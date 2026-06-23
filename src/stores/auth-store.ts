@@ -42,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        authApi.logout().catch(() => {});
         localStorage.removeItem("vouchedge_access_token");
         localStorage.removeItem("vouchedge_refresh_token");
         set({ token: null, refreshToken: null, me: null, isAuthenticated: false });

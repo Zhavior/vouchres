@@ -20,7 +20,7 @@ export function SignupPage() {
       await signup(email, username, password, region);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Signup failed");
+      setError(err?.message || err?.response?.data?.detail || "Signup failed");
     } finally {
       setLoading(false);
     }

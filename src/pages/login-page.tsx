@@ -18,7 +18,7 @@ export function LoginPage() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Login failed");
+      setError(err?.message || err?.response?.data?.detail || "Login failed");
     } finally {
       setLoading(false);
     }
