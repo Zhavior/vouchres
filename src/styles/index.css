@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply bg-navy-950 text-slate-100 antialiased;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, 0.15);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.3);
+  }
+}
+
+@layer components {
+  /* Enhanced glassmorphism with saturate */
+  .glass-card {
+    background: rgba(15, 20, 36, 0.55);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(0, 212, 255, 0.12);
+    border-radius: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-card-hover:hover {
+    border-color: rgba(0, 212, 255, 0.35);
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Electric gradient button */
+  .electric-button {
+    @apply px-5 py-2.5 rounded-xl font-semibold text-navy-950 transition-all active:scale-95;
+    background: linear-gradient(135deg, #00D4FF 0%, #00A8CC 100%);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
+  }
+  .electric-button:hover {
+    background: linear-gradient(135deg, #1ADBFF 0%, #00D4FF 100%);
+    box-shadow: 0 6px 24px rgba(0, 212, 255, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .ghost-button {
+    @apply px-5 py-2.5 rounded-xl font-semibold text-electric-300 border border-electric-500/30 transition-all;
+  }
+  .ghost-button:hover {
+    border-color: rgba(0, 212, 255, 0.6);
+    background: rgba(0, 212, 255, 0.05);
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.1);
+  }
+
+  .nav-link {
+    @apply px-3 py-2 rounded-lg text-sm font-medium text-slate-400 transition-all;
+  }
+  .nav-link:hover {
+    color: #4DE3FF;
+    background: rgba(0, 212, 255, 0.06);
+  }
+
+  .nav-link-active {
+    color: #4DE3FF !important;
+    background: rgba(0, 212, 255, 0.1) !important;
+    box-shadow: inset 0 0 12px rgba(0, 212, 255, 0.08);
+  }
+
+  .zigzag-line {
+    background-image: repeating-linear-gradient(135deg, transparent 0 8px, rgba(0, 212, 255, 0.4) 8px 9px);
+    height: 1px;
+  }
+
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Verified badge */
+  .verified-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold;
+    background: rgba(61, 214, 140, 0.1);
+    color: #3DD68C;
+    border: 1px solid rgba(61, 214, 140, 0.3);
+  }
+}
+
+/* ================== NEON LIGHT STREAMS ================== */
+@keyframes neonMoveHorizontal {
+  0% { left: -120%; }
+  100% { left: 220%; }
+}
+
+@keyframes neonMoveDiagonal {
+  0% { transform: translate(-100%, 100%) rotate(-35deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translate(250%, -250%) rotate(-35deg); opacity: 0; }
+}
+
+.neon-stream {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  opacity: 0.5;
+}
+
+.neon-stream-cyan {
+  height: 1.5px;
+  width: 300px;
+  background: linear-gradient(90deg, transparent, #00D4FF 50%, transparent);
+  animation: neonMoveHorizontal 14s linear infinite;
+}
+
+.neon-stream-pink {
+  height: 1.5px;
+  width: 400px;
+  background: linear-gradient(90deg, transparent, #ec4899 50%, transparent);
+  animation: neonMoveHorizontal 20s linear infinite reverse;
+}
+
+.neon-stream-purple {
+  height: 1.5px;
+  width: 350px;
+  background: linear-gradient(90deg, transparent, #a855f7 50%, transparent);
+  animation: neonMoveHorizontal 17s linear infinite;
+}
+
+.neon-stream-emerald {
+  height: 1.5px;
+  width: 250px;
+  background: linear-gradient(90deg, transparent, #10b981 50%, transparent);
+  animation: neonMoveHorizontal 12s linear infinite;
+}
+
+/* ================== UTILITIES ================== */
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+  }
+
+  .text-glow-strong {
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.8), 0 0 24px rgba(0, 212, 255, 0.4);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
