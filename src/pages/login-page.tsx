@@ -16,7 +16,7 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true); setError(null);
     try { await login(email, password); navigate("/dashboard"); }
-    catch (err: any) { setError(err?.response?.data?.detail || "Login failed"); }
+    catch (err: any) { setError(err?.message || err?.response?.data?.detail || "Login failed"); }
     finally { setLoading(false); }
   };
 

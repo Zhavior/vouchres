@@ -18,7 +18,7 @@ export function SignupPage() {
     e.preventDefault();
     setLoading(true); setError(null);
     try { await signup(email, username, password, region); navigate("/dashboard"); }
-    catch (err: any) { setError(err?.response?.data?.detail || "Signup failed"); }
+    catch (err: any) { setError(err?.message || err?.response?.data?.detail || "Signup failed"); }
     finally { setLoading(false); }
   };
 
