@@ -1,10 +1,9 @@
-import { useRef, useEffect, useState } from "react";
-
 /**
- * CyberBackground — animated canvas neural mesh + laser lines.
- * Lightweight (requestAnimationFrame, cleans up on unmount).
- * Sits behind all content at -z-20.
+ * CyberBackground — live sports data network canvas.
+ * Zig-zag neon lines, floating glowing nodes, subtle grid.
  */
+import { useRef, useEffect } from "react";
+
 export function CyberBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -14,160 +13,98 @@ export function CyberBackground() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let raf: number;
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    window.addEventListener("resize", handleResize);
+    const onResize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+    window.addEventListener("resize", onResize);
 
-    // Floating network nodes
-    const colors = [
-      "rgba(0, 212, 255, ",
-      "rgba(139, 92, 246, ",
-      "rgba(99, 102, 241, ",
-      "rgba(16, 185, 129, ",
-    ];
+    // Read CSS variables for colors
+    const styles = getComputedStyle(document.documentElement);
+    const nodeColor = styles.getPropertyValue("--ve-node-color").trim() || "rgba(34, 211, 238, 0.4)";
+    const zigzagColor = styles.getPropertyValue("--ve-zigzag-color").trim() || "rgba(0, 183, 255, 0.15)";
+    const accent = styles.getPropertyValue("--ve-accent").trim() || "#00B7FF";
 
-    const nodes: { x: number; y: number; vx: number; vy: number; r: number; a: number; c: string }[] = [];
-    for (let i = 0; i < 25; i++) {
+    // Extract rgba base from nodeColor for alpha manipulation
+    const nodeBase = nodeColor.replace(/rgba?\(([^)]+)\)/, "$1").split(",").map(s => s.trim());
+
+    // Nodes
+    const nodes: { x: number; y: number; vx: number; vy: number; r: number; a: number }[] = [];
+    for (let i = 0; i < 20; i++) {
       nodes.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        r: 1 + Math.random() * 2,
-        a: 0.1 + Math.random() * 0.3,
-        c: colors[Math.floor(Math.random() * colors.length)],
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+        r: 1.5 + Math.random() * 2.5, a: 0.2 + Math.random() * 0.3,
       });
     }
 
-    // Ambient glow orbs
+    // Orbs
     const orbs = [
-      { x: width * 0.2, y: height * 0.3, r: 250, vx: 0.1, vy: 0.08, c: "rgba(0, 212, 255, 0.025)" },
-      { x: width * 0.8, y: height * 0.7, r: 350, vx: -0.08, vy: -0.1, c: "rgba(139, 92, 246, 0.03)" },
+      { x: w * 0.2, y: h * 0.3, r: 220, vx: 0.08, vy: 0.06 },
+      { x: w * 0.8, y: h * 0.7, r: 300, vx: -0.06, vy: -0.08 },
     ];
 
     let gridOffset = 0;
 
     const render = () => {
-      if (!ctx || !canvas) return;
+      if (!ctx) return;
+      ctx.clearRect(0, 0, w, h);
 
-      // Clear with dark base
-      ctx.fillStyle = "#050810";
-      ctx.fillRect(0, 0, width, height);
-
-      // Glow orbs
-      orbs.forEach((orb) => {
-        orb.x += orb.vx;
-        orb.y += orb.vy;
-        if (orb.x < 0 || orb.x > width) orb.vx *= -1;
-        if (orb.y < 0 || orb.y > height) orb.vy *= -1;
-
-        const grad = ctx.createRadialGradient(orb.x, orb.y, 5, orb.x, orb.y, orb.r);
-        grad.addColorStop(0, orb.c);
-        grad.addColorStop(1, "rgba(5, 8, 16, 0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
-        ctx.fill();
+      // Orbs
+      orbs.forEach(o => {
+        o.x += o.vx; o.y += o.vy;
+        if (o.x < 0 || o.x > w) o.vx *= -1;
+        if (o.y < 0 || o.y > h) o.vy *= -1;
+        const g = ctx.createRadialGradient(o.x, o.y, 5, o.x, o.y, o.r);
+        g.addColorStop(0, `rgba(${nodeBase[0]}, ${nodeBase[1]}, ${nodeBase[2]}, 0.02)`);
+        g.addColorStop(1, "transparent");
+        ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2); ctx.fill();
       });
 
-      // Perspective grid
-      ctx.strokeStyle = "rgba(0, 212, 255, 0.03)";
+      // Grid
+      ctx.strokeStyle = zigzagColor;
       ctx.lineWidth = 1;
-      gridOffset = (gridOffset + 0.12) % 50;
+      gridOffset = (gridOffset + 0.1) % 50;
+      for (let i = 0; i <= w / 50; i++) { ctx.beginPath(); ctx.moveTo(i * 50, 0); ctx.lineTo(i * 50, h); ctx.stroke(); }
+      for (let i = 0; i <= h / 50; i++) { const y = (i * 50 + gridOffset) % h; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
 
-      const cols = Math.ceil(width / 50) + 1;
-      for (let i = 0; i < cols; i++) {
-        const x = i * 50;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
+      // Nodes + connections
+      nodes.forEach((n, idx) => {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0) n.x = w; if (n.x > w) n.x = 0;
+        if (n.y < 0) n.y = h; if (n.y > h) n.y = 0;
+        ctx.fillStyle = `rgba(${nodeBase[0]}, ${nodeBase[1]}, ${nodeBase[2]}, ${n.a})`;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
 
-      const rows = Math.ceil(height / 50) + 1;
-      for (let i = 0; i < rows; i++) {
-        const y = (i * 50 + gridOffset) % height;
-        ctx.strokeStyle = "rgba(0, 212, 255, 0.025)";
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-
-      // Neural mesh nodes + connections
-      nodes.forEach((node, idx) => {
-        node.x += node.vx;
-        node.y += node.vy;
-        if (node.x < 0) node.x = width;
-        if (node.x > width) node.x = 0;
-        if (node.y < 0) node.y = height;
-        if (node.y > height) node.y = 0;
-
-        ctx.fillStyle = `${node.c}${node.a})`;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Connect nearby nodes
         for (let j = idx + 1; j < nodes.length; j++) {
-          const dx = node.x - nodes[j].x;
-          const dy = node.y - nodes[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 170) {
-            const linkAlpha = (1 - dist / 170) * 0.08;
-            ctx.strokeStyle = `rgba(0, 212, 255, ${linkAlpha})`;
+          const dx = n.x - nodes[j].x, dy = n.y - nodes[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 160) {
+            ctx.strokeStyle = `rgba(${nodeBase[0]}, ${nodeBase[1]}, ${nodeBase[2]}, ${(1 - d / 160) * 0.06})`;
             ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(node.x, node.y);
-            ctx.lineTo(nodes[j].x, nodes[j].y);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
           }
         }
       });
 
-      animationId = requestAnimationFrame(render);
+      raf = requestAnimationFrame(render);
     };
 
     render();
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
   }, []);
 
   return (
     <>
-      {/* Canvas background */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none"
-        style={{ zIndex: -20 }}
-      />
-
-      {/* CSS neon light streams */}
+      <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: -20 }} />
+      {/* Neon streams */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -15 }}>
-        <div className="neon-stream neon-stream-cyan" style={{ top: "15%" }} />
-        <div className="neon-stream neon-stream-pink" style={{ top: "38%" }} />
-        <div className="neon-stream neon-stream-purple" style={{ top: "62%" }} />
-        <div className="neon-stream neon-stream-emerald" style={{ top: "82%" }} />
+        <div className="neon-stream" style={{ top: "20%", height: "1.5px", width: "300px", background: `linear-gradient(90deg, transparent, var(--ve-accent), transparent)` }} />
+        <div className="neon-stream" style={{ top: "55%", height: "1.5px", width: "400px", animationDuration: "20s", animationDirection: "reverse", background: `linear-gradient(90deg, transparent, var(--ve-purple), transparent)` }} />
+        <div className="neon-stream" style={{ top: "80%", height: "1.5px", width: "250px", animationDuration: "12s", background: `linear-gradient(90deg, transparent, var(--ve-neon), transparent)` }} />
       </div>
-
-      {/* Vignette overlay */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          zIndex: -10,
-          background: "radial-gradient(ellipse at center, rgba(5,8,16,0) 30%, rgba(5,8,16,0.6) 100%)",
-        }}
-      />
     </>
   );
 }

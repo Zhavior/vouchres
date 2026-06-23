@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { authApi, type MeResponse } from "@/services/auth";
 
 interface AuthState {
@@ -16,57 +15,91 @@ interface AuthState {
   hasAgeVerified: () => boolean;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      token: localStorage.getItem("vouchedge_access_token"),
-      refreshToken: localStorage.getItem("vouchedge_refresh_token"),
-      me: null,
-      isLoading: false,
-      isAuthenticated: !!localStorage.getItem("vouchedge_access_token"),
+function getInitialToken(): string | null {
+  try {
+    return localStorage.getItem("vouchedge_access_token");
+  } catch {
+    return null;
+  }
+}
 
-      login: async (email, password) => {
-        const tokens = await authApi.login({ email, password });
-        localStorage.setItem("vouchedge_access_token", tokens.access_token);
-        localStorage.setItem("vouchedge_refresh_token", tokens.refresh_token);
-        set({ token: tokens.access_token, refreshToken: tokens.refresh_token, isAuthenticated: true });
-        await get().fetchMe();
-      },
+function getInitialRefresh(): string | null {
+  try {
+    return localStorage.getItem("vouchedge_refresh_token");
+  } catch {
+    return null;
+  }
+}
 
-      signup: async (email, username, password, region) => {
-        const tokens = await authApi.signup({ email, username, password, region });
-        localStorage.setItem("vouchedge_access_token", tokens.access_token);
-        localStorage.setItem("vouchedge_refresh_token", tokens.refresh_token);
-        set({ token: tokens.access_token, refreshToken: tokens.refresh_token, isAuthenticated: true });
-        await get().fetchMe();
-      },
+const initialToken = getInitialToken();
 
-      logout: () => {
-        authApi.logout().catch(() => {});
-        localStorage.removeItem("vouchedge_access_token");
-        localStorage.removeItem("vouchedge_refresh_token");
-        set({ token: null, refreshToken: null, me: null, isAuthenticated: false });
-      },
+export const useAuthStore = create<AuthState>((set, get) => ({
+  token: initialToken,
+  refreshToken: getInitialRefresh(),
+  me: null,
+  isLoading: false,
+  // Only authenticated if we have a token — will be validated by fetchMe on app load
+  isAuthenticated: !!initialToken,
 
-      fetchMe: async () => {
-        if (!get().token) return;
-        try {
-          const me = await authApi.me();
-          set({ me });
-        } catch {
-          get().logout();
-        }
-      },
+  login: async (email, password) => {
+    const tokens = await authApi.login({ email, password });
+    localStorage.setItem("vouchedge_access_token", tokens.access_token);
+    localStorage.setItem("vouchedge_refresh_token", tokens.refresh_token);
+    set({
+      token: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      isAuthenticated: true,
+    });
+    // Fetch user profile
+    try {
+      const me = await authApi.me();
+      set({ me });
+    } catch {
+      // If /me fails after login, don't logout — the token is still valid
+      // The user just might not have a profile yet
+    }
+  },
 
-      hasAgeVerified: () => {
-        const me = get().me;
-        if (!me) return false;
-        // The /me endpoint doesn't directly return age_verified, but we can
-        // check via profile. For simplicity, return true if me exists.
-        // The backend enforces age verification on pick save.
-        return true;
-      },
-    }),
-    { name: "vouchedge-auth" }
-  )
-);
+  signup: async (email, username, password, region) => {
+    const tokens = await authApi.signup({ email, username, password, region });
+    localStorage.setItem("vouchedge_access_token", tokens.access_token);
+    localStorage.setItem("vouchedge_refresh_token", tokens.refresh_token);
+    set({
+      token: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      isAuthenticated: true,
+    });
+    try {
+      const me = await authApi.me();
+      set({ me });
+    } catch {
+      // Profile fetch failed but login succeeded
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem("vouchedge_access_token");
+    localStorage.removeItem("vouchedge_refresh_token");
+    set({ token: null, refreshToken: null, me: null, isAuthenticated: false });
+  },
+
+  fetchMe: async () => {
+    if (!get().token) {
+      set({ isAuthenticated: false });
+      return;
+    }
+    try {
+      const me = await authApi.me();
+      set({ me, isAuthenticated: true });
+    } catch {
+      // Token might be expired or invalid — logout
+      get().logout();
+    }
+  },
+
+  hasAgeVerified: () => {
+    const me = get().me;
+    if (!me) return false;
+    return true;
+  },
+}));
