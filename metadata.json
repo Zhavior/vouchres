@@ -1,0 +1,6 @@
+{
+  "name": "VouchEdge",
+  "description": "Track picks. Build proof. Follow the edge. A premium X-style sports proof and social feed platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

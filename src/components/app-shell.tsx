@@ -9,13 +9,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import {
   Home, Swords, Sparkles, Layers, Trophy, Users, Bell, Settings,
-  Shield, Palette, LogOut, ShieldCheck,
+  Shield, Palette, LogOut, ShieldCheck, Target,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Home", icon: Home },
   { to: "/live", label: "Live Games", icon: Swords },
   { to: "/picks", label: "Trust Picks AI", icon: Sparkles },
+  { to: "/ai-picks", label: "Today's AI Picks", icon: Target },
   { to: "/parlays", label: "Parlay Lab", icon: Layers },
   { to: "/feed", label: "Vouch Feed", icon: Users },
   { to: "/ledger", label: "Results", icon: Trophy },

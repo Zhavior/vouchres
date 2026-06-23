@@ -85,6 +85,61 @@ export interface PlayerDetail {
   splits: Record<string, any>;
 }
 
+export interface PlayerSearchResult {
+  player_id: number;
+  full_name: string;
+  team_id: number;
+  team_abbr: string;
+  position: string;
+  bats: string;
+  throws: string;
+  active: boolean;
+  headshot_url: string | null;
+}
+
+export interface AIPickData {
+  playerId: string;
+  playerName: string;
+  team: string;
+  opponent: string;
+  opposingPitcher: string;
+  gameTime: string;
+  scores: {
+    hrConfidenceScore: number;
+    trustScore: number;
+    valueScore: number;
+    matchupScore: number;
+    recentFormScore: number;
+    pitcherWeaknessScore: number;
+    parkWeatherScore: number;
+    volatilityScore: number;
+  };
+  riskTier: string;
+  confidenceLabel: string;
+  aiReasoning: string;
+  redFlags: string[];
+  estimatedHRProbability?: number;
+  valueLabel?: string;
+  source: string;
+}
+
+export interface PlayerAIBreakdownData {
+  player: any;
+  todayMatchup: any;
+  scores: AIPickData["scores"];
+  recentGames: any[];
+  previousGamesVsOpponent: any[];
+  pitcherDangerReport: any;
+  aiReasoning: {
+    whyAILikesIt: string;
+    whyItMayFail: string;
+    bestUse: string;
+    dataQualityScore: number;
+    missingData: string[];
+  };
+  missingData: string[];
+}
+
 export const mlbApi = {
   gamesToday: async (date?: string): Promise<{ data: Game[]; meta: any }> => {
     const r = await api.get("/mlb/games/today", { params: { date } });
@@ -120,6 +175,33 @@ export const mlbApi = {
 
   hrTargets: async (limit?: number): Promise<{ data: PickCard[]; meta: any }> => {
     const r = await api.get("/mlb/hr-targets", { params: { limit } });
+    return r.data;
+  },
+
+  // Player Registry — may not exist on backend yet
+  playersSearch: async (q: string, limit?: number): Promise<{ data: PlayerSearchResult[]; meta: any }> => {
+    const r = await api.get("/mlb/players/search", { params: { q, limit } });
+    return r.data;
+  },
+
+  activePlayers: async (limit?: number): Promise<{ data: PlayerSearchResult[]; meta: any }> => {
+    const r = await api.get("/mlb/players/active", { params: { limit } });
+    return r.data;
+  },
+
+  teamRoster: async (teamId: number): Promise<{ data: PlayerSearchResult[]; meta: any }> => {
+    const r = await api.get(`/mlb/teams/${teamId}/roster`);
+    return r.data;
+  },
+
+  // Today's AI Picks — may not exist on backend yet
+  todaysAIPicks: async (params?: { market?: string; limit?: number }): Promise<{ data: any; meta: any }> => {
+    const r = await api.get("/mlb/ai-picks/today", { params });
+    return r.data;
+  },
+
+  playerAIBreakdown: async (playerId: string): Promise<{ data: PlayerAIBreakdownData; meta: any }> => {
+    const r = await api.get(`/mlb/ai-picks/player/${playerId}`);
     return r.data;
   },
 };

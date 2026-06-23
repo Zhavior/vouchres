@@ -40,3 +40,34 @@ export function ErrorCard({ message, onRetry, className }: { message?: string; o
     </div>
   );
 }
+
+export function APIConfigError({ className }: { className?: string }) {
+  return (
+    <div className={cn("ve-card p-6 text-center", className)} style={{ borderColor: "rgba(250,204,21,0.2)" }}>
+      <p className="text-sm font-semibold" style={{ color: "var(--ve-warning)" }}>Backend API not configured</p>
+      <p className="text-xs mt-1" style={{ color: "var(--ve-text-muted)" }}>
+        Add <code className="px-1 rounded bg-black/30 text-electric-300">VITE_API_URL</code> in your Vercel environment variables pointing to your deployed backend.
+      </p>
+    </div>
+  );
+}
+
+export function BackendNotReady({ endpoint, className }: { endpoint: string; className?: string }) {
+  return (
+    <div className={cn("ve-card p-6 text-center", className)} style={{ borderColor: "rgba(250,204,21,0.2)" }}>
+      <p className="text-sm font-semibold" style={{ color: "var(--ve-warning)" }}>Backend endpoint not ready</p>
+      <p className="text-xs mt-1" style={{ color: "var(--ve-text-muted)" }}>
+        <code className="px-1 rounded bg-black/30 text-electric-300">{endpoint}</code> is not available on the backend yet.
+      </p>
+    </div>
+  );
+}
+
+export function DebugNote({ message, className }: { message: string; className?: string }) {
+  if (import.meta.env.PROD) return null;
+  return (
+    <div className={cn("text-[10px] font-mono px-3 py-1.5 rounded-lg", className)} style={{ background: "rgba(250,204,21,0.05)", color: "var(--ve-warning)", border: "1px solid rgba(250,204,21,0.15)" }}>
+      DEV: {message}
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ import { PickLedgerPage } from "@/pages/pick-ledger-page";
 import { SocialFeedPage } from "@/pages/social-feed-page";
 import { LeaderboardPage } from "@/pages/leaderboard-page";
 import { NotificationsPage } from "@/pages/notifications-page";
+import { TodaysAIPicksPage } from "@/pages/todays-ai-picks-page";
 import { ThemeStorePage } from "@/pages/theme-store-page";
 import { TermsOfServicePage } from "@/pages/terms-of-service-page";
 import { PrivacyPolicyPage } from "@/pages/privacy-policy-page";
@@ -59,6 +60,7 @@ export function AppRouter() {
           <Route path="/feed" element={<ProtectedRoute><SocialFeedPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/ai-picks" element={<ProtectedRoute><TodaysAIPicksPage /></ProtectedRoute>} />
           <Route path="/themes" element={<ProtectedRoute><ThemeStorePage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><PlaceholderPage title="Profile" description="Full profile with avatar borders, trust timeline, and proof history." icon={UserIcon} phase="Soon" /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><PlaceholderPage title="Settings" description="Account, region, preferred markets, notification preferences." icon={Settings} phase="Soon" /></ProtectedRoute>} />

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { mlbApi, type PickCard } from "@/services/mlb";
 import { picksApi } from "@/services/picks";
 import { TrustPickCard } from "@/components/trust-pick-card";
-import { EmptyStateCard, LoadingCard, ErrorCard } from "@/components/ui-states";
+import { EmptyStateCard, LoadingCard, ErrorCard, DebugNote } from "@/components/ui-states";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +39,9 @@ export function AiPicksHubPage() {
           <span>{data.meta.count} picks</span>
           {data.meta.is_stale && <span style={{ color: "var(--ve-warning)" }}>· stale</span>}
         </div>}
+        {data?.meta && data.meta.count <= 50 && data.meta.games_analyzed > 0 && (
+          <DebugNote message={`Backend returned ${data.meta.count} picks from ${data.meta.games_analyzed} games. Player registry may be limited — check backend players_per_team setting or /mlb/players/active endpoint.`} className="mt-2" />
+        )}
       </div>
 
       {/* Filters */}

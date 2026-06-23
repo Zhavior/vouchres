@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Use VITE_API_URL if set (production), otherwise relative /v1 (dev with Vite proxy)
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/v1";
+// Support both VITE_API_URL and VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "/v1";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -43,3 +43,13 @@ api.interceptors.response.use(
 );
 
 export { API_BASE_URL };
+
+// Check if API is configured (for production safety)
+export function isApiConfigured(): boolean {
+  // In production, VITE_API_URL should be set
+  // In dev, /v1 works via Vite proxy
+  if (import.meta.env.PROD && !import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_BASE_URL) {
+    return false;
+  }
+  return true;
+}
