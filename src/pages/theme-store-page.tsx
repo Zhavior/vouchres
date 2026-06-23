@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { themesApi } from "@/services/themes";
 import { useThemeStore } from "@/stores/theme-store";
 import { THEMES, getCategories, type VisualTheme } from "@/data/themes";
-import { EmptyState } from "@/components/empty-state";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
+import { EmptyStateCard } from "@/components/ui-states";
+import { LoadingCard } from "@/components/ui-states";
 import { Sparkles, Check, Coins, Lock, RotateCcw, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ export function ThemeStorePage() {
         </div>
 
         {/* Credits */}
-        <div className="glass-card px-4 py-2 flex items-center gap-3">
+        <div className="ve-card px-4 py-2 flex items-center gap-3">
           <Coins className="w-5 h-5 text-yellow-400" />
           <div>
             <div className="text-lg font-bold font-mono text-yellow-400">{themeCredits}</div>
@@ -76,7 +76,7 @@ export function ThemeStorePage() {
       </div>
 
       {/* Active theme banner */}
-      <div className="glass-card p-4 border-electric-500/30">
+      <div className="ve-card p-4 border-electric-500/30">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Active Theme</div>
@@ -118,7 +118,7 @@ export function ThemeStorePage() {
       {myThemes.isLoading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <LoadingSkeleton key={i} lines={5} className="glass-card p-4" />
+            <LoadingCard key={i} lines={5} className="ve-card p-4" />
           ))}
         </div>
       ) : (

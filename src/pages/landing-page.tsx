@@ -3,21 +3,24 @@ import { motion } from "framer-motion";
 import {
   Sparkles, Shield, TrendingUp, Users, Zap, Lock, CheckCircle2, ArrowRight,
 } from "lucide-react";
-import { PlayerPickCard } from "@/components/player-pick-card";
-import { TrustBadge } from "@/components/trust-badge";
-import type { ModelScore, Market } from "@/types";
+import { TrustPickCard } from "@/components/trust-pick-card";
 
-const DEMO_PREVIEW: ModelScore = {
-  id: 0,
+
+
+const DEMO_PREVIEW = {
   player_id: 0,
+  player_name: "Aaron Judge",
+  team_abbr: "NYY",
+  opponent_abbr: "BOS",
   game_id: 0,
-  market: "hr" as Market,
+  market: "hr",
+  line: 0.5,
   probability: 0.42,
   confidence: 0.78,
   edge: 0.08,
   risk_tier: "medium",
-  reasoning: "Pull-side power spike vs FB-heavy RHP. Career .275 ISO in this park.",
   model_version: "v0.1.0",
+  reasoning: "Pull-side power spike vs FB-heavy RHP. Career .275 ISO in this park.",
 };
 
 export function LandingPage() {
@@ -130,12 +133,8 @@ export function LandingPage() {
               }}
             />
 
-            <PlayerPickCard
-              score={DEMO_PREVIEW}
-              playerName="Aaron Judge"
-              playerTeam="NYY"
-              opponent="vs BOS"
-              pitcherMatchup="LHP Brayan Bello"
+            <TrustPickCard
+              pick={DEMO_PREVIEW}
             />
             <div className="mt-2 text-center text-[10px] text-slate-500 font-mono uppercase tracking-wider">
               Demo preview · not a real pick
@@ -253,11 +252,11 @@ export function LandingPage() {
               <span className="text-2xl font-bold font-mono text-electric-300" style={{ textShadow: "0 0 12px rgba(0,212,255,0.5)" }}>1000</span>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <TrustBadge level="unverified" />
-              <TrustBadge level="bronze" />
-              <TrustBadge level="silver" />
-              <TrustBadge level="gold" />
-              <TrustBadge level="platinum" />
+              <span className="ve-badge">Unverified</span>
+              <span className="ve-badge" style={{ color: "var(--ve-warning)" }}>Bronze</span>
+              <span className="ve-badge" style={{ color: "var(--ve-text-muted)" }}>Silver</span>
+              <span className="ve-badge" style={{ color: "var(--ve-warning)" }}>Gold</span>
+              <span className="ve-badge" style={{ color: "var(--ve-accent)" }}>Platinum</span>
             </div>
           </div>
         </div>
