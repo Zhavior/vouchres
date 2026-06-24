@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { registerApiRoutes } from "./server/routes";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
@@ -14,6 +15,10 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // VouchEdge intelligence backbone: MLB, agents, judges, AI, trust, results, skills.
+  // Registered before the Vite/static catch-all so these API paths resolve first.
+  registerApiRoutes(app);
 
   // API endpoints config
   // VEdge chat endpoint

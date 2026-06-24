@@ -78,41 +78,15 @@ export async function getActiveMLBRoster(): Promise<any[]> {
 }
 
 /**
- * Searches the entire MLB list + curated records and returns matching player stubs
+ * Converts a raw MLB Stats API person object into our enriched MLBPlayer stub,
+ * complete with a real MLB headshot URL. Heavy stats use neutral baselines and are
+ * replaced with live values by enrichPlayerStats() when the player is opened.
  */
-export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
-  const normTerm = term.trim().toLowerCase();
-  
-  // Start with local records so they are always fast and enriched
-  const localMatched = MLB_PLAYER_RECORDS.filter(p => 
-    p.name.toLowerCase().includes(normTerm) || 
-    p.team.toLowerCase().includes(normTerm) ||
-    p.position.toLowerCase().includes(normTerm)
-  );
-
-  // If search term is too short, or we haven't loaded the background roster yet, return local records
-  if (normTerm.length < 2) {
-    return localMatched;
-  }
-
-  try {
-    const roster = await getActiveMLBRoster();
-    const apiMatched = roster.filter(p => p.fullName.toLowerCase().includes(normTerm));
-
-    // Convert MLB Api stubs to local MLBPlayer type stubs
-    const apiConverted: MLBPlayer[] = apiMatched
-      .map(p => {
-        const id = `mlbapi_${p.id}`;
-        
-        // Skip converting if we already have it locally as pre-loaded
-        const existsLocally = MLB_PLAYER_RECORDS.some(lp => lp.id === id || lp.name.toLowerCase() === p.fullName.toLowerCase());
-        if (existsLocally) return null;
-
-        const bats = (p.batSide?.code === 'S' ? 'S' : p.batSide?.code === 'L' ? 'L' : 'R') as 'L' | 'R' | 'S';
-        const throws = (p.pitchHand?.code === 'L' ? 'L' : 'R') as 'L' | 'R';
-        
-        // Build initial basic object structure
-        return {
+export function toMLBPlayerStub(p: any): MLBPlayer {
+  const id = `mlbapi_${p.id}`;
+  const bats = (p.batSide?.code === 'S' ? 'S' : p.batSide?.code === 'L' ? 'L' : 'R') as 'L' | 'R' | 'S';
+  const throws = (p.pitchHand?.code === 'L' ? 'L' : 'R') as 'L' | 'R';
+  return {
           id,
           name: p.fullName,
           team: p.currentTeam?.name || 'MLB Free Agent',
@@ -174,13 +148,68 @@ export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
             { id: `prop_mlbapi_${p.id}_bases`, market: 'Total Bases Prop', odds: 1.85, spec: `${p.fullName} Over 1.5 Total Bases` }
           ]
         } as MLBPlayer;
-      })
-      .filter((p): p is MLBPlayer => p !== null);
+}
 
-    // Merge lists, keeping local records at the top, then adding unique API hits
+// True if a live-API player is already represented by a curated record.
+function existsInCurated(p: any): boolean {
+  return MLB_PLAYER_RECORDS.some(
+    (lp) => lp.id === `mlbapi_${p.id}` || lp.name.toLowerCase() === p.fullName.toLowerCase()
+  );
+}
+
+/**
+ * Returns the entire MLB player universe as MLBPlayer stubs:
+ * curated (enriched) records first, then every other active player from the live API,
+ * sorted alphabetically. Each has a real MLB headshot URL.
+ */
+export async function getAllMLBPlayerStubs(): Promise<MLBPlayer[]> {
+  const roster = await getActiveMLBRoster();
+  const apiStubs = roster
+    .filter((p) => !existsInCurated(p))
+    .map(toMLBPlayerStub)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return [...MLB_PLAYER_RECORDS, ...apiStubs];
+}
+
+/**
+ * Searches the entire MLB list + curated records and returns matching player stubs.
+ * With no/short term, returns the full MLB roster (curated first) so the console
+ * browses every active player by default.
+ */
+export async function searchMLBPlayers(term: string): Promise<MLBPlayer[]> {
+  const normTerm = term.trim().toLowerCase();
+
+  // No / very short term: browse the entire MLB universe.
+  if (normTerm.length < 2) {
+    try {
+      return await getAllMLBPlayerStubs();
+    } catch {
+      return MLB_PLAYER_RECORDS;
+    }
+  }
+
+  // Curated records first (always fast + enriched).
+  const localMatched = MLB_PLAYER_RECORDS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(normTerm) ||
+      p.team.toLowerCase().includes(normTerm) ||
+      p.position.toLowerCase().includes(normTerm)
+  );
+
+  try {
+    const roster = await getActiveMLBRoster();
+    const apiConverted: MLBPlayer[] = roster
+      .filter(
+        (p) =>
+          (p.fullName.toLowerCase().includes(normTerm) ||
+            (p.currentTeam?.name || '').toLowerCase().includes(normTerm)) &&
+          !existsInCurated(p)
+      )
+      .map(toMLBPlayerStub);
+
     const merged = [...localMatched];
     for (const ap of apiConverted) {
-      if (!merged.some(m => m.name.toLowerCase() === ap.name.toLowerCase())) {
+      if (!merged.some((m) => m.name.toLowerCase() === ap.name.toLowerCase())) {
         merged.push(ap);
       }
     }

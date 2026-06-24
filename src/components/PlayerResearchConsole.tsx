@@ -86,6 +86,9 @@ export default function PlayerResearchConsole({
   
   // MLB API background roster search states
   const [displayedPlayers, setDisplayedPlayers] = useState<MLBPlayer[]>(MLB_PLAYER_RECORDS);
+  const [allTeams, setAllTeams] = useState<string[]>(['ALL', ...Array.from(new Set(MLB_PLAYER_RECORDS.map(p => p.team)))]);
+  // Cap how many roster cards render at once (full MLB roster is ~1,300 players).
+  const ROSTER_RENDER_CAP = 120;
   const [isSearchingApi, setIsSearchingApi] = useState(false);
   const [isRefreshingApi, setIsRefreshingApi] = useState(false);
 
@@ -159,8 +162,8 @@ export default function PlayerResearchConsole({
     }
   };
 
-  // Extract unique lists for filtering dropdowns
-  const teams = ['ALL', ...Array.from(new Set(MLB_PLAYER_RECORDS.map(p => p.team)))];
+  // Extract unique lists for filtering dropdowns (teams come from the full live roster)
+  const teams = allTeams;
   const positions = ['ALL', 'Outfielder', 'Third Baseman', 'Shortstop / Outfielder', 'Designated Hitter / Pitcher'];
 
   // Load background roster list on mount & enrich active player
@@ -177,7 +180,14 @@ export default function PlayerResearchConsole({
       }
     };
     initEnrich();
-    getActiveMLBRoster();
+    // Load the full active roster, then build the team filter from all 30 MLB clubs.
+    getActiveMLBRoster()
+      .then((roster) => {
+        const apiTeams = roster.map((p: any) => p.currentTeam?.name).filter(Boolean) as string[];
+        const unique = Array.from(new Set([...MLB_PLAYER_RECORDS.map((p) => p.team), ...apiTeams])).sort();
+        setAllTeams(['ALL', ...unique]);
+      })
+      .catch(() => {});
   }, []);
 
   // Sync state for actual filtered results dynamically using searchMLBPlayers
@@ -437,8 +447,8 @@ export default function PlayerResearchConsole({
         {/* Dynamic overall dashboard stats summary */}
         <div className="flex flex-wrap items-center gap-4 bg-slate-950/60 border border-slate-800/60 p-4 rounded-2xl">
           <div className="px-4 border-r border-slate-800/50">
-            <span className="block text-[9px] text-slate-500 font-mono tracking-wider uppercase">VERIFIED PLAYERS</span>
-            <span className="text-lg font-black text-slate-200 font-mono">{MLB_PLAYER_RECORDS.length} Active</span>
+            <span className="block text-[9px] text-slate-500 font-mono tracking-wider uppercase">MLB PLAYERS LOADED</span>
+            <span className="text-lg font-black text-slate-200 font-mono">{displayedPlayers.length} Active</span>
           </div>
           <div className="px-4 border-r border-slate-800/50">
             <span className="block text-[9px] text-slate-500 font-mono tracking-wider uppercase">COMPUTATION METHOD</span>
@@ -579,7 +589,7 @@ export default function PlayerResearchConsole({
                   </button>
                 </div>
               ) : (
-                filteredPlayers.map((player) => {
+                filteredPlayers.slice(0, ROSTER_RENDER_CAP).map((player) => {
                   const isSelectedPrimary = activePlayer.id === player.id;
                   const isSelectedSecondary = compareMode && comparePlayer.id === player.id;
                   const scoreGrounded = aiReportCache[player.id]?.score || player.batterScore;
@@ -606,10 +616,12 @@ export default function PlayerResearchConsole({
                       <div className="flex items-center gap-3.5 min-w-0">
                         {/* Player headshot image from MLB static CDN */}
                         <div className="relative">
-                          <img 
-                            src={player.headshot} 
+                          <img
+                            src={player.headshot}
                             alt={player.name}
                             referrerPolicy="no-referrer"
+                            loading="lazy"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/generic/headshot/67/current'; }}
                             className="w-11 h-11 rounded-2xl object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0"
                           />
                           <span className="absolute -bottom-1 -right-1 text-[8.5px] font-black bg-slate-900 text-slate-350 border border-slate-700 px-1 rounded-md font-mono">
@@ -643,6 +655,13 @@ export default function PlayerResearchConsole({
                     </div>
                   );
                 })
+              )}
+              {filteredPlayers.length > ROSTER_RENDER_CAP && (
+                <div className="p-4 text-center bg-slate-950/40">
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    Showing {ROSTER_RENDER_CAP} of {filteredPlayers.length} players · search a name or pick a team to narrow
+                  </p>
+                </div>
               )}
             </div>
           </div>
