@@ -2,6 +2,7 @@
 import type { Express } from "express";
 import { registerMlbRoutes } from "./mlbRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
+import { registerMatchupRoutes } from "./mlbMatchupRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
 import { registerJudgeRoutes } from "./judgeRoutes";
 import { registerAiRoutes } from "./aiRoutes";
@@ -13,6 +14,7 @@ import type { Request, Response } from "express";
 export function registerApiRoutes(app: Express): void {
   registerMlbRoutes(app);
   registerHrBoardRoutes(app);
+  registerMatchupRoutes(app);
   registerAgentRoutes(app);
   registerJudgeRoutes(app);
   registerAiRoutes(app);

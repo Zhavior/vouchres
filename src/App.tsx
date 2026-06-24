@@ -14,6 +14,7 @@ import MlbIntelligenceHub from './components/MlbIntelligenceHub';
 import DailyHrBoardPage from './pages/DailyHrBoardPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
+import LiveGamesPro from './components/LiveGamesPro';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import SubscriberHub from './components/SubscriberHub';
@@ -481,7 +482,7 @@ export default function App() {
         return <DailyHrBoardPage />;
       case 'live_games':
         return (
-          <LiveGames 
+          <LiveGamesPro
             onSectionChange={setActiveSection}
             onAddLegToParlay={handleAddLegFromResearch}
           />

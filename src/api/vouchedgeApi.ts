@@ -16,6 +16,7 @@ import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
+import type { MatchupsResponse, GameMatchup } from "../types/matchup";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -66,6 +67,10 @@ export const vouchedgeApi = {
 
   // Live HR notification feed
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
+
+  // Live Games matchups
+  matchupsToday: () => getJson<MatchupsResponse>("/api/mlb/matchups/today"),
+  matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
 
   // Daily HR Board
   hrBoardToday: () => getJson<HrBoardResponse>("/api/mlb/hr-board/today"),

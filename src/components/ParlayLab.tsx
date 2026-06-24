@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -23,6 +23,7 @@ import { Parlay, Leg, MLBPlayer, Vouch, FeedPost, CreatorProofProfile } from '..
 import RiskTierVisualization from './RiskTierVisualization';
 import ResultsPage from './ResultsPage';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
+import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 
 interface ParlayLabProps {
@@ -190,21 +191,33 @@ export default function ParlayLab({
     pendingProp: null
   });
 
-  // Unique MLB teams list derived from mock data 
-  const MLB_TEAMS = ["ALL", "Los Angeles Dodgers", "New York Yankees", "Atlanta Braves", "Houston Astros", "San Diego Padres", "Boston Red Sox"];
+  // Full live MLB roster — starts with curated records, loads all ~1,250 players on mount.
+  const [allPlayers, setAllPlayers] = useState<MLBPlayer[]>(MLB_PLAYER_RECORDS);
+  useEffect(() => {
+    let active = true;
+    getAllMLBPlayerStubs()
+      .then((list) => { if (active && list.length) setAllPlayers(list); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
-  // Filter player list
-  const filteredPlayers = MLB_PLAYER_RECORDS.filter(p => {
+  // Teams list derived from the full live roster (all 30 MLB clubs).
+  const MLB_TEAMS = ["ALL", ...Array.from(new Set(allPlayers.map(p => p.team))).sort()];
+
+  // Filter, then cap render count (parlay cards are heavy with many players on screen).
+  const PLAYER_RENDER_CAP = 60;
+  const matchedPlayers = allPlayers.filter(p => {
     const matchesTeam = selectedTeam === "ALL" || p.team === selectedTeam;
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.position.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTeam && matchesSearch;
   });
+  const filteredPlayers = matchedPlayers.slice(0, PLAYER_RENDER_CAP);
 
   // Resolve leg's odds to the active bookie selection (including Bet365 and Market Average!)
   const getLegOddsForSelectedBookie = (leg: Leg, selectedBookie: string) => {
-    // Look up the exact player and proposition in MLB_PLAYER_RECORDS
-    for (const player of MLB_PLAYER_RECORDS) {
+    // Look up the exact player and proposition across the full roster
+    for (const player of allPlayers) {
       const matchedProp = player.propositions.find(p => p.spec === leg.selection);
       if (matchedProp) {
         return getSelectedBookieOddsValue(matchedProp.id, matchedProp.odds, selectedBookie).decimal;
@@ -572,6 +585,11 @@ export default function ParlayLab({
           </div>
 
           {/* Player Grid catalog */}
+          {matchedPlayers.length > PLAYER_RENDER_CAP && (
+            <p className="text-[11px] text-slate-500 font-mono mb-2">
+              Showing {PLAYER_RENDER_CAP} of {matchedPlayers.length} players · search a name or pick a team to narrow
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredPlayers.map((player) => {
               // Color formatting for injury status
@@ -591,6 +609,7 @@ export default function ParlayLab({
                       src={player.headshot}
                       alt={player.name}
                       referrerPolicy="no-referrer"
+                      loading="lazy"
                       className="w-12 h-12 rounded-xl object-cover border border-slate-800 shrink-0 bg-slate-900"
                     />
                     <div className="min-w-0 flex-1">

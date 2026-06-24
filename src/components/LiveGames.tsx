@@ -20,6 +20,25 @@ import {
 } from 'lucide-react';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer } from '../types';
+import { logoByTeamName } from '../lib/teamLogos';
+
+/** Small MLB team logo with graceful fallback when a team can't be matched. */
+function TeamLogo({ team, size = 22 }: { team: string; size?: number }) {
+  const src = logoByTeamName(team);
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={team}
+      width={size}
+      height={size}
+      loading="lazy"
+      className="object-contain shrink-0"
+      style={{ width: size, height: size }}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+    />
+  );
+}
 
 interface LiveGame {
   id: string;
@@ -369,13 +388,19 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                     <div className="space-y-2 pb-2.5 border-b border-slate-900/40">
                       {/* Away Team Line */}
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-100 font-extrabold text-sm">{game.awayTeam}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <TeamLogo team={game.awayTeam} />
+                          <span className="text-slate-100 font-extrabold text-sm truncate">{game.awayTeam}</span>
+                        </span>
                         <span className="text-white font-mono font-black text-base">{game.awayScore}</span>
                       </div>
-                      
+
                       {/* Home Team Line */}
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-100 font-extrabold text-sm">{game.homeTeam}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <TeamLogo team={game.homeTeam} />
+                          <span className="text-slate-100 font-extrabold text-sm truncate">{game.homeTeam}</span>
+                        </span>
                         <span className="text-white font-mono font-black text-base">{game.homeScore}</span>
                       </div>
                     </div>
@@ -421,12 +446,12 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                 <div className="space-y-2">
                   <div className="flex justify-between items-end text-xs font-mono">
                     <div>
-                      <span className="text-[10px] text-slate-400">{activeSelectedGame.awayTeam}</span>
+                      <span className="flex items-center gap-1.5 text-[10px] text-slate-400"><TeamLogo team={activeSelectedGame.awayTeam} size={16} />{activeSelectedGame.awayTeam}</span>
                       <span className="block text-base font-black text-slate-200 mt-0.5">{activeSelectedGame.predictions.winningPct.away}%</span>
                     </div>
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">PROJECTED MATCH WIN RATIOS</span>
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-400">{activeSelectedGame.homeTeam}</span>
+                      <span className="flex items-center justify-end gap-1.5 text-[10px] text-slate-400">{activeSelectedGame.homeTeam}<TeamLogo team={activeSelectedGame.homeTeam} size={16} /></span>
                       <span className="block text-base font-black text-sky-400 mt-0.5">{activeSelectedGame.predictions.winningPct.home}%</span>
                     </div>
                   </div>
