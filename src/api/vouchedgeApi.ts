@@ -14,6 +14,8 @@ import type { CapperAgent, JudgeAgent, AgentPicksResponse } from "../types/agent
 import type { JudgeVerdict, PickCandidate } from "../types/judging";
 import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
+import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
+import type { HrFeedResponse } from "../types/notifications";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -61,6 +63,15 @@ export const vouchedgeApi = {
       "/api/ai/daily-report",
       { date }
     ),
+
+  // Live HR notification feed
+  hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
+
+  // Daily HR Board
+  hrBoardToday: () => getJson<HrBoardResponse>("/api/mlb/hr-board/today"),
+  hrBoardByDate: (date: string) => getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}`),
+  hrBoardPlayer: (playerId: number, date?: string) =>
+    getJson<{ player: HrBoardRow }>(`/api/mlb/hr-board/player/${playerId}${date ? `?date=${date}` : ""}`),
 
   // Trust + results
   userTrust: (userId: string) => getJson<TrustScore>(`/api/trust/user/${userId}`),

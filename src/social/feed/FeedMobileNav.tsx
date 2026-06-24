@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame } from 'lucide-react';
 
 interface FeedMobileNavProps {
   activeSection: string;
@@ -11,11 +11,11 @@ export default function FeedMobileNav({ activeSection, onSectionChange }: FeedMo
     { id: 'welcome', label: 'Welcome', icon: Trophy },
     { id: 'feed', label: 'Home', icon: Home },
     { id: 'leaderboard', label: 'Cappers', icon: Award },
-    { id: 'streams', label: 'Streams', icon: Radio },
     { id: 'live_games', label: 'Live', icon: Tv },
     { id: 'build', label: 'Build', icon: Sliders },
     { id: 'ai_engine', label: 'V.A.I AI', icon: Cpu },
     { id: 'intel', label: 'Intel', icon: Activity },
+    { id: 'hr_board', label: 'HR Board', icon: Flame },
     { id: 'research', label: 'Research', icon: Search },
     { id: 'board', label: 'Vouch', icon: ClipboardCheck },
     { id: 'results', label: 'Results', icon: BarChart3 },

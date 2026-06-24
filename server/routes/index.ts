@@ -1,6 +1,7 @@
 /** Single entry point that registers every VouchEdge backend API route. */
 import type { Express } from "express";
 import { registerMlbRoutes } from "./mlbRoutes";
+import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
 import { registerJudgeRoutes } from "./judgeRoutes";
 import { registerAiRoutes } from "./aiRoutes";
@@ -11,6 +12,7 @@ import type { Request, Response } from "express";
 
 export function registerApiRoutes(app: Express): void {
   registerMlbRoutes(app);
+  registerHrBoardRoutes(app);
   registerAgentRoutes(app);
   registerJudgeRoutes(app);
   registerAiRoutes(app);

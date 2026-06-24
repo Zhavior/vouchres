@@ -11,9 +11,9 @@ import AisLandingPage from './components/AisLandingPage';
 import PlayerResearchConsole from './components/PlayerResearchConsole';
 import SmartAiEngine from './components/SmartAiEngine';
 import MlbIntelligenceHub from './components/MlbIntelligenceHub';
+import DailyHrBoardPage from './pages/DailyHrBoardPage';
 import LiveGames from './components/LiveGames';
-import NotificationCenter from './components/NotificationCenter';
-import LiveStreams from './components/LiveStreams';
+import HrNotifications from './components/notifications/HrNotifications';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import SubscriberHub from './components/SubscriberHub';
@@ -38,98 +38,6 @@ export default function App() {
   const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
   const [liveGames, setLiveGames] = useState<any[]>([]);
-
-  // Subscriber LiveStream Alert System State
-  const [streamToast, setStreamToast] = useState<{
-    id: string;
-    capperName: string;
-    username: string;
-    title: string;
-    avatarColor: string;
-    avatarInitials: string;
-  } | null>(null);
-
-  // Periodically check subscription status and trigger toast notification
-  useEffect(() => {
-    const triggerSimulatedToast = () => {
-      // Avoid showing or setting toast if the user is in the welcome page state
-      if (activeSectionRef.current === 'welcome') {
-        return;
-      }
-
-      // Look for user subscribed favorite cappers
-      let subscribedIds: string[] = [];
-      try {
-        const stored = localStorage.getItem('vouchedge_subscribed_cappers');
-        if (stored) {
-          subscribedIds = JSON.parse(stored);
-        }
-      } catch (e) {}
-
-      // Pool of verified creative sports cappers
-      const capperPool = [
-        {
-          id: 'c-alpha-guru',
-          name: 'Alpha Baseball Guru',
-          username: 'alphaguru',
-          avatarColor: 'bg-indigo-600',
-          avatarInitials: 'AG',
-          title: '🔥 High Heat Pitching Trends & Locked Giants Runlines! 🔥'
-        },
-        {
-          id: 'c-parabolics',
-          name: 'Homers & Parabolics',
-          username: 'homer_parabola',
-          avatarColor: 'bg-pink-600',
-          avatarInitials: 'HP',
-          title: '⚾ Statcast Exit Velocities & Live In-Play Total Runs Sweat!'
-        },
-        {
-          id: 'sharp_guru_pro',
-          name: 'Sharp Betting Guru',
-          username: 'sharp_guru_pro',
-          avatarColor: 'bg-emerald-600',
-          avatarInitials: 'SG',
-          title: '🔥 MLB Locked Sweep Parlay. Real-time Pitching Charts Live! 🔥'
-        }
-      ];
-
-      // Match against those they actually subscribed to in the Subscriber Hub tab
-      const subscribedOnly = capperPool.filter(c => 
-        subscribedIds.includes(c.id) || 
-        subscribedIds.includes(c.username)
-      );
-
-      // Choose a creator. If they have none selected, fallback to the pool as an onboarding showcase
-      const finalCreator = subscribedOnly.length > 0 
-        ? subscribedOnly[Math.floor(Math.random() * subscribedOnly.length)]
-        : capperPool[Math.floor(Math.random() * capperPool.length)];
-
-      setStreamToast({
-        id: `toast-${Date.now()}`,
-        capperName: finalCreator.name,
-        username: finalCreator.username,
-        title: finalCreator.title,
-        avatarColor: finalCreator.avatarColor,
-        avatarInitials: finalCreator.avatarInitials
-      });
-    };
-
-    // First popup after 18 seconds (onboard fast)
-    const timer = setTimeout(() => {
-      triggerSimulatedToast();
-    }, 18000);
-
-    // Re-check/alert every 45 seconds thereafter
-    const interval = setInterval(() => {
-      triggerSimulatedToast();
-    }, 45000);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Periodically fetch live game schedule status to prevent betting/picking on finished games
   useEffect(() => {
@@ -569,6 +477,8 @@ export default function App() {
         );
       case 'intel':
         return <MlbIntelligenceHub />;
+      case 'hr_board':
+        return <DailyHrBoardPage />;
       case 'live_games':
         return (
           <LiveGames 
@@ -599,16 +509,6 @@ export default function App() {
         return (
           <Leaderboard 
             profile={profile}
-            onSectionChange={setActiveSection}
-          />
-        );
-      case 'streams':
-        return (
-          <LiveStreams 
-            onSaveVouch={handleSaveVouch}
-            savedVouchIds={savedVouchIds}
-            profile={profile}
-            onPostCreated={handlePostCreated}
             onSectionChange={setActiveSection}
           />
         );
@@ -694,58 +594,7 @@ export default function App() {
         savedSlips={savedSlips}
       >
         {renderMainView()}
-        {activeSection !== 'welcome' && <NotificationCenter savedSlips={savedSlips} />}
-
-        {/* Dynamic Subscriber Livestream Go-Live Toast notification */}
-        {streamToast && activeSection !== 'welcome' && (
-          <div 
-            onClick={() => {
-              setActiveSection('streams');
-              setStreamToast(null);
-            }}
-            className="fixed bottom-6 right-6 md:right-8 max-w-sm bg-gradient-to-r from-red-950/95 via-slate-900/98 to-slate-950 border border-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.25)] p-4 rounded-xl cursor-pointer z-[100] group animate-slide-in hover:scale-105 transition-all text-left flex items-start gap-3.5"
-            id="livestream-subscriber-toast"
-          >
-            <div className="relative shrink-0 mt-0.5">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black text-rose-100 ${streamToast.avatarColor} ring-2 ring-red-500`}>
-                {streamToast.avatarInitials}
-              </div>
-              <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border border-slate-950 flex items-center justify-center text-[7px] font-black text-white">🔴</span>
-              </span>
-            </div>
-
-            <div className="space-y-1 select-none flex-1">
-              <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-red-400 font-extrabold font-mono tracking-wide uppercase">🔴 Capper Live!</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-400 font-bold font-mono">@{streamToast.username}</span>
-              </div>
-              <h4 className="text-[13px] font-extrabold text-slate-100 leading-tight group-hover:text-red-400 transition-colors uppercase">
-                {streamToast.capperName} Started Streaming!
-              </h4>
-              <div className="text-[11px] text-slate-400 font-semibold line-clamp-2 leading-tight">
-                "{streamToast.title}"
-              </div>
-              <div className="pt-1.5 flex items-center gap-1 text-[10px] text-red-400 font-bold uppercase tracking-wider">
-                <span>Click to watch theater Arena</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </div>
-
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setStreamToast(null);
-              }} 
-              className="p-1 text-slate-500 hover:text-slate-350 rounded hover:bg-slate-800 transition-colors shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
       </HomeFeedLayout>
     </ThemeProvider>
   );

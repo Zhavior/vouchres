@@ -1,0 +1,89 @@
+/** Frontend contract for the Daily HR Edge Board (mirrors server shapes). */
+
+export type Grade = "A+" | "A" | "B" | "C" | "D" | "F";
+export type FormTag = "Hot" | "Average" | "Cold" | "Slump";
+export type RiskLabel = "Strong" | "Playable" | "Sneaky" | "Lotto" | "Avoid";
+export type ProjectionType = "Projected" | "Confirmed" | "Live";
+
+export interface HrRowJudge {
+  approvalStatus: "Approved" | "Playable but risky" | "Needs more data" | "Avoid";
+  riskLabel: RiskLabel;
+  judgeNote: string;
+  whatCouldGoWrong: string[];
+  parlayAllowed: boolean;
+}
+
+export interface HrBoardRow {
+  playerId: number;
+  playerName: string;
+  team: string;
+  teamId: number;
+  headshot: string;
+  grade: Grade;
+  hrEdge: number;
+  estimatedHrProb: number;
+  impliedOdds: string;
+  bestOdds: string;
+  vouchScore: number;
+  formTag: FormTag;
+  opposingPitcher: string;
+  opposingPitcherTeam: string;
+  pitcherVulnerability: number;
+  parkFactor: number;
+  hrMultiplier: number;
+  dataConfidence: number;
+  weatherBoost: number;
+  gameStatus: string;
+  projectionType: ProjectionType;
+  lineupSpot: number;
+  lineMovement: number;
+  source: string;
+  riskLabel: RiskLabel;
+  reasons: string[];
+  judge: HrRowJudge;
+  dataQuality: "full" | "partial" | "limited";
+}
+
+export interface HrBoardGame {
+  gamePk: number;
+  matchup: string;
+  gameTime: string;
+  venue: string;
+  status: string;
+  environmentTag: "Hitter-Friendly" | "Pitcher-Friendly" | "Neutral";
+  parkNote: string;
+  weatherNote: string;
+  rankedHitters: number;
+  rows: HrBoardRow[];
+}
+
+export interface HrBoardResponse {
+  date: string;
+  gameCount: number;
+  generatedAt: string;
+  dataQuality: "full" | "partial" | "limited";
+  disclaimer: string;
+  games: HrBoardGame[];
+}
+
+export type SortKey =
+  | "hrEdge"
+  | "vouchScore"
+  | "grade"
+  | "pitcherVulnerability"
+  | "bestOdds"
+  | "dataConfidence"
+  | "lineupSpot"
+  | "weatherBoost";
+
+export interface HrBoardFilterState {
+  team: string;
+  grade: string;
+  risk: string;
+  hotOnly: boolean;
+  sneakyOnly: boolean;
+  confirmedOnly: boolean;
+  minPitcherVuln: number;
+  search: string;
+  sortKey: SortKey;
+}

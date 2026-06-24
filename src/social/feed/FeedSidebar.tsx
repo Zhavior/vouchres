@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 
@@ -14,11 +14,11 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
     { id: 'welcome', label: 'Welcome Portal', icon: Trophy },
     { id: 'feed', label: 'Home Feed', icon: Home },
     { id: 'leaderboard', label: 'Top Cappers 🏆', icon: Award },
-    { id: 'streams', label: 'Live Streams 🔴', icon: Radio },
     { id: 'live_games', label: 'Live Projections', icon: Tv },
     { id: 'build', label: 'Build Parlay', icon: Sliders },
     { id: 'ai_engine', label: 'V.A.I Smart Picks', icon: Cpu },
     { id: 'intel', label: 'MLB Intelligence', icon: Activity },
+    { id: 'hr_board', label: 'Daily HR Board 🔥', icon: Flame },
     { id: 'research', label: 'Player Research', icon: Search },
     { id: 'board', label: 'Vouch Board', icon: ClipboardCheck },
     { id: 'results', label: 'Results', icon: BarChart3 },
