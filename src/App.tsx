@@ -10,6 +10,7 @@ import PremiumSubPage from './components/PremiumSubPage';
 import AisLandingPage from './components/AisLandingPage';
 import PlayerResearchConsole from './components/PlayerResearchConsole';
 import SmartAiEngine from './components/SmartAiEngine';
+import MlbIntelligenceHub from './components/MlbIntelligenceHub';
 import LiveGames from './components/LiveGames';
 import NotificationCenter from './components/NotificationCenter';
 import LiveStreams from './components/LiveStreams';
@@ -558,7 +559,7 @@ export default function App() {
         );
       case 'ai_engine':
         return (
-          <SmartAiEngine 
+          <SmartAiEngine
             onSectionChange={setActiveSection}
             onAddLegToParlay={handleAddLegFromResearch}
             onSaveVouch={handleSaveVouch}
@@ -566,6 +567,8 @@ export default function App() {
             liveGames={liveGames}
           />
         );
+      case 'intel':
+        return <MlbIntelligenceHub />;
       case 'live_games':
         return (
           <LiveGames 

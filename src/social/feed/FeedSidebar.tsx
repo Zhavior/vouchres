@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 
@@ -18,6 +18,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
     { id: 'live_games', label: 'Live Projections', icon: Tv },
     { id: 'build', label: 'Build Parlay', icon: Sliders },
     { id: 'ai_engine', label: 'V.A.I Smart Picks', icon: Cpu },
+    { id: 'intel', label: 'MLB Intelligence', icon: Activity },
     { id: 'research', label: 'Player Research', icon: Search },
     { id: 'board', label: 'Vouch Board', icon: ClipboardCheck },
     { id: 'results', label: 'Results', icon: BarChart3 },
