@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CyberBackground } from "@/components/cyber-background";
-
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);

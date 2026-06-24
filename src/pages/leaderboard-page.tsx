@@ -44,30 +44,50 @@ export function LeaderboardPage() {
       {/* Leaderboard */}
       {isLoading ? <div className="space-y-2">{[1,2,3,4,5].map(i => <LoadingCard key={i} lines={2} />)}</div>
       : isError ? <ErrorCard onRetry={() => refetch()} />
-      : entries.length > 0 ? <div className="space-y-2">{entries.map((e: any) => {
+      : entries.length > 0 ? <div className="space-y-2 animate-slide-up">{entries.map((e: any) => {
         const border = getBorderForUser({ trustScore: e.trust_score, vouchLevel: e.vouch_level });
+        const isTop3 = e.rank <= 3;
         return (
-          <div key={e.user_id} className={cn("ve-card p-4 flex items-center gap-4 ve-card-hover")}>
-            <div className={cn("w-8 text-center font-extrabold font-mono", e.rank === 1 ? "text-yellow-400 text-lg" : e.rank === 2 ? "text-slate-300" : e.rank === 3 ? "text-amber-600" : "text-sm")} style={{ color: e.rank > 3 ? "var(--ve-text-dim)" : undefined }}>
+          <div key={e.user_id} className={cn("ve-card ve-card-hover glow-hover p-4 flex items-center gap-4 relative overflow-hidden",
+            e.rank === 1 ? "ring-1 ring-yellow-500/30" : e.rank === 2 ? "ring-1 ring-slate-300/20" : e.rank === 3 ? "ring-1 ring-amber-600/30" : ""
+          )}>
+            {isTop3 && (
+              <div className="absolute top-0 left-0 right-0 h-0.5" style={{
+                background: e.rank === 1 ? "linear-gradient(90deg,transparent,#fbbf24,transparent)" :
+                  e.rank === 2 ? "linear-gradient(90deg,transparent,#94a3b8,transparent)" :
+                  "linear-gradient(90deg,transparent,#d97706,transparent)"
+              }} />
+            )}
+            <div className={cn("w-8 text-center font-extrabold font-mono flex-shrink-0",
+              e.rank === 1 ? "text-yellow-400 text-lg" : e.rank === 2 ? "text-slate-300 text-lg" : e.rank === 3 ? "text-amber-500 text-lg" : "text-sm"
+            )} style={{ color: e.rank > 3 ? "var(--ve-text-dim)" : undefined }}>
               {e.rank === 1 ? "🥇" : e.rank === 2 ? "🥈" : e.rank === 3 ? "🥉" : `#${e.rank}`}
             </div>
             <ProfileAvatar username={e.username} borderType={border} size="md" />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-bold truncate">@{e.username}</span>
-                {(e.vouch_level === "gold" || e.vouch_level === "platinum") && <span className="ve-badge" style={{ color: "var(--ve-success)", borderColor: "var(--ve-success)" }}>VERIFIED</span>}
+                {(e.vouch_level === "gold" || e.vouch_level === "platinum") && (
+                  <span className="ve-badge" style={{ color: "var(--ve-success)", borderColor: "var(--ve-success)" }}>VERIFIED</span>
+                )}
               </div>
               <div className="mt-0.5 flex items-center gap-3 text-[10px] font-mono" style={{ color: "var(--ve-text-muted)" }}>
-                <span style={{ color: "var(--ve-success)" }}>{e.won}W</span>
-                <span style={{ color: "var(--ve-danger)" }}>{e.lost}L</span>
-                <span style={{ color: "var(--ve-accent)" }}>{(e.win_rate * 100).toFixed(0)}%</span>
-                {e.current_streak >= 3 && <span style={{ color: "var(--ve-warning)" }}><Flame className="w-2.5 h-2.5 inline" /> {e.current_streak}</span>}
+                <span className="text-emerald-400 font-bold">{e.won}W</span>
+                <span className="text-rose-400 font-bold">{e.lost}L</span>
+                <span style={{ color: "var(--ve-accent)" }} className="font-bold">{(e.win_rate * 100).toFixed(0)}%</span>
+                {e.current_streak >= 3 && (
+                  <span className="text-amber-400 font-bold flex items-center gap-0.5">
+                    <Flame className="w-2.5 h-2.5" /> {e.current_streak}
+                  </span>
+                )}
               </div>
             </div>
-            <TrustScoreRing score={e.trust_score} size={40} />
-            <div className="text-right">
-              <div className="text-lg font-bold font-mono" style={{ color: "var(--ve-accent)" }}>{e.trust_score}</div>
-              <div className="text-[9px] uppercase" style={{ color: "var(--ve-text-dim)" }}>trust</div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <TrustScoreRing score={e.trust_score} size={36} />
+              <div className="text-right">
+                <div className="text-base font-black font-mono" style={{ color: "var(--ve-accent)" }}>{e.trust_score}</div>
+                <div className="text-[9px] uppercase font-bold" style={{ color: "var(--ve-text-dim)" }}>trust</div>
+              </div>
             </div>
           </div>
         );

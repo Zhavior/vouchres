@@ -13,6 +13,7 @@ interface AuthState {
   logout: () => void;
   fetchMe: () => Promise<void>;
   hasAgeVerified: () => boolean;
+  devLogin: () => void;
 }
 
 function getInitialToken(): string | null {
@@ -101,5 +102,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const me = get().me;
     if (!me) return false;
     return true;
+  },
+
+  devLogin: () => {
+    if (!import.meta.env.DEV) return;
+    try { sessionStorage.setItem("ve_dev_bypass", "1"); } catch {}
+    localStorage.setItem("vouchedge_access_token", "dev-mock-token");
+    set({
+      token: "dev-mock-token",
+      isAuthenticated: true,
+      me: {
+        user: { id: "dev-001", email: "dev@vouchedge.com", username: "DevCapper", role: "capper", region: "US", is_demo: false, created_at: new Date().toISOString() },
+        trust_score: 847,
+        vouch_level: "gold",
+        plan: "pro",
+      },
+    });
   },
 }));

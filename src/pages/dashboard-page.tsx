@@ -34,30 +34,41 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hero trust banner */}
-      <div className="ve-card p-5 border-l-2" style={{ borderLeftColor: "var(--ve-accent)" }}>
+      {/* Premium hero banner */}
+      <div className="ve-card glass-card p-5 relative overflow-hidden animate-slide-up">
+        {/* Neon accent line */}
+        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: "linear-gradient(90deg, transparent, var(--ve-accent), transparent)" }} />
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-xl font-extrabold flex items-center gap-2">
-              <Shield className="w-5 h-5" style={{ color: "var(--ve-accent)" }} />
-              Proof over hype.
+            <div className="text-[10px] font-mono uppercase tracking-widest mb-1" style={{ color: "var(--ve-text-dim)" }}>
+              Welcome back
+            </div>
+            <h1 className="text-2xl font-black flex items-center gap-2 starwars-font-crawl">
+              VOUCH<span className="starwars-font-solid">EDGE</span>
             </h1>
-            <p className="text-xs mt-1" style={{ color: "var(--ve-text-muted)" }}>
-              Every pick gets locked. Every pick gets graded. Trust is earned.
+            <p className="text-sm mt-1 font-medium" style={{ color: "var(--ve-text-muted)" }}>
+              {me?.user?.username ? `@${me.user.username}` : "Analyst"} · Proof over hype. Every pick graded.
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TrustScoreRing score={me?.trust_score ?? 0} size={48} />
+            <div className="relative">
+              <TrustScoreRing score={me?.trust_score ?? 0} size={64} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-base font-black font-mono leading-none" style={{ color: "var(--ve-accent)" }}>{me?.trust_score ?? 0}</div>
+                <div className="text-[8px] uppercase font-bold" style={{ color: "var(--ve-text-dim)" }}>Trust</div>
+              </div>
+            </div>
             <div>
               <div className="text-xl font-bold font-mono" style={{ color: "var(--ve-accent)" }}>{me?.trust_score ?? 0}</div>
-              <div className="text-[10px] uppercase" style={{ color: "var(--ve-text-dim)" }}>{me?.vouch_level ?? "unverified"}</div>
+              <div className="text-[10px] uppercase capitalize font-semibold" style={{ color: "var(--ve-text-dim)" }}>{me?.vouch_level ?? "unverified"}</div>
+              <div className="text-[10px] font-bold text-amber-400">{(me?.plan ?? "FREE").toUpperCase()}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-up">
         <StatBox label="Record" value={recordStr} sub={gradedStr} icon={Trophy} />
         <StatBox label="Win Rate" value={winRate} sub={streak} icon={TrendingUp} />
         <StatBox label="Plan" value={(me?.plan ?? "FREE").toUpperCase()} sub={me?.plan === "free" ? "Upgrade for more" : "Active"} icon={Zap} />
@@ -154,13 +165,16 @@ function Section({ title, icon: Icon, link, linkLabel, children }: { title: stri
 
 function StatBox({ label, value, sub, icon: Icon }: { label: string; value: string; sub: string; icon: any }) {
   return (
-    <div className="ve-card p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--ve-text-dim)" }}>{label}</span>
-        <Icon className="w-3.5 h-3.5" style={{ color: "var(--ve-accent)" }} />
+    <div className="ve-card ve-card-hover glow-hover p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-0.5 opacity-60" style={{ background: "linear-gradient(90deg, var(--ve-accent), transparent)" }} />
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--ve-text-dim)" }}>{label}</span>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--ve-badge-bg)" }}>
+          <Icon className="w-3.5 h-3.5" style={{ color: "var(--ve-accent)" }} />
+        </div>
       </div>
-      <div className="mt-1 text-xl font-bold font-mono">{value}</div>
-      <div className="text-[10px]" style={{ color: "var(--ve-text-dim)" }}>{sub}</div>
+      <div className="text-2xl font-black font-mono" style={{ color: "var(--ve-accent)" }}>{value}</div>
+      <div className="text-[10px] mt-0.5" style={{ color: "var(--ve-text-dim)" }}>{sub}</div>
     </div>
   );
 }

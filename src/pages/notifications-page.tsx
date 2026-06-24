@@ -54,19 +54,25 @@ export function NotificationsPage() {
       ) : isError ? (
         <ErrorCard onRetry={() => refetch()} />
       ) : notifications.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-2 animate-slide-up">
           {notifications.map((notif: NotificationItem) => (
             <div
               key={notif.id}
               onClick={() => { if (!notif.read_at) markRead.mutate(notif.id); }}
-              className="ve-card p-3 cursor-pointer ve-card-hover"
-              style={!notif.read_at ? { borderLeft: "2px solid var(--ve-accent)" } : {}}
+              className="ve-card ve-card-hover glow-hover p-4 cursor-pointer relative overflow-hidden"
+              style={!notif.read_at ? { borderLeft: "3px solid var(--ve-accent)" } : {}}
             >
+              {!notif.read_at && (
+                <div className="absolute top-0 left-0 right-0 h-0.5 opacity-50" style={{ background: "linear-gradient(90deg, var(--ve-accent), transparent)" }} />
+              )}
               <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--ve-badge-bg)" }}>
+                  <Bell className="w-4 h-4" style={{ color: notif.read_at ? "var(--ve-text-dim)" : "var(--ve-accent)" }} />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{getNotifTitle(notif)}</span>
-                    {!notif.read_at && <div className="w-1.5 h-1.5 rounded-full ve-pulse" style={{ background: "var(--ve-accent)" }} />}
+                    <span className="text-sm font-bold">{getNotifTitle(notif)}</span>
+                    {!notif.read_at && <div className="w-2 h-2 rounded-full ve-pulse" style={{ background: "var(--ve-accent)" }} />}
                   </div>
                   {notif.payload && getNotifBody(notif) && (
                     <p className="text-xs mt-0.5" style={{ color: "var(--ve-text-muted)" }}>{getNotifBody(notif)}</p>

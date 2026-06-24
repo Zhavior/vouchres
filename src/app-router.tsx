@@ -18,8 +18,13 @@ import { TermsOfServicePage } from "@/pages/terms-of-service-page";
 import { PrivacyPolicyPage } from "@/pages/privacy-policy-page";
 import { ResponsibleGamblingPage } from "@/pages/responsible-gambling-page";
 import { PlaceholderPage } from "@/pages/placeholder-page";
+import { ProfilePage } from "@/pages/profile-page";
+import { SettingsPage } from "@/pages/settings-page";
+import { SubscriberHubPage } from "@/pages/subscriber-hub-page";
+import { VouchBoardPage } from "@/pages/vouch-board-page";
+import { PlayerResearchPage } from "@/pages/player-research-page";
 import { useAuthStore } from "@/stores/auth-store";
-import { Users, Bell, Settings, Shield, Activity, User as UserIcon } from "lucide-react";
+import { Users, Settings, Shield, User as UserIcon } from "lucide-react";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -62,8 +67,11 @@ export function AppRouter() {
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/ai-picks" element={<ProtectedRoute><TodaysAIPicksPage /></ProtectedRoute>} />
           <Route path="/themes" element={<ProtectedRoute><ThemeStorePage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><PlaceholderPage title="Profile" description="Full profile with avatar borders, trust timeline, and proof history." icon={UserIcon} phase="Soon" /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><PlaceholderPage title="Settings" description="Account, region, preferred markets, notification preferences." icon={Settings} phase="Soon" /></ProtectedRoute>} />
+          <Route path="/vouch-board" element={<ProtectedRoute><VouchBoardPage /></ProtectedRoute>} />
+          <Route path="/research" element={<ProtectedRoute><PlayerResearchPage /></ProtectedRoute>} />
+          <Route path="/premium" element={<ProtectedRoute><SubscriberHubPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><PlaceholderPage title="Admin" description="User management, pick moderation, trust review." icon={Shield} phase="Admin only" /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><PlaceholderPage title="Marketplace" description="Buy paid picks from verified cappers." icon={Users} phase="Live" /></ProtectedRoute>} />
           <Route path="/terms" element={<TermsOfServicePage />} />
