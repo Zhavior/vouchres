@@ -1,0 +1,253 @@
+export interface Leg {
+  id: string;
+  sport: string;
+  game: string;
+  market: string;
+  selection: string;
+  odds: number; // e.g. -110 or 1.91 (decimal representation is cleaner for math)
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
+}
+
+export interface Parlay {
+  id: string;
+  title: string;
+  legs: Leg[];
+  totalOdds: string; // e.g. "+360" or "4.60"
+  oddsValue: number; // Decimal or American for sorting
+  riskTier: 'LOW' | 'MEDIUM' | 'HIGH';
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
+  bookie?: string;
+  createdAt: string;
+  wagerAmount?: number;
+  payoutAmount?: number;
+  edgeScore?: number;
+  edgeReport?: string;
+}
+
+export interface Vouch {
+  id: string;
+  vouchSource: string; // user who vouched or site
+  userNote: string;
+  market: string;
+  sport: string;
+  playerOrTeam?: string;
+  gameName: string;
+  odds: string;
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
+  savedCount: number;
+  vouchedCount: number;
+  createdAt: string;
+  isSavedByUser?: boolean;
+  isVouchedByUser?: boolean;
+  parlay?: Parlay;
+  
+  // Custom high-fidelity vouch posting parameters
+  line?: string;
+  selection?: string;
+  aiConfidence?: number;
+  capperConfidence?: number;
+  riskTier?: 'LOW' | 'MEDIUM' | 'HIGH';
+  isLocked?: boolean;
+  lockTime?: string;
+  longerBreakdown?: string;
+  cardTheme?: 'cyber' | 'cosmic' | 'minimalist' | 'neon-pulse' | 'vintage-gold';
+  visibility?: 'public' | 'private';
+  addToHomeFeed?: boolean;
+  addToProfileFeed?: boolean;
+  createXPreview?: boolean;
+  addHashtags?: boolean;
+}
+
+export interface FeedPost {
+  id: string;
+  userId: string;
+  displayName: string;
+  username: string;
+  avatarUrl?: string;
+  isVerified?: boolean;
+  subscriptionTier?: 'BASIC' | 'GOLD' | 'SELLER_PRO';
+  timestamp: string; // ISO string or relative
+  sportBadge?: string; // e.g. "MLB", "NBA", "NFL"
+  sourceBadge?: string; // e.g. "AI Pick", "PRO", "Community"
+  postType: 'PARLAY' | 'VOUCH' | 'RESULT' | 'RESEARCH_NOTE' | 'AI_PICK';
+  content: string;
+  
+  // Attached items
+  parlay?: Parlay;
+  vouch?: Vouch;
+  result?: {
+    status: 'WON' | 'LOST' | 'PENDING' | 'VOID';
+    units: number;
+    profit?: number;
+    marketName: string;
+    details: string;
+  };
+  researchNote?: {
+    tags: string[];
+    gameContext?: string;
+    trendData?: string;
+  };
+  
+  // Interactions
+  likesCount: number;
+  commentsCount: number;
+  vouchesCount: number; // Tail/vouch action
+  repostsCount: number;
+  viewsCount?: number; // Twitter views count
+  
+  isLiked?: boolean;
+  isVouched?: boolean;
+  isReposted?: boolean;
+  isSaved?: boolean;
+  comments?: FeedComment[];
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
+  mediaUrl2?: string;
+  showSecondCard?: boolean;
+  boardConfig?: any;
+  poll?: {
+    question: string;
+    options: { text: string; votes: number }[];
+    totalVotes: number;
+    userVotedIndex?: number;
+    expiresAt?: string;
+  };
+  quotedPostId?: string; // Reference for quote tweets
+  profileThemeId?: string;
+  profileBorderId?: string;
+  winRate?: number;
+  quotedPost?: FeedPost;  // Embedded quote post
+}
+
+export interface FeedComment {
+  id: string;
+  postId: string;
+  userId: string;
+  displayName: string;
+  username: string;
+  avatarUrl?: string;
+  timestamp: string;
+  content: string;
+  likesCount: number;
+  isLiked?: boolean;
+}
+
+export interface CreatorProofProfile {
+  displayName: string;
+  username: string;
+  avatarUrl: string;
+  bio: string;
+  verified: boolean;
+  winRate: number; // Real tracked win rate
+  totalPicks: number;
+  wonPicks: number;
+  unitsTracked: number;
+  unitsNetProfit: number;
+  subscriptionTier?: 'BASIC' | 'GOLD' | 'SELLER_PRO';
+  activeTheme?: string; // App / Legacy Theme
+  boughtThemes?: string[]; // App / Legacy Bought Themes
+  appThemeId?: string;
+  profileThemeId?: string;
+  profileBorderId?: string;
+  unlockedThemeIds?: string[];
+  unlockedBorderIds?: string[];
+  reduceMotion?: boolean;
+  equippedAt?: string;
+}
+
+export interface GameMarket {
+  id: string;
+  game: string;
+  sport: string;
+  startTime: string;
+  headlineMarket: string;
+  selections: { name: string; odds: string; vouchCount: number }[];
+}
+
+export interface GameLog {
+  opponent: string;
+  date: string;
+  result: string;
+  ab: number;
+  h: number;
+  hr: number;
+  rbi: number;
+  r: number;
+  batterScore: number;
+}
+
+export interface PlayerProposition {
+  id: string;
+  market: string;
+  odds: number;
+  spec: string;
+}
+
+export interface AdvMetrics {
+  barrelPercent: number;
+  launchAngle: number;
+  exitVelocity: number;
+  hardHitPercent: number;
+  chasePercent: number;
+  woba: number;
+  xwoba: number;
+  sweetSpotPercent: number;
+}
+
+export interface MLBPlayer {
+  id: string;
+  name: string;
+  team: string;
+  position: string;
+  number: string;
+  headshot: string;
+  injuryStatus: string;
+  injurySeverity: 'NONE' | 'DAY_TO_DAY' | 'IL_10' | 'IL_60';
+  injuryNotes: string;
+  batterScore: number;
+  seasonStats: {
+    avg: string;
+    hr: string;
+    rbi: string;
+    ops: string;
+    obp?: string;
+    slg?: string;
+  };
+  gameLogs: GameLog[];
+  propositions: PlayerProposition[];
+  
+  // Custom deep-research metrics
+  bats: 'L' | 'R' | 'S';
+  throws: 'L' | 'R';
+  height: string;
+  weight: string;
+  battedBall?: {
+    gbPercent: number;
+    ldPercent: number;
+    fbPercent: number;
+  };
+  homeRunStats?: {
+    hrfbPercent: number;
+    abhr: number;
+    barrelsCount: number;
+    noDoubtHrs: number;
+    xHr: number;
+  };
+  birthdate: string;
+  advanced: AdvMetrics;
+  splits: {
+    vLHP: { avg: string; obp: string; slg: string; ops: string };
+    vRHP: { avg: string; obp: string; slg: string; ops: string };
+    home: { avg: string; obp: string; slg: string; ops: string };
+    away: { avg: string; obp: string; slg: string; ops: string };
+    last10: { avg: string; obp: string; slg: string; ops: string };
+  };
+  scoutingReport: {
+    powerText: string;
+    contactText: string;
+    disciplineText: string;
+    overallScouting: string;
+    hotZones: string[];
+    riskFactor: 'LOW' | 'MEDIUM' | 'HIGH';
+  };
+}

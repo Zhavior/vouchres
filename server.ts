@@ -4,7 +4,10 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
+// Load base env, then local secrets (.env.local) which take precedence.
+// Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
 dotenv.config();
+dotenv.config({ path: ".env.local", override: true });
 
 async function startServer() {
   const app = express();
@@ -296,22 +299,47 @@ Ensure the Tailwind classes are genuine Tailwind CSS utility classes that fit a 
       const injuryPenalty = playerData.injurySeverity === "NONE" ? 0 : playerData.injurySeverity === "DAY_TO_DAY" ? -14 : -38;
       const finalScore = Math.max(10, Math.min(99, baseScore + trendBonus + injuryPenalty));
 
-      const simulatedReport = `### ⚾ Simulated AI Advantage & Matchup Report
-We calculated a dynamic **${finalScore}** rating for **${playerData.name}** using local Batting & Statcast metadata.
+      // Derive a research-style risk level and confidence band from the model inputs.
+      const trendingUp = playerData.splits.last10.ops > playerData.seasonStats.ops;
+      const riskLevel = finalScore >= 78 ? "LOW" : finalScore >= 62 ? "MEDIUM" : "HIGH";
+      const confidenceBand = finalScore >= 78 ? "Strong" : finalScore >= 62 ? "Moderate" : "Speculative";
+      const healthy = playerData.injurySeverity === "NONE";
 
-#### 📈 Statcast & Split Breakdowns:
-- **Rolling Performance**: Currently showing a highly competitive **${playerData.splits.last10.ops} OPS** over the last 10 games, relative to a season baseline of **${playerData.seasonStats.ops}**.
-- **Exit Velocity Speed**: Average Exit Velocity of **${playerData.advanced.exitVelocity} mph** gives the athlete a high probability of launching baseballs into open outfield seams.
-- **Plate Discipline**: Holds a solid O-Swing Area zone disipline rate of **${playerData.advanced.chasePercent}%**, which increases walk rate opportunities.
+      // Build an honest "what could go wrong" list from the actual inputs.
+      const downsideFactors: string[] = [];
+      if (!healthy) downsideFactors.push(`Health flag: **${playerData.injuryStatus}** — reduced workload or late scratch is possible.`);
+      if (!trendingUp) downsideFactors.push(`Recent form is cooling: last-10 OPS (${playerData.splits.last10.ops}) sits below the season line (${playerData.seasonStats.ops}).`);
+      if (playerData.advanced.chasePercent > 30) downsideFactors.push(`Elevated chase rate (${playerData.advanced.chasePercent}%) — exploitable by sharp sequencing.`);
+      if (playerData.advanced.xwoba && playerData.advanced.woba && playerData.advanced.woba > playerData.advanced.xwoba) downsideFactors.push(`wOBA (${playerData.advanced.woba}) is running ahead of xwOBA (${playerData.advanced.xwoba}) — some recent output may be variance-driven.`);
+      if (downsideFactors.length === 0) downsideFactors.push("No major statistical red flags in the local inputs — but baseball variance and bullpen/weather swings always apply.");
 
-#### 🏥 Injury & Roster Check:
-- **Roster Advisory**: Under **${playerData.injuryStatus}** protocol. Expected workload capacity is at **${playerData.injurySeverity === 'NONE' ? '100%' : '75%'}**.
+      const simulatedReport = `### ⚾ AI Matchup Research — ${playerData.name}
+> _Simulated research mode (no live model key). Probability-based analysis for research and entertainment — not betting advice._
 
-*To activate real-time Gemini-3.5 analysis grounded with actual live MLB website data, please supply your **GEMINI_API_KEY** under Settings > Secrets.*`;
+**Matchup Advantage Score:** \`${finalScore}/99\`  ·  **Confidence:** ${confidenceBand}  ·  **Risk Level:** ${riskLevel}
+
+#### 📈 What the data says
+- **Rolling form:** ${playerData.splits.last10.ops} OPS over the last 10 vs a ${playerData.seasonStats.ops} season baseline (${trendingUp ? "trending up" : "trending down"}).
+- **Contact quality:** ${playerData.advanced.exitVelocity} mph average exit velocity, ${playerData.advanced.hardHitPercent}% hard-hit rate — a measured indicator of power upside, not a guarantee.
+- **Plate discipline:** ${playerData.advanced.chasePercent}% chase rate, which shapes walk and damage probability.
+- **Expected vs actual:** wOBA ${playerData.advanced.woba} / xwOBA ${playerData.advanced.xwoba}.
+
+#### 🧑‍⚖️ AI Judge Notes
+A ${confidenceBand.toLowerCase()}-confidence profile. The number reflects how the inputs *lean*, not a predicted outcome. Treat it as one research signal among many.
+
+#### ⚠️ What could go wrong
+${downsideFactors.map((f) => `- ${f}`).join("\n")}
+
+#### 🏥 Availability
+Status: **${playerData.injuryStatus}** · estimated workload **${healthy ? "100%" : "~75%"}**.
+
+*Add your **GEMINI_API_KEY** under Settings → Secrets to replace this with live, search-grounded Gemini analysis.*`;
 
       return res.json({
         status: "simulated",
         aiScore: finalScore,
+        riskLevel,
+        confidenceBand,
         report: simulatedReport
       });
     }
@@ -397,27 +425,45 @@ We calculated a dynamic **${finalScore}** rating for **${playerData.name}** usin
     if (!apiKey) {
       // Simulate/Calculate highly accurate parlay team synergy & Sabermetric edge statistics
       const legsCount = legs.length;
-      let calculatedEdgeScore = 72 + (legsCount * 4) + (legs[0]?.selection?.length % 8);
-      calculatedEdgeScore = Math.max(50, Math.min(99, calculatedEdgeScore));
+      // More legs = lower realistic hit probability; reflect that honestly.
+      let calculatedEdgeScore = 84 - (legsCount * 5) + ((legs[0]?.selection?.length || 0) % 6);
+      calculatedEdgeScore = Math.max(40, Math.min(95, calculatedEdgeScore));
+      const riskLevel = legsCount <= 2 ? "MODERATE" : legsCount <= 4 ? "ELEVATED" : "HIGH";
 
-      const simulatedReport = `### 🎫 VouchEdge Pro 'Edge Report' (Simulated Mode)
-Analyze results on your **${legsCount}-Leg Parlay** using local projection matrices:
+      // Naive correlation / bias scan over the supplied legs (local, zero-cost).
+      const sameTeam = new Set(legs.map((l: any) => l.team).filter(Boolean));
+      const correlationNote = sameTeam.size < legsCount && legsCount > 1
+        ? "Two or more legs share a team/game — outcomes may be correlated, which inflates both upside *and* downside. Not independent events."
+        : "No same-game stacking detected in the supplied legs; treat each as roughly independent.";
 
-#### 📊 Analytical Leg Checks:
+      const simulatedReport = `### 🎫 Parlay Edge Research — ${legsCount} Leg${legsCount > 1 ? "s" : ""}
+> _Simulated research mode (no live model key). Probability-based analysis for research and entertainment — not betting advice._
+
+**Edge Score:** \`${calculatedEdgeScore}/99\`  ·  **Combined Risk:** ${riskLevel}
+
+#### 📊 Leg-by-leg read
 ${legs.map((leg: any, i: number) => {
-  return `- **Leg ${i + 1}**: \`${leg.selection}\` on \`${leg.market}\`. 
-  Our Sabermetric baseline rates this selection with a high confidence index. Expected platoon alignment provides a **+3.4%** expected equity premium against recent performance trends.`;
+  return `- **Leg ${i + 1} — \`${leg.selection}\` (${leg.market})**: baseline inputs lean favorable, but each added leg multiplies failure points. This leg is a *contributing signal*, not a standalone call.`;
 }).join('\n')}
 
-#### ⚖️ Correlation & Wind-Tunnel Advisory:
-- **Symmetry Rating**: Checked lines show high core symmetry. No contrasting player props found (e.g. betting an Under on a pitcher alongside an Over on an opponent hitter).
-- **Matchup Friction**: Low friction forecast. Wind coefficients, ballpark park-factors, and active umpire strike-zone history align favorably with your choices.
+#### 🔗 Correlation warning
+- ${correlationNote}
 
-*To activate live Gemini-3.5 edge calculations with real-world sports news and deep analytical reasoning, please add your **GEMINI_API_KEY** under Settings > Secrets.*`;
+#### ⚖️ Bias & reality check
+- **Parlay math:** every leg you add lowers the realistic hit rate. A ${legsCount}-leg slip is **${riskLevel.toLowerCase()}** risk by construction.
+- **Recency bias:** hot-streak lines are often priced up — the market may have already absorbed the trend.
+- **No such thing as a lock:** treat the edge score as a research lean, not a prediction.
+
+#### ⚠️ What could go wrong
+- A single leg missing voids the whole slip.
+- Late scratches, weather, or bullpen usage can swing any leg after lineups post.
+
+*Add your **GEMINI_API_KEY** under Settings → Secrets to replace this with live Gemini edge + correlation analysis.*`;
 
       return res.json({
         status: "simulated",
         edgeScore: calculatedEdgeScore,
+        riskLevel,
         report: simulatedReport
       });
     }
