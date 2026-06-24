@@ -1,9 +1,11 @@
 import { MLBPlayer, GameLog } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 
-// Cache in-memory for active players roster to avoid duplicate fetches
+// Cache in-memory for active players roster to avoid duplicate fetches.
+// `rosterPromise` holds the single in-flight fetch so concurrent callers share it
+// (instead of one caller getting an empty list mid-fetch — the cause of the 43-player bug).
 let cachedActivePlayers: any[] = [];
-let isFetchingRoster = false;
+let rosterPromise: Promise<any[]> | null = null;
 
 /**
  * Interfaces for MLB Stats API payload structure
@@ -47,34 +49,40 @@ function normalizePosition(abbrev: string): string {
  * This runs in the background to enable seamless search across all MLB players.
  */
 export async function getActiveMLBRoster(): Promise<any[]> {
+  // Already loaded — return the cached full roster.
   if (cachedActivePlayers.length > 0) {
     return cachedActivePlayers;
   }
-  if (isFetchingRoster) {
-    // Wait slightly or return existing list to avoid parallel requests
+  // A fetch is already in flight — await the SAME promise so every caller gets the
+  // full roster (never an empty array mid-fetch).
+  if (rosterPromise) {
+    return rosterPromise;
+  }
+
+  rosterPromise = (async () => {
+    try {
+      // Use standard MLB stats API for active players
+      const response = await fetch('https://statsapi.mlb.com/api/v1/sports/1/players');
+      if (!response.ok) {
+        throw new Error(`MLB Roster Fetch failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data.people)) {
+        // Filter for active players with valid teams and positions
+        cachedActivePlayers = data.people.filter((p: any) => p.active && p.currentTeam && p.primaryPosition);
+        console.log(`Loaded ${cachedActivePlayers.length} active players from MLB Stats API successfully.`);
+      }
+    } catch (error) {
+      console.error('Failed to load active MLB roster, falling back to local database only:', error);
+    } finally {
+      // Clear the in-flight handle. On success the cache guard above serves future
+      // callers; on failure this allows a retry on the next call.
+      rosterPromise = null;
+    }
     return cachedActivePlayers;
-  }
+  })();
 
-  isFetchingRoster = true;
-  try {
-    // Use standard MLB stats API for active players
-    const response = await fetch('https://statsapi.mlb.com/api/v1/sports/1/players');
-    if (!response.ok) {
-      throw new Error(`MLB Roster Fetch failed: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data && Array.isArray(data.people)) {
-      // Filter for active players with valid teams and positions
-      cachedActivePlayers = data.people.filter((p: any) => p.active && p.currentTeam && p.primaryPosition);
-      console.log(`Loaded ${cachedActivePlayers.length} active players from MLB Stats API successfully.`);
-    }
-  } catch (error) {
-    console.error('Failed to load active MLB roster, falling back to local database only:', error);
-  } finally {
-    isFetchingRoster = false;
-  }
-
-  return cachedActivePlayers;
+  return rosterPromise;
 }
 
 /**
