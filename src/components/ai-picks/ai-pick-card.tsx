@@ -72,8 +72,14 @@ export function AIPickCard({ pick, onViewBreakdown, onAddToParlay, onVouchTail, 
       )}
 
       {pick.redFlags && pick.redFlags.length > 0 && (
-        <div className="mt-2 flex items-center gap-1 text-[10px]" style={{ color: "var(--ve-danger)" }}>
-          <AlertTriangle className="w-3 h-3" /> {pick.redFlags[0]}
+        <div className="mt-2 p-2 rounded-lg" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <div className="flex items-center gap-1 mb-1">
+            <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: "var(--ve-danger)" }} />
+            <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--ve-danger)" }}>Risk Factors</span>
+          </div>
+          {pick.redFlags.slice(0, 2).map((flag, i) => (
+            <p key={i} className="text-[10px] leading-relaxed" style={{ color: "var(--ve-text-muted)" }}>• {flag}</p>
+          ))}
         </div>
       )}
 
@@ -99,6 +105,7 @@ export function AIPickCard({ pick, onViewBreakdown, onAddToParlay, onVouchTail, 
           <Share2 className="w-3 h-3" />
         </button>
       </div>
+      <p className="mt-2 text-[9px] text-center" style={{ color: "var(--ve-text-dim)" }}>AI research tool — not financial advice. For entertainment.</p>
     </div>
   );
 }

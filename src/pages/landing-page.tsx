@@ -69,7 +69,7 @@ export function LandingPage() {
             >
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-electric-500/10 border border-electric-500/30 text-[11px] font-mono text-electric-300 mb-6">
                 <Sparkles className="w-3 h-3" />
-                MLBXYZ ANALYTICS · VOUCHEDGE TRUST
+                MLB INTELLIGENCE · VERIFIED CAPPER RECORDS
               </span>
 
               {/* VouchEdge — glowing like the nav logo */}
@@ -77,21 +77,20 @@ export function LandingPage() {
                 <span style={{ textShadow: "0 0 10px rgba(0,212,255,0.3)" }}>Vouch</span>
                 <span className="text-electric-400" style={{ textShadow: "0 0 20px rgba(0,212,255,0.9), 0 0 40px rgba(0,212,255,0.5)" }}>Edge</span>
                 <span className="block text-2xl md:text-3xl mt-2 text-slate-300">
-                  AI-powered MLB edge.
+                  MLB Intelligence. Verified.
                 </span>
                 <span className="block text-xl md:text-2xl text-slate-400 font-semibold mt-1">
-                  Verified picks. Trusted cappers.
+                  Research-grade AI picks. Transparent records. Real capper accountability.
                 </span>
               </h1>
 
               <p className="mt-6 text-slate-400 text-lg max-w-md">
-                Stop guessing. Get Statcast-grade probabilities, lock picks before first pitch,
-                and build a verified record nobody can fake.
+                Stop guessing. VouchEdge brings Statcast-grade probability analysis, AI-powered matchup research, and verified capper records — all in one platform.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/signup" className="electric-button">
-                  Get Started <ArrowRight className="w-4 h-4 inline ml-1" />
+                  Start Free — No Card Needed <ArrowRight className="w-4 h-4 inline ml-1" />
                 </Link>
                 <Link to="/login" className="ghost-button">
                   Sign in

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&display=swap');
+
 /* ================================================================
    VouchEdge Design System — Theme Tokens & CSS Variables
    ================================================================
@@ -275,9 +277,6 @@
    Phase 1 additions — Premium UI utilities
    ================================================================ */
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&display=swap');
-
 /* no-scrollbar alias */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -347,3 +346,182 @@
 /* Baseball font classes */
 .baseball-script  { font-family: 'Playball', cursive, sans-serif !important; }
 .baseball-varsity { font-family: 'Graduate', serif !important; }
+
+[data-theme="vouchedge-prime"] {
+  --ve-bg: #050B18;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #0B1224 0%, #050B18 60%, #030610 100%);
+  --ve-card-bg: rgba(11, 18, 36, 0.85);
+  --ve-card-border: rgba(0, 183, 255, 0.35);
+  --ve-card-hover-border: rgba(34, 211, 238, 0.55);
+  --ve-card-hover-glow: 0 0 32px rgba(0, 183, 255, 0.22);
+  --ve-accent: #00B7FF;
+  --ve-accent-2: #2563EB;
+  --ve-neon: #22D3EE;
+  --ve-purple: #7C3AED;
+  --ve-trust-ring: #00B7FF;
+  --ve-badge-bg: rgba(0, 183, 255, 0.12);
+  --ve-badge-border: rgba(0, 183, 255, 0.35);
+  --ve-button-bg: linear-gradient(135deg, #00B7FF 0%, #2563EB 100%);
+  --ve-button-hover: linear-gradient(135deg, #22D3EE 0%, #00B7FF 100%);
+  --ve-button-shadow: 0 4px 20px rgba(0, 183, 255, 0.35);
+  --ve-nav-active: rgba(0, 183, 255, 0.12);
+  --ve-nav-active-glow: 0 0 16px rgba(0, 183, 255, 0.2);
+  --ve-zigzag-color: rgba(0, 183, 255, 0.18);
+  --ve-node-color: rgba(34, 211, 238, 0.45);
+}
+
+[data-theme="sharp-syndicate"] {
+  --ve-bg: #090600;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #1a1200 0%, #090600 60%, #040300 100%);
+  --ve-card-bg: rgba(15, 10, 0, 0.9);
+  --ve-card-border: rgba(245, 158, 11, 0.45);
+  --ve-card-hover-border: rgba(251, 191, 36, 0.65);
+  --ve-card-hover-glow: 0 0 36px rgba(245, 158, 11, 0.28);
+  --ve-accent: #F59E0B;
+  --ve-accent-2: #D97706;
+  --ve-neon: #FCD34D;
+  --ve-purple: #92400E;
+  --ve-trust-ring: #F59E0B;
+  --ve-badge-bg: rgba(245, 158, 11, 0.12);
+  --ve-badge-border: rgba(245, 158, 11, 0.4);
+  --ve-button-bg: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --ve-button-hover: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+  --ve-button-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+  --ve-nav-active: rgba(245, 158, 11, 0.1);
+  --ve-nav-active-glow: 0 0 14px rgba(245, 158, 11, 0.2);
+  --ve-zigzag-color: rgba(245, 158, 11, 0.15);
+  --ve-node-color: rgba(251, 191, 36, 0.4);
+  --ve-sidebar-bg: rgba(9, 6, 0, 0.9);
+  --ve-text: #FFFBF0;
+  --ve-text-muted: #A8956A;
+  --ve-text-dim: #6B5E3A;
+}
+
+[data-theme="diamond-club"] {
+  --ve-bg: #030814;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #06122e 0%, #030814 60%, #010408 100%);
+  --ve-card-bg: rgba(8, 16, 40, 0.92);
+  --ve-card-border: rgba(148, 216, 255, 0.4);
+  --ve-card-hover-border: rgba(186, 230, 253, 0.65);
+  --ve-card-hover-glow: 0 0 44px rgba(148, 216, 255, 0.3);
+  --ve-accent: #94D8FF;
+  --ve-accent-2: #38BDF8;
+  --ve-neon: #BAE6FD;
+  --ve-purple: #818CF8;
+  --ve-trust-ring: #94D8FF;
+  --ve-badge-bg: rgba(148, 216, 255, 0.12);
+  --ve-badge-border: rgba(148, 216, 255, 0.4);
+  --ve-button-bg: linear-gradient(135deg, #94D8FF 0%, #38BDF8 100%);
+  --ve-button-hover: linear-gradient(135deg, #BAE6FD 0%, #94D8FF 100%);
+  --ve-button-shadow: 0 4px 20px rgba(148, 216, 255, 0.3);
+  --ve-nav-active: rgba(148, 216, 255, 0.1);
+  --ve-nav-active-glow: 0 0 14px rgba(148, 216, 255, 0.2);
+  --ve-zigzag-color: rgba(148, 216, 255, 0.15);
+  --ve-node-color: rgba(186, 230, 253, 0.4);
+}
+
+[data-theme="black-gold-vip"] {
+  --ve-bg: #040200;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #0e0800 0%, #040200 60%, #020100 100%);
+  --ve-card-bg: rgba(8, 5, 0, 0.95);
+  --ve-card-border: rgba(212, 175, 55, 0.55);
+  --ve-card-hover-border: rgba(250, 204, 21, 0.75);
+  --ve-card-hover-glow: 0 0 56px rgba(212, 175, 55, 0.38);
+  --ve-accent: #D4AF37;
+  --ve-accent-2: #B8960C;
+  --ve-neon: #FACC15;
+  --ve-purple: #92400E;
+  --ve-trust-ring: #D4AF37;
+  --ve-badge-bg: rgba(212, 175, 55, 0.12);
+  --ve-badge-border: rgba(212, 175, 55, 0.5);
+  --ve-button-bg: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+  --ve-button-hover: linear-gradient(135deg, #FACC15 0%, #D4AF37 100%);
+  --ve-button-shadow: 0 4px 24px rgba(212, 175, 55, 0.4);
+  --ve-nav-active: rgba(212, 175, 55, 0.1);
+  --ve-nav-active-glow: 0 0 16px rgba(212, 175, 55, 0.25);
+  --ve-zigzag-color: rgba(212, 175, 55, 0.15);
+  --ve-node-color: rgba(250, 204, 21, 0.4);
+  --ve-sidebar-bg: rgba(4, 2, 0, 0.95);
+  --ve-text: #FFFEF0;
+  --ve-text-muted: #C9A84C;
+  --ve-text-dim: #7A6020;
+}
+
+[data-theme="hr-hunter-mode"] {
+  --ve-bg: #0D0200;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #1a0400 0%, #0D0200 60%, #060100 100%);
+  --ve-card-bg: rgba(20, 4, 0, 0.88);
+  --ve-card-border: rgba(239, 68, 68, 0.45);
+  --ve-card-hover-border: rgba(248, 113, 113, 0.65);
+  --ve-card-hover-glow: 0 0 32px rgba(239, 68, 68, 0.28);
+  --ve-accent: #EF4444;
+  --ve-accent-2: #DC2626;
+  --ve-neon: #F87171;
+  --ve-purple: #9B2335;
+  --ve-trust-ring: #EF4444;
+  --ve-badge-bg: rgba(239, 68, 68, 0.12);
+  --ve-badge-border: rgba(239, 68, 68, 0.4);
+  --ve-button-bg: linear-gradient(135deg, #EF4444 0%, #EA580C 100%);
+  --ve-button-hover: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
+  --ve-button-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);
+  --ve-nav-active: rgba(239, 68, 68, 0.1);
+  --ve-nav-active-glow: 0 0 14px rgba(239, 68, 68, 0.2);
+  --ve-zigzag-color: rgba(239, 68, 68, 0.15);
+  --ve-node-color: rgba(248, 113, 113, 0.4);
+}
+
+[data-theme="founder-mode"] {
+  --ve-bg: #030005;
+  --ve-bg-gradient: radial-gradient(ellipse at top, #0A0020 0%, #030005 60%, #010003 100%);
+  --ve-card-bg: rgba(6, 0, 10, 0.97);
+  --ve-card-border: rgba(167, 139, 250, 0.6);
+  --ve-card-hover-border: rgba(196, 181, 253, 0.8);
+  --ve-card-hover-glow: 0 0 64px rgba(167, 139, 250, 0.45);
+  --ve-accent: #A78BFA;
+  --ve-accent-2: #7C3AED;
+  --ve-neon: #C4B5FD;
+  --ve-purple: #6D28D9;
+  --ve-trust-ring: #A78BFA;
+  --ve-badge-bg: rgba(167, 139, 250, 0.15);
+  --ve-badge-border: rgba(167, 139, 250, 0.55);
+  --ve-button-bg: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+  --ve-button-hover: linear-gradient(135deg, #C4B5FD 0%, #A78BFA 100%);
+  --ve-button-shadow: 0 4px 28px rgba(167, 139, 250, 0.5);
+  --ve-nav-active: rgba(167, 139, 250, 0.12);
+  --ve-nav-active-glow: 0 0 18px rgba(167, 139, 250, 0.28);
+  --ve-zigzag-color: rgba(167, 139, 250, 0.18);
+  --ve-node-color: rgba(196, 181, 253, 0.5);
+  --ve-sidebar-bg: rgba(3, 0, 5, 0.97);
+  --ve-text: #F5F0FF;
+  --ve-text-muted: #9D8FCC;
+  --ve-text-dim: #5D4A8A;
+}
+
+/* Premium theme glow border */
+.ve-premium-glow {
+  box-shadow: 0 0 0 1px var(--ve-card-border), var(--ve-card-hover-glow);
+}
+
+/* AI research label */
+.ve-ai-label {
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ve-text-dim);
+}
+
+/* Confidence bar with glow */
+.ve-conf-bar {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--ve-card-border);
+  overflow: hidden;
+}
+.ve-conf-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--ve-accent);
+  box-shadow: 0 0 8px var(--ve-accent);
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}

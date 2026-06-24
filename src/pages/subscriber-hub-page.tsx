@@ -187,6 +187,12 @@ export function SubscriberHubPage() {
         ))}
       </div>
 
+      {/* Pricing disclaimer */}
+      <p className="text-[10px] text-center mt-4" style={{ color: "var(--ve-text-dim)" }}>
+        VouchEdge provides research tools and probability analysis — not guaranteed investment or betting advice.
+        Results shown are historical. Past performance does not predict future outcomes. Please gamble responsibly.
+      </p>
+
       {/* Capper apply section */}
       <div className="ve-card p-5 animate-slide-up">
         <div className="flex items-center gap-3 mb-3">

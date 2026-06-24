@@ -75,6 +75,12 @@ export function ThemeStorePage() {
         </div>
       </div>
 
+      {/* Premium theme info banner */}
+      <div className="mb-6 p-4 rounded-xl text-center" style={{ background: "linear-gradient(135deg, rgba(0,183,255,0.08) 0%, rgba(124,58,237,0.08) 100%)", border: "1px solid rgba(0,183,255,0.2)" }}>
+        <p className="text-sm font-semibold" style={{ color: "var(--ve-accent)" }}>Unlock premium themes with VouchCoins or upgrade your membership</p>
+        <p className="text-[11px] mt-1" style={{ color: "var(--ve-text-dim)" }}>New themes release monthly. Founder Mode is exclusive to original members.</p>
+      </div>
+
       {/* Active theme banner */}
       <div className="ve-card p-4 border-electric-500/30">
         <div className="flex items-center justify-between">
