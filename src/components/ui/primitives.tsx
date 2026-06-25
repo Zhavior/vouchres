@@ -59,11 +59,11 @@ export function RiskBadge({ risk }: { risk: string }) {
   return <span className="text-[10px] font-black font-mono uppercase px-2 py-0.5 rounded border" style={{ color: c, borderColor: c + '55', background: c + '14' }}>{risk}</span>;
 }
 
-export function ScorePill({ label, value, color = '#38bdf8' }: { label: string; value: string | number; color?: string }) {
+export const ScorePill: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color = '#38bdf8' }) => {
   return (
     <div className="text-center px-2.5 py-1.5 rounded-xl bg-slate-950/50 border border-slate-800">
       <p className="text-[8px] text-slate-500 font-mono uppercase tracking-wider">{label}</p>
       <p className="text-sm font-mono font-black" style={{ color }}>{value}</p>
     </div>
   );
-}
+};

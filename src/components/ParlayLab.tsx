@@ -518,12 +518,13 @@ export default function ParlayLab({
         <div className="lg:col-span-7 space-y-6">
           {workMode === 'results' ? (
             <div className="bg-[#0b0f19]/30 rounded-3xl border border-slate-900/40 p-1">
-              <ResultsPage 
-                posts={posts} 
-                profile={profile} 
+              <ResultsPage
+                posts={posts}
+                profile={profile}
+                savedParlays={savedParlays}
                 onTailParlay={(tailLegs) => {
                   setLegs(tailLegs);
-                }} 
+                }}
               />
             </div>
           ) : (

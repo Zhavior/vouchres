@@ -22,13 +22,15 @@ import {
   Copy,
   Plus
 } from 'lucide-react';
-import { FeedPost, Leg, MLBPlayer, CreatorProofProfile } from '../types';
+import { FeedPost, Leg, MLBPlayer, CreatorProofProfile, Parlay } from '../types';
+import ResultsLedgerSummary from './results/ResultsLedgerSummary';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 
 interface ResultsPageProps {
   posts: FeedPost[];
   profile?: CreatorProofProfile;
   onTailParlay?: (legs: Leg[]) => void;
+  savedParlays?: Parlay[];
 }
 
 export interface AIParlayPick {
@@ -301,7 +303,7 @@ const INITIAL_AI_PARLAYS: AIParlayPick[] = [
   }
 ];
 
-export default function ResultsPage({ posts, profile, onTailParlay }: ResultsPageProps) {
+export default function ResultsPage({ posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
   // Navigation tabs: 'ai_model' (VAI AI Picks) vs 'community' (verified ledger) vs 'personal' (My Outcomes)
   const [activeSubTab, setActiveSubTab] = useState<'ai_model' | 'community' | 'personal'>('ai_model');
 
@@ -641,7 +643,9 @@ export default function ResultsPage({ posts, profile, onTailParlay }: ResultsPag
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen bg-transparent" id="results-analytics-view">
-      
+
+      <ResultsLedgerSummary savedParlays={savedParlays} />
+
       {/* Toast Notification */}
       {visualToast && (
         <div className="fixed bottom-5 right-5 z-50 bg-[#0d1527] border border-emerald-500 text-emerald-300 px-4 py-3 rounded-2xl flex items-center gap-2 shadow-2xl text-xs font-mono font-bold animate-bounce">
