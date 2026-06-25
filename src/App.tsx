@@ -16,6 +16,7 @@ import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import LiveGamesPro from './components/LiveGamesPro';
 import VouchScan from './components/VouchScan';
+import WelcomePortal from './components/WelcomePortal';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import SubscriberHub from './components/SubscriberHub';
@@ -428,13 +429,7 @@ export default function App() {
   const renderMainView = () => {
     switch (activeSection) {
       case 'welcome':
-        return (
-          <AisLandingPage
-            profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-            onSectionChange={setActiveSection}
-          />
-        );
+        return <WelcomePortal onSectionChange={setActiveSection} />;
       case 'feed':
         return (
           <HomeFeedPage

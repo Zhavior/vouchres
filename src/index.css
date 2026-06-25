@@ -387,3 +387,19 @@ button.bg-slate-950:hover,
 
 
 
+
+/* ===== Welcome Portal (spaceman landing) ===== */
+@keyframes ve-twinkle { 0%,100%{opacity:.25} 50%{opacity:1} }
+@keyframes ve-pulse-glow {
+  0%,100%{ filter: drop-shadow(0 0 10px rgba(100,200,255,.45)) drop-shadow(0 0 40px rgba(60,180,255,.25)); }
+  50%{ filter: drop-shadow(0 0 30px rgba(100,200,255,.9)) drop-shadow(0 0 90px rgba(60,180,255,.45)); }
+}
+.ve-star { position:absolute; border-radius:50%; background:#fff; animation: ve-twinkle var(--td,3s) ease-in-out infinite; animation-delay: var(--tdl,0s); }
+.ve-astro-glow { animation: ve-pulse-glow 3.5s ease-in-out infinite; }
+.ve-glass { background: rgba(255,255,255,.03); backdrop-filter: blur(12px); border:1px solid rgba(255,255,255,.08); transition: all .3s ease; }
+.ve-glass:hover { background: rgba(255,255,255,.06); border-color: rgba(100,200,255,.35); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.35), 0 0 30px rgba(100,200,255,.12); }
+.ve-nebula { background:
+  radial-gradient(ellipse at 18% 28%, rgba(88,28,135,.20) 0%, transparent 50%),
+  radial-gradient(ellipse at 82% 18%, rgba(14,116,144,.16) 0%, transparent 50%),
+  radial-gradient(ellipse at 50% 88%, rgba(30,64,175,.14) 0%, transparent 50%); }
+.ve-grad-text { background: linear-gradient(135deg,#60d0f0 0%,#a0e0ff 40%,#fff 60%,#80c0e0 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
