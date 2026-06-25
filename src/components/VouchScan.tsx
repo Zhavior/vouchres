@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { ScanLine, Upload, Plus, X, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ScanLeg {
@@ -41,7 +42,7 @@ export default function VouchScan() {
     setAnalyzing(true);
     setReport(null);
     try {
-      const res = await fetch('/api/ai/parlay-edge', {
+      const res = await fetch(apiUrl('/api/ai/parlay-edge'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ legs: legs.map((l) => ({ selection: l.selection, market: l.market, team: l.team })) }),

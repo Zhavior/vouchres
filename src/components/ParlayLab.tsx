@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   Plus, 
   Trash2, 
@@ -87,7 +88,7 @@ export default function ParlayLab({
     setEdgeError(null);
 
     try {
-      const response = await fetch('/api/ai/parlay-edge', {
+      const response = await fetch(apiUrl('/api/ai/parlay-edge'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

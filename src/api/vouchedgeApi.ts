@@ -18,9 +18,10 @@ import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { MatchupsResponse, GameMatchup } from "../types/matchup";
 import { dailyReportDirect, hrBoardDirect, matchupsDirect } from "../lib/mlbDirect";
+import { apiUrl } from "../lib/apiBase";
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await fetch(apiUrl(url));
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   return (await res.json()) as T;
 }
@@ -34,7 +35,7 @@ async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promis
   }
 }
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(apiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

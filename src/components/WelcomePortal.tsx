@@ -38,7 +38,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-slate-950">VE</div>
             <span className="font-black tracking-tight text-lg">Vouch<span className="text-cyan-400">Edge</span></span>
           </div>
-          <button onClick={() => onSectionChange('feed')} className="text-sm font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">Enter App</button>
+          <button onClick={() => onSectionChange('today')} className="text-sm font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">Enter App</button>
         </header>
 
         {/* Hero */}
@@ -55,7 +55,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               Live matchups, daily HR edges, vulnerable pitchers, player research, and honest AI judges — built on real MLB data, not hype.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <button onClick={() => onSectionChange('feed')} className="flex items-center gap-2 text-sm font-black px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_8px_30px_rgba(56,189,248,0.25)]">
+              <button onClick={() => onSectionChange('today')} className="flex items-center gap-2 text-sm font-black px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_8px_30px_rgba(56,189,248,0.25)]">
                 Enter VouchEdge <ArrowRight className="w-4 h-4" />
               </button>
               <button onClick={() => onSectionChange('live_games')} className="text-sm font-bold px-5 py-3 rounded-xl border border-white/15 text-slate-200 hover:bg-white/5 transition-all">Explore Live Games</button>
@@ -101,7 +101,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
           </div>
 
           <div className="text-center mt-10">
-            <button onClick={() => onSectionChange('feed')} className="inline-flex items-center gap-2 text-sm font-black px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">
+            <button onClick={() => onSectionChange('today')} className="inline-flex items-center gap-2 text-sm font-black px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">
               Enter VouchEdge <ArrowRight className="w-4 h-4" />
             </button>
             <p className="text-[11px] text-slate-600 mt-4">Probability-based research for entertainment — not betting advice.</p>

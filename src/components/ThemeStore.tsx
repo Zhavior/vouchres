@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   Sparkles, 
   ShoppingBag, 
@@ -132,7 +133,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     setAiError(null);
 
     try {
-      const response = await fetch('/api/ai/generate-theme', {
+      const response = await fetch(apiUrl('/api/ai/generate-theme'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt.trim() })

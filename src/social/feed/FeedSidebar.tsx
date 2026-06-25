@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 
@@ -12,6 +12,7 @@ interface FeedSidebarProps {
 export default function FeedSidebar({ activeSection, onSectionChange, profile }: FeedSidebarProps) {
   const menuItems = [
     { id: 'welcome', label: 'Welcome Portal', icon: Trophy },
+    { id: 'today', label: 'Today', icon: LayoutDashboard },
     { id: 'feed', label: 'Home Feed', icon: Home },
     { id: 'leaderboard', label: 'Top Cappers 🏆', icon: Award },
     { id: 'live_games', label: 'Live Projections', icon: Tv },

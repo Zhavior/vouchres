@@ -17,6 +17,8 @@ import HrNotifications from './components/notifications/HrNotifications';
 import LiveGamesPro from './components/LiveGamesPro';
 import VouchScan from './components/VouchScan';
 import WelcomePortal from './components/WelcomePortal';
+import TodayDashboard from './components/TodayDashboard';
+import { apiUrl } from './lib/apiBase';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import SubscriberHub from './components/SubscriberHub';
@@ -46,7 +48,7 @@ export default function App() {
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const response = await fetch('/api/mlb/live');
+        const response = await fetch(apiUrl('/api/mlb/live'));
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.games) {
@@ -430,6 +432,8 @@ export default function App() {
     switch (activeSection) {
       case 'welcome':
         return <WelcomePortal onSectionChange={setActiveSection} />;
+      case 'today':
+        return <TodayDashboard onSectionChange={setActiveSection} savedSlips={savedSlips} />;
       case 'feed':
         return (
           <HomeFeedPage

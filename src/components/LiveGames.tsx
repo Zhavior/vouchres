@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   Tv, 
   Flame, 
@@ -76,7 +77,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
     setLoading(true);
     setErrorCode(null);
     try {
-      const response = await fetch('/api/mlb/live');
+      const response = await fetch(apiUrl('/api/mlb/live'));
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }

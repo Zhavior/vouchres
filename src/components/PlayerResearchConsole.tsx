@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -132,7 +133,7 @@ export default function PlayerResearchConsole({
     if (isResearching) return;
     setIsResearching(true);
     try {
-      const res = await fetch('/api/ai/player-research', {
+      const res = await fetch(apiUrl('/api/ai/player-research'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerData: player })

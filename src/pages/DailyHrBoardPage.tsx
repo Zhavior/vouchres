@@ -4,7 +4,9 @@ import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { HrBoardResponse, HrBoardRow, HrBoardFilterState, SortKey } from '../types/hrBoard';
 import HrBoardFilters from '../components/hr-board/HrBoardFilters';
 import HrBoardTable from '../components/hr-board/HrBoardTable';
+import HrTierView from '../components/hr-board/HrTierView';
 import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
+import type { MLBPlayer } from '../types';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = 5 * 60_000;
@@ -32,7 +34,12 @@ function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
   }
 }
 
-export default function DailyHrBoardPage() {
+interface HrBoardPageProps {
+  onAddLegToParlay?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+}
+
+export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps = {}) {
+  const [view, setView] = useState<'tier' | 'game'>('tier');
   const [date, setDate] = useState(todayISO());
   const [board, setBoard] = useState<HrBoardResponse | null>(null);
   const [loading, setLoading] = useState(true);

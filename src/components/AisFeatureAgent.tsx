@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -223,7 +224,7 @@ Keep your eyes closely aligned to the **Live Games Board** to track further deve
       }));
       chatHistory.push({ role: 'user', content: userText });
 
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch(apiUrl('/api/ai/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -303,7 +304,7 @@ Keep your eyes closely aligned to the **Live Games Board** to track further deve
     setIsTyping(true);
 
     try {
-      const response = await fetch('/api/ai/parlay-edge', {
+      const response = await fetch(apiUrl('/api/ai/parlay-edge'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ legs: targetLegs })

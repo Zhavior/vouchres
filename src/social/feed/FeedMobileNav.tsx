@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, ScanLine } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard } from 'lucide-react';
 
 interface FeedMobileNavProps {
   activeSection: string;
@@ -8,21 +8,22 @@ interface FeedMobileNavProps {
 
 export default function FeedMobileNav({ activeSection, onSectionChange }: FeedMobileNavProps) {
   const navItems = [
-    { id: 'welcome', label: 'Welcome', icon: Trophy },
-    { id: 'feed', label: 'Home', icon: Home },
-    { id: 'leaderboard', label: 'Cappers', icon: Award },
-    { id: 'live_games', label: 'Live', icon: Tv },
-    { id: 'build', label: 'Build', icon: Sliders },
-    { id: 'ai_engine', label: 'V.A.I AI', icon: Cpu },
-    { id: 'intel', label: 'Intel', icon: Activity },
-    { id: 'hr_board', label: 'HR Board', icon: Flame },
-    { id: 'vouchscan', label: 'Scan', icon: ScanLine },
-    { id: 'research', label: 'Research', icon: Search },
-    { id: 'board', label: 'Vouch', icon: ClipboardCheck },
+    // Primary mobile tabs (verdict): Today, HRs, My Parlays, Results, Profile
+    { id: 'today', label: 'Today', icon: LayoutDashboard },
+    { id: 'hr_board', label: 'HRs', icon: Flame },
+    { id: 'build', label: 'My Parlays', icon: Sliders },
     { id: 'results', label: 'Results', icon: BarChart3 },
+    { id: 'profile', label: 'Profile', icon: User },
+    // Secondary (still reachable in the scrollable bar)
+    { id: 'feed', label: 'Home', icon: Home },
+    { id: 'live_games', label: 'Live', icon: Tv },
+    { id: 'vouchscan', label: 'Scan', icon: ScanLine },
+    { id: 'intel', label: 'Intel', icon: Activity },
+    { id: 'research', label: 'Research', icon: Search },
+    { id: 'leaderboard', label: 'Cappers', icon: Award },
+    { id: 'board', label: 'Vouch', icon: ClipboardCheck },
     { id: 'subscriber_hub', label: 'Premium', icon: MessageSquare },
     { id: 'themestore', label: 'Themes', icon: ShoppingBag },
-    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (
