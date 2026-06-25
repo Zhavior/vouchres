@@ -50,7 +50,7 @@ export default function VouchScan() {
       const data = await res.json();
       setReport({ edgeScore: data.edgeScore, riskLevel: data.riskLevel, report: data.report || 'No analysis returned.' });
     } catch {
-      setReport({ report: 'VouchCheck unavailable — make sure the dev server is running.' });
+      setReport({ report: 'VouchCheck unavailable — AI analysis requires the backend to be connected. Set VITE_API_BASE_URL to your deployed backend, or run npm run dev locally.' });
     } finally {
       setAnalyzing(false);
     }

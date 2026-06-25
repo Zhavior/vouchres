@@ -257,6 +257,12 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
   return (
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto min-h-screen bg-transparent space-y-6 text-left" id="leaderboard-outer-wrapper">
       
+      {/* Demo banner */}
+      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-300/80">
+        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/15 text-amber-300">Demo</span>
+        Capper rankings are sample data — real leaderboard populates as users post verified picks.
+      </div>
+
       {/* Upper header segment and description */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-850 pb-5" id="leaderboard-header">
         <div>

@@ -373,6 +373,12 @@ export default function SubscriberHub({
   return (
     <div className="w-full text-slate-100 p-4 md:p-6 space-y-6" id="subscriber-hub-root">
       
+      {/* Demo banner */}
+      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-300/80">
+        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/15 text-amber-300">Demo</span>
+        Subscriber counts and capper clubs are sample data — real clubs populate when cappers go live.
+      </div>
+
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-5 text-left" id="hub-head">
         <div className="space-y-1">

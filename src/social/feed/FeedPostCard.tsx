@@ -26,17 +26,27 @@ import { FeedPost, Vouch } from '../../types';
 import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
 
-const POST_TYPE_LABEL: Record<string, string> = {
-  PARLAY: 'Parlay', VOUCH: 'Pick', AI_PICK: 'HR Alert', RESULT: 'Result', RESEARCH_NOTE: 'Lesson',
+const POST_TYPE_META: Record<string, { label: string; color: string }> = {
+  PARLAY:        { label: 'Parlay',     color: '#22d3ee' },
+  VOUCH:         { label: 'Pick',       color: '#34d399' },
+  AI_PICK:       { label: 'HR Alert',   color: '#fb923c' },
+  RESULT:        { label: 'Result',     color: '#a78bfa' },
+  RESEARCH_NOTE: { label: 'Lesson',     color: '#60a5fa' },
+  DISCUSSION:    { label: 'Discussion', color: '#94a3b8' },
 };
 function PostTypeBadge({ post }: { post: FeedPost }) {
-  const label = POST_TYPE_LABEL[post.postType] || 'Discussion';
-  return <span className="text-[9px] font-black font-mono uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-slate-700 text-slate-300">{label}</span>;
+  const meta = POST_TYPE_META[post.postType] ?? POST_TYPE_META.DISCUSSION;
+  return (
+    <span className="text-[9px] font-black font-mono uppercase tracking-wide px-1.5 py-0.5 rounded-full border"
+      style={{ color: meta.color, borderColor: meta.color + '55', background: meta.color + '15' }}>
+      {meta.label}
+    </span>
+  );
 }
 function ResultStatusBadge({ post }: { post: FeedPost }) {
   if (!post.result) return null;
   const s = post.result.status;
-  const map: Record<string, string> = { WON: 'Won', LOST: 'Lost', VOID: 'Void', PENDING: 'Pending' };
+  const map: Record<string, string> = { WON: 'Won', LOST: 'Lost', VOID: 'Void', PENDING: 'Pending', PUSH: 'Pushed' };
   return (
     <span className="inline-flex items-center gap-1">
       <StatusBadge status={map[s] || 'Pending'} />
