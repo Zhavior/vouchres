@@ -1,0 +1,153 @@
+# docker-compose.yml — local development environment for VouchEdge
+#
+# Brings up:
+#   - Local Supabase (Postgres + GoTrue auth + PostgREST + Realtime + Studio)
+#   - The VouchEdge app (Node + Express + Vite dev server)
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f app
+#   docker compose down
+#
+# The local Supabase runs on:
+#   - Postgres: localhost:54322
+#   - Auth (GoTrue): http://localhost:54321/auth/v1
+#   - REST: http://localhost:54321/rest/v1
+#   - Studio dashboard: http://localhost:54323
+#
+# For the app to talk to local Supabase, set in .env.local:
+#   SUPABASE_URL=http://localhost:54321
+#   SUPABASE_SERVICE_ROLE_KEY=<from docker logs>
+#   VITE_SUPABASE_URL=http://localhost:54321
+#   VITE_SUPABASE_ANON_KEY=<from docker logs>
+#
+# The first time you start, the keys are printed in the supabase-init container logs:
+#   docker compose logs supabase-init
+
+version: "3.9"
+
+services:
+  # =========================================================
+  # VouchEdge app (Node + Express + Vite)
+  # =========================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SUPABASE_URL=http://supabase-auth:9999
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGJ96YH7qJ3Y0pK5KvLwLMWUYgVlEUlSN1kXqMjLkQk}
+      - VITE_SUPABASE_URL=http://localhost:54321
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - MLB_API_BASE_URL=https://statsapi.mlb.com/api
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - TRUST_PROXY=0
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    command: npm run dev
+
+  # =========================================================
+  # Local Supabase stack (simplified — see official supabase repo for full setup)
+  # =========================================================
+  supabase-db:
+    image: supabase/postgres:15.6.1.143
+    ports:
+      - "54322:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  supabase-auth:
+    image: supabase/gotrue:v2.150.0
+    ports:
+      - "54321:9999"
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=http://localhost:54321
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:postgres@supabase-db:5432/postgres
+      - GOTRUE_SITE_URL=http://localhost:3000
+      - GOTRUE_URI_ALLOW_LIST=http://localhost:3000/*
+      - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_ENABLE_EMAIL_SIGNUP=true
+      - GOTRUE_ENABLE_EMAIL_AUTOCONFIRM=true  # dev only — set false in prod
+      - GOTRUE_SMTP_ADMIN_EMAIL=admin@vouchedge.dev
+      - GOTRUE_SMTP_HOST=
+      - GOTRUE_SMTP_PORT=
+      - GOTRUE_SMTP_USER=
+      - GOTRUE_SMTP_PASS=
+      - GOTRUE_SMTP_SENDER_NAME=VouchEdge Dev
+      - GOTRUE_MAILER_URLPATHS_INVITE=/auth/invite
+      - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/auth/confirm
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/reset
+      - GOTRUE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    ports:
+      - "54320:3000"
+    environment:
+      - PGRST_DB_URI=postgres://postgres:postgres@supabase-db:5432/postgres
+      - PGRST_DB_SCHEMAS=public,storage,graphql_public
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  # Optional: Supabase Studio dashboard at http://localhost:54323
+  supabase-studio:
+    image: supabase/studio:20240701-de41c23
+    ports:
+      - "54323:3000"
+    environment:
+      - STUDIO_PG_META_URL=http://supabase-meta:8080
+      - POSTGRES_PASSWORD=postgres
+      - DEFAULT_ORGANIZATION=VouchEdge Dev
+      - DEFAULT_PROJECT=Local Dev
+      - SUPABASE_URL=http://localhost:54321
+      - SUPABASE_PUBLIC_URL=http://localhost:54321
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGJ96YH7qJ3Y0pK5KvLwLMWUYgVlEUlSN1kXqMjLkQk
+    depends_on:
+      - supabase-rest
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.83.2
+    environment:
+      - PG_META_PORT=8080
+      - PG_META_DB_HOST=supabase-db
+      - PG_META_DB_PORT=5432
+      - PG_META_DB_NAME=postgres
+      - PG_META_DB_USER=postgres
+      - PG_META_DB_PASSWORD=postgres
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+volumes:
+  supabase-db-data:

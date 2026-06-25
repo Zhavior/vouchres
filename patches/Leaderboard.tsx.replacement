@@ -1,0 +1,170 @@
+/**
+ * Leaderboard.tsx — REPLACEMENT
+ *
+ * Removes the hardcoded TOP_10_CAPPERS array (which fabricated 10 fake
+ * cappers with 73.7% win rates, 14,205 followers, and "🔥 6 W Streak"
+ * labels presented as a real leaderboard).
+ *
+ * Now fetches from /api/leaderboard, which queries trust_scores for
+ * cappers with at least 20 graded picks. Shows honest "no qualified
+ * cappers yet" empty state during early beta.
+ *
+ * Replace your existing src/components/Leaderboard.tsx with this file.
+ */
+
+import { useEffect, useState } from "react";
+import { apiClient, ApiError } from "../lib/apiClient";
+
+interface CapperLeaderboardEntry {
+  capper_id: string;
+  display_name: string;
+  tagline: string;
+  is_demo: boolean;
+  score: number;
+  total_picks: number;
+  won_picks: number;
+  lost_picks: number;
+  pushed_picks: number;
+  net_units: number;
+  window_start: string;
+  window_end: string;
+}
+
+const MIN_PICKS_TO_QUALIFY = 20;
+
+export function Leaderboard() {
+  const [entries, setEntries] = useState<CapperLeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await apiClient.get<{ entries: CapperLeaderboardEntry[] }>(
+          "/api/leaderboard",
+          { scope: "overall", limit: 50 }
+        );
+        if (!cancelled) {
+          setEntries(data.entries ?? []);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError("Failed to load leaderboard. Please try again.");
+          console.error("[leaderboard] fetch failed", err);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="leaderboard">
+        <h2>Capper Leaderboard</h2>
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="leaderboard">
+        <h2>Capper Leaderboard</h2>
+        <p className="leaderboard__error">{error}</p>
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="leaderboard leaderboard--empty">
+        <h2>Capper Leaderboard</h2>
+        <div className="leaderboard__empty-state">
+          <p>
+            <strong>No qualified cappers yet.</strong>
+          </p>
+          <p>
+            Cappers must have at least {MIN_PICKS_TO_QUALIFY} graded picks to
+            appear on the leaderboard. As cappers post picks and games conclude,
+            the leaderboard will populate.
+          </p>
+          <p>
+            <a href="/feed">Browse the feed</a> to see active cappers.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="leaderboard">
+      <h2>Capper Leaderboard</h2>
+      <p className="leaderboard__meta">
+        Ranked by trust score · Minimum {MIN_PICKS_TO_QUALIFY} graded picks to qualify ·
+        Rolling 30-day window
+      </p>
+
+      <table className="leaderboard__table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Capper</th>
+            <th>Trust</th>
+            <th>Record</th>
+            <th>Win %</th>
+            <th>Net Units</th>
+            <th>Picks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry, idx) => (
+            <tr key={entry.capper_id} className={entry.is_demo ? "leaderboard__row--demo" : ""}>
+              <td>{idx + 1}</td>
+              <td>
+                <div className="leaderboard__capper-name">
+                  {entry.display_name}
+                  {entry.is_demo && (
+                    <span className="leaderboard__demo-badge" title="This is a demo capper — not a real person">
+                      DEMO
+                    </span>
+                  )}
+                </div>
+                {entry.tagline && (
+                  <div className="leaderboard__capper-tagline">{entry.tagline}</div>
+                )}
+              </td>
+              <td>
+                <span className="leaderboard__trust-score">{entry.score.toFixed(1)}</span>
+              </td>
+              <td>
+                {entry.won_picks}-{entry.lost_picks}
+                {entry.pushed_picks > 0 && `-${entry.pushed_picks}`}
+              </td>
+              <td>
+                {entry.total_picks > 0
+                  ? ((entry.won_picks / entry.total_picks) * 100).toFixed(1) + "%"
+                  : "—"}
+              </td>
+              <td className={entry.net_units >= 0 ? "leaderboard__units--positive" : "leaderboard__units--negative"}>
+                {entry.net_units >= 0 ? "+" : ""}
+                {entry.net_units.toFixed(2)}
+              </td>
+              <td>{entry.total_picks}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p className="leaderboard__disclaimer">
+        Predictions are probability-based research for entertainment only —
+        not betting advice. Past performance does not guarantee future results.
+      </p>
+    </div>
+  );
+}

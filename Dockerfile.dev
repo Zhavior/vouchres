@@ -1,0 +1,31 @@
+# Dockerfile.dev — development image for VouchEdge
+# Used by docker-compose.yml
+#
+# For production, create a separate Dockerfile that runs the build:
+#   FROM node:20-alpine
+#   WORKDIR /app
+#   COPY package*.json ./
+#   RUN npm ci --only=production
+#   COPY . .
+#   RUN npm run build
+#   EXPOSE 3000
+#   CMD ["npm", "start"]
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies first (cached layer)
+COPY package*.json ./
+RUN npm install
+
+# Copy source (mounted as volume in dev, but include for build fallback)
+COPY . .
+
+# Expose dev server port
+EXPOSE 3000
+
+# Run dev server with hot reload
+# vite dev server binds to 0.0.0.0 to be accessible from host
+ENV HOST=0.0.0.0
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]

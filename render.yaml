@@ -1,14 +1,64 @@
+# Render service config — paid tier required for live MLB app.
+#
+# The previous render.yaml used the FREE plan, which sleeps after 15 minutes
+# of inactivity and takes ~50s to cold-start. Unacceptable for a "live"
+# app whose value prop is fresh data every 20s.
+#
+# This config uses the "Starter" plan ($7/mo, no sleep, always-on).
+# For higher traffic, upgrade to "Standard" or "Pro".
+
 services:
   - type: web
-    name: vouchedge
+    name: vouchedge-api
     runtime: node
-    plan: free
+    plan: starter  # was: free
+    region: oregon
+    branch: main
+    rootDir: .
     buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MLB_API_BASE_URL
-        value: https://statsapi.mlb.com/api
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_GOLD
+        sync: false
+      - key: STRIPE_PRICE_SELLER_PRO
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: MLB_API_BASE_URL
+        value: https://statsapi.mlb.com/api
+      - key: FRONTEND_URL
+        sync: false  # e.g. https://vouchedge.app
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false  # e.g. https://vouchedge.app,https://www.vouchedge.app
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SENTRY_DSN
+        sync: false
+
+# NOTE: Delete vercel.json from your repo before deploying to Render.
+# The existing vercel.json config is incompatible with this Render setup —
+# it would deploy the frontend as a static SPA without the backend, breaking
+# every /api/* call. Pick ONE deployment target.
+
+# If you genuinely want a split deployment (Vercel frontend + Render backend):
+#   1. Keep this render.yaml for the backend
+#   2. Replace vercel.json with a frontend-only config that sets
+#      VITE_API_BASE_URL to the Render backend URL
+#   3. Add CORS_ALLOWED_ORIGINS to Render env vars including the Vercel URL
+#   4. Understand that the Vercel free tier has 100s-of-ms cold starts on
+#      serverless functions — fine for a static frontend, but plan to
+#      migrate to Vercel Pro before scaling.

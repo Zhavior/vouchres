@@ -1,0 +1,26 @@
+# package.json additions — merge these into your existing package.json
+
+# Add to "dependencies":
+"dependencies": {
+  "@supabase/supabase-js": "^2.45.0",
+  "stripe": "^17.0.0",
+  "express-rate-limit": "^7.4.0",
+  "cors": "^2.8.5",
+  "zod": "^3.23.8",
+  "cookie-parser": "^1.4.7",
+  "helmet": "^8.0.0"
+}
+
+# Add to "devDependencies":
+"devDependencies": {
+  "@types/cors": "^2.8.17",
+  "@types/cookie-parser": "^1.4.7",
+  "supabase": "^2.0.0"
+}
+
+# Add to "scripts":
+"scripts": {
+  "db:push": "supabase db push",
+  "db:migrate": "supabase migration up",
+  "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/db.ts"
+}
