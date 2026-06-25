@@ -1,8 +1,10 @@
 /**
  * Daily HR Board service. Builds today's hitter-vs-pitcher HR board grouped by game.
- * Deterministic scoring first; cached 8 minutes. Lineups are projected placeholders.
+ * STRICT TEAM VALIDATION: Only hitters that belong to the actual away/home team appear.
+ * Uses official game boxscore lineups first; falls back to active roster with strict guard.
+ * Cached 8 minutes. Lineups are projected placeholders until official feeds connect.
  */
-import { getScheduleByDate, todayISO } from "./mlbClient";
+import { getScheduleByDate, getBoxscore, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { reportCache } from "./mlbCache";
 import { NormalizedGame, NormalizedPlayer, NormalizedPitcher, DataQuality } from "./mlbTypes";
@@ -50,14 +52,86 @@ function projectedLineup(hitters: NormalizedPlayer[]): NormalizedPlayer[] {
     .slice(0, HITTERS_PER_TEAM);
 }
 
-function buildGame(game: NormalizedGame, hittersByTeam: Map<number, NormalizedPlayer[]>): HrBoardGame {
+/** Extract official batting order from boxscore using the `batters` ID list.
+ *  The boxscore always includes `teams.home.batters` and `teams.away.batters`
+ *  as ordered arrays of player IDs — even for pre-game schedules.
+ *  Players are looked up in the `players` dict keyed by "ID{playerId}".
+ */
+function extractOfficialLineupFromBoxscore(boxscore: any, battingTeamId: number): NormalizedPlayer[] {
+  const hitters: NormalizedPlayer[] = [];
+  try {
+    const teams = boxscore?.teams;
+    if (!teams) return hitters;
+
+    for (const side of [teams.home, teams.away]) {
+      if (!side) continue;
+      const sideTeamId: number = side.team?.id;
+      if (sideTeamId !== battingTeamId) continue;
+
+      const batterIds: number[] = Array.isArray(side.batters) ? side.batters : [];
+      const players: Record<string, any> = side.players ?? {};
+      const teamName: string = side.team?.name ?? "Unknown";
+
+      for (const pid of batterIds) {
+        const entry = players[`ID${pid}`];
+        if (!entry?.person) continue;
+
+        const pos: string = entry.position?.abbreviation ?? "—";
+        // Exclude pitchers from the batting board
+        if (pos === "P") continue;
+
+        const batsCode = entry.person?.batSide?.code ?? "U";
+        hitters.push({
+          playerId: pid,
+          playerName: entry.person.fullName,
+          position: pos,
+          bats: batsCode === "L" ? "L" : batsCode === "R" ? "R" : batsCode === "S" ? "S" : "U",
+          team: teamName,
+          teamId: sideTeamId,
+          headshot: `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${pid}/headshot/67/current`,
+        });
+      }
+      // Found the right side — no need to check the other
+      if (hitters.length > 0) break;
+    }
+  } catch (err) {
+    console.warn(`[dailyHrBoardService] extractOfficialLineupFromBoxscore failed for team ${battingTeamId}:`, (err as Error).message);
+  }
+  return hitters;
+}
+
+function buildGame(game: NormalizedGame, hittersByTeam: Map<number, NormalizedPlayer[]>, boxscores: Map<number, any>): HrBoardGame {
   const proj = projection(game);
   const rows: HrBoardRow[] = [];
 
   const addSide = (battingTeamId: number, pitcher: NormalizedPitcher | null) => {
     if (!pitcher) return;
-    const hitters = projectedLineup(hittersByTeam.get(battingTeamId) ?? []);
-    hitters.forEach((h, i) => rows.push(buildHitterRow(h, pitcher, game, i + 1, proj)));
+
+    // Try official boxscore lineup first
+    const boxscore = boxscores.get(game.gamePk);
+    let hitters: NormalizedPlayer[] = [];
+    if (boxscore) {
+      hitters = extractOfficialLineupFromBoxscore(boxscore, battingTeamId);
+    }
+
+    // Fallback: active roster with strict team validation
+    if (hitters.length === 0) {
+      const rawHitters = hittersByTeam.get(battingTeamId) ?? [];
+      hitters = projectedLineup(rawHitters);
+    }
+
+    // STRICT GUARD: Reject any hitter that doesn't belong to the batting team
+    const validHitters = hitters.filter((h) => {
+      const isValid = h.teamId === battingTeamId;
+      if (!isValid) {
+        console.warn(
+          `[dailyHrBoardService] REJECTED invalid hitter: ${h.playerName} (team ID ${h.teamId}) does not belong to ${game[battingTeamId === game.homeTeam.teamId ? "homeTeam" : "awayTeam"].name} (ID ${battingTeamId})`,
+        );
+      }
+      return isValid;
+    });
+
+    validHitters.forEach((h, i) => rows.push(buildHitterRow(h, pitcher, game, i + 1, proj)));
   };
 
   // Home lineup faces the away probable; away lineup faces the home probable.
@@ -90,7 +164,19 @@ function buildGame(game: NormalizedGame, hittersByTeam: Map<number, NormalizedPl
 export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> {
   return reportCache.getOrSet(`hrboard:${date}`, async () => {
     const [games, hittersByTeam] = await Promise.all([getScheduleByDate(date), getActiveHittersByTeam()]);
-    const built = games.map((g) => buildGame(g, hittersByTeam));
+
+    // Fetch boxscores for all games (to get official lineups)
+    const boxscoresPromises = games.map((g) =>
+      getBoxscore(g.gamePk)
+        .then((bs) => ({ gamePk: g.gamePk, data: bs }))
+        .catch(() => ({ gamePk: g.gamePk, data: null })),
+    );
+    const boxscoresArray = await Promise.all(boxscoresPromises);
+    const boxscores = new Map(boxscoresArray.map((b) => [b.gamePk, b.data]).filter((b) => b[1] !== null));
+
+    console.log(`[dailyHrBoardService] Fetched boxscores for ${boxscores.size} of ${games.length} games`);
+
+    const built = games.map((g) => buildGame(g, hittersByTeam, boxscores));
     const haveHitters = hittersByTeam.size > 0;
     return {
       date,
