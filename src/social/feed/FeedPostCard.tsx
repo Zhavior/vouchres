@@ -23,7 +23,27 @@ import {
   Twitter
 } from 'lucide-react';
 import { FeedPost, Vouch } from '../../types';
+import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
+
+const POST_TYPE_LABEL: Record<string, string> = {
+  PARLAY: 'Parlay', VOUCH: 'Pick', AI_PICK: 'HR Alert', RESULT: 'Result', RESEARCH_NOTE: 'Lesson',
+};
+function PostTypeBadge({ post }: { post: FeedPost }) {
+  const label = POST_TYPE_LABEL[post.postType] || 'Discussion';
+  return <span className="text-[9px] font-black font-mono uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-slate-700 text-slate-300">{label}</span>;
+}
+function ResultStatusBadge({ post }: { post: FeedPost }) {
+  if (!post.result) return null;
+  const s = post.result.status;
+  const map: Record<string, string> = { WON: 'Won', LOST: 'Lost', VOID: 'Void', PENDING: 'Pending' };
+  return (
+    <span className="inline-flex items-center gap-1">
+      <StatusBadge status={map[s] || 'Pending'} />
+      <StatusBadge status={post.isVerified ? 'Verified' : 'Unverified'} />
+    </span>
+  );
+}
 import ResearchNotePostCard from './ResearchNotePostCard';
 import VouchCircleFeedCard from '../../components/VouchCircleFeedCard';
 import VouchCard from '../../components/vouch-system/VouchCard';
@@ -487,6 +507,8 @@ export default function FeedPostCard({
                   PRO
                 </span>
               ) : null}
+              <PostTypeBadge post={post} />
+              <ResultStatusBadge post={post} />
               <span className="text-slate-400 text-xs">@{post.username}</span>
               <span className="text-slate-500 text-xs">•</span>
               <span className="text-slate-400 text-xs font-mono">{formatTime(post.timestamp)}</span>
