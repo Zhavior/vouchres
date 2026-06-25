@@ -138,6 +138,24 @@ function buildGame(game: NormalizedGame, hittersByTeam: Map<number, NormalizedPl
   addSide(game.homeTeam.teamId, game.probablePitchers.away);
   addSide(game.awayTeam.teamId, game.probablePitchers.home);
 
+  // FINAL HARD FILTER: drop any row whose teamId is not one of the two teams in this game
+  const validTeamIds = new Set([game.homeTeam.teamId, game.awayTeam.teamId]);
+  const beforeCount = rows.length;
+  const filteredRows = rows.filter((r) => {
+    if (!validTeamIds.has(r.teamId)) {
+      console.warn(
+        `[HR BOARD FINAL DROP] ${r.playerName} teamId=${r.teamId} not in game ${game.awayTeam.abbreviation}@${game.homeTeam.abbreviation} (${[...validTeamIds].join(",")})`
+      );
+      return false;
+    }
+    return true;
+  });
+  if (filteredRows.length !== beforeCount) {
+    console.warn(`[HR BOARD FINAL DROP] game ${game.gamePk}: dropped ${beforeCount - filteredRows.length} rows with wrong teamId`);
+  }
+  rows.length = 0;
+  rows.push(...filteredRows);
+
   rows.sort((a, b) => b.hrEdge - a.hrEdge);
 
   const avgEdge = rows.length ? rows.reduce((s, r) => s + r.hrEdge, 0) / rows.length : 0;
@@ -162,7 +180,7 @@ function buildGame(game: NormalizedGame, hittersByTeam: Map<number, NormalizedPl
 }
 
 export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> {
-  return reportCache.getOrSet(`hrboard:${date}`, async () => {
+  return reportCache.getOrSet(`hrboard_v2:${date}`, async () => {
     const [games, hittersByTeam] = await Promise.all([getScheduleByDate(date), getActiveHittersByTeam()]);
 
     // Fetch boxscores for all games (to get official lineups)
