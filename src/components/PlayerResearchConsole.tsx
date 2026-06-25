@@ -249,21 +249,21 @@ export default function PlayerResearchConsole({
   const handleVouchProposition = (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => {
     const isVouched = savedVouchIds.includes(prop.id);
     const activeScore = aiReportCache[player.id]?.score || player.batterScore;
-    const mockVouch: Vouch = {
+    const vouch: Vouch = {
       id: prop.id,
-      vouchSource: "Sharps Model AI",
-      userNote: `Prop Matchup Analysis: ${player.name} holds a dynamic ${activeScore} Batter Score rating. advanced factors: Barrel % (${player.advanced.barrelPercent}%), xwOBA (${player.advanced.xwoba}).`,
+      vouchSource: "Player Research",
+      userNote: `${player.name} — ${prop.spec}. Batter Score: ${activeScore}. Barrel%: ${player.advanced.barrelPercent}%, xwOBA: ${player.advanced.xwoba}.`,
       market: prop.spec,
       sport: "MLB",
       playerOrTeam: player.name,
       gameName: `${player.team} Matchup`,
       odds: prop.odds.toFixed(2),
       status: "PENDING",
-      savedCount: 5 + Math.floor(Math.random() * 20),
-      vouchedCount: 12 + Math.floor(Math.random() * 30),
+      savedCount: 0,
+      vouchedCount: 0,
       createdAt: new Date().toISOString()
     };
-    onSaveVouch(mockVouch);
+    onSaveVouch(vouch);
     if (!isVouched) {
       showToast(`Vouched ${player.name}'s prop to your Personal Vouch Board!`);
     } else {

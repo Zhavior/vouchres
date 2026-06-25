@@ -661,7 +661,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
             {/* Video footer stat display */}
             <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
               <span>ACTION STAGED: USER PUBLISHING SLIP LOOP</span>
-              <span className="text-yellow-450 uppercase font-bold">STATUS: STREAMING DEMO</span>
+              <span className="text-yellow-450 uppercase font-bold">STATUS: RESEARCH PREVIEW</span>
             </div>
           </div>
         );
@@ -688,7 +688,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                   <div className="text-[8px] text-cyan-300">Step 2: Processing 10,000 Sabermetric Simulations</div>
                   <div className="text-[10px] text-slate-300 animate-pulse flex items-center gap-1.5">
                     <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                    <span>MOCK COMPUTING MULTI-VECTORS...</span>
+                    <span>COMPUTING SABERMETRIC VECTORS...</span>
                   </div>
                   <div className="bg-[#121824] p-1.5 rounded text-[8px] text-slate-500">
                     Confidence threshold set at: 85% Variance limit

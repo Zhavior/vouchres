@@ -25,43 +25,9 @@ export default function AdBanner({
     return null; // hide sidebar and inline slip ads for Pro!
   }
 
-  // Define some premium sports betting stylized mock ads
   const ADS_DATABASE = {
-    'DraftKings': {
-      title: 'DraftKings Match Special',
-      promo: 'Bet $5, Get $200 instantly in Bonus Bets!',
-      badge: 'PROMO COEF: +4000',
-      tagline: 'Unlock dynamic multipliers on tonight\'s MLB slates.',
-      bgColor: 'from-amber-600/15 to-emerald-600/15',
-      borderColor: 'border-yellow-600/30',
-      actionText: 'Lock Bonus Code ⚡',
-      link: 'https://draftkings.com',
-      logoChar: 'DK'
-    },
-    'FanDuel': {
-      title: 'FanDuel No Sweat Parlay',
-      promo: 'Get up to $1,000 back in Bonus Bets if you don\'t sweep!',
-      badge: 'INSURANCE COVER',
-      tagline: 'Combine Yordan Alvarez & Shohei Ohtani props with 0 downside risk.',
-      bgColor: 'from-[#1e3a8a]/20 to-[#3b82f6]/10',
-      borderColor: 'border-blue-500/35',
-      actionText: 'Play No-Sweat Slip',
-      link: 'https://fanduel.com',
-      logoChar: 'FD'
-    },
-    'PrizePicks': {
-      title: 'PrizePicks Friday multiplier',
-      promo: '100x your cash entry on 6-Leg pitcher strikeouts!',
-      badge: '100X MULTIPLIER',
-      tagline: 'More or Less selections. Real-time ledger grading included.',
-      bgColor: 'from-[#ec4899]/15 to-[#3b82f6]/15',
-      borderColor: 'border-pink-500/30',
-      actionText: 'Taily Pick Now 🎯',
-      link: 'https://prizepicks.com',
-      logoChar: 'PP'
-    },
     'VouchEdge Premium Upgrade': {
-      title: 'Sponsor Ad: VouchEdge Seller Pro',
+      title: 'VouchEdge Seller Pro',
       promo: 'Monetize your parlay slips & sell verified tails completely ad-free!',
       badge: 'UNLIMITED PROOF',
       tagline: 'Upgrade above GOLD to get 100% ad-free experience with ledger certificates.',
@@ -71,9 +37,9 @@ export default function AdBanner({
       link: '#',
       logoChar: '💎'
     }
-  };
+  } as const;
 
-  const ad = ADS_DATABASE[activeSponsor as keyof typeof ADS_DATABASE] || ADS_DATABASE['DraftKings'];
+  const ad = ADS_DATABASE['VouchEdge Premium Upgrade'];
 
   // Render styles depending on type
   if (bannerType === 'feed-top') {

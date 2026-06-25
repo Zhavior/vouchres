@@ -118,14 +118,13 @@ export default function VouchCard({
     );
   };
 
-  // Extract mock confidence scores if not present
-  const aiConfidence = (vouch as any).aiConfidence ?? (vouch.id.charCodeAt(0) % 30 + 65); // 65-95%
-  const capperConfidence = (vouch as any).capperConfidence ?? (vouch.id.charCodeAt(1) % 25 + 75); // 75-99%
-  const riskTier = (vouch as any).riskTier ?? (aiConfidence > 85 ? 'LOW' : aiConfidence > 70 ? 'MEDIUM' : 'HIGH');
+  const aiConfidence = (vouch as any).aiConfidence ?? null;
+  const capperConfidence = (vouch as any).capperConfidence ?? null;
+  const riskTier = (vouch as any).riskTier ?? null;
   const isLocked = (vouch as any).isLocked ?? true;
   const lockTimeText = (vouch as any).lockTime ?? 'Locks before game time';
   const trustScoreImpact = (vouch as any).trustScoreImpact ?? (vouch.status === 'WON' ? 45 : vouch.status === 'LOST' ? -25 : 0);
-  const actualResult = (vouch as any).actualResult ?? (vouch.status === 'WON' ? 'Covered (Won 6-3)' : vouch.status === 'LOST' ? 'Missed (Lost 2-4)' : 'Pending Grade');
+  const actualResult = (vouch as any).actualResult ?? (vouch.status === 'WON' ? 'Covered' : vouch.status === 'LOST' ? 'Missed' : 'Pending Grade');
   
   // Custom theme background/styling (Cyber blue default)
   const isXPreview = layout === 'x-preview';
@@ -175,7 +174,8 @@ export default function VouchCard({
   };
 
   // Helper for rendering a confidence gauge or sparkline
-  const renderConfidenceMeter = (val: number, colorClass: string, glowClass: string) => {
+  const renderConfidenceMeter = (val: number | null, colorClass: string, glowClass: string) => {
+    if (val === null) return null;
     return (
       <div className="w-full space-y-1">
         <div className="flex justify-between items-center text-[10px] font-mono text-slate-450 font-bold uppercase">
@@ -183,7 +183,7 @@ export default function VouchCard({
           <span className={`${colorClass} font-black`}>{val}%</span>
         </div>
         <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
-          <div 
+          <div
             className={`h-full rounded-full transition-all duration-500 ${colorClass} ${glowClass}`}
             style={{ width: `${val}%` }}
           />
@@ -312,9 +312,11 @@ export default function VouchCard({
               <span className="text-[8px] bg-slate-900 font-bold text-slate-400 px-1.5 py-0.5 rounded font-mono">
                 TS: {profile?.trustScore || 845}
               </span>
-              <span className="text-[8px] bg-[#1a0f05] text-amber-500 border border-amber-900/30 px-1.5 py-0.5 rounded font-extrabold">
-                {riskTier} RISK
-              </span>
+              {riskTier && (
+                <span className="text-[8px] bg-[#1a0f05] text-amber-500 border border-amber-900/30 px-1.5 py-0.5 rounded font-extrabold">
+                  {riskTier} RISK
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -615,7 +617,7 @@ export default function VouchCard({
             <Sparkles className="w-3.5 h-3.5" /> AI Model-Supported Backtesting Metrics
           </h5>
           <p className="text-slate-350 leading-relaxed font-semibold">
-            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market at a <strong className="text-cyan-400">{aiConfidence}% frequency</strong> over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
+            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market{aiConfidence !== null ? <> at a <strong className="text-cyan-400">{aiConfidence}% frequency</strong></> : ''} over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
           </p>
           <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono pt-1">
             <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
@@ -683,14 +685,16 @@ export default function VouchCard({
               </div>
 
               {/* Confidence bars */}
-              <div className="grid grid-cols-2 gap-2 text-left text-[8px] pt-1 border-t border-slate-900">
-                <div>
-                  <span className="text-purple-400 block font-bold font-mono">AI CONFIDENCE: {aiConfidence}%</span>
+              {(aiConfidence !== null || capperConfidence !== null) && (
+                <div className="grid grid-cols-2 gap-2 text-left text-[8px] pt-1 border-t border-slate-900">
+                  {aiConfidence !== null && (
+                    <div><span className="text-purple-400 block font-bold font-mono">AI CONFIDENCE: {aiConfidence}%</span></div>
+                  )}
+                  {capperConfidence !== null && (
+                    <div><span className="text-cyan-400 block font-bold font-mono">CAPPER COEF: {capperConfidence}%</span></div>
+                  )}
                 </div>
-                <div>
-                  <span className="text-cyan-400 block font-bold font-mono">CAPPER COEF: {capperConfidence}%</span>
-                </div>
-              </div>
+              )}
 
               {/* Watermark notice */}
               <div className="mt-2 text-center">
@@ -704,7 +708,19 @@ export default function VouchCard({
               <textarea
                 readOnly
                 className="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 font-mono leading-relaxed outline-none focus:border-cyan-500/50 resize-none h-24"
-                value={`🔥 VERIFIED PROOF VOUCH 🔥\n\n📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}\n📊 Game: ${vouch.gameName}\n📈 Odds: ${vouch.odds}\n\n🤖 AI Confidence: ${aiConfidence}%\n✍️ My Confidence: ${capperConfidence}%\n\n🛡️ Verified Pre-Lock via VouchEdge.ai\n\n⚠️ Probability-based. No guarantees.`}
+                value={[
+                  `🔥 VERIFIED PROOF VOUCH 🔥`,
+                  ``,
+                  `📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}`,
+                  `📊 Game: ${vouch.gameName}`,
+                  `📈 Odds: ${vouch.odds}`,
+                  aiConfidence !== null ? `🤖 AI Confidence: ${aiConfidence}%` : '',
+                  capperConfidence !== null ? `✍️ My Confidence: ${capperConfidence}%` : '',
+                  ``,
+                  `🛡️ Verified Pre-Lock via VouchEdge.ai`,
+                  ``,
+                  `⚠️ Probability-based. No guarantees.`,
+                ].filter(l => l !== undefined).join('\n')}
               />
             </div>
 
@@ -712,7 +728,19 @@ export default function VouchCard({
             <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`🔥 VERIFIED PROOF VOUCH 🔥\n\n📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}\n📊 Game: ${vouch.gameName}\n📈 Odds: ${vouch.odds}\n\n🤖 AI Confidence: ${aiConfidence}%\n✍️ My Confidence: ${capperConfidence}%\n\n🛡️ Verified Pre-Lock via VouchEdge.ai\n\n⚠️ Probability-based. No guarantees.`);
+                  navigator.clipboard.writeText([
+                    `🔥 VERIFIED PROOF VOUCH 🔥`,
+                    ``,
+                    `📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}`,
+                    `📊 Game: ${vouch.gameName}`,
+                    `📈 Odds: ${vouch.odds}`,
+                    aiConfidence !== null ? `🤖 AI Confidence: ${aiConfidence}%` : '',
+                    capperConfidence !== null ? `✍️ My Confidence: ${capperConfidence}%` : '',
+                    ``,
+                    `🛡️ Verified Pre-Lock via VouchEdge.ai`,
+                    ``,
+                    `⚠️ Probability-based. No guarantees.`,
+                  ].filter(l => l !== undefined).join('\n'));
                   triggerToast('📋 Copied tweet caption!');
                 }}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-slate-800"
