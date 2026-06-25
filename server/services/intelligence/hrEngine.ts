@@ -1,19 +1,22 @@
 /**
  * HR Target Engine + Sneaky HR Finder.
  * Ranks HR opportunity at the matchup level (the lineup facing a probable pitcher).
- * Individual-hitter resolution needs lineups/Statcast (placeholders marked limited).
+ * Uses real pitcher vulnerability (HR/9, ERA, BB/K) and sourced park factors.
+ * Individual hitter resolution (lineup order, form) is in hrEdgeEngine/dailyHrBoardService.
  */
 import { NormalizedGame, DataQuality } from "../mlb/mlbTypes";
 import { buildVulnerablePitcherReport, VulnerablePitcherProfile } from "./pitcherVulnerabilityEngine";
-import { clamp, seededInt, hrLabelFromScore, confidenceFromScore, HrLabel, ConfidenceBand } from "./scoring";
+import { PitcherSeasonStats } from "../mlb/statsClient";
+import { getParkFactor } from "../mlb/parkFactors";
+import { clamp, hrLabelFromScore, confidenceFromScore, HrLabel, ConfidenceBand } from "./scoring";
 
 export interface HrTarget {
   targetId: string;
-  team: string; // attacking team (the lineup)
+  team: string;
   opponent: string;
   opposingPitcher: string;
   opposingPitcherId: number;
-  hrScore: number; // 1-100
+  hrScore: number;
   tier: HrLabel;
   label: HrLabel;
   reasons: string[];
@@ -34,26 +37,24 @@ export interface SneakyHrTarget {
   whatCouldGoWrong: string[];
 }
 
-function targetFromVuln(v: VulnerablePitcherProfile): HrTarget {
-  const key = `hr:${v.pitcherId}:${v.opponent}`;
-  // Power upside of the attacking lineup is a placeholder; pitcher vulnerability is the real driver.
-  const lineupPower = seededInt(key + ":power", 35, 85);
-  const parkFactor = seededInt(key + ":park", 40, 80);
-  const hrScore = clamp(Math.round(0.5 * v.vulnerabilityScore + 0.3 * lineupPower + 0.2 * parkFactor), 1, 100);
+function targetFromVuln(v: VulnerablePitcherProfile, venue: string): HrTarget {
+  const { factor: parkFactor, source: parkSource } = getParkFactor(venue);
+  const parkC = clamp(((parkFactor - 88) / 33) * 100, 0, 100);
+
+  // Pitcher vulnerability is the real driver; park adds secondary adjustment.
+  // No lineup-level power data at this layer — that lives in hrEdgeEngine.
+  const hrScore = clamp(Math.round(0.70 * v.vulnerabilityScore + 0.30 * parkC), 1, 100);
   const label = hrLabelFromScore(hrScore);
 
   const reasons = [
-    `Faces ${v.pitcherName} (vulnerability ${v.vulnerabilityScore}/100)`,
+    `${v.pitcherName} vulnerability ${v.vulnerabilityScore}/100 (${v.dataQuality === "limited" ? "no stat data" : "real HR/9 + ERA"})`,
     ...v.attackReasons.slice(0, 2),
-  ];
-  const riskWarnings = [
-    "Lineup spots and weather not yet wired — matchup-level read only.",
-    ...(label === "Lotto" || label === "Avoid" ? ["Low modeled HR equity — high variance."] : []),
+    `${venue} park factor ${parkFactor} (${parkSource === "table" ? "sourced" : "neutral"})`,
   ];
 
   return {
-    targetId: key,
-    team: v.opponent, // the team batting against this pitcher
+    targetId: `hr:${v.pitcherId}:${v.opponent}`,
+    team: v.opponent,
     opponent: v.team,
     opposingPitcher: v.pitcherName,
     opposingPitcherId: v.pitcherId,
@@ -61,38 +62,54 @@ function targetFromVuln(v: VulnerablePitcherProfile): HrTarget {
     tier: label,
     label,
     reasons,
-    riskWarnings,
+    riskWarnings: [
+      "Matchup-level score only — individual hitter lineup spots are in the HR Board.",
+      ...(label === "Lotto" || label === "Avoid" ? ["Low modeled HR equity — high variance."] : []),
+    ],
     confidence: confidenceFromScore(hrScore),
-    judgeStatus: "Pending",
-    dataQuality: "limited",
+    judgeStatus: v.dataQuality === "limited" ? "Needs more data" : "Pending",
+    dataQuality: v.dataQuality,
   };
 }
 
 /** Ranked HR matchup targets for the slate, strongest first. */
-export function rankHrTargets(games: NormalizedGame[]): HrTarget[] {
-  const vulns = buildVulnerablePitcherReport(games);
-  return vulns.map(targetFromVuln).sort((a, b) => b.hrScore - a.hrScore);
+export async function rankHrTargets(
+  games: NormalizedGame[],
+  pitcherStatsMap: Map<number, PitcherSeasonStats | null> = new Map()
+): Promise<HrTarget[]> {
+  const vulns = await buildVulnerablePitcherReport(games, pitcherStatsMap);
+  // Build a venue map: pitcherId → game venue
+  const venueMap = new Map<number, string>();
+  for (const g of games) {
+    if (g.probablePitchers.away) venueMap.set(g.probablePitchers.away.pitcherId, g.venue);
+    if (g.probablePitchers.home) venueMap.set(g.probablePitchers.home.pitcherId, g.venue);
+  }
+  return vulns
+    .map((v) => targetFromVuln(v, venueMap.get(v.pitcherId) ?? ""))
+    .sort((a, b) => b.hrScore - a.hrScore);
 }
 
-/**
- * Sneaky HR finder: deliberately skips the most obvious top matchups and surfaces
- * mid-pack spots with a hidden value indicator. Always flagged higher risk.
- */
-export function findSneakyHrTargets(games: NormalizedGame[], limit = 6): SneakyHrTarget[] {
-  const all = rankHrTargets(games);
-  // Skip the obvious top tier; look at the middle band for hidden value.
-  const midBand = all.filter((t) => t.hrScore >= 45 && t.hrScore < 72);
-  return midBand.slice(0, limit).map((t, i) => ({
-    sneakyRank: i + 1,
-    team: t.team,
-    opponent: t.opponent,
-    opposingPitcher: t.opposingPitcher,
-    reason: `Under-the-radar spot vs ${t.opposingPitcher}: modeled hard-contact/HR tendency outpaces the market's attention on this game.`,
-    risk: t.hrScore >= 55 ? "HIGH" : "EXTREME",
-    confidence: t.confidence,
-    whatCouldGoWrong: [
-      "These are intentionally non-obvious — lower hit rate than headline plays.",
-      "Needs lineup confirmation; a bottom-order bat lowers real HR equity.",
-    ],
-  }));
+/** Sneaky HR: mid-pack matchups with hidden value. Always flagged higher risk. */
+export async function findSneakyHrTargets(
+  games: NormalizedGame[],
+  pitcherStatsMap: Map<number, PitcherSeasonStats | null> = new Map(),
+  limit = 6
+): Promise<SneakyHrTarget[]> {
+  const all = await rankHrTargets(games, pitcherStatsMap);
+  return all
+    .filter((t) => t.hrScore >= 45 && t.hrScore < 72)
+    .slice(0, limit)
+    .map((t, i) => ({
+      sneakyRank: i + 1,
+      team: t.team,
+      opponent: t.opponent,
+      opposingPitcher: t.opposingPitcher,
+      reason: `Under-the-radar spot vs ${t.opposingPitcher}: HR/9 + park factor lean outpaces public attention on this game.`,
+      risk: t.hrScore >= 55 ? "HIGH" : "EXTREME",
+      confidence: t.confidence,
+      whatCouldGoWrong: [
+        "Intentionally non-obvious — lower hit rate than headline plays.",
+        "Needs lineup confirmation; bottom-order bats lower real HR equity.",
+      ],
+    }));
 }
