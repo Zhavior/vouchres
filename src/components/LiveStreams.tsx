@@ -157,30 +157,27 @@ const CHANNELS: StreamChannel[] = [
 ];
 
 const MOCK_CHAT_POOL = [
-  "LFG Dodgers!!!",
-  "Guru state of mind. Tailing!",
-  "Is that +185 still available on draftkings?",
+  "LFG tonight!",
+  "Tailing this research, good breakdown",
   "Ohtani looks locked in tonight boys.",
   "What is the confidence meter on Tanner Houck?",
-  "I'm putting 5 units on this live vouch !!",
   "Those sabermetric strikeout tables are pure gold",
   "Wait, didn't Red Sox bullpen blow the last game?",
   "This stream is so much better than standard sports TV",
-  "Verified track record indeed, let's keep it green!",
-  "Just vouched this circle prop to my shared profile feed!",
-  "Absolute W stream",
+  "Verified track record, respect the process!",
+  "Just vouched this to my research board!",
+  "Great analysis W",
   "Can someone explain why Houck is valued here?",
-  "Weather reports match wind tracker perfectly",
-  "That winrate is crazy, is it real?",
-  "Yes sir! Tailed and voucherized",
-  "Double down on Dodgers let's go. W guru",
-  "Unreal pitch correlation, loving these live graphs."
+  "That winrate is real, check the ledger tab",
+  "Saved this to my parlay slip",
+  "Unreal pitch correlation, loving these live graphs.",
+  "The HR board called this one earlier too"
 ];
 
 const STREAMER_CHAT_RESPONSES = [
-  "Appreciate you tailing! Let's cash this ticket together.",
-  "Check the live analytics radar, the value is absolutely on our side.",
-  "Keep your units responsible, but this Dodgers runline is high-correlation.",
+  "Appreciate you following along! Let's track this together.",
+  "Check the live analytics radar, the value is on our side.",
+  "Track responsibly — this is research, not a guarantee.",
   "Yes, the odds are backed by the live VouchEdge pitch tracking coefficients.",
   "Glad you like the live board overlay! Remember to save it directly into your ledger tab."
 ];
