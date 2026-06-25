@@ -1,7 +1,47 @@
-import React from 'react';
-import { Sparkles, Save, Check } from 'lucide-react';
-import { HOT_MARKETS } from '../../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { Sparkles, Clock, AlertCircle } from 'lucide-react';
 import { Vouch } from '../../types';
+
+interface LiveGame {
+  gamePk: number;
+  game: string;
+  awayAbbr: string;
+  homeAbbr: string;
+  startTime: string;
+  status: string;
+  awayPitcher: string | null;
+  homePitcher: string | null;
+}
+
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  } catch { return 'TBD'; }
+}
+
+async function fetchTodayGames(): Promise<LiveGame[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team,probablePitcher,linescore`);
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = await res.json();
+  const games: any[] = data?.dates?.[0]?.games ?? [];
+  return games.slice(0, 5).map((g) => {
+    const away = g.teams?.away?.team;
+    const home = g.teams?.home?.team;
+    const ap = g.teams?.away?.probablePitcher;
+    const hp = g.teams?.home?.probablePitcher;
+    return {
+      gamePk: g.gamePk,
+      game: `${away?.name ?? '?'} @ ${home?.name ?? '?'}`,
+      awayAbbr: away?.abbreviation ?? '?',
+      homeAbbr: home?.abbreviation ?? '?',
+      startTime: formatTime(g.gameDate),
+      status: g.status?.detailedState ?? g.status?.abstractGameState ?? 'Scheduled',
+      awayPitcher: ap?.fullName ?? null,
+      homePitcher: hp?.fullName ?? null,
+    };
+  });
+}
 
 interface HotMarketsPanelProps {
   onQuickVouch: (vouch: Vouch) => void;
@@ -9,86 +49,111 @@ interface HotMarketsPanelProps {
 }
 
 export default function HotMarketsPanel({ onQuickVouch, savedVouchIds }: HotMarketsPanelProps) {
+  const [games, setGames] = useState<LiveGame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetchTodayGames()
+      .then(setGames)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="bg-[#121824] rounded-xl border border-slate-850 p-4" id="hot-markets-card">
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-5 h-5 text-sky-400" />
-        <h3 className="font-bold text-slate-100 text-sm tracking-wide uppercase">Hot MLB Markets</h3>
+        <h3 className="font-bold text-slate-100 text-sm tracking-wide uppercase">Today's MLB Games</h3>
       </div>
 
-      <div className="space-y-3">
-        {HOT_MARKETS.map((m) => {
-          return (
-            <div
-              key={m.id}
-              className="p-3 bg-[#0b0f19] rounded-lg border border-slate-800 space-y-2 text-xs"
-              id={`hot-market-${m.id}`}
-            >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded uppercase">
-                  {m.sport}
-                </span>
-                <span className="text-slate-400 text-[10px] font-mono">{m.startTime}</span>
-              </div>
-              <p className="font-medium text-slate-200 line-clamp-1">{m.game}</p>
-              
-              <div className="pt-1 border-t border-slate-800/60">
-                <p className="text-[10px] text-slate-400 mb-1.5 uppercase font-semibold">Headline Selection</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {m.selections.map((sel) => {
-                    // Create unique ID for this selection as a vouch target
-                    const vouchId = `vouch-${m.id}-${sel.name.replace(/\s+/g, '-').toLowerCase()}`;
-                    const isSaved = savedVouchIds.includes(vouchId);
-                    
-                    const handleVouchClick = () => {
-                      const newVouch: Vouch = {
-                        id: vouchId,
-                        vouchSource: "VouchEdge Community",
-                        userNote: "Quick vouch from live MLB board selection.",
-                        market: m.headlineMarket,
-                        sport: "MLB",
-                        playerOrTeam: sel.name,
-                        gameName: m.game,
-                        odds: sel.odds,
-                        status: "PENDING",
-                        savedCount: sel.vouchCount,
-                        vouchedCount: sel.vouchCount + 1,
-                        createdAt: new Date().toISOString(),
-                        isSavedByUser: true,
-                        isVouchedByUser: true
-                      };
-                      onQuickVouch(newVouch);
-                    };
+      {loading && (
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-lg bg-slate-800/40 animate-pulse" />)}
+        </div>
+      )}
 
-                    return (
-                      <button
-                        key={sel.name}
-                        onClick={handleVouchClick}
-                        className={`p-2 rounded text-left border transition-all flex flex-col justify-between ${
-                          isSaved
-                            ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400'
-                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-850'
-                        }`}
-                        id={`quick-vouch-sel-${m.id}-${sel.name.replace(/\s+/g, '-').toLowerCase()}`}
-                      >
-                        <span className="font-bold block truncate">{sel.name}</span>
-                        <div className="flex items-center justify-between gap-1 w-full mt-1">
-                          <span className={`${isSaved ? 'text-emerald-300' : 'text-sky-400'} font-mono font-bold text-[10px]`}>
-                            {sel.odds}
-                          </span>
-                          <span className="text-slate-400 text-[9px] font-mono">
-                            {sel.vouchCount + (isSaved ? 1 : 0)} vouches
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+      {error && (
+        <div className="flex items-center gap-2 text-xs text-slate-400 p-3 bg-slate-800/30 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          Schedule unavailable — check back soon.
+        </div>
+      )}
+
+      {!loading && !error && games.length === 0 && (
+        <p className="text-xs text-slate-500 text-center py-4">No games scheduled today.</p>
+      )}
+
+      <div className="space-y-2">
+        {games.map((m) => {
+          const isLive  = /progress|live|warmup/i.test(m.status);
+          const isFinal = /final/i.test(m.status);
+          const vouchId = `vouch-game-${m.gamePk}`;
+          const isSaved = savedVouchIds.includes(vouchId);
+
+          const handleVouch = () => {
+            const v: Vouch = {
+              id: vouchId,
+              vouchSource: 'VouchEdge',
+              userNote: `Research lean on ${m.game}.`,
+              market: 'Game',
+              sport: 'MLB',
+              playerOrTeam: m.game,
+              gameName: m.game,
+              odds: 'N/A',
+              status: 'PENDING',
+              savedCount: 0,
+              vouchedCount: 1,
+              createdAt: new Date().toISOString(),
+              isSavedByUser: true,
+              isVouchedByUser: true,
+            };
+            onQuickVouch(v);
+          };
+
+          return (
+            <div key={m.gamePk} className="p-3 bg-[#0b0f19] rounded-lg border border-slate-800 text-xs space-y-1.5" id={`hot-market-${m.gamePk}`}>
+              <div className="flex items-center justify-between gap-1">
+                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${
+                  isLive  ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                  isFinal ? 'bg-slate-700 text-slate-400' : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {isLive ? '🔴 Live' : isFinal ? 'Final' : 'MLB'}
+                </span>
+                <span className="text-slate-500 text-[10px] font-mono flex items-center gap-1">
+                  <Clock className="w-2.5 h-2.5" />{m.startTime}
+                </span>
               </div>
+
+              <p className="font-semibold text-slate-200 truncate">{m.game}</p>
+
+              {(m.awayPitcher || m.homePitcher) ? (
+                <div className="text-[10px] text-slate-400 space-y-0.5">
+                  {m.awayPitcher && <div><span className="text-slate-500">{m.awayAbbr}:</span> {m.awayPitcher}</div>}
+                  {m.homePitcher && <div><span className="text-slate-500">{m.homeAbbr}:</span> {m.homePitcher}</div>}
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-600 italic">Probables not yet posted</p>
+              )}
+
+              <button
+                onClick={handleVouch}
+                className={`w-full mt-1 py-1 rounded text-[10px] font-bold transition-all ${
+                  isSaved
+                    ? 'bg-emerald-950/40 border border-emerald-800 text-emerald-400'
+                    : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-sky-700 hover:text-sky-400'
+                }`}
+              >
+                {isSaved ? '✓ Added to Research' : '+ Add to Research'}
+              </button>
             </div>
           );
         })}
       </div>
+
+      {!loading && !error && games.length > 0 && (
+        <p className="text-[9px] text-slate-600 mt-2 text-center">Live from MLB Stats API · Odds unavailable</p>
+      )}
     </div>
   );
 }
