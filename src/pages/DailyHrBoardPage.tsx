@@ -128,6 +128,14 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         </p>
       </div>
 
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 w-fit mb-3 text-[11px] font-bold">
+        {(['tier', 'game'] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} className={`px-3 py-1 rounded-lg transition-all ${view === v ? 'bg-orange-500/20 text-orange-300' : 'text-slate-400'}`}>
+            {v === 'tier' ? 'By Tier' : 'By Game'}
+          </button>
+        ))}
+      </div>
+
       <HrBoardFilters date={date} onDateChange={setDate} teams={teams} filters={filters} onChange={update} />
 
       {error && <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-sm text-red-300">{error}</div>}
@@ -141,6 +149,8 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
           <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">
             No hitters match these filters.
           </div>
+        ) : view === 'tier' ? (
+          <HrTierView games={filteredGames} onSelect={setSelected} onAddLeg={onAddLegToParlay} />
         ) : (
           filteredGames.map((g) => <HrBoardTable key={g.gamePk} game={g} onSelect={setSelected} />)
         )

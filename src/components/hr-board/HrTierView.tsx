@@ -24,7 +24,7 @@ function americanToDecimal(am: string): number {
 
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
-function HrCard({ row, onSelect, onAddLeg }: { row: HrBoardRow; onSelect: () => void; onAddLeg?: Props['onAddLeg'] }) {
+const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props['onAddLeg'] }> = ({ row, onSelect, onAddLeg }) => {
   return (
     <Card onClick={onSelect} className="group">
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -65,7 +65,7 @@ function HrCard({ row, onSelect, onAddLeg }: { row: HrBoardRow; onSelect: () => 
       </div>
     </Card>
   );
-}
+};
 
 export default function HrTierView({ games, onSelect, onAddLeg }: Props) {
   const rows = games.flatMap((g) => g.rows);

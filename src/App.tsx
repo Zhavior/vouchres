@@ -479,7 +479,7 @@ export default function App() {
       case 'intel':
         return <MlbIntelligenceHub />;
       case 'hr_board':
-        return <DailyHrBoardPage />;
+        return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
       case 'vouchscan':
         return <VouchScan />;
       case 'live_games':
