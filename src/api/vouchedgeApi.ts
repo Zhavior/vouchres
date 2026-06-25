@@ -17,11 +17,21 @@ import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { MatchupsResponse, GameMatchup } from "../types/matchup";
+import { dailyReportDirect, hrBoardDirect, matchupsDirect } from "../lib/mlbDirect";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   return (await res.json()) as T;
+}
+
+/** Try the backend, fall back to a direct-statsapi client build (real data, no mock). */
+async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+  try {
+    return await primary();
+  } catch {
+    return await fallback();
+  }
 }
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -38,7 +48,10 @@ export const vouchedgeApi = {
   todayGames: () => getJson<{ date: string; games: ApiGame[] }>("/api/mlb/games/today"),
   gamesByDate: (date: string) => getJson<{ date: string; games: ApiGame[] }>(`/api/mlb/games/date/${date}`),
   dailyReport: (date?: string) =>
-    getJson<DailyMlbReport>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
+    withFallback(
+      () => getJson<DailyMlbReport>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
+      () => dailyReportDirect(date)
+    ),
   vulnerablePitchers: () => getJson<{ report: VulnerablePitcher[] }>("/api/mlb/reports/vulnerable-pitchers"),
   hrTargets: () => getJson<{ targets: HrTarget[] }>("/api/mlb/reports/hr-targets"),
   sneakyHr: () => getJson<{ sneaky: SneakyHrTarget[] }>("/api/mlb/reports/sneaky-hr"),
@@ -69,11 +82,11 @@ export const vouchedgeApi = {
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
 
   // Live Games matchups
-  matchupsToday: () => getJson<MatchupsResponse>("/api/mlb/matchups/today"),
+  matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
 
   // Daily HR Board
-  hrBoardToday: () => getJson<HrBoardResponse>("/api/mlb/hr-board/today"),
+  hrBoardToday: () => withFallback(() => getJson<HrBoardResponse>("/api/mlb/hr-board/today"), () => hrBoardDirect()),
   hrBoardByDate: (date: string) => getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}`),
   hrBoardPlayer: (playerId: number, date?: string) =>
     getJson<{ player: HrBoardRow }>(`/api/mlb/hr-board/player/${playerId}${date ? `?date=${date}` : ""}`),
