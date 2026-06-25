@@ -49,6 +49,44 @@ services:
       - key: SENTRY_DSN
         sync: false
 
+  - type: cron
+    name: vouchedge-grader
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    schedule: "0 6 * * *"  # 2 AM ET (6 AM UTC) — after all MLB games are final
+    startCommand: node dist/gradeJob.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: MLB_API_BASE_URL
+        value: https://statsapi.mlb.com/api
+
+  - type: cron
+    name: vouchedge-deleter
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    schedule: "0 4 * * *"  # 4 AM UTC — low-traffic window
+    startCommand: node dist/deleteJob.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
 # NOTE: Delete vercel.json from your repo before deploying to Render.
 # The existing vercel.json config is incompatible with this Render setup —
 # it would deploy the frontend as a static SPA without the backend, breaking

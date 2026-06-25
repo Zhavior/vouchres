@@ -98,7 +98,7 @@ export async function gradePendingPicks(opts: {
     // 4. Evaluate each pick
     for (const pick of picks) {
       try {
-        const result = evaluatePick(pick, boxscore);
+        const result = await evaluatePick(pick, boxscore);
 
         if (result.status === "graded_error") {
           skipped.push({ ...result, pick_id: pick.id });
@@ -172,7 +172,7 @@ async function fetchBoxscore(gamePk: string): Promise<any> {
  *
  * New markets can be added here as the capper agents evolve.
  */
-function evaluatePick(
+async function evaluatePick(
   pick: {
     id: string;
     market: string;
@@ -295,7 +295,7 @@ async function gradeParlayPick(
     }
 
     // Reuse the single-pick evaluation logic for this leg
-    const legResult = evaluatePick(
+    const legResult = await evaluatePick(
       {
         id: pick.id,
         market: leg.market,
