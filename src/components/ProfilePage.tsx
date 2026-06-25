@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Shield, ShieldCheck, Mail, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share } from 'lucide-react';
-import { CreatorProofProfile, FeedPost, Vouch } from '../types';
+import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
+import ProfileResume from './profile/ProfileResume';
 import FeedPostCard from '../social/feed/FeedPostCard';
 import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
@@ -17,6 +18,7 @@ interface ProfilePageProps {
   onSaveVouch?: (vouch: Vouch) => void;
   savedVouchIds?: string[];
   onAddComment?: (postId: string, commentContent: string) => void;
+  savedParlays?: Parlay[];
 }
 
 export default function ProfilePage({ 
@@ -28,7 +30,8 @@ export default function ProfilePage({
   onRepostPost = () => {},
   onSaveVouch = () => {},
   savedVouchIds = [],
-  onAddComment = () => {}
+  onAddComment = () => {},
+  savedParlays = []
 }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -127,7 +130,9 @@ export default function ProfilePage({
   return (
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
       <div className="p-4 md:p-6 max-w-[1120px] mx-auto min-h-screen bg-transparent space-y-6" id="profile-details-view">
-        
+
+        <ProfileResume savedParlays={savedParlays} winRate={profile.winRate} />
+
         {/* Title segment */}
         <div className="flex flex-col">
           <h2 className="text-xl font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">

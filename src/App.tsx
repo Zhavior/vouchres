@@ -542,6 +542,7 @@ export default function App() {
             onSaveVouch={handleSaveVouch}
             savedVouchIds={savedVouchIds}
             onAddComment={handleAddComment}
+            savedParlays={savedSlips}
           />
         );
       case 'premium':
