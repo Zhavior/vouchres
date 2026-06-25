@@ -376,7 +376,7 @@ export default function App() {
     syncProfile(nextProfile);
   };
 
-  // Restore seeded presets
+  // Reset all local state to initial empty values
   const handleResetDatabase = () => {
     localStorage.removeItem('vouchedge_posts');
     localStorage.removeItem('vouchedge_slips');

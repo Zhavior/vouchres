@@ -64,7 +64,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
       </Section>
 
       {/* Today's VouchEdge Brief */}
-      <Section title="Today’s VouchEdge Brief" subtitle="Generated from live MLB data" action={<StatusBadge status={report?.dataQuality === 'limited' ? 'Demo' : 'Projected'} />}>
+      <Section title="Today’s VouchEdge Brief" subtitle="Generated from live MLB data" action={<StatusBadge status={report?.dataQuality === 'limited' ? 'Limited' : 'Projected'} />}>
         {loading ? (
           <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-28 rounded-2xl bg-slate-900/60 border border-slate-800 animate-pulse" />)}</div>
         ) : (
@@ -79,7 +79,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
             <BriefCard icon={AlertTriangle} color="#fbbf24" label="Most Vulnerable Pitcher" status="Projected"
               line={vp ? (beginner ? `${vp.pitcherName} (${vp.team}) is today’s most hittable starter.` : `${vp.pitcherName} · vulnerability ${vp.vulnerabilityScore}/100`) : 'No probables set yet.'}
               onClick={() => onSectionChange('intel')} cta="MLB Intelligence" />
-            <BriefCard icon={ClipboardList} color="#22d3ee" label="My Saved Parlays" status={savedSlips.length ? 'Pending' : 'Demo'}
+            <BriefCard icon={ClipboardList} color="#22d3ee" label="My Saved Parlays" status={savedSlips.length ? 'Pending' : 'Projected'}
               line={savedSlips.length ? (beginner ? `You have ${savedSlips.length} saved parlay${savedSlips.length > 1 ? 's' : ''} to track.` : savedSlips.slice(0, 2).map((s) => s.title).join(' · ')) : 'No saved parlays yet — build one to track it.'}
               onClick={() => onSectionChange(savedSlips.length ? 'results' : 'build')} cta={savedSlips.length ? 'View Results' : 'Build a Parlay'} />
           </div>

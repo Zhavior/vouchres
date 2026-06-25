@@ -72,7 +72,7 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
               <span className="text-xs" style={{ color: FORM_COLOR[row.formTag] }}>{row.formTag} form</span>
             </div>
             <p className="text-[11px] text-slate-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> Park factor {row.parkFactor} (×{row.hrMultiplier} HR)</p>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1"><CloudSun className="w-3 h-3" /> Weather boost {row.weatherBoost > 0 ? '+' : ''}{row.weatherBoost}% <span className="text-slate-600">(placeholder)</span></p>
+            <p className="text-[11px] text-slate-400 flex items-center gap-1"><CloudSun className="w-3 h-3" /> Weather data unavailable — not factored</p>
           </Section>
 
           {/* AI Judge note */}
