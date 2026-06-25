@@ -26,6 +26,7 @@ import ResultsPage from './ResultsPage';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
+import ParlaySlipSummary, { BuilderMode } from './parlay/ParlaySlipSummary';
 
 interface ParlayLabProps {
   onSaveParlay: (parlay: Parlay) => void;
@@ -71,6 +72,8 @@ export default function ParlayLab({
   
   const [researchText, setResearchText] = useState("");
   const [isPremiumSubOnly, setIsPremiumSubOnly] = useState(false);
+
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('balanced');
 
   // AI-driven Edge Report state
   const [edgeReport, setEdgeReport] = useState<{ edgeScore: number; report: string } | null>(null);
@@ -830,6 +833,17 @@ export default function ParlayLab({
                 {legs.length} {legs.length === 1 ? 'LEG ACTIVE' : 'LEGS ACTIVE'}
               </span>
             </div>
+
+            <ParlaySlipSummary
+              legs={legs}
+              mode={builderMode}
+              setMode={setBuilderMode}
+              judgeScore={edgeReport?.edgeScore}
+              analyzing={isAnalyzingEdge}
+              onAnalyze={handleGenerateEdgeReport}
+              onSave={handleSaveParlaySlip}
+              onShare={handleShareToVouchPage}
+            />
 
             {legs.length === 0 ? (
               <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl text-slate-500 text-xs py-12">
