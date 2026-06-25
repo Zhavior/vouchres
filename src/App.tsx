@@ -15,6 +15,7 @@ import DailyHrBoardPage from './pages/DailyHrBoardPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import LiveGamesPro from './components/LiveGamesPro';
+import VouchScan from './components/VouchScan';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import SubscriberHub from './components/SubscriberHub';
@@ -480,6 +481,8 @@ export default function App() {
         return <MlbIntelligenceHub />;
       case 'hr_board':
         return <DailyHrBoardPage />;
+      case 'vouchscan':
+        return <VouchScan />;
       case 'live_games':
         return (
           <LiveGamesPro
