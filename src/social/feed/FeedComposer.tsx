@@ -36,27 +36,6 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
   const [mediaFileName, setMediaFileName] = useState<string>('');
   const [isReadingMedia, setIsReadingMedia] = useState<boolean>(false);
 
-  const PRESETS = [
-    {
-      id: 'p1',
-      name: 'Padres lineup chart',
-      type: 'image' as const,
-      url: 'https://images.unsplash.com/photo-1544045560-7297ff640ac4?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p2',
-      name: 'Pitch map analytics',
-      type: 'image' as const,
-      url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p3',
-      name: 'Bases loaded highlight',
-      type: 'video' as const,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    }
-  ];
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, expectedType?: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -804,28 +783,6 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
                     className="hidden" 
                   />
                 </label>
-              </div>
-            </div>
-
-            {/* Premium quick-attach Presets */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-[10px] text-slate-500 font-bold uppercase shrink-0">Demo sport presets:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(preset.type, preset.url, preset.name)}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-semibold transition-all flex items-center gap-1 ${
-                      mediaUrl === preset.url
-                        ? 'bg-sky-950/50 border-sky-500/60 text-sky-400 font-bold shadow-sm'
-                        : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-100'
-                    }`}
-                  >
-                    {preset.type === 'image' ? <Image className="w-2.5 h-2.5 shrink-0 text-sky-400" /> : <Film className="w-2.5 h-2.5 shrink-0 text-emerald-400" />}
-                    <span>{preset.name}</span>
-                  </button>
-                ))}
               </div>
             </div>
 
