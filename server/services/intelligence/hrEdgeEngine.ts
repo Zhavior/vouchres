@@ -1,12 +1,23 @@
 /**
- * HR Edge Engine — deterministic per-hitter scoring for the Daily HR Board.
- * Real inputs: hitter, opposing probable pitcher, venue, game status.
- * Placeholders (seeded, stable): batter power, handedness edge, park, weather,
- * lineup spot, line movement — clearly marked until real feeds are wired.
+ * HR Edge Engine — real stat-based scoring for the Daily HR Board.
+ *
+ * REAL inputs (sourced from MLB Stats API):
+ *   - hitter season HR/PA, SLG, OPS
+ *   - hitter recent form (last 7 game logs)
+ *   - pitcher HR/9, ERA, BB/K (season)
+ *   - lineup spot from boxscore battingOrder (when confirmed)
+ *   - park factor from static sourced table (parkFactors.ts)
+ *
+ * UNAVAILABLE (explicitly labeled, not invented):
+ *   - weather/wind boost → 0, source noted
+ *   - sportsbook line movement → 0, source noted
+ *   - bestOdds → same as implied (no odds feed)
  */
 import { NormalizedGame, NormalizedPitcher, NormalizedPlayer, DataQuality } from "../mlb/mlbTypes";
 import { buildPitcherVulnerability } from "./pitcherVulnerabilityEngine";
-import { clamp, seed01, seededInt } from "./scoring";
+import { HitterStats, PitcherSeasonStats } from "../mlb/statsClient";
+import { getParkFactor } from "../mlb/parkFactors";
+import { clamp } from "./scoring";
 
 export type Grade = "A+" | "A" | "B" | "C" | "D" | "F";
 export type FormTag = "Hot" | "Average" | "Cold" | "Slump";
@@ -28,10 +39,10 @@ export interface HrBoardRow {
   teamId: number;
   headshot: string;
   grade: Grade;
-  hrEdge: number; // 1-100 edge index, displayed as %
-  estimatedHrProb: number; // 0-1
-  impliedOdds: string; // American
-  bestOdds: string;
+  hrEdge: number;           // 1-100 composite edge index
+  estimatedHrProb: number;  // 0-1, single-game HR probability estimate
+  impliedOdds: string;      // American odds derived from estimatedHrProb (not sportsbook)
+  bestOdds: string;         // same as impliedOdds — no odds feed connected
   vouchScore: number;
   formTag: FormTag;
   opposingPitcher: string;
@@ -40,49 +51,62 @@ export interface HrBoardRow {
   parkFactor: number;
   hrMultiplier: number;
   dataConfidence: number;
-  weatherBoost: number;
+  weatherBoost: number;     // always 0 — weather API not connected
   gameStatus: string;
   projectionType: ProjectionType;
   lineupSpot: number;
-  lineMovement: number; // %
+  lineMovement: number;     // always 0 — odds feed not connected
   source: string;
   riskLabel: RiskLabel;
   reasons: string[];
   judge: HrRowJudge;
   dataQuality: DataQuality;
+  // diagnostic fields
+  seasonHR: number | null;
+  seasonPA: number | null;
+  hrPerPA: number | null;
+  recentHR7: number | null; // HRs in last 7 games
+  pitcherHrPer9: number | null;
 }
 
-// ---- Helper calculators -----------------------------------------------------
+// ---- Form from recent game logs -------------------------------------------------
 
-export function calculatePitcherVulnerability(pitcher: NormalizedPitcher, opponent: string, venue: string): number {
-  return buildPitcherVulnerability(pitcher, opponent, venue).vulnerabilityScore;
+export function formTagFromGameLog(
+  recentGames: HitterStats["recentGames"]
+): { tag: FormTag; recentHR7: number } {
+  if (recentGames.length === 0) return { tag: "Average", recentHR7: 0 };
+
+  const totalHR = recentGames.reduce((s, g) => s + g.homeRuns, 0);
+  const totalH  = recentGames.reduce((s, g) => s + g.hits, 0);
+  const totalAB = recentGames.reduce((s, g) => s + g.atBats, 0);
+  const avg7 = totalAB > 0 ? totalH / totalAB : 0;
+
+  let tag: FormTag;
+  if (totalHR >= 2 || (totalHR >= 1 && avg7 >= 0.300)) tag = "Hot";
+  else if (totalHR >= 1 || avg7 >= 0.260)               tag = "Average";
+  else if (avg7 >= 0.180)                               tag = "Cold";
+  else                                                   tag = "Slump";
+
+  return { tag, recentHR7: totalHR };
 }
 
-export function calculateFormTag(playerId: number): FormTag {
-  const r = seed01(`form:${playerId}`);
-  if (r > 0.74) return "Hot";
-  if (r > 0.4) return "Average";
-  if (r > 0.2) return "Cold";
-  return "Slump";
+// ---- Hitter power score from season stats (0-100) --------------------------------
+
+function hitterPowerScore(hrPerPA: number, slg: number): number {
+  // League avg HR/PA ≈ 0.030; top ~0.070. Normalize 0-100.
+  const hrScore = clamp((hrPerPA / 0.070) * 100, 0, 100);
+  // SLG: league avg ~0.410; elite ~0.600+. Normalize 0-100.
+  const slgScore = clamp(((slg - 0.300) / 0.350) * 100, 0, 100);
+  return clamp(Math.round(0.65 * hrScore + 0.35 * slgScore), 0, 100);
 }
 
-/** Park HR factor, 100 = neutral (placeholder until a park-factor source is wired). */
-export function calculateParkBoost(venue: string): number {
-  return seededInt(`park:${venue}`, 88, 116);
+// ---- Form adjustment (additive to edge) -----------------------------------------
+
+function formAdj(tag: FormTag): number {
+  return tag === "Hot" ? 10 : tag === "Average" ? 2 : tag === "Cold" ? -6 : -12;
 }
 
-/** Weather/wind HR boost as a percent (placeholder until a weather API is wired). */
-export function calculateWeatherBoost(gamePk: number): number {
-  return seededInt(`wx:${gamePk}`, -8, 16);
-}
-
-export function calculateDataConfidence(hasPitcher: boolean, lineupConfirmed: boolean, hasWeather: boolean): number {
-  let c = 48;
-  if (hasPitcher) c += 14;
-  c += lineupConfirmed ? 20 : 6; // projected lineup caps confidence
-  c += hasWeather ? 10 : 2; // weather is a placeholder today
-  return clamp(c, 20, 95);
-}
+// ---- Grade + risk ---------------------------------------------------------------
 
 export function calculateGrade(hrEdge: number): Grade {
   if (hrEdge >= 85) return "A+";
@@ -95,97 +119,168 @@ export function calculateGrade(hrEdge: number): Grade {
 
 export function riskFromGrade(grade: Grade): RiskLabel {
   switch (grade) {
-    case "A+":
-    case "A":
-      return "Strong";
-    case "B":
-      return "Playable";
-    case "C":
-      return "Sneaky";
-    case "D":
-      return "Lotto";
-    default:
-      return "Avoid";
+    case "A+": case "A": return "Strong";
+    case "B":            return "Playable";
+    case "C":            return "Sneaky";
+    case "D":            return "Lotto";
+    default:             return "Avoid";
   }
 }
 
-/** American implied odds from a probability. */
+// ---- Implied odds ---------------------------------------------------------------
+
 export function calculateImpliedOdds(prob: number): string {
   const p = clamp(prob, 0.02, 0.92);
   if (p >= 0.5) return `-${Math.round((p / (1 - p)) * 100)}`;
   return `+${Math.round(((1 - p) / p) * 100)}`;
 }
 
-export function calculateLineMovementPlaceholder(playerId: number, gamePk: number): number {
-  return seededInt(`line:${playerId}:${gamePk}`, -8, 8);
+// ---- Data confidence ------------------------------------------------------------
+
+function dataConfidence(args: {
+  hasSeasonStats: boolean;
+  hasGameLog: boolean;
+  hasPitcherStats: boolean;
+  lineupConfirmed: boolean;
+  parkFromTable: boolean;
+}): number {
+  let c = 30; // base
+  if (args.hasSeasonStats)   c += 20;
+  if (args.hasGameLog)       c += 10;
+  if (args.hasPitcherStats)  c += 18;
+  if (args.lineupConfirmed)  c += 12;
+  if (args.parkFromTable)    c +=  8;
+  // weather always missing: -0 (already not counted)
+  return clamp(c, 20, 95);
 }
 
-function formAdj(tag: FormTag): number {
-  return tag === "Hot" ? 12 : tag === "Average" ? 3 : tag === "Cold" ? -5 : -11;
+// ---- Lineup spot from boxscore battingOrder -------------------------------------
+
+export function lineupSpotFromBattingOrder(battingOrder: number | null | undefined): number {
+  if (!battingOrder || battingOrder === 0) return 9; // unknown → assume deep
+  return Math.round(battingOrder / 100);
 }
 
-/** Core HR Edge composite (1-100). */
-export function calculateHrEdge(args: {
-  playerId: number;
-  pitcherId: number;
-  vulnerability: number;
+// ---- Core edge composite --------------------------------------------------------
+
+function calculateHrEdge(args: {
+  powerScore: number;      // 0-100 from season stats
+  vulnerability: number;  // 0-100 pitcher
+  parkFactor: number;     // 88-121
   formTag: FormTag;
-  parkFactor: number;
-  weatherBoost: number;
   lineupSpot: number;
 }): number {
-  const power = seededInt(`power:${args.playerId}`, 30, 90); // batter power placeholder
-  const hand = seededInt(`hand:${args.playerId}:${args.pitcherId}`, -6, 10); // handedness placeholder
-  const parkC = ((args.parkFactor - 88) / 28) * 100; // normalize park to 0-100
-  const weatherC = ((args.weatherBoost + 8) / 24) * 100; // normalize weather to 0-100
-  const lineupBonus = args.lineupSpot <= 5 ? 5 : args.lineupSpot <= 7 ? 1 : -3;
+  // Park: normalize 88-121 → 0-100
+  const parkC = clamp(((args.parkFactor - 88) / 33) * 100, 0, 100);
+  // Lineup bonus: top of order gets more PA
+  const lineupBonus = args.lineupSpot <= 4 ? 6 : args.lineupSpot <= 6 ? 2 : -3;
 
-  let edge =
-    0.3 * args.vulnerability +
-    0.28 * power +
-    0.16 * parkC +
-    0.12 * weatherC +
+  const edge =
+    0.35 * args.vulnerability +
+    0.30 * args.powerScore +
+    0.20 * parkC +
     formAdj(args.formTag) +
-    hand +
     lineupBonus;
 
   return clamp(Math.round(edge), 1, 100);
 }
 
-// ---- Row builder + judge ----------------------------------------------------
+// ---- Row builder ----------------------------------------------------------------
 
 export function buildHitterRow(
   hitter: NormalizedPlayer,
   pitcher: NormalizedPitcher,
   game: NormalizedGame,
   lineupSpot: number,
-  projectionType: ProjectionType
+  projectionType: ProjectionType,
+  hitterStats?: HitterStats,
+  pitcherSeasonStats?: PitcherSeasonStats | null,
+  battingOrder?: number | null
 ): HrBoardRow {
-  const vulnerability = calculatePitcherVulnerability(pitcher, hitter.team, game.venue);
-  const formTag = calculateFormTag(hitter.playerId);
-  const parkFactor = calculateParkBoost(game.venue);
-  const weatherBoost = calculateWeatherBoost(game.gamePk);
-  const hrEdge = calculateHrEdge({
-    playerId: hitter.playerId,
-    pitcherId: pitcher.pitcherId,
-    vulnerability,
-    formTag,
-    parkFactor,
-    weatherBoost,
-    lineupSpot,
-  });
+  // --- Pitcher vulnerability (real stats when available) ---
+  const pitcherProfile = buildPitcherVulnerability(pitcher, hitter.team, game.venue, pitcherSeasonStats ?? null);
+  const vulnerability = pitcherProfile.vulnerabilityScore;
+
+  // --- Hitter season stats ---
+  const season = hitterStats?.season ?? null;
+  const hrPerPA = season?.hrPerPA ?? 0;
+  const slg = season?.slg ?? 0;
+  const powerScore = season ? hitterPowerScore(hrPerPA, slg) : 50; // 50 = neutral if unavailable
+
+  // --- Form from game log ---
+  const { tag: formTag, recentHR7 } = hitterStats?.recentGames?.length
+    ? formTagFromGameLog(hitterStats.recentGames)
+    : { tag: "Average" as FormTag, recentHR7: 0 };
+
+  // --- Park factor (static table) ---
+  const { factor: parkFactor, source: parkSource } = getParkFactor(game.venue);
+
+  // --- Lineup spot ---
+  const confirmedSpot = battingOrder !== null && battingOrder !== undefined
+    ? lineupSpotFromBattingOrder(battingOrder)
+    : null;
+  const effectiveLineupSpot = confirmedSpot ?? lineupSpot;
+  const lineupConfirmed = confirmedSpot !== null;
+
+  // --- Edge composite ---
+  const hrEdge = calculateHrEdge({ powerScore, vulnerability, parkFactor, formTag, lineupSpot: effectiveLineupSpot });
   const grade = calculateGrade(hrEdge);
   const riskLabel = riskFromGrade(grade);
-  const estimatedHrProb = clamp(0.03 + (hrEdge / 100) * 0.17, 0.02, 0.3);
-  const impliedOdds = calculateImpliedOdds(estimatedHrProb);
-  const dataConfidence = calculateDataConfidence(true, projectionType === "Confirmed", false);
-  const vouchScore = clamp(Math.round(0.6 * hrEdge + 0.4 * dataConfidence), 1, 100);
 
-  const reasons: string[] = [
-    `Faces ${pitcher.pitcherName} — vulnerability ${vulnerability}/100`,
-    `Park factor ${parkFactor} (100 = neutral), weather ${weatherBoost > 0 ? "+" : ""}${weatherBoost}%`,
-    `${formTag} form, projected lineup spot ${lineupSpot}`,
-  ];
+  // --- Single-game HR probability ---
+  // Base: season HR/PA rate (probability per plate appearance)
+  // Adjust for pitcher and park, then convert to per-game (≈4 PA)
+  const baseRatePerPA = season ? hrPerPA : 0.033; // 0.033 = approx league avg
+  const pitcherAdj = pitcherSeasonStats ? pitcherSeasonStats.homeRunsPer9 / 1.25 : 1.0;
+  const parkAdj = parkFactor / 100;
+  const adjRatePerPA = baseRatePerPA * pitcherAdj * parkAdj;
+  const avgPA = 4;
+  const estimatedHrProb = clamp(1 - Math.pow(1 - adjRatePerPA, avgPA), 0.02, 0.45);
+
+  const impliedOdds = calculateImpliedOdds(estimatedHrProb);
+
+  // --- Data confidence ---
+  const confidence = dataConfidence({
+    hasSeasonStats: !!season,
+    hasGameLog: (hitterStats?.recentGames?.length ?? 0) > 0,
+    hasPitcherStats: !!pitcherSeasonStats,
+    lineupConfirmed,
+    parkFromTable: parkSource === "table",
+  });
+
+  const vouchScore = clamp(Math.round(0.6 * hrEdge + 0.4 * confidence), 1, 100);
+
+  // --- Source label ---
+  const sourceFields: string[] = [];
+  if (season) sourceFields.push(`season stats (${season.homeRuns} HR/${season.plateAppearances} PA)`);
+  if ((hitterStats?.recentGames?.length ?? 0) > 0) sourceFields.push("last-7 game log");
+  if (pitcherSeasonStats) sourceFields.push(`pitcher HR/9=${pitcherSeasonStats.homeRunsPer9.toFixed(2)}`);
+  sourceFields.push(`park=${parkSource}`);
+  if (!lineupConfirmed) sourceFields.push("lineup=projected");
+  sourceFields.push("weather=unavailable");
+  sourceFields.push("odds=unavailable");
+  const source = sourceFields.length ? `MLB Stats API 2026: ${sourceFields.join(", ")}` : "MLB Stats API 2026 (limited)";
+
+  // --- Reasons ---
+  const reasons: string[] = [];
+  if (season) {
+    reasons.push(`Season: ${season.homeRuns} HR in ${season.plateAppearances} PA (.${Math.round(season.avg * 1000).toString().padStart(3, "0")} avg, ${season.slg.toFixed(3)} SLG)`);
+  } else {
+    reasons.push("Season hitting stats unavailable for this player.");
+  }
+  if (recentHR7 > 0) {
+    reasons.push(`Recent form: ${recentHR7} HR in last 7 games (${formTag})`);
+  } else {
+    reasons.push(`Recent form: 0 HR in last 7 games (${formTag})`);
+  }
+  reasons.push(
+    pitcherSeasonStats
+      ? `Faces ${pitcher.pitcherName}: HR/9=${pitcherSeasonStats.homeRunsPer9.toFixed(2)}, ERA=${pitcherSeasonStats.era.toFixed(2)} — vulnerability ${vulnerability}/100`
+      : `Faces ${pitcher.pitcherName} — vulnerability ${vulnerability}/100 (no stat data)`
+  );
+  reasons.push(
+    `${game.venue} park factor ${parkFactor} (${parkSource === "table" ? "sourced" : "neutral — venue not in table"})`
+  );
 
   const row: HrBoardRow = {
     playerId: hitter.playerId,
@@ -197,63 +292,77 @@ export function buildHitterRow(
     hrEdge,
     estimatedHrProb,
     impliedOdds,
-    bestOdds: impliedOdds, // best-line placeholder until odds API
+    bestOdds: impliedOdds, // no odds feed — same as implied
     vouchScore,
     formTag,
     opposingPitcher: pitcher.pitcherName,
     opposingPitcherTeam: pitcher.team,
     pitcherVulnerability: vulnerability,
     parkFactor,
-    hrMultiplier: Math.round((parkFactor / 100) * 100) / 100,
-    dataConfidence,
-    weatherBoost,
+    hrMultiplier: Math.round(parkFactor) / 100,
+    dataConfidence: confidence,
+    weatherBoost: 0,       // weather API not connected
     gameStatus: game.status,
-    projectionType,
-    lineupSpot,
-    lineMovement: calculateLineMovementPlaceholder(hitter.playerId, game.gamePk),
-    source: "Consensus (placeholder)",
+    projectionType: lineupConfirmed ? "Confirmed" : projectionType,
+    lineupSpot: effectiveLineupSpot,
+    lineMovement: 0,       // odds feed not connected
+    source,
     riskLabel,
     reasons,
     judge: { approvalStatus: "Needs more data", riskLabel, judgeNote: "", whatCouldGoWrong: [], parlayAllowed: false },
-    dataQuality: "partial",
+    dataQuality: confidence >= 70 ? "partial" : "limited",
+    // diagnostic
+    seasonHR: season?.homeRuns ?? null,
+    seasonPA: season?.plateAppearances ?? null,
+    hrPerPA: season?.hrPerPA ?? null,
+    recentHR7,
+    pitcherHrPer9: pitcherSeasonStats?.homeRunsPer9 ?? null,
   };
+
   row.judge = judgeHrRow(row);
   return row;
 }
 
-/** Lightweight 5-check judge: pick logic, risk, data quality, weather/park, market value. */
+// ---- Judge ----------------------------------------------------------------------
+
 export function judgeHrRow(row: HrBoardRow): HrRowJudge {
   const whatCouldGoWrong: string[] = [];
 
-  // Pick logic
-  const pickLogic = row.hrEdge >= 70 && row.pitcherVulnerability >= 60;
-  // Risk
-  if (row.formTag === "Slump") whatCouldGoWrong.push("Hitter is in a slump — recent form is cold.");
-  if (row.lineupSpot >= 7) whatCouldGoWrong.push(`Projected low in the order (spot ${row.lineupSpot}) — fewer plate appearances.`);
-  // Data quality
-  if (row.projectionType !== "Confirmed") whatCouldGoWrong.push("Lineup is projected, not confirmed — could be a late scratch or sit.");
-  if (row.dataConfidence < 60) whatCouldGoWrong.push("Limited data confidence — weather/park are placeholders.");
-  // Weather/park
-  if (row.parkFactor < 96) whatCouldGoWrong.push("Park leans pitcher-friendly for HR.");
-  // Market value
-  if (row.lineMovement < -3) whatCouldGoWrong.push("Line drifting against this spot.");
+  if (row.formTag === "Slump") whatCouldGoWrong.push("Hitter in a slump — 0 HR and low average in last 7 games.");
+  if (row.lineupSpot >= 7 && !row.source.includes("lineup=projected"))
+    whatCouldGoWrong.push(`Batting ${row.lineupSpot}th — fewer plate appearances per game.`);
+  if (row.projectionType !== "Confirmed")
+    whatCouldGoWrong.push("Lineup projected — could be a late scratch or day off.");
+  if (row.dataConfidence < 60)
+    whatCouldGoWrong.push("Limited data — season stats or pitcher data unavailable.");
+  if (row.parkFactor < 96)
+    whatCouldGoWrong.push("Pitcher-friendly park for HR (factor < 96).");
+  if (whatCouldGoWrong.length === 0)
+    whatCouldGoWrong.push("Standard HR variance — single-game power is inherently noisy.");
 
-  if (whatCouldGoWrong.length === 0) whatCouldGoWrong.push("Standard HR variance — single-game power is inherently noisy.");
-
+  const pickLogic = row.hrEdge >= 68 && row.pitcherVulnerability >= 58;
   let approvalStatus: HrRowJudge["approvalStatus"];
-  if (row.dataConfidence < 55 && row.hrEdge < 60) approvalStatus = "Needs more data";
-  else if (row.grade === "A+" || row.grade === "A") approvalStatus = pickLogic ? "Approved" : "Playable but risky";
-  else if (row.grade === "B" || row.grade === "C") approvalStatus = "Playable but risky";
-  else approvalStatus = "Avoid";
+  if (row.dataConfidence < 50)                              approvalStatus = "Needs more data";
+  else if (row.grade === "A+" || row.grade === "A")         approvalStatus = pickLogic ? "Approved" : "Playable but risky";
+  else if (row.grade === "B" || row.grade === "C")          approvalStatus = "Playable but risky";
+  else                                                      approvalStatus = "Avoid";
 
   const judgeNote =
     approvalStatus === "Approved"
-      ? `Strong HR spot: vulnerable arm (${row.pitcherVulnerability}) + favorable context. Still probability-based, not a lock.`
+      ? `Strong spot: vulnerable arm (HR/9=${row.pitcherHrPer9?.toFixed(2) ?? "?"}) + favorable park + positive form. Still probability-based.`
       : approvalStatus === "Avoid"
-      ? "Weak modeled HR equity — better spots exist on the board."
-      : "Playable but high-variance — treat as a research lean, not a guarantee.";
+      ? "Weak HR equity today — better spots exist on the board."
+      : "Playable but high-variance — treat as a research lean.";
 
   const parlayAllowed = (row.grade === "A+" || row.grade === "A" || row.grade === "B") && row.dataConfidence >= 58;
 
   return { approvalStatus, riskLabel: row.riskLabel, judgeNote, whatCouldGoWrong: whatCouldGoWrong.slice(0, 4), parlayAllowed };
 }
+
+// Legacy stubs for any callers not yet updated
+export { buildPitcherVulnerability as calculatePitcherVulnerability } from "./pitcherVulnerabilityEngine";
+export function calculateFormTag(): FormTag { return "Average"; }
+export function calculateParkBoost(venue: string): number { return getParkFactor(venue).factor; }
+export function calculateWeatherBoost(): number { return 0; }
+export function calculateDataConfidence(): number { return 50; }
+export function calculateLineMovementPlaceholder(): number { return 0; }
