@@ -1,14 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { buildValidatedHrBoard } from "../../../server/services/mlb/hrPipeline";
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
-    const mod = await import("../../../server/services/mlb/hrPipeline");
-    const board = await mod.buildValidatedHrBoard();
+    const board = await buildValidatedHrBoard();
 
     return res.status(200).json({
       ...board,
       source: board.source ?? "vouchedge_hr_pipeline",
-      runtime: "vercel_direct_function_lazy_import",
+      runtime: "vercel_direct_function_static_import",
       updatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -18,7 +18,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       error: "Failed to build validated HR board",
       message: error?.message || "Unknown error",
       stack: error?.stack || null,
-      runtime: "vercel_direct_function_lazy_import",
+      runtime: "vercel_direct_function_static_import",
     });
   }
 }
