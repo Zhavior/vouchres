@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   ArrowRight,
   Wand2,
+  Ticket,
+  MailCheck,
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -52,11 +54,13 @@ export default function AuthModal({
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [usernameState, setUsernameState] = useState<UsernameState>('idle');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync mode when reopened with a different intent
@@ -65,6 +69,7 @@ export default function AuthModal({
       setMode(initialMode);
       setError(null);
       setNotice(null);
+      setEmailSent(false);
     }
   }, [open, initialMode]);
 
@@ -134,10 +139,14 @@ export default function AuthModal({
     setBusy(true);
     try {
       if (mode === 'signup') {
-        const { error } = await signUpWithEmail({ email: email.trim(), password, username: username.trim() });
+        const { error } = await signUpWithEmail({
+          email: email.trim(),
+          password,
+          username: username.trim(),
+          inviteCode: inviteCode.trim() || undefined,
+        });
         if (error) { setError(friendlyError(error.message)); return; }
-        setNotice('Account created! Check your email to confirm, then log in.');
-        setMode('login');
+        setEmailSent(true);
       } else {
         const { error } = await signInWithEmail({ email: email.trim(), password });
         if (error) { setError(friendlyError(error.message)); return; }
@@ -162,7 +171,7 @@ export default function AuthModal({
     try {
       const { error } = await signInWithMagicLink(email.trim());
       if (error) { setError(friendlyError(error.message)); return; }
-      setNotice('Magic link sent! Check your inbox to finish signing in.');
+      setEmailSent(true);
     } catch (err: any) {
       setError(friendlyError(err?.message ?? 'Could not send magic link.'));
     } finally {
@@ -221,15 +230,45 @@ export default function AuthModal({
             </div>
 
             <h2 className="text-xl font-black text-white tracking-tight">
-              {mode === 'signup' ? 'Create your account' : 'Welcome back'}
+              {emailSent ? 'Check your inbox' : mode === 'signup' ? 'Create your account' : 'Welcome back'}
             </h2>
             <p className="text-sm text-slate-400 mt-1">
-              {mode === 'signup'
+              {emailSent
+                ? 'One more step to lock in your edge.'
+                : mode === 'signup'
                 ? 'Track verified picks, build slips, and unlock the full edge board.'
                 : 'Log in to pick up where you left off.'}
             </p>
           </div>
 
+          {emailSent ? (
+            /* ── Check-your-email confirmation ── */
+            <div className="px-6 py-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)' }}>
+                <MailCheck className="w-8 h-8" style={{ color: CYAN }} />
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
+                We sent a secure link to{' '}
+                <span className="font-bold text-white break-all">{email || 'your email'}</span>.
+                Click it to {mode === 'signup' ? 'confirm your account' : 'finish signing in'} — it expires in 1 hour.
+              </p>
+              <button
+                onClick={() => { setEmailSent(false); }}
+                className="mt-5 w-full py-3 rounded-xl text-sm font-black text-slate-950"
+                style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
+              >
+                Got it
+              </button>
+              <button
+                onClick={() => { setEmailSent(false); setMode('login'); }}
+                className="mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+          <>
           {/* Tab switch */}
           <div className="px-6">
             <div className="grid grid-cols-2 gap-1 p-1 rounded-xl" style={{ background: FIELD }}>
@@ -364,6 +403,36 @@ export default function AuthModal({
               )}
             </div>
 
+            {/* Invite code (signup) — optional during preview, required at private-beta launch */}
+            <AnimatePresence initial={false}>
+              {mode === 'signup' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <Field icon={<Ticket className="w-4 h-4" />}>
+                    <input
+                      type="text"
+                      placeholder="Invite code — optional (VE-XXXXXXXX)"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                      className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none tracking-wide"
+                    />
+                  </Field>
+                  <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
+                    VouchEdge is in private beta. No code?{' '}
+                    <button type="button" onClick={onGuest} className="font-semibold underline" style={{ color: BLURPLE }}>
+                      Join the waitlist
+                    </button>
+                    .
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Error / notice */}
             <AnimatePresence>
               {error && (
@@ -435,11 +504,14 @@ export default function AuthModal({
             >
               Continue as guest
             </button>
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-600">
-              <ShieldCheck className="w-3 h-3 text-emerald-500/70" />
-              Probability-based research for entertainment — not betting advice.
+            <p className="text-[10px] text-center leading-relaxed text-slate-600">
+              By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
+              <span className="text-slate-400">Privacy Policy</span>. You must be 21+ and in a jurisdiction
+              where this is legal. Probability-based research for entertainment — not betting advice.
             </p>
           </div>
+          </>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

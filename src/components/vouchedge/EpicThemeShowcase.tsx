@@ -37,6 +37,21 @@ function themeBg(t: VisualTheme): string {
   const m = (t.pageBg || t.background || "").match(/#[0-9A-Fa-f]{6}/);
   return m ? m[0] : "#0b0f19";
 }
+// Friendly, affordable price model (you start with 1,000 credits). Tiered by
+// rarity so a couple of premium themes are always within reach — deliberately
+// cheaper than a Nitro-style subscription.
+function themePrice(t: VisualTheme): number {
+  if (!t.isPremium) return 0;
+  switch (t.rarity) {
+    case "rare":      return 100;
+    case "epic":      return 200;
+    case "legendary": return 350;
+    case "seasonal":  return 150;
+    case "verified":
+    case "founder":   return 500;
+    default:          return 80;
+  }
+}
 function rarityMeta(r: string) {
   const map: Record<string, { label: string; color: string }> = {
     common:    { label: "Common",    color: "#949ba4" },
@@ -96,7 +111,7 @@ export function EpicThemeShowcase() {
   const accent = themeAccent(active);
   const rarity = rarityMeta(active.rarity);
 
-  const isOwned = (t: VisualTheme) => !t.isPremium || t.cost === 0 || unlockedThemes.includes(t.id);
+  const isOwned = (t: VisualTheme) => themePrice(t) === 0 || unlockedThemes.includes(t.id);
   const isEquipped = (t: VisualTheme) => currentAppTheme.id === t.id;
 
   const flash = (text: string, ok: boolean) => {
@@ -110,14 +125,15 @@ export function EpicThemeShowcase() {
   };
 
   const handleBuy = (t: VisualTheme) => {
-    if (userCredits < t.cost) {
-      flash(`Need ${t.cost - userCredits} more credits for ${t.name}.`, false);
+    const price = themePrice(t);
+    if (userCredits < price) {
+      flash(`Need ${price - userCredits} more credits for ${t.name}.`, false);
       return;
     }
-    setUserCredits(userCredits - t.cost);
+    setUserCredits(userCredits - price);
     unlockTheme(t.id);
     setAppTheme(t.id);
-    flash(`Unlocked & equipped ${t.name} for ${t.cost} credits.`, true);
+    flash(`Unlocked & equipped ${t.name} for ${price} credits.`, true);
   };
 
   // 3-D tilt
@@ -273,7 +289,7 @@ export function EpicThemeShowcase() {
                           <span className="text-[10px] font-bold uppercase flex-shrink-0" style={{ color: DC.green }}>Owned</span>
                         ) : (
                           <span className="flex items-center gap-1 text-xs font-black flex-shrink-0" style={{ color: "#F2C94C" }}>
-                            <Coins className="w-3 h-3" /> {t.cost}
+                            <Coins className="w-3 h-3" /> {themePrice(t)}
                           </span>
                         )}
                       </div>
@@ -288,7 +304,7 @@ export function EpicThemeShowcase() {
                           color: equipped ? DC.textMuted : owned ? ta : "#fff",
                           border: `1px solid ${equipped ? DC.separator : owned ? ta + "44" : "transparent"}`,
                         }}>
-                        {equipped ? "✓ Equipped" : owned ? "Equip theme" : `Buy · ${t.cost} credits`}
+                        {equipped ? "✓ Equipped" : owned ? "Equip theme" : `Buy · ${themePrice(t)} credits`}
                       </button>
                     </div>
                   </div>
@@ -389,7 +405,7 @@ export function EpicThemeShowcase() {
                     <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: rarity.color + "20", color: rarity.color }}>{rarity.label}</span>
                     {!isOwned(active) && (
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded flex items-center gap-1" style={{ background: "#D4AF3720", color: "#F2C94C" }}>
-                        <Coins className="w-3 h-3" /> {active.cost} credits
+                        <Coins className="w-3 h-3" /> {themePrice(active)} credits
                       </span>
                     )}
                   </div>
@@ -404,7 +420,7 @@ export function EpicThemeShowcase() {
                   }}>
                   {isEquipped(active) ? <><Check className="w-4 h-4" /> Equipped</>
                     : isOwned(active) ? <><Check className="w-4 h-4" /> Equip theme</>
-                    : <><Lock className="w-4 h-4" /> Buy · {active.cost} credits</>}
+                    : <><Lock className="w-4 h-4" /> Buy · {themePrice(active)} credits</>}
                 </button>
               </div>
             </div>
