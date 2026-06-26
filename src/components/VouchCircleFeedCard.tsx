@@ -173,11 +173,11 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
   const selectedPlayers = config.selectedPlayers || [];
 
   const showWinRate = config.showWinRate !== false;
-  const customWinRate = config.customWinRate || "92.4%";
+  const customWinRate = config.customWinRate || "Record building";
   const showDailyWinRate = config.showDailyWinRate !== false;
-  const customDailyWinRate = config.customDailyWinRate || "85.0% today";
+  const customDailyWinRate = config.customDailyWinRate || "0 verified picks yet";
   const showMonthlyWinRate = config.showMonthlyWinRate !== false;
-  const customMonthlyWinRate = config.customMonthlyWinRate || "89.3% in June";
+  const customMonthlyWinRate = config.customMonthlyWinRate || "Awaiting verified results";
   const showMlbPicks = config.showMlbPicks !== false;
   const customMlbPicks = config.customMlbPicks || "24-3 RUN";
   const showProBadge = config.showProBadge !== false;

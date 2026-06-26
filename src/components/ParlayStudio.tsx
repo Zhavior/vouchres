@@ -165,7 +165,7 @@ export default function ParlayStudio({
     setIsAnalyzing(true);
     setJudgeVerdict(null);
 
-    // Simulated judge (real version would call /api/ai/parlay-edge)
+    // Local draft judge — backend AI judge not connected yet. Falls back to local logic.
     setTimeout(() => {
       const warnings: string[] = [];
       let score = 70 - legs.length * 8;
@@ -679,6 +679,7 @@ function SlipAndJudge({ legs, combinedOdds, riskTier, weakestLeg, volatility, mo
       <div className="rounded-xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(167,139,250,0.15)" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-bold uppercase tracking-widest text-violet-400">AI Judge</div>
+          <span className="text-[8px] text-slate-600 font-mono">Local draft — backend not connected</span>
           <button
             onClick={onJudge}
             disabled={isAnalyzing || legs.length === 0}

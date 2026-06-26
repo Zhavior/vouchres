@@ -239,16 +239,16 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
   // SELF VOUCH CARDS PROMOTIONAL CONFIG STATES
   const [showWinRate, setShowWinRate] = useState<boolean>(true);
-  const [customWinRate, setCustomWinRate] = useState<string>("92.4%");
+  const [customWinRate, setCustomWinRate] = useState<string>("Record building");
   
   const [showDailyWinRate, setShowDailyWinRate] = useState<boolean>(true);
-  const [customDailyWinRate, setCustomDailyWinRate] = useState<string>("85.0% today");
+  const [customDailyWinRate, setCustomDailyWinRate] = useState<string>("0 verified picks yet");
   
   const [showMonthlyWinRate, setShowMonthlyWinRate] = useState<boolean>(true);
-  const [customMonthlyWinRate, setCustomMonthlyWinRate] = useState<string>("89.3% in June");
+  const [customMonthlyWinRate, setCustomMonthlyWinRate] = useState<string>("Awaiting verified results");
 
   const [showMlbPicks, setShowMlbPicks] = useState<boolean>(true);
-  const [customMlbPicks, setCustomMlbPicks] = useState<string>("24-3 RUN");
+  const [customMlbPicks, setCustomMlbPicks] = useState<string>("0-0 · Demo preview");
 
   const [showProBadge, setShowProBadge] = useState<boolean>(true);
   const [customProTag, setCustomProTag] = useState<string>("VIP GOLD");
@@ -261,7 +261,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   const [bestParlayDesc, setBestParlayDesc] = useState<string>("+180 Golden Parlay (Ohtani HR + Betts Run)");
 
   const [showUnitsProfit, setShowUnitsProfit] = useState<boolean>(true);
-  const [unitsProfitValue, setUnitsProfitValue] = useState<string>("+42.5 Units");
+  const [unitsProfitValue, setUnitsProfitValue] = useState<string>("Record building");
 
   const [customCardPhoto, setCustomCardPhoto] = useState<string>(""); // Base64 or Unsplash image URL
   const [customCardPhotoLabel, setCustomCardPhotoLabel] = useState<string>("");
@@ -298,7 +298,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   const [simulationStakeUnit, setSimulationStakeUnit] = useState<number>(100);
   const [portfolioRiskFilter, setPortfolioRiskFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [historicalTimeframe, setHistoricalTimeframe] = useState<'7d' | '14d' | '30d'>('14d');
-  const [simulatedWinRate, setSimulatedWinRate] = useState<number>(76);
+  const [simulatedWinRate, setSimulatedWinRate] = useState<number>(0);
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
   const [auditLog, setAuditLog] = useState<string[]>([]);
 
@@ -545,9 +545,9 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       `[${new Date().toLocaleTimeString()}] 📥 Fetching historic splits for active roster (${selectedPlayers.map(p=>p.player.name.split(' ').pop()).join(', ')})...`,
       `[${new Date().toLocaleTimeString()}] 📈 Adjusting stake allocation coefficient at $${simulationStakeUnit} per unit...`,
       `[${new Date().toLocaleTimeString()}] ⚡ Testing risk factor category: "${portfolioRiskFilter.toUpperCase()}"`,
-      `[${new Date().toLocaleTimeString()}] 🧠 Simulating 10,000 Monte Carlo match projections...`,
-      `[${new Date().toLocaleTimeString()}] ✓ CALCULATED INTEGRITY: Verified backtested Accuracy at ${simulatedWinRate}% over a ${historicalTimeframe} window.`,
-      `[${new Date().toLocaleTimeString()}] 🏆 AUDIT PASS: Dynamic portfolio index cashed +${(selectedPlayers.length * 4.2).toFixed(1)} Units ($${(selectedPlayers.length * 4.2 * simulationStakeUnit).toLocaleString()})`
+      `[${new Date().toLocaleTimeString()}] 📊 Simulation only — not verified performance.`,
+      `[${new Date().toLocaleTimeString()}] ⚠️ Simulation only — not verified performance. No guaranteed outcomes.`,
+      `[${new Date().toLocaleTimeString()}] 📋 Demo preview — no real profit/units tracked yet.`
     ];
 
     logs.forEach((logLine, idx) => {
@@ -633,13 +633,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Simulated Net Return</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Simulated Return (Demo)</span>
                   <div className="text-2xl font-black text-emerald-400 font-mono tracking-tight">
                     +${Math.round((selectedPlayers.length * 4.2 * simulationStakeUnit) * (simulatedWinRate / 75)).toLocaleString()}
                   </div>
                   <span className="text-[10px] font-semibold text-emerald-500/80 flex items-center gap-1">
                     <TrendingUp className="w-3 h-3" />
-                    +{parseFloat((selectedPlayers.length * 4.2 * (simulatedWinRate / 75)).toFixed(1))} Units Profit
+                    +{parseFloat((selectedPlayers.length * 4.2 * (simulatedWinRate / 75)).toFixed(1))} Simulated Units (Demo)
                   </span>
                 </div>
                 <div className="p-2 bg-emerald-950/40 rounded-xl border border-emerald-900/40">
@@ -648,12 +648,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               </div>
             </div>
 
-            {/* Metric 2: Backtested Win Rate */}
+            {/* Metric 2: Assumed Accuracy (Simulation) */}
             <div className="bg-gradient-to-br from-[#0c1322] to-[#080d1a] border border-amber-950/70 p-4.5 rounded-2xl relative overflow-hidden shadow-lg group hover:border-amber-500/20 transition-all duration-300">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Accuracy Target</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Assumed Accuracy (Demo)</span>
                   <div className="text-2xl font-black text-amber-400 font-mono tracking-tight">
                     {simulatedWinRate}%
                   </div>
@@ -830,7 +830,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 <div>
                   <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                     <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-                    VouchEdge Monte Carlo Roster Backtester & Auditor
+                    VouchEdge Monte Carlo Roster Backtester (Simulation only — not verified performance)
                   </h3>
                   <p className="text-[10px] text-slate-400 mt-0.5">
                     Tweak your model accuracy, update bankroll unit sizing, and trigger simulated deep audits.

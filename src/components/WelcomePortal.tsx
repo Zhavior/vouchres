@@ -94,54 +94,117 @@ export default function WelcomePortal({ onSectionChange }: Props) {
           </div>
         </header>
 
-        {/* ====== 1. HERO ====== */}
-        <section className="relative pt-16 md:pt-24 pb-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-3xl">
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6" style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)", color: "#22d3ee" }}>
-                  <ShieldCheck className="w-3.5 h-3.5" /> Proof over hype · Beta build
-                </span>
+        {/* ====== 1. SPACE HERO ====== */}
+        <section className="landing-space-hero relative overflow-hidden pt-16 md:pt-20 pb-24">
+          {/* Space background layers */}
+          <div className="landing-space-layer absolute inset-0" />
+          <div className="landing-stars-layer absolute inset-0" />
+
+          {/* Orbit ring behind astronaut */}
+          <div className="absolute top-1/2 right-[15%] -translate-y-1/2 w-[500px] h-[500px] rounded-full hidden lg:block pointer-events-none"
+            style={{ border: "1px solid rgba(34,211,238,0.08)", animation: "landing-orbit-spin 60s linear infinite" }} />
+          <div className="absolute top-1/2 right-[15%] -translate-y-1/2 w-[380px] h-[380px] rounded-full hidden lg:block pointer-events-none"
+            style={{ border: "1px solid rgba(59,130,246,0.06)", animation: "landing-orbit-spin 40s linear infinite reverse" }} />
+
+          {/* Hero content */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[70vh]">
+              {/* Left: Copy */}
+              <div className="max-w-2xl">
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6" style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)", color: "#22d3ee" }}>
+                    <ShieldCheck className="w-3.5 h-3.5" /> Proof over hype · Beta build
+                  </span>
+                </motion.div>
+
+                <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.05 }} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white leading-[1.02]">
+                  Proof over hype{" "}
+                  <span style={{ background: "linear-gradient(135deg, #ffffff, #67e8f9, #22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                    for sports picks.
+                  </span>
+                </motion.h1>
+
+                <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }} className="mt-6 text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed">
+                  Post picks before game time, lock them before start, grade them after final, and build a public record people can actually trust.
+                </motion.p>
+
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }} className="mt-8 flex flex-wrap items-center gap-3">
+                  <button onClick={handleStartBeta} className="text-sm font-bold text-slate-950 px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)", boxShadow: "0 8px 30px -8px rgba(34,211,238,0.5)" }}>
+                    Start Beta <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button onClick={handleExplore} className="text-sm font-bold text-white px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <Eye className="w-4 h-4 text-cyan-400" /> Explore Features
+                  </button>
+                  <button onClick={handleDemoCard} className="text-sm text-slate-400 hover:text-white px-3 py-3.5 transition-colors">
+                    View Demo Proof Card →
+                  </button>
+                </motion.div>
+
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-5 text-[10px] text-slate-600">
+                  Sports research and social proof platform. Probability-based. No guarantees.
+                </motion.p>
+              </div>
+
+              {/* Right: Astronaut + floating chips */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="relative flex items-center justify-center lg:justify-end"
+              >
+                {/* Glow behind astronaut */}
+                <div className="landing-astronaut-glow absolute w-[400px] h-[400px] rounded-full pointer-events-none"
+                  style={{ background: "radial-gradient(circle, rgba(34,211,238,0.18) 0%, rgba(59,130,246,0.08) 40%, transparent 70%)" }} />
+
+                {/* Astronaut */}
+                <motion.img
+                  src="/astronaut.png"
+                  alt="VouchEdge astronaut"
+                  draggable={false}
+                  className="landing-astronaut-wrap relative z-10 w-[60%] sm:w-[55%] lg:w-[70%] max-w-[450px] object-contain select-none"
+                  animate={{ y: [-12, 12, -12] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+
+                {/* Floating proof chips */}
+                <motion.div
+                  animate={{ y: [-6, 6, -6] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="floating-proof-chip absolute top-[10%] left-[5%] sm:left-[2%] z-20 hidden sm:block"
+                >
+                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(52,211,153,0.2)" }}>
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[10px] font-bold text-white">Posted before start</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  animate={{ y: [6, -6, 6] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                  className="floating-proof-chip absolute bottom-[15%] left-[8%] sm:left-[0%] z-20 hidden sm:block"
+                >
+                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(34,211,238,0.2)" }}>
+                    <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                    <span className="text-[10px] font-bold text-white">Graded after final</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  animate={{ y: [-8, 8, -8] }}
+                  transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="floating-proof-chip absolute top-[20%] right-[0%] z-20 hidden sm:block"
+                >
+                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                    <ShieldCheck className="w-3 h-3 text-violet-400" />
+                    <span className="text-[10px] font-bold text-white">Trust score updates</span>
+                  </div>
+                </motion.div>
               </motion.div>
-
-              <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.05 }} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white leading-[1.02]">
-                Proof over hype{" "}
-                <span style={{ background: "linear-gradient(135deg, #ffffff, #67e8f9, #22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  for sports picks.
-                </span>
-              </motion.h1>
-
-              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }} className="mt-6 text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed">
-                Post picks before game time, lock them before start, grade them after final, and build a public record people can actually trust.
-              </motion.p>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }} className="mt-8 flex flex-wrap items-center gap-3">
-                <button onClick={handleStartBeta} className="text-sm font-bold text-slate-950 px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)", boxShadow: "0 8px 30px -8px rgba(34,211,238,0.5)" }}>
-                  Start Beta <ArrowRight className="w-4 h-4" />
-                </button>
-                <button onClick={handleExplore} className="text-sm font-bold text-white px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <Eye className="w-4 h-4 text-cyan-400" /> Explore Features
-                </button>
-                <button onClick={handleDemoCard} className="text-sm text-slate-400 hover:text-white px-3 py-3.5 transition-colors">
-                  View Demo Proof Card →
-                </button>
-              </motion.div>
-
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-5 text-[10px] text-slate-600">
-                Sports research and social proof platform. Probability-based. No guarantees.
-              </motion.p>
             </div>
-
-            {/* 3D floating preview card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-12 max-w-sm"
-            >
-              <FloatingVouchCard />
-            </motion.div>
           </div>
+
+          {/* Fade into particle background */}
+          <div className="landing-hero-fade absolute inset-x-0 bottom-0 h-32 pointer-events-none" />
         </section>
 
         {/* ====== 2. 3D FEATURE CARDS ====== */}
