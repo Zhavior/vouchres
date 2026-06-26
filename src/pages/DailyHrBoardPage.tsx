@@ -89,7 +89,12 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       return board.games;
     }
 
-    const candidates = Array.isArray((board as any)?.candidates) ? (board as any).candidates : [];
+    const candidates =
+      Array.isArray((board as any)?.candidates) ? (board as any).candidates :
+      Array.isArray((board as any)?.rows) ? (board as any).rows :
+      Array.isArray((board as any)?.players) ? (board as any).players :
+      Array.isArray((board as any)?.targets) ? (board as any).targets :
+      [];
 
     if (!candidates.length) return [];
 
