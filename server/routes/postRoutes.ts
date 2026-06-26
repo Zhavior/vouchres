@@ -47,14 +47,14 @@ postRoutes.get("/feed", optionalAuth, async (req: AuthedRequest, res: Response) 
     .range(offset, offset + limit - 1);
 
   // If logged in, filter to: posts by people I follow + my own posts + all demo posts
-  if (req.user) {
+  if ((req as any).user) {
     const { data: follows } = await supabaseAdmin
       .from("follows")
       .select("following_profile_id")
-      .eq("follower_id", req.user.id);
+      .eq("follower_id", (req as any).user.id);
 
     const followedIds = (follows ?? []).map((f: any) => f.following_profile_id).filter(Boolean);
-    followedIds.push(req.user.id); // include self
+    followedIds.push((req as any).user.id); // include self
 
     if (followedIds.length > 1) {
       query = query.or(`author_id.in.(${followedIds.join(",")}),is_demo.eq.true`);
@@ -134,7 +134,7 @@ postRoutes.post(
         .select("user_id")
         .eq("id", pick_id)
         .single();
-      if (!pick || pick.user_id !== req.user!.id) {
+      if (!pick || pick.user_id !== (req as any).user!.id) {
         return res.status(403).json({ error: "pick_not_owned" });
       }
     }
@@ -142,7 +142,7 @@ postRoutes.post(
     const { data, error } = await supabaseAdmin
       .from("posts")
       .insert({
-        author_id: req.user!.id,
+        author_id: (req as any).user!.id,
         body: postBody,
         pick_id: pick_id ?? null,
         is_demo: false,
@@ -183,12 +183,12 @@ postRoutes.get("/posts/:id", optionalAuth, async (req, res: Response) => {
 
   // If logged in, check if caller has liked this post
   let liked_by_me = false;
-  if (req.user) {
+  if ((req as any).user) {
     const { data: like } = await supabaseAdmin
       .from("post_likes")
       .select("post_id")
       .eq("post_id", id)
-      .eq("profile_id", req.user.id)
+      .eq("profile_id", (req as any).user.id)
       .maybeSingle();
     liked_by_me = !!like;
   }
@@ -206,7 +206,7 @@ postRoutes.delete("/posts/:id", requireAuth, async (req: AuthedRequest, res: Res
     .from("posts")
     .delete()
     .eq("id", id)
-    .eq("author_id", req.user!.id); // RLS-style filter at the query level too
+    .eq("author_id", (req as any).user!.id); // RLS-style filter at the query level too
 
   if (error) return res.status(500).json({ error: "delete_failed" });
   return res.json({ ok: true });
@@ -245,7 +245,7 @@ postRoutes.post("/posts/:id/like", requireAuth, async (req: AuthedRequest, res: 
   if (!post) return res.status(404).json({ error: "post_not_found" });
 
   const { error } = await supabaseAdmin.from("post_likes").upsert(
-    { post_id: id, profile_id: req.user!.id },
+    { post_id: id, profile_id: (req as any).user!.id },
     { onConflict: "post_id,profile_id" }
   );
 
@@ -268,7 +268,7 @@ postRoutes.delete("/posts/:id/like", requireAuth, async (req: AuthedRequest, res
     .from("post_likes")
     .delete()
     .eq("post_id", id)
-    .eq("profile_id", req.user!.id);
+    .eq("profile_id", (req as any).user!.id);
 
   if (error) return res.status(500).json({ error: "unlike_failed" });
   return res.json({ ok: true, liked: false });
@@ -301,7 +301,7 @@ postRoutes.post(
       .from("post_comments")
       .insert({
         post_id: id,
-        author_id: req.user!.id,
+        author_id: (req as any).user!.id,
         body: commentBody,
       })
       .select(`
@@ -346,7 +346,7 @@ postRoutes.delete("/comments/:id", requireAuth, async (req: AuthedRequest, res: 
     .from("post_comments")
     .delete()
     .eq("id", id)
-    .eq("author_id", req.user!.id);
+    .eq("author_id", (req as any).user!.id);
 
   if (error) return res.status(500).json({ error: "delete_failed" });
   return res.json({ ok: true });

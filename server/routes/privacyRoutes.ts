@@ -99,7 +99,7 @@ privacyRoutes.post("/delete-account", requireAuth, async (req: AuthedRequest, re
   }
 
   // Check if deletion is already scheduled
-  if (req.user!.profile.deletion_scheduled_at) {
+  if ((req.user!.profile as any).deletion_scheduled_at) {
     return res.status(400).json({ error: "already_scheduled" });
   }
 
@@ -120,10 +120,10 @@ privacyRoutes.post("/delete-account", requireAuth, async (req: AuthedRequest, re
   }
 
   // Cancel any active Stripe subscription immediately
-  if (req.user!.profile.stripe_subscription_id) {
+  if ((req.user!.profile as any).stripe_subscription_id) {
     try {
       const { stripe } = await import("../services/billing/stripeService");
-      await stripe.subscriptions.cancel(req.user!.profile.stripe_subscription_id, {
+      await stripe.subscriptions.cancel((req.user!.profile as any).stripe_subscription_id, {
         invoice_now: true,
         prorate: true,
       });
@@ -153,7 +153,7 @@ privacyRoutes.post("/delete-account", requireAuth, async (req: AuthedRequest, re
  * Undo a pending deletion. Allowed any time during the 30-day grace period.
  */
 privacyRoutes.post("/cancel-deletion", requireAuth, async (req: AuthedRequest, res: Response) => {
-  if (!req.user!.profile.deletion_scheduled_at) {
+  if (!(req.user!.profile as any).deletion_scheduled_at) {
     return res.status(400).json({ error: "no_deletion_scheduled" });
   }
 
@@ -178,7 +178,7 @@ privacyRoutes.post("/cancel-deletion", requireAuth, async (req: AuthedRequest, r
  */
 privacyRoutes.get("/deletion-status", requireAuth, async (req: AuthedRequest, res: Response) => {
   return res.json({
-    deletion_scheduled_at: req.user!.profile.deletion_scheduled_at ?? null,
+    deletion_scheduled_at: (req.user!.profile as any).deletion_scheduled_at ?? null,
     grace_period_days: 30,
   });
 });

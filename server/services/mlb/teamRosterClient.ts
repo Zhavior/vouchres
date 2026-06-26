@@ -113,13 +113,36 @@ async function getTeamActiveHitters(teamId: number, teamName: string): Promise<N
   return verified;
 }
 
-/** Map of teamId -> active position players, pitchers excluded, currentTeam verified. */
-export async function getActiveHittersByTeam(): Promise<Map<number, NormalizedPlayer[]>> {
-  return hittersCache.getOrSet(CACHE_KEY, async () => {
+/**
+ * Map of teamId -> active position players, pitchers excluded, currentTeam verified.
+ *
+ * OPTIMIZATION: If `teamIds` is provided, only fetch rosters for those teams
+ * (today's games only). This cuts 30 roster calls → ~20 and 388 stat calls → ~80.
+ * If `teamIds` is omitted, falls back to all 30 teams (legacy behavior, slow).
+ */
+export async function getActiveHittersByTeam(
+  teamIds?: number[]
+): Promise<Map<number, NormalizedPlayer[]>> {
+  // Use a separate cache key when filtered by team IDs
+  const cacheKey = teamIds && teamIds.length > 0
+    ? `${CACHE_KEY}:teams:${teamIds.sort((a, b) => a - b).join(",")}`
+    : CACHE_KEY;
+
+  return hittersCache.getOrSet(cacheKey, async () => {
     const map = new Map<number, NormalizedPlayer[]>();
 
     try {
-      const teams = await getMlbTeams();
+      let teams: Array<{ id: number; name: string }>;
+
+      if (teamIds && teamIds.length > 0) {
+        // Only fetch the specified teams (today's slate)
+        teams = teamIds.map((id) => ({ id, name: `Team ${id}` }));
+        console.log(`[teamRosterClient] Fetching rosters for ${teams.length} teams (today's slate only)`);
+      } else {
+        // Legacy: fetch all 30 teams
+        teams = await getMlbTeams();
+        console.log(`[teamRosterClient] Fetching rosters for all ${teams.length} teams`);
+      }
 
       const results = await Promise.allSettled(
         teams.map(async (team) => {

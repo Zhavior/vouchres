@@ -64,15 +64,15 @@ interface StreamChannel {
 const CHANNELS: StreamChannel[] = [
   {
     id: 'ch-guru',
-    streamerName: 'Sharp Betting Guru',
+    streamerName: 'Stream Demo 1',
     streamerUsername: 'sharp_guru_pro',
     avatarInitials: 'SG',
     avatarColor: 'bg-indigo-600',
-    title: '🔥 Live Bets & Sweating Dodgers -1.5 Runline! Real Parlay Locks! 🔥',
+    title: 'Live MLB research stream · Demo',
     gameName: 'Los Angeles Dodgers @ San Francisco Giants',
     sport: 'MLB',
     viewers: 1420,
-    winRate: 64.2,
+    winRate: 0,
     liveSlipOdds: '+185',
     liveSlipMarket: 'Dodgers Runline Handicap',
     liveSlipSelection: 'Dodgers -1.5 Runs',
@@ -87,7 +87,7 @@ const CHANNELS: StreamChannel[] = [
   },
   {
     id: 'ch-sabermetrician',
-    streamerName: 'Sabermetrics Pro',
+    streamerName: 'Stream Demo 2',
     streamerUsername: 'sabermetrics_pro',
     avatarInitials: 'SP',
     avatarColor: 'bg-teal-600',
@@ -95,7 +95,7 @@ const CHANNELS: StreamChannel[] = [
     gameName: 'New York Yankees @ Boston Red Sox',
     sport: 'MLB',
     viewers: 935,
-    winRate: 59.8,
+    winRate: 0,
     liveSlipOdds: '+115',
     liveSlipMarket: 'Pitcher Total Strikeouts',
     liveSlipSelection: 'Tanner Houck Over 6.5 Ks',
@@ -110,7 +110,7 @@ const CHANNELS: StreamChannel[] = [
   },
   {
     id: 'ch-wind',
-    streamerName: 'Wrigley Wind Expert',
+    streamerName: 'Stream Demo 3',
     streamerUsername: 'wrigley_wind_tracker',
     avatarInitials: 'WW',
     avatarColor: 'bg-orange-600',
@@ -118,7 +118,7 @@ const CHANNELS: StreamChannel[] = [
     gameName: 'Chicago Cubs @ Atlanta Braves',
     sport: 'MLB',
     viewers: 512,
-    winRate: 55.4,
+    winRate: 0,
     liveSlipOdds: '-110',
     liveSlipMarket: 'Alternative Game Total Runs',
     liveSlipSelection: 'Under 7.5 Total Runs',
@@ -133,15 +133,15 @@ const CHANNELS: StreamChannel[] = [
   },
   {
     id: 'ch-parlay-queen',
-    streamerName: 'Parlay Princess',
-    streamerUsername: 'parlay_queen_locks',
+    streamerName: 'Stream Demo 4',
+    streamerUsername: 'stream_demo_4',
     avatarInitials: 'PQ',
     avatarColor: 'bg-pink-600',
     title: '💸 High Yield Risk Sweep: 3-Leg MLB Home Run Slip Sweeper! 💸',
     gameName: 'Houston Astros @ Texas Rangers',
     sport: 'MLB',
     viewers: 820,
-    winRate: 61.5,
+    winRate: 0,
     liveSlipOdds: '+425',
     liveSlipMarket: 'To Hit A Home Run',
     liveSlipSelection: 'Yordan Alvarez HR',
@@ -163,14 +163,14 @@ const MOCK_CHAT_POOL = [
   "What is the confidence meter on Tanner Houck?",
   "Those sabermetric strikeout tables are pure gold",
   "Wait, didn't Red Sox bullpen blow the last game?",
-  "This stream is so much better than standard sports TV",
-  "Verified track record, respect the process!",
+  "Demo chat — stream integration in development",
+  "Sample chat message for layout testing",
   "Just vouched this to my research board!",
   "Great analysis W",
   "Can someone explain why Houck is valued here?",
-  "That winrate is real, check the ledger tab",
+  "This stream is a demo preview",
   "Saved this to my parlay slip",
-  "Unreal pitch correlation, loving these live graphs.",
+  "Demo chat — no real messages yet",
   "The HR board called this one earlier too"
 ];
 
@@ -200,7 +200,7 @@ export default function LiveStreams({
   
   // User Webcam Setup
   const [isUserLive, setIsUserLive] = useState(false);
-  const [streamTitle, setStreamTitle] = useState('MLB Late Night Locked Sweep Parlays!');
+  const [streamTitle, setStreamTitle] = useState('MLB research stream · Demo');
   const [activeGameCover, setActiveGameCover] = useState('Los Angeles Dodgers @ San Francisco Giants');
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   const [userStreamViewers, setUserStreamViewers] = useState(0);
@@ -364,7 +364,7 @@ export default function LiveStreams({
       const selectedUser = userList[Math.floor(Math.random() * userList.length)];
       
       const customChats = [
-        `Let's go @${profile.username}! What's the main lock tonight?`,
+        `Let's go @${profile.username}! What matchup are you researching?`,
         `Tailing whatever is on that VouchEdge deck !`,
         `Let us cash! Standard 2 units on this !`,
         `That win rate verified banner is gorgeous`,

@@ -40,7 +40,13 @@ export interface PickRecord {
  * For capper picks, use the service role (this client).
  */
 export async function createPick(
-  input: Omit<PickRecord, "id" | "status" | "graded_at" | "settled_units" | "is_demo" | "created_at" | "updated_at"> & {
+  input: Partial<Omit<PickRecord, "id" | "status" | "graded_at" | "settled_units" | "created_at" | "updated_at">> & {
+    user_id: string | null;
+    capper_id: string | null;
+    leg_type: "single" | "parlay";
+    sport: string;
+    market: string;
+    selection: string;
     is_demo?: boolean;
   }
 ): Promise<PickRecord> {

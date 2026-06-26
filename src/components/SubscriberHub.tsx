@@ -95,33 +95,33 @@ export default function SubscriberHub({
       id: 'c-user-current',
       name: profile.displayName || 'Current Creator',
       username: profile.username || 'currentcapper',
-      winRate: profile.winRate || 68.4,
-      totalPicks: profile.totalPicks || 184,
+      winRate: profile.winRate || 0,
+      totalPicks: profile.totalPicks || 0,
       bio: profile.bio || 'Professional MLB predictive metrics expert using core Python regressions.',
       monthlyFee: 0,
-      subscriberCount: 312,
+      subscriberCount: 0,
       badge: '👑 OWNER'
     },
     {
       id: 'c-alpha-guru',
-      name: 'Alpha Baseball Guru',
+      name: 'Demo Capper A',
       username: 'alphaguru',
-      winRate: 72.8,
-      totalPicks: 420,
+      winRate: 0,
+      totalPicks: 0,
       bio: 'Correlated multi-leg strikeout props & platoon-adjusted moneyline vectors.',
       monthlyFee: 50,
-      subscriberCount: 1840,
+      subscriberCount: 0,
       badge: '⚡ VIP_EDGE'
     },
     {
       id: 'c-parabolics',
-      name: 'Homers & Parabolics',
+      name: 'Demo Capper B',
       username: 'homer_parabola',
-      winRate: 64.1,
-      totalPicks: 312,
+      winRate: 0,
+      totalPicks: 0,
       bio: 'Exit velocity predictions and heavy batter-vs-pitcher stadium variables.',
       monthlyFee: 80,
-      subscriberCount: 752,
+      subscriberCount: 0,
       badge: '🏮 LAUNCH_PAD'
     }
   ]);
@@ -170,16 +170,16 @@ export default function SubscriberHub({
       } else {
         const initialMsgs: Record<string, ChatMessage[]> = {
           'c-user-current': [
-            { id: 'm1', userId: 'usr-9', displayName: 'Michael T.', username: 'mitch_pro', text: 'Stunning predictions! Your profile theme is gorgeous too.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'm2', userId: 'usr-8', displayName: 'Daniel K.', username: 'd_kitts', text: 'Can we post our latest Java Vouch Studio compiles too?', timestamp: new Date(Date.now() - 18000000).toISOString() },
-            { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome subscribers! This premium slide features the absolute best calculations from our regression models.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
+            { id: 'm1', userId: 'usr-9', displayName: 'Demo User', username: 'demo_user', text: 'Sample message — subscriber chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'm2', userId: 'usr-8', displayName: 'Demo User 2', username: 'demo_user_2', text: 'Demo message for layout testing.', timestamp: new Date(Date.now() - 18000000).toISOString() },
+            { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome to the subscriber chat. This is a demo — real messages appear once subscribers join.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
           ],
           'c-alpha-guru': [
-            { id: 'ag1', userId: 'usr-2', displayName: 'Sarah V.', username: 'sarah_cap', text: 'Which bullpen metrics are you weighting today, Guru?', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Alpha Baseball Guru', username: 'alphaguru', text: 'Highly weighting the rest factor of the Red Sox bullpen today, Sarah!', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
+            { id: 'ag1', userId: 'usr-2', displayName: 'Demo User 3', username: 'demo_user_3', text: 'Sample question — demo chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Demo Capper A', username: 'alphaguru', text: 'Demo response — subscriber chat is in development.', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
           ],
           'c-parabolics': [
-            { id: 'hp1', userId: 'usr-5', displayName: 'George F.', username: 'g_factor', text: 'Ready for major launch configurations today!', timestamp: new Date(Date.now() - 20000000).toISOString() }
+            { id: 'hp1', userId: 'usr-5', displayName: 'Demo User 4', username: 'demo_user_4', text: 'Demo message — subscriber chat in development.', timestamp: new Date(Date.now() - 20000000).toISOString() }
           ]
         };
         setMessages(initialMsgs);
@@ -430,7 +430,7 @@ export default function SubscriberHub({
               How VouchEdge Subscriptions Work
             </h3>
             <p className="text-[11px] text-slate-400 mt-1 lines-normal">
-              Backing verified elite experts. Subscriptions last for the selected months tier and grant unlockable access to a dedicated realtime **Chatroom**, premium model-correlated **Parlay-Only** items (which you can react and build from), and critical **Anouncements/Vouchers** directly connected to creator proof balances.
+              Backing verified cappers. Subscriptions last for the selected months tier and grant unlockable access to a dedicated realtime **Chatroom**, premium model-correlated **Parlay-Only** items (which you can react and build from), and critical **Anouncements/Vouchers** directly connected to creator proof balances.
             </p>
           </div>
 
@@ -893,7 +893,7 @@ export default function SubscriberHub({
               Customize Subscription Offerings
             </h3>
             <p className="text-xs text-slate-400 lines-normal">
-              Represent yourself like an elite high-frequency analyst. Owners have absolute freedom to configure months tiers, customize pricing in credits points to align with model performance indicators, and define exclusive unlockable incentives.
+              Represent yourself as a high-frequency analyst. Owners have absolute freedom to configure months tiers, customize pricing in credits points to align with model performance indicators, and define exclusive unlockable incentives.
             </p>
           </div>
 

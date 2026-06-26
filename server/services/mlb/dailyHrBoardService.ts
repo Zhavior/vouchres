@@ -204,27 +204,44 @@ async function buildGame(
 }
 
 export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> {
-  return reportCache.getOrSet(`hrboard_v3:${date}`, async () => {
-    const [games, hittersByTeam] = await Promise.all([getScheduleByDate(date), getActiveHittersByTeam()]);
+  return reportCache.getOrSet(`hrboard_v4:${date}`, async () => {
+    // STEP 1: Fetch today's schedule first (fast — one API call)
+    const games = await getScheduleByDate(date);
 
-    // Collect all player IDs and pitcher IDs for batch stat fetch
+    // STEP 2: Extract team IDs from today's games only (not all 30 teams)
+    const todayTeamIds = new Set<number>();
+    for (const g of games) {
+      if (g.awayTeam?.teamId) todayTeamIds.add(g.awayTeam.teamId);
+      if (g.homeTeam?.teamId) todayTeamIds.add(g.homeTeam.teamId);
+    }
+    const teamIdList = [...todayTeamIds];
+    console.log(`[dailyHrBoardService] Today's slate: ${games.length} games, ${teamIdList.length} unique teams`);
+
+    // STEP 3: Fetch rosters ONLY for today's teams (not all 30)
+    const hittersByTeam = await getActiveHittersByTeam(teamIdList);
+
+    // STEP 4: Limit to top 5 power hitters per team (by batting order)
+    // This cuts ~250 hitters → ~100, keeping only the players likely to hit HRs
+    const MAX_HITTERS_PER_TEAM = 5;
     const allHitterIds = new Set<number>();
     const allPitcherIds = new Set<number>();
 
-    for (const [, players] of hittersByTeam) {
-      for (const p of players) allHitterIds.add(p.playerId);
+    for (const [teamId, players] of hittersByTeam) {
+      const topHitters = players
+        .sort((a, b) => (a.battingOrder ?? 99) - (b.battingOrder ?? 99))
+        .slice(0, MAX_HITTERS_PER_TEAM);
+      for (const p of topHitters) allHitterIds.add(p.playerId);
     }
     for (const g of games) {
       if (g.probablePitchers.away?.pitcherId) allPitcherIds.add(g.probablePitchers.away.pitcherId);
       if (g.probablePitchers.home?.pitcherId) allPitcherIds.add(g.probablePitchers.home.pitcherId);
     }
 
-    console.log(`[dailyHrBoardService] Fetching stats: ${allHitterIds.size} hitters, ${allPitcherIds.size} pitchers`);
-
-    // Fetch boxscores, hitter stats, pitcher stats in parallel
-    // Hitter stats: batch with concurrency limit to avoid overwhelming the API
-    const CONCURRENCY = 20;
     const hitterIds = [...allHitterIds];
+    console.log(`[dailyHrBoardService] Fetching stats: ${hitterIds.length} hitters (top ${MAX_HITTERS_PER_TEAM}/team), ${allPitcherIds.size} pitchers`);
+
+    // STEP 5: Fetch hitter stats in batches of 10 (was 20 — lower concurrency = more stable)
+    const CONCURRENCY = 10;
     const hitterStatsList: HitterStats[] = [];
     for (let i = 0; i < hitterIds.length; i += CONCURRENCY) {
       const batch = hitterIds.slice(i, i + CONCURRENCY);
@@ -235,6 +252,7 @@ export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> 
     }
     const hitterStatsMap = new Map(hitterStatsList.map((s) => [s.playerId, s]));
 
+    // STEP 6: Fetch pitcher stats (only ~26 probable pitchers — fast)
     const pitcherStatsResults = await Promise.allSettled(
       [...allPitcherIds].map(async (id) => ({ id, stats: await getPitcherStats(id) }))
     );
@@ -243,15 +261,10 @@ export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> 
       if (r.status === "fulfilled") pitcherStatsMap.set(r.value.id, r.value.stats.season);
     }
 
-    const boxscoresResults = await Promise.allSettled(
-      games.map(async (g) => ({ gamePk: g.gamePk, data: await getBoxscore(g.gamePk) }))
-    );
+    // STEP 7: Skip boxscores for pre-game board (they're empty before first pitch anyway)
     const boxscores = new Map<number, any>();
-    for (const r of boxscoresResults) {
-      if (r.status === "fulfilled" && r.value.data) boxscores.set(r.value.gamePk, r.value.data);
-    }
 
-    console.log(`[dailyHrBoardService] Boxscores: ${boxscores.size}/${games.length} | Pitcher stats: ${pitcherStatsMap.size}`);
+    console.log(`[dailyHrBoardService] Stats loaded: ${hitterStatsMap.size} hitters, ${pitcherStatsMap.size} pitchers`);
 
     const built = await Promise.all(
       games.map((g) => buildGame(g, hittersByTeam, boxscores, hitterStatsMap, pitcherStatsMap))
@@ -267,7 +280,7 @@ export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> 
       disclaimer: DISCLAIMER,
       games: built,
     };
-  }, 8 * 60_000) as Promise<HrBoardResponse>;
+  }, 5 * 60_000) as Promise<HrBoardResponse>;
 }
 
 export async function getHrBoardPlayer(playerId: number, date = todayISO()): Promise<HrBoardRow | null> {

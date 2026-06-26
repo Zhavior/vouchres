@@ -352,12 +352,12 @@ export function EpicThemeShowcase() {
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-white text-sm border-2"
                                   style={{ background: `linear-gradient(135deg, ${accent}, ${accent}80)`, borderColor: accent, boxShadow: `0 0 16px ${accent}50` }}>DK</div>
                                 <div>
-                                  <div className="text-sm font-bold" style={{ color: isGold ? "#6B4F0D" : DC.textNormal }}>D. Karpov</div>
-                                  <div className="text-[10px]" style={{ color: DC.textMuted }}>@sharp_researcher</div>
+                                  <div className="text-sm font-bold" style={{ color: isGold ? "#6B4F0D" : DC.textNormal }}>Sample Capper</div>
+                                  <div className="text-[10px]" style={{ color: DC.textMuted }}>@sample_capper</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-3 gap-1.5">
-                                {[{ l: "Record", v: "247-132" }, { l: "Units", v: "+342.7" }, { l: "Streak", v: "W5" }].map((s) => (
+                                {[{ l: "Record", v: "0-0" }, { l: "Units", v: "0.0u" }, { l: "Streak", v: "—" }].map((s) => (
                                   <div key={s.l} className="text-center py-1.5 rounded-lg border" style={{ background: isGold ? "rgba(107,79,13,0.1)" : accent + "0a", borderColor: isGold ? "rgba(107,79,13,0.2)" : accent + "25" }}>
                                     <div className="text-[7px] uppercase tracking-widest font-mono" style={{ color: DC.textMuted }}>{s.l}</div>
                                     <div className="text-xs font-black font-mono" style={{ color: isGold ? "#6B4F0D" : accent }}>{s.v}</div>
@@ -369,7 +369,7 @@ export function EpicThemeShowcase() {
                           <div style={{ transform: "translateZ(80px)" }}>
                             <div className="rounded-xl p-4 border" style={{ background: isGold ? "rgba(107,79,13,0.12)" : DC.bgSecondary + "cc", borderColor: isGold ? "rgba(107,79,13,0.3)" : accent + "30" }}>
                               <div className="flex items-center justify-between mb-2.5">
-                                <span className="text-[9px] font-mono font-bold uppercase tracking-wider" style={{ color: DC.textMuted }}>SLIP #VE-2941</span>
+                                <span className="text-[9px] font-mono font-bold uppercase tracking-wider" style={{ color: DC.textMuted }}>SLIP #VE-DEMO-001</span>
                                 <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border" style={{ background: accent + "20", borderColor: accent + "40", color: accent }}>VOUCHCHECK ✓</span>
                               </div>
                               <div className="space-y-1.5">

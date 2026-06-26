@@ -1185,7 +1185,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, cubicBezier: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col items-center"
         >
           {/* Trust Shield Badge - Luxurious Platinum Silver & Gold style */}

@@ -234,7 +234,7 @@ export default function AuthModal({
             </h2>
             <p className="text-sm text-slate-400 mt-1">
               {emailSent
-                ? 'One more step to lock in your edge.'
+                ? 'One more step to finish setting up your account.'
                 : mode === 'signup'
                 ? 'Track verified picks, build slips, and unlock the full edge board.'
                 : 'Log in to pick up where you left off.'}

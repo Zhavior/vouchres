@@ -183,7 +183,7 @@ async function evaluatePick(
     event_id?: string | null;
   },
   boxscore: any
-): GradeResult {
+): Promise<GradeResult> {
   const market = pick.market.toLowerCase();
   const selection = pick.selection;
 
@@ -263,7 +263,7 @@ async function gradeParlayPick(
   for (const eventId of eventIds) {
     try {
       // If this leg's event matches the parlay's parent event, reuse the boxscore
-      if (eventId === pick.event_id?.toString()) {
+      if (eventId === (pick as any).event_id?.toString()) {
         boxscoreCache.set(eventId, boxscore);
         continue;
       }

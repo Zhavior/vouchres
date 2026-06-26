@@ -52,7 +52,7 @@ export const SKILLS: Skill[] = [
     description: "Vulnerability profile per probable pitcher.",
     inputSchema: ["date?"],
     outputSchema: ["report[]"],
-    run: async (input) => ({ report: buildVulnerablePitcherReport(await gamesFor(input)) }),
+    run: async (input) => ({ report: buildVulnerablePitcherReport(await gamesFor(input), new Map()) }),
   },
   {
     id: "rankHrTargets",
@@ -60,7 +60,7 @@ export const SKILLS: Skill[] = [
     description: "Ranked HR matchup targets for the slate.",
     inputSchema: ["date?"],
     outputSchema: ["targets[]"],
-    run: async (input) => ({ targets: rankHrTargets(await gamesFor(input)) }),
+    run: async (input) => ({ targets: rankHrTargets(await gamesFor(input), new Map()) }),
   },
   {
     id: "findSneakyHrTargets",

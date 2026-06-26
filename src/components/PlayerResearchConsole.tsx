@@ -1303,16 +1303,16 @@ export default function PlayerResearchConsole({
                         <div className="h-32 w-full text-[9px] font-mono">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={[
-                              { game: 'G1', OPS: parseFloat((activePlayer.splits.last10.ops * 0.85).toFixed(3)) },
-                              { game: 'G2', OPS: parseFloat((activePlayer.splits.last10.ops * 0.95).toFixed(3)) },
-                              { game: 'G3', OPS: parseFloat((activePlayer.splits.last10.ops * 0.90).toFixed(3)) },
-                              { game: 'G4', OPS: parseFloat((activePlayer.splits.last10.ops * 1.05).toFixed(3)) },
-                              { game: 'G5', OPS: parseFloat((activePlayer.splits.last10.ops * 1.02).toFixed(3)) },
-                              { game: 'G6', OPS: parseFloat((activePlayer.splits.last10.ops * 0.88).toFixed(3)) },
-                              { game: 'G7', OPS: parseFloat((activePlayer.splits.last10.ops * 1.15).toFixed(3)) },
-                              { game: 'G8', OPS: parseFloat((activePlayer.splits.last10.ops * 0.97).toFixed(3)) },
-                              { game: 'G9', OPS: parseFloat((activePlayer.splits.last10.ops * 1.08).toFixed(3)) },
-                              { game: 'G10', OPS: activePlayer.splits.last10.ops },
+                              { game: 'G1', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 0.85).toFixed(3)) },
+                              { game: 'G2', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 0.95).toFixed(3)) },
+                              { game: 'G3', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 0.90).toFixed(3)) },
+                              { game: 'G4', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 1.05).toFixed(3)) },
+                              { game: 'G5', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 1.02).toFixed(3)) },
+                              { game: 'G6', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 0.88).toFixed(3)) },
+                              { game: 'G7', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 1.15).toFixed(3)) },
+                              { game: 'G8', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 0.97).toFixed(3)) },
+                              { game: 'G9', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 1.08).toFixed(3)) },
+                              { game: 'G10', OPS: Number(activePlayer.splits.last10.ops) },
                             ]}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                               <XAxis dataKey="game" stroke="#64748b" tickLine={false} />

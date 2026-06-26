@@ -53,7 +53,6 @@ export function initSentry() {
         if (event.request) {
           delete event.request.headers?.["x-forwarded-for"];
           delete event.request.headers?.["user-agent"];
-          event.request.ip = "[scrubbed]";
         }
         // Remove user tags
         if (event.user) {

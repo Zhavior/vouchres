@@ -71,7 +71,7 @@ export default function AisFeatureAgent({
 
 I can explain any app feature, connect with our **V.A.I Smart Picks** and the parlay engine, fetch live MLB stats, analyze your draft tickets, or dispatch verified feedback emails directly to **vouchedge@gmail.com** and **zhavior@gmail.com**.
 
-How can I help you dominate the board today?`,
+How can I help you research today?`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'feature_list'
         }

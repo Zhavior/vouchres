@@ -39,7 +39,7 @@ export function initServerSentry(app?: Express) {
       // Enable HTTP requests tracing
       Sentry.httpIntegration(),
       // Enable Express middleware error capture
-      ...(app ? [Sentry.expressIntegration({ app })] : []),
+      ...(app ? [Sentry.expressIntegration({ app } as any)] : []),
     ],
     tracesSampleRate: SENTRY_ENV === "production" ? 0.1 : 1.0,
     profilesSampleRate: SENTRY_ENV === "production" ? 0.1 : 0,
@@ -84,7 +84,7 @@ export function initServerSentry(app?: Express) {
  *   // ... all your routes ...
  *   app.use(sentryErrorHandler());
  */
-export const sentryRequestHandler = Sentry.requestHandler;
+export const sentryRequestHandler = (Sentry as any).requestHandler ?? ((req: any, res: any, next: any) => next());
 export const sentryErrorHandler = Sentry.expressErrorHandler;
 
 /**

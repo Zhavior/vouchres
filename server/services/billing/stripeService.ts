@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { supabaseAdmin } from "../middleware/auth";
+import { supabaseAdmin } from "../../middleware/auth";
 
 /**
  * Stripe service — manages customers, checkout sessions, and syncs
@@ -11,7 +11,7 @@ import { supabaseAdmin } from "../middleware/auth";
  */
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
+  apiVersion: "2024-12-18.acacia" as any,
   typescript: true,
 });
 
@@ -157,9 +157,9 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
       stripe_price_id: priceId,
       tier,
       status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+      current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+      cancel_at_period_end: (subscription as any).cancel_at_period_end,
     },
     { onConflict: "stripe_subscription_id" }
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import HomeFeedPage from './social/feed/HomeFeedPage';
 import ParlayLab from './components/ParlayLab';
+import ParlayStudio from './components/ParlayStudio';
 import VouchBoard from './components/VouchBoard';
 import ResultsPage from './components/ResultsPage';
 import ProfilePage from './components/ProfilePage';
@@ -9,6 +10,9 @@ import SettingsPage from './components/SettingsPage';
 import PremiumSubPage from './components/PremiumSubPage';
 import AisLandingPage from './components/AisLandingPage';
 import PlayerResearchConsole from './components/PlayerResearchConsole';
+import PlayerResearchHub from './components/PlayerResearchHub';
+import CustomizePage from './components/CustomizePage';
+import ResultsStudio from './components/results/ResultsStudio';
 import SmartAiEngine from './components/SmartAiEngine';
 import MlbIntelligenceHub from './components/MlbIntelligenceHub';
 import DailyHrBoardPage from './pages/DailyHrBoardPage';
@@ -454,8 +458,8 @@ export default function App() {
         );
       case 'build':
         return (
-          <ParlayLab 
-            onSaveParlay={handleSaveParlaySlip} 
+          <ParlayStudio
+            onSaveParlay={handleSaveParlaySlip}
             savedParlays={savedSlips}
             legs={activeLegs}
             setLegs={setActiveLegs}
@@ -492,7 +496,7 @@ export default function App() {
         );
       case 'research':
         return (
-          <PlayerResearchConsole
+          <PlayerResearchHub
             onAddLegToParlay={handleAddLegFromResearch}
             onSaveVouch={handleSaveVouch}
             savedVouchIds={savedVouchIds}
@@ -518,17 +522,10 @@ export default function App() {
         );
       case 'results':
         return (
-          <ParlayLab 
-            onSaveParlay={handleSaveParlaySlip} 
-            savedParlays={savedSlips}
-            legs={activeLegs}
-            setLegs={setActiveLegs}
-            onSectionChange={setActiveSection}
-            liveGames={liveGames}
-            onSaveVouch={handleSaveVouch}
+          <ResultsStudio
             posts={posts}
             profile={profile}
-            initialTab="results"
+            savedParlays={savedSlips}
           />
         );
       case 'profile':
@@ -572,11 +569,19 @@ export default function App() {
         );
       case 'settings':
         return (
-          <SettingsPage 
-            onResetDatabase={handleResetDatabase} 
-            profileName={profile.displayName} 
+          <SettingsPage
+            onResetDatabase={handleResetDatabase}
+            profileName={profile.displayName}
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
+          />
+        );
+      case 'customize':
+        return (
+          <CustomizePage
+            profile={profile}
+            onUpdateProfile={handleUpdateProfile}
+            onSectionChange={setActiveSection}
           />
         );
       default:

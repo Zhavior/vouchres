@@ -44,7 +44,7 @@ function judged(pick: AgentPick): JudgedPick {
 }
 
 /** Produce an agent's picks for the slate, judged and ready for the frontend. */
-export function generatePicks(agentId: string, report: DailyMlbReport): JudgedPick[] {
+export async function generatePicks(agentId: string, report: DailyMlbReport): Promise<JudgedPick[]> {
   const agent = getAgent(agentId);
   if (!agent) return [];
 
@@ -121,7 +121,7 @@ export function generatePicks(agentId: string, report: DailyMlbReport): JudgedPi
       );
     }
     case "parlay-demon": {
-      const parlay = buildParlay(report.games, 3);
+      const parlay = await buildParlay(report.games, 3);
       return [
         judged({
           agentId: agent.id,

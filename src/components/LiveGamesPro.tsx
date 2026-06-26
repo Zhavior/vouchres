@@ -109,7 +109,7 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
 };
 
 function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () => void; onAddLeg: (w: HrWatch) => void }) {
-  const Section: React.FC<{ icon: React.ComponentType<{ className?: string }>; title: string; tone?: string; children: React.ReactNode }> = ({ icon: Icon, title, tone = '#38bdf8', children }) => (
+  const Section: React.FC<{ icon: any; title: string; tone?: string; children: React.ReactNode }> = ({ icon: Icon, title, tone = '#38bdf8', children }) => (
     <div>
       <div className="flex items-center gap-1.5 mb-2"><Icon className="w-3.5 h-3.5" style={{ color: tone }} /><h4 className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-400">{title}</h4></div>
       {children}

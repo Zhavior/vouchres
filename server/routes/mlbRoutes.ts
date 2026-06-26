@@ -1,15 +1,7 @@
 /** MLB data + intelligence report routes. */
 import type { Express, Request, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
-import { buildDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
-import { buildVulnerablePitcherReport } from "../services/intelligence/pitcherVulnerabilityEngine";
-import { rankHrTargets, findSneakyHrTargets } from "../services/intelligence/hrEngine";
-import { rankRbiTargets } from "../services/intelligence/rbiEnvironmentEngine";
-import { scoreRunEnvironment } from "../services/intelligence/runEnvironmentEngine";
-
-async function gamesForDate(date?: string) {
-  return date ? getScheduleByDate(date) : getTodayGames();
-}
+import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 
 export function registerMlbRoutes(app: Express): void {
   app.get("/api/mlb/games/today", async (_req: Request, res: Response) => {
@@ -31,26 +23,56 @@ export function registerMlbRoutes(app: Express): void {
   });
 
   app.get("/api/mlb/reports/daily", async (req: Request, res: Response) => {
-    res.json(await buildDailyReport((req.query.date as string) || undefined));
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json(report);
+    } catch (err: any) {
+      res.status(503).json({ error: "Daily report unavailable", message: err?.message });
+    }
   });
 
   app.get("/api/mlb/reports/vulnerable-pitchers", async (req: Request, res: Response) => {
-    res.json({ report: buildVulnerablePitcherReport(await gamesForDate(req.query.date as string)) });
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json({ report: report.vulnerablePitchers });
+    } catch (err: any) {
+      res.status(503).json({ error: "Vulnerable pitchers unavailable", message: err?.message });
+    }
   });
 
   app.get("/api/mlb/reports/hr-targets", async (req: Request, res: Response) => {
-    res.json({ targets: rankHrTargets(await gamesForDate(req.query.date as string)) });
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json({ targets: report.hrTargets });
+    } catch (err: any) {
+      res.status(503).json({ error: "HR targets unavailable", message: err?.message });
+    }
   });
 
   app.get("/api/mlb/reports/sneaky-hr", async (req: Request, res: Response) => {
-    res.json({ sneaky: findSneakyHrTargets(await gamesForDate(req.query.date as string)) });
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json({ sneaky: report.sneakyHr });
+    } catch (err: any) {
+      res.status(503).json({ error: "Sneaky HR unavailable", message: err?.message });
+    }
   });
 
   app.get("/api/mlb/reports/rbi-targets", async (req: Request, res: Response) => {
-    res.json(rankRbiTargets(await gamesForDate(req.query.date as string)));
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json(report.rbi);
+    } catch (err: any) {
+      res.status(503).json({ error: "RBI targets unavailable", message: err?.message });
+    }
   });
 
   app.get("/api/mlb/reports/run-environments", async (req: Request, res: Response) => {
-    res.json({ environments: scoreRunEnvironment(await gamesForDate(req.query.date as string)) });
+    try {
+      const report = await getSharedDailyReport((req.query.date as string) || undefined);
+      res.json({ environments: report.runEnvironments });
+    } catch (err: any) {
+      res.status(503).json({ error: "Run environments unavailable", message: err?.message });
+    }
   });
 }

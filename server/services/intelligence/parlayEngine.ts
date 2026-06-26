@@ -43,9 +43,9 @@ function combinedRisk(size: number): BuiltParlay["combinedRisk"] {
   return "EXTREME";
 }
 
-export function buildParlay(games: NormalizedGame[], size = 3): BuiltParlay {
+export async function buildParlay(games: NormalizedGame[], size = 3): Promise<BuiltParlay> {
   const safeSize = clamp(size, 2, 4);
-  const targets = rankHrTargets(games).slice(0, safeSize);
+  const targets = (await rankHrTargets(games, new Map())).slice(0, safeSize);
   const legs = targets.map(legFromTarget);
 
   // Combined score decays with each leg (independent-event approximation).

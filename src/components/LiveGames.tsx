@@ -650,7 +650,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                 <div className="bg-slate-900/10 border border-slate-900/60 p-3 rounded-xl flex gap-2 text-[10.5px] text-slate-500 leading-relaxed font-mono">
                   <Info className="w-4 h-4 text-sky-400 flex-shrink-0" />
                   <p>
-                    All live score predictions are updated continuously under client-side caching schemes. Free integration allows infinite scale across thousands of visitors daily.
+                    All live score predictions are updated continuously under client-side caching schemes. Free integration scales across many concurrent visitors.
                   </p>
                 </div>
 

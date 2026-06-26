@@ -1,7 +1,14 @@
-import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
+import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Trophy, LayoutDashboard, Home, Award, Tv, Sliders, Cpu, Activity,
+  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles,
+  MessageSquare, ShoppingBag, User, Settings,
+};
 
 interface FeedSidebarProps {
   activeSection: string;
@@ -10,27 +17,27 @@ interface FeedSidebarProps {
 }
 
 export default function FeedSidebar({ activeSection, onSectionChange, profile }: FeedSidebarProps) {
-  const menuItems = [
-    { id: 'welcome', label: 'Welcome Portal', icon: Trophy },
-    { id: 'today', label: 'Today', icon: LayoutDashboard },
-    { id: 'feed', label: 'Home Feed', icon: Home },
-    { id: 'leaderboard', label: 'Top Cappers 🏆', icon: Award },
-    { id: 'live_games', label: 'Live Projections', icon: Tv },
-    { id: 'build', label: 'Build Parlay', icon: Sliders },
-    { id: 'ai_engine', label: 'V.A.I Smart Picks', icon: Cpu },
-    { id: 'intel', label: 'MLB Intelligence', icon: Activity },
-    { id: 'hr_board', label: 'Daily HR Board 🔥', icon: Flame },
-    { id: 'vouchscan', label: 'VouchScan', icon: ScanLine },
-    { id: 'research', label: 'Player Research', icon: Search },
-    { id: 'board', label: 'Vouch Board', icon: ClipboardCheck },
-    { id: 'results', label: 'Results', icon: BarChart3 },
-    { id: 'premium', label: 'PRO Premium Tiers', icon: Sparkles },
-    { id: 'subscriber_hub', label: 'Subscriber Clubs 💬', icon: MessageSquare },
-    { id: 'themestore', label: 'Theme Store 🎨', icon: ShoppingBag },
-    { id: 'epic_themes', label: 'Epic Themes ✨', icon: Sparkles },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+  const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
+
+  // Reload layout when profile changes (e.g. after CustomizePage saves)
+  useEffect(() => {
+    setLayout(loadFeatureLayout());
+  }, [activeSection]);
+
+  // Build menu items from the feature config
+  const enabledFeatures = getEnabledFeatures(layout);
+  const menuItems = enabledFeatures.map((f) => ({
+    id: f.id,
+    label: f.label,
+    icon: ICON_MAP[f.icon] || Settings,
+  }));
+
+  const toggleMode = () => {
+    const newMode = layout.mode === "beginner" ? "pro" : "beginner";
+    const next = setViewMode(layout, newMode);
+    setLayout(next);
+    saveFeatureLayout(next);
+  };
 
   return (
     <aside className="hidden md:flex flex-col h-screen sticky top-0 px-2 xl:px-4 py-6 border-r border-[#1e293b]/70 w-[70px] xl:w-[260px] text-slate-100 justify-between select-none bg-[#090d16]/95 backdrop-blur-xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none">
@@ -106,6 +113,31 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           </div>
           <p className="text-slate-400 text-[10px] truncate leading-none mt-0.5">@{profile.username}</p>
         </div>
+      </div>
+
+      {/* Mode toggle + Customize link */}
+      <div className="space-y-2 pt-2">
+        <button
+          onClick={toggleMode}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border"
+          style={{
+            background: layout.mode === "pro" ? "rgba(34,211,238,0.08)" : "rgba(255,255,255,0.02)",
+            borderColor: layout.mode === "pro" ? "rgba(34,211,238,0.3)" : "rgba(255,255,255,0.06)",
+            color: layout.mode === "pro" ? "#22d3ee" : "#64748b",
+          }}
+        >
+          {layout.mode === "pro" ? <Zap className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+          <span className="hidden xl:inline">{layout.mode === "pro" ? "Pro Mode" : "Beginner"}</span>
+          <span className="hidden xl:inline ml-auto text-[8px] opacity-50">click to switch</span>
+        </button>
+        <button
+          onClick={() => onSectionChange("customize")}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+          style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
+        >
+          <Palette className="w-3 h-3" />
+          <span className="hidden xl:inline">Customize Layout</span>
+        </button>
       </div>
     </aside>
   );

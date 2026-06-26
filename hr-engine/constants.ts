@@ -254,3 +254,19 @@ export const SAFE_LANGUAGE = {
 // Disclaimer (appended to every pick, every card, every notification)
 // =========================================================
 export const DISCLAIMER = "Probability-based research for entertainment only. Not betting advice. Past performance does not guarantee future results.";
+
+/**
+ * Rough MLB standard deviations (for percentile conversion).
+ * These are approximations — real values vary year to year.
+ * Re-exported here so barrelFormScore.ts can import from a single location.
+ */
+export const LEAGUE_STD_DEVS = {
+  iso: 0.055,
+  barrelRate: 0.045,
+  hardHitRate: 0.085,
+  hrFbRate: 0.055,
+  hr9: 0.35,
+  barrelAllowed: 0.025,
+  hardHitAllowed: 0.07,
+  fbAllowed: 0.07,
+} as const;

@@ -104,7 +104,7 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
   );
 }
 
-function Section({ icon: Icon, title, tone = '#64748b', children }: { icon: React.ComponentType<{ className?: string }>; title: string; tone?: string; children: React.ReactNode }) {
+function Section({ icon: Icon, title, tone = '#64748b', children }: { icon: any; title: string; tone?: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
