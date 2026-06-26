@@ -208,6 +208,10 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
 
   const filteredGames = useMemo(() => {
     if (!board) return [];
+    const isVercelSafePartial =
+      (board as any)?.dataQuality === 'vercel_safe_partial' ||
+      (board as any)?.runtime === 'vercel_standalone_no_server_imports';
+
     const q = filters.search.trim().toLowerCase();
     return games
       .map((g) => {
@@ -215,9 +219,9 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
           if (filters.team !== 'ALL' && r.team !== filters.team) return false;
           if (filters.grade !== 'ALL' && r.grade !== filters.grade) return false;
           if (filters.risk !== 'ALL' && r.riskLabel !== filters.risk) return false;
-          if (filters.hotOnly && r.formTag !== 'Hot') return false;
-          if (filters.sneakyOnly && r.riskLabel !== 'Sneaky') return false;
-          if (filters.confirmedOnly && r.projectionType !== 'Confirmed') return false;
+          if (!isVercelSafePartial && filters.hotOnly && r.formTag !== 'Hot') return false;
+          if (!isVercelSafePartial && filters.sneakyOnly && r.riskLabel !== 'Sneaky') return false;
+          if (!isVercelSafePartial && filters.confirmedOnly && r.projectionType !== 'Confirmed') return false;
           if (r.pitcherVulnerability < filters.minPitcherVuln) return false;
           if (q && !(r.playerName ?? '').toLowerCase().includes(q)) return false;
           return true;
