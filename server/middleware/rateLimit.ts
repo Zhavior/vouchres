@@ -1,5 +1,4 @@
-import rateLimit from "express-rate-limit";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 /**
  * Rate limiters.
@@ -18,6 +17,36 @@ import type { Request, Response } from "express";
  */
 
 const TRUST_PROXY = Number(process.env.TRUST_PROXY ?? 1);
+void TRUST_PROXY;
+
+type RateLimitOptions = {
+  windowMs: number;
+  limit: number;
+  keyGenerator?: (req: Request) => string;
+  handler: (req: Request, res: Response) => Response;
+  skip?: (req: Request) => boolean;
+};
+
+function rateLimit(options: RateLimitOptions) {
+  const hits = new Map<string, { count: number; resetAt: number }>();
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (options.skip?.(req)) return next();
+
+    const now = Date.now();
+    const key = options.keyGenerator?.(req) ?? keyGenerator(req);
+    const current = hits.get(key);
+
+    if (!current || current.resetAt <= now) {
+      hits.set(key, { count: 1, resetAt: now + options.windowMs });
+      return next();
+    }
+
+    current.count += 1;
+    if (current.count > options.limit) return options.handler(req, res);
+    return next();
+  };
+}
 
 function keyGenerator(req: Request): string {
   // Prefer authenticated user ID, fall back to IP
@@ -47,8 +76,6 @@ function handler(req: Request, res: Response) {
 export const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 200,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
   keyGenerator,
   handler,
   // Skip if behind an internal health check
@@ -62,8 +89,6 @@ export const globalLimiter = rateLimit({
 export const aiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 20,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
   keyGenerator,
   handler,
 });
@@ -75,8 +100,6 @@ export const aiLimiter = rateLimit({
 export const pickLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
   keyGenerator,
   handler,
 });
@@ -88,8 +111,6 @@ export const pickLimiter = rateLimit({
 export const betaSignupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 3,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
   // Always key by IP for unauthenticated endpoints
   keyGenerator: (req: Request) =>
     `ip:${(req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.ip ?? "unknown"}`,
@@ -103,8 +124,6 @@ export const betaSignupLimiter = rateLimit({
 export const webhookLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 100,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
   keyGenerator: (req) => `webhook:${req.ip ?? "unknown"}`,
   handler,
 });

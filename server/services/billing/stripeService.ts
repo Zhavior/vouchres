@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { supabaseAdmin } from "../../middleware/auth";
+import { getSupabaseAdmin } from "../../middleware/auth";
 
 /**
  * Stripe service — manages customers, checkout sessions, and syncs
@@ -34,6 +34,7 @@ export const STRIPE_PRICES: Record<string, { tier: "gold" | "seller_pro"; priceI
  * Create or reuse a Stripe customer for a profile.
  */
 export async function ensureStripeCustomer(profileId: string, email: string) {
+  const supabaseAdmin = await getSupabaseAdmin();
   // Check if profile already has a stripe_customer_id
   const { data: profile } = await supabaseAdmin
     .from("profiles")
@@ -102,6 +103,7 @@ export async function createPortalSession(opts: {
   profileId: string;
   returnUrl: string;
 }) {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select("stripe_customer_id")
@@ -130,6 +132,7 @@ export function tierFromPriceId(priceId: string): "gold" | "seller_pro" | null {
  * Called from the webhook handler on every subscription event.
  */
 export async function syncSubscription(subscription: Stripe.Subscription) {
+  const supabaseAdmin = await getSupabaseAdmin();
   const profileId = subscription.metadata.profile_id;
   if (!profileId) {
     console.error("[stripe] subscription has no profile_id metadata", subscription.id);

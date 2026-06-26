@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -7,13 +7,21 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
  *
  * NEVER expose this client to the browser. It bypasses RLS.
  */
-export const supabaseAdmin: SupabaseClient = createClient(
-  process.env.SUPABASE_URL ?? "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-  {
-    auth: { persistSession: false, autoRefreshToken: false },
-  }
-);
+let supabaseAdminClient: SupabaseClient | null = null;
+
+export async function getSupabaseAdmin(): Promise<SupabaseClient> {
+  if (supabaseAdminClient) return supabaseAdminClient;
+
+  const { createClient } = await import("@supabase/supabase-js");
+  supabaseAdminClient = createClient(
+    process.env.SUPABASE_URL ?? "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }
+  );
+  return supabaseAdminClient;
+}
 
 /**
  * Auth middleware — verifies the Supabase JWT from the Authorization header
@@ -54,6 +62,7 @@ export async function requireAuth(
   const token = header.slice(7);
 
   // Verify the JWT via Supabase auth admin API
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
     return res.status(401).json({ error: "invalid_token" });
@@ -108,6 +117,7 @@ export async function optionalAuth(
   if (!header?.startsWith("Bearer ")) return next();
 
   const token = header.slice(7);
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) return next();
 

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../../middleware/auth";
+import { getSupabaseAdmin } from "../../middleware/auth";
 
 /**
  * Pick persistence — replaces server/services/trust/resultLedgerService.ts
@@ -50,6 +50,7 @@ export async function createPick(
     is_demo?: boolean;
   }
 ): Promise<PickRecord> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("picks")
     .insert({ ...input, status: "pending" })
@@ -74,6 +75,7 @@ export async function gradePick(opts: {
   settledUnits: number | null;
   learningNote?: string;
 }): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { error } = await supabaseAdmin
     .from("picks")
     .update({
@@ -100,6 +102,7 @@ export async function getLedger(opts: {
   limit?: number;
   offset?: number;
 }): Promise<{ picks: PickRecord[]; total: number }> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const limit = Math.min(opts.limit ?? 50, 100);
   const offset = opts.offset ?? 0;
 
@@ -124,6 +127,7 @@ export async function getLedger(opts: {
  * pick after it has been graded. Updates both public.profiles and public.trust_scores.
  */
 async function recomputeTrustForPick(pickId: string): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
   // 1. Look up the pick to find the author
   const { data: pick } = await supabaseAdmin
     .from("picks")

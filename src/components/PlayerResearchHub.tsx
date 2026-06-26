@@ -17,11 +17,13 @@ import {
    Style: Bloomberg terminal — dark glass, large numbers, data-confidence badges
 
    Drop-in replacement for: src/components/PlayerResearchConsole.tsx
-   Uses the same props + MLB_PLAYER_RECORDS data — no backend changes.
+   Backend player registry is the main source of truth. MLB_PLAYER_RECORDS only
+   enriches official backend players or acts as a fallback when backend is down.
    ============================================================================ */
 
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
+import { apiUrl } from "../lib/apiBase";
 
 interface Props {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
@@ -34,6 +36,113 @@ interface Props {
 type Mode = "scout" | "compare" | "build";
 type ListStyle = "grid" | "table";
 type DetailTab = "overview" | "splits" | "gamelog" | "ai" | "props";
+
+interface BackendRegistryPlayer {
+  playerId: number;
+  id: string;
+  playerName: string;
+  name: string;
+  teamId: number;
+  team: string;
+  position: string;
+  bats?: "L" | "R" | "S" | "U";
+  throws?: "L" | "R" | "U";
+  headshot: string;
+  rosterType?: string;
+  dataSource?: string;
+}
+
+const fallbackByName = new Map(MLB_PLAYER_RECORDS.map((player) => [player.name.toLowerCase(), player]));
+
+function normalizeHand(value: string | undefined, fallback: "L" | "R" | "S" = "R"): "L" | "R" | "S" {
+  return value === "L" || value === "R" || value === "S" ? value : fallback;
+}
+
+function normalizeThrow(value: string | undefined): "L" | "R" {
+  return value === "L" || value === "R" ? value : "R";
+}
+
+function fallbackPlayerShell(player: BackendRegistryPlayer): MLBPlayer {
+  const name = player.playerName || player.name || `Player ${player.playerId}`;
+  return {
+    id: String(player.playerId || player.id),
+    name,
+    team: player.team || "MLB",
+    position: player.position || "MLB",
+    number: "—",
+    headshot: player.headshot || `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${player.playerId}/headshot/67/current`,
+    injuryStatus: "Status unavailable",
+    injurySeverity: "NONE",
+    injuryNotes: "Backend registry identity only. Enriched local research is unavailable for this player.",
+    batterScore: 50,
+    seasonStats: { avg: "—", hr: "—", rbi: "—", ops: "—" },
+    gameLogs: [],
+    propositions: [
+      { id: `prop_${player.playerId}_hits`, market: "To Record 1+ Hits", odds: 1.9, spec: `${name} 1+ Hits` },
+      { id: `prop_${player.playerId}_hr`, market: "To Hit 1+ Home Run", odds: 4.5, spec: `${name} 1+ HR` },
+    ],
+    bats: normalizeHand(player.bats),
+    throws: normalizeThrow(player.throws),
+    height: "—",
+    weight: "—",
+    birthdate: "—",
+    advanced: {
+      barrelPercent: 0,
+      launchAngle: 0,
+      exitVelocity: 0,
+      hardHitPercent: 0,
+      chasePercent: 0,
+      woba: 0,
+      xwoba: 0,
+      sweetSpotPercent: 0,
+    },
+    splits: {
+      vLHP: { avg: "—", obp: "—", slg: "—", ops: "—" },
+      vRHP: { avg: "—", obp: "—", slg: "—", ops: "—" },
+      home: { avg: "—", obp: "—", slg: "—", ops: "—" },
+      away: { avg: "—", obp: "—", slg: "—", ops: "—" },
+      last10: { avg: "—", obp: "—", slg: "—", ops: "—" },
+    },
+    scoutingReport: {
+      powerText: "Backend registry identity is available. Deeper research requires enriched stats.",
+      contactText: "Backend registry identity is available. Deeper research requires enriched stats.",
+      disciplineText: "Backend registry identity is available. Deeper research requires enriched stats.",
+      overallScouting: "Official MLB player registry record loaded from the backend.",
+      hotZones: ["Data unavailable"],
+      riskFactor: "MEDIUM",
+    },
+  };
+}
+
+function mapBackendPlayer(player: BackendRegistryPlayer): MLBPlayer {
+  const name = player.playerName || player.name || "";
+  const fallback = fallbackByName.get(name.toLowerCase());
+  const shell = fallbackPlayerShell(player);
+  return {
+    ...shell,
+    ...(fallback || {}),
+    id: String(player.playerId || player.id),
+    name: name || fallback?.name || shell.name,
+    team: player.team || fallback?.team || shell.team,
+    position: player.position || fallback?.position || shell.position,
+    headshot: player.headshot || fallback?.headshot || shell.headshot,
+    bats: normalizeHand(player.bats, fallback?.bats || "R"),
+    throws: normalizeThrow(player.throws || fallback?.throws),
+  };
+}
+
+async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(apiUrl(path), {
+    headers: { Accept: "application/json" },
+    signal,
+  });
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`Expected JSON from ${path}, received ${contentType || "unknown content type"}.`);
+  }
+  if (!response.ok) throw new Error(`Request failed ${response.status} for ${path}.`);
+  return response.json() as Promise<T>;
+}
 
 export default function PlayerResearchHub({
   onAddLegToParlay,
@@ -49,6 +158,11 @@ export default function PlayerResearchHub({
   const [sortBy, setSortBy] = useState<"batterScore" | "hr" | "avg" | "ops" | "name">("batterScore");
   const [selectedPlayer, setSelectedPlayer] = useState<MLBPlayer | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
+  const [registryPlayers, setRegistryPlayers] = useState<MLBPlayer[]>([]);
+  const [allRegistryPlayers, setAllRegistryPlayers] = useState<MLBPlayer[]>([]);
+  const [backendCount, setBackendCount] = useState<number | null>(null);
+  const [registryStatus, setRegistryStatus] = useState<"loading" | "ready" | "fallback" | "error">("loading");
+  const [registryError, setRegistryError] = useState("");
 
   // Compare mode
   const [compareA, setCompareA] = useState<MLBPlayer | null>(null);
@@ -58,13 +172,71 @@ export default function PlayerResearchHub({
   const [aiReports, setAiReports] = useState<Record<string, string>>({});
   const [researching, setResearching] = useState<string | null>(null);
 
-  const teams = useMemo(() => {
-    const set = new Set(MLB_PLAYER_RECORDS.map((p) => p.team));
-    return ["ALL", ...Array.from(set).sort()];
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadRegistry() {
+      try {
+        setRegistryStatus("loading");
+        const [countPayload, registryPayload] = await Promise.all([
+          fetchJson<{ count: number }>("/api/mlb/players/count", controller.signal),
+          fetchJson<{ players: BackendRegistryPlayer[] }>("/api/mlb/players/registry", controller.signal),
+        ]);
+        setBackendCount(countPayload.count);
+        const mapped = (registryPayload.players || []).map(mapBackendPlayer);
+        setAllRegistryPlayers(mapped);
+        setRegistryPlayers(mapped);
+        setRegistryStatus("ready");
+        setRegistryError("");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setRegistryPlayers(MLB_PLAYER_RECORDS);
+        setBackendCount(null);
+        setRegistryStatus("fallback");
+        setRegistryError(error instanceof Error ? error.message : "Backend player registry unavailable.");
+      }
+    }
+    loadRegistry();
+    return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      if (allRegistryPlayers.length) setRegistryPlayers(allRegistryPlayers);
+      return;
+    }
+    const controller = new AbortController();
+    async function runBackendSearch() {
+      try {
+        const payload = await fetchJson<{ players: BackendRegistryPlayer[] }>(
+          `/api/mlb/players/search?q=${encodeURIComponent(query)}`,
+          controller.signal
+        );
+        setRegistryPlayers((payload.players || []).map(mapBackendPlayer));
+        setRegistryStatus("ready");
+        setRegistryError("");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setRegistryStatus("fallback");
+        setRegistryError(error instanceof Error ? error.message : "Backend search unavailable.");
+      }
+    }
+    const timer = window.setTimeout(runBackendSearch, 250);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [search, allRegistryPlayers]);
+
+  const players = registryPlayers.length ? registryPlayers : MLB_PLAYER_RECORDS;
+
+  const teams = useMemo(() => {
+    const set = new Set(players.map((p) => p.team));
+    return ["ALL", ...Array.from(set).sort()];
+  }, [players]);
+
   const filtered = useMemo(() => {
-    let result = MLB_PLAYER_RECORDS;
+    let result = players;
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -84,7 +256,7 @@ export default function PlayerResearchHub({
       return 0;
     });
     return sorted;
-  }, [search, teamFilter, sortBy]);
+  }, [players, search, teamFilter, sortBy]);
 
   const openDetail = (player: MLBPlayer, tab: DetailTab = "overview") => {
     setSelectedPlayer(player);
@@ -116,7 +288,10 @@ export default function PlayerResearchHub({
               <Search className="w-4 h-4 text-slate-950" />
             </div>
             <span className="font-bold text-white text-sm">Player Research</span>
-            <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">{MLB_PLAYER_RECORDS.length} players</span>
+            <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
+              {backendCount ?? players.length} players · {registryStatus === "ready" ? "backend registry" : registryStatus === "loading" ? "loading registry" : "fallback records"}
+            </span>
+            {registryError && <span className="text-[10px] text-amber-400 font-mono hidden md:inline">{registryError}</span>}
           </div>
           {/* Mode tabs */}
           <div className="flex p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -204,7 +379,7 @@ export default function PlayerResearchHub({
         {/* ====== COMPARE MODE ====== */}
         {mode === "compare" && (
           <CompareView
-            players={MLB_PLAYER_RECORDS}
+            players={players}
             compareA={compareA}
             compareB={compareB}
             onSelectA={setCompareA}
@@ -215,7 +390,7 @@ export default function PlayerResearchHub({
 
         {/* ====== BUILD MODE ====== */}
         {mode === "build" && (
-          <BuildView players={MLB_PLAYER_RECORDS} onAddLeg={onAddLegToParlay} activeLegs={activeLegs} />
+          <BuildView players={players} onAddLeg={onAddLegToParlay} activeLegs={activeLegs} />
         )}
       </div>
 

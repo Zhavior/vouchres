@@ -1,23 +1,28 @@
 /** Single entry point that registers every VouchEdge backend API route. */
 import type { Express } from "express";
+import { coreRoutes } from "./coreRoutes";
+import { parlayRoutes } from "./parlayRoutes";
+import { playerRegistryRoutes } from "./playerRegistryRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
 import { registerJudgeRoutes } from "./judgeRoutes";
-import { registerAiRoutes } from "./aiRoutes";
 import { registerTrustRoutes } from "./trustRoutes";
 import { registerResultRoutes } from "./resultRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import type { Request, Response } from "express";
 
 export function registerApiRoutes(app: Express): void {
+  app.use("/api", coreRoutes);
+  app.use("/api", parlayRoutes);
+  app.use("/api", playerRegistryRoutes);
+
   registerMlbRoutes(app);
   registerHrBoardRoutes(app);
   registerMatchupRoutes(app);
   registerAgentRoutes(app);
   registerJudgeRoutes(app);
-  registerAiRoutes(app);
   registerTrustRoutes(app);
   registerResultRoutes(app);
 
@@ -32,6 +37,19 @@ export function registerApiRoutes(app: Express): void {
   });
 
   // Backend health.
+  app.get("/api/system/core-health", (_req: Request, res: Response) =>
+    res.json({
+      status: "ok",
+      service: "vouchedge-core",
+      routes: {
+        core: true,
+        parlays: true,
+        playerRegistry: true,
+      },
+      time: new Date().toISOString(),
+    })
+  );
+
   app.get("/api/health", (_req: Request, res: Response) =>
     res.json({ status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
   );

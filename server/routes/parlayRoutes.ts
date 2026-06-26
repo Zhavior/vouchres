@@ -1,8 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { z } from "zod";
-import { AuthedRequest, requireAuth, requireLegalConfirmed, supabaseAdmin } from "../middleware/auth";
-import { validate } from "../middleware/validation";
+import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
 import { pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { createPick } from "../services/persistence/pickService";
@@ -25,25 +23,58 @@ import { createPick } from "../services/persistence/pickService";
  */
 export const parlayRoutes = Router();
 
-const ParlayLegSchema = z.object({
-  event_id: z.string().max(64),
-  market: z.string().min(1).max(64),
-  selection: z.string().min(1).max(280),
-  odds_decimal: z.number().positive().max(1000),
-});
+type ParlayLegBody = {
+  event_id: string;
+  market: string;
+  selection: string;
+  odds_decimal: number;
+};
 
-const CreateParlaySchema = z.object({
-  legs: z.array(ParlayLegSchema).min(2).max(8),
-  stake_units: z.number().positive().max(100).default(1.0),
-  confidence: z.number().min(0).max(100).optional(),
-  explanation: z.string().max(4000).optional(),
-  // Optional: judge panel output for the combined parlay
-  judge_quality: z.number().min(0).max(100).optional(),
-  judge_risk: z.number().min(0).max(100).optional(),
-  judge_bias: z.number().min(0).max(100).optional(),
-  judge_trust: z.number().min(0).max(100).optional(),
-  judge_verdict: z.string().max(32).optional(),
-});
+type CreateParlayBody = {
+  legs: ParlayLegBody[];
+  stake_units?: number;
+  confidence?: number;
+  explanation?: string;
+  judge_quality?: number;
+  judge_risk?: number;
+  judge_bias?: number;
+  judge_trust?: number;
+  judge_verdict?: string;
+};
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isValidLeg(leg: unknown): leg is ParlayLegBody {
+  const row = leg as ParlayLegBody;
+  return (
+    typeof row?.event_id === "string" &&
+    row.event_id.length <= 64 &&
+    typeof row.market === "string" &&
+    row.market.length >= 1 &&
+    row.market.length <= 64 &&
+    typeof row.selection === "string" &&
+    row.selection.length >= 1 &&
+    row.selection.length <= 280 &&
+    isNumber(row.odds_decimal) &&
+    row.odds_decimal > 0 &&
+    row.odds_decimal <= 1000
+  );
+}
+
+function isValidParlayBody(body: unknown): body is CreateParlayBody {
+  const row = body as CreateParlayBody;
+  return (
+    Array.isArray(row?.legs) &&
+    row.legs.length >= 2 &&
+    row.legs.length <= 8 &&
+    row.legs.every(isValidLeg) &&
+    (row.stake_units === undefined || (isNumber(row.stake_units) && row.stake_units > 0 && row.stake_units <= 100)) &&
+    (row.confidence === undefined || (isNumber(row.confidence) && row.confidence >= 0 && row.confidence <= 100)) &&
+    (row.explanation === undefined || (typeof row.explanation === "string" && row.explanation.length <= 4000))
+  );
+}
 
 /**
  * POST /api/parlays
@@ -60,9 +91,11 @@ parlayRoutes.post(
   requireLegalConfirmed,
   pickLimiter,
   requireTierOrQuota("gold", 2, "parlays_per_day"),
-  validate({ body: CreateParlaySchema }),
   async (req: AuthedRequest, res: Response) => {
-    const body = req.body as z.infer<typeof CreateParlaySchema>;
+    if (!isValidParlayBody(req.body)) {
+      return res.status(400).json({ error: "validation_error" });
+    }
+    const body = req.body;
 
     // 1. Compute combined odds
     const combinedOdds = body.legs.reduce((product, leg) => product * leg.odds_decimal, 1);
@@ -82,7 +115,7 @@ parlayRoutes.post(
         market: `${body.legs.length}-leg parlay`,
         selection: body.legs.map((l) => l.selection).join(" | "),
         odds_decimal: Number(combinedOdds.toFixed(3)),
-        stake_units: body.stake_units,
+        stake_units: body.stake_units ?? 1.0,
         confidence: body.confidence ?? null,
         judge_quality: body.judge_quality ?? null,
         judge_risk: body.judge_risk ?? null,
@@ -104,6 +137,7 @@ parlayRoutes.post(
         status: "pending" as const,
       }));
 
+      const supabaseAdmin = await getSupabaseAdmin();
       const { error: legsError } = await supabaseAdmin
         .from("pick_legs")
         .insert(legsToInsert);
@@ -143,6 +177,7 @@ parlayRoutes.post(
  */
 parlayRoutes.get("/parlays/:id", async (req, res: Response) => {
   const { id } = req.params;
+  const supabaseAdmin = await getSupabaseAdmin();
 
   const [pickRes, legsRes] = await Promise.all([
     supabaseAdmin
@@ -181,6 +216,7 @@ parlayRoutes.get("/parlays", async (req, res: Response) => {
     return res.status(400).json({ error: "user_id_required" });
   }
 
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, count, error } = await supabaseAdmin
     .from("picks")
     .select("*", { count: "exact" })

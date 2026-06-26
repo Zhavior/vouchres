@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../../middleware/auth";
+import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePick } from "../persistence/pickService";
 
 /**
@@ -43,6 +43,7 @@ export async function gradePendingPicks(opts: {
   days?: number;
   dryRun?: boolean;
 } = {}): Promise<{ graded: GradeResult[]; skipped: GradeResult[] }> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const days = opts.days ?? 3;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
@@ -240,6 +241,7 @@ async function gradeParlayPick(
   },
   boxscore: any
 ): Promise<GradeResult> {
+  const supabaseAdmin = await getSupabaseAdmin();
   // 1. Load legs
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")

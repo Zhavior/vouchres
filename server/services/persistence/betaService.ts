@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "../../middleware/auth";
+import { getSupabaseAdmin } from "../../middleware/auth";
 
 /**
  * Beta signup persistence — replaces the localStorage-only beta signup
@@ -20,6 +20,7 @@ export interface BetaSignup {
  * Add an email to the waitlist. Idempotent on email.
  */
 export async function joinWaitlist(email: string): Promise<BetaSignup> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("beta_signups")
     .upsert(
@@ -49,6 +50,7 @@ export async function joinWaitlist(email: string): Promise<BetaSignup> {
  * Called by staff via admin UI.
  */
 export async function issueInvite(email: string): Promise<BetaSignup | null> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const code = generateInviteCode();
   const { data, error } = await supabaseAdmin
     .from("beta_signups")
@@ -73,6 +75,7 @@ export async function issueInvite(email: string): Promise<BetaSignup | null> {
  * Mark a signup as 'active' once the user has created an auth account.
  */
 export async function markActivated(email: string, userId: string): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
   await supabaseAdmin
     .from("beta_signups")
     .update({ state: "active", activated_user_id: userId })
@@ -83,6 +86,7 @@ export async function markActivated(email: string, userId: string): Promise<void
  * Validate an invite code during signup.
  */
 export async function validateInviteCode(code: string): Promise<boolean> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("beta_signups")
     .select("state, invite_code")

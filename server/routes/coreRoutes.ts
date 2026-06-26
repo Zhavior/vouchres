@@ -1,8 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { z } from "zod";
-import { AuthedRequest, requireAuth, requireLegalConfirmed } from "../middleware/auth";
-import { validate } from "../middleware/validation";
+import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { createPick, getLedger, gradePick } from "../services/persistence/pickService";
@@ -14,16 +12,40 @@ export const coreRoutes = Router();
  * POST /api/beta/signup
  * Public waitlist signup. Replaces the localStorage-only flow in PremiumSubPage.
  */
-const BetaSignupSchema = z.object({
-  email: z.string().email().max(254),
-});
+function badRequest(res: Response, message = "invalid_request") {
+  return res.status(400).json({ error: message });
+}
+
+function isEmail(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+type CreatePickBody = {
+  market: string;
+  selection: string;
+  odds_decimal?: number;
+  stake_units?: number;
+  confidence?: number;
+  event_id?: string;
+  leg_type?: "single" | "parlay";
+  judge_quality?: number;
+  judge_risk?: number;
+  judge_bias?: number;
+  judge_trust?: number;
+  judge_verdict?: string;
+  explanation?: string;
+};
 
 coreRoutes.post(
   "/beta/signup",
   betaSignupLimiter,
-  validate({ body: BetaSignupSchema }),
   async (req, res: Response) => {
-    const { email } = req.body as z.infer<typeof BetaSignupSchema>;
+    const email = req.body?.email;
+    if (!isEmail(email)) return badRequest(res, "validation_error");
     try {
       const signup = await joinWaitlist(email);
       return res.json({
@@ -44,18 +66,15 @@ coreRoutes.post(
  * User confirms 21+ age and selects jurisdiction.
  * Required before posting picks.
  */
-const LegalConfirmSchema = z.object({
-  age_confirmed: z.literal(true),
-  jurisdiction: z.string().min(2).max(10),
-});
-
 coreRoutes.post(
   "/legal/confirm",
   requireAuth,
-  validate({ body: LegalConfirmSchema }),
   async (req: AuthedRequest, res: Response) => {
-    const { jurisdiction } = req.body as z.infer<typeof LegalConfirmSchema>;
-    const { supabaseAdmin } = await import("../middleware/auth");
+    const { age_confirmed, jurisdiction } = req.body ?? {};
+    if (age_confirmed !== true || typeof jurisdiction !== "string" || jurisdiction.length < 2 || jurisdiction.length > 10) {
+      return badRequest(res, "validation_error");
+    }
+    const supabaseAdmin = await getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -77,38 +96,34 @@ coreRoutes.post(
  * Body shape (simplified — extend to match your types.ts):
  *   { market, selection, odds_decimal?, stake_units?, confidence?, event_id?, legs?: [...] }
  */
-const CreatePickSchema = z.object({
-  market: z.string().min(1).max(64),
-  selection: z.string().min(1).max(280),
-  odds_decimal: z.number().positive().max(1000).optional(),
-  stake_units: z.number().positive().max(100).optional(),
-  confidence: z.number().min(0).max(100).optional(),
-  event_id: z.string().max(64).optional(),
-  leg_type: z.enum(["single", "parlay"]).default("single"),
-  // Judge panel output (computed server-side via judgeRoutes — client should
-  // pass through whatever the panel returned so we can snapshot it)
-  judge_quality: z.number().min(0).max(100).optional(),
-  judge_risk: z.number().min(0).max(100).optional(),
-  judge_bias: z.number().min(0).max(100).optional(),
-  judge_trust: z.number().min(0).max(100).optional(),
-  judge_verdict: z.string().max(32).optional(),
-  explanation: z.string().max(4000).optional(),
-});
-
 coreRoutes.post(
   "/picks",
   requireAuth,
   requireLegalConfirmed,
   pickLimiter,
   requireTierOrQuota("gold", 3, "picks_per_day"),
-  validate({ body: CreatePickSchema }),
   async (req: AuthedRequest, res: Response) => {
     try {
-      const body = req.body as z.infer<typeof CreatePickSchema>;
+      const body = req.body as CreatePickBody;
+      if (
+        typeof body?.market !== "string" ||
+        body.market.length < 1 ||
+        body.market.length > 64 ||
+        typeof body.selection !== "string" ||
+        body.selection.length < 1 ||
+        body.selection.length > 280 ||
+        (body.odds_decimal !== undefined && (!isNumber(body.odds_decimal) || body.odds_decimal <= 0 || body.odds_decimal > 1000)) ||
+        (body.stake_units !== undefined && (!isNumber(body.stake_units) || body.stake_units <= 0 || body.stake_units > 100)) ||
+        (body.confidence !== undefined && (!isNumber(body.confidence) || body.confidence < 0 || body.confidence > 100)) ||
+        (body.event_id !== undefined && (typeof body.event_id !== "string" || body.event_id.length > 64)) ||
+        (body.leg_type !== undefined && body.leg_type !== "single" && body.leg_type !== "parlay")
+      ) {
+        return badRequest(res, "validation_error");
+      }
       const pick = await createPick({
         user_id: req.user!.id,
         capper_id: null,
-        leg_type: body.leg_type,
+        leg_type: body.leg_type ?? "single",
         sport: "mlb",
         event_id: body.event_id ?? null,
         market: body.market,
@@ -166,20 +181,25 @@ coreRoutes.get("/picks", async (req, res: Response) => {
  * CRITICAL: This is the ONLY way a pick's status can change. The client
  * cannot grade picks. The grader runs server-side (cron job or admin button).
  */
-const GradeSchema = z.object({
-  pick_id: z.string().uuid(),
-  status: z.enum(["won", "lost", "push", "void", "graded_error"]),
-  settled_units: z.number().nullable(),
-  learning_note: z.string().max(4000).optional(),
-});
-
 coreRoutes.post(
   "/admin/grade",
   requireAuth,
-  (await import("../middleware/auth")).requireStaff,
-  validate({ body: GradeSchema }),
+  requireStaff,
   async (req: AuthedRequest, res: Response) => {
-    const body = req.body as z.infer<typeof GradeSchema>;
+    const body = req.body as {
+      pick_id?: string;
+      status?: "won" | "lost" | "push" | "void" | "graded_error";
+      settled_units?: number | null;
+      learning_note?: string;
+    };
+    if (
+      typeof body?.pick_id !== "string" ||
+      !["won", "lost", "push", "void", "graded_error"].includes(String(body.status)) ||
+      (body.settled_units !== null && body.settled_units !== undefined && !isNumber(body.settled_units)) ||
+      (body.learning_note !== undefined && (typeof body.learning_note !== "string" || body.learning_note.length > 4000))
+    ) {
+      return badRequest(res, "validation_error");
+    }
     try {
       await gradePick({
         pickId: body.pick_id,
