@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../lib/apiBase';
 import { 
   Trophy, 
   Award, 
@@ -40,211 +41,84 @@ interface Capper {
   avatarUrl?: string;
 }
 
-const TOP_10_CAPPERS: Capper[] = [
-  {
-    rank: 1,
-    displayName: "Sharp Betting Guru",
-    username: "sharp_guru_pro",
-    avatarColor: "bg-indigo-600",
-    avatarInitials: "SG",
-    winRecord: "42-15",
-    winRate: 73.7,
-    peakProfit: 58.4,
-    streak: "🔥 6 W Streak",
-    badge: { name: "Sharp Oracle", color: "text-amber-400 border-amber-500/30", bg: "bg-amber-950/40" },
-    primarySport: "MLB",
-    followersCount: 14205,
-    isVerified: true
-  },
-  {
-    rank: 2,
-    displayName: "Sabermetrics Pro",
-    username: "sabermetrics_pro",
-    avatarColor: "bg-teal-600",
-    avatarInitials: "SP",
-    winRecord: "38-16",
-    winRate: 70.3,
-    peakProfit: 46.8,
-    streak: "📈 4 W Sweep",
-    badge: { name: "AI Analyst", color: "text-teal-400 border-teal-500/30", bg: "bg-teal-950/40" },
-    primarySport: "MLB Props",
-    followersCount: 9350,
-    isVerified: true
-  },
-  {
-    rank: 3,
-    displayName: "Parlay Princess",
-    username: "parlay_queen_locks",
-    avatarColor: "bg-pink-600",
-    avatarInitials: "PQ",
-    winRecord: "35-15",
-    winRate: 70.0,
-    peakProfit: 41.2,
-    streak: "✨ 3 W Streak",
-    badge: { name: "HR Prophet", color: "text-pink-400 border-pink-500/30", bg: "bg-pink-950/40" },
-    primarySport: "MLB Homers",
-    followersCount: 8200,
-    isVerified: true
-  },
-  {
-    rank: 4,
-    displayName: "Edge Sizer",
-    username: "edge_sizer_caps",
-    avatarColor: "bg-violet-600",
-    avatarInitials: "ES",
-    winRecord: "30-14",
-    winRate: 68.1,
-    peakProfit: 34.5,
-    streak: "🔥 5 W Streak",
-    badge: { name: "Calculated Peak", color: "text-violet-400 border-violet-500/20", bg: "bg-violet-955/20" },
-    primarySport: "MLB Totals",
-    followersCount: 4210,
-    isVerified: false
-  },
-  {
-    rank: 5,
-    displayName: "Wrigley Wind Specialist",
-    username: "wrigley_wind_tracker",
-    avatarColor: "bg-orange-600",
-    avatarInitials: "WW",
-    winRecord: "28-13",
-    winRate: 68.2,
-    peakProfit: 32.1,
-    streak: "🌿 2 W Streak",
-    badge: { name: "Meteorological Edge", color: "text-orange-400 border-orange-500/20", bg: "bg-orange-955/20" },
-    primarySport: "MLB Under",
-    followersCount: 5120,
-    isVerified: false
-  },
-  {
-    rank: 6,
-    displayName: "Boston Bullpen Scout",
-    username: "boston_scout_66",
-    avatarColor: "bg-rose-600",
-    avatarInitials: "BS",
-    winRecord: "29-14",
-    winRate: 67.4,
-    peakProfit: 29.8,
-    streak: "❄️ 1 L State",
-    badge: { name: "Bullpen Radar", color: "text-rose-455 border-rose-500/20", bg: "bg-rose-955/20" },
-    primarySport: "MLB Relievers",
-    followersCount: 2310,
-    isVerified: true
-  },
-  {
-    rank: 7,
-    displayName: "Underdog Sorter",
-    username: "underdog_oracle",
-    avatarColor: "bg-amber-600",
-    avatarInitials: "UO",
-    winRecord: "25-13",
-    winRate: 65.7,
-    peakProfit: 28.5,
-    streak: "🔥 4 W Streak",
-    badge: { name: "Value Seeker", color: "text-amber-400 border-amber-500/20", bg: "bg-amber-955/20" },
-    primarySport: "MLB Moneylines",
-    followersCount: 6180,
-    isVerified: false
-  },
-  {
-    rank: 8,
-    displayName: "K-Prop Commander",
-    username: "k_prop_commander",
-    avatarColor: "bg-sky-600",
-    avatarInitials: "KC",
-    winRecord: "26-15",
-    winRate: 63.4,
-    peakProfit: 22.4,
-    streak: "🔥 2 W Streak",
-    badge: { name: "Strikeout Alpha", color: "text-sky-400 border-sky-500/20", bg: "bg-sky-955/20" },
-    primarySport: "MLB Pitching Props",
-    followersCount: 3950,
-    isVerified: true
-  },
-  {
-    rank: 9,
-    displayName: "Golden Ticket Sweep",
-    username: "gold_ticket_sweeps",
-    avatarColor: "bg-cyan-600",
-    avatarInitials: "GT",
-    winRecord: "22-13",
-    winRate: 62.8,
-    peakProfit: 19.5,
-    streak: "🌿 Flat Line",
-    badge: { name: "Parlay Sweeper", color: "text-cyan-405 border-cyan-500/20", bg: "bg-cyan-955/20" },
-    primarySport: "MLB Alternative Lines",
-    followersCount: 1840,
-    isVerified: false
-  },
-  {
-    rank: 10,
-    displayName: "Runline Raider",
-    username: "runline_raiders",
-    avatarColor: "bg-emerald-600",
-    avatarInitials: "RR",
-    winRecord: "20-12",
-    winRate: 62.5,
-    peakProfit: 18.2,
-    streak: "🔥 3 W Streak",
-    badge: { name: "Spread Tactician", color: "text-emerald-400 border-emerald-500/20", bg: "bg-emerald-955/20" },
-    primarySport: "MLB Handcaps",
-    followersCount: 2250,
-    isVerified: false
-  }
-];
+const AVATAR_COLORS = ['bg-indigo-600','bg-teal-600','bg-pink-600','bg-violet-600','bg-orange-600','bg-rose-600','bg-amber-600','bg-sky-600','bg-cyan-600','bg-emerald-600'];
+const SCOPE_MAP: Record<string, string> = { month: 'monthly', week: 'weekly', 'all-time': 'overall' };
+
+function entryToCapper(e: any, idx: number): Capper {
+  const won = e.won_picks ?? 0;
+  const lost = e.lost_picks ?? 0;
+  const total = e.total_picks ?? 0;
+  const winRate = total > 0 ? Number(((won / total) * 100).toFixed(1)) : 0;
+  const name: string = e.display_name || e.username || 'Unknown';
+  const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  const netUnits = Number(e.net_units ?? 0);
+  const score = Number(e.score ?? 50);
+
+  const badgeColors = [
+    { color: 'text-amber-400 border-amber-500/30', bg: 'bg-amber-950/40' },
+    { color: 'text-teal-400 border-teal-500/30', bg: 'bg-teal-950/40' },
+    { color: 'text-pink-400 border-pink-500/30', bg: 'bg-pink-950/40' },
+    { color: 'text-violet-400 border-violet-500/20', bg: 'bg-violet-950/20' },
+    { color: 'text-orange-400 border-orange-500/20', bg: 'bg-orange-950/20' },
+  ];
+  const bc = badgeColors[idx % badgeColors.length];
+
+  return {
+    rank: idx + 1,
+    displayName: name,
+    username: e.username ?? e.capper_id ?? String(idx),
+    avatarColor: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+    avatarInitials: initials,
+    winRecord: `${won}-${lost}`,
+    winRate,
+    peakProfit: netUnits,
+    streak: score >= 70 ? '🔥 Hot' : score >= 55 ? '📈 Solid' : '—',
+    badge: { name: score >= 70 ? 'Sharp' : score >= 55 ? 'Proven' : 'Tracked', ...bc },
+    primarySport: e.tagline ?? 'MLB',
+    followersCount: 0,
+    isVerified: true,
+    avatarUrl: e.avatar_url ?? undefined,
+  };
+}
 
 export default function Leaderboard({ profile, onSectionChange }: LeaderboardProps) {
   const [activeRange, setActiveRange] = useState<'month' | 'week' | 'all-time'>('month');
   const [searchQuery, setSearchQuery] = useState('');
   const [followedStates, setFollowedStates] = useState<Record<string, boolean>>({});
   const [selectedCapper, setSelectedCapper] = useState<Capper | null>(null);
+  const [allCappers, setAllCappers] = useState<Capper[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const scope = SCOPE_MAP[activeRange] ?? 'overall';
+    setLoading(true);
+    fetch(apiUrl(`/api/leaderboard?scope=${scope}&limit=50&min_picks=1&include_users=true`))
+      .then(r => r.json())
+      .then(data => {
+        const entries: any[] = data.entries ?? [];
+        setAllCappers(entries.map(entryToCapper));
+      })
+      .catch(() => setAllCappers([]))
+      .finally(() => setLoading(false));
+  }, [activeRange]);
 
   const toggleFollow = (username: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent opening detailed modal
-    setFollowedStates(p => ({
-      ...p,
-      [username]: !p[username]
-    }));
+    e.stopPropagation();
+    setFollowedStates(p => ({ ...p, [username]: !p[username] }));
   };
 
-  const getFilteredCappers = () => {
-    let list = [...TOP_10_CAPPERS];
-    
-    // Simulating slight adjustments for weekly / all-time to make UI organic
-    if (activeRange === 'week') {
-      list = list.map(c => ({
-        ...c,
-        winRecord: `${Math.round(c.rank * 1.5)}-${Math.max(1, Math.round(c.rank / 2))}`,
-        winRate: Number((100 - (c.rank * 2.8)).toFixed(1)),
-        peakProfit: Number((30 - (c.rank * 2)).toFixed(1)),
-      })).sort((a,b) => b.winRate - a.winRate);
-      
-      // Re-assign rank indices after weekly sorting
-      list = list.map((c, idx) => ({ ...c, rank: idx + 1 }));
-    } else if (activeRange === 'all-time') {
-      list = list.map(c => ({
-        ...c,
-        winRecord: `${Math.round(c.rank * 15)}-${Math.round(c.rank * 6)}`,
-        winRate: Number((80 - (c.rank * 1.4)).toFixed(1)),
-        peakProfit: Number((240 - (c.rank * 15)).toFixed(1)),
-      })).sort((a,b) => b.peakProfit - a.peakProfit);
-      
-      list = list.map((c, idx) => ({ ...c, rank: idx + 1 }));
-    }
-
+  const cappersList = (() => {
+    let list = allCappers;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      list = list.filter(c => 
-        c.displayName.toLowerCase().includes(q) || 
+      list = list.filter(c =>
+        c.displayName.toLowerCase().includes(q) ||
         c.username.toLowerCase().includes(q) ||
         c.primarySport.toLowerCase().includes(q)
       );
     }
-    
     return list;
-  };
-
-  const cappersList = getFilteredCappers();
+  })();
   
   // Extract top 3 podium if present
   const firstPlace = cappersList.find(c => c.rank === 1);
@@ -257,10 +131,10 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
   return (
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto min-h-screen bg-transparent space-y-6 text-left" id="leaderboard-outer-wrapper">
       
-      {/* Demo banner */}
-      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-300/80">
-        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/15 text-amber-300">Demo</span>
-        Capper rankings are sample data — real leaderboard populates as users post verified picks.
+      {/* Info banner */}
+      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-500/8 border border-sky-500/20 text-[11px] text-sky-300/80">
+        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-sky-500/40 bg-sky-500/15 text-sky-300">Live</span>
+        Rankings are drawn from verified pick records — graded nightly. Leaderboard fills as cappers post and picks settle.
       </div>
 
       {/* Upper header segment and description */}
@@ -331,8 +205,26 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
         </div>
       </div>
 
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="flex flex-col gap-3 py-8">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 rounded-xl bg-slate-800/50 animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && cappersList.length === 0 && !searchQuery && (
+        <div className="py-16 text-center text-slate-500">
+          <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-semibold text-sm">No rankings yet</p>
+          <p className="text-xs mt-1">Picks are graded nightly — check back tomorrow.</p>
+        </div>
+      )}
+
       {/* ================= DESIGN ELEMENT: STUNNING PODIUM DISPLAY FOR TOP 3 ================= */}
-      {cappersList.length >= 3 && !searchQuery && (
+      {!loading && cappersList.length >= 3 && !searchQuery && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 block" id="podium-display-wrapper">
           
           {/* SILVER - SECOND PLACE COLUMN */}
@@ -501,7 +393,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
       )}
 
       {/* ================= TABLE LISTING: ALL TOP CAPPERS SECTION ================= */}
-      <div className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden shadow-2xl space-y-3" id="all-cappers-ranking-table">
+      {!loading && <div className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden shadow-2xl space-y-3" id="all-cappers-ranking-table">
         <div className="bg-slate-900/60 p-4 border-b border-slate-850 flex items-center justify-between select-none font-semibold">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
@@ -648,7 +540,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
             </table>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ================= MODAL PROFILE DETAILS OVERVIEW POPUP ================= */}
       {selectedCapper && (

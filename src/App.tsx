@@ -21,6 +21,7 @@ import TodayDashboard from './components/TodayDashboard';
 import { apiUrl } from './lib/apiBase';
 import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
+import { EpicThemeShowcase } from './components/vouchedge/EpicThemeShowcase';
 import SubscriberHub from './components/SubscriberHub';
 import { X } from 'lucide-react';
 import { ThemeProvider } from './components/theme/ThemeProvider';
@@ -554,11 +555,13 @@ export default function App() {
         );
       case 'themestore':
         return (
-          <ThemeStore 
-            profile={profile} 
-            onUpdateProfile={handleUpdateProfile} 
+          <ThemeStore
+            profile={profile}
+            onUpdateProfile={handleUpdateProfile}
           />
         );
+      case 'epic_themes':
+        return <EpicThemeShowcase />;
       case 'subscriber_hub':
         return (
           <SubscriberHub

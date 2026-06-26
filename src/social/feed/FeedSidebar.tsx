@@ -27,6 +27,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
     { id: 'premium', label: 'PRO Premium Tiers', icon: Sparkles },
     { id: 'subscriber_hub', label: 'Subscriber Clubs 💬', icon: MessageSquare },
     { id: 'themestore', label: 'Theme Store 🎨', icon: ShoppingBag },
+    { id: 'epic_themes', label: 'Epic Themes ✨', icon: Sparkles },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

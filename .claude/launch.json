@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "vouchres-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5173"],
+      "port": 5173
     }
   ]
 }
