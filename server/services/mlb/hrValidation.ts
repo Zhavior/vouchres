@@ -100,6 +100,7 @@ export interface GameContext {
   homeTeamId: number;
   awayTeamAbbrev: string;
   homeTeamAbbrev: string;
+  venueName?: string;
   probablePitchers: {
     away: { pitcherId: number; pitcherName: string; teamId: number } | null;
     home: { pitcherId: number; pitcherName: string; teamId: number } | null;

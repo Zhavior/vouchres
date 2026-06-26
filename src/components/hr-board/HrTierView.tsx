@@ -17,9 +17,10 @@ const TIERS: { key: string; title: string; sub: string; color: string; match: (r
   { key: 'avoid', title: 'Avoid / Trap Picks', sub: 'Weak modeled HR equity', color: '#f87171', match: (r) => r.grade === 'D' || r.grade === 'F' },
 ];
 
-function americanToDecimal(am: string): number {
-  const n = parseInt(am, 10);
-  return isNaN(n) ? 2 : n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
+function americanToDecimal(am?: string | null): number {
+  const n = parseInt(String(am ?? ""), 10);
+  if (!Number.isFinite(n) || Number.isNaN(n)) return 1;
+  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
 }
 
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
@@ -36,29 +37,43 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusBadge status={row.projectionType === 'Live' ? 'Live' : 'Projected'} />
+          <StatusBadge status={row.projectionType === 'Confirmed' ? 'Confirmed' : row.projectionType === 'Live' ? 'Live' : 'Projected'} />
           <RiskBadge risk={row.riskLabel} />
         </div>
       </div>
 
       {/* Plain-English context */}
       <p className="text-[11px] text-slate-400 mb-2 leading-snug">
-        {row.formTag} bat, park {row.parkFactor}, weather {row.weatherBoost > 0 ? '+' : ''}{row.weatherBoost}% — faces a {row.pitcherVulnerability}/100 vulnerable arm.
+        {row.projectionType === 'Confirmed' ? `Confirmed starter${row.battingOrder ? `, batting order ${row.battingOrder}` : ''}. ` : 'Projected bat. '}
+        {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `Park HR factor ${row.hrMultiplier}x. ` : row.parkFactor && row.parkFactor !== 'N/A' ? `Park factor ${row.parkFactor}. ` : 'Park data unavailable. '}
+        {row.weatherSource === 'unavailable' || row.weatherBoost === null || row.weatherBoost === undefined
+          ? 'Weather unavailable. '
+          : `Weather boost ${row.weatherBoost > 0 ? '+' : ''}${row.weatherBoost}%. `}
+        Faces {row.opposingPitcher || 'TBD'}, HR/9 risk {row.pitcherVulnerability}.
       </p>
 
       <div className="flex items-center gap-2">
         <ScorePill label="HR Score" value={row.hrEdge} color="#fb923c" />
-        <ScorePill label="Odds" value={row.impliedOdds} />
+        <ScorePill label="Odds" value={row.impliedOdds || "N/A"} />
         <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: FORM_COLOR[row.formTag] ?? '#94a3b8' }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: FORM_COLOR[row.formTag] ?? '#94a3b8' }} />{row.formTag}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           {onAddLeg && (
-            <button
+            <div
+              role="button"
+              tabIndex={0}
               onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR` }); }}
-              className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10">
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR` });
+                }
+              }}
+              className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10 cursor-pointer">
               <Plus className="w-3 h-3" /> Parlay
-            </button>
+            </div>
           )}
           <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 transition-colors" />
         </div>

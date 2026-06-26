@@ -5,7 +5,7 @@ import HrBoardRow, { GradeBadge, Move, FORM_COLOR, edgeColor } from './HrBoardRo
 
 const COLUMNS = [
   'Player', 'Team', 'Grade', 'HR Edge', 'Implied', 'Vouch', 'Form', 'Opp Pitcher', 'P.Team',
-  'P.Vuln', 'Park', 'HR×', 'Conf', 'Weather', 'Status', 'Proj', 'Spot', 'Best', 'Move',
+  'P.Vuln', 'Park', 'HR×', 'Data', 'Weather', 'Status', 'BAT', 'Best', 'Move',
 ];
 
 const ENV_COLOR: Record<HrBoardGame['environmentTag'], string> = {
@@ -52,7 +52,11 @@ const MobileCard: React.FC<{ row: Row; onClick: () => void }> = ({ row, onClick 
         <Stat label="FORM" value={row.formTag} color={FORM_COLOR[row.formTag]} />
       </div>
       <div className="flex items-center justify-between mt-2 text-[10px] font-mono text-slate-500">
-        <span>P.Vuln {row.pitcherVulnerability} · Park {row.parkFactor}</span>
+        <span>
+          P.Vuln {row.pitcherVulnerability} · Park {typeof row.parkFactor === 'number'
+            ? `${row.parkFactor >= 100 ? '+' : ''}${row.parkFactor - 100}%`
+            : row.parkFactor ?? 'N/A'}
+        </span>
         <Move pct={row.lineMovement} />
       </div>
     </div>

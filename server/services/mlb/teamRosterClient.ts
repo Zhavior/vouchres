@@ -94,9 +94,11 @@ async function getTeamActiveHitters(teamId: number, teamName: string): Promise<N
       continue;
     }
 
-    console.log(
-      `[HR BOARD ROSTER OK]   ${r.person.fullName} (${playerId}) team=${teamName} (${teamId}) ✓`
-    );
+    if (process.env.DEBUG_HR_PIPELINE === "true") {
+      console.log(
+        `[HR BOARD ROSTER OK]   ${r.person.fullName} (${playerId}) team=${teamName} (${teamId}) ✓`
+      );
+    }
 
     const pos = r.position.abbreviation as string;
     verified.push({
@@ -135,9 +137,24 @@ export async function getActiveHittersByTeam(
       let teams: Array<{ id: number; name: string }>;
 
       if (teamIds && teamIds.length > 0) {
-        // Only fetch the specified teams (today's slate)
-        teams = teamIds.map((id) => ({ id, name: `Team ${id}` }));
-        console.log(`[teamRosterClient] Fetching rosters for ${teams.length} teams (today's slate only)`);
+        // Fetch official MLB team metadata, then filter to today's slate.
+        // Do not create placeholder names like "Team 136".
+        const wantedTeamIds = new Set(teamIds);
+        const allTeams = await getMlbTeams();
+
+        teams = allTeams.filter((team) => wantedTeamIds.has(team.id));
+
+        const missingTeamIds = teamIds.filter(
+          (id) => !teams.some((team) => team.id === id)
+        );
+
+        if (missingTeamIds.length > 0) {
+          console.warn(
+            `[teamRosterClient] Missing official metadata for team IDs: ${missingTeamIds.join(", ")}`
+          );
+        }
+
+        console.log(`[teamRosterClient] Fetching rosters for ${teams.length} official teams (today's slate only)`);
       } else {
         // Legacy: fetch all 30 teams
         teams = await getMlbTeams();

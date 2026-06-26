@@ -3,7 +3,7 @@
  *
  * Uses the new hrPipeline.ts which:
  *   - Fetches only today's teams (not all 30)
- *   - Builds a Today Player Pool (top 5 hitters per team)
+ *   - Builds a Today Player Pool (top 13 playable hitters per team)
  *   - Validates each candidate (15 checks including injury/lineup/team/game)
  *   - Scores only validated candidates
  *   - Returns dataConfidence + status + warnings on every candidate
@@ -50,6 +50,7 @@ export function registerHrBoardRoutes(app: Express): void {
           injuredScratchedBlocked: result.pool.injuredScratchedBlocked,
           hrCandidatesScored: result.pool.hrCandidatesScored,
         },
+        debug: result.debug,
         note: "Validated pipeline — every candidate passed team/game/injury/lineup/pitcher checks.",
       });
     } catch (err: any) {

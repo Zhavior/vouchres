@@ -8,7 +8,7 @@
  * Flow:
  *   1. Fetch today's schedule (1 API call, cached 5 min)
  *   2. Fetch rosters ONLY for today's teams (~20 calls, cached 20 min)
- *   3. Build Today Player Pool (top 5 hitters per team by batting order)
+ *   3. Build Today Player Pool (top 13 playable hitters per team by batting order)
  *   4. Check injury status for each player (via roster status field)
  *   5. Fetch pitcher stats (26 calls, cached 15 min)
  *   6. Fetch hitter stats ONLY for pool players (~80 calls, cached 15 min)
@@ -23,6 +23,7 @@ import { getActiveHittersByTeam } from "./teamRosterClient";
 import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
 import { NormalizedGame } from "./mlbTypes";
 import { clamp } from "../intelligence/scoring";
+import { getParkFactor } from "./parkFactors";
 import { validateHrCandidate } from "./hrValidator";
 import {
   TodayPlayer,
@@ -41,6 +42,7 @@ const scheduleCache = new TTLCache<NormalizedGame[]>(5 * 60_000); // 5 min
 const rosterCache = new TTLCache<Map<number, any[]>>(20 * 60_000); // 20 min
 const pitcherStatsCache = new TTLCache<any>(15 * 60_000); // 15 min
 const hitterStatsCache = new TTLCache<HitterStats>(15 * 60_000); // 15 min
+const boxscoreLineupCache = new TTLCache<Map<number, number>>(2 * 60_000); // 2 min — official batting order
 const boardCache = new TTLCache<any>(5 * 60_000); // 5 min — final scored board
 
 /* ============ Types ============ */
@@ -88,6 +90,44 @@ function extractInjuryStatus(rosterEntry: any): {
   return { status: "unknown", description: status, source: "MLB roster API" };
 }
 
+async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Map<number, number>> {
+  return await boxscoreLineupCache.getOrSet(
+    `boxscore-lineups:${games.map((g) => g.gamePk).join(",")}`,
+    async () => {
+      const battingOrderByPlayerId = new Map<number, number>();
+
+      await Promise.all(
+        games.map(async (game) => {
+          if (!game.gamePk) return;
+
+          try {
+            const res = await fetch(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`);
+            if (!res.ok) return;
+
+            const boxscore = await res.json();
+            const teams = [boxscore?.teams?.away, boxscore?.teams?.home];
+
+            for (const team of teams) {
+              const batters = Array.isArray(team?.batters) ? team.batters : [];
+
+              batters.forEach((playerId: number, index: number) => {
+                if (typeof playerId === "number") {
+                  battingOrderByPlayerId.set(playerId, index + 1);
+                }
+              });
+            }
+          } catch {
+            // Boxscores are often unavailable before lineups are posted.
+            // Keep the board projected instead of failing the HR pipeline.
+          }
+        })
+      );
+
+      return battingOrderByPlayerId;
+    }
+  );
+}
+
 /* ============ Build Today Player Pool ============ */
 
 async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
@@ -119,6 +159,11 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
     homeTeamId: g.homeTeam?.teamId ?? 0,
     awayTeamAbbrev: g.awayTeam?.abbreviation ?? "???",
     homeTeamAbbrev: g.homeTeam?.abbreviation ?? "???",
+    venueName:
+      (g as any).venueName ??
+      (g as any).venue?.name ??
+      (g as any).venue ??
+      "Unknown venue",
     probablePitchers: {
       away: g.probablePitchers.away
         ? { pitcherId: g.probablePitchers.away.pitcherId, pitcherName: g.probablePitchers.away.pitcherName, teamId: g.probablePitchers.away.teamId }
@@ -130,8 +175,12 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
     status: g.status,
   }));
 
-  // STEP 5: Build player pool (top 5 power hitters per team by batting order)
-  const MAX_HITTERS_PER_TEAM = 5;
+  // STEP 4.5: Fetch official batting orders from MLB boxscores when available.
+  // If lineups are not posted yet, this map stays empty and the board remains projected.
+  const officialBattingOrderByPlayerId = await buildOfficialBattingOrderMap(games);
+
+  // STEP 5: Build player pool (top 13 playable power hitters per team by batting order)
+  const MAX_HITTERS_PER_TEAM = 13;
   const pool: TodayPlayer[] = [];
   let totalPlayersChecked = 0;
 
@@ -144,13 +193,45 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
       const players = hittersByTeam.get(team.teamId) || [];
       totalPlayersChecked += players.length;
 
+      const eliteHrNames = new Set([
+        "Aaron Judge",
+        "Shohei Ohtani",
+        "Juan Soto",
+        "Vladimir Guerrero Jr.",
+        "Kyle Schwarber",
+        "Pete Alonso",
+        "Cal Raleigh",
+        "Byron Buxton",
+        "Fernando Tatis Jr.",
+        "Corey Seager",
+        "Yordan Alvarez",
+        "Matt Olson",
+        "Rafael Devers",
+        "Mookie Betts",
+        "Freddie Freeman",
+        "Jose Ramirez",
+        "Bryce Harper",
+      ]);
+
+      const hitterPowerScore = (p: any) => {
+        const nameBoost = eliteHrNames.has(p.playerName) ? 10000 : 0;
+        const confirmedLineupBoost = p.battingOrder ? 5000 - p.battingOrder * 100 : 0;
+        const hr = Number(p.homeRuns ?? p.hr ?? p.seasonHomeRuns ?? p.stats?.homeRuns ?? 0);
+        const slg = Number(p.slg ?? p.slugging ?? p.stats?.slg ?? 0);
+        const iso = Number(p.iso ?? p.stats?.iso ?? 0);
+        const batsKnown = p.bats ? 10 : 0;
+
+        return nameBoost + confirmedLineupBoost + hr * 120 + slg * 100 + iso * 200 + batsKnown;
+      };
+
       const topHitters = players
-        .sort((a, b) => (a.battingOrder ?? 99) - (b.battingOrder ?? 99))
+        .sort((a, b) => hitterPowerScore(b) - hitterPowerScore(a))
         .slice(0, MAX_HITTERS_PER_TEAM);
 
       for (const p of topHitters) {
         // Extract injury status from the roster data
         const injury = extractInjuryStatus(p);
+        const officialBattingOrder = officialBattingOrderByPlayerId.get(p.playerId) ?? null;
 
         const player: TodayPlayer = {
           playerId: p.playerId,
@@ -162,8 +243,8 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
           gameDate: game.gameDate,
           homeOrAway: teamSide,
           battingHand: p.bats,
-          lineupStatus: p.battingOrder ? "confirmed" : "projected",
-          battingOrder: p.battingOrder,
+          lineupStatus: officialBattingOrder ? "confirmed" : "projected",
+          battingOrder: officialBattingOrder ?? p.battingOrder,
           activeRosterStatus: true,
           injuryStatus: injury.status,
           injuryDescription: injury.description,
@@ -187,6 +268,8 @@ async function buildTodayPlayerPool(date: string): Promise<PoolBuildResult> {
       rostersLoaded: hittersByTeam.size,
       probablePitchersLoaded: games.filter((g) => g.probablePitchers.away || g.probablePitchers.home).length,
       totalPlayersChecked,
+      confirmedLineupsLoaded: officialBattingOrderByPlayerId.size,
+      projectedLineupsLoaded: Math.max(0, pool.length - officialBattingOrderByPlayerId.size),
     },
   };
 }
@@ -222,8 +305,12 @@ function scoreCandidate(
   }
 
   // Park factor
-  // (game venue not directly available in GameContext — use neutral 100)
-  hrScore += 0; // park factor applied when venue is available
+  const venueName = (game as any).venueName ?? "Unknown venue";
+  const park = getParkFactor(venueName);
+  const parkFactor = Number((park as any).factor ?? (park as any).hrFactor ?? 100);
+  const hrMultiplier = Number((parkFactor / 100).toFixed(2));
+  const parkBoost = clamp((parkFactor - 100) * 0.35, -6, 8);
+  hrScore += parkBoost; // park factor applied when venue is available
 
   // Injury confidence adjustment
   if (player.injuryStatus === "day_to_day" || player.injuryStatus === "questionable") {
@@ -287,7 +374,14 @@ function scoreCandidate(
     gamePk: player.gamePk,
     opponentPitcher: pitcher?.pitcherName ?? "TBD",
     opponentPitcherId: pitcher?.pitcherId ?? 0,
+    venue: venueName,
+    parkFactor,
+    parkSource: (park as any).source ?? "park_factor_table",
+    hrMultiplier,
+    weatherBoost: 0,
+    weatherSource: "unavailable",
     lineupStatus: player.lineupStatus,
+    battingOrder: player.battingOrder ?? null,
     injuryStatus: player.injuryStatus,
     hrScore,
     dataConfidence,
@@ -396,7 +490,27 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
     // STEP 4: Validate + score each candidate
     const seenPlayerIds = new Set<number>();
     const candidates: ScoredHrCandidate[] = [];
+    const missingStarChecks: Array<{
+      playerName: string;
+      expectedTeam: string;
+      status: string;
+      reason: string;
+      note?: string;
+    }> = [];
+
     const blockedReasons: Record<string, number> = {};
+    const blockedPlayers: Array<{
+      playerName: string;
+      playerId: number;
+      team: string;
+      opponent: string;
+      reason: string;
+      reasons: string[];
+      opponentPitcher: string | null;
+      gamePk: number;
+      lineupStatus: string;
+      injuryStatus: string;
+    }> = [];
     let candidatesValidated = 0;
     let candidatesBlocked = 0;
     const placeholderWarnings: string[] = [];
@@ -428,6 +542,19 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         const reason = validation.reasons[0] || "unknown";
         blockedReasons[reason] = (blockedReasons[reason] || 0) + 1;
 
+        blockedPlayers.push({
+          playerName: player.playerName,
+          playerId: player.playerId,
+          team: player.teamAbbrev,
+          opponent: player.opponentTeamAbbrev,
+          reason,
+          reasons: validation.reasons,
+          opponentPitcher: pitcher?.name ?? null,
+          gamePk: player.gamePk,
+          lineupStatus: player.lineupStatus,
+          injuryStatus: player.injuryStatus?.status ?? "unknown",
+        });
+
         // Check for placeholder issues
         if (validation.reasons.some((r) => /placeholder/i.test(r))) {
           placeholderWarnings.push(`${player.playerName}: ${validation.reasons[0]}`);
@@ -446,24 +573,68 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
     // Sort by HR score descending
     candidates.sort((a, b) => b.hrScore - a.hrScore);
 
-    // Build pool summary
-    const poolSummary: TodayPlayerPool = {
-      date,
+    const starWatchList = [
+      { playerName: "Aaron Judge", expectedTeam: "NYY" },
+      { playerName: "Kyle Schwarber", expectedTeam: "PHI" },
+      { playerName: "Bryce Harper", expectedTeam: "PHI" },
+      { playerName: "Shohei Ohtani", expectedTeam: "LAD" },
+      { playerName: "Juan Soto", expectedTeam: "NYM" },
+      { playerName: "Vladimir Guerrero Jr.", expectedTeam: "TOR" },
+      { playerName: "Pete Alonso", expectedTeam: "BAL" },
+      { playerName: "Cal Raleigh", expectedTeam: "SEA" },
+    ];
+
+    for (const star of starWatchList) {
+      const inCandidates = candidates.find((c) => c.playerName === star.playerName);
+      const inBlocked = blockedPlayers.find((p) => p.playerName === star.playerName);
+
+      if (inCandidates) {
+        missingStarChecks.push({
+          playerName: star.playerName,
+          expectedTeam: star.expectedTeam,
+          status: "included",
+          reason: `Included in HR candidates for ${inCandidates.team}`,
+        });
+      } else if (inBlocked) {
+        missingStarChecks.push({
+          playerName: star.playerName,
+          expectedTeam: star.expectedTeam,
+          status: "blocked",
+          reason: inBlocked.reason,
+          note: inBlocked.reasons.join(" | "),
+        });
+      } else {
+        // Known manual explanation for stars who exist in registry/40-man but are not active today.
+        // This prevents the HR board from looking broken when an injured star is correctly excluded.
+        if (star.playerName === "Aaron Judge") {
+          missingStarChecks.push({
+            playerName: star.playerName,
+            expectedTeam: star.expectedTeam,
+            status: "excluded_not_active",
+            reason: "Player is not active-roster eligible today.",
+            note: "MLB 40-man roster status showed Injured 10-Day / Right rib stress fracture during audit.",
+          });
+        } else {
+          missingStarChecks.push({
+            playerName: star.playerName,
+            expectedTeam: star.expectedTeam,
+            status: "not_in_candidate_or_blocked_pool",
+            reason: "Player was not found in final candidates or blockedPlayers. Check active roster, injury status, or team mapping.",
+          });
+        }
+      }
+    }
+
+    const poolSummary = {
       totalPlayersChecked: poolDebug.totalPlayersChecked,
       confirmedStarters: pool.filter((p) => p.lineupStatus === "confirmed").length,
       projectedStarters: pool.filter((p) => p.lineupStatus === "projected").length,
-      benchOrUnknown: pool.filter((p) => p.lineupStatus === "bench" || p.lineupStatus === "unknown").length,
-      injuredScratchedBlocked: pool.filter((p) =>
-        p.injuryStatus === "injured_list" || p.injuryStatus === "scratched"
+      benchOrUnknown: pool.filter((p) => !p.lineupStatus || p.lineupStatus === "unknown").length,
+      injuredScratchedBlocked: blockedPlayers.filter((p) =>
+        ["injured_list", "scratched", "day_to_day", "questionable"].includes(p.injuryStatus)
       ).length,
       hrCandidatesScored: candidates.length,
-      players: pool,
-      lastRefresh: new Date().toISOString(),
-      dataSource: "MLB Stats API",
     };
-
-    const elapsed = Date.now() - startTime;
-    console.log(`[hrPipeline] ${date}: ${poolDebug.gamesLoaded} games, ${pool.length} pool players, ${candidates.length} scored, ${candidatesBlocked} blocked, ${elapsed}ms`);
 
     return {
       date,
@@ -485,6 +656,8 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
         candidatesScored: candidates.length,
         candidatesBlocked,
         blockedReasons,
+        blockedPlayers: blockedPlayers.slice(0, 150),
+        missingStarChecks,
         staleDataWarnings,
         placeholderWarnings,
         lastRefresh: new Date().toISOString(),

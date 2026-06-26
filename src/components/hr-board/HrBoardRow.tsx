@@ -27,9 +27,15 @@ export function GradeBadge({ grade }: { grade: Grade }) {
   );
 }
 
-export function Move({ pct }: { pct: number }) {
-  const up = pct >= 0;
-  return <span className="font-mono text-[11px] font-bold" style={{ color: up ? '#34d399' : '#f87171' }}>{up ? '+' : ''}{pct}%</span>;
+export function Move({ pct }: { pct?: number | null }) {
+  if (pct === null || pct === undefined || Number.isNaN(Number(pct))) {
+    return <span className="text-slate-500">N/A</span>;
+  }
+
+  if (pct > 0) return <span className="text-emerald-300">+{pct}%</span>;
+  if (pct < 0) return <span className="text-rose-300">{pct}%</span>;
+
+  return <span className="text-slate-500">N/A</span>;
 }
 
 const cell = 'px-2.5 py-2 text-[11px] whitespace-nowrap';
@@ -60,15 +66,26 @@ const HrBoardRow: React.FC<{ row: Row; onClick: () => void }> = ({ row, onClick 
       <td className={`${cell} text-slate-300`}>{row.opposingPitcher}</td>
       <td className={`${cell} text-slate-500 font-mono`}>{row.opposingPitcherTeam}</td>
       <td className={`${cell} text-center font-mono`} style={{ color: edgeColor(row.pitcherVulnerability) }}>{row.pitcherVulnerability}</td>
-      <td className={`${cell} text-center font-mono text-slate-400`}>{row.parkFactor}</td>
-      <td className={`${cell} text-center font-mono text-slate-400`}>×{row.hrMultiplier}</td>
-      <td className={`${cell} text-center font-mono text-slate-400`}>{row.dataConfidence}%</td>
-      <td className={`${cell} text-center font-mono`} style={{ color: row.weatherBoost >= 0 ? '#34d399' : '#f87171' }}>{row.weatherBoost > 0 ? '+' : ''}{row.weatherBoost}%</td>
-      <td className={`${cell} text-slate-400 font-mono`}>{row.gameStatus}</td>
-      <td className={cell}>
-        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-slate-700 text-slate-400">{row.projectionType}</span>
+      <td className={`${cell} text-center font-mono text-slate-400`}>
+        {typeof row.parkFactor === 'number'
+          ? `${row.parkFactor >= 100 ? '+' : ''}${row.parkFactor - 100}%`
+          : row.parkFactor && row.parkFactor !== 'N/A'
+            ? row.parkFactor
+            : 'N/A'}
       </td>
-      <td className={`${cell} text-center font-mono text-slate-400`}>{row.lineupSpot}</td>
+      <td className={`${cell} text-center font-mono text-slate-400`}>
+        {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `×${row.hrMultiplier}` : 'N/A'}
+      </td>
+      <td className={`${cell} text-center font-mono text-slate-400`}>{row.dataConfidence}%</td>
+      <td className={`${cell} text-center font-mono`} style={{ color: row.weatherBoost >= 0 ? '#34d399' : '#f87171' }}>{row.weatherBoost > 0 ? '+' : ''}{row.weatherSource === 'unavailable' || row.weatherBoost === null || row.weatherBoost === undefined ? 'N/A' : `${row.weatherBoost}%`}</td>
+      <td className={`${cell} text-slate-400 font-mono`}>
+        {row.projectionType ?? (row.gameStatus === 'confirmed' ? 'Confirmed' : row.gameStatus === 'projected' ? 'Projected' : row.gameStatus)}
+      </td>
+      <td className={`${cell} text-center font-mono text-slate-400`}>
+        {row.lineupSpot === null || row.lineupSpot === undefined || Number.isNaN(Number(row.lineupSpot))
+          ? 'N/A'
+          : row.lineupSpot}
+      </td>
       <td className={`${cell} text-center font-mono text-slate-300`}>{row.bestOdds}</td>
       <td className={`${cell} text-center`}><Move pct={row.lineMovement} /></td>
     </tr>

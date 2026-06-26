@@ -220,9 +220,9 @@ export async function buildHrBoard(date = todayISO()): Promise<HrBoardResponse> 
     // STEP 3: Fetch rosters ONLY for today's teams (not all 30)
     const hittersByTeam = await getActiveHittersByTeam(teamIdList);
 
-    // STEP 4: Limit to top 5 power hitters per team (by batting order)
+    // STEP 4: Limit to top 13 playable power hitters per team (by batting order)
     // This cuts ~250 hitters → ~100, keeping only the players likely to hit HRs
-    const MAX_HITTERS_PER_TEAM = 5;
+    const MAX_HITTERS_PER_TEAM = 13;
     const allHitterIds = new Set<number>();
     const allPitcherIds = new Set<number>();
 

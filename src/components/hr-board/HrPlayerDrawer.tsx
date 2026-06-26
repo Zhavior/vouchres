@@ -18,7 +18,12 @@ function Metric({ label, value, color }: { label: string; value: string; color?:
 
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
   if (!row) return null;
-  const j = row.judge;
+  const j = row.judge ?? {
+    approvalStatus: row.hrEdge >= 85 ? "Approved" : row.hrEdge >= 70 ? "Playable but risky" : "Needs more data",
+    summary: "Auto-generated from HR board row data.",
+    reasons: [],
+    warnings: [],
+  };
   return (
     <div className="fixed inset-0 z-[60] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -29,7 +34,9 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             <img src={row.headshot} alt={row.playerName} referrerPolicy="no-referrer" className="w-11 h-11 rounded-xl object-cover bg-slate-900 border border-slate-800" />
             <div>
               <h3 className="text-base font-black text-slate-100 flex items-center gap-1.5">{row.playerName}{row.hrEdge >= 75 && <Flame className="w-4 h-4 text-orange-400" />}</h3>
-              <p className="text-[11px] text-slate-500 font-mono">{row.team} · {row.projectionType} · spot {row.lineupSpot}</p>
+              <p className="text-[11px] text-slate-500 font-mono">
+                {row.team} · {row.projectionType} · BAT {row.lineupSpot === null || row.lineupSpot === undefined ? 'N/A' : row.lineupSpot}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
@@ -49,9 +56,32 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <div className="grid grid-cols-4 gap-2">
             <Metric label="HR Edge" value={`${row.hrEdge}%`} color={edgeColor(row.hrEdge)} />
             <Metric label="Vouch" value={String(row.vouchScore)} color="#34d399" />
-            <Metric label="Implied" value={row.impliedOdds} />
-            <Metric label="Conf" value={`${row.dataConfidence}%`} />
+            <Metric label="Implied" value={row.impliedOdds || "N/A"} />
+            <Metric label="Data" value={`${row.dataConfidence}%`} />
           </div>
+
+          {/* Why ranked high */}
+          <Section icon={ShieldCheck} title="Why this player is ranked">
+            <ul className="space-y-1">
+              <li className="text-[11px] text-slate-400">
+                • {row.projectionType === 'Confirmed'
+                  ? `Confirmed starter${row.lineupSpot !== null && row.lineupSpot !== undefined ? `, batting ${row.lineupSpot}` : ''}`
+                  : 'Projected lineup spot — confirm before using'}
+              </li>
+              <li className="text-[11px] text-slate-400">
+                • Park HR factor {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `${row.hrMultiplier}x` : row.parkFactor ?? 'N/A'}
+              </li>
+              <li className="text-[11px] text-slate-400">
+                • Opposing pitcher vulnerability {row.pitcherVulnerability}
+              </li>
+              <li className="text-[11px] text-slate-400">
+                • Data reliability {row.dataConfidence}%
+              </li>
+              <li className="text-[11px] text-slate-500">
+                • Weather and sportsbook odds are unavailable, so they are not counted
+              </li>
+            </ul>
+          </Section>
 
           {/* Matchup vs pitcher */}
           <Section icon={TrendingUp} title="Matchup vs pitcher">
@@ -69,32 +99,35 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <Section icon={MapPin} title="Form, park & weather">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full" style={{ background: FORM_COLOR[row.formTag] }} />
-              <span className="text-xs" style={{ color: FORM_COLOR[row.formTag] }}>{row.formTag} form</span>
+              <span className="text-xs" style={{ color: FORM_COLOR[row.formTag] }}>Form data unavailable</span>
             </div>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> Park factor {row.parkFactor} (×{row.hrMultiplier} HR)</p>
+            <p className="text-[11px] text-slate-400 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              Park HR factor: {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `${row.hrMultiplier}x` : row.parkFactor ?? 'N/A'}
+            </p>
             <p className="text-[11px] text-slate-400 flex items-center gap-1"><CloudSun className="w-3 h-3" /> Weather data unavailable — not factored</p>
           </Section>
 
           {/* AI Judge note */}
           <Section icon={Gavel} title="AI Judge note">
             <p className="text-xs text-slate-300 leading-relaxed">{j.judgeNote}</p>
-            <p className="text-[10px] text-slate-500 font-mono mt-1.5">Parlay allowed: {j.parlayAllowed ? 'Yes' : 'No'}</p>
+            <p className="text-[10px] text-slate-500 font-mono mt-1.5">Sportsbook odds unavailable — parlay price not counted</p>
           </Section>
 
           {/* What could go wrong */}
           <Section icon={AlertTriangle} title="What could go wrong" tone="#fbbf24">
             <ul className="space-y-1">
-              {j.whatCouldGoWrong.map((w, i) => <li key={i} className="text-[11px] text-slate-400">• {w}</li>)}
+              {(j.whatCouldGoWrong?.length ? j.whatCouldGoWrong : ["Lineup changes, late scratches, pitcher changes, and unavailable weather/odds data can change the read."]).map((w, i) => <li key={i} className="text-[11px] text-slate-400">• {w}</li>)}
             </ul>
           </Section>
 
           {/* Safer alternative + verdict */}
           <Section icon={ShieldCheck} title="VouchEdge verdict" tone="#34d399">
-            <p className="text-xs text-slate-300">{row.reasons[0]}</p>
+            <p className="text-xs text-slate-300">{row.reasons?.[0] ?? 'Probability-based research only. Review lineup, pitcher, park, and weather context before using.'}</p>
             {(row.grade === 'D' || row.grade === 'F') && (
               <p className="text-[11px] text-emerald-400/90 mt-1.5">↪ Safer alternative: target a higher-graded bat in this game or a total-bases line instead of the HR.</p>
             )}
-            <p className="text-[10px] text-slate-600 mt-2">{row.source} · data quality: {row.dataQuality}</p>
+            <p className="text-[10px] text-slate-600 mt-2">{row.source} Data quality: source-based MLB board data {row.dataQuality}</p>
           </Section>
 
           <p className="text-[10px] text-slate-600 text-center pt-2">Probability-based research for entertainment — not betting advice. No guaranteed outcomes.</p>
