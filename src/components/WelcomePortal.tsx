@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Tv, Flame, Activity, Search, Sliders, ScanLine, ArrowRight, ShieldCheck, Gavel } from 'lucide-react';
+import { Tv, Flame, Activity, Search, Sliders, ScanLine, ArrowRight, ShieldCheck, Gavel, LogIn, Sparkles, Check, Trophy, Palette } from 'lucide-react';
+import AuthModal from './auth/AuthModal';
 
 interface Props { onSectionChange: (section: string) => void; }
 
@@ -11,13 +12,28 @@ const FEATURES = [
   { icon: Search, color: '#a78bfa', section: 'research', title: 'Player Research', desc: 'All 1,250+ active players with real headshots, splits, and AI matchup reports. Search anyone, build your read.' },
   { icon: Sliders, color: '#22d3ee', section: 'build', title: 'Parlay Lab', desc: 'Build slips from the full roster, then run VouchCheck for honest edge, correlation, and risk — no hype.' },
   { icon: ScanLine, color: '#f472b6', section: 'vouchscan', title: 'VouchScan', desc: 'Upload a slip and confirm your legs, then get a research-grade VouchCheck. Your picks, verified — never invented.' },
+  { icon: Trophy, color: '#fbbf24', section: 'leaderboard', title: 'Top Cappers', desc: 'A real leaderboard built from verified, nightly-graded pick records — win rate, net units, and trust score.' },
+  { icon: Palette, color: '#a855f7', section: 'epic_themes', title: 'Theme Shop', desc: 'Equip 3D animated themes — snow, embers, coins, aurora, pixel rain — and the whole app transforms instantly.' },
+];
+
+const TRUST_PILLS = [
+  'Real MLB Stats API',
+  '4-judge AI review',
+  'Verified trust records',
+  'No fabricated data',
 ];
 
 export default function WelcomePortal({ onSectionChange }: Props) {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+
   const stars = useMemo(() => Array.from({ length: 140 }, (_, i) => ({
     id: i, left: Math.random() * 100, top: Math.random() * 100,
     size: Math.random() * 2 + 1, td: 2 + Math.random() * 4, tdl: Math.random() * 5,
   })), []);
+
+  const openAuth = (mode: 'login' | 'signup') => { setAuthMode(mode); setAuthOpen(true); };
+  const enterApp = () => onSectionChange('today');
 
   return (
     <div className="relative min-h-screen overflow-hidden ve-nebula" style={{ background: 'radial-gradient(ellipse at top, #0a1020 0%, #050810 55%, #02040a 100%)' }}>
@@ -38,7 +54,20 @@ export default function WelcomePortal({ onSectionChange }: Props) {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-slate-950">VE</div>
             <span className="font-black tracking-tight text-lg">Vouch<span className="text-cyan-400">Edge</span></span>
           </div>
-          <button onClick={() => onSectionChange('today')} className="text-sm font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">Enter App</button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => openAuth('login')}
+              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-xl text-slate-200 hover:bg-white/5 border border-white/10 transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Log In
+            </button>
+            <button
+              onClick={() => openAuth('signup')}
+              className="text-sm font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_6px_24px_rgba(56,189,248,0.25)]"
+            >
+              Sign Up Free
+            </button>
+          </div>
         </header>
 
         {/* Hero */}
@@ -54,12 +83,34 @@ export default function WelcomePortal({ onSectionChange }: Props) {
             <p className="mt-5 text-slate-400 max-w-md leading-relaxed">
               Live matchups, daily HR edges, vulnerable pitchers, player research, and honest AI judges — built on real MLB data, not hype.
             </p>
+
             <div className="mt-8 flex flex-wrap gap-3">
-              <button onClick={() => onSectionChange('today')} className="flex items-center gap-2 text-sm font-black px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_8px_30px_rgba(56,189,248,0.25)]">
-                Enter VouchEdge <ArrowRight className="w-4 h-4" />
+              <button
+                onClick={() => openAuth('signup')}
+                className="flex items-center gap-2 text-sm font-black px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_8px_30px_rgba(56,189,248,0.25)]"
+              >
+                Get Started — it's free <ArrowRight className="w-4 h-4" />
               </button>
-              <button onClick={() => onSectionChange('live_games')} className="text-sm font-bold px-5 py-3 rounded-xl border border-white/15 text-slate-200 hover:bg-white/5 transition-all">Explore Live Games</button>
+              <button
+                onClick={() => openAuth('login')}
+                className="flex items-center gap-2 text-sm font-bold px-5 py-3 rounded-xl border border-white/15 text-slate-200 hover:bg-white/5 transition-all"
+              >
+                <LogIn className="w-4 h-4" /> Log In
+              </button>
             </div>
+
+            {/* Trust pills */}
+            <div className="mt-7 flex flex-wrap gap-2">
+              {TRUST_PILLS.map((p) => (
+                <span key={p} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 bg-white/[0.04] border border-white/10 rounded-full px-3 py-1.5">
+                  <Check className="w-3 h-3 text-emerald-400" /> {p}
+                </span>
+              ))}
+            </div>
+
+            <button onClick={enterApp} className="mt-5 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors inline-flex items-center gap-1.5">
+              or explore as a guest <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </motion.div>
 
           {/* Astronaut */}
@@ -76,7 +127,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
         <section className="pb-20">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-black tracking-tight ve-grad-text inline-block">Everything inside the portal</h2>
-            <p className="text-slate-400 text-sm mt-2">Tap any feature to jump straight in.</p>
+            <p className="text-slate-400 text-sm mt-2">Create a free account to save your research — or tap any feature to look around.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => {
@@ -100,14 +151,37 @@ export default function WelcomePortal({ onSectionChange }: Props) {
             <span className="flex items-center gap-2 text-sm text-slate-300"><Activity className="w-4 h-4 text-sky-400" /> Live MLB data, no mock</span>
           </div>
 
-          <div className="text-center mt-10">
-            <button onClick={() => onSectionChange('today')} className="inline-flex items-center gap-2 text-sm font-black px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all">
-              Enter VouchEdge <ArrowRight className="w-4 h-4" />
-            </button>
-            <p className="text-[11px] text-slate-600 mt-4">Probability-based research for entertainment — not betting advice.</p>
+          {/* Final CTA card */}
+          <div className="relative mt-8 rounded-2xl overflow-hidden border border-cyan-500/20 p-8 text-center"
+            style={{ background: 'radial-gradient(120% 140% at 50% 0%, rgba(34,211,238,0.12), rgba(11,19,34,0.6) 60%)' }}>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-cyan-300/90 mb-3">
+              <Sparkles className="w-3.5 h-3.5" /> Free to start
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Ready to find your edge?</h3>
+            <p className="text-slate-400 text-sm mt-2 max-w-md mx-auto">Create your account to save slips, track verified records, and climb the capper leaderboard.</p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => openAuth('signup')}
+                className="inline-flex items-center gap-2 text-sm font-black px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 hover:from-cyan-400 hover:to-blue-500 transition-all"
+              >
+                Create free account <ArrowRight className="w-4 h-4" />
+              </button>
+              <button onClick={enterApp} className="inline-flex items-center gap-2 text-sm font-bold px-6 py-3 rounded-xl border border-white/15 text-slate-200 hover:bg-white/5 transition-all">
+                Explore as guest
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-600 mt-5">Probability-based research for entertainment — not betting advice.</p>
           </div>
         </section>
       </div>
+
+      <AuthModal
+        open={authOpen}
+        initialMode={authMode}
+        onClose={() => setAuthOpen(false)}
+        onAuthed={() => { setAuthOpen(false); enterApp(); }}
+        onGuest={() => { setAuthOpen(false); enterApp(); }}
+      />
     </div>
   );
 }

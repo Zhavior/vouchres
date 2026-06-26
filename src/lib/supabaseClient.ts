@@ -9,21 +9,36 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
 
-if (!supabaseUrl || !supabaseAnonKey) {
+/**
+ * True when both Supabase env vars are present. The UI uses this to decide
+ * whether to show the real auth flow or fall back to guest-only entry, so
+ * the app stays usable in environments where auth isn't configured.
+ */
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured) {
   console.warn(
     "[supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set. Auth will not work."
   );
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
-    storageKey: "vouchedge.auth",
-  },
-});
+// createClient throws synchronously if the URL/key are empty. When auth isn't
+// configured we still construct a client with harmless placeholders so importing
+// this module never crashes the app — every real auth call is gated behind
+// isSupabaseConfigured, so the placeholder client is never actually hit.
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-anon-key",
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+      storageKey: "vouchedge.auth",
+    },
+  }
+);
 
 /**
  * Get the current session's access token for Authorization header.

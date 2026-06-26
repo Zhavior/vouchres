@@ -11,6 +11,12 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    // Pre-bundle heavy deps on startup so Vite doesn't discover them mid-session
+    // and trigger a full-page reload loop (notably @supabase/supabase-js, which
+    // enters the graph via the auth flow).
+    optimizeDeps: {
+      include: ['@supabase/supabase-js'],
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
