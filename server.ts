@@ -755,6 +755,10 @@ ${legs.map((leg: any, i: number) => {
     app.use(express.static(distPath));
 
   // VOUCHEDGE COMPAT MLB ROUTES START
+  /*
+  DISABLED: old production compatibility routes.
+  These were causing Vercel to serve partial/fallback HR board data instead of the real registered MLB HR routes.
+
   // These routes support the newer VouchEdge frontend pages:
   // MB Intelligence, Live Matchups, Daily HR Board, and MLB reports.
   // They use official MLB Stats API schedule data as a safe backend fallback.
@@ -1150,6 +1154,8 @@ ${legs.map((leg: any, i: number) => {
   });
 
   // VOUCHEDGE COMPAT MLB ROUTES END
+  */
+
 
 
     app.get("*", (req, res) => {
