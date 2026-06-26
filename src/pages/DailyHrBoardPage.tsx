@@ -85,8 +85,16 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
   }, [date, load]);
 
   const games = useMemo(() => {
-    if (Array.isArray(board?.games) && board.games.length > 0) {
-      return board.games;
+    const existingGames = Array.isArray((board as any)?.games) ? (board as any).games : [];
+    const gamesHaveHrRows = existingGames.some((game: any) =>
+      Array.isArray(game?.rows) ||
+      Array.isArray(game?.hitters) ||
+      Array.isArray(game?.candidates) ||
+      Array.isArray(game?.players)
+    );
+
+    if (existingGames.length && gamesHaveHrRows) {
+      return existingGames;
     }
 
     const candidates =
