@@ -251,8 +251,6 @@ export function renderHrShareCardSvg(
     : "Confirmed lineup data available.";
   const risk = candidate.riskTier ?? "N/A";
   const matchup = `${candidate.team ?? "TBD"} vs ${candidate.opponent ?? "TBD"}`;
-  const reasonOne = truncate(candidate.reasons?.[0] ?? "HR Engine Pro v2 signal from current matchup context.", 92);
-  const reasonTwo = truncate(candidate.reasons?.[1] ?? candidate.warnings?.[0] ?? "Review final lineup and pitcher status before using this research.", 92);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="VouchEdge HR player share card">
@@ -328,8 +326,6 @@ export function renderHrShareCardSvg(
   </g>
 
   <g transform="translate(86 548)">
-    <text x="0" y="-84" fill="${palette.text}" font-size="16" font-family="Inter, Arial, sans-serif" font-weight="800">${escapeXml(reasonOne)}</text>
-    <text x="0" y="-58" fill="${palette.muted}" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="700">${escapeXml(reasonTwo)}</text>
   </g>
 
   <text x="86" y="604" fill="${palette.muted}" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="800">Probability-based research. Not betting advice. No guaranteed outcomes.</text>
