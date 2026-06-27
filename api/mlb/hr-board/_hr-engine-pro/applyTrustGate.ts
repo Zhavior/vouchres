@@ -1,4 +1,4 @@
-import type { HrCandidate } from "./hrEngineTypes";
+import type { HrCandidate } from "./hrEngineTypes.js";
 
 const BAD_PAIRINGS = new Set([
   "Pete Alonso|BAL",

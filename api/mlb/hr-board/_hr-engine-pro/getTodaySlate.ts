@@ -1,4 +1,4 @@
-import type { HrSlateGame } from "./hrEngineTypes";
+import type { HrSlateGame } from "./hrEngineTypes.js";
 
 const MLB_SCHEDULE_URL = "https://statsapi.mlb.com/api/v1/schedule";
 

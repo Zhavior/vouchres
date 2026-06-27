@@ -1,12 +1,12 @@
-import type { HrBoardResponse, HrEngineInput } from "./hrEngineTypes";
-import { getTodaySlate, todayISO } from "./getTodaySlate";
-import { buildEligiblePlayerPool } from "./buildEligiblePlayerPool";
-import { calculateHrScore } from "./calculateHrScore";
-import { applyTrustGate } from "./applyTrustGate";
-import { rankHrCandidates } from "./rankHrCandidates";
-import { attachHitterStats } from "./attachHitterStats";
-import { attachRecentHitterForm } from "./attachRecentHitterForm";
-import { attachPitcherStats } from "./attachPitcherStats";
+import type { HrBoardResponse, HrEngineInput } from "./hrEngineTypes.js";
+import { getTodaySlate, todayISO } from "./getTodaySlate.js";
+import { buildEligiblePlayerPool } from "./buildEligiblePlayerPool.js";
+import { calculateHrScore } from "./calculateHrScore.js";
+import { applyTrustGate } from "./applyTrustGate.js";
+import { rankHrCandidates } from "./rankHrCandidates.js";
+import { attachHitterStats } from "./attachHitterStats.js";
+import { attachRecentHitterForm } from "./attachRecentHitterForm.js";
+import { attachPitcherStats } from "./attachPitcherStats.js";
 
 export async function buildHrBoardResponse(input: HrEngineInput = {}): Promise<HrBoardResponse> {
   const date = input.date ?? todayISO();
