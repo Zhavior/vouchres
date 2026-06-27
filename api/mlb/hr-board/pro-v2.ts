@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-import { buildHrBoardResponse } from "../../../server/services/mlb/hr-engine";
+import { buildHrBoardResponse } from "./_hr-engine-pro/buildHrBoardResponse";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -23,6 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       ...board,
+      runtimeRoute: "api_local_hr_engine_pro_v2",
       count: board.candidates.length,
       rankedCount: board.projectedCandidates.length,
       warning:
@@ -31,8 +31,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error: any) {
     return res.status(500).json({
       error: "Failed to load HR Engine Pro v2 test route",
+      errorName: error?.name ?? "Error",
       message: error?.message ?? "Unknown error",
       runtime: "hr_engine_pro_v2",
+      runtimeRoute: "api_local_hr_engine_pro_v2",
       source: "official_mlb_statsapi_hr_engine_pro_v2",
       route: "/api/mlb/hr-board/pro-v2",
     });
