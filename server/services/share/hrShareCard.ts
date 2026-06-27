@@ -358,7 +358,7 @@ export function renderHrShareCardSvg(
     <text x="24" y="132" fill="${palette.muted}" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800">Opposing pitcher: ${escapeXml(truncate(pitcherName, 40))}</text>
   </g>
 
-  <g transform="translate(796 112)">
+  <g transform="translate(796 92)">
     <circle cx="138" cy="130" r="113" fill="#020617" fill-opacity="0.76" stroke="url(#accent)" stroke-width="6" />
     <circle cx="138" cy="130" r="91" fill="#0f172a" fill-opacity="0.50" stroke="${palette.border}" stroke-width="1.5" />
     <text x="138" y="99" text-anchor="middle" fill="${palette.muted}" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="1000" letter-spacing="2">HR EDGE</text>
@@ -370,7 +370,7 @@ export function renderHrShareCardSvg(
     ${miniChip("P.VULN", pitcherVulnerability, 78, 342, 146, palette.accent)}
     ${miniChip("HITTER", hitterPower, 238, 342, 146, palette.accent3)}
     ${miniChip("PARK", parkFactor, 398, 342, 146, palette.accent2)}
-    ${miniChip("RECENT", recentSignal, 558, 342, 146, "#c084fc")}
+    ${miniChip("RECENT", recentSignal, 558, 342, 146, palette.accent2)}
     ${miniChip("DATA", dataConfidence, 718, 342, 146, palette.accent)}
     ${miniChip("FINAL", finalScore, 878, 342, 146, palette.accent3)}
   </g>
@@ -388,8 +388,8 @@ export function renderHrShareCardSvg(
   </g>
 
   <g transform="translate(78 546)">
-    <rect x="0" y="0" width="946" height="37" rx="18" fill="${palette.accent3}" fill-opacity="0.22" stroke="${palette.accent3}" stroke-opacity="0.22" />
-    <text x="24" y="24" fill="${palette.text}" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="900">${escapeXml(warning)}</text>
+    <rect x="0" y="0" width="946" height="37" rx="18" fill="#0f172a" fill-opacity="0.92" stroke="${palette.border}" stroke-opacity="0.70" />
+    <text x="24" y="24" fill="${palette.warningText}" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="900">${escapeXml(warning)}</text>
   </g>
 
   <text x="78" y="612" fill="${palette.muted}" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="800">Probability-based research. Not betting advice. No guaranteed outcomes.</text>
