@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { buildHrBoardResponse } from "./_hr-engine-pro/buildHrBoardResponse";
+import { buildHrBoardResponse } from "./_hr-engine-pro/buildHrBoardResponse.js";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 

@@ -1,4 +1,4 @@
-import type { HrEligibleHitter, HrPitcherStats } from "./hrEngineTypes";
+import type { HrEligibleHitter, HrPitcherStats } from "./hrEngineTypes.js";
 
 const MLB_API = "https://statsapi.mlb.com/api/v1";
 

@@ -1,4 +1,4 @@
-import type { HrCandidate } from "./hrEngineTypes";
+import type { HrCandidate } from "./hrEngineTypes.js";
 
 const TOP20_LIMITS = {
   team: 3,
