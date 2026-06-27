@@ -1,7 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import { buildHrBoardResponse } from "../../../server/services/mlb/hr-engine/buildHrBoardResponse";
-
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const clamp = (value: number, min: number, max: number) =>
@@ -15,6 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? Number.parseInt(req.query.previewLimit, 10)
         : 50;
     const previewLimit = clamp(Number.isFinite(rawLimit) ? rawLimit : 50, 10, 350);
+    const { buildHrBoardResponse } = require("../../../server/services/mlb/hr-engine/buildHrBoardResponse");
 
     const board = await buildHrBoardResponse({
       date,
