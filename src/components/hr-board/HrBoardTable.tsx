@@ -4,8 +4,7 @@ import type { HrBoardGame, HrBoardRow as Row } from '../../types/hrBoard';
 import HrBoardRow, { GradeBadge, Move, FORM_COLOR, edgeColor } from './HrBoardRow';
 
 const COLUMNS = [
-  'Player', 'Team', 'Grade', 'HR Edge', 'Implied', 'Vouch', 'Form', 'Opp Pitcher', 'P.Team',
-  'P.Vuln', 'Park', 'HR×', 'Data', 'Weather', 'Status', 'BAT', 'Best', 'Move',
+  'Player', 'Context', 'HR Score', 'Model Signals', 'Vouch', 'Data / Status', '',
 ];
 
 const ENV_COLOR: Record<HrBoardGame['environmentTag'], string> = {
@@ -16,11 +15,11 @@ function GameHeader({ game }: { game: HrBoardGame }) {
   const c = ENV_COLOR[game.environmentTag];
   const time = game.gameTime ? new Date(game.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 bg-slate-900/70 border-b border-slate-800">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-950 border-b border-slate-800">
       <div className="flex items-center gap-3">
-        <h3 className="text-sm font-black font-mono text-slate-100">{game.matchup}</h3>
+        <h3 className="text-sm font-black text-slate-100">{game.matchup}</h3>
         {time && <span className="text-[11px] text-slate-500 font-mono">{time}</span>}
-        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded border uppercase tracking-wide"
+        <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-full border uppercase tracking-wide"
           style={{ color: c, borderColor: c + '55', background: c + '15' }}>{game.environmentTag}</span>
       </div>
       <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono">
@@ -38,12 +37,12 @@ const MobileCard: React.FC<{ row: Row; onClick: () => void }> = ({ row, onClick 
   const breakdown = row.scoreBreakdown;
 
   return (
-    <div onClick={onClick} className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 active:bg-slate-800/40 cursor-pointer">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <img src={row.headshot} alt={row.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-8 h-8 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
+    <div onClick={onClick} className="p-3.5 rounded-2xl bg-slate-900/55 border border-slate-800/80 active:bg-slate-800/40 cursor-pointer shadow-lg shadow-black/10">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={row.headshot} alt={row.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-10 h-10 rounded-xl object-cover bg-slate-900 border border-slate-700 flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-100 truncate flex items-center gap-1">
+            <p className="text-sm font-black text-slate-100 truncate flex items-center gap-1">
               <span className="text-[10px] font-mono text-slate-500">#{row.rank ?? '-'}</span>
               {row.playerName}
               {row.hrEdge >= 75 && <Flame className="w-3 h-3 text-orange-400" />}
@@ -54,10 +53,22 @@ const MobileCard: React.FC<{ row: Row; onClick: () => void }> = ({ row, onClick 
         <GradeBadge grade={row.grade} />
       </div>
 
+      <div className="mb-3 grid grid-cols-3 gap-2">
+        <div className="rounded-xl border border-orange-400/25 bg-orange-400/10 px-2 py-2 text-center">
+          <p className="text-[9px] font-mono uppercase text-orange-200/70">HR Score</p>
+          <p className="text-lg font-mono font-black leading-none" style={{ color: edgeColor(row.hrEdge) }}>{row.hrEdge}</p>
+        </div>
+        <div className="rounded-xl border border-sky-400/20 bg-sky-400/10 px-2 py-2 text-center">
+          <p className="text-[9px] font-mono uppercase text-sky-200/70">P.Vuln</p>
+          <p className="text-lg font-mono font-black leading-none" style={{ color: edgeColor(row.pitcherVulnerability) }}>{row.pitcherVulnerability}</p>
+        </div>
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-2 py-2 text-center">
+          <p className="text-[9px] font-mono uppercase text-emerald-200/70">Data</p>
+          <p className="text-lg font-mono font-black leading-none text-emerald-300">{row.dataConfidence}%</p>
+        </div>
+      </div>
+
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full border border-orange-400/30 bg-orange-400/10 px-2 py-1 text-[10px] font-mono font-bold" style={{ color: edgeColor(row.hrEdge) }}>
-          HR {row.hrEdge}
-        </span>
         <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-1 text-[10px] font-mono font-bold text-sky-300">
           {row.riskLabel}
         </span>
@@ -121,16 +132,16 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 const HrBoardTable: React.FC<{ game: HrBoardGame; onSelect: (row: Row) => void }> = ({ game, onSelect }) => {
   if (game.rows.length === 0) return null;
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-800 mb-4 bg-[#0b1120]">
+    <div className="rounded-2xl overflow-hidden border border-slate-800/80 mb-4 bg-[#0b1120] shadow-xl shadow-black/10">
       <GameHeader game={game} />
 
       {/* Desktop table */}
       <div className="hidden lg:block overflow-x-auto group">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 z-10">
-            <tr className="bg-slate-950/90 backdrop-blur">
+            <tr className="bg-slate-950/95 backdrop-blur">
               {COLUMNS.map((c, i) => (
-                <th key={c} className={`px-2.5 py-2 text-[9px] font-mono uppercase tracking-wider text-slate-500 whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-slate-950/90' : ''}`}>{c}</th>
+                <th key={`${c}-${i}`} className={`px-4 py-2.5 text-[9px] font-mono uppercase tracking-wider text-slate-500 whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-slate-950/95' : ''}`}>{c}</th>
               ))}
             </tr>
           </thead>

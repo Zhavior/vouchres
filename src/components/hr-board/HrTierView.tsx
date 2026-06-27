@@ -2,7 +2,7 @@ import React from 'react';
 import { Flame, Plus, ChevronRight } from 'lucide-react';
 import type { HrBoardGame, HrBoardRow } from '../../types/hrBoard';
 import type { MLBPlayer } from '../../types';
-import { Card, RiskBadge, StatusBadge, ScorePill } from '../ui/primitives';
+import { Card, RiskBadge, ScorePill } from '../ui/primitives';
 
 interface Props {
   games: HrBoardGame[];
@@ -54,6 +54,15 @@ function BreakdownChip({ label, value, color }: { label: string; value?: number;
   );
 }
 
+function RecentStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg bg-slate-950/45 px-2 py-1.5 text-center">
+      <div className="text-[8px] font-mono uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-xs font-mono font-black text-slate-100">{value}</div>
+    </div>
+  );
+}
+
 const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props['onAddLeg'] }> = ({ row, onSelect, onAddLeg }) => {
   const recentForm = row.recentForm;
   const breakdown = row.scoreBreakdown;
@@ -61,17 +70,20 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
   const projectedWarning = row.lineupStatus === 'projected_unconfirmed';
 
   return (
-    <Card onClick={onSelect} className="group">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <img src={row.headshot} alt={row.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
+    <Card onClick={onSelect} className="group relative overflow-hidden bg-slate-900/55 p-0">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400/70 via-blue-500/40 to-transparent" />
+      <div className="p-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={row.headshot} alt={row.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-12 h-12 rounded-xl object-cover bg-slate-900 border border-slate-700 flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-black truncate flex items-center gap-1">
+            <p className="text-base font-black truncate flex items-center gap-1">
               <span className="text-[10px] font-mono text-slate-500">#{row.rank ?? '-'}</span>
               <span className="truncate">{row.playerName}</span>
               {row.hrEdge >= 75 && <Flame className="w-3 h-3 text-orange-400" />}
             </p>
-            <p className="text-[10px] text-slate-500 truncate">{row.team} vs {row.opponent} · {row.opponentPitcherName ?? row.opposingPitcher}</p>
+            <p className="text-[11px] text-slate-500 truncate">{row.team} vs {row.opponent}</p>
+            <p className="text-[10px] text-slate-400 truncate">{row.opponentPitcherName ?? row.opposingPitcher}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -80,11 +92,15 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 mb-2">
+      <div className="grid grid-cols-3 gap-2 mb-3">
         <ScorePill label="HR Score" value={row.hrEdge} color="#fb923c" />
-        <ScorePill label="Risk" value={row.riskLabel} />
-        <span className="text-[10px] font-mono text-slate-400">{row.venue ?? 'Unknown venue'}</span>
-        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: FORM_COLOR[row.formTag] ?? '#94a3b8' }}>
+        <ScorePill label="P.Vuln" value={row.pitcherVulnerability} color="#22d3ee" />
+        <ScorePill label="Vouch" value={row.vouchScore} color="#34d399" />
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
+        <span className="font-mono">{row.venue ?? 'Unknown venue'}</span>
+        <span className="inline-flex items-center gap-1" style={{ color: FORM_COLOR[row.formTag] ?? '#94a3b8' }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: FORM_COLOR[row.formTag] ?? '#94a3b8' }} />{row.formTag}
         </span>
       </div>
@@ -96,7 +112,7 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
       )}
 
       {topReasons.length > 0 && (
-        <div className="mb-2 rounded-lg border border-slate-800 bg-slate-950/35 px-2.5 py-2">
+        <div className="mb-3 rounded-xl border border-slate-800 bg-slate-950/35 px-3 py-2.5">
           <div className="mb-1 text-[10px] font-mono font-bold uppercase tracking-wide text-slate-500">Why this pick?</div>
           <div className="space-y-1">
             {topReasons.map((reason, index) => (
@@ -109,25 +125,11 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
       )}
 
       {recentForm && (
-        <div className="mb-2 grid grid-cols-4 gap-2 rounded-lg border border-slate-800 bg-slate-950/35 px-2.5 py-2">
-          <div>
-            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">L15</div>
-            <div className="text-xs font-black text-slate-100">{recentForm.gamesChecked ?? 0} G</div>
-          </div>
-          <div>
-            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">HR</div>
-            <div className="text-xs font-black text-slate-100">{recentForm.homeRuns ?? 0}</div>
-          </div>
-          <div>
-            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">XBH</div>
-            <div className="text-xs font-black text-slate-100">{recentForm.extraBaseHits ?? 0}</div>
-          </div>
-          <div>
-            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">SLG</div>
-            <div className="text-xs font-black text-slate-100">
-              {typeof recentForm.slugging === 'number' ? recentForm.slugging.toFixed(3) : 'N/A'}
-            </div>
-          </div>
+        <div className="mb-3 grid grid-cols-4 gap-1.5 rounded-xl border border-slate-800 bg-slate-950/30 p-1.5">
+          <RecentStat label="L15" value={`${recentForm.gamesChecked ?? 0}G`} />
+          <RecentStat label="HR" value={recentForm.homeRuns ?? 0} />
+          <RecentStat label="XBH" value={recentForm.extraBaseHits ?? 0} />
+          <RecentStat label="SLG" value={typeof recentForm.slugging === 'number' ? recentForm.slugging.toFixed(3) : 'N/A'} />
         </div>
       )}
 
@@ -162,6 +164,7 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
           <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 transition-colors" />
         </div>
       </div>
+      </div>
     </Card>
   );
 };
@@ -182,7 +185,7 @@ export default function HrTierView({ games, onSelect, onAddLeg }: Props) {
                 <p className="text-[11px] text-slate-500">{t.sub}</p>
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {list.slice(0, 18).map((row) => <HrCard key={row.playerId} row={row} onSelect={() => onSelect(row)} onAddLeg={onAddLeg} />)}
             </div>
           </div>
