@@ -10,6 +10,7 @@ import type { MLBPlayer } from '../types';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = 5 * 60_000;
+const PREVIEW_LIMIT = 50;
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -19,6 +20,14 @@ const DEFAULT_FILTERS: HrBoardFilterState = {
   team: 'ALL', grade: 'ALL', risk: 'ALL', hotOnly: false, sneakyOnly: false,
   confirmedOnly: false, minPitcherVuln: 0, search: '', sortKey: 'hrEdge',
 };
+
+function formTagFromRecentPowerScore(score: number | null | undefined) {
+  if (score === null || score === undefined || Number.isNaN(Number(score))) return 'Average';
+  if (score >= 82) return 'Hot';
+  if (score >= 68) return 'Average';
+  if (score >= 54) return 'Cold';
+  return 'Slump';
+}
 
 function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
   const arr = [...rows];
@@ -65,11 +74,13 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
     setLoading(true);
     setError(null);
     try {
-      const data = date === todayISO() ? await vouchedgeApi.hrBoardToday() : await vouchedgeApi.hrBoardByDate(date);
+      const data = date === todayISO()
+        ? await vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
+        : await vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT);
       setBoard(data);
       setLastUpdated(new Date());
     } catch {
-      setError('Backend unavailable — run the dev server (npm run dev) to load the live HR board.');
+      setError('HR Board data unavailable right now.');
     } finally {
       setLoading(false);
     }
@@ -133,28 +144,37 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       const team = candidate.teamAbbr ?? candidate.team ?? candidate.teamName ?? 'UNK';
       const opponent = candidate.opponentAbbr ?? candidate.opponent ?? candidate.vs ?? '';
       const gameKey = candidate.gamePk ?? candidate.gameId ?? `${team}${opponent ? ` vs ${opponent}` : ''}`;
+      const recentForm = candidate.recentForm ?? null;
+      const scoreBreakdown = candidate.scoreBreakdown ?? null;
+      const recentPowerScore =
+        recentForm && recentForm.recentPowerScore !== undefined && recentForm.recentPowerScore !== null
+          ? Number(recentForm.recentPowerScore)
+          : null;
+      const lineupStatus = candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected');
+      const projectionType =
+        candidate.projectionType ??
+        (lineupStatus === 'projected_unconfirmed'
+          ? 'Projection Preview'
+          : lineupStatus === 'confirmed'
+            ? 'Confirmed'
+            : lineupStatus === 'projected'
+              ? 'Projected'
+              : 'Projected');
 
       const row = {
         id: candidate.id ?? candidate.playerId ?? `${candidate.playerName ?? candidate.name ?? 'player'}-${index}`,
         playerId: candidate.playerId ?? candidate.id ?? index,
+        rank: index + 1,
         playerName: candidate.playerName ?? candidate.name ?? candidate.fullName ?? 'Unknown Player',
         team,
         opponent,
         position: candidate.position ?? candidate.primaryPosition ?? '',
         grade: candidate.grade ?? candidate.tier ?? 'B',
         riskLabel: candidate.riskLabel ?? candidate.riskTier ?? candidate.risk ?? 'Standard',
-        formTag: candidate.formTag ?? candidate.form ?? '',
+        formTag: candidate.formTag ?? candidate.form ?? formTagFromRecentPowerScore(recentPowerScore),
         projectionType:
-          candidate.projectionType ??
-          (candidate.lineupStatus === 'projected_unconfirmed'
-            ? 'Projection Preview'
-            : undefined) ??
-          (candidate.lineupStatus === 'confirmed'
-            ? 'Confirmed'
-            : candidate.lineupStatus === 'projected'
-              ? 'Projected'
-              : 'Projected'),
-        lineupStatus: candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected'),
+          projectionType,
+        lineupStatus,
         battingOrder: candidate.battingOrder ?? candidate.lineupSpot ?? null,
         hrEdge: Number(candidate.hrEdge ?? candidate.score ?? candidate.hrScore ?? candidate.vouchScore ?? 0),
         vouchScore: Number(candidate.vouchScore ?? candidate.hrScore ?? candidate.score ?? candidate.hrEdge ?? 0),
@@ -183,12 +203,14 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         bestOdds: String(candidate.bestOdds ?? candidate.odds ?? candidate.hrOdds ?? 'N/A'),
         pitcherName: candidate.opponentPitcherName ?? candidate.pitcherName ?? candidate.opponentPitcher ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
         opponentPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
+        opponentPitcherName: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
         oppPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
         opposingPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
         pitcherTeam: candidate.opponent ?? candidate.pitcherTeam ?? '',
         pTeam: candidate.opponent ?? candidate.pitcherTeam ?? '',
         opposingPitcherTeam: candidate.opponent ?? candidate.pitcherTeam ?? 'TBD',
         pitcherHand: candidate.pitcherHand ?? candidate.pitcherThrows ?? '',
+        venue: candidate.venue ?? candidate.ballpark ?? candidate.parkName ?? 'Unknown venue',
         parkFactor: candidate.parkFactor ?? candidate.park ?? candidate.venue ?? 'N/A',
         hrMultiplier: candidate.hrMultiplier ?? candidate.hrMult ?? candidate.multiplier ?? 'N/A',
         gameStatus: candidate.status ?? candidate.gameStatus ?? candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected'),
@@ -205,6 +227,8 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         tags: Array.isArray(candidate.tags) ? candidate.tags : [candidate.riskTier, candidate.lineupStatus, candidate.injuryStatus].filter(Boolean),
         reasons: Array.isArray(candidate.reasons) ? candidate.reasons : [],
         warnings: Array.isArray(candidate.warnings) ? candidate.warnings : [],
+        recentForm,
+        scoreBreakdown,
         injuryStatus: candidate.injuryStatus ?? 'unknown',
         headshot: candidate.headshot ?? candidate.imageUrl ?? candidate.playerImage ?? (candidate.playerId ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_80,q_auto:best/v1/people/${candidate.playerId}/headshot/67/current` : ''),
         raw: candidate,

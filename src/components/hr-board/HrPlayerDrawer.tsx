@@ -18,6 +18,10 @@ function Metric({ label, value, color }: { label: string; value: string; color?:
 
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
   if (!row) return null;
+  const topReasons = row.reasons?.slice(0, 5) ?? [];
+  const topWarnings = row.warnings?.slice(0, 3) ?? [];
+  const recentForm = row.recentForm;
+  const breakdown = row.scoreBreakdown;
   const j = row.judge ?? {
     approvalStatus: row.hrEdge >= 85 ? "Approved" : row.hrEdge >= 70 ? "Playable but risky" : "Needs more data",
     summary: "Auto-generated from HR board row data.",
@@ -33,9 +37,13 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <div className="flex items-center gap-3">
             <img src={row.headshot} alt={row.playerName} referrerPolicy="no-referrer" className="w-11 h-11 rounded-xl object-cover bg-slate-900 border border-slate-800" />
             <div>
-              <h3 className="text-base font-black text-slate-100 flex items-center gap-1.5">{row.playerName}{row.hrEdge >= 75 && <Flame className="w-4 h-4 text-orange-400" />}</h3>
+              <h3 className="text-base font-black text-slate-100 flex items-center gap-1.5">
+                <span className="text-[11px] font-mono text-slate-500">#{row.rank ?? '-'}</span>
+                {row.playerName}
+                {row.hrEdge >= 75 && <Flame className="w-4 h-4 text-orange-400" />}
+              </h3>
               <p className="text-[11px] text-slate-500 font-mono">
-                {row.team} · {row.projectionType} · BAT {row.lineupSpot === null || row.lineupSpot === undefined ? 'N/A' : row.lineupSpot}
+                {row.team} vs {row.opponent} · {row.venue ?? 'Unknown venue'} · BAT {row.lineupSpot === null || row.lineupSpot === undefined ? 'N/A' : row.lineupSpot}
               </p>
             </div>
           </div>
@@ -56,38 +64,28 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <div className="grid grid-cols-4 gap-2">
             <Metric label="HR Edge" value={`${row.hrEdge}%`} color={edgeColor(row.hrEdge)} />
             <Metric label="Vouch" value={String(row.vouchScore)} color="#34d399" />
-            <Metric label="Implied" value={row.impliedOdds || "N/A"} />
+            <Metric label="Risk" value={row.riskLabel} color={RISK_COLOR[row.riskLabel]} />
             <Metric label="Data" value={`${row.dataConfidence}%`} />
           </div>
 
-          {/* Why ranked high */}
-          <Section icon={ShieldCheck} title="Why this player is ranked">
+          {row.lineupStatus === 'projected_unconfirmed' && (
+            <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-3 py-2 text-xs text-amber-100">
+              Official lineup not posted yet.
+            </div>
+          )}
+
+          <Section icon={ShieldCheck} title="Why this pick?">
             <ul className="space-y-1">
-              <li className="text-[11px] text-slate-400">
-                • {row.projectionType === 'Confirmed'
-                  ? `Confirmed starter${row.lineupSpot !== null && row.lineupSpot !== undefined ? `, batting ${row.lineupSpot}` : ''}`
-                  : row.projectionType === 'Projection Preview'
-                    ? 'Projection preview only — official lineup not posted yet'
-                    : 'Projected lineup spot — confirm before using'}
-              </li>
-              <li className="text-[11px] text-slate-400">
-                • Park HR factor {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `${row.hrMultiplier}x` : row.parkFactor ?? 'N/A'}
-              </li>
-              <li className="text-[11px] text-slate-400">
-                • Opposing pitcher vulnerability {row.pitcherVulnerability}
-              </li>
-              <li className="text-[11px] text-slate-400">
-                • Data reliability {row.dataConfidence}%
-              </li>
-              <li className="text-[11px] text-slate-500">
-                • Weather and sportsbook odds are unavailable, so they are not counted
-              </li>
+              {topReasons.map((reason, index) => (
+                <li key={`${row.playerId}-drawer-reason-${index}`} className="text-[11px] text-slate-300">
+                  • {reason}
+                </li>
+              ))}
             </ul>
           </Section>
 
-          {/* Matchup vs pitcher */}
           <Section icon={TrendingUp} title="Matchup vs pitcher">
-            <p className="text-xs text-slate-300">{row.opposingPitcher} <span className="text-slate-500">({row.opposingPitcherTeam})</span></p>
+            <p className="text-xs text-slate-300">{row.opponentPitcherName ?? row.opposingPitcher} <span className="text-slate-500">({row.opposingPitcherTeam})</span></p>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[11px] text-slate-500 font-mono">Pitcher vulnerability</span>
               <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
@@ -97,17 +95,29 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             </div>
           </Section>
 
-          {/* Form + park + weather */}
-          <Section icon={MapPin} title="Form, park & weather">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full" style={{ background: FORM_COLOR[row.formTag] }} />
-              <span className="text-xs" style={{ color: FORM_COLOR[row.formTag] }}>Form data unavailable</span>
+          <Section icon={MapPin} title="Recent form">
+            <div className="grid grid-cols-4 gap-2">
+              <Metric label="L15" value={`${recentForm?.gamesChecked ?? 0} G`} />
+              <Metric label="HR" value={String(recentForm?.homeRuns ?? 0)} />
+              <Metric label="XBH" value={String(recentForm?.extraBaseHits ?? 0)} />
+              <Metric label="SLG" value={typeof recentForm?.slugging === 'number' ? recentForm.slugging.toFixed(3) : 'N/A'} />
             </div>
+          </Section>
+
+          <Section icon={CloudSun} title="Score breakdown">
+            <div className="grid grid-cols-4 gap-2">
+              <Metric label="Hitter" value={String(Math.round(Number(breakdown?.hitterPower ?? 0)))} color="#fb923c" />
+              <Metric label="Pitcher" value={String(Math.round(Number(breakdown?.pitcherVulnerability ?? 0)))} color="#22d3ee" />
+              <Metric label="Park" value={String(Math.round(Number(breakdown?.parkFactor ?? 0)))} color="#34d399" />
+              <Metric label="Recent" value={String(Math.round(Number(breakdown?.recentForm ?? 0)))} color="#c084fc" />
+            </div>
+          </Section>
+
+          <Section icon={MapPin} title="Venue">
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              Park HR factor: {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `${row.hrMultiplier}x` : row.parkFactor ?? 'N/A'}
+              {row.venue ?? 'Unknown venue'}
             </p>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1"><CloudSun className="w-3 h-3" /> Weather data unavailable — not factored</p>
           </Section>
 
           {/* AI Judge note */}
@@ -116,10 +126,9 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             <p className="text-[10px] text-slate-500 font-mono mt-1.5">Sportsbook odds unavailable — parlay price not counted</p>
           </Section>
 
-          {/* What could go wrong */}
-          <Section icon={AlertTriangle} title="What could go wrong" tone="#fbbf24">
+          <Section icon={AlertTriangle} title="Warnings" tone="#fbbf24">
             <ul className="space-y-1">
-              {(j.whatCouldGoWrong?.length ? j.whatCouldGoWrong : ["Lineup changes, late scratches, pitcher changes, and unavailable weather/odds data can change the read."]).map((w, i) => <li key={i} className="text-[11px] text-slate-400">• {w}</li>)}
+              {(topWarnings.length ? topWarnings : j.whatCouldGoWrong?.length ? j.whatCouldGoWrong : ["Lineup changes, late scratches, and pitcher changes can alter the read."]).map((w, i) => <li key={i} className="text-[11px] text-slate-400">• {w}</li>)}
             </ul>
           </Section>
 

@@ -25,42 +25,122 @@ function americanToDecimal(am?: string | null): number {
 
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
+function LineupBadge({ lineupStatus }: { lineupStatus?: string }) {
+  const projected = lineupStatus === 'projected_unconfirmed';
+  const confirmed = lineupStatus === 'confirmed';
+  const label = confirmed ? 'Confirmed' : projected ? 'Preview' : 'Projected';
+  const color = confirmed ? '#34d399' : projected ? '#fbbf24' : '#94a3b8';
+
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide"
+      style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function BreakdownChip({ label, value, color }: { label: string; value?: number; color: string }) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
+
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-mono font-bold"
+      style={{ color, background: `${color}14`, border: `1px solid ${color}30` }}
+    >
+      {label} {Math.round(Number(value))}
+    </span>
+  );
+}
+
 const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props['onAddLeg'] }> = ({ row, onSelect, onAddLeg }) => {
+  const recentForm = row.recentForm;
+  const breakdown = row.scoreBreakdown;
+  const topReasons = row.reasons?.slice(0, 4) ?? [];
+  const projectedWarning = row.lineupStatus === 'projected_unconfirmed';
+
   return (
     <Card onClick={onSelect} className="group">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <img src={row.headshot} alt={row.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-black truncate flex items-center gap-1">{row.playerName}{row.hrEdge >= 75 && <Flame className="w-3 h-3 text-orange-400" />}</p>
-            <p className="text-[10px] text-slate-500 truncate">{row.team} · vs {row.opposingPitcher}</p>
+            <p className="text-sm font-black truncate flex items-center gap-1">
+              <span className="text-[10px] font-mono text-slate-500">#{row.rank ?? '-'}</span>
+              <span className="truncate">{row.playerName}</span>
+              {row.hrEdge >= 75 && <Flame className="w-3 h-3 text-orange-400" />}
+            </p>
+            <p className="text-[10px] text-slate-500 truncate">{row.team} vs {row.opponent} · {row.opponentPitcherName ?? row.opposingPitcher}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusBadge status={row.projectionType === 'Confirmed' ? 'Confirmed' : row.projectionType === 'Live' ? 'Live' : row.projectionType === 'Projection Preview' ? 'Preview' : 'Projected'} />
+          <LineupBadge lineupStatus={row.lineupStatus} />
           <RiskBadge risk={row.riskLabel} />
         </div>
       </div>
 
-      {/* Plain-English context */}
-      <p className="text-[11px] text-slate-400 mb-2 leading-snug">
-        {row.projectionType === 'Confirmed'
-          ? `Confirmed starter${row.battingOrder ? `, batting order ${row.battingOrder}` : ''}. `
-          : row.projectionType === 'Projection Preview'
-            ? 'Projection preview only. Official lineup not posted yet. '
-            : 'Projected bat. '}
-        {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `Park HR factor ${row.hrMultiplier}x. ` : row.parkFactor && row.parkFactor !== 'N/A' ? `Park factor ${row.parkFactor}. ` : 'Park data unavailable. '}
-        {row.weatherSource === 'unavailable' || row.weatherBoost === null || row.weatherBoost === undefined
-          ? 'Weather unavailable. '
-          : `Weather boost ${row.weatherBoost > 0 ? '+' : ''}${row.weatherBoost}%. `}
-        Faces {row.opposingPitcher || 'TBD'}, HR/9 risk {row.pitcherVulnerability}.
-      </p>
-
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
         <ScorePill label="HR Score" value={row.hrEdge} color="#fb923c" />
-        <ScorePill label="Odds" value={row.impliedOdds || "N/A"} />
+        <ScorePill label="Risk" value={row.riskLabel} />
+        <span className="text-[10px] font-mono text-slate-400">{row.venue ?? 'Unknown venue'}</span>
         <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: FORM_COLOR[row.formTag] ?? '#94a3b8' }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: FORM_COLOR[row.formTag] ?? '#94a3b8' }} />{row.formTag}
+        </span>
+      </div>
+
+      {projectedWarning && (
+        <div className="mb-2 rounded-lg border border-amber-400/20 bg-amber-400/8 px-2.5 py-2 text-[11px] text-amber-100">
+          Official lineup not posted yet.
+        </div>
+      )}
+
+      {topReasons.length > 0 && (
+        <div className="mb-2 rounded-lg border border-slate-800 bg-slate-950/35 px-2.5 py-2">
+          <div className="mb-1 text-[10px] font-mono font-bold uppercase tracking-wide text-slate-500">Why this pick?</div>
+          <div className="space-y-1">
+            {topReasons.map((reason, index) => (
+              <p key={`${row.playerId}-reason-${index}`} className="text-[11px] leading-snug text-slate-300">
+                {reason}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recentForm && (
+        <div className="mb-2 grid grid-cols-4 gap-2 rounded-lg border border-slate-800 bg-slate-950/35 px-2.5 py-2">
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">L15</div>
+            <div className="text-xs font-black text-slate-100">{recentForm.gamesChecked ?? 0} G</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">HR</div>
+            <div className="text-xs font-black text-slate-100">{recentForm.homeRuns ?? 0}</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">XBH</div>
+            <div className="text-xs font-black text-slate-100">{recentForm.extraBaseHits ?? 0}</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-wide text-slate-500">SLG</div>
+            <div className="text-xs font-black text-slate-100">
+              {typeof recentForm.slugging === 'number' ? recentForm.slugging.toFixed(3) : 'N/A'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        <BreakdownChip label="Hitter" value={breakdown?.hitterPower} color="#fb923c" />
+        <BreakdownChip label="Pitcher" value={breakdown?.pitcherVulnerability} color="#22d3ee" />
+        <BreakdownChip label="Park" value={breakdown?.parkFactor} color="#34d399" />
+        <BreakdownChip label="Recent" value={breakdown?.recentForm} color="#c084fc" />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-mono text-slate-400">
+          {row.team} vs {row.opponent} · {row.opponentPitcherName ?? row.opposingPitcher} · {row.venue ?? 'Unknown venue'}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           {onAddLeg && (

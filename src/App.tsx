@@ -33,13 +33,53 @@ import { ThemeProvider } from './components/theme/ThemeProvider';
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
 
+const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
+
+function resolveDevSectionFromLocation() {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+
+  const pathname = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase().replace(/^#/, '');
+  const target = hash || pathname;
+
+  if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
+    return 'hr_board';
+  }
+
+  return null;
+}
+
 export default function App() {
-  const [activeSection, setActiveSection] = useState<string>('welcome');
+  const [activeSection, setActiveSection] = useState<string>(() => {
+    const locationSection = resolveDevSectionFromLocation();
+    if (locationSection) return locationSection;
+    if (DEV_BYPASS_AUTH) return 'hr_board';
+    return 'welcome';
+  });
   const activeSectionRef = useRef(activeSection);
   
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const syncSectionFromLocation = () => {
+      const locationSection = resolveDevSectionFromLocation();
+      if (locationSection) {
+        setActiveSection(locationSection);
+      }
+    };
+
+    window.addEventListener('hashchange', syncSectionFromLocation);
+    window.addEventListener('popstate', syncSectionFromLocation);
+
+    return () => {
+      window.removeEventListener('hashchange', syncSectionFromLocation);
+      window.removeEventListener('popstate', syncSectionFromLocation);
+    };
+  }, []);
 
   // Core synchronized states
   const [posts, setPosts] = useState<FeedPost[]>([]);
@@ -54,7 +94,9 @@ export default function App() {
     const fetchGames = async () => {
       try {
         const response = await fetch(apiUrl('/api/mlb/live'));
-        if (response.ok) {
+        const contentType = response.headers.get('content-type') ?? '';
+
+        if (response.ok && contentType.includes('application/json')) {
           const data = await response.json();
           if (data.success && data.games) {
             setLiveGames(data.games);

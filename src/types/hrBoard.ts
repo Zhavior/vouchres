@@ -15,6 +15,7 @@ export interface HrRowJudge {
 
 export interface HrBoardRow {
   playerId: number;
+  rank?: number;
   playerName: string;
   team: string;
   teamId: number;
@@ -40,6 +41,23 @@ export interface HrBoardRow {
   source: string;
   riskLabel: RiskLabel;
   reasons: string[];
+  warnings?: string[];
+  lineupStatus?: string;
+  venue?: string;
+  opponentPitcherName?: string;
+  recentForm?: {
+    gamesChecked?: number;
+    homeRuns?: number;
+    extraBaseHits?: number;
+    slugging?: number;
+    recentPowerScore?: number;
+  };
+  scoreBreakdown?: {
+    hitterPower?: number;
+    pitcherVulnerability?: number;
+    parkFactor?: number;
+    recentForm?: number;
+  };
   judge: HrRowJudge;
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
 }

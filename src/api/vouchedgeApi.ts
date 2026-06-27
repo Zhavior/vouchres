@@ -17,12 +17,28 @@ import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { MatchupsResponse, GameMatchup } from "../types/matchup";
-import { dailyReportDirect, hrBoardDirect, matchupsDirect } from "../lib/mlbDirect";
+import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
+
+const DEV_HR_BOARD_FALLBACK_BASE = "https://vouchres.vercel.app";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(apiUrl(url));
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
+  }
+  return (await res.json()) as T;
+}
+
+async function getAbsoluteJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
+  }
   return (await res.json()) as T;
 }
 
@@ -34,6 +50,22 @@ async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promis
     return await fallback();
   }
 }
+
+async function hrBoardTodayWithDevFallback(previewLimit?: number): Promise<HrBoardResponse> {
+  const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
+  const localPath = `/api/mlb/hr-board/today${query}`;
+
+  try {
+    return await getJson<HrBoardResponse>(localPath);
+  } catch (error) {
+    if (!import.meta.env.DEV) {
+      throw error;
+    }
+
+    return getAbsoluteJson<HrBoardResponse>(`${DEV_HR_BOARD_FALLBACK_BASE}${localPath}`);
+  }
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(apiUrl(url), {
     method: "POST",
@@ -87,11 +119,7 @@ export const vouchedgeApi = {
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
 
   // Daily HR Board
-  hrBoardToday: (previewLimit?: number) =>
-    withFallback(
-      () => getJson<HrBoardResponse>(`/api/mlb/hr-board/today${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
-      () => hrBoardDirect()
-    ),
+  hrBoardToday: (previewLimit?: number) => hrBoardTodayWithDevFallback(previewLimit),
   hrBoardByDate: (date: string, previewLimit?: number) =>
     getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
   hrBoardPlayer: (playerId: number, date?: string) =>
