@@ -209,6 +209,23 @@ const FUTURE_GRAPHS = [
 const PRO_TABS = ['Overview', 'Recent Form', 'Vs Team', 'Vs Pitcher', 'Bat Box', 'Graphs', 'AI Notes'] as const;
 type ProTab = typeof PRO_TABS[number];
 
+
+function SignalBar({ label, value, color }: { label: string; value: number; color: string }) {
+  const safeValue = Math.max(0, Math.min(100, Math.round(value)));
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <span className="text-[10px] font-bold text-slate-400">{label}</span>
+        <span className="text-[10px] font-black tabular-nums" style={{ color }}>{safeValue}</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+        <div className="h-full rounded-full" style={{ width: `${safeValue}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
   const [activeProTab, setActiveProTab] = useState<ProTab>('Overview');
   const [shareStatus, setShareStatus] = useState<string | null>(null);
