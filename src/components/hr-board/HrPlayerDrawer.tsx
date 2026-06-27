@@ -113,19 +113,82 @@ function LockedGraphPlaceholder({ title, detail }: { title: string; detail: stri
 }
 
 function ProLockedPanel() {
+  const proCrossFeatures = [
+    {
+      title: "Player Edge Lab",
+      detail: "Full player research profile with HR score, form, matchup, confidence, and AI notes.",
+    },
+    {
+      title: "Matchup History",
+      detail: "Team history vs hitter, recent opponent trends, and matchup context. No fake history shown.",
+    },
+    {
+      title: "Batter vs Pitcher",
+      detail: "Head-to-head history unlocks when the verified matchup module is connected.",
+    },
+    {
+      title: "Vs Team Trends",
+      detail: "Hits, RBIs, runs, HRs, and extra-base trends against today’s opponent.",
+    },
+    {
+      title: "Recent Power Graphs",
+      detail: "Last 7, 15, and 30 game power trend charts using verified player data.",
+    },
+    {
+      title: "Park + Pitcher Vulnerability",
+      detail: "Cross-checks hitter power with park factor and pitcher HR vulnerability signals.",
+    },
+    {
+      title: "Batter Box / Zone Data",
+      detail: "Future Pro zone module for swing zones, hot zones, and pitch-location signals.",
+    },
+  ];
+
   return (
-    <div className="rounded-2xl border border-sky-500/15 bg-sky-500/5 p-4">
-      <div className="flex items-center gap-2">
-        <Lock className="h-4 w-4 text-sky-300" />
-        <h4 className="text-xs font-black uppercase tracking-wider text-sky-100">Pro Player Edge Lab</h4>
+    <div className="rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-slate-950/70 to-emerald-500/5 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-sky-300" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-sky-100">Pro Cross Features</h4>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+            Unlock deeper research tools that connect this HR pick to matchup history, player trends, pitcher weakness, and Pro graphs.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200">
+          Pro
+        </span>
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
-        Basic player context is visible. Score graphs unlock for Pro users using the existing HR Engine Pro v2 payload.
-      </p>
-      <div className="mt-3 grid gap-2">
-        <LockedGraphPlaceholder title="Score Breakdown Graph" detail="Coming soon with Pro data feed access for this account." />
-        <LockedGraphPlaceholder title="Recent Form Graph" detail="Requires Pro Player Edge access. No game-by-game data is faked." />
-        <LockedGraphPlaceholder title="HR Signal Matrix" detail="Unlocks existing hitter, pitcher, park, form, and confidence signals." />
+
+      <div className="mt-4 grid gap-2">
+        {proCrossFeatures.map((feature) => (
+          <div
+            key={feature.title}
+            className="group rounded-xl border border-slate-800/80 bg-slate-950/55 p-3 transition-colors hover:border-sky-500/25 hover:bg-sky-500/5"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Lock className="h-3.5 w-3.5 text-slate-500 group-hover:text-sky-300" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-200">
+                  {feature.title}
+                </span>
+              </div>
+              <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-slate-500">
+                Locked
+              </span>
+            </div>
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+              {feature.detail}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
+        <p className="text-[10px] leading-relaxed text-slate-500">
+          Pro modules are locked until verified data feeds are connected. VouchEdge will not show fake batter-vs-pitcher, zone, or matchup-history stats.
+        </p>
       </div>
     </div>
   );
