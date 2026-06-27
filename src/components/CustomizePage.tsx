@@ -10,6 +10,7 @@ import {
   FeatureLayout, ViewMode, loadFeatureLayout, saveFeatureLayout,
   toggleFeature, moveFeature, setViewMode, resetLayout, getDefaultLayout,
 } from "../lib/featureConfig";
+import { canAccessThemeStore } from "../lib/adminDevAccess";
 
 /* ============================================================================
    CustomizePage — modular feature management
@@ -73,7 +74,10 @@ export default function CustomizePage({ profile, onUpdateProfile, onSectionChang
     showToast("Reset to defaults");
   };
 
-  const sortedFeatures = [...layout.features].sort((a, b) => a.order - b.order);
+  const visibleFeatures = layout.features.filter((feature) => {
+    return feature.access !== "admin_dev" || canAccessThemeStore(profile);
+  });
+  const sortedFeatures = [...visibleFeatures].sort((a, b) => a.order - b.order);
 
   return (
     <div className="min-h-screen pb-12" style={{ background: "#040810", color: "#e2e8f0" }}>

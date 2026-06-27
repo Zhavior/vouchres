@@ -47,9 +47,15 @@ export interface HrBoardRow {
   opponentPitcherName?: string;
   recentForm?: {
     gamesChecked?: number;
+    atBats?: number;
+    hits?: number;
     homeRuns?: number;
+    doubles?: number;
+    triples?: number;
     extraBaseHits?: number;
+    totalBases?: number;
     slugging?: number;
+    recentHrRate?: number;
     recentPowerScore?: number;
   };
   scoreBreakdown?: {
@@ -57,6 +63,8 @@ export interface HrBoardRow {
     pitcherVulnerability?: number;
     parkFactor?: number;
     recentForm?: number;
+    lineupConfidence?: number;
+    riskPenalty?: number;
     finalScore?: number;
   };
   judge: HrRowJudge;

@@ -20,6 +20,8 @@ export interface FeatureConfig {
   order: number;
   /** Features that can't be disabled (core app navigation) */
   locked?: boolean;
+  /** Features hidden from regular users while still available to admin/dev operators. */
+  access?: "public" | "admin_dev";
 }
 
 export interface FeatureLayout {
@@ -46,7 +48,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 12 },
   { id: "premium", label: "PRO Premium Tiers", icon: "Sparkles", enabled: true, order: 13 },
   { id: "subscriber_hub", label: "Subscriber Clubs", icon: "MessageSquare", enabled: true, order: 14 },
-  { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 15 },
+  { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 15, access: "admin_dev" },
   { id: "epic_themes", label: "Epic Themes", icon: "Sparkles", enabled: true, order: 16 },
   { id: "profile", label: "Profile", icon: "User", enabled: true, order: 17, locked: true },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 18, locked: true },
@@ -99,9 +101,13 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 /* ============ Helpers ============ */
 
 /** Returns only enabled features, sorted by order — for sidebar rendering */
-export function getEnabledFeatures(layout: FeatureLayout): FeatureConfig[] {
+export function getEnabledFeatures(
+  layout: FeatureLayout,
+  options: { canAccessThemeStore?: boolean } = {},
+): FeatureConfig[] {
   return layout.features
     .filter((f) => f.enabled)
+    .filter((f) => f.access !== "admin_dev" || options.canAccessThemeStore)
     .sort((a, b) => a.order - b.order);
 }
 

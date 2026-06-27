@@ -3,6 +3,7 @@ import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
+import { canAccessThemeStore } from '../../lib/adminDevAccess';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Sliders, Cpu, Activity,
@@ -25,7 +26,9 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   }, [activeSection]);
 
   // Build menu items from the feature config
-  const enabledFeatures = getEnabledFeatures(layout);
+  const enabledFeatures = getEnabledFeatures(layout, {
+    canAccessThemeStore: canAccessThemeStore(profile),
+  });
   const menuItems = enabledFeatures.map((f) => ({
     id: f.id,
     label: f.label,

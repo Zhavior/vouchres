@@ -29,6 +29,7 @@ import { EpicThemeShowcase } from './components/vouchedge/EpicThemeShowcase';
 import SubscriberHub from './components/SubscriberHub';
 import { X } from 'lucide-react';
 import { ThemeProvider } from './components/theme/ThemeProvider';
+import { canAccessThemeStore } from './lib/adminDevAccess';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
@@ -88,6 +89,13 @@ export default function App() {
   const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
   const [liveGames, setLiveGames] = useState<any[]>([]);
+  const canSeeThemeStore = canAccessThemeStore(profile);
+
+  useEffect(() => {
+    if (activeSection === 'themestore' && !canSeeThemeStore) {
+      setActiveSection('profile');
+    }
+  }, [activeSection, canSeeThemeStore]);
 
   // Periodically fetch live game schedule status to prevent betting/picking on finished games
   useEffect(() => {
@@ -593,6 +601,22 @@ export default function App() {
           />
         );
       case 'themestore':
+        if (!canSeeThemeStore) {
+          return (
+            <ProfilePage
+              profile={profile}
+              onUpdateProfile={handleUpdateProfile}
+              posts={posts}
+              onLikePost={handleLikePost}
+              onVouchPost={handleVouchPost}
+              onRepostPost={handleRepostPost}
+              onSaveVouch={handleSaveVouch}
+              savedVouchIds={savedVouchIds}
+              onAddComment={handleAddComment}
+              savedParlays={savedSlips}
+            />
+          );
+        }
         return (
           <ThemeStore
             profile={profile}

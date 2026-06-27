@@ -1,12 +1,15 @@
 import React from 'react';
 import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard } from 'lucide-react';
+import { CreatorProofProfile } from '../../types';
+import { canAccessThemeStore } from '../../lib/adminDevAccess';
 
 interface FeedMobileNavProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  profile: CreatorProofProfile;
 }
 
-export default function FeedMobileNav({ activeSection, onSectionChange }: FeedMobileNavProps) {
+export default function FeedMobileNav({ activeSection, onSectionChange, profile }: FeedMobileNavProps) {
   const navItems = [
     // Primary mobile tabs (verdict): Today, HRs, My Parlays, Results, Profile
     { id: 'today', label: 'Today', icon: LayoutDashboard },
@@ -23,7 +26,7 @@ export default function FeedMobileNav({ activeSection, onSectionChange }: FeedMo
     { id: 'leaderboard', label: 'Cappers', icon: Award },
     { id: 'board', label: 'Vouch', icon: ClipboardCheck },
     { id: 'subscriber_hub', label: 'Premium', icon: MessageSquare },
-    { id: 'themestore', label: 'Themes', icon: ShoppingBag },
+    ...(canAccessThemeStore(profile) ? [{ id: 'themestore', label: 'Themes', icon: ShoppingBag }] : []),
   ];
 
   return (

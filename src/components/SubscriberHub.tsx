@@ -247,7 +247,7 @@ export default function SubscriberHub({
 
   const handleSubscribe = (capper: SubscriberCapper, price: number, monthsName: string) => {
     if (credits < price) {
-      alert(`❌ Insufficient credits! This premium ${monthsName} sub requires ${price} credits. Please go to the Theme Store and tap "Claim Free Credits" to top up immediately!`);
+      alert(`Insufficient credits. This premium ${monthsName} subscription requires ${price} credits. Credit top-up controls are limited during beta.`);
       return;
     }
 

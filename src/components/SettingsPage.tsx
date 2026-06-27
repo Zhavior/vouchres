@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
 import { PREMIUM_THEMES } from '../data/themesData';
+import { canAccessThemeStore } from '../lib/adminDevAccess';
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -54,6 +55,7 @@ export default function SettingsPage({
   const [twitch, setTwitch] = useState(profile.twitch || 'vouchedge_live');
   const [themeAccent, setThemeAccent] = useState(profile.themeAccent || 'cosmic');
   const [activeTheme, setActiveTheme] = useState(profile.activeTheme || 'default');
+  const canSeeThemeStore = canAccessThemeStore(profile);
 
   // --- Professional Livestreaming setting states ---
   const [streamServer, setStreamServer] = useState(() => localStorage.getItem('vEdge_streamServer') || 'twitch');
@@ -433,8 +435,10 @@ export default function SettingsPage({
                           <div className="p-3.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl flex items-start gap-2.5 animate-pulse" id="no-bought-themes-notice">
                             <Sparkles className="w-4 h-4 text-sky-400 mt-0.5 shrink-0" />
                             <div className="text-[10px] text-slate-400 leading-normal font-medium">
-                              <span className="font-extrabold text-[#94a3b8] block mb-0.5">🎨 Unlock Premium Aesthetic Skins</span>
-                              You haven't bought any premium themes from the Theme Store yet! Currently, only the Standard Theme is active. Go to the Theme Store tab to buy Neon Pulse Beat Lines, 8-Bit Retro or cute anime styles using credits.
+                              <span className="font-extrabold text-[#94a3b8] block mb-0.5">🎨 Theme Engine Active</span>
+                              {canSeeThemeStore
+                                ? "You have not unlocked premium themes yet. Theme Store is available in admin/dev mode for configuring premium visual identity."
+                                : "Your applied VouchEdge theme is active. Premium Theme Store controls are limited to admin/dev access during beta."}
                             </div>
                           </div>
                         )}

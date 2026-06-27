@@ -10,6 +10,7 @@ import ParticleBackground from "./vouchedge/ParticleBackground";
 import FeatureCard3D from "./vouchedge/FeatureCard3D";
 import OnboardingSlideshow, { BETA_THEMES } from "./vouchedge/OnboardingSlideshow";
 import AuthModal from "./auth/AuthModal";
+import { canAccessThemeStore } from "../lib/adminDevAccess";
 
 /**
  * WelcomePortal — Premium front page
@@ -60,7 +61,9 @@ export default function WelcomePortal({ onSectionChange }: Props) {
     { icon: Cpu, color: "#fbbf24", title: "AI Picks Hub", desc: "Use AI-assisted research for HR targets, undervalued players, and watchlists.", onClick: () => onSectionChange("ai_engine") },
     { icon: CheckCircle2, color: "#10b981", title: "Verified Result Ledger", desc: "Every graded pick updates the user's public proof history.", onClick: () => onSectionChange("results") },
     { icon: Users, color: "#f472b6", title: "AI Capper League", desc: "Follow different AI capper personalities with unique styles, notes, and proof records.", onClick: () => onSectionChange("ai_engine") },
-    { icon: Palette, color: "#22d3ee", title: "Theme Identity", desc: "Customize your profile with themes, borders, and proof identity.", onClick: () => onSectionChange("themestore") },
+    ...(canAccessThemeStore()
+      ? [{ icon: Palette, color: "#22d3ee", title: "Theme Identity", desc: "Customize your profile with themes, borders, and proof identity.", onClick: () => onSectionChange("themestore") }]
+      : []),
   ];
 
   const steps = [

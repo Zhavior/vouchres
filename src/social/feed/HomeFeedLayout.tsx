@@ -207,6 +207,7 @@ export default function HomeFeedLayout({
         <FeedMobileNav 
           activeSection={activeSection} 
           onSectionChange={onSectionChange} 
+          profile={profile}
         />
       )}
 

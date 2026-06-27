@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CreatorProofProfile, Parlay } from '../types';
+import { canAccessThemeStore } from '../lib/adminDevAccess';
 
 interface AisFeatureAgentProps {
   profile: CreatorProofProfile;
@@ -59,6 +60,7 @@ export default function AisFeatureAgent({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const canSeeThemeStore = canAccessThemeStore(profile);
 
   // Initial welcome message with suggestions
   useEffect(() => {
@@ -236,7 +238,7 @@ Keep your eyes closely aligned to the **Live Games Board** to track further deve
           3. Player Research (Google search grounding).
           4. Java Vouch Studio (ticket card editor).
           5. Subscriber Clubs (chats & private locks).
-          6. Theme Store (purchasing cool custom profiles like GameBeat equalizers).
+          6. Theme Engine (applied visual identity and profile presentation).
           
           If the user wants to send feedback, remind them that they can ask you to send an email to vouchedge@gmail.com or zhavior@gmail.com, or use the "Send Email" action buttons in the chat interface. Keep instructions super elegant and professional.`
         })
@@ -266,6 +268,12 @@ Keep your eyes closely aligned to the **Live Games Board** to track further deve
 
   const handleExplainFeature = (feature: string) => {
     let explanation = '';
+
+    if (feature === 'themestore' && !canSeeThemeStore) {
+      addAgentMessage('🎨 Theme Store is currently limited to admin/dev access during beta. Your applied theme still runs in the background, and regular users only see the active VouchEdge visual identity.');
+      return;
+    }
+
     onSectionChange(feature);
 
     switch (feature) {
@@ -282,7 +290,7 @@ Keep your eyes closely aligned to the **Live Games Board** to track further deve
         explanation = `🛠️ Welcome to the **Vouch Board & Customizer**! Customize border neons, background grid styles, shadows, and templates, then post your custom ticket directly to the feed index.`;
         break;
       case 'themestore':
-        explanation = `🎨 Opening the **Theme Store**! Here, you can purchase premium themes (like our new music **Neon Pulse Beat Lines** equalizer) or mint your own customized layout for credits!`;
+        explanation = `🎨 Opening the **Theme Store** admin/dev panel. Theme Engine remains active in the background for users through the applied visual identity.`;
         break;
       default:
         explanation = `Opening requested feature: **${feature}**! Let's explore its advanced sports analytics and layout properties.`;
