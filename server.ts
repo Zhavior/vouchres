@@ -752,7 +752,23 @@ ${legs.map((leg: any, i: number) => {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith("index.html")) {
+            res.setHeader(
+              "Cache-Control",
+              "no-store, no-cache, must-revalidate, proxy-revalidate",
+            );
+            return;
+          }
+
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          }
+        },
+      }),
+    );
 
   // VOUCHEDGE COMPAT MLB ROUTES START
   /*
@@ -1159,6 +1175,10 @@ ${legs.map((leg: any, i: number) => {
 
 
     app.get("*", (req, res) => {
+      res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate",
+      );
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
