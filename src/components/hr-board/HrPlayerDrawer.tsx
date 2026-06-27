@@ -112,7 +112,7 @@ function LockedGraphPlaceholder({ title, detail }: { title: string; detail: stri
   );
 }
 
-function ProLockedPanel() {
+function ProLockedPanel({ onLockedFeature }: { onLockedFeature: (title: string) => void }) {
   const proCrossFeatures = [
     {
       title: "Player Edge Lab",
@@ -163,9 +163,11 @@ function ProLockedPanel() {
 
       <div className="mt-4 grid gap-2">
         {proCrossFeatures.map((feature) => (
-          <div
+          <button
+            type="button"
             key={feature.title}
-            className="group rounded-xl border border-slate-800/80 bg-slate-950/55 p-3 transition-colors hover:border-sky-500/25 hover:bg-sky-500/5"
+            onClick={() => onLockedFeature(feature.title)}
+            className="group w-full rounded-xl border border-slate-800/80 bg-slate-950/55 p-3 text-left transition-colors hover:border-sky-500/25 hover:bg-sky-500/5"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -181,7 +183,7 @@ function ProLockedPanel() {
             <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
               {feature.detail}
             </p>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -210,6 +212,11 @@ type ProTab = typeof PRO_TABS[number];
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
   const [activeProTab, setActiveProTab] = useState<ProTab>('Overview');
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+
+  const handleLockedProFeature = (title: string) => {
+    setShareStatus(`${title} locked — Pro verified data feed required`);
+    window.setTimeout(() => setShareStatus(null), 2200);
+  };
 
   if (!row) return null;
   const isProUser = false;
@@ -396,7 +403,7 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             </>
           ) : (
             <Section icon={Lock} title="Player Edge Lab Pro" tone="#38bdf8">
-              <ProLockedPanel />
+              <ProLockedPanel onLockedFeature={handleLockedProFeature} />
             </Section>
           )}
 
