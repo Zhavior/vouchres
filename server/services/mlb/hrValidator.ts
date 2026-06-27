@@ -21,6 +21,8 @@ import {
   isPlaceholder,
 } from "./hrValidation";
 
+const TEAM_MISMATCH_REASON = "Team mismatch / stale roster assignment";
+
 /* ============ Main validation function ============ */
 
 export function validateHrCandidate(
@@ -31,10 +33,29 @@ export function validateHrCandidate(
   hasPitcherStats: boolean,
   seenPlayerIds: Set<number>
 ): ValidationResult {
+  return validateCandidateInternal(player, game, injuryStatus, hasHitterStats, hasPitcherStats, seenPlayerIds, true);
+}
 
-  const reasons: string[] = [];
-  const warnings: string[] = [];
+export function validateProjectedPreviewCandidate(
+  player: TodayPlayer,
+  game: GameContext,
+  injuryStatus: InjuryStatus,
+  hasHitterStats: boolean,
+  hasPitcherStats: boolean,
+  seenPlayerIds: Set<number>
+): ValidationResult {
+  return validateCandidateInternal(player, game, injuryStatus, hasHitterStats, hasPitcherStats, seenPlayerIds, false);
+}
 
+function validateCandidateInternal(
+  player: TodayPlayer,
+  game: GameContext,
+  injuryStatus: InjuryStatus,
+  hasHitterStats: boolean,
+  hasPitcherStats: boolean,
+  seenPlayerIds: Set<number>,
+  requireConfirmedLineup: boolean
+): ValidationResult {
   // CHECK 1: playerId exists
   if (!player.playerId || player.playerId <= 0) {
     return { valid: false, status: "blocked", reasons: ["Missing playerId"], warnings: [] };
@@ -48,6 +69,8 @@ export function validateHrCandidate(
   // CHECK 3: player's teamId matches today's home OR away team
   const isHomeTeam = player.teamId === game.homeTeamId;
   const isAwayTeam = player.teamId === game.awayTeamId;
+  const expectedTeamAbbrev = isHomeTeam ? game.homeTeamAbbrev : isAwayTeam ? game.awayTeamAbbrev : "";
+
   if (!isHomeTeam && !isAwayTeam) {
     return {
       valid: false,
@@ -55,6 +78,53 @@ export function validateHrCandidate(
       reasons: [`Player teamId ${player.teamId} doesn't match game teams (${game.awayTeamId} vs ${game.homeTeamId})`],
       warnings: [],
     };
+  }
+
+  if (requireConfirmedLineup) {
+    if (
+      player.teamId !== player.sourceTeamId ||
+      player.activeRosterTeamId !== player.sourceTeamId ||
+      (player.playerCurrentTeamId !== null &&
+        player.playerCurrentTeamId !== undefined &&
+        player.playerCurrentTeamId !== player.sourceTeamId) ||
+      (expectedTeamAbbrev && player.teamAbbrev !== expectedTeamAbbrev) ||
+      (player.sourceTeamAbbrev && player.teamAbbrev !== player.sourceTeamAbbrev)
+    ) {
+      return {
+        valid: false,
+        status: "blocked",
+        reasons: [TEAM_MISMATCH_REASON],
+        warnings: [
+          `teamId=${player.teamId}, sourceTeamId=${player.sourceTeamId}, currentTeamId=${player.playerCurrentTeamId ?? "unknown"}, teamAbbrev=${player.teamAbbrev}, expectedTeamAbbrev=${expectedTeamAbbrev || "unknown"}`,
+        ],
+      };
+    }
+  } else {
+    if (player.activeRosterTeamId && player.activeRosterTeamId !== player.teamId) {
+      return {
+        valid: false,
+        status: "blocked",
+        reasons: [TEAM_MISMATCH_REASON],
+        warnings: [
+          `Preview safety mismatch: activeRosterTeamId=${player.activeRosterTeamId}, player.teamId=${player.teamId}`,
+        ],
+      };
+    }
+
+    if (
+      player.playerCurrentTeamId !== null &&
+      player.playerCurrentTeamId !== undefined &&
+      player.playerCurrentTeamId !== player.teamId
+    ) {
+      return {
+        valid: false,
+        status: "blocked",
+        reasons: [TEAM_MISMATCH_REASON],
+        warnings: [
+          `Preview safety mismatch: playerCurrentTeamId=${player.playerCurrentTeamId}, player.teamId=${player.teamId}`,
+        ],
+      };
+    }
   }
 
   // CHECK 4: opponentTeamId is the opposite team in the same game
@@ -96,6 +166,19 @@ export function validateHrCandidate(
       status: "blocked",
       reasons: ["Player not on active roster and not in confirmed lineup"],
       warnings: [],
+    };
+  }
+
+  // CHECK 7.5: roster-only projections are not safe enough for HR candidates.
+  // MLB active/current roster payloads can be internally consistent while still
+  // stale for betting research. Only official game batting order membership
+  // proves the player belongs to this exact team/game.
+  if (requireConfirmedLineup && player.lineupStatus !== "confirmed") {
+    return {
+      valid: false,
+      status: "blocked",
+      reasons: ["Official lineup not posted yet"],
+      warnings: ["Player is not confirmed in the official batting order for this exact game/team."],
     };
   }
 
@@ -181,6 +264,7 @@ export function validateHrCandidate(
   }
 
   // === All hard checks passed. Determine status ===
+  const warnings: string[] = [];
 
   // Day-to-day → warning
   if (injuryStatus === "day_to_day") {

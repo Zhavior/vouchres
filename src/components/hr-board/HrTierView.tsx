@@ -37,14 +37,18 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusBadge status={row.projectionType === 'Confirmed' ? 'Confirmed' : row.projectionType === 'Live' ? 'Live' : 'Projected'} />
+          <StatusBadge status={row.projectionType === 'Confirmed' ? 'Confirmed' : row.projectionType === 'Live' ? 'Live' : row.projectionType === 'Projection Preview' ? 'Preview' : 'Projected'} />
           <RiskBadge risk={row.riskLabel} />
         </div>
       </div>
 
       {/* Plain-English context */}
       <p className="text-[11px] text-slate-400 mb-2 leading-snug">
-        {row.projectionType === 'Confirmed' ? `Confirmed starter${row.battingOrder ? `, batting order ${row.battingOrder}` : ''}. ` : 'Projected bat. '}
+        {row.projectionType === 'Confirmed'
+          ? `Confirmed starter${row.battingOrder ? `, batting order ${row.battingOrder}` : ''}. `
+          : row.projectionType === 'Projection Preview'
+            ? 'Projection preview only. Official lineup not posted yet. '
+            : 'Projected bat. '}
         {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `Park HR factor ${row.hrMultiplier}x. ` : row.parkFactor && row.parkFactor !== 'N/A' ? `Park factor ${row.parkFactor}. ` : 'Park data unavailable. '}
         {row.weatherSource === 'unavailable' || row.weatherBoost === null || row.weatherBoost === undefined
           ? 'Weather unavailable. '

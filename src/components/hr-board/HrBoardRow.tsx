@@ -9,7 +9,7 @@ export const FORM_COLOR: Record<FormTag, string> = {
   Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b',
 };
 export const RISK_COLOR: Record<RiskLabel, string> = {
-  Strong: '#34d399', Playable: '#22d3ee', Sneaky: '#a78bfa', Lotto: '#fb923c', Avoid: '#f87171',
+  Strong: '#34d399', Playable: '#22d3ee', Sneaky: '#a78bfa', Longshot: '#fb923c', Lotto: '#fb923c', Avoid: '#f87171',
 };
 
 export function edgeColor(edge: number): string {
@@ -79,7 +79,7 @@ const HrBoardRow: React.FC<{ row: Row; onClick: () => void }> = ({ row, onClick 
       <td className={`${cell} text-center font-mono text-slate-400`}>{row.dataConfidence}%</td>
       <td className={`${cell} text-center font-mono`} style={{ color: row.weatherBoost >= 0 ? '#34d399' : '#f87171' }}>{row.weatherBoost > 0 ? '+' : ''}{row.weatherSource === 'unavailable' || row.weatherBoost === null || row.weatherBoost === undefined ? 'N/A' : `${row.weatherBoost}%`}</td>
       <td className={`${cell} text-slate-400 font-mono`}>
-        {row.projectionType ?? (row.gameStatus === 'confirmed' ? 'Confirmed' : row.gameStatus === 'projected' ? 'Projected' : row.gameStatus)}
+        {row.projectionType ?? (row.gameStatus === 'confirmed' ? 'Confirmed' : row.gameStatus === 'projected_unconfirmed' ? 'Projection Preview' : row.gameStatus === 'projected' ? 'Projected' : row.gameStatus)}
       </td>
       <td className={`${cell} text-center font-mono text-slate-400`}>
         {row.lineupSpot === null || row.lineupSpot === undefined || Number.isNaN(Number(row.lineupSpot))

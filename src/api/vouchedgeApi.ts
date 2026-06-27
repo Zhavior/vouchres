@@ -87,8 +87,13 @@ export const vouchedgeApi = {
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
 
   // Daily HR Board
-  hrBoardToday: () => withFallback(() => getJson<HrBoardResponse>("/api/mlb/hr-board/today"), () => hrBoardDirect()),
-  hrBoardByDate: (date: string) => getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}`),
+  hrBoardToday: (previewLimit?: number) =>
+    withFallback(
+      () => getJson<HrBoardResponse>(`/api/mlb/hr-board/today${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
+      () => hrBoardDirect()
+    ),
+  hrBoardByDate: (date: string, previewLimit?: number) =>
+    getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
   hrBoardPlayer: (playerId: number, date?: string) =>
     getJson<{ player: HrBoardRow }>(`/api/mlb/hr-board/player/${playerId}${date ? `?date=${date}` : ""}`),
 

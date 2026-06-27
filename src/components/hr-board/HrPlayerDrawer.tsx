@@ -66,7 +66,9 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
               <li className="text-[11px] text-slate-400">
                 • {row.projectionType === 'Confirmed'
                   ? `Confirmed starter${row.lineupSpot !== null && row.lineupSpot !== undefined ? `, batting ${row.lineupSpot}` : ''}`
-                  : 'Projected lineup spot — confirm before using'}
+                  : row.projectionType === 'Projection Preview'
+                    ? 'Projection preview only — official lineup not posted yet'
+                    : 'Projected lineup spot — confirm before using'}
               </li>
               <li className="text-[11px] text-slate-400">
                 • Park HR factor {row.hrMultiplier && row.hrMultiplier !== 'N/A' ? `${row.hrMultiplier}x` : row.parkFactor ?? 'N/A'}

@@ -84,6 +84,24 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
     return () => clearInterval(id);
   }, [date, load]);
 
+  const confirmedCandidates = useMemo(
+    () => (Array.isArray((board as any)?.candidates) ? (board as any).candidates : []),
+    [board]
+  );
+
+  const projectedCandidates = useMemo(
+    () => (Array.isArray((board as any)?.projectedCandidates) ? (board as any).projectedCandidates : []),
+    [board]
+  );
+
+  const previewMeta = board?.previewMeta;
+
+  const boardMode = confirmedCandidates.length > 0
+    ? 'confirmed'
+    : projectedCandidates.length > 0
+      ? 'preview'
+      : 'empty';
+
   const games = useMemo(() => {
     const existingGames = Array.isArray((board as any)?.games) ? (board as any).games : [];
     const gamesHaveHrRows = existingGames.some((game: any) =>
@@ -98,7 +116,8 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
     }
 
     const candidates =
-      Array.isArray((board as any)?.candidates) ? (board as any).candidates :
+      confirmedCandidates.length ? confirmedCandidates :
+      projectedCandidates.length ? projectedCandidates :
       Array.isArray((board as any)?.rows) ? (board as any).rows :
       Array.isArray((board as any)?.players) ? (board as any).players :
       Array.isArray((board as any)?.targets) ? (board as any).targets :
@@ -125,12 +144,15 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         formTag: candidate.formTag ?? candidate.form ?? '',
         projectionType:
           candidate.projectionType ??
+          (candidate.lineupStatus === 'projected_unconfirmed'
+            ? 'Projection Preview'
+            : undefined) ??
           (candidate.lineupStatus === 'confirmed'
             ? 'Confirmed'
             : candidate.lineupStatus === 'projected'
               ? 'Projected'
               : 'Projected'),
-        lineupStatus: candidate.lineupStatus ?? 'projected',
+        lineupStatus: candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected'),
         battingOrder: candidate.battingOrder ?? candidate.lineupSpot ?? null,
         hrEdge: Number(candidate.hrEdge ?? candidate.score ?? candidate.hrScore ?? candidate.vouchScore ?? 0),
         vouchScore: Number(candidate.vouchScore ?? candidate.hrScore ?? candidate.score ?? candidate.hrEdge ?? 0),
@@ -157,17 +179,17 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
                 ? Number(candidate.projectedLineupSpot)
                 : null,
         bestOdds: String(candidate.bestOdds ?? candidate.odds ?? candidate.hrOdds ?? 'N/A'),
-        pitcherName: candidate.pitcherName ?? candidate.opponentPitcher ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
-        opponentPitcher: candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
-        oppPitcher: candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
-        opposingPitcher: candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
+        pitcherName: candidate.opponentPitcherName ?? candidate.pitcherName ?? candidate.opponentPitcher ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
+        opponentPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
+        oppPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
+        opposingPitcher: candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName ?? candidate.opposingPitcher ?? candidate.probablePitcher ?? 'TBD',
         pitcherTeam: candidate.opponent ?? candidate.pitcherTeam ?? '',
         pTeam: candidate.opponent ?? candidate.pitcherTeam ?? '',
         opposingPitcherTeam: candidate.opponent ?? candidate.pitcherTeam ?? 'TBD',
         pitcherHand: candidate.pitcherHand ?? candidate.pitcherThrows ?? '',
         parkFactor: candidate.parkFactor ?? candidate.park ?? candidate.venue ?? 'N/A',
         hrMultiplier: candidate.hrMultiplier ?? candidate.hrMult ?? candidate.multiplier ?? 'N/A',
-        gameStatus: candidate.status ?? candidate.gameStatus ?? candidate.lineupStatus ?? 'projected',
+        gameStatus: candidate.status ?? candidate.gameStatus ?? candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected'),
         lineMovement:
           candidate.lineMovement !== undefined && candidate.lineMovement !== null
             ? Number(candidate.lineMovement)
@@ -204,7 +226,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         rows,
       };
     }) as any[];
-  }, [board]);
+  }, [board, boardMode, confirmedCandidates, projectedCandidates]);
 
   const teams = useMemo(() => {
     const set = new Set<string>();
@@ -250,6 +272,54 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
     ? (board as any).debug.missingStarChecks
     : [];
 
+  const getStarWatchBadgeClass = (status: string) => {
+    switch (status) {
+      case 'included':
+        return 'bg-emerald-500/15 text-emerald-300';
+      case 'preview':
+        return 'bg-cyan-500/15 text-cyan-300';
+      case 'waiting':
+        return 'bg-yellow-500/15 text-yellow-300';
+      case 'blocked':
+        return 'bg-orange-500/15 text-orange-300';
+      default:
+        return 'bg-red-500/15 text-red-300';
+    }
+  };
+
+  const getStarWatchLabel = (star: any) => {
+    if (typeof star?.label === 'string' && star.label.trim()) return star.label;
+
+    switch (star?.status) {
+      case 'included':
+        return 'CONFIRMED';
+      case 'preview':
+        return 'PREVIEW';
+      case 'waiting':
+        return 'WAITING';
+      case 'blocked':
+        return 'BLOCKED';
+      default:
+        return 'EXCLUDED';
+    }
+  };
+
+  const getStarWatchReason = (star: any) => {
+    if (star?.reason === 'Team mismatch / stale roster assignment') {
+      return 'Roster verification conflict';
+    }
+
+    return star?.reason ?? '';
+  };
+
+  const getStarWatchNote = (star: any) => {
+    if (star?.reason === 'Team mismatch / stale roster assignment') {
+      return 'MLB active roster and trusted team registry disagree. Hidden for safety until confirmed.';
+    }
+
+    return star?.note ?? '';
+  };
+
   return (
     <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-5 text-slate-100">
       {/* Header */}
@@ -259,7 +329,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
             <Flame className="w-5 h-5 text-orange-400" /> Daily HR Edge Board
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            {board ? `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · data: ${board.dataQuality}` : 'Loading today’s slate…'}
+            {board ? `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : boardMode === 'preview' ? 'Projection Preview' : 'waiting for lineups'} · data: ${board.dataQuality}` : 'Loading today’s slate…'}
             {lastUpdated && <span className="text-slate-600"> · updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
           </p>
         </div>
@@ -276,12 +346,27 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         </p>
       </div>
 
+      {boardMode === 'preview' && (
+        <div className="mb-4 p-3 rounded-xl bg-amber-500/8 border border-amber-400/25 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
+          <div className="text-[11px] leading-relaxed text-amber-100">
+            <div className="font-bold">Projection Preview — waiting for official lineups.</div>
+            <div>These rows are active-roster and current-team verified, but they are not confirmed starters. Do not treat them as confirmed HR candidates.</div>
+            {typeof previewMeta?.eligiblePreviewPoolCount === 'number' && (
+              <div className="mt-1 text-amber-200/90">
+                Showing Top {previewMeta.projectedPreviewCount} of {previewMeta.eligiblePreviewPoolCount} MLB-verified preview hitters.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {missingStarChecks.length > 0 && (
         <section className="mb-4 rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-4">
           <div className="mb-3">
             <h2 className="text-sm font-black text-white">Star Watch</h2>
             <p className="text-xs text-slate-400">
-              Why major HR names are included, blocked, or excluded today.
+              Why major HR names are confirmed, in preview, waiting, blocked, or excluded today.
             </p>
           </div>
 
@@ -293,19 +378,13 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
                     <div className="text-sm font-bold text-white">{star.playerName}</div>
                     <div className="text-[11px] text-slate-500">{star.expectedTeam}</div>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
-                    star.status === 'included'
-                      ? 'bg-emerald-500/15 text-emerald-300'
-                      : star.status === 'blocked'
-                        ? 'bg-yellow-500/15 text-yellow-300'
-                        : 'bg-red-500/15 text-red-300'
-                  }`}>
-                    {star.status === 'included' ? 'Included' : star.status === 'blocked' ? 'Waiting' : 'Excluded'}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${getStarWatchBadgeClass(star.status)}`}>
+                    {getStarWatchLabel(star)}
                   </span>
                 </div>
 
-                <div className="mt-2 text-xs text-slate-300">{star.reason}</div>
-                {star.note && <div className="mt-1 text-[11px] text-slate-500">{star.note}</div>}
+                <div className="mt-2 text-xs text-slate-300">{getStarWatchReason(star)}</div>
+                {getStarWatchNote(star) && <div className="mt-1 text-[11px] text-slate-500">{getStarWatchNote(star)}</div>}
               </div>
             ))}
           </div>

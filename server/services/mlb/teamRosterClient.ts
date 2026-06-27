@@ -10,26 +10,26 @@ import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
 // Bust old cache by incrementing the key version when verification logic changes
-const CACHE_KEY = "hitters_v3_verified";
+const CACHE_KEY = "hitters_v4_team_provenance";
 const hittersCache = new TTLCache<Map<number, NormalizedPlayer[]>>(20 * 60_000);
 
 function bats(code?: string): "L" | "R" | "S" | "U" {
   return code === "L" ? "L" : code === "R" ? "R" : code === "S" ? "S" : "U";
 }
 
-async function getMlbTeams(): Promise<Array<{ id: number; name: string }>> {
+async function getMlbTeams(): Promise<Array<{ id: number; name: string; abbreviation: string }>> {
   const res = await fetch(`${BASE}/v1/teams?sportId=1&activeStatus=Y`);
   if (!res.ok) throw new Error(`teams ${res.status}`);
   const data = await res.json();
   const teams: any[] = Array.isArray(data?.teams) ? data.teams : [];
   return teams
     .filter((t) => typeof t.id === "number" && t.name)
-    .map((t) => ({ id: t.id, name: t.name }));
+    .map((t) => ({ id: t.id, name: t.name, abbreviation: t.abbreviation || t.teamCode || "" }));
 }
 
 /** Fetch currentTeam.id for a batch of player IDs via the people API. */
-async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, number>> {
-  const result = new Map<number, number>();
+async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id: number; name: string; abbreviation: string }>> {
+  const result = new Map<number, { id: number; name: string; abbreviation: string }>();
   if (playerIds.length === 0) return result;
 
   // MLB API accepts up to ~50 IDs per call
@@ -47,7 +47,11 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, numb
       for (const p of data?.people ?? []) {
         const ctId: number | undefined = p?.currentTeam?.id;
         if (p?.id && ctId) {
-          result.set(p.id, ctId);
+          result.set(p.id, {
+            id: ctId,
+            name: p?.currentTeam?.name || "",
+            abbreviation: p?.currentTeam?.abbreviation || p?.currentTeam?.teamCode || "",
+          });
         }
       }
     } catch (err) {
@@ -57,7 +61,8 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, numb
   return result;
 }
 
-async function getTeamActiveHitters(teamId: number, teamName: string): Promise<NormalizedPlayer[]> {
+async function getTeamActiveHitters(team: { id: number; name: string; abbreviation: string }): Promise<NormalizedPlayer[]> {
+  const teamId = team.id;
   const res = await fetch(`${BASE}/v1/teams/${teamId}/roster?rosterType=active`);
   if (!res.ok) throw new Error(`team ${teamId} roster ${res.status}`);
 
@@ -78,7 +83,8 @@ async function getTeamActiveHitters(teamId: number, teamName: string): Promise<N
   const verified: NormalizedPlayer[] = [];
   for (const r of candidates) {
     const playerId = r.person.id as number;
-    const verifiedTeamId = currentTeamMap.get(playerId);
+    const verifiedTeam = currentTeamMap.get(playerId);
+    const verifiedTeamId = verifiedTeam?.id;
 
     if (verifiedTeamId === undefined) {
       console.warn(
@@ -96,7 +102,7 @@ async function getTeamActiveHitters(teamId: number, teamName: string): Promise<N
 
     if (process.env.DEBUG_HR_PIPELINE === "true") {
       console.log(
-        `[HR BOARD ROSTER OK]   ${r.person.fullName} (${playerId}) team=${teamName} (${teamId}) ✓`
+        `[HR BOARD ROSTER OK]   ${r.person.fullName} (${playerId}) team=${team.name} (${teamId}) ✓`
       );
     }
 
@@ -106,8 +112,16 @@ async function getTeamActiveHitters(teamId: number, teamName: string): Promise<N
       playerName: r.person.fullName,
       position: pos,
       bats: bats(r.person?.batSide?.code),
-      team: teamName,
+      team: team.name,
       teamId,
+      teamAbbrev: team.abbreviation,
+      sourceTeamId: teamId,
+      sourceTeamAbbrev: team.abbreviation,
+      playerCurrentTeamId: verifiedTeamId,
+      playerCurrentTeamName: verifiedTeam?.name || null,
+      playerCurrentTeamAbbrev: verifiedTeam?.abbreviation || null,
+      activeRosterTeamId: teamId,
+      rosterType: "active",
       headshot: headshotUrl(playerId),
     } satisfies NormalizedPlayer);
   }
@@ -134,7 +148,7 @@ export async function getActiveHittersByTeam(
     const map = new Map<number, NormalizedPlayer[]>();
 
     try {
-      let teams: Array<{ id: number; name: string }>;
+      let teams: Array<{ id: number; name: string; abbreviation: string }>;
 
       if (teamIds && teamIds.length > 0) {
         // Fetch official MLB team metadata, then filter to today's slate.
@@ -163,7 +177,7 @@ export async function getActiveHittersByTeam(
 
       const results = await Promise.allSettled(
         teams.map(async (team) => {
-          const hitters = await getTeamActiveHitters(team.id, team.name);
+          const hitters = await getTeamActiveHitters(team);
           return { team, hitters };
         })
       );

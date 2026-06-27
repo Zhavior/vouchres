@@ -3,7 +3,7 @@ import { Search, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
 import type { HrBoardFilterState, SortKey } from '../../types/hrBoard';
 
 const GRADES = ['ALL', 'A+', 'A', 'B', 'C', 'D', 'F'];
-const RISKS = ['ALL', 'Strong', 'Playable', 'Sneaky', 'Lotto', 'Avoid'];
+const RISKS = ['ALL', 'Strong', 'Playable', 'Sneaky', 'Longshot', 'Lotto', 'Avoid'];
 const SORTS: { key: SortKey; label: string }[] = [
   { key: 'hrEdge', label: 'HR Edge' },
   { key: 'vouchScore', label: 'Vouch Score' },

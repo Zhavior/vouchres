@@ -2,8 +2,8 @@
 
 export type Grade = "A+" | "A" | "B" | "C" | "D" | "F";
 export type FormTag = "Hot" | "Average" | "Cold" | "Slump";
-export type RiskLabel = "Strong" | "Playable" | "Sneaky" | "Lotto" | "Avoid";
-export type ProjectionType = "Projected" | "Confirmed" | "Live";
+export type RiskLabel = "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid";
+export type ProjectionType = "Projected" | "Projection Preview" | "Confirmed" | "Live";
 
 export interface HrRowJudge {
   approvalStatus: "Approved" | "Playable but risky" | "Needs more data" | "Avoid";
@@ -41,7 +41,7 @@ export interface HrBoardRow {
   riskLabel: RiskLabel;
   reasons: string[];
   judge: HrRowJudge;
-  dataQuality: "full" | "partial" | "limited";
+  dataQuality: "full" | "partial" | "limited" | "projection_preview";
 }
 
 export interface HrBoardGame {
@@ -61,9 +61,35 @@ export interface HrBoardResponse {
   date: string;
   gameCount: number;
   generatedAt: string;
-  dataQuality: "full" | "partial" | "limited";
+  dataQuality: "full" | "partial" | "limited" | "projection_preview";
   disclaimer: string;
-  games: HrBoardGame[];
+  games?: HrBoardGame[];
+  candidates?: Array<Record<string, unknown>>;
+  projectedCandidates?: Array<Record<string, unknown>>;
+  previewMeta?: {
+    previewLimit: number;
+    eligiblePreviewPoolCount: number;
+    scoredPreviewPoolCount: number;
+    projectedPreviewCount: number;
+  };
+  rosterAudit?: {
+    source: string;
+    strictTeamVerification: boolean;
+    warning: string;
+  };
+  debug?: {
+    teamMismatchBlocked?: number;
+    teamMismatchExamples?: Array<Record<string, unknown>>;
+    confirmedLineupsLoaded?: number;
+    projectedPreviewCount?: number;
+    eligiblePreviewPoolCount?: number;
+    scoredPreviewPoolCount?: number;
+    previewPoolBeforeRegistryFilter?: number;
+    previewPoolAfterSafetyFilter?: number;
+    badPairingAuditBlocked?: Array<Record<string, unknown>>;
+    missingStarChecks?: Array<Record<string, unknown>>;
+  };
+  note?: string;
 }
 
 export type SortKey =

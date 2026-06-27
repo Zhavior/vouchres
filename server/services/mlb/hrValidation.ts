@@ -17,7 +17,7 @@ export type InjuryStatus =
   | "scratched"
   | "unknown";
 
-export type LineupStatus = "confirmed" | "projected" | "bench" | "unknown";
+export type LineupStatus = "confirmed" | "projected" | "projected_unconfirmed" | "bench" | "unknown";
 
 export type RefreshStatus = "fresh" | "stale" | "projected" | "blocked";
 
@@ -28,6 +28,12 @@ export interface TodayPlayer {
   playerName: string;
   teamId: number;
   teamAbbrev: string;
+  sourceTeamName: string;
+  sourceTeamId: number;
+  sourceTeamAbbrev: string;
+  playerCurrentTeamId?: number | null;
+  playerCurrentTeamAbbrev?: string | null;
+  activeRosterTeamId: number;
   opponentTeamId: number;
   gamePk: number;
   gameDate: string;
@@ -76,17 +82,19 @@ export interface ScoredHrCandidate {
   opponent: string;
   opponentTeamId: number;
   gamePk: number;
+  opponentPitcherName: string;
   opponentPitcher: string;
   opponentPitcherId: number;
   lineupStatus: LineupStatus;
   injuryStatus: InjuryStatus;
   hrScore: number;
   dataConfidence: number;
-  riskTier: "Strong" | "Playable" | "Sneaky" | "Lotto" | "Avoid";
+  riskTier: "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid";
   status: HrCandidateStatus;
   reasons: string[];
   warnings: string[];
-  dataQuality: "full" | "partial" | "limited";
+  registryConflict?: boolean;
+  dataQuality: "full" | "partial" | "limited" | "projection_preview";
   lastUpdated: string;
   dataSource: string;
 }
@@ -102,8 +110,8 @@ export interface GameContext {
   homeTeamAbbrev: string;
   venueName?: string;
   probablePitchers: {
-    away: { pitcherId: number; pitcherName: string; teamId: number } | null;
-    home: { pitcherId: number; pitcherName: string; teamId: number } | null;
+    away: { pitcherId: number; pitcherName: string; teamId: number; throws?: "L" | "R" | "U" } | null;
+    home: { pitcherId: number; pitcherName: string; teamId: number; throws?: "L" | "R" | "U" } | null;
   };
   status: string;
 }
@@ -124,6 +132,41 @@ export interface HrDebugResponse {
   candidatesValidated: number;
   candidatesScored: number;
   candidatesBlocked: number;
+  projectedPreviewCount?: number;
+  eligiblePreviewPoolCount?: number;
+  scoredPreviewPoolCount?: number;
+  teamMismatchBlocked?: number;
+  trueTeamMismatchBlocked?: number;
+  teamMismatchExamples?: Array<{
+    playerName: string;
+    playerId: number;
+    team: string;
+    teamId: number;
+    sourceTeamId?: number | null;
+    playerCurrentTeamId?: number | null;
+    expectedTeamAbbrev?: string;
+    reason: string;
+  }>;
+  registryConflictCount?: number;
+  registryConflictWarnings?: number;
+  registryConflictExamples?: Array<{
+    playerName: string;
+    playerId: number;
+    mlbTeam: string;
+    trustedRegistryTeam: string;
+  }>;
+  previewPoolBeforeRegistryFilter?: number;
+  previewPoolAfterSafetyFilter?: number;
+  legacyBadPairAudit?: Array<{
+    playerName: string;
+    team: string;
+    source: "candidates" | "projectedCandidates" | "blockedPlayers" | "pool";
+  }>;
+  badPairingAuditBlocked?: Array<{
+    playerName: string;
+    team: string;
+    reason: string;
+  }>;
   blockedReasons: Record<string, number>;
   staleDataWarnings: string[];
   placeholderWarnings: string[];

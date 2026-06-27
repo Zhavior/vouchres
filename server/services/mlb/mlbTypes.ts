@@ -17,6 +17,14 @@ export interface NormalizedPlayer {
   bats: "L" | "R" | "S" | "U";
   team: string;
   teamId: number;
+  teamAbbrev?: string;
+  sourceTeamId?: number;
+  sourceTeamAbbrev?: string;
+  playerCurrentTeamId?: number | null;
+  playerCurrentTeamName?: string | null;
+  playerCurrentTeamAbbrev?: string | null;
+  activeRosterTeamId?: number;
+  rosterType?: "active";
   battingOrder?: number;
   headshot: string;
 }
