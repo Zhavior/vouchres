@@ -111,7 +111,9 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       Array.isArray(game?.players)
     );
 
-    if (existingGames.length && gamesHaveHrRows) {
+    // In preview mode, the backend may include the full game/player pool for audit/research.
+    // The main HR Board must use projectedCandidates[] so users see the curated Top N, not all hitters.
+    if (existingGames.length && gamesHaveHrRows && boardMode !== 'preview') {
       return existingGames;
     }
 
@@ -268,6 +270,18 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
 
   const totalRows = filteredGames.reduce((s, g) => s + g.rows.length, 0);
 
+  const displayedPreviewCount = projectedCandidates.length;
+  const totalPreviewPool =
+    previewMeta?.eligiblePreviewPoolCount ??
+    previewMeta?.scoredPreviewPoolCount ??
+    displayedPreviewCount;
+
+  const boardSummary = board
+    ? boardMode === 'preview'
+      ? `${board.date} · ${board.gameCount} games · Showing Top ${displayedPreviewCount} of ${totalPreviewPool} MLB-verified preview hitters · Projection Preview · data: ${board.dataQuality}`
+      : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'waiting for lineups'} · data: ${board.dataQuality}`
+    : 'Loading today’s slate…';
+
   const missingStarChecks = Array.isArray((board as any)?.debug?.missingStarChecks)
     ? (board as any).debug.missingStarChecks
     : [];
@@ -329,7 +343,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
             <Flame className="w-5 h-5 text-orange-400" /> Daily HR Edge Board
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            {board ? `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : boardMode === 'preview' ? 'Projection Preview' : 'waiting for lineups'} · data: ${board.dataQuality}` : 'Loading today’s slate…'}
+            {boardSummary}
             {lastUpdated && <span className="text-slate-600"> · updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
           </p>
         </div>
