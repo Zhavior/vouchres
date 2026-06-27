@@ -57,6 +57,7 @@ export interface HrBoardRow {
     pitcherVulnerability?: number;
     parkFactor?: number;
     recentForm?: number;
+    finalScore?: number;
   };
   judge: HrRowJudge;
   dataQuality: "full" | "partial" | "limited" | "projection_preview";

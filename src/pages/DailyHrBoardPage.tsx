@@ -29,6 +29,16 @@ function formTagFromRecentPowerScore(score: number | null | undefined) {
   return 'Slump';
 }
 
+function firstFiniteNumber(...values: unknown[]): number | undefined {
+  for (const value of values) {
+    if (value === null || value === undefined || value === '') continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return undefined;
+}
+
 function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
   const arr = [...rows];
   switch (key) {
@@ -147,9 +157,17 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       const recentForm = candidate.recentForm ?? null;
       const scoreBreakdown = candidate.scoreBreakdown ?? null;
       const recentPowerScore =
-        recentForm && recentForm.recentPowerScore !== undefined && recentForm.recentPowerScore !== null
-          ? Number(recentForm.recentPowerScore)
-          : null;
+        firstFiniteNumber(recentForm?.recentPowerScore, scoreBreakdown?.recentForm) ?? null;
+      const hrScore = firstFiniteNumber(candidate.hrScore, candidate.hrEdge, candidate.score, candidate.vouchScore) ?? 0;
+      const finalScore = firstFiniteNumber(scoreBreakdown?.finalScore, hrScore) ?? 0;
+      const pitcherVulnerability = firstFiniteNumber(
+        scoreBreakdown?.pitcherVulnerability,
+        candidate.pitcherVulnerability,
+        candidate.pitcherVuln,
+        candidate.pitcherScore,
+        ((candidate.reasons ?? []).join(" ").match(/HR\/9 = ([\d.]+)/)?.[1] ?? undefined)
+      ) ?? 0;
+      const parkFactor = firstFiniteNumber(scoreBreakdown?.parkFactor, candidate.parkFactor, candidate.park);
       const lineupStatus = candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected');
       const projectionType =
         candidate.projectionType ??
@@ -171,20 +189,17 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         position: candidate.position ?? candidate.primaryPosition ?? '',
         grade: candidate.grade ?? candidate.tier ?? 'B',
         riskLabel: candidate.riskLabel ?? candidate.riskTier ?? candidate.risk ?? 'Standard',
-        formTag: candidate.formTag ?? candidate.form ?? formTagFromRecentPowerScore(recentPowerScore),
+        formTag: recentPowerScore !== null
+          ? formTagFromRecentPowerScore(recentPowerScore)
+          : candidate.formTag ?? candidate.form ?? 'Average',
         projectionType:
           projectionType,
         lineupStatus,
         battingOrder: candidate.battingOrder ?? candidate.lineupSpot ?? null,
-        hrEdge: Number(candidate.hrEdge ?? candidate.score ?? candidate.hrScore ?? candidate.vouchScore ?? 0),
-        vouchScore: Number(candidate.vouchScore ?? candidate.hrScore ?? candidate.score ?? candidate.hrEdge ?? 0),
-        pitcherVulnerability: Number(
-          candidate.pitcherVulnerability ??
-          candidate.pitcherVuln ??
-          candidate.pitcherScore ??
-          ((candidate.reasons ?? []).join(" ").match(/HR\/9 = ([\d.]+)/)?.[1] ?? 0)
-        ),
-        dataConfidence: Number(candidate.dataConfidence ?? candidate.confidence ?? 50),
+        hrEdge: hrScore,
+        vouchScore: finalScore,
+        pitcherVulnerability,
+        dataConfidence: firstFiniteNumber(candidate.dataConfidence, candidate.confidence) ?? 50,
         weatherBoost:
           candidate.weatherBoost !== undefined && candidate.weatherBoost !== null
             ? Number(candidate.weatherBoost)
@@ -211,7 +226,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         opposingPitcherTeam: candidate.opponent ?? candidate.pitcherTeam ?? 'TBD',
         pitcherHand: candidate.pitcherHand ?? candidate.pitcherThrows ?? '',
         venue: candidate.venue ?? candidate.ballpark ?? candidate.parkName ?? 'Unknown venue',
-        parkFactor: candidate.parkFactor ?? candidate.park ?? candidate.venue ?? 'N/A',
+        parkFactor: parkFactor ?? 'N/A',
         hrMultiplier: candidate.hrMultiplier ?? candidate.hrMult ?? candidate.multiplier ?? 'N/A',
         gameStatus: candidate.status ?? candidate.gameStatus ?? candidate.lineupStatus ?? (boardMode === 'preview' ? 'projected_unconfirmed' : 'projected'),
         lineMovement:
