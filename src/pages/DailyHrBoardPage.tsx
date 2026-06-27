@@ -182,6 +182,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       const row = {
         id: candidate.id ?? candidate.playerId ?? `${candidate.playerName ?? candidate.name ?? 'player'}-${index}`,
         playerId: candidate.playerId ?? candidate.id ?? index,
+        gamePk: candidate.gamePk ?? candidate.gameId ?? gameKey,
         rank: index + 1,
         playerName: candidate.playerName ?? candidate.name ?? candidate.fullName ?? 'Unknown Player',
         team,

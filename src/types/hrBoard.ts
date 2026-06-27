@@ -19,6 +19,8 @@ export interface HrBoardRow {
   playerName: string;
   team: string;
   teamId: number;
+  opponent?: string;
+  gamePk?: number | string;
   headshot: string;
   grade: Grade;
   hrEdge: number;
@@ -69,6 +71,7 @@ export interface HrBoardRow {
   };
   judge: HrRowJudge;
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
+  raw?: Record<string, unknown>;
 }
 
 export interface HrBoardGame {

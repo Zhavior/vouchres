@@ -3,6 +3,7 @@ import type { Express } from "express";
 import { coreRoutes } from "./coreRoutes";
 import { parlayRoutes } from "./parlayRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
+import { shareRoutes } from "./shareRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
@@ -17,6 +18,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", coreRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", playerRegistryRoutes);
+  app.use("/api", shareRoutes);
 
   registerMlbRoutes(app);
   registerHrBoardRoutes(app);

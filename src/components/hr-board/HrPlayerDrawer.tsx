@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Flame, AlertTriangle, Gavel, ShieldCheck, TrendingUp, MapPin, Lock, BarChart3 } from 'lucide-react';
+import { X, Flame, AlertTriangle, Gavel, ShieldCheck, TrendingUp, MapPin, Lock, BarChart3, Share2, Copy } from 'lucide-react';
 import type { HrBoardRow } from '../../types/hrBoard';
 import { GradeBadge, edgeColor, RISK_COLOR } from './HrBoardRow';
+import { apiUrl } from '../../lib/apiBase';
 
 const APPROVAL_COLOR: Record<string, string> = {
   Approved: '#34d399', 'Playable but risky': '#fbbf24', 'Needs more data': '#60a5fa', Avoid: '#f87171',
@@ -26,6 +27,21 @@ function formatNumber(value: unknown, fallback = 'N/A') {
 
 function formatDecimal(value: unknown, digits = 3, fallback = 'N/A') {
   return isFiniteNumber(value) ? value.toFixed(digits) : fallback;
+}
+
+function buildHrShareCardUrl(row: HrBoardRow) {
+  const params = new URLSearchParams({
+    playerId: String(row.playerId),
+    format: 'svg',
+    theme: 'dark',
+  });
+
+  const gamePk = row.gamePk ?? row.raw?.gamePk;
+  if (gamePk !== undefined && gamePk !== null && String(gamePk).trim()) {
+    params.set('gamePk', String(gamePk));
+  }
+
+  return apiUrl(`/api/share/hr-card?${params.toString()}`);
 }
 
 function clampPercent(value: number) {
@@ -130,6 +146,7 @@ type ProTab = typeof PRO_TABS[number];
 
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
   const [activeProTab, setActiveProTab] = useState<ProTab>('Overview');
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   if (!row) return null;
   const isProUser = false;
@@ -147,6 +164,23 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
     reasons: [],
     warnings: [],
   };
+  const shareCardUrl = buildHrShareCardUrl(row);
+
+  const handleOpenShareCard = () => {
+    window.open(shareCardUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyShareCardUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(new URL(shareCardUrl, window.location.origin).toString());
+      setShareStatus('Image URL copied');
+      window.setTimeout(() => setShareStatus(null), 1800);
+    } catch {
+      setShareStatus('Copy unavailable');
+      window.setTimeout(() => setShareStatus(null), 1800);
+    }
+  };
+
   return (
     <div className={`fixed inset-0 z-[60] flex ${isProUser ? 'items-end md:items-stretch md:justify-end' : 'justify-end'}`} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -213,6 +247,28 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             <Metric label="Risk" value={row.riskLabel} color={RISK_COLOR[row.riskLabel]} />
             <Metric label="Data" value={`${row.dataConfidence}%`} />
           </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleOpenShareCard}
+              className="flex items-center justify-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-100 transition-colors hover:border-sky-400/40 hover:bg-sky-500/15"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              Share Image
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyShareCardUrl}
+              className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-900"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy URL
+            </button>
+          </div>
+          {shareStatus && (
+            <p className="text-center text-[10px] font-bold uppercase tracking-wider text-sky-300">{shareStatus}</p>
+          )}
 
           {row.lineupStatus === 'projected_unconfirmed' && (
             <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-3 py-2 text-xs text-amber-100">
