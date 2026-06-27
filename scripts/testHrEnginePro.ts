@@ -21,6 +21,7 @@ async function main() {
     console.log("score:", pick.hrScore, "| tier:", pick.riskTier);
     console.log("pitcher:", pick.opponentPitcherName, "| venue:", pick.venue);
     console.log("breakdown:", pick.scoreBreakdown);
+    console.log("recentForm:", pick.recentForm);
     console.log("reasons:");
     for (const reason of pick.reasons.slice(0, 8)) {
       console.log(" -", reason);

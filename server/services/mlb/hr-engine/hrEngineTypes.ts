@@ -49,6 +49,20 @@ export type HrHitterStats = {
   isoProxy?: number;
 };
 
+export type HrRecentForm = {
+  gamesChecked: number;
+  atBats: number;
+  hits: number;
+  homeRuns: number;
+  doubles: number;
+  triples: number;
+  extraBaseHits: number;
+  totalBases: number;
+  slugging: number;
+  recentHrRate: number;
+  recentPowerScore: number;
+};
+
 export type HrPitcherStats = {
   gamesPlayed?: number;
   gamesStarted?: number;
@@ -69,6 +83,7 @@ export type HrEligibleHitter = {
   playerName: string;
   position: string;
   hitterStats?: HrHitterStats;
+  recentForm?: HrRecentForm;
 
   teamId: number;
   team: string;
@@ -123,6 +138,7 @@ export type HrCandidate = {
   hrScore: number;
   riskTier: HrRiskTier;
   scoreBreakdown: HrScoreBreakdown;
+  recentForm?: HrRecentForm;
 
   reasons: string[];
   warnings: string[];
