@@ -5,6 +5,7 @@ import { calculateHrScore } from "./calculateHrScore";
 import { applyTrustGate } from "./applyTrustGate";
 import { rankHrCandidates } from "./rankHrCandidates";
 import { attachHitterStats } from "./attachHitterStats";
+import { attachRecentHitterForm } from "./attachRecentHitterForm";
 import { attachPitcherStats } from "./attachPitcherStats";
 
 export async function buildHrBoardResponse(input: HrEngineInput = {}): Promise<HrBoardResponse> {
@@ -20,8 +21,13 @@ export async function buildHrBoardResponse(input: HrEngineInput = {}): Promise<H
     season
   );
 
-  const { hitters, warnings: pitcherStatsWarnings } = await attachPitcherStats(
+  const { hitters: recentFormRows, warnings: recentFormWarnings } = await attachRecentHitterForm(
     hitterStatRows,
+    season
+  );
+
+  const { hitters, warnings: pitcherStatsWarnings } = await attachPitcherStats(
+    recentFormRows,
     season
   );
 
@@ -52,7 +58,12 @@ export async function buildHrBoardResponse(input: HrEngineInput = {}): Promise<H
       pitcherMissingBlocked: trustGate.debug.pitcherMissingBlocked,
       hitterStatsMissingBlocked: 0,
       badPairingAuditBlocked: trustGate.debug.badPairingAuditBlocked,
-      warnings: [...rosterWarnings, ...hitterStatsWarnings, ...pitcherStatsWarnings],
+      warnings: [
+        ...rosterWarnings,
+        ...hitterStatsWarnings,
+        ...recentFormWarnings,
+        ...pitcherStatsWarnings,
+      ],
     },
 
     dataQuality: "projection_preview",

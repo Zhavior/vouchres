@@ -146,12 +146,14 @@ export function calculateHrScore(hitter: HrEligibleHitter): HrCandidate {
 
   const hitterPower = hitterPowerFromStats(hitter);
   const pitcherRisk = pitcherVulnerability(hitter);
+  const recentForm = hitter.recentForm;
+  const recentPowerScore = recentForm?.recentPowerScore ?? 50;
 
   const breakdown: HrScoreBreakdown = {
     hitterPower: hitterPower.score,
     pitcherVulnerability: pitcherRisk.score,
     parkFactor: clamp(rawPark, 85, 125),
-    recentForm: 50,
+    recentForm: recentPowerScore,
     lineupConfidence: hitter.lineupStatus === "confirmed" ? 85 : 48,
     riskPenalty: (hitter.opponentPitcherName ? 0 : 12) + hitterPower.smallSamplePenalty,
     finalScore: 0,
@@ -182,6 +184,28 @@ export function calculateHrScore(hitter: HrEligibleHitter): HrCandidate {
     warnings.push("Opposing pitcher missing. Candidate should be treated as watchlist only.");
   }
 
+  const reasons: string[] = [
+    `Active MLB roster hitter for ${hitter.team}.`,
+    `Projected matchup vs ${hitter.opponentPitcherName ?? "TBD"}.`,
+    `Park factor ${rawPark} at ${hitter.venue}.`,
+    ...hitterPower.reasons,
+    ...pitcherRisk.reasons,
+  ];
+
+  if (recentForm) {
+    reasons.push(
+      `Recent 15-game form: ${recentForm.homeRuns} HR, ${recentForm.extraBaseHits} XBH, ${recentForm.slugging.toFixed(3)} SLG.`
+    );
+
+    if (recentForm.recentPowerScore >= 60) {
+      reasons.push("Recent power boost.");
+    }
+
+    if (recentForm.gamesChecked < 15 || recentForm.atBats < 45) {
+      reasons.push("Recent small sample penalty.");
+    }
+  }
+
   return {
     playerId: hitter.playerId,
     playerName: hitter.playerName,
@@ -206,14 +230,8 @@ export function calculateHrScore(hitter: HrEligibleHitter): HrCandidate {
     hrScore,
     riskTier: riskTier(hrScore),
     scoreBreakdown: breakdown,
-
-    reasons: [
-      `Active MLB roster hitter for ${hitter.team}.`,
-      `Projected matchup vs ${hitter.opponentPitcherName ?? "TBD"}.`,
-      `Park factor ${rawPark} at ${hitter.venue}.`,
-      ...hitterPower.reasons,
-      ...pitcherRisk.reasons,
-    ],
+    recentForm,
+    reasons,
 
     warnings,
 

@@ -6,6 +6,7 @@ export type {
   HrEngineDebug,
   HrEngineInput,
   HrPreviewMeta,
+  HrRecentForm,
   HrRiskTier,
   HrScoreBreakdown,
   HrSlateGame,
@@ -19,3 +20,4 @@ export { applyTrustGate } from "./applyTrustGate";
 export { rankHrCandidates } from "./rankHrCandidates";
 export { attachHitterStats } from "./attachHitterStats";
 export { attachPitcherStats } from "./attachPitcherStats";
+export { attachRecentHitterForm } from "./attachRecentHitterForm";
