@@ -246,6 +246,160 @@ export function renderHrShareCardSvg(
   const palette = PALETTES[input.theme] ?? PALETTES.dark;
   const breakdown = candidate.scoreBreakdown;
   const recent = candidate.recentForm;
+
+  const warning = candidate.lineupStatus === "projected_unconfirmed"
+    ? "Projection preview — official lineup not posted yet."
+    : "Confirmed lineup data available.";
+
+  const risk = candidate.riskTier ?? "N/A";
+  const matchup = `${candidate.team ?? "TBD"} vs ${candidate.opponent ?? "TBD"}`;
+  const dateLabel = input.date ?? "Today";
+  const hrScore = rounded(candidate.hrScore);
+  const finalScore = rounded(breakdown?.finalScore ?? candidate.hrScore);
+  const pitcherVulnerability = rounded(breakdown?.pitcherVulnerability);
+  const hitterPower = rounded(breakdown?.hitterPower);
+  const parkFactor = rounded(breakdown?.parkFactor);
+  const recentSignal = rounded(breakdown?.recentForm);
+  const dataConfidence = `${rounded(candidate.dataConfidence)}%`;
+
+  const recentSummary = `${recent?.gamesChecked ?? "15"}G · ${recent?.homeRuns ?? "N/A"} HR · ${recent?.extraBaseHits ?? "N/A"} XBH · ${decimal(recent?.slugging)} SLG`;
+  const pitcherName = candidate.opponentPitcherName ?? "TBD";
+  const venue = candidate.venue ?? "Unknown venue";
+
+  const bar = (
+    label: string,
+    value: string | number | undefined,
+    y: number,
+    color: string,
+  ) => {
+    const numeric = Number(value);
+    const width = Number.isFinite(numeric) ? Math.max(0, Math.min(340, (numeric / 100) * 340)) : 0;
+    return `
+      <text x="0" y="${y}" fill="${palette.muted}" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="900" letter-spacing="0.6">${escapeXml(label)}</text>
+      <text x="382" y="${y}" text-anchor="end" fill="${palette.text}" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(String(value ?? "N/A"))}</text>
+      <rect x="0" y="${y + 14}" width="382" height="12" rx="6" fill="#020617" fill-opacity="0.70" />
+      <rect x="0" y="${y + 14}" width="${width}" height="12" rx="6" fill="${color}" />
+    `;
+  };
+
+  const miniChip = (
+    label: string,
+    value: string | number | undefined,
+    x: number,
+    y: number,
+    w: number,
+    color: string,
+  ) => `
+    <rect x="${x}" y="${y}" width="${w}" height="74" rx="18" fill="#061226" fill-opacity="0.72" stroke="${palette.border}" stroke-width="1.5" />
+    <text x="${x + 20}" y="${y + 27}" fill="${palette.muted}" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="1000" letter-spacing="1.2">${escapeXml(label)}</text>
+    <text x="${x + 20}" y="${y + 57}" fill="${color}" font-size="30" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(String(value ?? "N/A"))}</text>
+  `;
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="VouchEdge HR player share card">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617" />
+      <stop offset="0.48" stop-color="${palette.bg}" />
+      <stop offset="1" stop-color="${palette.bg2}" />
+    </linearGradient>
+
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${palette.accent}" />
+      <stop offset="0.52" stop-color="${palette.accent2}" />
+      <stop offset="1" stop-color="${palette.accent3}" />
+    </linearGradient>
+
+    <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${palette.accent}" stop-opacity="0.16" />
+      <stop offset="0.55" stop-color="#0f172a" stop-opacity="0.72" />
+      <stop offset="1" stop-color="${palette.accent3}" stop-opacity="0.10" />
+    </linearGradient>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="22" result="blur" />
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.12 0 0 0 0 0.73 0 0 0 0 0.95 0 0 0 0.38 0" />
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="22" stdDeviation="20" flood-color="#000000" flood-opacity="0.38"/>
+    </filter>
+
+    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="${palette.accent}" opacity="0.16"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#dots)" opacity="0.55" />
+
+  <circle cx="1025" cy="105" r="250" fill="${palette.accent}" opacity="0.08" filter="url(#softGlow)" />
+  <circle cx="92" cy="552" r="250" fill="${palette.accent2}" opacity="0.08" filter="url(#softGlow)" />
+  <path d="M0 106 C220 66 350 148 540 105 C790 48 950 94 1200 42" stroke="url(#accent)" stroke-width="2" opacity="0.48" fill="none" />
+
+  <rect x="42" y="35" width="1116" height="560" rx="38" fill="url(#panelGlow)" stroke="${palette.border}" stroke-width="2" filter="url(#shadow)" />
+  <rect x="42" y="35" width="1116" height="10" rx="5" fill="url(#accent)" />
+
+  <g transform="translate(78 72)">
+    <rect x="0" y="0" width="68" height="68" rx="20" fill="url(#accent)" />
+    <text x="34" y="43" text-anchor="middle" fill="#020617" font-size="26" font-family="Inter, Arial, sans-serif" font-weight="1000">VE</text>
+
+    <text x="88" y="26" fill="${palette.text}" font-size="30" font-family="Inter, Arial, sans-serif" font-weight="1000" letter-spacing="0.3">VouchEdge</text>
+    <text x="90" y="55" fill="${palette.muted}" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="900" letter-spacing="1.6">HR ENGINE PRO V2 SHARE CARD</text>
+  </g>
+
+  <g transform="translate(78 176)">
+    <text x="0" y="0" fill="${palette.text}" font-size="56" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(truncate(candidate.playerName, 32))}</text>
+    <text x="2" y="42" fill="${palette.muted}" font-size="24" font-family="Inter, Arial, sans-serif" font-weight="900">${escapeXml(truncate(matchup, 54))}</text>
+
+    <rect x="0" y="68" width="516" height="86" rx="22" fill="#020617" fill-opacity="0.44" stroke="${palette.border}" />
+    <text x="24" y="102" fill="${palette.text}" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="900">Venue: ${escapeXml(truncate(venue, 42))}</text>
+    <text x="24" y="132" fill="${palette.muted}" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800">Opposing pitcher: ${escapeXml(truncate(pitcherName, 40))}</text>
+  </g>
+
+  <g transform="translate(796 112)">
+    <circle cx="138" cy="130" r="113" fill="#020617" fill-opacity="0.76" stroke="url(#accent)" stroke-width="6" />
+    <circle cx="138" cy="130" r="91" fill="#0f172a" fill-opacity="0.50" stroke="${palette.border}" stroke-width="1.5" />
+    <text x="138" y="99" text-anchor="middle" fill="${palette.muted}" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="1000" letter-spacing="2">HR EDGE</text>
+    <text x="138" y="162" text-anchor="middle" fill="${palette.accent}" font-size="76" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(hrScore)}</text>
+    <text x="138" y="199" text-anchor="middle" fill="${riskColor(risk)}" font-size="24" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(risk)}</text>
+  </g>
+
+  <g>
+    ${miniChip("P.VULN", pitcherVulnerability, 78, 342, 146, palette.accent)}
+    ${miniChip("HITTER", hitterPower, 238, 342, 146, palette.accent3)}
+    ${miniChip("PARK", parkFactor, 398, 342, 146, palette.accent2)}
+    ${miniChip("RECENT", recentSignal, 558, 342, 146, "#c084fc")}
+    ${miniChip("DATA", dataConfidence, 718, 342, 146, palette.accent)}
+    ${miniChip("FINAL", finalScore, 878, 342, 146, palette.accent3)}
+  </g>
+
+  <g transform="translate(78 442)">
+    <rect x="0" y="0" width="520" height="88" rx="24" fill="#020617" fill-opacity="0.54" stroke="${palette.border}" stroke-width="1.5" />
+    <text x="24" y="32" fill="${palette.muted}" font-size="17" font-family="Inter, Arial, sans-serif" font-weight="1000" letter-spacing="1.3">RECENT FORM</text>
+    <text x="24" y="65" fill="${palette.text}" font-size="25" font-family="Inter, Arial, sans-serif" font-weight="1000">${escapeXml(recentSummary)}</text>
+  </g>
+
+  <g transform="translate(638 440)">
+    <rect x="-22" y="-20" width="438" height="118" rx="24" fill="#020617" fill-opacity="0.44" stroke="${palette.border}" stroke-width="1.5" />
+    ${bar("Hitter power", hitterPower, 10, palette.accent3)}
+    ${bar("Pitcher vulnerability", pitcherVulnerability, 64, palette.accent)}
+  </g>
+
+  <g transform="translate(78 546)">
+    <rect x="0" y="0" width="946" height="37" rx="18" fill="${palette.accent3}" fill-opacity="0.22" stroke="${palette.accent3}" stroke-opacity="0.22" />
+    <text x="24" y="24" fill="${palette.text}" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="900">${escapeXml(warning)}</text>
+  </g>
+
+  <text x="78" y="612" fill="${palette.muted}" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="800">Probability-based research. Not betting advice. No guaranteed outcomes.</text>
+  <text x="1082" y="612" text-anchor="end" fill="${palette.muted}" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="800">${escapeXml(dateLabel)}</text>
+</svg>`;
+},
+) {
+  const palette = PALETTES[input.theme] ?? PALETTES.dark;
+  const breakdown = candidate.scoreBreakdown;
+  const recent = candidate.recentForm;
   const warning = candidate.lineupStatus === "projected_unconfirmed"
     ? "Projection preview — official lineup not posted yet."
     : "Confirmed lineup data available.";
