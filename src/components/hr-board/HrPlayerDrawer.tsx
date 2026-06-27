@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Flame, AlertTriangle, Gavel, ShieldCheck, TrendingUp, MapPin, Lock, BarChart3 } from 'lucide-react';
 import type { HrBoardRow } from '../../types/hrBoard';
 import { GradeBadge, edgeColor, RISK_COLOR } from './HrBoardRow';
@@ -14,17 +14,6 @@ function Metric({ label, value, color }: { label: string; value: string; color?:
       <p className="text-sm font-mono font-black mt-0.5" style={{ color: color ?? '#e2e8f0' }}>{value}</p>
     </div>
   );
-}
-
-function isProPlayerEdgeUnlocked(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    const profile = JSON.parse(localStorage.getItem('vouchedge_profile') || '{}');
-    return profile.subscriptionTier === 'GOLD' || profile.subscriptionTier === 'SELLER_PRO';
-  } catch {
-    return false;
-  }
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -128,6 +117,7 @@ function ProLockedPanel() {
 
 const FUTURE_GRAPHS = [
   ['Last 15 games trend', 'Coming soon with Pro data feed.'],
+  ['Player trend graphs', 'Coming soon with Pro data feed.'],
   ['Batter vs pitcher history', 'Requires matchup history module.'],
   ['Pitch type matchup', 'Requires pitch-type module.'],
   ['Ballpark split chart', 'Requires ballpark split module.'],
@@ -135,13 +125,18 @@ const FUTURE_GRAPHS = [
   ['Weather impact graph', 'Requires weather impact module.'],
 ] as const;
 
+const PRO_TABS = ['Overview', 'Recent Form', 'Vs Team', 'Vs Pitcher', 'Bat Box', 'Graphs', 'AI Notes'] as const;
+type ProTab = typeof PRO_TABS[number];
+
 export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
+  const [activeProTab, setActiveProTab] = useState<ProTab>('Overview');
+
   if (!row) return null;
+  const isProUser = false;
   const topReasons = row.reasons?.slice(0, 5) ?? [];
   const topWarnings = row.warnings?.slice(0, 3) ?? [];
   const recentForm = row.recentForm;
   const breakdown = row.scoreBreakdown;
-  const isPro = isProPlayerEdgeUnlocked();
   const finalScore = isFiniteNumber(breakdown?.finalScore) ? breakdown.finalScore : row.hrEdge;
   const recentPowerScore = isFiniteNumber(recentForm?.recentPowerScore)
     ? recentForm.recentPowerScore
@@ -153,9 +148,16 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
     warnings: [],
   };
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end" onClick={onClose}>
+    <div className={`fixed inset-0 z-[60] flex ${isProUser ? 'items-end md:items-stretch md:justify-end' : 'justify-end'}`} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md h-full bg-[#0b1120] border-l border-slate-800 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`relative w-full bg-[#0b1120] border-slate-800 overflow-y-auto shadow-2xl ${
+          isProUser
+            ? 'h-[94vh] rounded-t-3xl border-t md:h-full md:max-w-6xl md:rounded-none md:border-l md:border-t-0'
+            : 'max-w-md h-full border-l'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-[#0b1120]/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
@@ -174,7 +176,27 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <button onClick={onClose} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className={isProUser ? 'p-4 md:p-5 space-y-4' : 'p-4 space-y-4'}>
+          {isProUser && (
+            <div className="sticky top-[69px] z-[9] -mx-4 md:-mx-5 border-b border-slate-800 bg-[#0b1120]/95 px-4 md:px-5 py-2 backdrop-blur">
+              <div className="flex gap-2 overflow-x-auto scrollbar-none">
+                {PRO_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveProTab(tab)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all ${
+                      activeProTab === tab
+                        ? 'border-sky-400/50 bg-sky-400/15 text-sky-100'
+                        : 'border-slate-800 bg-slate-950/50 text-slate-500 hover:text-slate-200'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Verdict banner */}
           <div className="p-3 rounded-xl border flex items-center justify-between" style={{ borderColor: (APPROVAL_COLOR[j.approvalStatus] ?? '#94a3b8') + '55', background: (APPROVAL_COLOR[j.approvalStatus] ?? '#94a3b8') + '12' }}>
             <div className="flex items-center gap-2">
@@ -228,68 +250,33 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             </div>
           </Section>
 
-          {isPro ? (
+          {!isProUser && (
+            <Section icon={BarChart3} title="Basic score breakdown" tone="#38bdf8">
+              <div className="grid grid-cols-4 gap-2">
+                <Metric label="Hitter" value={formatNumber(breakdown?.hitterPower)} color="#fb923c" />
+                <Metric label="P.Vuln" value={formatNumber(breakdown?.pitcherVulnerability)} color="#22d3ee" />
+                <Metric label="Park" value={formatNumber(breakdown?.parkFactor)} color="#34d399" />
+                <Metric label="Recent" value={formatNumber(recentPowerScore)} color="#c084fc" />
+              </div>
+            </Section>
+          )}
+
+          {isProUser ? (
             <>
-              <Section icon={BarChart3} title="Pro Player Edge Lab" tone="#38bdf8">
-                <div className="space-y-4 rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-300">Score Breakdown Graph</h5>
-                      <span className="rounded-full border border-orange-400/20 bg-orange-400/10 px-2 py-0.5 text-[10px] font-mono font-black text-orange-200">
-                        HR Score {formatNumber(row.hrEdge)}
-                      </span>
-                    </div>
-                    <div className="space-y-2.5">
-                      <GraphBar label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
-                      <GraphBar label="Pitcher Vulnerability" value={breakdown?.pitcherVulnerability} color="#38bdf8" />
-                      <GraphBar label="Park Factor" value={breakdown?.parkFactor} max={120} color="#34d399" />
-                      <GraphBar label="Recent Form" value={breakdown?.recentForm} color="#c084fc" />
-                      <GraphBar label="Lineup Confidence" value={breakdown?.lineupConfidence} color="#facc15" />
-                      <GraphBar label="Risk Penalty" value={breakdown?.riskPenalty} color="#f87171" />
-                      <GraphBar label="Final Score" value={finalScore} color="#f97316" />
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-800/80 pt-3">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-300">Recent Form Graph</h5>
-                      <span className="text-[10px] font-mono text-slate-500">Last {recentForm?.gamesChecked ?? 15} games</span>
-                    </div>
-                    <div className="space-y-2.5">
-                      <GraphBar label="Home Runs" value={recentForm?.homeRuns} max={10} color="#fb923c" />
-                      <GraphBar label="Extra-Base Hits" value={recentForm?.extraBaseHits} max={15} color="#facc15" />
-                      <GraphBar label="Hits" value={recentForm?.hits} max={25} color="#38bdf8" />
-                      <GraphBar label="Total Bases" value={recentForm?.totalBases} max={60} color="#34d399" />
-                      <GraphBar label="Recent Power Score" value={recentPowerScore} color="#c084fc" />
-                    </div>
-                    <p className="mt-2 text-[10px] text-slate-500">
-                      Recent 15-game stats: {recentForm?.homeRuns ?? 'N/A'} HR, {recentForm?.extraBaseHits ?? 'N/A'} XBH, {formatDecimal(recentForm?.slugging)} SLG.
-                    </p>
-                  </div>
-
-                  <div className="border-t border-slate-800/80 pt-3">
-                    <h5 className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-300">HR Signal Radar / Matrix</h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      <SignalTile label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
-                      <SignalTile label="Pitcher Vuln" value={breakdown?.pitcherVulnerability} color="#38bdf8" />
-                      <SignalTile label="Park Factor" value={isFiniteNumber(breakdown?.parkFactor) ? Math.min(100, breakdown.parkFactor) : undefined} color="#34d399" />
-                      <SignalTile label="Recent Form" value={recentPowerScore} color="#c084fc" />
-                      <SignalTile label="Data Confidence" value={row.dataConfidence} color="#22d3ee" />
-                    </div>
-                  </div>
-                </div>
-              </Section>
-
-              <Section icon={Lock} title="Pro locked future graphs" tone="#94a3b8">
-                <div className="grid gap-2">
-                  {FUTURE_GRAPHS.map(([title, detail]) => (
-                    <LockedGraphPlaceholder key={title} title={title} detail={detail} />
-                  ))}
-                </div>
-              </Section>
+              <ProTabContent
+                activeTab={activeProTab}
+                row={row}
+                breakdown={breakdown}
+                recentForm={recentForm}
+                finalScore={finalScore}
+                recentPowerScore={recentPowerScore}
+                topReasons={topReasons}
+                topWarnings={topWarnings}
+                judgeNote={j.judgeNote}
+              />
             </>
           ) : (
-            <Section icon={Lock} title="Pro graph previews" tone="#38bdf8">
+            <Section icon={Lock} title="Player Edge Lab Pro" tone="#38bdf8">
               <ProLockedPanel />
             </Section>
           )}
@@ -325,6 +312,182 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
           <p className="text-[10px] text-slate-600 text-center pt-2">Probability-based research for entertainment — not betting advice. No guaranteed outcomes.</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ProTabContent({
+  activeTab,
+  row,
+  breakdown,
+  recentForm,
+  finalScore,
+  recentPowerScore,
+  topReasons,
+  topWarnings,
+  judgeNote,
+}: {
+  activeTab: ProTab;
+  row: HrBoardRow;
+  breakdown: HrBoardRow['scoreBreakdown'];
+  recentForm: HrBoardRow['recentForm'];
+  finalScore: number;
+  recentPowerScore?: number;
+  topReasons: string[];
+  topWarnings: string[];
+  judgeNote?: string;
+}) {
+  if (activeTab === 'Overview') {
+    return (
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <Section icon={BarChart3} title="Score Breakdown Graph" tone="#38bdf8">
+          <div className="space-y-3 rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">Live HR Engine Pro v2 payload</span>
+              <span className="rounded-full border border-orange-400/20 bg-orange-400/10 px-2 py-0.5 text-[10px] font-mono font-black text-orange-200">
+                HR Score {formatNumber(row.hrEdge)}
+              </span>
+            </div>
+            <GraphBar label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
+            <GraphBar label="Pitcher Vulnerability" value={breakdown?.pitcherVulnerability} color="#38bdf8" />
+            <GraphBar label="Park Factor" value={breakdown?.parkFactor} max={120} color="#34d399" />
+            <GraphBar label="Recent Form" value={breakdown?.recentForm} color="#c084fc" />
+            <GraphBar label="Lineup Confidence" value={breakdown?.lineupConfidence} color="#facc15" />
+            <GraphBar label="Risk Penalty" value={breakdown?.riskPenalty} color="#f87171" />
+            <GraphBar label="Final Score" value={finalScore} color="#f97316" />
+          </div>
+        </Section>
+
+        <Section icon={Flame} title="HR Signal Radar / Matrix" tone="#fb923c">
+          <div className="grid grid-cols-2 gap-2">
+            <SignalTile label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
+            <SignalTile label="Pitcher Vuln" value={breakdown?.pitcherVulnerability} color="#38bdf8" />
+            <SignalTile label="Park Factor" value={isFiniteNumber(breakdown?.parkFactor) ? Math.min(100, breakdown.parkFactor) : undefined} color="#34d399" />
+            <SignalTile label="Recent Form" value={recentPowerScore} color="#c084fc" />
+            <SignalTile label="Data Confidence" value={row.dataConfidence} color="#22d3ee" />
+          </div>
+        </Section>
+      </div>
+    );
+  }
+
+  if (activeTab === 'Recent Form') {
+    return (
+      <Section icon={TrendingUp} title="Recent Form Graph" tone="#c084fc">
+        <div className="space-y-3 rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <Metric label="Last" value={`${recentForm?.gamesChecked ?? 15} G`} />
+            <Metric label="HR" value={String(recentForm?.homeRuns ?? 'N/A')} color="#fb923c" />
+            <Metric label="XBH" value={String(recentForm?.extraBaseHits ?? 'N/A')} color="#facc15" />
+            <Metric label="Hits" value={String(recentForm?.hits ?? 'N/A')} color="#38bdf8" />
+            <Metric label="SLG" value={formatDecimal(recentForm?.slugging)} color="#c084fc" />
+          </div>
+          <GraphBar label="Home Runs" value={recentForm?.homeRuns} max={10} color="#fb923c" />
+          <GraphBar label="Extra-Base Hits" value={recentForm?.extraBaseHits} max={15} color="#facc15" />
+          <GraphBar label="Hits" value={recentForm?.hits} max={25} color="#38bdf8" />
+          <GraphBar label="Total Bases" value={recentForm?.totalBases} max={60} color="#34d399" />
+          <GraphBar label="Recent Power Score" value={recentPowerScore} color="#c084fc" />
+          <p className="text-[10px] text-slate-500">
+            Recent 15-game stats: {recentForm?.homeRuns ?? 'N/A'} HR, {recentForm?.extraBaseHits ?? 'N/A'} XBH, {formatDecimal(recentForm?.slugging)} SLG.
+          </p>
+        </div>
+      </Section>
+    );
+  }
+
+  if (activeTab === 'Vs Team') {
+    return (
+      <Section icon={ShieldCheck} title={`Vs ${row.opponent} research`} tone="#34d399">
+        <div className="grid gap-2 md:grid-cols-2">
+          <LockedGraphPlaceholder title="Last 10 games vs current opponent team" detail="Coming soon: last 10 games vs team." />
+          <LockedGraphPlaceholder title="Hits vs this team" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="RBIs vs this team" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Runs vs this team" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Stolen bases vs this team" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Home runs vs this team" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Doubles / extra-base hits" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Strikeouts and walks" detail="Requires Pro matchup history feed." />
+        </div>
+      </Section>
+    );
+  }
+
+  if (activeTab === 'Vs Pitcher') {
+    return (
+      <Section icon={TrendingUp} title="Batter vs Pitcher" tone="#38bdf8">
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+            <p className="text-xs text-slate-300">
+              Current opposing pitcher: <span className="font-black text-slate-100">{row.opponentPitcherName ?? row.opposingPitcher}</span>
+            </p>
+            <div className="mt-3">
+              <GraphBar label="Pitcher Vulnerability" value={breakdown?.pitcherVulnerability ?? row.pitcherVulnerability} color="#38bdf8" />
+            </div>
+          </div>
+          <LockedGraphPlaceholder title="Batter vs pitcher history" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Pitch type matchup" detail="Requires pitch-type module." />
+        </div>
+      </Section>
+    );
+  }
+
+  if (activeTab === 'Bat Box') {
+    return (
+      <Section icon={MapPin} title="Bat Box" tone="#facc15">
+        <div className="grid gap-2 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+            <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-300">Batter box percentage</div>
+            <GraphBar label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
+            <p className="mt-2 text-[10px] text-slate-500">Current view uses HR Engine hitter power. Detailed box-location percentage requires zone feed.</p>
+          </div>
+          <LockedGraphPlaceholder title="Hot/cold zones" detail="Requires zone heatmap module." />
+          <LockedGraphPlaceholder title="Team vulnerability" detail="Requires team vulnerability module." />
+          <LockedGraphPlaceholder title="Park/weather impact" detail="Weather impact graph requires weather module. Park factor uses existing payload." />
+        </div>
+      </Section>
+    );
+  }
+
+  if (activeTab === 'Graphs') {
+    return (
+      <Section icon={BarChart3} title="Graphs" tone="#38bdf8">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+            <h5 className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-300">Available now</h5>
+            <GraphBar label="HR Score" value={row.hrEdge} color="#fb923c" />
+            <GraphBar label="Pitcher Vulnerability" value={breakdown?.pitcherVulnerability} color="#38bdf8" />
+            <GraphBar label="Park Factor" value={breakdown?.parkFactor} max={120} color="#34d399" />
+            <GraphBar label="Recent Form" value={recentPowerScore} color="#c084fc" />
+          </div>
+          <div className="grid gap-2">
+            {FUTURE_GRAPHS.map(([title, detail]) => (
+              <LockedGraphPlaceholder key={title} title={title} detail={detail} />
+            ))}
+          </div>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Section icon={Gavel} title="AI Notes" tone="#a78bfa">
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3">
+          <p className="text-xs leading-relaxed text-slate-300">{judgeNote ?? 'No AI judge note available.'}</p>
+          <div className="mt-3 space-y-1">
+            {topReasons.map((reason, index) => (
+              <p key={`${row.playerId}-pro-reason-${index}`} className="text-[11px] text-slate-400">• {reason}</p>
+            ))}
+          </div>
+        </div>
+      </Section>
+      <Section icon={AlertTriangle} title="Warnings" tone="#fbbf24">
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/35 p-3 space-y-1">
+          {(topWarnings.length ? topWarnings : ['Lineup changes, late scratches, and pitcher changes can alter the read.']).map((warning, index) => (
+            <p key={`${row.playerId}-pro-warning-${index}`} className="text-[11px] text-slate-400">• {warning}</p>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }
