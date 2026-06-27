@@ -346,6 +346,67 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
             </div>
           )}
 
+          <Section icon={TrendingUp} title="HR Player Profile" tone="#22d3ee">
+            <div className="space-y-3">
+              <div className="rounded-xl border border-slate-800 bg-slate-950/55 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Today’s profile</p>
+                    <p className="mt-1 text-sm font-black text-slate-100">{row.playerName}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {row.team} vs {row.opponent} · {row.venue ?? 'Unknown venue'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">HR Edge</p>
+                    <p className="text-2xl font-black" style={{ color: edgeColor(row.hrEdge) }}>{row.hrEdge}%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Opposing pitcher</p>
+                  <p className="mt-1 text-xs font-bold text-slate-200">
+                    {row.opponentPitcherName ?? row.opposingPitcher ?? 'TBD'}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">
+                    {row.opposingPitcherTeam ?? row.opponent ?? 'Opponent'} · P.VULN {row.pitcherVulnerability}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Data status</p>
+                  <p className="mt-1 text-xs font-bold text-slate-200">
+                    {row.lineupStatus === 'projected_unconfirmed' ? 'Projected preview' : 'Lineup checked'}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">
+                    Confidence {row.dataConfidence}% · Risk {row.riskLabel}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                <Metric label="Hitter" value={formatNumber(breakdown?.hitterPower)} color="#d6a64f" />
+                <Metric label="P.Vuln" value={formatNumber(breakdown?.pitcherVulnerability)} color="#22d3ee" />
+                <Metric label="Park" value={formatNumber(breakdown?.parkFactor)} color="#34d399" />
+                <Metric label="Final" value={formatNumber(finalScore)} color="#f8fafc" />
+              </div>
+
+              <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Profile read</p>
+                  <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-sky-200">
+                    HR research
+                  </span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-400">
+                  This profile combines hitter power, pitcher vulnerability, park factor, recent form, lineup status, and data confidence from the active HR Engine row.
+                </p>
+              </div>
+            </div>
+          </Section>
+
           <Section icon={ShieldCheck} title="Why this pick?">
             <ul className="space-y-1">
               {topReasons.map((reason, index) => (
