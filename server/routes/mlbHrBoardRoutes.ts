@@ -19,12 +19,7 @@ import type { Express, Request, Response } from "express";
 import { buildValidatedHrBoard } from "../services/mlb/hrPipeline";
 import { buildHrBoard, getHrBoardPlayer } from "../services/mlb/dailyHrBoardService";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
-
-function parsePreviewLimit(value: unknown): number {
-  const parsed = Number.parseInt(String(value ?? ""), 10);
-  if (!Number.isFinite(parsed)) return 50;
-  return Math.max(10, Math.min(350, parsed));
-}
+import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
@@ -41,45 +36,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/today", async (req: Request, res: Response) => {
     try {
       const result = await buildValidatedHrBoard();
-      const previewLimit = parsePreviewLimit(req.query.previewLimit);
-      const eligiblePreviewPoolCount = result.debug.eligiblePreviewPoolCount ?? result.projectedCandidates.length;
-      const scoredPreviewPoolCount = result.debug.scoredPreviewPoolCount ?? result.projectedCandidates.length;
-      const projectedCandidates = result.projectedCandidates.slice(0, previewLimit);
-      res.json({
-        date: result.date,
-        gameCount: result.gameCount,
-        generatedAt: new Date().toISOString(),
-        dataQuality: result.candidates.length > 0 ? "partial" : projectedCandidates.length > 0 ? "projection_preview" : "limited",
-        disclaimer: "Probability-based research using real MLB season stats. For entertainment only — not betting advice. No guaranteed outcomes.",
-        rosterAudit: result.rosterAudit,
-        candidates: result.candidates,
-        projectedCandidates,
-        previewMeta: {
-          previewLimit,
-          eligiblePreviewPoolCount,
-          scoredPreviewPoolCount,
-          projectedPreviewCount: projectedCandidates.length,
-        },
-        pool: {
-          totalPlayersChecked: result.pool.totalPlayersChecked,
-          confirmedStarters: result.pool.confirmedStarters,
-          projectedStarters: result.pool.projectedStarters,
-          benchOrUnknown: result.pool.benchOrUnknown,
-          injuredScratchedBlocked: result.pool.injuredScratchedBlocked,
-          hrCandidatesScored: result.pool.hrCandidatesScored,
-        },
-        debug: {
-          ...result.debug,
-          eligiblePreviewPoolCount,
-          scoredPreviewPoolCount,
-          projectedPreviewCount: projectedCandidates.length,
-        },
-        note: result.candidates.length > 0
-          ? "Confirmed HR Board — every candidate passed team/game/injury/lineup/pitcher checks."
-          : projectedCandidates.length > 0
-            ? "Projection Preview — official lineups are not posted yet. Preview rows are roster/currentTeam verified only."
-            : "Waiting for official lineups or safe preview candidates.",
-      });
+      res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
     } catch (err: any) {
       console.error("[hr-board/today] validated pipeline failed:", err.message);
       res.status(503).json({
@@ -131,31 +88,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/date/:date", async (req: Request, res: Response) => {
     try {
       const result = await buildValidatedHrBoard(req.params.date);
-      const previewLimit = parsePreviewLimit(req.query.previewLimit);
-      const eligiblePreviewPoolCount = result.debug.eligiblePreviewPoolCount ?? result.projectedCandidates.length;
-      const scoredPreviewPoolCount = result.debug.scoredPreviewPoolCount ?? result.projectedCandidates.length;
-      const projectedCandidates = result.projectedCandidates.slice(0, previewLimit);
-      res.json({
-        date: result.date,
-        gameCount: result.gameCount,
-        candidates: result.candidates,
-        projectedCandidates,
-        previewMeta: {
-          previewLimit,
-          eligiblePreviewPoolCount,
-          scoredPreviewPoolCount,
-          projectedPreviewCount: projectedCandidates.length,
-        },
-        pool: result.pool,
-        rosterAudit: result.rosterAudit,
-        disclaimer: result.disclaimer,
-        debug: {
-          ...result.debug,
-          eligiblePreviewPoolCount,
-          scoredPreviewPoolCount,
-          projectedPreviewCount: projectedCandidates.length,
-        },
-      });
+      res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
     } catch (err: any) {
       res.status(503).json({ error: "HR board unavailable", message: err?.message });
     }
