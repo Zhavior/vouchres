@@ -404,6 +404,23 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
                   This profile combines hitter power, pitcher vulnerability, park factor, recent form, lineup status, and data confidence from the active HR Engine row.
                 </p>
               </div>
+
+              <div className="rounded-xl border border-slate-800 bg-slate-950/45 p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Signal stack</p>
+                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">
+                    live row
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  <SignalBar label="Hitter power" value={Number(formatNumber(breakdown?.hitterPower)) || 0} color="#d6a64f" />
+                  <SignalBar label="Pitcher vulnerability" value={Number(formatNumber(breakdown?.pitcherVulnerability)) || 0} color="#22d3ee" />
+                  <SignalBar label="Park factor" value={Number(formatNumber(breakdown?.parkFactor)) || 0} color="#34d399" />
+                  <SignalBar label="Recent form" value={Number(formatNumber(breakdown?.recentForm)) || 0} color="#818cf8" />
+                  <SignalBar label="Data confidence" value={Number(row.dataConfidence) || 0} color="#f8fafc" />
+                </div>
+              </div>
             </div>
           </Section>
 
