@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, CloudSun, Flame } from 'lucide-react';
 import type { HrBoardGame, HrBoardRow as Row } from '../../types/hrBoard';
-import HrBoardRow, { GradeBadge, Move, FORM_COLOR, edgeColor } from './HrBoardRow';
+import HrBoardRow, { GradeBadge, Move, edgeColor } from './HrBoardRow';
 
 const COLUMNS = [
   'Player', 'Context', 'HR Score', 'Model Signals', 'Vouch', 'Data / Status', '',
