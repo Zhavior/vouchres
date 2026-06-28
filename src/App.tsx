@@ -35,6 +35,9 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
+import PlayerEdgeLabPage from './pages/pro/PlayerEdgeLabPage';
+import TeamMatchupLabPage from './pages/pro/TeamMatchupLabPage';
+import ProGraphsLabPage from './pages/pro/ProGraphsLabPage';
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
@@ -51,6 +54,18 @@ function resolveDevSectionFromLocation() {
 
   if (target === 'live-game-lab' || target === '/live-game-lab') {
     return 'live_game_lab';
+  }
+
+  if (target === 'player-edge-lab' || target === '/player-edge-lab') {
+    return 'player_edge_lab';
+  }
+
+  if (target === 'team-matchup-lab' || target === '/team-matchup-lab') {
+    return 'team_matchup_lab';
+  }
+
+  if (target === 'pro-graphs-lab' || target === '/pro-graphs-lab') {
+    return 'pro_graphs_lab';
   }
 
   if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {
@@ -578,6 +593,12 @@ export default function App() {
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
       case 'live_game_lab':
         return <LiveGameLabPage />;
+      case 'player_edge_lab':
+        return <PlayerEdgeLabPage />;
+      case 'team_matchup_lab':
+        return <TeamMatchupLabPage />;
+      case 'pro_graphs_lab':
+        return <ProGraphsLabPage />;
       case 'vouchscan':
         return <VouchScan />;
       case 'live_games':
