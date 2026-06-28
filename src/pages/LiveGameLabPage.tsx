@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, Crown, Flame, Search } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { HrBoardResponse, HrBoardRow } from '../types/hrBoard';
 import { normalizeHrPlayers, type NormalizedHrPlayer } from '../adapters/hrBoardAdapter';
+import { buildGameProfile } from '../adapters/gameProfileAdapter';
 import ProGraphShell from '../components/pro/ProGraphShell';
 import ProLockedCard from '../components/pro/ProLockedCard';
 import ProSignalBar from '../components/pro/ProSignalBar';
