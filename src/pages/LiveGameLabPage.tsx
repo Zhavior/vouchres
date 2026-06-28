@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Crown, Flame, Search } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { HrBoardResponse, HrBoardRow } from '../types/hrBoard';
+import { normalizeHrPlayers, type NormalizedHrPlayer } from '../adapters/hrBoardAdapter';
 import ProGraphShell from '../components/pro/ProGraphShell';
 import ProLockedCard from '../components/pro/ProLockedCard';
 import ProSignalBar from '../components/pro/ProSignalBar';
@@ -15,7 +16,7 @@ type GameGroup = {
   pitcher: string;
   lineupStatus: string;
   confidence: number;
-  rows: HrBoardRow[];
+  rows: NormalizedHrPlayer[];
 };
 
 function asRows(board: HrBoardResponse | null): HrBoardRow[] {
@@ -24,7 +25,7 @@ function asRows(board: HrBoardResponse | null): HrBoardRow[] {
   return [];
 }
 
-function groupRows(rows: HrBoardRow[]): GameGroup[] {
+function groupRows(rows: NormalizedHrPlayer[]): GameGroup[] {
   const map = new Map<string, HrBoardRow[]>();
   rows.forEach((row) => {
     const key = String(row.gamePk ?? `${row.team}-${row.opponent ?? 'TBD'}`);
@@ -77,7 +78,7 @@ export default function LiveGameLabPage() {
     };
   }, []);
 
-  const groups = useMemo(() => groupRows(asRows(board)), [board]);
+  const groups = useMemo(() => groupRows(normalizeHrPlayers(asRows(board))), [board]);
   const selected = groups.find((game) => game.key === selectedGameKey) ?? groups[0] ?? null;
   const hrThreats = selected?.rows.slice(0, 6) ?? [];
 
