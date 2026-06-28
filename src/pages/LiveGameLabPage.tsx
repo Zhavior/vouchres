@@ -1,3 +1,4 @@
+import { navigateToSection } from '../lib/appNavigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Crown, Flame, Search } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
@@ -138,13 +139,13 @@ export default function LiveGameLabPage() {
 
           <section className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
-              <button type="button" onClick={() => { window.location.hash = '#player-edge-lab'; }} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 p-4 text-left text-sm font-black text-cyan-100 hover:border-cyan-300/35">
+              <button type="button" onClick={() => navigateToSection('player_edge_lab')} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 p-4 text-left text-sm font-black text-cyan-100 hover:border-cyan-300/35">
                 Open Player Edge Lab
               </button>
-              <button type="button" onClick={() => { window.location.hash = '#team-matchup-lab'; }} className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4 text-left text-sm font-black text-emerald-100 hover:border-emerald-300/35">
+              <button type="button" onClick={() => navigateToSection('team_matchup_lab')} className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4 text-left text-sm font-black text-emerald-100 hover:border-emerald-300/35">
                 Open Team Matchup Lab
               </button>
-              <button type="button" onClick={() => { window.location.hash = '#pro-graphs-lab'; }} className="rounded-2xl border border-amber-300/15 bg-amber-300/5 p-4 text-left text-sm font-black text-amber-100 hover:border-amber-300/35">
+              <button type="button" onClick={() => navigateToSection('pro_graphs_lab')} className="rounded-2xl border border-amber-300/15 bg-amber-300/5 p-4 text-left text-sm font-black text-amber-100 hover:border-amber-300/35">
                 Open Pro Graphs Lab
               </button>
             </div>
