@@ -6,7 +6,7 @@ import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, 
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Trophy, LayoutDashboard, Home, Award, Tv, Sliders, Cpu, Activity,
+  Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles,
   MessageSquare, ShoppingBag, User, Settings,
 };

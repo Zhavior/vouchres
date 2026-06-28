@@ -16,6 +16,7 @@ import ResultsStudio from './components/results/ResultsStudio';
 import SmartAiEngine from './components/SmartAiEngine';
 import MlbIntelligenceHub from './components/MlbIntelligenceHub';
 import DailyHrBoardPage from './pages/DailyHrBoardPage';
+import LiveGameLabPage from './pages/LiveGameLabPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import LiveGamesPro from './components/LiveGamesPro';
@@ -45,6 +46,10 @@ function resolveDevSectionFromLocation() {
 
   if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
     return 'hr_board';
+  }
+
+  if (target === 'live-game-lab' || target === '/live-game-lab') {
+    return 'live_game_lab';
   }
 
   return null;
@@ -535,6 +540,8 @@ export default function App() {
         return <MlbIntelligenceHub />;
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
+      case 'live_game_lab':
+        return <LiveGameLabPage />;
       case 'vouchscan':
         return <VouchScan />;
       case 'live_games':
