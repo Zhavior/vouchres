@@ -11,3 +11,5 @@ export function VerifiedDataNotice({
     </div>
   );
 }
+
+export default VerifiedDataNotice;

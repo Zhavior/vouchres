@@ -27,3 +27,5 @@ export function ProGraphShell({ title, description, children }: ProGraphShellPro
     </div>
   );
 }
+
+export default ProGraphShell;

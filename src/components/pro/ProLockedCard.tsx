@@ -31,3 +31,5 @@ export function ProLockedCard({
     </div>
   );
 }
+
+export default ProLockedCard;

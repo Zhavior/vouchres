@@ -15,3 +15,5 @@ export function ProPageHeader({ title, subtitle, badge = 'Pro Research' }: ProPa
     </div>
   );
 }
+
+export default ProPageHeader;

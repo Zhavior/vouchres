@@ -22,3 +22,5 @@ export function ProSignalBar({ label, value, color = '#22d3ee' }: ProSignalBarPr
     </div>
   );
 }
+
+export default ProSignalBar;
