@@ -19,6 +19,7 @@ interface HomeFeedLayoutProps {
   children: React.ReactNode;
   activeLegs?: Leg[];
   savedSlips?: Parlay[];
+  isRouteSwitching?: boolean;
 }
 
 export default function HomeFeedLayout({
@@ -31,6 +32,7 @@ export default function HomeFeedLayout({
   children,
   activeLegs = [],
   savedSlips = [],
+  isRouteSwitching = false,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
@@ -185,8 +187,21 @@ export default function HomeFeedLayout({
           )}
 
           {/* Render Active Page Content */}
-          <div className="w-full h-full" id="inner-view-slot">
-            {children}
+          <div className="relative min-h-screen w-full" id="inner-view-slot">
+            {isRouteSwitching && (
+              <div className="pointer-events-none absolute inset-x-4 top-4 z-50 rounded-2xl border border-cyan-300/20 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <div className="h-3 w-3 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Loading VouchEdge screen</div>
+                    <div className="text-xs text-slate-500">Keeping the app active while the next lab mounts.</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className={`min-h-screen transition-opacity duration-150 ${isRouteSwitching ? 'opacity-60' : 'opacity-100'}`}>
+              {children}
+            </div>
           </div>
         </main>
 

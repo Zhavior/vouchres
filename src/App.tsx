@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import HomeFeedPage from './social/feed/HomeFeedPage';
 import ParlayLab from './components/ParlayLab';
@@ -31,6 +31,7 @@ import SubscriberHub from './components/SubscriberHub';
 import { X } from 'lucide-react';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
+import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
@@ -63,10 +64,41 @@ export default function App() {
     return 'welcome';
   });
   const activeSectionRef = useRef(activeSection);
+  const routeSwitchTimerRef = useRef<number | null>(null);
+  const [isPendingRoute, startRouteTransition] = useTransition();
+  const [isRouteSwitching, setIsRouteSwitching] = useState(false);
+
+  const navigateSection = (section: string) => {
+    if (!section || section === activeSectionRef.current) return;
+
+    setIsRouteSwitching(true);
+    if (routeSwitchTimerRef.current) {
+      window.clearTimeout(routeSwitchTimerRef.current);
+    }
+
+    window.requestAnimationFrame(() => {
+      startRouteTransition(() => {
+        setActiveSection(section);
+      });
+    });
+
+    routeSwitchTimerRef.current = window.setTimeout(() => {
+      setIsRouteSwitching(false);
+      routeSwitchTimerRef.current = null;
+    }, 450);
+  };
   
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
+
+  useEffect(() => {
+    return () => {
+      if (routeSwitchTimerRef.current) {
+        window.clearTimeout(routeSwitchTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -74,7 +106,7 @@ export default function App() {
     const syncSectionFromLocation = () => {
       const locationSection = resolveDevSectionFromLocation();
       if (locationSection) {
-        setActiveSection(locationSection);
+        navigateSection(locationSection);
       }
     };
 
@@ -491,9 +523,9 @@ export default function App() {
   const renderMainView = () => {
     switch (activeSection) {
       case 'welcome':
-        return <WelcomePortal onSectionChange={setActiveSection} />;
+        return <WelcomePortal onSectionChange={navigateSection} />;
       case 'today':
-        return <TodayDashboard onSectionChange={setActiveSection} savedSlips={savedSlips} />;
+        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
       case 'feed':
         return (
           <HomeFeedPage
@@ -508,7 +540,7 @@ export default function App() {
             savedVouchIds={savedVouchIds}
             onAddComment={handleAddComment}
             profile={profile}
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
           />
         );
       case 'build':
@@ -518,7 +550,7 @@ export default function App() {
             savedParlays={savedSlips}
             legs={activeLegs}
             setLegs={setActiveLegs}
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
             liveGames={liveGames}
             onSaveVouch={handleSaveVouch}
             posts={posts}
@@ -529,7 +561,7 @@ export default function App() {
       case 'ai_engine':
         return (
           <SmartAiEngine
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
             onAddLegToParlay={handleAddLegFromResearch}
             onSaveVouch={handleSaveVouch}
             onPostCreated={handlePostCreated}
@@ -547,7 +579,7 @@ export default function App() {
       case 'live_games':
         return (
           <LiveGamesPro
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
             onAddLegToParlay={handleAddLegFromResearch}
           />
         );
@@ -574,7 +606,7 @@ export default function App() {
         return (
           <Leaderboard 
             profile={profile}
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
           />
         );
       case 'results':
@@ -637,7 +669,7 @@ export default function App() {
           <SubscriberHub
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
           />
         );
       case 'settings':
@@ -654,7 +686,7 @@ export default function App() {
           <CustomizePage
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
-            onSectionChange={setActiveSection}
+            onSectionChange={navigateSection}
           />
         );
       default:
@@ -668,19 +700,22 @@ export default function App() {
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
-      <HomeFeedLayout
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-        posts={posts}
-        profile={profile}
-        savedVouchIds={savedVouchIds}
-        onSaveVouch={handleSaveVouch}
-        activeLegs={activeLegs}
-        savedSlips={savedSlips}
-      >
-        {renderMainView()}
-        {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
-      </HomeFeedLayout>
+      <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
+        <HomeFeedLayout
+          activeSection={activeSection}
+          onSectionChange={navigateSection}
+          posts={posts}
+          profile={profile}
+          savedVouchIds={savedVouchIds}
+          onSaveVouch={handleSaveVouch}
+          activeLegs={activeLegs}
+          savedSlips={savedSlips}
+          isRouteSwitching={isRouteSwitching || isPendingRoute}
+        >
+          {renderMainView()}
+          {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
+        </HomeFeedLayout>
+      </AppErrorBoundary>
     </ThemeProvider>
   );
 }
