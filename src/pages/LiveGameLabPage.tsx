@@ -224,6 +224,17 @@ export default function LiveGameLabPage() {
               </div>
             </div>
 
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-5">
+              <div className="mb-4 text-sm font-black text-slate-100">Game Research Roadmap</div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <Snapshot label="Runs graph" value="Locked feed" />
+                <Snapshot label="Hits graph" value="Locked feed" />
+                <Snapshot label="HR graph" value="HR board connected" />
+                <Snapshot label="Strikeouts" value="Locked feed" />
+                <Snapshot label="History" value="Locked feed" />
+              </div>
+            </div>
+
             <ProLockedCard
               title="Match History"
               description="Past games between these teams, runs, hits, HRs, and strikeouts require a verified matchup history feed."
