@@ -4,6 +4,10 @@ import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
+
+/** Sidebar section order. Ungrouped items (e.g. Welcome) render first, headerless. */
+const GROUP_ORDER = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -19,21 +23,55 @@ interface FeedSidebarProps {
 
 export default function FeedSidebar({ activeSection, onSectionChange, profile }: FeedSidebarProps) {
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
+  const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
 
   // Reload layout when profile changes (e.g. after CustomizePage saves)
   useEffect(() => {
     setLayout(loadFeatureLayout());
   }, [activeSection]);
 
-  // Build menu items from the feature config
+  // Keep the sidebar in sync when the active sport changes anywhere in the app
+  useEffect(() => onSportChange(setActiveSportState), []);
+
+  const handleSportClick = (id: SportId) => {
+    setActiveSport(id);
+    setActiveSportState(id);
+  };
+
+  // Build menu items from the feature config, filtered by the active sport
   const enabledFeatures = getEnabledFeatures(layout, {
     canAccessThemeStore: canAccessThemeStore(profile),
+    activeSport,
   });
-  const menuItems = enabledFeatures.map((f) => ({
-    id: f.id,
-    label: f.label,
-    icon: ICON_MAP[f.icon] || Settings,
-  }));
+
+  // Split into ungrouped (top) + grouped sections, preserving order
+  const ungrouped = enabledFeatures.filter((f) => !f.group);
+  const grouped = GROUP_ORDER
+    .map((group) => ({
+      group,
+      items: enabledFeatures.filter((f) => f.group === group),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  const renderItem = (f: { id: string; label: string; icon: string }) => {
+    const IconComponent = ICON_MAP[f.icon] || Settings;
+    const isActive = activeSection === f.id;
+    return (
+      <button
+        key={f.id}
+        onClick={() => onSectionChange(f.id)}
+        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 outline-none ${
+          isActive
+            ? 'bg-sky-950/40 text-sky-400 border border-sky-800/40 font-semibold'
+            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900 border border-transparent'
+        }`}
+        id={`sidebar-link-${f.id}`}
+      >
+        <IconComponent className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
+        <span className="hidden xl:inline truncate">{f.label}</span>
+      </button>
+    );
+  };
 
   const toggleMode = () => {
     const newMode = layout.mode === "beginner" ? "pro" : "beginner";
@@ -59,27 +97,47 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           </span>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="space-y-1.5" id="sidebar-nav-container">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            const isActive = activeSection === item.id;
+        {/* Sport Switcher */}
+        <div className="flex xl:items-stretch gap-1.5 rounded-xl border border-slate-800/70 bg-slate-950/50 p-1" id="sidebar-sport-switcher">
+          {SPORT_LIST.map((sport) => {
+            const isActive = activeSport === sport.id;
             return (
               <button
-                key={item.id}
-                onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-200 outline-none ${
+                key={sport.id}
+                onClick={() => handleSportClick(sport.id)}
+                disabled={!sport.enabled}
+                title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-black transition-all ${
                   isActive
-                    ? 'bg-sky-950/40 text-sky-400 border border-sky-800/40 font-semibold'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900 border border-transparent'
+                    ? 'bg-sky-500/15 text-sky-300 border border-sky-500/40'
+                    : sport.enabled
+                      ? 'text-slate-400 hover:text-slate-100 hover:bg-slate-900 border border-transparent'
+                      : 'text-slate-700 cursor-not-allowed border border-transparent'
                 }`}
-                id={`sidebar-link-${item.id}`}
+                id={`sidebar-sport-${sport.id}`}
               >
-                <IconComponent className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
-                <span className="hidden xl:inline truncate">{item.label}</span>
+                <span>{sport.emoji}</span>
+                <span className="hidden xl:inline">{sport.label}</span>
+                {!sport.enabled && <span className="hidden xl:inline text-[8px] font-bold text-slate-600">soon</span>}
               </button>
             );
           })}
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="space-y-1.5" id="sidebar-nav-container">
+          {/* Ungrouped (e.g. Welcome) */}
+          {ungrouped.map(renderItem)}
+
+          {/* Grouped sections */}
+          {grouped.map((section) => (
+            <div key={section.group} className="space-y-1 pt-2">
+              <p className="hidden xl:block px-4 pb-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">
+                {section.group}
+              </p>
+              {section.items.map(renderItem)}
+            </div>
+          ))}
         </nav>
 
         {/* Primary CTA: Build Parlay */}

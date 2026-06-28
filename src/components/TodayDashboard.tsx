@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Sliders, ScanLine, Tv, BarChart3, ArrowRight, Activity, CloudSun, AlertTriangle, ClipboardList } from 'lucide-react';
+import { Flame, Sliders, Users, Tv, BarChart3, ArrowRight, Activity, CloudSun, AlertTriangle, ClipboardList } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { DailyMlbReport } from '../types/mlb';
 import type { Parlay } from '../types';
@@ -9,9 +9,9 @@ import { Section, Card, Button, StatusBadge, RiskBadge } from './ui/primitives';
 interface Props { onSectionChange: (section: string) => void; savedSlips?: Parlay[]; }
 
 const ACTIONS = [
-  { icon: Flame, color: '#fb923c', section: 'hr_board', title: 'Find HR Picks', sub: "See today's best home-run targets" },
+  { icon: Flame, color: '#fb923c', section: 'hr_board', title: 'Find Edge Picks', sub: "See today's best player edge targets" },
   { icon: Sliders, color: '#22d3ee', section: 'build', title: 'Build a Parlay', sub: 'Combine legs and check the edge' },
-  { icon: ScanLine, color: '#f472b6', section: 'vouchscan', title: 'Scan My Slip', sub: 'Confirm your legs, get VouchCheck' },
+  { icon: Users, color: '#f472b6', section: 'daily_players', title: 'Daily Players', sub: "Every player in today's games" },
   { icon: Tv, color: '#38bdf8', section: 'live_games', title: "Check Today's Games", sub: 'Live matchups + win probabilities' },
   { icon: BarChart3, color: '#34d399', section: 'results', title: 'Track My Results', sub: 'Your record, win rate, and ROI' },
 ];

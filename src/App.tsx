@@ -20,7 +20,6 @@ import LiveGameLabPage from './pages/LiveGameLabPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import LiveGamesPro from './components/LiveGamesPro';
-import VouchScan from './components/VouchScan';
 import WelcomePortal from './components/WelcomePortal';
 import TodayDashboard from './components/TodayDashboard';
 import { apiUrl } from './lib/apiBase';
@@ -623,8 +622,6 @@ export default function App() {
             <ProGraphsLabPage />
           </ProAccessGate>
         );
-      case 'vouchscan':
-        return <VouchScan />;
       case 'live_games':
         return (
           <LiveGamesPro
