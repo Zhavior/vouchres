@@ -1,35 +1,53 @@
+import React from 'react';
 import { Lock } from 'lucide-react';
 
-type ProLockedCardProps = {
+export interface ProLockedCardProps {
   title: string;
-  description: string;
+  detail?: string;
+  description?: string;
   badge?: string;
-};
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  accent?: string;
+  className?: string;
+}
 
-export function ProLockedCard({
+export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function ProLockedCard({
   title,
+  detail,
   description,
   badge = 'Pro',
-}: ProLockedCardProps) {
-  return (
-    <div className="rounded-2xl border border-sky-400/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.06)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-sky-400/20 bg-sky-400/10 p-2">
-            <Lock className="h-4 w-4 text-sky-200" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-100">{title}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">{description}</p>
-          </div>
-        </div>
+  icon: Icon = Lock,
+  accent = '#64748b',
+  className = '',
+}) {
+  const copy = detail ?? description ?? 'Verified data feed required. No fake data shown.';
 
-        <span className="shrink-0 rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-200">
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-xl border bg-slate-950/40 p-3 ${className}`}
+      style={{ borderColor: accent + '33' }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-transparent to-slate-950/50 opacity-60" />
+      <div className="relative flex items-center gap-2">
+        <span
+          className="flex h-5 w-5 items-center justify-center rounded-md border"
+          style={{ borderColor: accent + '40', background: accent + '12' }}
+        >
+          <Icon className="h-3 w-3" style={{ color: accent }} />
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">
+          {title}
+        </span>
+        <span
+          className="ml-auto rounded-full border px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider"
+          style={{ borderColor: accent + '40', color: accent, background: accent + '10' }}
+        >
           {badge}
         </span>
       </div>
+      <p className="relative mt-1.5 text-[10px] leading-relaxed text-slate-500">{copy}</p>
     </div>
   );
-}
+});
 
 export default ProLockedCard;

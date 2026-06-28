@@ -1,11 +1,18 @@
+import { useMemo } from 'react';
 import {
+  HrSignalGraphs,
   ProGraphShell,
   ProLockedCard,
   ProPageHeader,
   VerifiedDataNotice,
+  VerifiedGraphEmptyState,
 } from '../../components/pro';
+import { buildPlayerPayload, useHrBoardProData } from './proLabData';
 
 export default function ProGraphsLabPage() {
+  const { topRow, loading, error, source } = useHrBoardProData();
+  const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
       <div className="mx-auto max-w-7xl space-y-5">
@@ -15,31 +22,45 @@ export default function ProGraphsLabPage() {
           badge="Graph Pro"
         />
 
-        <VerifiedDataNotice />
+        <VerifiedDataNotice
+          variant={source === 'network' ? 'coming-soon' : 'feed-required'}
+          title={loading ? 'Loading verified HR board feed' : source === 'network' ? 'Verified HR graph feed' : 'Verified data feed required'}
+          detail={error ? `${error}. No fake graph data shown.` : 'Graphs below use only fields returned by the production HR Board endpoint.'}
+        />
+
+        {playerPayload ? (
+          <HrSignalGraphs payload={playerPayload} />
+        ) : (
+          <VerifiedGraphEmptyState
+            variant="feed-required"
+            title="Verified HR graph data required"
+            detail="The Pro Graphs Lab needs a verified HR board row before rendering HrSignalGraphs."
+          />
+        )}
 
         <div className="grid gap-4 lg:grid-cols-3">
           <ProLockedCard
             title="Player Trend Graphs"
-            description="Player-level HR, hits, RBI, runs, and power trend graphs."
+            description="Player-level HR, hits, RBI, runs, and power trend graphs require verified feeds."
           />
           <ProLockedCard
             title="Team Trend Graphs"
-            description="Team run creation, hits, HRs, and strikeout trend graphs."
+            description="Team run creation, hits, HRs, and strikeout trend graphs require verified feeds."
           />
           <ProLockedCard
             title="Pitcher Vulnerability Graphs"
-            description="Pitcher HR weakness, contact risk, and strikeout volatility."
+            description="Pitcher HR weakness, contact risk, and strikeout volatility require verified feeds."
           />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <ProGraphShell
             title="Player Signal Comparison"
-            description="Compare hitter power, recent form, park factor, and pitcher weakness."
+            description="Uses HrSignalGraphs when a verified HR board row is available."
           />
           <ProGraphShell
             title="Team Game Pressure"
-            description="Compare team pressure across run, hit, HR, and strikeout signals."
+            description="Run, hit, HR, and strikeout signal graphs remain locked until verified feeds exist."
           />
         </div>
       </div>
