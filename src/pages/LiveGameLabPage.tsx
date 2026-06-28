@@ -137,6 +137,18 @@ export default function LiveGameLabPage() {
           </aside>
 
           <section className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <button type="button" onClick={() => { window.location.hash = '#player-edge-lab'; }} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 p-4 text-left text-sm font-black text-cyan-100 hover:border-cyan-300/35">
+                Open Player Edge Lab
+              </button>
+              <button type="button" onClick={() => { window.location.hash = '#team-matchup-lab'; }} className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4 text-left text-sm font-black text-emerald-100 hover:border-emerald-300/35">
+                Open Team Matchup Lab
+              </button>
+              <button type="button" onClick={() => { window.location.hash = '#pro-graphs-lab'; }} className="rounded-2xl border border-amber-300/15 bg-amber-300/5 p-4 text-left text-sm font-black text-amber-100 hover:border-amber-300/35">
+                Open Pro Graphs Lab
+              </button>
+            </div>
+
             <div className="grid gap-5 lg:grid-cols-3">
               <div className="rounded-2xl border border-slate-800 bg-[#07111f]/85 p-5 lg:col-span-2">
                 <div className="mb-4 flex items-center gap-2">
