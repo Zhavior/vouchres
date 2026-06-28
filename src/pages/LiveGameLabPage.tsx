@@ -183,6 +183,25 @@ export default function LiveGameLabPage() {
               </div>
             </div>
 
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4">
+                <div className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200">Can do now</div>
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
+                  <li>• Show HR threats from verified HR board data</li>
+                  <li>• Show game snapshot and pitcher context</li>
+                  <li>• Show team pressure using connected HR signals</li>
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-amber-300/15 bg-amber-300/5 p-4">
+                <div className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">Locked until verified</div>
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
+                  <li>• RBI, run, hit, and strikeout player boards</li>
+                  <li>• Team match history graphs</li>
+                  <li>• Bullpen fatigue and full pitcher risk models</li>
+                </ul>
+              </div>
+            </div>
+
             <div className="grid gap-5 xl:grid-cols-4">
               <ThreatColumn title="HR Threats" rows={hrThreats} live />
               <LockedThreat title="RBI Threats" />
