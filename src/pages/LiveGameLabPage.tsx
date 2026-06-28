@@ -157,6 +157,21 @@ export default function LiveGameLabPage() {
               </div>
             </div>
 
+            <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 p-5">
+              <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+                Visual Read
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <Snapshot label="HR threats found" value={`${hrThreats.length} verified`} />
+                <Snapshot label="RBI board" value="Locked feed" />
+                <Snapshot label="Run board" value="Locked feed" />
+                <Snapshot label="Hit board" value="Locked feed" />
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                HR threats use the verified HR board. RBI, run, and hit projections stay locked until verified formulas and feeds are connected.
+              </p>
+            </div>
+
             <div className="grid gap-5 xl:grid-cols-4">
               <ThreatColumn title="HR Threats" rows={hrThreats} live />
               <LockedThreat title="RBI Threats" />
