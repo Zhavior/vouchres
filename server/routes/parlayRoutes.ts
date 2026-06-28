@@ -1,9 +1,10 @@
 import { Router } from "express";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
 import { pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { createPick } from "../services/persistence/pickService";
+import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 
 /**
  * Parlay routes — multi-leg pick creation with transactional integrity.
@@ -22,6 +23,76 @@ import { createPick } from "../services/persistence/pickService";
  * limit is lower than the 3-pick/day limit for singles).
  */
 export const parlayRoutes = Router();
+
+/* ============================================================
+   POST /api/parlays/grade  — stateless grading (no auth, no DB)
+   Grades legs live against the sport's data feed (MLB now; NBA/NFL
+   return 'pending' until their graders exist). Used by the client to
+   settle locally-stored parlays and reflect outcomes in Results.
+   Body: { legs: [{ sport, gamePk, market, selection, threshold?, oddsDecimal? }], stakeUnits? }
+   ============================================================ */
+parlayRoutes.post("/parlays/grade", async (req: Request, res: Response) => {
+  const body = req.body ?? {};
+  const legs = body.legs;
+  const stakeUnits = typeof body.stakeUnits === "number" && body.stakeUnits > 0 ? body.stakeUnits : 1.0;
+
+  if (!Array.isArray(legs) || legs.length === 0 || legs.length > 12) {
+    return res.status(400).json({ error: "legs must be a 1–12 item array" });
+  }
+  const valid = legs.every(
+    (l: any) =>
+      l && typeof l.sport === "string" && typeof l.gamePk === "string" && l.gamePk &&
+      typeof l.market === "string" && typeof l.selection === "string"
+  );
+  if (!valid) {
+    return res.status(400).json({ error: "each leg needs sport, gamePk, market, selection" });
+  }
+
+  try {
+    // Fetch each unique (sport+game) once.
+    const gameCache = new Map<string, GameData | null>();
+    for (const leg of legs as GradableLeg[]) {
+      const key = `${leg.sport}:${leg.gamePk}`;
+      if (!gameCache.has(key)) {
+        gameCache.set(key, await getGrader(leg.sport).fetchGame(leg.gamePk));
+      }
+    }
+
+    // Evaluate each leg.
+    const gradedLegs = (legs as GradableLeg[]).map((leg) => {
+      const key = `${leg.sport}:${leg.gamePk}`;
+      const game = gameCache.get(key) ?? null;
+      let outcome: LegOutcome;
+      if (!game) {
+        outcome = { status: "pending", note: "game data unavailable" };
+      } else if (!game.final) {
+        outcome = { status: "pending", note: "game not final" };
+      } else {
+        outcome = getGrader(leg.sport).evaluateLeg(leg, game);
+      }
+      return {
+        sport: leg.sport,
+        gamePk: leg.gamePk,
+        market: leg.market,
+        selection: leg.selection,
+        oddsDecimal: leg.oddsDecimal ?? null,
+        status: outcome.status,
+        actual: outcome.actual ?? null,
+        note: outcome.note ?? null,
+      };
+    });
+
+    const parlay = settleParlay(
+      gradedLegs.map((l) => ({ outcome: { status: l.status, actual: l.actual ?? undefined }, oddsDecimal: l.oddsDecimal ?? undefined })),
+      stakeUnits
+    );
+
+    return res.json({ legs: gradedLegs, parlay, gradedAt: new Date().toISOString() });
+  } catch (err: any) {
+    console.error("[parlays/grade] failed", err?.message);
+    return res.status(500).json({ error: "grade_failed", message: err?.message });
+  }
+});
 
 type ParlayLegBody = {
   event_id: string;

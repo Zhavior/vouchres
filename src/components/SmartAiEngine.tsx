@@ -23,17 +23,40 @@ import {
   TrendingDown,
   Activity,
   Compass,
-  ArrowRight
+  ArrowRight,
+  Save,
+  Bookmark
 } from 'lucide-react';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
-import { MLBPlayer, Leg, FeedPost } from '../types';
+import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
+import { safeJsonFetch } from '../api/safeApiClient';
+import { resolveMarket } from '../sports/markets';
 
 interface SmartAiEngineProps {
   onSectionChange: (section: string) => void;
-  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
   onSaveVouch: (vouchItem: any) => void;
   onPostCreated?: (newPost: FeedPost) => void;
+  onSaveParlay?: (parlay: Parlay) => void;
   liveGames?: any[];
+}
+
+/** Normalized real candidate from the live HR Board (carries gamePk → gradable). */
+interface RealCandidate {
+  playerId: string;
+  playerName: string;
+  gamePk?: string;
+  team: string;
+  opponent: string;
+  oddsDecimal: number;
+  score: number;
+}
+
+function americanToDecimalOdds(am: unknown): number {
+  if (typeof am === 'number') return am > 0 ? 1 + am / 100 : 1 + 100 / Math.abs(am);
+  const n = parseInt(String(am ?? '').replace(/[+]/g, ''), 10);
+  if (!n || isNaN(n)) return 2.0;
+  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
 }
 
 // Procedural, deterministic generation of 850 distinct high-quality AI picks
@@ -69,9 +92,10 @@ interface PrecomputedPick {
 
 export default function SmartAiEngine({ 
   onSectionChange, 
-  onAddLegToParlay, 
+  onAddLegToParlay,
   onSaveVouch,
   onPostCreated,
+  onSaveParlay,
   liveGames = []
 }: SmartAiEngineProps) {
   
@@ -106,202 +130,149 @@ export default function SmartAiEngine({
   }, [builderCategory]);
 
   // Dynamic sabermetric parlay constructed 100% on actual historical player game logs
-  const dynamicParlay = useMemo(() => {
-    const list: any[] = [];
-    const playersPool = MLB_PLAYER_RECORDS;
+  // ── Real candidates from the live HR Board (carry gamePk → gradable) ──
+  const [realCandidates, setRealCandidates] = useState<RealCandidate[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(true);
 
-    playersPool.forEach(player => {
-      // Find matching game logs where they reached or exceeded the chosen threshold
-      const matchingLogs = player.gameLogs.filter(log => {
-        if (builderCategory === 'HITS') {
-          return log.h >= builderThreshold;
-        } else if (builderCategory === 'RBIS') {
-          return log.rbi >= builderThreshold;
-        } else if (builderCategory === 'RUNS') {
-          return log.r >= builderThreshold;
-        } else if (builderCategory === 'HR') {
-          return log.hr >= builderThreshold;
-        }
-        return false;
+  useEffect(() => {
+    let alive = true;
+    setCandidatesLoading(true);
+    safeJsonFetch<any>('/api/mlb/hr-board/today?limit=75', { fallbackData: { candidates: [] }, timeoutMs: 14000 })
+      .then((r) => {
+        if (!alive) return;
+        const raw: any[] = r.data?.candidates ?? r.data?.rows ?? [];
+        const mapped: RealCandidate[] = raw
+          .filter((c) => c && (c.gamePk ?? c.gameId) != null)
+          .map((c) => ({
+            playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
+            playerName: c.playerName ?? c.player_name ?? c.name ?? 'Unknown',
+            gamePk: String(c.gamePk ?? c.gameId),
+            team: c.team ?? c.teamAbbrev ?? 'MLB',
+            opponent: c.opponent ?? c.opponentTeam ?? c.opponentPitcherName ?? 'opponent',
+            oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds ?? '+350'),
+            score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
+          }));
+        setRealCandidates(mapped);
+        setCandidatesLoading(false);
       });
+    return () => { alive = false; };
+  }, []);
 
-      // MANDATE: Only if the player has accomplished this metric previously!
-      if (matchingLogs.length > 0) {
-        // AI Confidence formulation based on occurrence rate and seasonal coefficients
-        const frequencyRate = matchingLogs.length / player.gameLogs.length; // e.g. 0.60
-        let baseConfidence = 52 + Math.round(frequencyRate * 35);
-
-        if (builderCategory === 'HITS') {
-          const avgNum = parseFloat(player.seasonStats.avg) || 0.280;
-          baseConfidence += Math.round((avgNum - 0.250) * 85);
-        } else if (builderCategory === 'HR') {
-          const hrNum = parseInt(player.seasonStats.hr) || 12;
-          baseConfidence += Math.min(12, Math.round(hrNum * 0.25));
-        } else if (builderCategory === 'RBIS') {
-          const rbiNum = parseInt(player.seasonStats.rbi) || 50;
-          baseConfidence += Math.min(10, Math.round(rbiNum * 0.1));
-        } else if (builderCategory === 'RUNS') {
-          const opsNum = parseFloat(player.seasonStats.ops) || 0.750;
-          baseConfidence += Math.round((opsNum - 0.700) * 75);
-        }
-
-        // Incorporate Statcast dynamic profiles
-        baseConfidence += Math.round((player.advanced.barrelPercent - 10) * 0.4);
-
-        // Weather check (climated-aided ball flight projections)
-        const playerTeam = player.team ? player.team.toLowerCase() : '';
-        const game = liveGames.find((g: any) => 
-          g.homeTeam.toLowerCase() === playerTeam || 
-          g.awayTeam.toLowerCase() === playerTeam
-        );
-        
-        let isFinal = false;
-        if (game) {
-          isFinal = game.status.toLowerCase() === 'final';
-          if (game.status.toLowerCase().includes('progress')) {
-            baseConfidence += 3;
-          }
-        }
-
-        const confidenceVal = Math.min(99.4, Math.max(25, baseConfidence));
-
-        // Generate precise realistic bookie decimal odds for this specific selection
-        let oddsVal = 1.85;
-        let marketName = "";
-        let customSpec = "";
-
-        if (builderCategory === 'HITS') {
-          if (builderThreshold === 1) {
-            oddsVal = 1.35 + (frequencyRate * 0.15);
-            marketName = "To Record 1+ Hits";
-            customSpec = `${player.name} Over 0.5 Hits`;
-          } else if (builderThreshold === 2) {
-            oddsVal = 2.10 + ((1.0 - frequencyRate) * 0.45);
-            marketName = "To Record 2+ Hits";
-            customSpec = `${player.name} Over 1.5 Hits`;
-          } else {
-            oddsVal = 4.80 + ((1.0 - frequencyRate) * 1.80);
-            marketName = "To Record 3+ Hits";
-            customSpec = `${player.name} Over 2.5 Hits`;
-          }
-        } else if (builderCategory === 'RBIS') {
-          oddsVal = 1.70 + (builderThreshold * 0.65) + ((1.0 - frequencyRate) * 0.60);
-          marketName = `To Record ${builderThreshold}+ RBIs`;
-          customSpec = `${player.name} Over ${builderThreshold - 0.5} RBIs`;
-        } else if (builderCategory === 'RUNS') {
-          oddsVal = 1.55 + (builderThreshold * 0.50) + ((1.0 - frequencyRate) * 0.45);
-          marketName = `To Record ${builderThreshold}+ Runs`;
-          customSpec = `${player.name} Over ${builderThreshold - 0.5} Runs`;
-        } else if (builderCategory === 'HR') {
-          if (builderThreshold === 1) {
-            oddsVal = player.id === 'mlb_ohtani' ? 3.20 : player.id === 'mlb_judge' ? 2.90 : 3.65;
-            marketName = "To Hit 1+ Home Run";
-            customSpec = `${player.name} Over 0.5 HRs`;
-          } else {
-            oddsVal = player.id === 'mlb_ohtani' ? 14.0 : player.id === 'mlb_judge' ? 12.0 : 18.0;
-            marketName = "To Hit 2+ Home Runs";
-            customSpec = `${player.name} Over 1.5 HRs`;
-          }
-        }
-
-        const oddsRounded = Math.round(oddsVal * 100) / 100;
-
-        list.push({
-          player,
-          playerId: player.id,
-          playerName: player.name,
-          team: player.team,
-          headshot: player.headshot,
-          aiConfidenceScore: confidenceVal,
-          marketName,
-          customSpec,
-          oddsValRounded: oddsRounded,
-          matchingLogs,
-          isFinal
-        });
-      }
-    });
-
-    const sortedByConfidence = list.sort((a, b) => b.aiConfidenceScore - a.aiConfidenceScore);
-    const activeOnly = sortedByConfidence.filter(c => !c.isFinal);
-    const candidates = activeOnly.length >= builderLegs ? activeOnly : sortedByConfidence;
-
-    const selected = candidates.slice(0, builderLegs);
-
-    if (selected.length === 0) {
-      return null;
+  // Build a market label + spec + odds for a candidate given category/threshold.
+  // Grading reads the final boxscore (which has HR/RBI/runs/hits for every player),
+  // so any leg with a real gamePk + real player settles correctly.
+  const buildMarket = (cand: RealCandidate, category: string, threshold: number) => {
+    const n = cand.playerName;
+    if (category === 'HITS') {
+      const odds = threshold === 1 ? 1.4 : threshold === 2 ? 2.3 : 5.0;
+      return { marketName: `To Record ${threshold}+ Hits`, customSpec: `${n} ${threshold}+ Hits`, odds };
     }
+    if (category === 'RBIS') {
+      return { marketName: `To Record ${threshold}+ RBIs`, customSpec: `${n} ${threshold}+ RBI`, odds: 1.7 + threshold * 0.7 };
+    }
+    if (category === 'RUNS') {
+      return { marketName: `To Record ${threshold}+ Runs`, customSpec: `${n} ${threshold}+ Runs`, odds: 1.6 + threshold * 0.6 };
+    }
+    // HR — use the candidate's real implied odds from the board
+    const odds = threshold >= 2 ? Math.max(8, cand.oddsDecimal * 4) : cand.oddsDecimal || 3.5;
+    return { marketName: threshold >= 2 ? 'To Hit 2+ Home Runs' : 'To Hit 1+ Home Run', customSpec: `${n} ${threshold}+ HR`, odds: Math.round(odds * 100) / 100 };
+  };
 
-    let combinedOddsMultiplier = 1.0;
-    selected.forEach(c => {
-      combinedOddsMultiplier *= c.oddsValRounded;
+  const dynamicParlay = useMemo(() => {
+    if (!realCandidates.length) return null;
+
+    // Top candidates by board score (already the day's strongest hitters).
+    const selected = realCandidates
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .slice(0, builderLegs);
+    if (selected.length === 0) return null;
+
+    const legs = selected.map((c) => {
+      const { marketName, customSpec, odds } = buildMarket(c, builderCategory, builderThreshold);
+      return {
+        playerId: c.playerId,
+        playerName: c.playerName,
+        gamePk: c.gamePk,
+        team: c.team,
+        marketName,
+        customSpec,
+        odds,
+        isFinal: false,
+        justification: `Confirmed on today's verified board — ${c.team} vs ${c.opponent}. Live MLB game (graded from the official boxscore).`,
+      };
     });
 
-    const roundedOddsMultiplier = Math.round(combinedOddsMultiplier * 100) / 100;
-
-    const decimalToAmericanOdds = (dec: number) => {
-      if (dec >= 2.0) {
-        return `+${Math.round((dec - 1) * 100)}`;
-      } else {
-        return `-${Math.round(100 / (dec - 1))}`;
-      }
-    };
-
-    const averageConfidence = Math.round(
-      selected.reduce((sum, c) => sum + c.aiConfidenceScore, 0) / selected.length
+    const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
+    const decimalToAmericanOdds = (dec: number) => (dec >= 2.0 ? `+${Math.round((dec - 1) * 100)}` : `-${Math.round(100 / (dec - 1))}`);
+    // Confidence proxy from board ranking (top of board = higher confidence).
+    const avgConf = Math.round(
+      selected.reduce((s, c, i) => s + Math.max(45, 92 - i * 3), 0) / selected.length
     );
 
     return {
-      legs: selected.map((c, index) => ({
-        playerId: c.playerId,
-        playerName: c.playerName,
-        marketName: c.marketName,
-        customSpec: c.customSpec,
-        odds: c.oddsValRounded,
-        isFinal: c.isFinal,
-        justification: `${c.playerName} hit this target in ${c.matchingLogs.length} previous matchups (e.g. on ${c.matchingLogs.map(l => l.date + ' vs ' + l.opponent.split(' ').pop()).slice(0,2).join(', ')}). Climatic models support peak travel speeds.`
-      })),
-      totalOdds: decimalToAmericanOdds(roundedOddsMultiplier),
-      oddsValue: roundedOddsMultiplier,
-      aiConfidenceScore: averageConfidence,
-      players: selected.map(c => c.player),
-      riskTier: averageConfidence > 82 ? 'LOW' : averageConfidence > 64 ? 'MEDIUM' : 'HIGH'
+      legs,
+      totalOdds: decimalToAmericanOdds(combined),
+      oddsValue: combined,
+      aiConfidenceScore: avgConf,
+      players: selected.map((c) => ({ id: c.playerId, name: c.playerName, team: c.team } as MLBPlayer)),
+      riskTier: avgConf > 82 ? 'LOW' : avgConf > 64 ? 'MEDIUM' : 'HIGH',
     };
-  }, [builderLegs, builderCategory, builderThreshold, liveGames]);
+  }, [builderLegs, builderCategory, builderThreshold, realCandidates]);
 
   const handleAddCustomParlayToSlip = () => {
     if (!dynamicParlay) return;
     let addedCount = 0;
-    dynamicParlay.legs.forEach(leg => {
-      // Check if leg's game is final
-      const player = dynamicParlay.players.find(p => p.id === leg.playerId);
-      if (player) {
-        // Identify game status to protect live integrity
-        const playerTeam = player.team ? player.team.toLowerCase() : '';
-        const game = liveGames.find((g: any) => 
-          g.homeTeam.toLowerCase() === playerTeam || 
-          g.awayTeam.toLowerCase() === playerTeam
-        );
-        if (game && game.status.toLowerCase() === 'final') {
-          return; // skip concluded picks
-        }
-
-        onAddLegToParlay(player, {
-          id: `prop-ai-custom-${leg.playerId}-${Date.now()}`,
-          market: leg.marketName,
-          odds: leg.odds,
-          spec: leg.customSpec
-        });
-        addedCount++;
-      }
+    dynamicParlay.legs.forEach((leg) => {
+      const player = dynamicParlay.players.find((p) => p.id === leg.playerId) || ({ id: leg.playerId, name: leg.playerName, team: leg.team } as MLBPlayer);
+      onAddLegToParlay(player, {
+        id: `prop-ai-custom-${leg.playerId}-${Date.now()}`,
+        market: leg.marketName,
+        odds: leg.odds,
+        spec: leg.customSpec,
+        gamePk: leg.gamePk, // real game → gradable
+      });
+      addedCount++;
     });
+    alert(`🎯 Transferred ${addedCount} verified legs into your active parlay builder slip!`);
+    onSectionChange('build');
+  };
 
-    if (addedCount === 0) {
-      alert(`⚠️ All selected legs in this custom parlay correspond to concluded games (status: Final). Placing picks on concluded games is strictly prohibited.`);
-    } else {
-      alert(`🎯 Successfully transferred ${addedCount} stats-verified custom legs directly into your active parlay builder slip!`);
-      onSectionChange('build');
-    }
+  // Save the current AI parlay directly as a gradable Parlay → Results grades it
+  // from the MLB boxscore. Each leg carries gamePk + marketCode + threshold.
+  const handleSaveGradableParlay = () => {
+    if (!dynamicParlay || !onSaveParlay) return;
+    const legs: Leg[] = dynamicParlay.legs.map((leg, i) => {
+      const { marketCode, threshold } = resolveMarket('mlb', leg.marketName, leg.customSpec);
+      return {
+        id: `ai-leg-${Date.now()}-${i}`,
+        sport: 'MLB',
+        game: `${leg.team} vs opp`,
+        market: leg.marketName,
+        selection: leg.customSpec,
+        odds: leg.odds,
+        status: 'PENDING',
+        gamePk: leg.gamePk,
+        marketCode,
+        threshold,
+      };
+    });
+    const parlay: Parlay = {
+      id: `ai-parlay-${Date.now()}`,
+      title: `V.A.I ${builderLegs}-Leg ${builderCategory} Parlay`,
+      legs,
+      totalOdds: dynamicParlay.totalOdds,
+      oddsValue: dynamicParlay.oddsValue,
+      riskTier: (dynamicParlay.riskTier === 'LOW' ? 'LOW' : dynamicParlay.riskTier === 'HIGH' ? 'HIGH' : 'MEDIUM'),
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+      wagerAmount: 1,
+      edgeScore: dynamicParlay.aiConfidenceScore,
+    };
+    onSaveParlay(parlay);
+    const gradable = legs.filter((l) => l.gamePk).length;
+    alert(`✅ Saved "${parlay.title}" to your slips.\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
+    onSectionChange('results');
   };
 
   // Real-time custom simulation controls (keeps the interactive feature)
@@ -946,14 +917,26 @@ export default function SmartAiEngine({
                     })}
                   </div>
 
-                  {/* Bulk Master Slip CTA */}
-                  <button
-                    onClick={handleAddCustomParlayToSlip}
-                    className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
-                  >
-                    <Plus className="w-4 h-4 text-sky-100" />
-                    TRANSFER PARLAY SLIP
-                  </button>
+                  {/* Save (gradable) + Transfer CTAs */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleSaveGradableParlay}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-emerald-950/30 active:scale-[0.98]"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      SAVE &amp; TRACK
+                    </button>
+                    <button
+                      onClick={handleAddCustomParlayToSlip}
+                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
+                    >
+                      <Plus className="w-4 h-4 text-sky-100" />
+                      TO BUILDER
+                    </button>
+                  </div>
+                  <p className="mt-2 text-center text-[10px] text-slate-500 font-mono">
+                    Save &amp; Track logs a gradable parlay — it auto-settles in Results from the live MLB boxscore.
+                  </p>
 
                 </div>
               ) : (

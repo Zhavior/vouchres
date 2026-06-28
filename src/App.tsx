@@ -19,6 +19,7 @@ import DailyHrBoardPage from './pages/DailyHrBoardPage';
 import LiveGameLabPage from './pages/LiveGameLabPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
+import AppNotificationsHost from './components/notifications/AppNotificationsHost';
 import LiveGamesPro from './components/LiveGamesPro';
 import WelcomePortal from './components/WelcomePortal';
 import TodayDashboard from './components/TodayDashboard';
@@ -38,7 +39,16 @@ import PlayerEdgeLabPage from './pages/pro/PlayerEdgeLabPage';
 import TeamMatchupLabPage from './pages/pro/TeamMatchupLabPage';
 import ProGraphsLabPage from './pages/pro/ProGraphsLabPage';
 import DailyPlayersPage from './pages/DailyPlayersPage';
+import LiveParlaysPage from './pages/LiveParlaysPage';
 import { ProAccessGate } from './components/pro/ProAccessGate';
+import { resolveMarket } from './sports/markets';
+import { gradePendingParlays } from './lib/parlayGrading';
+import { generateAiParlays } from './lib/aiParlayGenerator';
+import { isLive } from './lib/parlayLifecycle';
+import { notify } from './lib/appNotifications';
+
+/** Default daily time the AI builds the slate (local time, "HH:MM"). */
+const AI_GEN_DEFAULT_TIME = '10:00';
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
@@ -55,6 +65,10 @@ function resolveDevSectionFromLocation() {
 
   if (target === 'daily-players' || target === '/daily-players') {
     return 'daily_players';
+  }
+
+  if (target === 'live-parlays' || target === '/live-parlays') {
+    return 'live_parlays';
   }
 
   if (target === 'live-game-lab' || target === '/live-game-lab') {
@@ -89,6 +103,9 @@ export default function App() {
   });
   const activeSectionRef = useRef(activeSection);
   const routeSwitchTimerRef = useRef<number | null>(null);
+  const gradingRef = useRef(false);
+  const savedSlipsRef = useRef<Parlay[]>([]);
+  const profileRef = useRef<CreatorProofProfile | null>(null);
   const [isPendingRoute, startRouteTransition] = useTransition();
   const [isRouteSwitching, setIsRouteSwitching] = useState(false);
 
@@ -308,6 +325,7 @@ export default function App() {
   };
 
   const syncSlips = (newSlips: Parlay[]) => {
+    savedSlipsRef.current = newSlips;
     setSavedSlips(newSlips);
     localStorage.setItem('vouchedge_slips', JSON.stringify(newSlips));
   };
@@ -318,9 +336,15 @@ export default function App() {
   };
 
   const syncProfile = (newProfile: CreatorProofProfile) => {
+    profileRef.current = newProfile;
     setProfile(newProfile);
     localStorage.setItem('vouchedge_profile', JSON.stringify(newProfile));
   };
+
+  // Keep refs fresh for the mount-once lifecycle heartbeat (avoids stale closures
+  // and prevents the interval from re-subscribing on every state change).
+  savedSlipsRef.current = savedSlips;
+  profileRef.current = profile;
 
   // Interaction: Create post
   const handlePostCreated = (postData: Partial<FeedPost>) => {
@@ -486,6 +510,132 @@ export default function App() {
     syncSlips(updated);
   };
 
+  // Grade pending parlays against the live MLB feed and reflect outcomes in
+  // Results + profile stats. Idempotent: only PENDING+gradable parlays are sent,
+  // and only PENDING→settled transitions update win/loss/units.
+  const handleGradeResults = async () => {
+    if (gradingRef.current) return;
+    gradingRef.current = true;
+    try {
+      const { parlays, newlySettled, changed } = await gradePendingParlays(savedSlipsRef.current);
+      if (!changed) return;
+      syncSlips(parlays);
+      if (newlySettled.length) {
+        let wins = 0, losses = 0, units = 0;
+        for (const s of newlySettled) {
+          if (s.after.status === 'WON') wins++;
+          else if (s.after.status === 'LOST') losses++;
+          units += s.settledUnits;
+          notify({
+            kind: 'result',
+            title: `${s.after.status === 'WON' ? '🏆 Parlay won' : 'Parlay graded'}: ${s.after.title}`,
+            body: `${s.after.status} · ${s.settledUnits >= 0 ? '+' : ''}${s.settledUnits.toFixed(2)} units. View in Results.`,
+            section: 'results',
+          });
+        }
+        const cur = profileRef.current!;
+        const newTotal = cur.totalPicks + wins + losses;
+        const newWon = cur.wonPicks + wins;
+        syncProfile({
+          ...cur,
+          totalPicks: newTotal,
+          wonPicks: newWon,
+          unitsNetProfit: cur.unitsNetProfit + units,
+          winRate: newTotal ? (newWon / newTotal) * 100 : cur.winRate,
+        });
+      }
+    } finally {
+      gradingRef.current = false;
+    }
+  };
+
+  // Auto-grade when the user opens Results.
+  useEffect(() => {
+    if (activeSection === 'results') handleGradeResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
+
+  // Run the scheduled AI parlay generation if it's past today's set time and we
+  // haven't generated for today yet. Confirmed-starter parlays only.
+  const runScheduledAiGeneration = async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastGen = localStorage.getItem('vouchedge_ai_gen_date');
+    if (lastGen === today) return;
+    const genTime = localStorage.getItem('vouchedge_ai_gen_time') || AI_GEN_DEFAULT_TIME; // "HH:MM"
+    const [gh, gm] = genTime.split(':').map(Number);
+    const now = new Date();
+    if (now.getHours() < gh || (now.getHours() === gh && now.getMinutes() < gm)) return;
+
+    const created = await generateAiParlays({ sport: 'mlb' });
+    // Mark today done even if 0 (no confirmed lineups yet) — we retry tomorrow,
+    // but allow a manual refresh via the Live Parlays page if lineups post later.
+    localStorage.setItem('vouchedge_ai_gen_date', today);
+    if (created.length === 0) return;
+    // Dedupe: drop any prior still-pending AI parlays before adding the new slate.
+    const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
+    syncSlips([...created, ...kept]);
+    notify({
+      kind: 'ai',
+      title: `🤖 V.A.I built ${created.length} parlays for today`,
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Live Parlays.',
+      section: 'live_parlays',
+    });
+  };
+
+  // Manual generation (Live Parlays "Generate" button). Replaces today's slate.
+  const handleGenerateAiParlaysNow = async () => {
+    if (gradingRef.current) return;
+    const created = await generateAiParlays({ sport: 'mlb' });
+    localStorage.setItem('vouchedge_ai_gen_date', new Date().toISOString().slice(0, 10));
+    if (created.length === 0) {
+      alert('No confirmed lineups are posted yet — check back closer to game time.');
+      return;
+    }
+    const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
+    syncSlips([...created, ...kept]);
+    notify({
+      kind: 'ai',
+      title: `🤖 V.A.I built ${created.length} parlays`,
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Live Parlays.',
+      section: 'live_parlays',
+    });
+  };
+
+  // Fire a one-time "locked → moved to Live" notification as parlays cross their
+  // lock time, and persist the flag so it doesn't repeat.
+  const checkParlayLocks = () => {
+    let changed = false;
+    const updated = savedSlipsRef.current.map((p) => {
+      if (p.status !== 'PENDING' || p.lockNotified) return p;
+      if (isLive(p)) {
+        changed = true;
+        notify({
+          kind: 'lock',
+          title: `🔒 Locked: ${p.title}`,
+          body: 'Moved to Live Parlays. It will auto-grade when the games are final.',
+          section: 'live_parlays',
+        });
+        return { ...p, lockNotified: true };
+      }
+      return p;
+    });
+    if (changed) syncSlips(updated);
+  };
+
+  // Lifecycle heartbeat: scheduled generation, lock notifications, auto-grading.
+  // Mount-once; reads live state via refs to avoid re-subscribing on every save.
+  useEffect(() => {
+    const tick = () => {
+      runScheduledAiGeneration();
+      checkParlayLocks();
+      handleGradeResults();
+    };
+    const warmup = window.setTimeout(tick, 1500); // let initial state hydrate
+    const id = window.setInterval(tick, 60_000);
+    return () => { window.clearTimeout(warmup); window.clearInterval(id); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Update Profile Hub details
   const handleUpdateProfile = (updatedProfile: Partial<CreatorProofProfile>) => {
     const nextProfile = { ...profile, ...updatedProfile };
@@ -513,7 +663,7 @@ export default function App() {
 
   const savedVouchIds = savedVouches.map((v) => v.id);
 
-  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => {
+  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => {
     // Check if player's game has played already and status is Final
     const playerTeam = player.team ? player.team.toLowerCase() : '';
     const matchedGame = liveGames.find((g: any) => 
@@ -530,6 +680,8 @@ export default function App() {
       alert("This player prop selection is already added to your current parlay slip!");
       return;
     }
+    const { marketCode, threshold } = resolveMarket('mlb', prop.market, prop.spec);
+    const gamePk = prop.gamePk != null ? String(prop.gamePk) : (matchedGame?.gamePk != null ? String(matchedGame.gamePk) : undefined);
     const newLeg: Leg = {
       id: `leg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       sport: "MLB",
@@ -537,7 +689,10 @@ export default function App() {
       market: prop.market,
       selection: prop.spec,
       odds: prop.odds,
-      status: 'PENDING'
+      status: 'PENDING',
+      gamePk,
+      marketCode,
+      threshold,
     };
     setActiveLegs([...activeLegs, newLeg]);
     alert(`🎯 Added "${prop.spec}" to your active parlay slip context!`);
@@ -589,6 +744,7 @@ export default function App() {
             onAddLegToParlay={handleAddLegFromResearch}
             onSaveVouch={handleSaveVouch}
             onPostCreated={handlePostCreated}
+            onSaveParlay={handleSaveParlaySlip}
             liveGames={liveGames}
           />
         );
@@ -598,6 +754,8 @@ export default function App() {
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
       case 'daily_players':
         return <DailyPlayersPage />;
+      case 'live_parlays':
+        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
@@ -767,6 +925,7 @@ export default function App() {
         >
           {renderMainView()}
           {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
+          {activeSection !== 'welcome' && <AppNotificationsHost onNavigate={navigateSection} />}
         </HomeFeedLayout>
       </AppErrorBoundary>
     </ThemeProvider>

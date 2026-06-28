@@ -7,7 +7,7 @@ import { Card, RiskBadge, ScorePill } from '../ui/primitives';
 interface Props {
   games: HrBoardGame[];
   onSelect: (row: HrBoardRow) => void;
-  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
 }
 
 const TIERS: { key: string; title: string; sub: string; color: string; match: (r: HrBoardRow) => boolean }[] = [
@@ -149,12 +149,12 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
               <div
                 role="button"
                 tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR` }); }}
+                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk }); }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
-                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR` });
+                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk });
                   }
                 }}
                 className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10 cursor-pointer">

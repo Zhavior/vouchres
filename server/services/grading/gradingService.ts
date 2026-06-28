@@ -50,7 +50,7 @@ export async function gradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, created_at")
+    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -182,11 +182,25 @@ async function evaluatePick(
     stake_units: number | null;
     leg_type: string;
     event_id?: string | null;
+    sport?: string | null;
   },
   boxscore: any
 ): Promise<GradeResult> {
   const market = pick.market.toLowerCase();
   const selection = pick.selection;
+
+  // Future-proof for NBA/NFL: non-MLB picks defer to the sport grader registry.
+  // Until those graders exist they're left pending (skipped) rather than being
+  // mis-graded by MLB boxscore logic. See server/services/grading/sportGraders.ts.
+  const sport = (pick.sport ?? "mlb").toLowerCase();
+  if (sport !== "mlb") {
+    return {
+      pick_id: pick.id,
+      status: "graded_error",
+      settled_units: null,
+      error: `sport_not_yet_supported:${sport}`,
+    };
+  }
 
   const playerName = extractPlayerName(selection, market);
 

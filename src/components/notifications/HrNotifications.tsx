@@ -131,9 +131,9 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
         ))}
       </div>
 
-      {/* Bell button */}
+      {/* Bell button — stacked directly above the AI support FAB (which sits at bottom-6 right-6/8) */}
       <button onClick={openPanel}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[100] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-orange-500/60 transition-colors"
+        className="fixed bottom-28 md:bottom-24 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-orange-500/60 transition-colors"
         aria-label="Home run notifications">
         <Bell className="w-5 h-5 text-orange-400" />
         {enabled && unread > 0 && (

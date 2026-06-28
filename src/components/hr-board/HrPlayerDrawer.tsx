@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Flame, AlertTriangle, Gavel, ShieldCheck, TrendingUp, MapPin, Lock, BarChart3, Share2, Copy } from 'lucide-react';
-import type { HrBoardRow } from '../../types/hrBoard';
+import type { HrBoardRow, HrRowJudge } from '../../types/hrBoard';
 import { GradeBadge, edgeColor, RISK_COLOR } from './HrBoardRow';
 import { apiUrl } from '../../lib/apiBase';
 
@@ -245,11 +245,12 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
   const recentPowerScore = isFiniteNumber(recentForm?.recentPowerScore)
     ? recentForm.recentPowerScore
     : breakdown?.recentForm;
-  const j = row.judge ?? {
+  const j: HrRowJudge = row.judge ?? {
     approvalStatus: row.hrEdge >= 85 ? "Approved" : row.hrEdge >= 70 ? "Playable but risky" : "Needs more data",
-    summary: "Auto-generated from HR board row data.",
-    reasons: [],
-    warnings: [],
+    riskLabel: row.riskLabel,
+    judgeNote: "Auto-generated from HR board row data — sportsbook odds unavailable.",
+    whatCouldGoWrong: [],
+    parlayAllowed: row.hrEdge >= 70,
   };
   const shareCardUrl = buildHrShareCardUrl(row);
 

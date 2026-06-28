@@ -67,7 +67,7 @@ function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
 }
 
 interface HrBoardPageProps {
-  onAddLegToParlay?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLegToParlay?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
 }
 
 export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps = {}) {
