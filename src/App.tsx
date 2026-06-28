@@ -53,6 +53,10 @@ function resolveDevSectionFromLocation() {
     return 'live_game_lab';
   }
 
+  if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {
+    return 'live_games';
+  }
+
   return null;
 }
 

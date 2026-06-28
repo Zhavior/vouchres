@@ -5,6 +5,8 @@ import {
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { GameMatchup, HrWatch } from '../types/matchup';
 import type { MLBPlayer } from '../types';
+import type { HrBoardResponse } from '../types/hrBoard';
+import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -28,6 +30,118 @@ function gradeColor(g: string): string {
 }
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? value as Record<string, unknown> : {};
+}
+
+function text(value: unknown, fallback = ''): string {
+  return typeof value === 'string' && value.trim() ? value : fallback;
+}
+
+function num(value: unknown, fallback = 0): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    promise.then((value) => {
+      window.clearTimeout(id);
+      resolve(value);
+    }).catch((error) => {
+      window.clearTimeout(id);
+      reject(error);
+    });
+  });
+}
+
+function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
+  const playerId = num(candidate.playerId ?? candidate.id, 0);
+  const playerName = text(candidate.playerName ?? candidate.name, 'Unknown Player');
+  return {
+    playerId,
+    playerName,
+    headshot: text(candidate.headshot, `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${playerId}/headshot/67/current`),
+    team: text(candidate.team, 'TBD'),
+    teamAbbr: text(candidate.teamAbbrev ?? candidate.team, 'TBD'),
+    hrEdge: num(candidate.hrScore ?? candidate.hrEdge, 0),
+    grade: text(candidate.grade ?? candidate.riskTier, 'B'),
+    formTag: text(candidate.formTag, 'Average'),
+    opposingPitcher: text(candidate.opponentPitcherName ?? candidate.opponentPitcher ?? candidate.pitcherName, 'Pitcher pending'),
+    reason: Array.isArray(candidate.reasons) ? text(candidate.reasons[0], '') : '',
+    impliedOdds: text(candidate.impliedOdds ?? candidate.bestOdds, 'Manual only'),
+  };
+}
+
+function buildMatchupsFromHrBoard(board: HrBoardResponse): GameMatchup[] {
+  const sourceRows = Array.isArray(board.candidates) && board.candidates.length > 0
+    ? board.candidates
+    : Array.isArray(board.projectedCandidates)
+      ? board.projectedCandidates
+      : [];
+  const groups = new Map<string, Record<string, unknown>[]>();
+
+  sourceRows.forEach((raw) => {
+    const row = asRecord(raw);
+    const key = String(row.gamePk ?? row.game_id ?? `${text(row.team, 'TBD')}-${text(row.opponent, 'TBD')}`);
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  });
+
+  return Array.from(groups.entries()).map(([key, rows]) => {
+    const first = rows[0] ?? {};
+    const team = text(first.team, 'TBD');
+    const opponent = text(first.opponent, 'TBD');
+    const teamId = num(first.teamId, 0);
+    const opponentTeamId = num(first.opponentTeamId, 0);
+    const topHrWatch = rows
+      .map(watchFromCandidate)
+      .sort((a, b) => b.hrEdge - a.hrEdge)
+      .slice(0, 6);
+
+    return {
+      gamePk: num(first.gamePk ?? key, Math.abs(key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0))),
+      status: text(first.status ?? first.gameStatus, text(first.lineupStatus, 'Projection preview')),
+      isLive: /progress|live|in play/i.test(text(first.status ?? first.gameStatus, '')),
+      isFinal: /final|game over/i.test(text(first.status ?? first.gameStatus, '')),
+      gameTime: text(first.gameTime ?? first.gameDate ?? board.generatedAt, ''),
+      venue: text(first.venue, 'Venue pending'),
+      away: {
+        teamId,
+        name: team,
+        abbreviation: text(first.teamAbbrev ?? first.team, team),
+        logo: logoByTeamId(teamId) ?? logoByTeamName(team) ?? '',
+        record: null,
+        seasonWinPct: 0,
+        probablePitcher: null,
+      },
+      home: {
+        teamId: opponentTeamId,
+        name: opponent,
+        abbreviation: opponent,
+        logo: logoByTeamId(opponentTeamId) ?? logoByTeamName(opponent) ?? '',
+        record: null,
+        seasonWinPct: 0,
+        probablePitcher: null,
+      },
+      score: { away: 0, home: 0 },
+      winProbability: { away: 0, home: 0 },
+      winProbModel: ['Win probability feed not connected for this fast preview. No fake model edge shown.'],
+      runEnvironment: null,
+      topHrWatch,
+      keyFactors: ['Fast preview uses the verified HR board payload only.'],
+      whatToWatch: topHrWatch[0] ? [`Top HR watch: ${topHrWatch[0].playerName} (${topHrWatch[0].team}).`] : ['HR watch data unavailable.'],
+      aiVerdict: 'Fast Live Projection preview. HR watch is connected; win probability, RBI, run, hit, and bullpen modules require verified feeds.',
+      dataQuality: 'limited' as const,
+    };
+  });
+}
+
+function safePct(value: unknown): string {
+  const n = num(value, NaN);
+  return Number.isFinite(n) && n > 0 ? `${Math.round(n)}%` : 'Pending';
+}
+
 function TeamLogo({ src, alt, size = 32 }: { src: string; alt: string; size?: number }) {
   return <img src={src} alt={alt} width={size} height={size} loading="lazy"
     className="object-contain shrink-0" style={{ width: size, height: size }}
@@ -48,7 +162,9 @@ function StatusBadge({ m }: { m: GameMatchup }) {
 const ENV_COLOR: Record<string, string> = { SHOOTOUT: '#f87171', HIGH: '#fb923c', MODERATE: '#fbbf24', LOW: '#64748b' };
 
 const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen }) => {
-  const homeFav = m.winProbability.home >= m.winProbability.away;
+  const winProbability = m.winProbability ?? { away: 0, home: 0 };
+  const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
+  const homeFav = winProbability.home >= winProbability.away;
   return (
     <button onClick={onOpen}
       className={`text-left rounded-2xl border p-4 transition-all hover:scale-[1.01] w-full ${m.isLive ? 'border-red-500/30 bg-gradient-to-br from-red-950/20 via-[#0b1120] to-[#0b1120] shadow-[0_0_24px_rgba(239,68,68,0.12)]' : 'border-slate-800 bg-gradient-to-br from-slate-900/40 to-[#0b1120]'}`}>
@@ -59,16 +175,16 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
 
       {/* Teams */}
       {[m.away, m.home].map((t, i) => {
-        const pct = i === 0 ? m.winProbability.away : m.winProbability.home;
+        const pct = i === 0 ? winProbability.away : winProbability.home;
         const fav = i === 0 ? !homeFav : homeFav;
-        const score = i === 0 ? m.score.away : m.score.home;
+        const score = i === 0 ? m.score?.away : m.score?.home;
         return (
-          <div key={t.teamId} className="flex items-center justify-between gap-2 mb-2">
+          <div key={`${t.teamId}-${t.name}`} className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <TeamLogo src={t.logo} alt={t.name} />
               <div className="min-w-0">
                 <p className={`text-sm font-black truncate ${fav ? 'text-slate-100' : 'text-slate-300'}`}>{t.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">{t.record ? `${t.record.wins}-${t.record.losses}` : '—'} · {pct}% win</p>
+                <p className="text-[10px] text-slate-500 font-mono">{t.record ? `${t.record.wins}-${t.record.losses}` : '—'} · {safePct(pct)} win</p>
               </div>
             </div>
             <span className="text-xl font-mono font-black text-white">{(m.isLive || m.isFinal) ? score : ''}</span>
@@ -78,8 +194,8 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
 
       {/* Win prob bar */}
       <div className="mt-1 h-1.5 rounded-full overflow-hidden bg-slate-800 flex">
-        <div style={{ width: `${m.winProbability.away}%`, background: '#64748b' }} />
-        <div style={{ width: `${m.winProbability.home}%`, background: '#0ea5e9' }} />
+        <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
+        <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
       </div>
 
       {/* Run env + top HR watch */}
@@ -92,10 +208,10 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
         <span className="flex items-center gap-1 text-[10px] text-sky-400 font-bold">AI Breakdown <ChevronRight className="w-3 h-3" /></span>
       </div>
 
-      {m.topHrWatch.length > 0 && (
+      {topHrWatch.length > 0 && (
         <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-800/60">
           <span className="text-[9px] text-slate-500 font-mono uppercase mr-1">HR Watch</span>
-          {m.topHrWatch.slice(0, 3).map((w) => (
+          {topHrWatch.slice(0, 3).map((w) => (
             <span key={w.playerId} className="flex items-center gap-1">
               <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-5 h-5 rounded-full object-cover bg-slate-900 border border-slate-700" />
               <span className="text-[10px] text-slate-300 truncate max-w-[70px]">{w.playerName.split(' ').slice(-1)[0]}</span>
@@ -115,7 +231,9 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
       {children}
     </div>
   );
-  const homeFav = m.winProbability.home >= m.winProbability.away;
+  const winProbability = m.winProbability ?? { away: 0, home: 0 };
+  const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
+  const homeFav = winProbability.home >= winProbability.away;
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -135,14 +253,14 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           {/* Win probability */}
           <Section icon={Activity} title="Win probability (model)">
             <div className="flex items-center justify-between text-sm font-black mb-1.5">
-              <span className={!homeFav ? 'text-sky-400' : 'text-slate-300'}>{m.away.abbreviation} {m.winProbability.away}%</span>
-              <span className={homeFav ? 'text-sky-400' : 'text-slate-300'}>{m.winProbability.home}% {m.home.abbreviation}</span>
+              <span className={!homeFav ? 'text-sky-400' : 'text-slate-300'}>{m.away.abbreviation} {safePct(winProbability.away)}</span>
+              <span className={homeFav ? 'text-sky-400' : 'text-slate-300'}>{safePct(winProbability.home)} {m.home.abbreviation}</span>
             </div>
             <div className="h-2 rounded-full overflow-hidden bg-slate-800 flex mb-2">
-              <div style={{ width: `${m.winProbability.away}%`, background: '#64748b' }} />
-              <div style={{ width: `${m.winProbability.home}%`, background: '#0ea5e9' }} />
+              <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
+              <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
             </div>
-            <ul className="space-y-0.5">{m.winProbModel.map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
+            <ul className="space-y-0.5">{(m.winProbModel ?? []).map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
           </Section>
 
           {/* Pitcher matchups */}
@@ -171,14 +289,14 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
                 <span className="text-sm font-black font-mono" style={{ color: ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8' }}>{m.runEnvironment.tier}</span>
                 <span className="text-xs text-slate-400 font-mono">{m.runEnvironment.score}/100</span>
               </div>
-              <ul className="space-y-0.5">{m.runEnvironment.reasons.map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
+              <ul className="space-y-0.5">{(m.runEnvironment.reasons ?? []).map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
             </Section>
           )}
 
           {/* Players to watch */}
           <Section icon={Flame} title="Players to watch (HR)" tone="#fb923c">
             <div className="space-y-2">
-              {m.topHrWatch.map((w) => (
+              {topHrWatch.map((w) => (
                 <div key={w.playerId} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
                   <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -200,7 +318,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           {/* Key factors + what to watch */}
           <Section icon={Gavel} title="Key factors & what to watch">
             <ul className="space-y-1">
-              {[...m.keyFactors, ...m.whatToWatch].map((f, i) => <li key={i} className="text-[11px] text-slate-300">• {f}</li>)}
+              {[...(m.keyFactors ?? []), ...(m.whatToWatch ?? [])].map((f, i) => <li key={i} className="text-[11px] text-slate-300">• {f}</li>)}
             </ul>
           </Section>
 
@@ -223,15 +341,50 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
   const [selected, setSelected] = useState<GameMatchup | null>(null);
+  const [sourceNote, setSourceNote] = useState('Loading live projection context...');
 
   const load = useCallback(async () => {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+    setSourceNote('Loading fast HR board preview...');
+
+    let fastLoaded = false;
     try {
-      const res = await vouchedgeApi.matchupsToday();
-      setMatchups(res.matchups);
+      const board = await withTimeout(vouchedgeApi.hrBoardToday(50), 7000, 'HR board preview');
+      const fastMatchups = buildMatchupsFromHrBoard(board);
+      if (fastMatchups.length > 0) {
+        fastLoaded = true;
+        setMatchups(fastMatchups);
+        setSourceNote('Fast preview loaded from verified HR board. Enriching matchup model...');
+        setLoading(false);
+      }
     } catch {
-      setError('Backend unavailable — run the dev server to load live matchups.');
-    } finally { setLoading(false); }
+      setSourceNote('Fast preview unavailable. Trying matchup model...');
+    }
+
+    try {
+      const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
+      const next = Array.isArray(res.matchups) ? res.matchups : [];
+      if (next.length > 0) {
+        setMatchups(next);
+        setError(null);
+        setSourceNote('Full matchup model loaded.');
+      } else if (!fastLoaded) {
+        setError('No live projection data available. No fake games shown.');
+        setSourceNote('No verified live projection rows returned.');
+      }
+    } catch {
+      if (fastLoaded) {
+        setError(null);
+        setSourceNote('Full matchup model is slow/unavailable. Showing verified HR-board preview.');
+      } else {
+        setError('Live projections unavailable right now. No fake games shown.');
+        setMatchups([]);
+        setSourceNote('Backend unavailable.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); const id = setInterval(load, REFRESH_MS); return () => clearInterval(id); }, [load]);
@@ -254,8 +407,9 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-sky-950/30 via-[#0b1120] to-[#0b1120] p-5 mb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Matchups</h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-md">Real MLB schedule with model win probabilities, run environment, and the actual hitters to watch in each game.</p>
+            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Projections</h1>
+            <p className="text-xs text-slate-400 mt-1 max-w-md">Fast MLB game cards with verified HR watch first, then deeper matchup model when available. No fake win, RBI, run, or hit data.</p>
+            <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-cyan-300">{sourceNote}</p>
           </div>
           <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-500/50 transition-colors">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
