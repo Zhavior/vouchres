@@ -42,6 +42,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: true, order: 6 },
   { id: "intel", label: "MLB Intelligence", icon: "Activity", enabled: true, order: 7 },
   { id: "hr_board", label: "Daily HR Board", icon: "Flame", enabled: true, order: 8 },
+  { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 8.5 },
   { id: "live_game_lab", label: "Live Game Lab", icon: "Radio", enabled: true, order: 9 },
   { id: "player_edge_lab", label: "Player Edge Lab", icon: "UserRoundSearch", enabled: true, order: 10 },
   { id: "team_matchup_lab", label: "Team Matchup Lab", icon: "Swords", enabled: true, order: 11 },

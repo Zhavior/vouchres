@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Sparkles, 
-  ShieldCheck, 
-  Trophy, 
-  TrendingUp, 
-  UserCheck, 
-  Coins, 
-  Lock, 
-  Mail, 
-  Check, 
+import {
+  Sparkles,
+  ShieldCheck,
+  Trophy,
+  TrendingUp,
+  UserCheck,
+  Coins,
+  Lock,
+  Mail,
+  Check,
   Send,
   Loader,
-  AlertCircle
+  AlertCircle,
+  CreditCard,
+  ExternalLink
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
+import { startStripeCheckout, openBillingPortal, fetchBillingStatus, tierToSubscriptionTier } from '../lib/billingClient';
 
 interface PremiumSubPageProps {
   profile: CreatorProofProfile;
@@ -29,6 +32,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [betaRegID, setBetaRegID] = useState('');
 
+  // Stripe checkout / portal state
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
+
   // Loaded from previous beta logs
   useEffect(() => {
     const storedBeta = localStorage.getItem('vouchedge_beta_email');
@@ -40,12 +48,32 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
     }
   }, []);
 
+  // On return from Stripe checkout success, refresh billing status
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      fetchBillingStatus().then((status) => {
+        if (status) {
+          const subTier = tierToSubscriptionTier(status.tier);
+          onUpdateProfile({
+            subscriptionTier: subTier,
+            verified: subTier === 'GOLD' || subTier === 'SELLER_PRO',
+          });
+        }
+      });
+      // Clean up URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('checkout');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
   const handleBetaSignUp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!betaEmail.trim()) return;
 
     setIsSubmittingBeta(true);
-    
+
     setTimeout(() => {
       const regID = `VE-BETA-${Math.floor(1000 + Math.random() * 9000)}`;
       localStorage.setItem('vouchedge_beta_email', betaEmail);
@@ -57,25 +85,42 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
     }, 1200);
   };
 
-  const handleSubscribePlan = (tier: 'BASIC' | 'GOLD' | 'SELLER_PRO') => {
-    let verifiedUpdate = profile.verified;
-    if (tier === 'GOLD' || tier === 'SELLER_PRO') {
-      verifiedUpdate = true;
+  const handleSubscribePlan = async (tier: 'BASIC' | 'GOLD' | 'SELLER_PRO') => {
+    setBillingError(null);
+
+    if (tier === 'BASIC') {
+      // Downgrade to basic — open portal to manage/cancel
+      await handleManageBilling();
+      return;
     }
 
-    onUpdateProfile({
-      subscriptionTier: tier,
-      verified: verifiedUpdate
-    });
+    const stripeTier = tier === 'GOLD' ? 'gold' : 'seller_pro';
+    setCheckoutLoading(tier);
 
-    // Provide immediate interactive sensory confirmation
-    const tierNames = {
-      BASIC: 'VEdge Basic',
-      GOLD: 'VEdge Gold (Verified)',
-      SELLER_PRO: 'VEdge Research Seller PRO'
-    };
+    const result = await startStripeCheckout(stripeTier);
+    setCheckoutLoading(null);
 
-    alert(`🎉 Successfully activated your subscription to: ${tierNames[tier]}! Your verified profile features, limits, and storefront parameters have been integrated into your local ledger.`);
+    if (result.ok) {
+      window.location.href = result.url;
+    } else {
+      const errMsg = (result as { ok: false; error: string }).error;
+      setBillingError(`Stripe not active yet: ${errMsg}. Activating locally for preview.`);
+      onUpdateProfile({ subscriptionTier: tier, verified: true });
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setBillingError(null);
+    setPortalLoading(true);
+    const result = await openBillingPortal();
+    setPortalLoading(false);
+
+    if (result.ok) {
+      window.location.href = result.url;
+    } else {
+      const errMsg = (result as { ok: false; error: string }).error;
+      setBillingError(`Portal not active yet: ${errMsg}`);
+    }
   };
 
   const activeTier = profile.subscriptionTier || 'BASIC';
@@ -301,13 +346,15 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             <div className="pt-6">
               <button
                 onClick={() => handleSubscribePlan('GOLD')}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
+                disabled={checkoutLoading === 'GOLD'}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   activeTier === 'GOLD'
                     ? 'bg-sky-950/40 border border-sky-800/40 text-sky-400 cursor-default'
-                    : 'bg-sky-500 hover:bg-sky-450 text-white shadow'
+                    : 'bg-sky-500 hover:bg-sky-450 text-white shadow disabled:opacity-60'
                 }`}
               >
-                {activeTier === 'GOLD' ? 'Active Gold Member' : 'Upgrade to Gold'}
+                {checkoutLoading === 'GOLD' && <Loader className="h-3.5 w-3.5 animate-spin" />}
+                {activeTier === 'GOLD' ? 'Active Gold Member' : checkoutLoading === 'GOLD' ? 'Redirecting to Stripe...' : 'Upgrade to Gold'}
               </button>
             </div>
           </div>
@@ -364,13 +411,15 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             <div className="pt-6">
               <button
                 onClick={() => handleSubscribePlan('SELLER_PRO')}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
+                disabled={checkoutLoading === 'SELLER_PRO'}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   activeTier === 'SELLER_PRO'
                     ? 'bg-indigo-950 text-indigo-300 border border-indigo-800 cursor-default'
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md'
+                    : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md disabled:opacity-60'
                 }`}
               >
-                {activeTier === 'SELLER_PRO' ? 'Active Storefront' : 'Go Pro & Sell Picks'}
+                {checkoutLoading === 'SELLER_PRO' && <Loader className="h-3.5 w-3.5 animate-spin" />}
+                {activeTier === 'SELLER_PRO' ? 'Active Storefront' : checkoutLoading === 'SELLER_PRO' ? 'Redirecting to Stripe...' : 'Go Pro & Sell Picks'}
               </button>
             </div>
           </div>
@@ -378,12 +427,40 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
         </div>
       </div>
 
+      {/* Stripe billing error / info banner */}
+      {billingError && (
+        <div className="p-3.5 bg-amber-900/25 rounded-xl border border-amber-700/40 flex items-start gap-2 text-[11px] text-amber-200 leading-relaxed">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div>{billingError}</div>
+        </div>
+      )}
+
+      {/* Manage Billing — visible when subscribed */}
+      {(activeTier === 'GOLD' || activeTier === 'SELLER_PRO') && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-black text-slate-200">Manage Your Subscription</p>
+            <p className="text-xs text-slate-500 mt-0.5">Update payment, view invoices, or cancel anytime via the Stripe billing portal.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleManageBilling}
+            disabled={portalLoading}
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2.5 text-xs font-black text-cyan-200 hover:bg-cyan-400/20 transition-colors disabled:opacity-50"
+          >
+            {portalLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+            <span>Billing Portal</span>
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
       {/* Disclaimers warning safety first */}
       <div className="p-3.5 bg-slate-900/65 rounded-xl border border-slate-850 flex items-start gap-2 text-[11px] text-slate-450 leading-relaxed">
         <AlertCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <div>
           <span className="text-slate-350 block mb-0.5 font-bold uppercase">SECURE BILLING NOTICE:</span>
-          Subscriptions are simulated for direct beta evaluation. Active tiers instantly upgrade local cache profiles and authorize emerald verification checklists across the feed card, results summary, and parlay tracking ledger.
+          Subscriptions are processed securely via Stripe (test mode). Upgrading redirects to Stripe Checkout. Your subscription tier syncs back to VouchEdge after payment completes. Verified profile badges and Pro Lab access activate automatically.
         </div>
       </div>
 

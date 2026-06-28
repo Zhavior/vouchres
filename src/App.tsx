@@ -38,6 +38,8 @@ import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
 import PlayerEdgeLabPage from './pages/pro/PlayerEdgeLabPage';
 import TeamMatchupLabPage from './pages/pro/TeamMatchupLabPage';
 import ProGraphsLabPage from './pages/pro/ProGraphsLabPage';
+import DailyPlayersPage from './pages/DailyPlayersPage';
+import { ProAccessGate } from './components/pro/ProAccessGate';
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
@@ -50,6 +52,10 @@ function resolveDevSectionFromLocation() {
 
   if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
     return 'hr_board';
+  }
+
+  if (target === 'daily-players' || target === '/daily-players') {
+    return 'daily_players';
   }
 
   if (target === 'live-game-lab' || target === '/live-game-lab') {
@@ -591,14 +597,32 @@ export default function App() {
         return <MlbIntelligenceHub />;
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
+      case 'daily_players':
+        return <DailyPlayersPage />;
       case 'live_game_lab':
-        return <LiveGameLabPage />;
+        return (
+          <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
+            <LiveGameLabPage />
+          </ProAccessGate>
+        );
       case 'player_edge_lab':
-        return <PlayerEdgeLabPage />;
+        return (
+          <ProAccessGate profile={profile} featureName="Player Edge Lab" onNavigatePremium={() => navigateSection('premium')}>
+            <PlayerEdgeLabPage />
+          </ProAccessGate>
+        );
       case 'team_matchup_lab':
-        return <TeamMatchupLabPage />;
+        return (
+          <ProAccessGate profile={profile} featureName="Team Matchup Lab" onNavigatePremium={() => navigateSection('premium')}>
+            <TeamMatchupLabPage />
+          </ProAccessGate>
+        );
       case 'pro_graphs_lab':
-        return <ProGraphsLabPage />;
+        return (
+          <ProAccessGate profile={profile} featureName="Pro Graphs Lab" onNavigatePremium={() => navigateSection('premium')}>
+            <ProGraphsLabPage />
+          </ProAccessGate>
+        );
       case 'vouchscan':
         return <VouchScan />;
       case 'live_games':
