@@ -172,6 +172,17 @@ export default function LiveGameLabPage() {
               </p>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-4">
+              <PressureCard title="HR Pressure" value={hrThreats[0]?.hrEdge ?? 0} label="From HR board" color="text-cyan-200" />
+              <PressureCard title="Pitcher Risk" value={hrThreats[0]?.pitcherVulnerability ?? 0} label="P.VULN signal" color="text-amber-200" />
+              <PressureCard title="Confidence" value={selected?.confidence ?? 0} label="Data confidence" color="text-emerald-200" />
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">RBI / Run / Hit</div>
+                <div className="mt-2 text-xl font-black text-slate-200">Locked</div>
+                <p className="mt-1 text-xs text-slate-500">Verified feed required.</p>
+              </div>
+            </div>
+
             <div className="grid gap-5 xl:grid-cols-4">
               <ThreatColumn title="HR Threats" rows={hrThreats} live />
               <LockedThreat title="RBI Threats" />
@@ -211,6 +222,16 @@ export default function LiveGameLabPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function PressureCard({ title, value, label, color }: { title: string; value: number; label: string; color: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
+      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{title}</div>
+      <div className={`mt-2 text-3xl font-black ${color}`}>{Math.round(value)}</div>
+      <p className="mt-1 text-xs text-slate-500">{label}</p>
+    </div>
   );
 }
 
