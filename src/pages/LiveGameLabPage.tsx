@@ -168,29 +168,29 @@ export default function LiveGameLabPage() {
               <div className="rounded-2xl border border-slate-800 bg-[#07111f]/80 p-5">
                 <h3 className="mb-4 text-sm font-black text-slate-100">Team Pressure Signals</h3>
                 <div className="space-y-4">
-                  <ProSignalBar label="HR danger" value={hrThreats[0]?.hrEdge ?? null} tone="cyan" />
-                  <ProSignalBar label="Pitcher vulnerability" value={hrThreats[0]?.pitcherVulnerability ?? null} tone="amber" />
-                  <ProSignalBar label="Data confidence" value={selected?.confidence ?? null} tone="emerald" />
+                  <ProSignalBar label="HR danger" value={hrThreats[0]?.hrEdge ?? null} color="#22d3ee" />
+                  <ProSignalBar label="Pitcher vulnerability" value={hrThreats[0]?.pitcherVulnerability ?? null} color="#d6a64f" />
+                  <ProSignalBar label="Data confidence" value={selected?.confidence ?? null} color="#34d399" />
                 </div>
               </div>
               <ProLockedCard
                 title="Pitcher / Bullpen Risk"
-                detail="Requires verified starter depth, bullpen usage, and recent fatigue feed. No fake pitcher risk shown."
-                label="Verified feed required"
+                description="Requires verified starter depth, bullpen usage, and recent fatigue feed. No fake pitcher risk shown."
+                badge="Verified feed required"
               />
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <ProGraphShell title="Recent Runs Trend" />
-              <ProGraphShell title="Recent Hits / HR Trend" />
-              <ProGraphShell title="Strikeout Pressure Trend" />
-              <ProGraphShell title="Pitcher Vulnerability Comparison" />
+              <ProGraphShell title="Recent Runs Trend" description="Verified recent team runs trend feed required. No fake graph data shown." />
+              <ProGraphShell title="Recent Hits / HR Trend" description="Verified recent hits and HR trend feed required. No fake graph data shown." />
+              <ProGraphShell title="Strikeout Pressure Trend" description="Verified strikeout pressure trend feed required. No fake graph data shown." />
+              <ProGraphShell title="Pitcher Vulnerability Comparison" description="Verified pitcher vulnerability comparison feed required. No fake graph data shown." />
             </div>
 
             <ProLockedCard
               title="Match History"
-              detail="Past games between these teams, runs, hits, HRs, and strikeouts require a verified matchup history feed."
-              label="Coming soon"
+              description="Past games between these teams, runs, hits, HRs, and strikeouts require a verified matchup history feed."
+              badge="Coming soon"
             />
           </section>
         </div>
