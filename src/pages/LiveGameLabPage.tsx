@@ -177,7 +177,9 @@ export default function LiveGameLabPage() {
                 Visual Read
               </div>
               <div className="grid gap-3 sm:grid-cols-4">
-                <Snapshot label="HR threats found" value={`${hrThreats.length} verified`} />
+                <Snapshot label="Game" value={gameProfile.matchup} />
+                <Snapshot label="Venue" value={gameProfile.venue} />
+                <Snapshot label="HR threats found" value={`${gameProfile.hrThreatCount} verified`} />
                 <Snapshot label="RBI board" value="Locked feed" />
                 <Snapshot label="Run board" value="Locked feed" />
                 <Snapshot label="Hit board" value="Locked feed" />
@@ -188,8 +190,8 @@ export default function LiveGameLabPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-4">
-              <PressureCard title="HR Pressure" value={hrThreats[0]?.hrEdge ?? 0} label="From HR board" color="text-cyan-200" />
-              <PressureCard title="Pitcher Risk" value={hrThreats[0]?.pitcherVulnerability ?? 0} label="P.VULN signal" color="text-amber-200" />
+              <PressureCard title="HR Pressure" value={gameProfile.topHrEdge} label="From HR board" color="text-cyan-200" />
+              <PressureCard title="Pitcher Risk" value={gameProfile.topPitcherVulnerability} label="P.VULN signal" color="text-amber-200" />
               <PressureCard title="Confidence" value={selected?.confidence ?? 0} label="Data confidence" color="text-emerald-200" />
               <div className="rounded-2xl border border-slate-800 bg-slate-950/55 p-4">
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">RBI / Run / Hit</div>
