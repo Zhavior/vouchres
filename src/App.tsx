@@ -715,11 +715,18 @@ export default function App() {
         return <EpicThemeShowcase />;
       case 'subscriber_hub':
         return (
-          <SubscriberHub
+          <ProAccessGate
             profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-            onSectionChange={navigateSection}
-          />
+            requiredTier="SELLER_PRO"
+            featureName="Subscriber Clubs & Chat"
+            onNavigatePremium={() => navigateSection('premium')}
+          >
+            <SubscriberHub
+              profile={profile}
+              onUpdateProfile={handleUpdateProfile}
+              onSectionChange={navigateSection}
+            />
+          </ProAccessGate>
         );
       case 'settings':
         return (

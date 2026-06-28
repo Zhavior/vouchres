@@ -235,7 +235,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             Premium X-Style Deals Grid
           </h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Opt into your tailored ledger profile tier below to instantly update your verification badges and access levels.
+            Two paywall layers: <span className="text-sky-400 font-bold">Gold ($12.99)</span> unlocks all Pro analytics labs, then <span className="text-indigo-400 font-bold">Seller PRO ($49.99)</span> adds deep research, pick selling, and subscriber chat & clubs.
           </p>
         </div>
 
@@ -313,11 +313,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <ShieldCheck className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-sky-400 font-sans">$8</span>
+                  <span className="text-2xl font-black text-sky-400 font-sans">$12.99</span>
                   <span className="text-slate-400 text-xs font-mono">/ Month</span>
                 </div>
                 <p className="text-[11px] text-slate-350 leading-relaxed pt-1">
-                  Unlock official verification & expand analysis layout capabilities.
+                  Layer 1 — Unlock all Pro analytics labs, verification & advanced graphs.
                 </p>
               </div>
 
@@ -329,11 +329,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-300">
                   <Check className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
-                  <span>Attach custom files to backing logs</span>
+                  <span>All 4 Pro Labs: Live Game, Player Edge, Team Matchup, Pro Graphs</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-300">
                   <Check className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
-                  <span>Advanced Recharts Lab visualization</span>
+                  <span>Real-time signal graphs & confidence meters</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-300">
                   <Check className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
@@ -378,11 +378,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <Coins className="w-4 h-4 text-indigo-400 animate-bounce" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-indigo-400 font-sans">$40</span>
+                  <span className="text-2xl font-black text-indigo-400 font-sans">$49.99</span>
                   <span className="text-slate-400 text-xs font-mono">/ Month</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed pt-1">
-                  The ultimate storefront deal for sports analysts looking to sell and monetize their premium MLB or NFL research picks.
+                  Layer 2 — Everything in Gold, plus deep research, sell your picks, and your own subscriber chat & clubs.
                 </p>
               </div>
 
@@ -390,19 +390,19 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
               <div className="border-t border-indigo-950/70 pt-3.5 space-y-2.5">
                 <div className="flex items-start gap-2 text-[11px] text-indigo-300 font-bold">
                   <Coins className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Open Paid Storefront: Get tipped & paid</span>
+                  <span>Everything in Gold + deep research suite</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-200">
                   <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                  <span>Gated Research Sheets payment wall</span>
+                  <span>Sell your picks: paid storefront, 0% commission</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-200">
                   <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                  <span>Cryptographic API verification keys</span>
+                  <span>Subscriber Chat & Clubs — run your own paid community</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-slate-200">
                   <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                  <span>0% commission on storefront sales</span>
+                  <span>Gated research sheets & cryptographic verification keys</span>
                 </div>
               </div>
             </div>
