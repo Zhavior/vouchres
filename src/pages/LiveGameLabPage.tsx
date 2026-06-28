@@ -202,6 +202,23 @@ export default function LiveGameLabPage() {
               </div>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-3">
+              {hrThreats.slice(0, 3).map((row, index) => (
+                <div key={`quick-${row.playerId}-${row.gamePk}`} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/5 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200">
+                    Quick HR Read #{index + 1}
+                  </div>
+                  <div className="mt-2 text-lg font-black text-white">{row.playerName}</div>
+                  <div className="mt-1 text-xs text-slate-500">{row.team} vs {row.opponent} · vs {row.opponentPitcherName}</div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <Snapshot label="HR Edge" value={`${Math.round(row.hrEdge ?? 0)}`} />
+                    <Snapshot label="P.VULN" value={`${Math.round(row.pitcherVulnerability ?? 0)}`} />
+                    <Snapshot label="Risk" value={row.riskLabel ?? 'Review'} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="grid gap-5 xl:grid-cols-4">
               <ThreatColumn title="HR Threats" rows={hrThreats} live />
               <LockedThreat title="RBI Threats" />
