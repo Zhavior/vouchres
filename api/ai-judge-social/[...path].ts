@@ -78,8 +78,22 @@ const judges = [
 
 function getPath(req: VercelRequest): string[] {
   const raw = req.query.path;
-  if (Array.isArray(raw)) return raw.map(String);
-  if (typeof raw === "string") return [raw];
+  if (Array.isArray(raw) && raw.length > 0) return raw.map(String);
+  if (typeof raw === "string" && raw.length > 0) return [raw];
+
+  const url = req.url || "";
+  const clean = url.split("?")[0] || "";
+  const prefix = "/api/ai-judge-social/";
+  const index = clean.indexOf(prefix);
+
+  if (index >= 0) {
+    return clean
+      .slice(index + prefix.length)
+      .split("/")
+      .filter(Boolean)
+      .map(decodeURIComponent);
+  }
+
   return [];
 }
 
