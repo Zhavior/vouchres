@@ -4,8 +4,11 @@ import {
   ArrowRight,
   Bell,
   Bot,
+  Check,
+  CreditCard,
   Home,
   Layers3,
+  Lock,
   LogIn,
   Palette,
   Radio,
@@ -23,8 +26,61 @@ import type { Parlay, CreatorProofProfile } from '../../types';
 type TheEdgeMode = 'public' | 'dashboard';
 type TheEdgePresentation = 'page' | 'overlay';
 
-/** Trimmed funnel: one sell screen, one auth screen each, quick handoff to the Island. */
+/** Trimmed funnel: one sell screen, guided signup wizard, quick handoff to the Island. */
 type EdgeLayer = 'intro' | 'login' | 'signup' | 'welcomeBack' | 'dashboard';
+
+/** Steps inside the signup wizard. */
+type SignupStep = 'features' | 'account' | 'plan' | 'payment' | 'policy';
+
+type PlanId = 'free' | 'pro_trial' | 'pro_elite';
+
+const PLANS: Record<PlanId, { name: string; price: string; sub: string; perks: string[]; accent: 'cyan' | 'emerald' | 'violet'; badge?: string; paid: boolean }> = {
+  free: {
+    name: 'Free',
+    price: '$0',
+    sub: 'Core research, forever',
+    perks: ['Daily board & player pages', 'Build & save parlays', 'Results ledger'],
+    accent: 'cyan',
+    paid: false,
+  },
+  pro_trial: {
+    name: 'Pro',
+    price: '1.5 weeks free',
+    sub: 'then $12.99/mo · cancel anytime',
+    perks: ['Everything in Free', 'All Pro Labs + AI Smart Picks', 'Pitcher Pro profiles & alerts'],
+    accent: 'emerald',
+    badge: 'Most popular',
+    paid: true,
+  },
+  pro_elite: {
+    name: 'Pro Elite',
+    price: '$49.99/mo',
+    sub: 'Deep research + sell your picks',
+    perks: ['Everything in Pro', 'Deep research suite', 'Sell picks + Subscriber Clubs'],
+    accent: 'violet',
+    badge: 'Top tier',
+    paid: true,
+  },
+};
+
+/** VouchEdge policy the user must read + agree to before an account is created. */
+const POLICY_TEXT = `VouchEdge — Terms, Privacy & Responsible Use
+
+1. Research & entertainment only. VouchEdge provides probability-based sports research, statistics, and tools. Nothing on the platform is betting advice, a guarantee of outcome, or a promise of profit. You are solely responsible for any decisions you make.
+
+2. Eligibility. You must be at least 21 years old and located in a jurisdiction where using sports research tools is permitted. You confirm you are not excluded or self-excluded from gaming services.
+
+3. No guaranteed outcomes. All grades, edges, projections, and AI outputs are estimates derived from public data (e.g. the MLB Stats API) and may be incomplete, delayed, or incorrect. Past results never guarantee future results.
+
+4. Your data. We store the account details, picks, and preferences you create to operate the product. We do not sell your personal data. Payment is processed by our payment provider; we do not store full card numbers.
+
+5. Subscriptions & trials. Free tiers remain free. Paid plans (including the 1.5-week Pro free trial) renew automatically at the stated price unless cancelled before the trial or billing period ends. You can cancel anytime from billing settings.
+
+6. Fair use. Do not scrape, resell, or redistribute VouchEdge data or attempt to manipulate grading. Accounts that abuse the platform may be suspended.
+
+7. Changes. We may update these terms; continued use means you accept the current version.
+
+By checking the boxes below you confirm you have read and agree to these terms, the Privacy Policy, and the Responsible Use notice.`;
 
 type TheEdgeShellProps = {
   mode: TheEdgeMode;
@@ -71,8 +127,35 @@ export default function TheEdgeShell({
   onSectionChange,
 }: TheEdgeShellProps) {
   const [edgeLayer, setEdgeLayer] = useState<EdgeLayer>(mode === 'public' ? 'intro' : 'welcomeBack');
-  const [trial, setTrial] = useState(true);
   const [slate, setSlate] = useState<SlateGame[]>([]);
+  const [signupStep, setSignupStep] = useState<SignupStep>('features');
+  const [plan, setPlan] = useState<PlanId>('pro_trial');
+  const [agree, setAgree] = useState({ age: false, terms: false, research: false });
+  const allAgreed = agree.age && agree.terms && agree.research;
+
+  function openSignup(p: PlanId = 'pro_trial') {
+    setPlan(p);
+    setSignupStep('features');
+    setAgree({ age: false, terms: false, research: false });
+    setEdgeLayer('signup');
+  }
+
+  // Wizard order — payment is skipped for the free plan.
+  const signupOrder: SignupStep[] = plan === 'free'
+    ? ['features', 'account', 'plan', 'policy']
+    : ['features', 'account', 'plan', 'payment', 'policy'];
+
+  function signupNext() {
+    const i = signupOrder.indexOf(signupStep);
+    if (i < 0) return setSignupStep('account');
+    if (i >= signupOrder.length - 1) { completeAuth(); return; }
+    setSignupStep(signupOrder[i + 1]);
+  }
+  function signupBack() {
+    const i = signupOrder.indexOf(signupStep);
+    if (i <= 0) { setEdgeLayer('intro'); return; }
+    setSignupStep(signupOrder[i - 1]);
+  }
 
   // Real today's slate for the scoreboard ticker (no fake games).
   useEffect(() => {
@@ -118,6 +201,8 @@ export default function TheEdgeShell({
 
   function completeAuth() {
     localStorage.setItem('vouchedge_after_auth_mode', 'island');
+    localStorage.setItem('vouchedge_signup_plan', plan);
+    localStorage.setItem('vouchedge_policy_agreed_at', new Date().toISOString());
     setEdgeLayer('welcomeBack');
     window.setTimeout(() => setEdgeLayer('dashboard'), 900);
   }
@@ -212,8 +297,8 @@ export default function TheEdgeShell({
                     </div>
 
                     <div className="mt-7 flex flex-wrap gap-3">
-                      <button onClick={() => { setTrial(true); setEdgeLayer('signup'); }} className={PRIMARY}>
-                        <span className="inline-flex items-center gap-2">Start 2-week trial <ArrowRight className="h-4 w-4" /></span>
+                      <button onClick={() => openSignup('pro_trial')} className={PRIMARY}>
+                        <span className="inline-flex items-center gap-2">Start 1.5-week free trial <ArrowRight className="h-4 w-4" /></span>
                       </button>
                       <button onClick={() => setEdgeLayer('login')} className={SECONDARY}>
                         <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
@@ -222,7 +307,7 @@ export default function TheEdgeShell({
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-bold text-slate-500">
-                      <span>2-week trial</span><span>·</span><span>Cancel anytime</span><span>·</span><span>Research & entertainment only</span>
+                      <span>1.5-week free trial</span><span>·</span><span>Cancel anytime</span><span>·</span><span>Research &amp; entertainment only</span>
                     </div>
                   </div>
 
@@ -296,56 +381,207 @@ export default function TheEdgeShell({
                   <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Password" type="password" />
                 </div>
                 <button onClick={completeAuth} className={`mt-6 w-full ${PRIMARY}`}>Login → Enter The Island</button>
-                <button onClick={() => setEdgeLayer('signup')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                <button onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
                   New here? Start a free trial →
                 </button>
               </motion.section>
             )}
 
-            {/* ── SIGNUP: details + trial choice on ONE screen ── */}
+            {/* ── SIGNUP WIZARD: features → account → plan → payment → policy ── */}
             {edgeLayer === 'signup' && (
               <motion.section
                 key="signup"
-                initial={{ opacity: 0, x: 32 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -32 }}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.4, ease }}
-                className="mx-auto max-w-md rounded-3xl border border-slate-800 bg-slate-950/70 p-6 shadow-2xl shadow-black/30"
+                className="mx-auto max-w-2xl"
               >
-                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Create account</div>
-                <h2 className="mt-2 text-3xl font-black text-white">Start your Edge.</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">One step. Save picks, build a proof ledger, unlock the Island.</p>
-
-                <div className="mt-6 grid gap-3">
-                  <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Name" />
-                  <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Email" />
-                  <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Password" type="password" />
+                {/* Stepper */}
+                <div className="mb-5 flex items-center gap-2">
+                  {signupOrder.map((s, i) => {
+                    const active = s === signupStep;
+                    const done = signupOrder.indexOf(signupStep) > i;
+                    return (
+                      <div key={s} className="flex flex-1 items-center gap-2">
+                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black ${active ? 'bg-cyan-400 text-slate-950' : done ? 'bg-emerald-400 text-slate-950' : 'border border-slate-700 bg-slate-900 text-slate-500'}`}>
+                          {done ? <Check className="h-3 w-3" /> : i + 1}
+                        </div>
+                        {i < signupOrder.length - 1 && <div className={`h-px flex-1 ${done ? 'bg-emerald-400/60' : 'bg-slate-800'}`} />}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Trial toggle (replaces a whole membership layer) */}
-                <div className="mt-5 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setTrial(true)}
-                    className={`rounded-2xl border p-3 text-left transition ${trial ? 'border-emerald-300/40 bg-emerald-300/10' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'}`}
-                  >
-                    <div className="text-sm font-black text-white">2-week trial</div>
-                    <div className="text-[11px] text-slate-400">Premium tools · cancel anytime</div>
-                  </button>
-                  <button
-                    onClick={() => setTrial(false)}
-                    className={`rounded-2xl border p-3 text-left transition ${!trial ? 'border-cyan-300/40 bg-cyan-300/10' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'}`}
-                  >
-                    <div className="text-sm font-black text-white">Continue free</div>
-                    <div className="text-[11px] text-slate-400">Core features · upgrade later</div>
-                  </button>
-                </div>
+                <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 shadow-2xl shadow-black/30">
+                  <AnimatePresence mode="wait">
 
-                <button onClick={completeAuth} className={`mt-5 w-full ${PRIMARY}`}>
-                  {trial ? 'Start trial → Enter The Island' : 'Create account → Enter The Island'}
-                </button>
-                <p className="mt-3 text-center text-[11px] text-slate-500">
-                  If VouchEdge helps your research, keep a membership to support the platform.
-                </p>
+                    {/* 1) FEATURES */}
+                    {signupStep === 'features' && (
+                      <motion.div key="s-features" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">What you unlock</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Built to make you sharper.</h2>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                          {[
+                            [ShieldCheck, 'Proof ledger', 'Every pick graded to the final box score.'],
+                            [TrendingUp, 'Daily research', 'HR board, player pages, matchup context.'],
+                            [Layers3, 'Parlay + AI Smart Picks', 'Build slips or let the AI build from confirmed starters.'],
+                            [Users, 'Community with receipts', 'Follow members by tracked results, not hype.'],
+                          ].map(([Icon, title, body]) => {
+                            const I = Icon as typeof ShieldCheck;
+                            return (
+                              <div key={title as string} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                                <I className="h-5 w-5 text-cyan-300" />
+                                <div className="mt-3 text-sm font-black text-white">{title as string}</div>
+                                <p className="mt-1 text-[11px] leading-5 text-slate-500">{body as string}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Continue <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 2) ACCOUNT */}
+                    {signupStep === 'account' && (
+                      <motion.div key="s-account" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Create account</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Your Edge profile.</h2>
+                        <div className="mt-5 grid gap-3">
+                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Name" />
+                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Email" />
+                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Password" type="password" />
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Choose plan <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 3) PLAN */}
+                    {signupStep === 'plan' && (
+                      <motion.div key="s-plan" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Pick your plan</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Start free, or go Pro.</h2>
+                        <div className="mt-5 grid gap-3">
+                          {(Object.entries(PLANS) as [PlanId, typeof PLANS[PlanId]][]).map(([id, p]) => {
+                            const selected = plan === id;
+                            const ring = selected
+                              ? p.accent === 'emerald' ? 'border-emerald-300/50 bg-emerald-300/[0.07]' : p.accent === 'violet' ? 'border-violet-300/50 bg-violet-300/[0.07]' : 'border-cyan-300/50 bg-cyan-300/[0.07]'
+                              : 'border-slate-800 bg-slate-900/50 hover:border-slate-700';
+                            return (
+                              <button key={id} onClick={() => setPlan(id)} className={`relative rounded-2xl border p-4 text-left transition ${ring}`}>
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-black text-white">{p.name}</span>
+                                      {p.badge && <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-300">{p.badge}</span>}
+                                    </div>
+                                    <div className="mt-0.5 text-[11px] text-slate-400">{p.sub}</div>
+                                    <ul className="mt-2 space-y-1">
+                                      {p.perks.map((perk) => (
+                                        <li key={perk} className="flex items-center gap-1.5 text-[11px] text-slate-300"><Check className="h-3 w-3 text-emerald-300" /> {perk}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-black text-white">{p.price}</div>
+                                    <div className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-cyan-300 bg-cyan-300 text-slate-950' : 'border-slate-600'}`}>
+                                      {selected && <Check className="h-3 w-3" />}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}>
+                            <span className="inline-flex items-center gap-2">{PLANS[plan].paid ? 'Continue to payment' : 'Continue'} <ArrowRight className="h-4 w-4" /></span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 4) PAYMENT (paid plans only) */}
+                    {signupStep === 'payment' && (
+                      <motion.div key="s-payment" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Payment</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">
+                          {plan === 'pro_trial' ? '1.5 weeks free, then $12.99/mo.' : `${PLANS[plan].name} — ${PLANS[plan].price}.`}
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">
+                          {plan === 'pro_trial'
+                            ? 'You won’t be charged today. Your card holds your trial; cancel anytime before it ends.'
+                            : 'Secure checkout. You can cancel your subscription anytime.'}
+                        </p>
+                        <div className="mt-5 grid gap-3">
+                          <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3">
+                            <CreditCard className="h-4 w-4 text-slate-500" />
+                            <input className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Card number" inputMode="numeric" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="MM / YY" />
+                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="CVC" />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-slate-500">
+                          <Lock className="h-3.5 w-3.5 text-emerald-300" /> Encrypted checkout · processed by our payment provider
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Review terms <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 5) POLICY + AGREEMENT VERIFICATION */}
+                    {signupStep === 'policy' && (
+                      <motion.div key="s-policy" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Terms &amp; agreement</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Read &amp; agree to continue.</h2>
+                        <div className="mt-4 max-h-56 overflow-y-auto whitespace-pre-line rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-[11px] leading-5 text-slate-400">
+                          {POLICY_TEXT}
+                        </div>
+                        <div className="mt-4 space-y-2.5">
+                          {([
+                            ['age', 'I am 21+ and in a permitted jurisdiction.'],
+                            ['terms', 'I have read and agree to the Terms & Privacy Policy.'],
+                            ['research', 'I understand VouchEdge is research/entertainment only — not betting advice.'],
+                          ] as const).map(([key, label]) => (
+                            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 transition hover:border-slate-700">
+                              <button
+                                type="button"
+                                onClick={() => setAgree((a) => ({ ...a, [key]: !a[key] }))}
+                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition ${agree[key] ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-950'}`}
+                                aria-pressed={agree[key]}
+                              >
+                                {agree[key] && <Check className="h-3.5 w-3.5" />}
+                              </button>
+                              <span className="text-xs leading-5 text-slate-300">{label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between gap-3">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button
+                            onClick={signupNext}
+                            disabled={!allAgreed}
+                            className={`${PRIMARY} ${!allAgreed ? 'cursor-not-allowed opacity-40 hover:translate-y-0' : ''}`}
+                          >
+                            {plan === 'free' ? 'Agree & create account' : plan === 'pro_trial' ? 'Agree & start free trial' : 'Agree & subscribe'}
+                          </button>
+                        </div>
+                        {!allAgreed && <p className="mt-2 text-right text-[10px] font-bold text-slate-600">Check all three boxes to continue.</p>}
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+                </div>
               </motion.section>
             )}
 
