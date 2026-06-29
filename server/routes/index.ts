@@ -11,6 +11,7 @@ import { registerAgentRoutes } from "./agentRoutes";
 import { registerJudgeRoutes } from "./judgeRoutes";
 import { registerTrustRoutes } from "./trustRoutes";
 import { registerResultRoutes } from "./resultRoutes";
+import { registerAiJudgeSocialRoutes } from "./aiJudgeSocialRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import type { Request, Response } from "express";
 
@@ -27,6 +28,7 @@ export function registerApiRoutes(app: Express): void {
   registerJudgeRoutes(app);
   registerTrustRoutes(app);
   registerResultRoutes(app);
+  registerAiJudgeSocialRoutes(app);
 
   // Skills introspection + generic runner.
   app.get("/api/skills", (_req: Request, res: Response) => res.json({ skills: listSkills() }));
