@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 
 /**
  * Public routes — world-readable data used by the home feed, leaderboard,
@@ -18,6 +19,24 @@ import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../midd
  *   GET  /api/following                — caller's follows (auth)
  */
 export const publicRoutes = Router();
+
+
+// =========================================================
+// AI Judge Leaderboard
+// =========================================================
+
+publicRoutes.get("/ai-judges/leaderboard", async (_req, res: Response) => {
+  try {
+    const payload = await buildAiJudgeLeaderboard();
+    return res.json(payload);
+  } catch (error: any) {
+    console.error("[ai-judges] leaderboard failed", error?.message);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to build AI Judge leaderboard",
+    });
+  }
+});
 
 // =========================================================
 // Leaderboard
