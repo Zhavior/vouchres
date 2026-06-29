@@ -106,7 +106,7 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
         <div>
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <h1 className="text-xl font-black tracking-tight">Game Intelligence Center</h1>
+            <h1 className="text-xl font-black tracking-tight">MLB Intelligence Hub</h1>
           </div>
           <p className="text-xs text-slate-400 font-mono">
             {report ? `${report.date} · ${report.gameCount} games · data: ${report.dataQuality}` : 'Loading live slate…'}
@@ -115,62 +115,6 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
         <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500/50 transition-colors">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
-      </div>
-
-      {/* Pro Game Intelligence Hero */}
-      <div className="mb-5 overflow-hidden rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/30 p-5 shadow-2xl relative">
-        <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
-
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black font-mono uppercase tracking-[0.3em] text-emerald-300">
-              AI game room
-            </p>
-            <h2 className="mt-1 text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Game Intelligence Center
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-400">
-              A premium AI scouting room for pitcher pressure, run environment, HR threats, sneaky edges, and judge-style game reads.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 min-w-[260px]">
-            <div className="rounded-2xl bg-black/25 border border-slate-700/70 p-3">
-              <p className="text-[10px] text-slate-500 font-mono uppercase">Games</p>
-              <p className="text-xl font-black text-white">{report?.gameCount ?? '—'}</p>
-            </div>
-            <div className="rounded-2xl bg-black/25 border border-slate-700/70 p-3">
-              <p className="text-[10px] text-slate-500 font-mono uppercase">Quality</p>
-              <p className="text-xl font-black text-emerald-300">{report?.dataQuality ?? 'syncing'}</p>
-            </div>
-            <div className="rounded-2xl bg-black/25 border border-slate-700/70 p-3">
-              <p className="text-[10px] text-slate-500 font-mono uppercase">Mode</p>
-              <p className="text-xl font-black text-sky-300">{isPro ? 'Pro' : 'Free'}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative mt-5 grid sm:grid-cols-2 xl:grid-cols-5 gap-2">
-          {[
-            { name: 'Data Scout', code: 'DS', role: 'Math-first reads', tone: 'Careful' },
-            { name: 'Power Hunter', code: 'PH', role: 'HR threat radar', tone: 'Aggressive' },
-            { name: 'Momentum Reader', code: 'MR', role: 'Live rhythm', tone: 'Reactive' },
-            { name: 'Risk Auditor', code: 'RA', role: 'Weak-data warnings', tone: 'Skeptical' },
-            { name: 'Pro Edge Agent', code: 'PE', role: 'Premium stat paths', tone: 'Locked' },
-          ].map((agent) => (
-            <div key={agent.code} className="rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 hover:border-emerald-400/35 transition">
-              <div className="flex items-center gap-3">
-                <PixelAgentIcon label={agent.code} />
-                <div>
-                  <p className="text-sm font-black text-slate-100">{agent.name}</p>
-                  <p className="text-[10px] text-slate-500 font-mono uppercase">{agent.tone}</p>
-                </div>
-              </div>
-              <p className="mt-2 text-[11px] text-slate-400">{agent.role}</p>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Disclaimer */}
@@ -351,32 +295,6 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
         onClose={() => setSelectedPitcher(null)}
         onUpgrade={() => { setSelectedPitcher(null); onSectionChange?.('premium'); }}
       />
-    </div>
-  );
-}
-
-function PixelAgentIcon({ label }: { label: string }) {
-  return (
-    <div className="relative h-11 w-11 shrink-0 rounded-xl border border-emerald-400/30 bg-slate-950 shadow-inner overflow-hidden">
-      <div className="absolute inset-1 grid grid-cols-4 grid-rows-4 gap-[2px]">
-        {Array.from({ length: 16 }).map((_, i) => (
-          <span
-            key={i}
-            className={`rounded-[2px] ${
-              [1, 2, 4, 7, 8, 11, 13, 14].includes(i)
-                ? 'bg-emerald-300'
-                : [0, 5, 10, 15].includes(i)
-                  ? 'bg-sky-400/80'
-                  : 'bg-slate-800'
-            }`}
-          />
-        ))}
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="rounded bg-black/60 px-1 py-0.5 text-[9px] font-black font-mono text-white">
-          {label}
-        </span>
-      </div>
     </div>
   );
 }
