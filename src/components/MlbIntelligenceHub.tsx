@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import type { Leg, Parlay } from '../types';
 import {
   Activity,
   AlertTriangle,
@@ -91,6 +92,12 @@ type AiJudge = {
     maxLegs: number;
     legs: unknown[];
   };
+};
+
+type MlbIntelligenceHubProps = {
+  profile?: unknown;
+  onSectionChange?: (section: string) => void;
+  onSaveParlay?: (parlay: Parlay) => void;
 };
 
 type AiJudgeLeaderboard = {
@@ -271,7 +278,7 @@ function availabilityTone(status?: string) {
   return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
 }
 
-function JudgeCard({ judge }: { judge: AiJudge }) {
+function JudgeCard({ judge, onBuildParlay }: { judge: AiJudge; onBuildParlay?: (judge: AiJudge) => void }) {
   const isRisk = judge.id === 'risk_auditor';
   const picks = Array.isArray(judge.topPicks) ? judge.topPicks.slice(0, 5) : [];
   const eligibleLegs = picks.filter((p) => p.parlayEligible);
@@ -309,8 +316,10 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
           {!isRisk && (
             <button
               type="button"
-              className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20"
-              title="Next step: connect this to My Parlays."
+              onClick={() => onBuildParlay?.(judge)}
+              disabled={eligibleLegs.length === 0}
+              className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+              title={eligibleLegs.length === 0 ? "No parlay-ready picks yet" : "Save this judge's picks to My Parlays"}
             >
               Build Parlay
             </button>
@@ -410,6 +419,46 @@ export default function MlbIntelligenceHub(_props: Props) {
     } finally {
       setJudgeLoading(false);
     }
+  };
+
+  const handleBuildJudgeParlay = (judge: AiJudge) => {
+    if (!onSaveParlay || judge.id === 'risk_auditor') return;
+
+    const eligiblePicks = safeArray<AiJudgePick>(judge.topPicks)
+      .filter((pick) => pick.parlayEligible)
+      .slice(0, 5);
+
+    if (eligiblePicks.length === 0) return;
+
+    const legs: Leg[] = eligiblePicks.map((pick, index) => ({
+      id: `ai-judge-${judge.id}-${Date.now()}-${index}`,
+      sport: 'MLB',
+      game: `${pick.team} vs ${pick.opponent}`,
+      market: pick.market || 'Home Run',
+      selection: `${pick.playerName} HR`,
+      odds: 0,
+      status: 'PENDING',
+      marketCode: 'hr',
+      threshold: 1,
+    }));
+
+    const parlay: Parlay = {
+      id: `ai-judge-parlay-${judge.id}-${Date.now()}`,
+      title: `${judge.displayName} Top HR Parlay`,
+      legs,
+      totalOdds: 'AI Generated',
+      oddsValue: 0,
+      riskTier: legs.length <= 2 ? 'LOW' : legs.length <= 4 ? 'MEDIUM' : 'HIGH',
+      status: 'PENDING',
+      mode: 'PRACTICE',
+      createdAt: new Date().toISOString(),
+      aiGenerated: true,
+      edgeScore: Math.round(Number(judge.trustScore ?? 50)),
+      edgeReport: `Built from ${judge.displayName}'s AI Judge top picks. Availability checked. Projected picks should be confirmed before real use.`,
+    };
+
+    onSaveParlay(parlay);
+    onSectionChange?.('live_parlays');
   };
 
   useEffect(() => {
@@ -699,7 +748,7 @@ export default function MlbIntelligenceHub(_props: Props) {
           {!judgeLoading && !judgeError && (
             <div className="space-y-5">
               {safeArray<AiJudge>(judgeBoard?.leaderboard).map((judge) => (
-                <JudgeCard key={judge.id} judge={judge} />
+                <JudgeCard key={judge.id} judge={judge} onBuildParlay={handleBuildJudgeParlay} />
               ))}
             </div>
           )}
