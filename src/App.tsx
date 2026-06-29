@@ -28,7 +28,7 @@ import Leaderboard from './components/Leaderboard';
 import ThemeStore from './components/ThemeStore';
 import { EpicThemeShowcase } from './components/vouchedge/EpicThemeShowcase';
 import SubscriberHub from './components/SubscriberHub';
-import { X } from 'lucide-react';
+import { Crown, Home, X } from 'lucide-react';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
@@ -48,6 +48,7 @@ import { isLive } from './lib/parlayLifecycle';
 import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
+import AuthStatusBadge from './components/auth/AuthStatusBadge';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -95,6 +96,103 @@ function mapParlayToBackendPayload(parlay: Parlay) {
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
+const STICKY_PUBLIC_SECTIONS = new Set([
+  'welcome',
+  'feed',
+  'home',
+  'daily_players',
+  'live_games',
+  'hr_board',
+  'game_research',
+  'player_research',
+]);
+
+const PUBLIC_SECTIONS = new Set([
+  'welcome',
+  'feed',
+  'home',
+  'daily_players',
+  'live_games',
+  'hr_board',
+  'game_research',
+  'player_research',
+  'top_cappers',
+  'subscribers_club',
+  'subscriber_club',
+]);
+
+function hasRealAuthToken() {
+  try {
+    const directToken =
+      localStorage.getItem('vouchedge_auth_token') ||
+      localStorage.getItem('mlb_ai_auth_token');
+
+    const looksReal = (value: string | null) => {
+      if (!value) return false;
+      const clean = value.trim();
+      if (!clean || clean === 'null' || clean === 'undefined') return false;
+      if (clean.toLowerCase().includes('fake')) return false;
+      if (clean.toLowerCase().includes('demo')) return false;
+      if (clean.toLowerCase().includes('dev')) return false;
+      return clean.length >= 20;
+    };
+
+    if (looksReal(directToken)) return true;
+
+    // Supabase stores browser sessions under sb-... auth keys.
+    // Read them synchronously so App does not bounce before getSession() finishes.
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key) continue;
+      if (!key.startsWith('sb-') || !key.includes('auth-token')) continue;
+
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+
+      try {
+        const parsed = JSON.parse(raw);
+        const session = parsed?.currentSession ?? parsed;
+        const accessToken = session?.access_token;
+        if (looksReal(accessToken)) {
+          localStorage.setItem('vouchedge_auth_token', accessToken);
+          return true;
+        }
+      } catch {
+        if (looksReal(raw)) return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+const PROTECTED_SECTIONS = new Set([
+  'profile',
+  'settings',
+  'results',
+  'notifications',
+  'parlay_lab',
+  'my_parlays',
+  'billing',
+  'admin',
+]);
+
+function saveActiveSection(section: string) {
+  try {
+    localStorage.setItem('vouchedge_active_section', section);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function requiresLogin(section: string) {
+  if (PUBLIC_SECTIONS.has(section)) return false;
+  return PROTECTED_SECTIONS.has(section);
+}
+
+
 function resolveDevSectionFromLocation() {
   if (!import.meta.env.DEV || typeof window === 'undefined') return null;
 
@@ -141,7 +239,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH) return 'hr_board';
+    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
     return 'welcome';
   });
   const activeSectionRef = useRef(activeSection);
@@ -155,24 +253,27 @@ export default function App() {
   const [isRouteSwitching, setIsRouteSwitching] = useState(false);
 
   const navigateSection = (section: string) => {
-    if (!section || section === activeSectionRef.current) return;
-
-    setIsRouteSwitching(true);
-    if (routeSwitchTimerRef.current) {
-      window.clearTimeout(routeSwitchTimerRef.current);
+    if (PUBLIC_SECTIONS.has(section)) {
+      saveActiveSection(section);
+      setActiveSection(section);
+      return;
     }
 
-    window.requestAnimationFrame(() => {
-      startRouteTransition(() => {
-        setActiveSection(section);
-      });
-    });
+    if (requiresLogin(section) && !hasRealAuthToken()) {
+      try {
+        localStorage.setItem('vouchedge_after_auth_destination', section);
+      } catch {
+        // ignore storage failures
+      }
 
-    routeSwitchTimerRef.current = window.setTimeout(() => {
-      setIsRouteSwitching(false);
-      routeSwitchTimerRef.current = null;
-    }, 450);
-  };
+      saveActiveSection('welcome');
+      setActiveSection('welcome');
+      return;
+    }
+
+    saveActiveSection(section);
+    setActiveSection(section);
+  }
   
   useEffect(() => {
     activeSectionRef.current = activeSection;

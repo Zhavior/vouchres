@@ -1,0 +1,63 @@
+import cors from "cors";
+import helmet from "helmet";
+
+/**
+ * CORS configuration.
+ *
+ * The current vercel.json + Render split is broken out of the box because
+ * there's no CORS config. This fixes it: only allow your known frontend
+ * origins. Credentials are required so the Authorization header (and any
+ * future cookies) can flow cross-origin.
+ */
+const ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+if (ALLOWED_ORIGINS.length === 0 && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[cors] CORS_ALLOWED_ORIGINS is empty in production. API will reject all cross-origin requests."
+  );
+}
+
+export const corsMiddleware = cors({
+  origin(origin, cb) {
+    // Allow same-origin (no Origin header) — e.g. Render-served frontend
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(new Error(`Origin ${origin} not allowed by CORS`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Authorization",
+    "Content-Type",
+    "X-Client-Version",
+    "X-Request-Id",
+  ],
+  exposedHeaders: ["X-Request-Id", "X-RateLimit-Remaining"],
+  maxAge: 600, // cache preflight for 10 minutes
+});
+
+/**
+ * Helmet — security headers. Strict-Transport-Security, no-sniff, etc.
+ * Disable COEP/COOP if you embed third-party iframes (you probably don't).
+ */
+export const helmetMiddleware = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Tailwind v4 needs unsafe-inline
+      connectSrc: [
+        "'self'",
+        "https://statsapi.mlb.com",
+        "https://*.supabase.co",
+        "https://api.stripe.com",
+      ],
+      frameSrc: ["https://js.stripe.com"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+});
