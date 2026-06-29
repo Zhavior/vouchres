@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import '../edgePortal/edgePortalTheme.css';
 import { safeJsonFetch } from '../../api/safeApiClient';
+import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
 
 type TheEdgeMode = 'public' | 'dashboard';
@@ -132,6 +133,14 @@ const SPACE_PARTICLES = [
   { x: '94%', y: '82%', size: '4px', delay: '-4.5s', duration: '13s' },
 ];
 
+function friendlyAuthError(message?: string) {
+  const text = String(message ?? '').toLowerCase();
+  if (text.includes('invalid login')) return 'Email or password is incorrect.';
+  if (text.includes('email not confirmed')) return 'Confirm your email before logging in.';
+  if (text.includes('password')) return 'Password must be at least 6 characters.';
+  return message || 'Authentication failed. Try again.';
+}
+
 export default function TheEdgeShell({
   mode,
   presentation,
@@ -145,12 +154,18 @@ export default function TheEdgeShell({
   const [signupStep, setSignupStep] = useState<SignupStep>('features');
   const [plan, setPlan] = useState<PlanId>('pro_trial');
   const [agree, setAgree] = useState({ age: false, terms: false, research: false });
+  const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const allAgreed = agree.age && agree.terms && agree.research;
 
   function openSignup(p: PlanId = 'pro_trial') {
     setPlan(p);
     setSignupStep('features');
     setAgree({ age: false, terms: false, research: false });
+    setAuthError(null);
+    setAuthNotice(null);
     setEdgeLayer('signup');
   }
 
@@ -159,10 +174,13 @@ export default function TheEdgeShell({
     ? ['features', 'account', 'plan', 'policy']
     : ['features', 'account', 'plan', 'payment', 'policy'];
 
-  function signupNext() {
+  async function signupNext() {
     const i = signupOrder.indexOf(signupStep);
     if (i < 0) return setSignupStep('account');
-    if (i >= signupOrder.length - 1) { completeAuth(); return; }
+    if (signupStep === 'account' && !validateAccountForm()) return;
+    if (i >= signupOrder.length - 1) { await completeSignup(); return; }
+    setAuthError(null);
+    setAuthNotice(null);
     setSignupStep(signupOrder[i + 1]);
   }
   function signupBack() {
@@ -213,12 +231,103 @@ export default function TheEdgeShell({
     if (presentation === 'overlay') onClose?.();
   }
 
-  function completeAuth() {
+  function finishAuth() {
     localStorage.setItem('vouchedge_after_auth_mode', 'island');
     localStorage.setItem('vouchedge_signup_plan', plan);
     localStorage.setItem('vouchedge_policy_agreed_at', new Date().toISOString());
     setEdgeLayer('welcomeBack');
     window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+  }
+
+  function validateAccountForm() {
+    setAuthError(null);
+    setAuthNotice(null);
+
+    if (!authForm.email.trim()) {
+      setAuthError('Enter your email.');
+      return false;
+    }
+    if (!authForm.password) {
+      setAuthError('Enter your password.');
+      return false;
+    }
+    if (authForm.password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return false;
+    }
+    if (edgeLayer === 'signup' && authForm.name.trim().length < 3) {
+      setAuthError('Pick a username or display name with at least 3 characters.');
+      return false;
+    }
+
+    return true;
+  }
+
+  async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!validateAccountForm()) return;
+
+    if (!isSupabaseConfigured) {
+      setAuthError("Accounts aren't enabled in this environment yet.");
+      return;
+    }
+
+    setAuthBusy(true);
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      const { error } = await signInWithEmail({
+        email: authForm.email.trim(),
+        password: authForm.password,
+      });
+      if (error) {
+        setAuthError(friendlyAuthError(error.message));
+        return;
+      }
+      finishAuth();
+    } catch (error: any) {
+      setAuthError(friendlyAuthError(error?.message));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function completeSignup() {
+    if (!allAgreed || !validateAccountForm()) return;
+
+    if (!isSupabaseConfigured) {
+      setAuthError("Accounts aren't enabled in this environment yet.");
+      return;
+    }
+
+    setAuthBusy(true);
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      const username = authForm.name.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24);
+      const { data, error } = await signUpWithEmail({
+        email: authForm.email.trim(),
+        password: authForm.password,
+        username: username || authForm.email.trim().split('@')[0],
+      });
+
+      if (error) {
+        setAuthError(friendlyAuthError(error.message));
+        return;
+      }
+
+      if (data.session) {
+        finishAuth();
+        return;
+      }
+
+      setAuthNotice('Account created. Check your email to confirm it, then log in.');
+      setEdgeLayer('login');
+    } catch (error: any) {
+      setAuthError(friendlyAuthError(error?.message));
+    } finally {
+      setAuthBusy(false);
+    }
   }
 
   const shellClass =
@@ -302,7 +411,7 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
-                className="mx-auto max-w-6xl"
+                className="edge-welcome-front mx-auto max-w-6xl"
               >
                 <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                   {/* Left: the pitch */}
@@ -429,17 +538,45 @@ export default function TheEdgeShell({
                 transition={{ duration: 0.4, ease }}
                 className="mx-auto max-w-md rounded-3xl border border-slate-800 bg-slate-950/70 p-6 shadow-2xl shadow-black/30"
               >
-                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Login</div>
-                <h2 className="mt-2 text-3xl font-black text-white">Welcome back.</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then The Edge becomes your Island.</p>
-                <div className="mt-6 grid gap-3">
-                  <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Email" />
-                  <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Password" type="password" />
-                </div>
-                <button onClick={completeAuth} className={`mt-6 w-full ${PRIMARY}`}>Login → Enter The Island</button>
-                <button onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
-                  New here? Start a free trial →
-                </button>
+                <form onSubmit={handleLoginSubmit}>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Login</div>
+                  <h2 className="mt-2 text-3xl font-black text-white">Welcome back.</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then The Edge becomes your Island.</p>
+                  <div className="mt-6 grid gap-3">
+                    <input
+                      className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                      placeholder="Email"
+                      type="email"
+                      autoComplete="email"
+                      value={authForm.email}
+                      onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
+                    />
+                    <input
+                      className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                      placeholder="Password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={authForm.password}
+                      onChange={(event) => setAuthForm((form) => ({ ...form, password: event.target.value }))}
+                    />
+                  </div>
+                  {authError && (
+                    <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                      {authError}
+                    </div>
+                  )}
+                  {authNotice && (
+                    <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                      {authNotice}
+                    </div>
+                  )}
+                  <button type="submit" disabled={authBusy} className={`mt-6 w-full ${PRIMARY} ${authBusy ? 'cursor-wait opacity-70 hover:translate-y-0' : ''}`}>
+                    {authBusy ? 'Logging in...' : 'Login → Enter The Island'}
+                  </button>
+                  <button type="button" onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                    New here? Start a free trial →
+                  </button>
+                </form>
               </motion.section>
             )}
 
@@ -506,10 +643,40 @@ export default function TheEdgeShell({
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Create account</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Your Edge profile.</h2>
                         <div className="mt-5 grid gap-3">
-                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Name" />
-                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Email" />
-                          <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="Password" type="password" />
+                          <input
+                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            placeholder="Name"
+                            autoComplete="name"
+                            value={authForm.name}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, name: event.target.value }))}
+                          />
+                          <input
+                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            placeholder="Email"
+                            type="email"
+                            autoComplete="email"
+                            value={authForm.email}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
+                          />
+                          <input
+                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            placeholder="Password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={authForm.password}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, password: event.target.value }))}
+                          />
                         </div>
+                        {authError && (
+                          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                            {authError}
+                          </div>
+                        )}
+                        {authNotice && (
+                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                            {authNotice}
+                          </div>
+                        )}
                         <div className="mt-6 flex items-center justify-between">
                           <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
                           <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Choose plan <ArrowRight className="h-4 w-4" /></span></button>
@@ -626,12 +793,22 @@ export default function TheEdgeShell({
                           <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
                           <button
                             onClick={signupNext}
-                            disabled={!allAgreed}
-                            className={`${PRIMARY} ${!allAgreed ? 'cursor-not-allowed opacity-40 hover:translate-y-0' : ''}`}
+                            disabled={!allAgreed || authBusy}
+                            className={`${PRIMARY} ${!allAgreed || authBusy ? 'cursor-not-allowed opacity-40 hover:translate-y-0' : ''}`}
                           >
-                            {plan === 'free' ? 'Agree & create account' : plan === 'pro_trial' ? 'Agree & start free trial' : 'Agree & subscribe'}
+                            {authBusy ? 'Creating account...' : plan === 'free' ? 'Agree & create account' : plan === 'pro_trial' ? 'Agree & start free trial' : 'Agree & subscribe'}
                           </button>
                         </div>
+                        {authError && (
+                          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                            {authError}
+                          </div>
+                        )}
+                        {authNotice && (
+                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                            {authNotice}
+                          </div>
+                        )}
                         {!allAgreed && <p className="mt-2 text-right text-[10px] font-bold text-slate-600">Check all three boxes to continue.</p>}
                       </motion.div>
                     )}

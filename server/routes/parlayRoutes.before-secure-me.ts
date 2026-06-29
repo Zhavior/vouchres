@@ -246,7 +246,7 @@ parlayRoutes.post(
  * GET /api/parlays/:id
  * Returns a parlay pick with all its legs.
  */
-parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.get("/parlays/:id", async (req, res: Response) => {
   const { id } = req.params;
   const supabaseAdmin = await getSupabaseAdmin();
 
@@ -255,7 +255,6 @@ parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Re
       .from("picks")
       .select("*")
       .eq("id", id)
-      .eq("user_id", req.user!.id)
       .eq("leg_type", "parlay")
       .single(),
     supabaseAdmin
@@ -279,192 +278,14 @@ parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Re
  * GET /api/parlays?user_id=X&limit=50&offset=0
  * List a user's parlays.
  */
-
-
-/**
- * GET /api/me/ledger
- * Authenticated user ledger for Results, Profile, and The Island dashboard.
- * Returns the current user's picks/parlays with legs grouped in one clean payload.
- */
-
-
-/**
- * GET /api/me/dashboard-summary
- * Small authenticated summary for The Island dashboard widgets.
- */
-parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  const { data: picks, error } = await supabaseAdmin
-    .from("picks")
-    .select("id, status, leg_type, created_at")
-    .eq("user_id", req.user!.id)
-    .order("created_at", { ascending: false })
-    .limit(250);
-
-  if (error) {
-    console.error("[me/dashboard-summary] fetch failed", error);
-    return res.status(500).json({ error: "dashboard_summary_failed" });
-  }
-
-  const rows = picks ?? [];
-
-  const summary = rows.reduce(
-    (acc: any, pick: any) => {
-      const status = String(pick.status ?? "pending").toLowerCase();
-      acc.total += 1;
-      acc[status] = (acc[status] ?? 0) + 1;
-
-      if (pick.leg_type === "parlay") acc.parlays += 1;
-      else acc.singles += 1;
-
-      return acc;
-    },
-    {
-      total: 0,
-      pending: 0,
-      won: 0,
-      lost: 0,
-      void: 0,
-      push: 0,
-      parlays: 0,
-      singles: 0,
-    }
-  );
-
-  const graded = summary.won + summary.lost + summary.void + summary.push;
-  const decisions = summary.won + summary.lost;
-
-  const winRate =
-    decisions > 0 ? Number(((summary.won / decisions) * 100).toFixed(1)) : null;
-
-  const proofScore =
-    graded > 0
-      ? Math.min(100, Math.round((summary.won * 7 + summary.push * 2 + graded * 1.5)))
-      : 0;
-
-  return res.json({
-    widgets: {
-      savedPicks: summary.total,
-      savedParlays: summary.parlays,
-      pendingPicks: summary.pending,
-      winRate,
-      proofScore,
-    },
-    summary,
-    recent: rows.slice(0, 8),
-  });
-});
-
-parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit ?? 100), 200);
-  const offset = Number(req.query.offset ?? 0);
-  const status = typeof req.query.status === "string" ? req.query.status.toLowerCase() : undefined;
-
-  const allowedStatuses = new Set(["pending", "won", "lost", "void", "push"]);
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  let query = supabaseAdmin
-    .from("picks")
-    .select("*", { count: "exact" })
-    .eq("user_id", req.user!.id)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (status && allowedStatuses.has(status)) {
-    query = query.eq("status", status);
-  }
-
-  const { data: picks, count, error } = await query;
-
-  if (error) {
-    console.error("[me/ledger] picks fetch failed", error);
-    return res.status(500).json({ error: "ledger_fetch_failed" });
-  }
-
-  const pickIds = (picks ?? []).map((pick: any) => pick.id);
-
-  let legsByPickId: Record<string, any[]> = {};
-
-  if (pickIds.length > 0) {
-    const { data: legs, error: legsError } = await supabaseAdmin
-      .from("pick_legs")
-      .select("*")
-      .in("pick_id", pickIds)
-      .order("leg_index", { ascending: true });
-
-    if (legsError) {
-      console.error("[me/ledger] legs fetch failed", legsError);
-      return res.status(500).json({ error: "ledger_legs_fetch_failed" });
-    }
-
-    legsByPickId = (legs ?? []).reduce((acc: Record<string, any[]>, leg: any) => {
-      const key = String(leg.pick_id);
-      acc[key] = acc[key] ?? [];
-      acc[key].push(leg);
-      return acc;
-    }, {});
-  }
-
-  const ledger = (picks ?? []).map((pick: any) => ({
-    ...pick,
-    legs: legsByPickId[String(pick.id)] ?? [],
-    is_parlay: pick.leg_type === "parlay",
-  }));
-
-  const summary = ledger.reduce(
-    (acc: any, pick: any) => {
-      const normalizedStatus = String(pick.status ?? "pending").toLowerCase();
-      acc.total += 1;
-      acc[normalizedStatus] = (acc[normalizedStatus] ?? 0) + 1;
-      if (pick.is_parlay) acc.parlays += 1;
-      else acc.singles += 1;
-      return acc;
-    },
-    { total: 0, pending: 0, won: 0, lost: 0, void: 0, push: 0, parlays: 0, singles: 0 }
-  );
-
-  return res.json({
-    ledger,
-    summary,
-    total: count ?? 0,
-    limit,
-    offset,
-  });
-});
-
-parlayRoutes.get("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.get("/parlays", async (req, res: Response) => {
+  const userId = req.query.user_id as string | undefined;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
 
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data, count, error } = await supabaseAdmin
-    .from("picks")
-    .select("*", { count: "exact" })
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) return res.status(500).json({ error: "fetch_failed" });
-
-  return res.json({ parlays: data ?? [], total: count ?? 0, limit, offset });
-});
-
-/**
- * Legacy route kept for compatibility, but now protected.
- * If user_id is provided, it must match the logged-in user.
- */
-parlayRoutes.get("/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const requestedUserId = req.query.user_id as string | undefined;
-  const userId = req.user!.id;
-
-  if (requestedUserId && requestedUserId !== userId) {
-    return res.status(403).json({ error: "forbidden" });
+  if (!userId) {
+    return res.status(400).json({ error: "user_id_required" });
   }
-
-  const limit = Math.min(Number(req.query.limit ?? 50), 100);
-  const offset = Number(req.query.offset ?? 0);
 
   const supabaseAdmin = await getSupabaseAdmin();
   const { data, count, error } = await supabaseAdmin
