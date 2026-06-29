@@ -1,4 +1,3 @@
-import { supabaseAdmin } from "../../middleware/auth";
 import { buildValidatedHrBoard } from "../mlb/hrPipeline";
 
 type JudgeId =
@@ -176,28 +175,13 @@ function selectTopPicks(judgeId: JudgeId, candidates: Candidate[]) {
   }));
 }
 
-async function getCapperStatsByNames(names: string[]) {
-  const { data: cappers } = await supabaseAdmin
-    .from("cappers")
-    .select("id, display_name, tagline, persona, is_demo, is_active")
-    .in("display_name", names);
-
-  const capperIds = (cappers ?? []).map((c: any) => c.id);
-
-  const { data: scores } =
-    capperIds.length > 0
-      ? await supabaseAdmin
-          .from("trust_scores")
-          .select("subject_id, score, total_picks, won_picks, lost_picks, pushed_picks, net_units, window_start, window_end")
-          .eq("subject_type", "capper")
-          .eq("scope", "overall")
-          .in("subject_id", capperIds)
-      : { data: [] as any[] };
-
-  const capperMap = new Map((cappers ?? []).map((c: any) => [c.display_name, c]));
-  const scoreMap = new Map((scores ?? []).map((s: any) => [s.subject_id, s]));
-
-  return { capperMap, scoreMap };
+async function getCapperStatsByNames(_names: string[]) {
+  // Safe fallback for local/dev and hidden prototype mode.
+  // Later, when AI Judge picks are saved as real cappers, this can read Supabase trust_scores again.
+  return {
+    capperMap: new Map<string, any>(),
+    scoreMap: new Map<string, any>(),
+  };
 }
 
 export async function buildAiJudgeLeaderboard() {

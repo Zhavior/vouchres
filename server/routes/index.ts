@@ -1,6 +1,7 @@
 /** Single entry point that registers every VouchEdge backend API route. */
 import type { Express } from "express";
 import { coreRoutes } from "./coreRoutes";
+import { publicRoutes } from "./publicRoutes";
 import { parlayRoutes } from "./parlayRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
 import { shareRoutes } from "./shareRoutes";
@@ -17,6 +18,7 @@ import type { Request, Response } from "express";
 
 export function registerApiRoutes(app: Express): void {
   app.use("/api", coreRoutes);
+  app.use("/api", publicRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", playerRegistryRoutes);
   app.use("/api", shareRoutes);
