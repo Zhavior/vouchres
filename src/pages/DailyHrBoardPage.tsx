@@ -404,7 +404,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         <div className="mb-4 p-3 rounded-xl bg-amber-500/8 border border-amber-400/25 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
           <div className="text-[11px] leading-relaxed text-amber-100">
-            <div className="font-bold">Projection Preview — waiting for official lineups.</div>
+            <div className="font-bold">Projected HR Board · official lineups not confirmed yet.</div>
             <div>These rows are active-roster and current-team verified, but they are not confirmed starters. Do not treat them as confirmed HR candidates.</div>
             {typeof previewMeta?.eligiblePreviewPoolCount === 'number' && (
               <div className="mt-1 text-amber-200/90">
