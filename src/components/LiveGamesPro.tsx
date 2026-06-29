@@ -184,7 +184,9 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
               <TeamLogo src={t.logo} alt={t.name} />
               <div className="min-w-0">
                 <p className={`text-sm font-black truncate ${fav ? 'text-slate-100' : 'text-slate-300'}`}>{t.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">{t.record ? `${t.record.wins}-${t.record.losses}` : '—'} · {safePct(pct)} win</p>
+                <p className="text-[10px] text-slate-500 font-mono">
+                  {(m.isLive || m.isFinal) ? (m.isFinal ? 'Final score' : 'Live score') : (t.record ? `${t.record.wins}-${t.record.losses}` : 'Scheduled')}
+                </p>
               </div>
             </div>
             <span className="text-xl font-mono font-black text-white">{(m.isLive || m.isFinal) ? score : ''}</span>
@@ -250,17 +252,30 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
         </div>
 
         <div className="p-4 space-y-5">
-          {/* Win probability */}
-          <Section icon={Activity} title="Win probability (model)">
-            <div className="flex items-center justify-between text-sm font-black mb-1.5">
-              <span className={!homeFav ? 'text-sky-400' : 'text-slate-300'}>{m.away.abbreviation} {safePct(winProbability.away)}</span>
-              <span className={homeFav ? 'text-sky-400' : 'text-slate-300'}>{safePct(winProbability.home)} {m.home.abbreviation}</span>
+          {/* Scoreboard */}
+          <Section icon={Activity} title="Game scoreboard">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
+                <p className="text-[10px] text-slate-500 font-mono">{m.away.abbreviation}</p>
+                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
+                <p className="text-[10px] text-slate-500">{m.away.name}</p>
+              </div>
+              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
+                <p className="text-[10px] text-slate-500 font-mono">{m.home.abbreviation}</p>
+                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
+                <p className="text-[10px] text-slate-500">{m.home.name}</p>
+              </div>
             </div>
-            <div className="h-2 rounded-full overflow-hidden bg-slate-800 flex mb-2">
-              <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
-              <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
+
+            <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+              <p className="text-[10px] text-slate-500 font-mono uppercase">Status</p>
+              <p className="text-sm font-black text-slate-200">
+                {m.isFinal ? 'Final' : m.isLive ? 'Live now' : (m.status ?? 'Scheduled')}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Model win lean is still available below as research context, but score comes first on Live Games.
+              </p>
             </div>
-            <ul className="space-y-0.5">{(m.winProbModel ?? []).map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
           </Section>
 
           {/* Pitcher matchups */}
