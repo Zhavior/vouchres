@@ -73,3 +73,65 @@ export function lockCountdown(parlay: Parlay, now: Date = new Date()): string {
   const m = mins % 60;
   return h > 0 ? `locks in ${h}h ${m}m` : `locks in ${m}m`;
 }
+
+
+/**
+ * More detailed display status for UI cards.
+ * Keeps bucketParlays simple, but gives the user clearer wording.
+ */
+export type ParlayDisplayStatus =
+  | 'not_started'
+  | 'locked'
+  | 'live'
+  | 'ready_to_grade'
+  | 'won'
+  | 'lost'
+  | 'void'
+  | 'time_tbd';
+
+export function getDisplayStatus(parlay: Parlay, now: Date = new Date()): ParlayDisplayStatus {
+  if (parlay.status === 'WON') return 'won';
+  if (parlay.status === 'LOST') return 'lost';
+  if (parlay.status === 'VOID') return 'void';
+
+  const start = earliestStart(parlay);
+  const lock = lockTime(parlay);
+
+  if (!start || !lock) return 'time_tbd';
+
+  const startMs = start.getTime();
+  const lockMs = lock.getTime();
+  const nowMs = now.getTime();
+
+  // Assume baseball game is ready to grade around 4 hours after first pitch.
+  // Later we can replace this with real MLB final game status.
+  const estimatedFinalMs = startMs + 4 * 60 * 60 * 1000;
+
+  if (nowMs < lockMs) return 'not_started';
+  if (nowMs >= lockMs && nowMs < startMs) return 'locked';
+  if (nowMs >= startMs && nowMs < estimatedFinalMs) return 'live';
+
+  return 'ready_to_grade';
+}
+
+export function displayStatusLabel(status: ParlayDisplayStatus): string {
+  switch (status) {
+    case 'not_started':
+      return 'Not started';
+    case 'locked':
+      return 'Locked';
+    case 'live':
+      return 'Live now';
+    case 'ready_to_grade':
+      return 'Ready to grade';
+    case 'won':
+      return 'Won';
+    case 'lost':
+      return 'Lost';
+    case 'void':
+      return 'Void';
+    case 'time_tbd':
+    default:
+      return 'Start time TBD';
+  }
+}

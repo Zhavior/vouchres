@@ -28,6 +28,8 @@ export interface Parlay {
   oddsValue: number; // Decimal or American for sorting
   riskTier: 'LOW' | 'MEDIUM' | 'HIGH';
   status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
+  /** PRACTICE = simulator/testing, REAL = user actually placed/tracks the bet. */
+  mode?: 'PRACTICE' | 'REAL';
   bookie?: string;
   createdAt: string;
   wagerAmount?: number;
