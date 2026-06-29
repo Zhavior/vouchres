@@ -15,6 +15,7 @@ import CustomizePage from './components/CustomizePage';
 import ResultsStudio from './components/results/ResultsStudio';
 import SmartAiEngine from './components/SmartAiEngine';
 import MlbIntelligenceHub from './components/MlbIntelligenceHub';
+import AiJudgeSocialLab from './components/AiJudgeSocialLab';
 import DailyHrBoardPage from './pages/DailyHrBoardPage';
 import LiveGameLabPage from './pages/LiveGameLabPage';
 import LiveGames from './components/LiveGames';
@@ -784,6 +785,8 @@ export default function App() {
         );
       case 'intel':
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
+      case 'ai_judge_lab':
+        return <AiJudgeSocialLab />;
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
       case 'daily_players':

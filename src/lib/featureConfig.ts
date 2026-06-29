@@ -57,6 +57,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Pro Labs — sport-scoped analytics
   { id: "intel", label: "Game Intelligence", icon: "Activity", enabled: true, order: 5, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "ai_judge_lab", label: "AI Judge Lab", icon: "Bot", enabled: true, order: 5.5, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "live_game_lab", label: "Live Game Lab", icon: "Radio", enabled: true, order: 6, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "player_edge_lab", label: "Player Edge Lab", icon: "UserRoundSearch", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "team_matchup_lab", label: "Team Matchup Lab", icon: "Swords", enabled: true, order: 8, group: "Pro Labs", sports: ALL_SPORTS },
