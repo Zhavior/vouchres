@@ -88,7 +88,18 @@ export interface ScoredHrCandidate {
   lineupStatus: LineupStatus;
   injuryStatus: InjuryStatus;
   hrScore: number;
+  estimatedHrProbability?: number;
+  confidenceTier?: "elite" | "strong" | "watchlist" | "thin" | "avoid";
   dataConfidence: number;
+  scoreBreakdown?: {
+    hitterPower: number;
+    pitcherVulnerability: number;
+    parkContext: number;
+    lineupVolume: number;
+    handednessEdge: number;
+    recentForm: number;
+    penalties: number;
+  };
   riskTier: "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid";
   status: HrCandidateStatus;
   reasons: string[];
