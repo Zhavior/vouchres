@@ -467,49 +467,106 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
         ) : (
           <div className="space-y-4">
             {activeGame && (
-              <div className="rounded-2xl border border-sky-500/30 bg-sky-500/5 p-4">
-                <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="relative overflow-hidden rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/40 p-5 shadow-2xl">
+                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-sky-500/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                <div className="relative flex items-center justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[10px] font-black font-mono uppercase tracking-wider text-sky-300">Selected live game</p>
-                    <h2 className="text-xl font-black text-slate-100">
+                    <p className="text-[10px] font-black font-mono uppercase tracking-[0.28em] text-sky-300">
+                      Live Games Center
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                       {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
                     </h2>
-                    <p className="text-xs text-slate-400">
-                      {activeGame.status ?? 'Game status unavailable'} · {activeGame.venue ?? 'Venue TBD'}
+                    <p className="text-xs text-slate-400 mt-1">
+                      {activeGame.venue ?? 'Venue TBD'} · {activeGame.status ?? 'Game status unavailable'}
                     </p>
+                  </div>
+
+                  <div className={`rounded-full px-3 py-1 text-[10px] font-black font-mono uppercase tracking-wider border ${
+                    activeGame.isFinal
+                      ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
+                      : activeGame.isLive
+                        ? 'bg-red-500/10 border-red-400/40 text-red-300'
+                        : 'bg-slate-800/80 border-slate-600 text-slate-300'
+                  }`}>
+                    {activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live' : 'Scheduled'}
+                  </div>
+                </div>
+
+                <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border border-slate-700/70 bg-black/25 p-4">
+                  <div className="text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={34} />
+                      <div>
+                        <p className="text-xs text-slate-400 font-mono">AWAY</p>
+                        <p className="text-lg font-black text-white">{activeGame.away.abbreviation}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{activeGame.away.name}</p>
+                  </div>
+
+                  <div className="text-center px-2">
+                    <div className="flex items-center gap-3 justify-center">
+                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
+                      </span>
+                      <span className="text-slate-600 text-2xl font-black">–</span>
+                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono uppercase mt-2">
+                      {activeGame.isFinal ? 'Final score' : activeGame.isLive ? 'Live score' : 'Pregame'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-2 mb-2">
+                      <div>
+                        <p className="text-xs text-slate-400 font-mono">HOME</p>
+                        <p className="text-lg font-black text-white">{activeGame.home.abbreviation}</p>
+                      </div>
+                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={34} />
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{activeGame.home.name}</p>
+                  </div>
+                </div>
+
+                <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">Game state</p>
+                    <p className="text-sm font-black text-slate-100">{activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live now' : 'Scheduled'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
+                    <p className="text-sm font-black text-slate-100">{activeGame.hrWatch?.length ?? 0} players</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
+                    <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
                   </div>
                   <button
                     onClick={() => setSelected(activeGame)}
-                    className="text-xs font-black rounded-xl px-3 py-2 bg-sky-500/15 border border-sky-500/40 text-sky-200 hover:bg-sky-500/25"
+                    className="rounded-2xl bg-sky-500/15 border border-sky-500/40 p-3 text-left hover:bg-sky-500/25 transition"
                   >
-                    Open details
+                    <p className="text-[10px] text-sky-300 font-mono uppercase">Details</p>
+                    <p className="text-sm font-black text-sky-100">Open game room</p>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-                    <p className="text-[10px] text-slate-500 font-mono">AWAY</p>
-                    <p className="text-lg font-black">{activeGame.away.abbreviation}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-                    <p className="text-[10px] text-slate-500 font-mono">HOME</p>
-                    <p className="text-lg font-black">{activeGame.home.abbreviation}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-                    <p className="text-[10px] text-slate-500 font-mono">LIVE STATE</p>
-                    <p className="text-sm font-black">{activeGame.isLive ? 'Live now' : 'Not live'}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
-                    <p className="text-[10px] text-slate-500 font-mono">HR WATCH</p>
-                    <p className="text-sm font-black">{activeGame.hrWatch?.length ?? 0} players</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 rounded-xl bg-slate-950/40 border border-slate-800 p-3">
-                  <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300 mb-1">Pro live stats coming next</p>
-                  <p className="text-xs text-slate-400">
-                    Stolen bases, RBI tracker, total bases, pitch mix, pitch velocity, bullpen fatigue, runner-on-base context, and live parlay impact.
-                  </p>
+                <div className="relative mt-4 grid sm:grid-cols-3 gap-2">
+                  {[
+                    'Stolen Base Tracker',
+                    'RBI Opportunity Meter',
+                    'Live Parlay Impact'
+                  ].map((label) => (
+                    <div key={label} className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3">
+                      <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300">🔒 Pro</p>
+                      <p className="text-xs font-bold text-slate-200 mt-1">{label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
