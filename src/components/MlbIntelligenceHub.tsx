@@ -138,7 +138,7 @@ async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
     dataQuality: payload.dataQuality ?? payload.data_quality ?? 'hr_board_projection',
     disclaimer:
       payload.disclaimer ??
-      'Premium AI research powered by the HR Board engine. Compare HR targets, pitcher pressure, game environments, AI judge rankings, and parlay-ready signals.',
+      'AI Edge Lab is powered by the HR Board engine. Research only — not betting advice.',
     candidates,
   };
 }
@@ -298,7 +298,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
   const eligibleLegs = picks.filter((p) => p.parlayEligible);
 
   return (
-    <article className="relative overflow-hidden rounded-3xl border border-sky-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-5 shadow-2xl shadow-sky-950/30">
+    <article className="rounded-3xl border border-slate-800 bg-slate-950/80 p-5 shadow-xl shadow-black/20">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
@@ -316,7 +316,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-slate-800 bg-black/30 p-4 shadow-inner shadow-black/30">
+      <div className="mt-5 rounded-2xl border border-slate-800 bg-black/20 p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
@@ -338,9 +338,9 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
               }}
               disabled={eligibleLegs.length === 0}
               className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
-              title={eligibleLegs.length === 0 ? "Wait / No Parlay-ready picks yet" : "Copy this judge's parlay legs"}
+              title={eligibleLegs.length === 0 ? "No parlay-ready picks yet" : "Copy this judge's parlay legs"}
             >
-              Copy Parlay Card
+              Copy Parlay Legs
             </button>
           )}
         </div>
@@ -352,7 +352,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
             </p>
           ) : (
             picks.map((pick) => (
-              <div key={`${judge.id}-${pick.rank}-${pick.playerName}`} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-3 transition hover:border-sky-400/30 hover:bg-slate-900/80">
+              <div key={`${judge.id}-${pick.rank}-${pick.playerName}`} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-black text-white">
@@ -378,7 +378,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
                         ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
                         : 'border-slate-700 bg-slate-800 text-slate-400'
                     }`}>
-                      {pick.parlayEligible ? 'Parlay Ready' : 'Wait / No Parlay'}
+                      {pick.parlayEligible ? 'Parlay-ready' : 'No parlay'}
                     </span>
                   </div>
                 </div>
@@ -524,7 +524,7 @@ export default function MlbIntelligenceHub(_props: Props) {
               </p>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white">
-              VouchEdge AI Edge Lab
+              AI Edge Lab Center
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-400">
               A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
@@ -605,7 +605,7 @@ export default function MlbIntelligenceHub(_props: Props) {
 
       {loading && (
         <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-8 text-center text-slate-400">
-          Loading AI Edge Lab signals…
+          Loading AI Edge Lab…
         </div>
       )}
 
@@ -692,16 +692,16 @@ export default function MlbIntelligenceHub(_props: Props) {
 
       {!loading && tab === 'judges' && (
         <section className="space-y-5">
-          <div className="rounded-3xl border border-sky-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/30 p-5 shadow-2xl shadow-sky-950/20">
+          <div className="rounded-3xl border border-sky-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/20 p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-300">
-                  Premium AI Judge Board
+                  Premium Judge Edge Board
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-slate-400">
-                  Compare each AI judge’s top picks, availability status, parlay-ready legs, trust score, and record in one clean pro board.
-                  Risk Auditor is your trap-watch board — it flags avoid spots and should not be used to build parlays.
+                  Compare each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
+                  Risk Auditor is your trap-watch board, not a parlay builder.
                 </p>
               </div>
               <button
@@ -727,15 +727,9 @@ export default function MlbIntelligenceHub(_props: Props) {
 
           {!judgeLoading && !judgeError && (
             <div className="space-y-5">
-              {safeArray<AiJudge>(judgeBoard?.leaderboard).length === 0 ? (
-                <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-400">
-                  No AI Judge rankings are available yet. Refresh once the HR Board finishes loading.
-                </div>
-              ) : (
-                safeArray<AiJudge>(judgeBoard?.leaderboard).map((judge) => (
-                  <JudgeCard key={judge.id} judge={judge} />
-                ))
-              )}
+              {safeArray<AiJudge>(judgeBoard?.leaderboard).map((judge) => (
+                <JudgeCard key={judge.id} judge={judge} />
+              ))}
             </div>
           )}
         </section>
