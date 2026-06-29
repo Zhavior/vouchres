@@ -44,6 +44,14 @@ export interface Parlay {
   lockAt?: string;
   /** Marks that a "locked / moved to Live" notification was already sent. */
   lockNotified?: boolean;
+  /** Backend pick id after /api/parlays accepts this slip. */
+  backendPickId?: string;
+  /** Whether the backend knows about this slip yet. */
+  backendSyncState?: 'synced' | 'auth_required' | 'legal_required' | 'failed' | 'not_syncable';
+  /** Last backend sync timestamp for this slip. */
+  backendSyncedAt?: string;
+  /** Most recent backend sync error, if any. */
+  backendSyncError?: string;
 }
 
 export type ParlayLifecycle = 'upcoming' | 'live' | 'final';

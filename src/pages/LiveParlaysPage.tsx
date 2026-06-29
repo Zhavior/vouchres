@@ -136,6 +136,23 @@ function ParlayCard({ p, live }: { p: Parlay; live: boolean }) {
           <div className="mt-2 rounded-xl border border-slate-800/70 bg-slate-900/40 px-3 py-2 text-[11px] font-bold text-slate-400">
             {autoGradeLabel}
           </div>
+          {p.aiGenerated ? (
+            <div className="mt-2 rounded-xl border border-slate-800/70 bg-slate-950/70 px-3 py-2 text-[11px] font-bold text-slate-400">
+              Backend tracking: {
+                p.backendSyncState === 'synced'
+                  ? 'Pending parlay registered'
+                  : p.backendSyncState === 'auth_required'
+                    ? 'Sign in required'
+                    : p.backendSyncState === 'legal_required'
+                      ? 'Legal confirmation required'
+                      : p.backendSyncState === 'not_syncable'
+                        ? 'Waiting for verified leg data'
+                        : p.backendSyncState === 'failed'
+                          ? 'Sync failed'
+                          : 'Waiting to sync'
+              }
+            </div>
+          ) : null}
         </div>
 
         <div className="text-right">
@@ -203,6 +220,11 @@ export default function LiveParlaysPage({ parlays, onGenerate, generating }: Pro
   const lostCount = (parlays || []).filter((p) => String((p as any).status || '').toUpperCase() === 'LOST').length;
   const gradedCount = wonCount + lostCount;
   const readyToGradeCount = (parlays || []).filter((p) => getDisplayStatus(p) === 'ready_to_grade').length;
+  const syncedPendingAiParlays = (parlays || []).filter((p) =>
+    p.aiGenerated &&
+    String((p as any).status || '').toUpperCase() === 'PENDING' &&
+    p.backendSyncState === 'synced'
+  ).length;
   const winRateLabel = gradedCount > 0 ? `${Math.round((wonCount / gradedCount) * 100)}%` : '—';
 
   return (
@@ -258,9 +280,9 @@ export default function LiveParlaysPage({ parlays, onGenerate, generating }: Pro
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-500">Needs Grade</div>
-            <div className="mt-1 text-2xl font-black text-rose-300">{readyToGradeCount}</div>
-            <div className="mt-1 text-[11px] text-slate-500">Waiting for final box scores</div>
+            <div className="text-xs font-black uppercase tracking-wider text-slate-500">Backend Pending AI</div>
+            <div className="mt-1 text-2xl font-black text-rose-300">{syncedPendingAiParlays}</div>
+            <div className="mt-1 text-[11px] text-slate-500">{readyToGradeCount} waiting for final box scores</div>
           </div>
         </div>
 

@@ -274,6 +274,7 @@ export default function SmartAiEngine({
       createdAt: new Date().toISOString(),
       wagerAmount: 1,
       edgeScore: dynamicParlay.aiConfidenceScore,
+      aiGenerated: true,
     };
     onSaveParlay(parlay);
     const gradable = legs.filter((l) => l.gamePk).length;

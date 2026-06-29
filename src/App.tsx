@@ -46,9 +46,52 @@ import { gradePendingParlays } from './lib/parlayGrading';
 import { generateAiParlays } from './lib/aiParlayGenerator';
 import { isLive } from './lib/parlayLifecycle';
 import { notify } from './lib/appNotifications';
+import { apiClient } from './lib/apiClient';
+import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
+
+interface BackendProfile {
+  id: string;
+  age_confirmed_at?: string | null;
+  jurisdiction_confirmed_at?: string | null;
+  jurisdiction?: string | null;
+}
+
+function isAiBackendCandidate(parlay: Parlay): boolean {
+  return Boolean(parlay.aiGenerated);
+}
+
+function mapParlayToBackendPayload(parlay: Parlay) {
+  const legs = (parlay.legs || []).map((leg) => {
+    const resolved = leg.marketCode ? { marketCode: leg.marketCode } : resolveMarket('mlb', leg.market, leg.selection);
+    const oddsDecimal = typeof leg.odds === 'number' && Number.isFinite(leg.odds) ? leg.odds : null;
+    if (!leg.gamePk || !resolved.marketCode || !leg.selection || !oddsDecimal) {
+      return null;
+    }
+    return {
+      event_id: String(leg.gamePk),
+      market: resolved.marketCode,
+      selection: leg.selection,
+      odds_decimal: oddsDecimal,
+    };
+  }).filter(Boolean) as Array<{
+    event_id: string;
+    market: string;
+    selection: string;
+    odds_decimal: number;
+  }>;
+
+  if (legs.length < 2) return null;
+
+  return {
+    legs,
+    stake_units: parlay.wagerAmount ?? 1,
+    confidence: parlay.edgeScore ?? undefined,
+    explanation: parlay.edgeReport ?? undefined,
+  };
+}
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
@@ -104,6 +147,8 @@ export default function App() {
   const activeSectionRef = useRef(activeSection);
   const routeSwitchTimerRef = useRef<number | null>(null);
   const gradingRef = useRef(false);
+  const backendParlaySyncRef = useRef(false);
+  const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
   const savedSlipsRef = useRef<Parlay[]>([]);
   const profileRef = useRef<CreatorProofProfile | null>(null);
   const [isPendingRoute, startRouteTransition] = useTransition();
@@ -341,10 +386,138 @@ export default function App() {
     localStorage.setItem('vouchedge_profile', JSON.stringify(newProfile));
   };
 
+  const fetchBackendProfile = async (): Promise<BackendProfile | null> => {
+    if (!isSupabaseConfigured) return null;
+    if (backendProfileRef.current !== undefined) return backendProfileRef.current;
+
+    const token = await getAuthToken();
+    if (!token) {
+      backendProfileRef.current = null;
+      return null;
+    }
+
+    try {
+      const me = await apiClient.get<BackendProfile>('/api/auth/me');
+      backendProfileRef.current = me;
+      return me;
+    } catch (error) {
+      console.warn('[parlays] backend profile lookup failed', error);
+      backendProfileRef.current = null;
+      return null;
+    }
+  };
+
+  const syncParlayToBackend = async (parlay: Parlay): Promise<Parlay> => {
+    if (!isAiBackendCandidate(parlay) || parlay.backendPickId) {
+      return parlay;
+    }
+
+    const payload = mapParlayToBackendPayload(parlay);
+    if (!payload) {
+      return {
+        ...parlay,
+        backendSyncState: 'not_syncable',
+        backendSyncError: 'Missing verified gamePk, market code, or multi-leg structure.',
+      };
+    }
+
+    const me = await fetchBackendProfile();
+    if (!me?.id) {
+      return {
+        ...parlay,
+        backendSyncState: 'auth_required',
+        backendSyncError: 'Sign in required before the backend can track this AI parlay.',
+      };
+    }
+
+    if (!me.age_confirmed_at || !me.jurisdiction_confirmed_at || !me.jurisdiction) {
+      return {
+        ...parlay,
+        backendSyncState: 'legal_required',
+        backendSyncError: 'Legal confirmation is required before the backend can track this AI parlay.',
+      };
+    }
+
+    try {
+      const created = await apiClient.post<{ id: string }>('/api/parlays', payload);
+      return {
+        ...parlay,
+        backendPickId: created?.id || parlay.backendPickId,
+        backendSyncState: 'synced',
+        backendSyncedAt: new Date().toISOString(),
+        backendSyncError: undefined,
+      };
+    } catch (error: any) {
+      const status = Number(error?.status ?? 0);
+      if (status === 401) {
+        backendProfileRef.current = null;
+        return {
+          ...parlay,
+          backendSyncState: 'auth_required',
+          backendSyncError: 'Sign in required before the backend can track this AI parlay.',
+        };
+      }
+      if (status === 403) {
+        return {
+          ...parlay,
+          backendSyncState: 'legal_required',
+          backendSyncError: error?.error || error?.message || 'Legal confirmation blocked backend parlay save.',
+        };
+      }
+      return {
+        ...parlay,
+        backendSyncState: 'failed',
+        backendSyncError: error?.error || error?.message || 'Backend parlay save failed.',
+      };
+    }
+  };
+
   // Keep refs fresh for the mount-once lifecycle heartbeat (avoids stale closures
   // and prevents the interval from re-subscribing on every state change).
   savedSlipsRef.current = savedSlips;
   profileRef.current = profile;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const runBackendParlaySync = async () => {
+      if (backendParlaySyncRef.current) return;
+
+      const candidates = savedSlipsRef.current.filter((parlay) =>
+        isAiBackendCandidate(parlay) &&
+        !parlay.backendPickId &&
+        parlay.backendSyncState !== 'not_syncable'
+      );
+
+      if (!candidates.length) return;
+
+      backendParlaySyncRef.current = true;
+      try {
+        let next = savedSlipsRef.current;
+        let changed = false;
+
+        for (const parlay of candidates) {
+          const updated = await syncParlayToBackend(parlay);
+          if (JSON.stringify(updated) !== JSON.stringify(parlay)) {
+            next = next.map((row) => (row.id === parlay.id ? updated : row));
+            changed = true;
+          }
+        }
+
+        if (!cancelled && changed) {
+          syncSlips(next);
+        }
+      } finally {
+        backendParlaySyncRef.current = false;
+      }
+    };
+
+    void runBackendParlaySync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [savedSlips]);
 
   // Interaction: Create post
   const handlePostCreated = (postData: Partial<FeedPost>) => {
