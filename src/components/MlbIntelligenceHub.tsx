@@ -44,7 +44,63 @@ type IntelligenceReport = {
   candidates: Candidate[];
 };
 
-type Tab = 'overview' | 'targets' | 'pitchers' | 'games' | 'agents';
+type AiJudgePick = {
+  rank: number;
+  playerName: string;
+  team: string;
+  opponent: string;
+  opponentPitcherName?: string;
+  venue?: string;
+  pickType: string;
+  market: string;
+  hrScore: number;
+  agentScore: number;
+  confidenceTier?: string | null;
+  riskTier?: string | null;
+  availability?: {
+    status: string;
+    label: string;
+    parlayEligible: boolean;
+    reasons: string[];
+  };
+  parlayEligible?: boolean;
+};
+
+type AiJudge = {
+  id: string;
+  displayName: string;
+  handle: string;
+  tagline: string;
+  persona: string;
+  color: string;
+  trustScore: number;
+  winRate: number | null;
+  record: {
+    won: number;
+    lost: number;
+    pushed: number;
+    graded: number;
+    pending: number;
+    netUnits: number;
+  };
+  topPicks: AiJudgePick[];
+  parlayBuilder?: {
+    judgeId: string;
+    judgeName: string;
+    suggestedParlayName: string;
+    maxLegs: number;
+    legs: unknown[];
+  };
+};
+
+type AiJudgeLeaderboard = {
+  status: string;
+  date: string;
+  candidateCount: number;
+  leaderboard: AiJudge[];
+};
+
+type Tab = 'overview' | 'targets' | 'pitchers' | 'games' | 'judges' | 'agents';
 
 const safeArray = <T,>(value: unknown): T[] => Array.isArray(value) ? value as T[] : [];
 
@@ -201,11 +257,126 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
   );
 }
 
+async function loadAiJudgeLeaderboard(): Promise<AiJudgeLeaderboard> {
+  const res = await fetch('/api/ai-judges/leaderboard', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`AI Judge Leaderboard unavailable (${res.status})`);
+  return res.json();
+}
+
+function availabilityTone(status?: string) {
+  const value = String(status ?? '').toLowerCase();
+  if (value === 'confirmed') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (value === 'projected') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
+  if (value === 'avoid') return 'border-red-400/30 bg-red-400/10 text-red-200';
+  return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
+}
+
+function JudgeCard({ judge }: { judge: AiJudge }) {
+  const isRisk = judge.id === 'risk_auditor';
+  const picks = Array.isArray(judge.topPicks) ? judge.topPicks.slice(0, 5) : [];
+  const eligibleLegs = picks.filter((p) => p.parlayEligible);
+
+  return (
+    <article className="rounded-3xl border border-slate-800 bg-slate-950/80 p-5 shadow-xl shadow-black/20">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
+            {isRisk ? 'Trap Watch Agent' : 'AI Capper'}
+          </div>
+          <h3 className="mt-1 text-2xl font-black text-white">{judge.displayName}</h3>
+          <p className="mt-1 text-sm text-slate-400">{judge.tagline}</p>
+          <p className="mt-2 max-w-2xl text-xs text-slate-500">{judge.persona}</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <StatTile label="Win Rate" value={judge.winRate == null ? 'New' : `${judge.winRate}%`} tone="emerald" />
+          <StatTile label="Trust" value={Math.round(Number(judge.trustScore ?? 50))} tone="sky" />
+          <StatTile label="Record" value={`${judge.record?.won ?? 0}-${judge.record?.lost ?? 0}`} tone="slate" />
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-slate-800 bg-black/20 p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+              {isRisk ? 'Top 5 Avoid / Risk Flags' : 'Top 5 Current Picks'}
+            </p>
+            <p className="text-xs text-slate-400">
+              {isRisk ? 'These are warning profiles, not parlay legs.' : `${eligibleLegs.length} parlay-ready legs available.`}
+            </p>
+          </div>
+
+          {!isRisk && (
+            <button
+              type="button"
+              className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20"
+              title="Next step: connect this to My Parlays."
+            >
+              Build Parlay
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          {picks.length === 0 ? (
+            <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-500">
+              No judge picks available yet.
+            </p>
+          ) : (
+            picks.map((pick) => (
+              <div key={`${judge.id}-${pick.rank}-${pick.playerName}`} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-white">
+                      #{pick.rank} {pick.playerName}
+                      <span className="ml-2 text-xs font-normal text-slate-500">
+                        {pick.team} vs {pick.opponent}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {pick.market} · Agent Score {pick.agentScore} · HR Edge {pick.hrScore}
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${availabilityTone(pick.availability?.status)}`}>
+                      {pick.availability?.label ?? 'Availability unknown'}
+                    </span>
+                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
+                      pick.parlayEligible
+                        ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                        : 'border-slate-700 bg-slate-800 text-slate-400'
+                    }`}>
+                      {pick.parlayEligible ? 'Parlay-ready' : 'No parlay'}
+                    </span>
+                  </div>
+                </div>
+
+                {pick.availability?.reasons?.length ? (
+                  <div className="mt-2 text-[11px] text-slate-500">
+                    {pick.availability.reasons.slice(0, 2).join(' · ')}
+                  </div>
+                ) : null}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function MlbIntelligenceHub(_props: Props) {
   const [tab, setTab] = useState<Tab>('overview');
   const [report, setReport] = useState<IntelligenceReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [judgeBoard, setJudgeBoard] = useState<AiJudgeLeaderboard | null>(null);
+  const [judgeLoading, setJudgeLoading] = useState(false);
+  const [judgeError, setJudgeError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -227,8 +398,23 @@ export default function MlbIntelligenceHub(_props: Props) {
     }
   };
 
+  const loadJudges = async () => {
+    setJudgeLoading(true);
+    setJudgeError(null);
+    try {
+      const data = await loadAiJudgeLeaderboard();
+      setJudgeBoard(data);
+    } catch (err) {
+      setJudgeError(err instanceof Error ? err.message : 'AI Judge leaderboard unavailable.');
+      setJudgeBoard(null);
+    } finally {
+      setJudgeLoading(false);
+    }
+  };
+
   useEffect(() => {
     void load();
+    void loadJudges();
   }, []);
 
   const candidates = safeArray<Candidate>(report?.candidates);
