@@ -10,7 +10,7 @@ import type { MLBPlayer } from '../types';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = 5 * 60_000;
-const PREVIEW_LIMIT = 50;
+const PREVIEW_LIMIT = 999;
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -318,7 +318,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
 
   const boardSummary = board
     ? boardMode === 'preview'
-      ? `${board.date} · ${board.gameCount} games · Showing Top ${displayedPreviewCount} of ${totalPreviewPool} MLB-verified preview hitters · Projected HR Board · data: ${board.dataQuality}`
+      ? `${board.date} · ${board.gameCount} games · Showing full projected pool: ${displayedPreviewCount} of ${totalPreviewPool} MLB-verified preview hitters · Projected HR Board · data: ${board.dataQuality}`
       : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'Projected HR Board · official lineups not confirmed yet'} · data: ${board.dataQuality}`
     : 'Loading today’s slate…';
 
