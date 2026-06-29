@@ -70,27 +70,46 @@ interface HrBoardPageProps {
   onAddLegToParlay?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
 }
 
+// Module-level cache (survives unmount/navigation) so re-opening the HR Edge
+// Board is instant and never flashes blank while the slow engine re-fetches.
+const hrBoardCache: Record<string, { data: HrBoardResponse; ts: number }> = {};
+
 export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps = {}) {
+  const initialDate = todayISO();
   const [view, setView] = useState<'tier' | 'game'>('tier');
-  const [date, setDate] = useState(todayISO());
-  const [board, setBoard] = useState<HrBoardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [date, setDate] = useState(initialDate);
+  // Seed from the module cache so re-visiting renders instantly (sticky) instead
+  // of flashing blank while the slow HR engine endpoint re-fetches.
+  const [board, setBoard] = useState<HrBoardResponse | null>(() => hrBoardCache[initialDate]?.data ?? null);
+  const [loading, setLoading] = useState(() => !hrBoardCache[initialDate]);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HrBoardFilterState>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<HrBoardRow | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(
+    () => (hrBoardCache[initialDate] ? new Date(hrBoardCache[initialDate].ts) : null)
+  );
 
   const load = useCallback(async () => {
-    setLoading(true);
+    // Keep showing cached data (no blank) and refresh quietly in the background;
+    // only show the loading state when there's nothing cached for this date.
+    const cached = hrBoardCache[date];
+    if (cached) {
+      setBoard(cached.data);
+      setLastUpdated(new Date(cached.ts));
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = date === todayISO()
         ? await vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
         : await vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT);
+      hrBoardCache[date] = { data, ts: Date.now() };
       setBoard(data);
       setLastUpdated(new Date());
     } catch {
-      setError('HR Board data unavailable right now.');
+      if (!hrBoardCache[date]) setError('HR Board data unavailable right now.');
     } finally {
       setLoading(false);
     }

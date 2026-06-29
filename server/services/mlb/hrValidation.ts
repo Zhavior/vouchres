@@ -108,6 +108,14 @@ export interface ScoredHrCandidate {
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
   lastUpdated: string;
   dataSource: string;
+  // Optional contextual fields attached by the pipeline for downstream display.
+  venue?: string;
+  parkFactor?: number;
+  parkSource?: string;
+  hrMultiplier?: number;
+  weatherBoost?: number;
+  weatherSource?: string;
+  battingOrder?: number | null;
 }
 
 /* ============ Game context for validation ============ */

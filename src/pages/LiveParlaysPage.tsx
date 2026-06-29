@@ -21,6 +21,7 @@ import {
 interface Props {
   parlays: Parlay[];
   onGenerate?: () => void;
+  onUpdateParlay?: (updatedParlay: Parlay) => void;
   generating?: boolean;
 }
 

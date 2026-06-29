@@ -78,6 +78,8 @@ interface PoolBuildResult {
     totalPlayersChecked: number;
     previewPoolBeforeRegistryFilter?: number;
     previewPoolAfterSafetyFilter?: number;
+    confirmedLineupsLoaded?: number;
+    projectedLineupsLoaded?: number;
     teamMismatchBlocked?: number;
     teamMismatchExamples?: Array<{
       playerName: string;
@@ -387,11 +389,13 @@ function scoreCandidate(
   let recentHr = 0;
   let recentHrGames = 0;
   let smallSamplePenalty = 0;
+  let hrRate = 0; // HR per plate appearance (function-scoped for the hitterPower calc)
 
   // Hitter power component — this should dominate over generic environment boosts.
   if (hitterStats?.season) {
     const s = hitterStats.season;
     const hrPerPA = s.hrPerPA || 0;
+    hrRate = hrPerPA;
     seasonHR = s.homeRuns || 0;
     plateAppearances = s.plateAppearances || 0;
     atBats = s.atBats || 0;
@@ -591,7 +595,7 @@ function scoreCandidate(
     hrScore >= 38 ? "thin" : "avoid";
 
   // Risk tier
-  let riskTier =
+  let riskTier: "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid" =
     hrScore >= 80 ? "Strong" :
     hrScore >= 65 ? "Playable" :
     hrScore >= 50 ? "Sneaky" :
@@ -653,7 +657,7 @@ function scoreCandidate(
     hrMultiplier,
     weatherBoost: 0,
     weatherSource: "unavailable",
-    lineupStatus: player.lineupStatus,
+    lineupStatus: player.lineupStatus as LineupStatus,
     battingOrder: player.battingOrder ?? null,
     injuryStatus: player.injuryStatus,
     hrScore,
@@ -893,12 +897,12 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
             }
           }
 
-          const previewCandidate = {
+          const previewCandidate: ScoredHrCandidate = {
             ...previewScored,
-            lineupStatus: "projected_unconfirmed",
+            lineupStatus: "projected_unconfirmed" as LineupStatus,
             dataConfidence: previewConfidence,
             registryConflict,
-            dataQuality: "projection_preview",
+            dataQuality: "projection_preview" as const,
             warnings: Array.from(new Set(previewWarnings)),
           };
 
@@ -965,7 +969,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
           reasons: previewValidation.reasons,
           opponentPitcher: pitcher?.pitcherName ?? null,
           gamePk: player.gamePk,
-          lineupStatus: player.lineupStatus,
+          lineupStatus: player.lineupStatus as LineupStatus,
           injuryStatus: player.injuryStatus ?? "unknown",
         });
 
@@ -1004,7 +1008,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
           reasons: validation.reasons,
           opponentPitcher: pitcher?.pitcherName ?? null,
           gamePk: player.gamePk,
-          lineupStatus: player.lineupStatus,
+          lineupStatus: player.lineupStatus as LineupStatus,
           injuryStatus: player.injuryStatus ?? "unknown",
         });
 

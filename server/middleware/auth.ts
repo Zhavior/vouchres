@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -9,19 +9,33 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 let supabaseAdminClient: SupabaseClient | null = null;
 
-export async function getSupabaseAdmin(): Promise<SupabaseClient> {
-  if (supabaseAdminClient) return supabaseAdminClient;
-
-  const { createClient } = await import("@supabase/supabase-js");
-  supabaseAdminClient = createClient(
-    process.env.SUPABASE_URL ?? "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    {
-      auth: { persistSession: false, autoRefreshToken: false },
-    }
-  );
+function initSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdminClient) {
+    supabaseAdminClient = createClient(
+      process.env.SUPABASE_URL ?? "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+  }
   return supabaseAdminClient;
 }
+
+export async function getSupabaseAdmin(): Promise<SupabaseClient> {
+  return initSupabaseAdmin();
+}
+
+/**
+ * Synchronous service-role client. Lazily initialized on first property access
+ * so importing modules can use `supabaseAdmin.from(...)` directly without await.
+ * (Compatibility shim for the many route handlers written against a sync client.)
+ */
+export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = initSupabaseAdmin();
+    const value = Reflect.get(client as object, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 /**
  * Auth middleware — verifies the Supabase JWT from the Authorization header

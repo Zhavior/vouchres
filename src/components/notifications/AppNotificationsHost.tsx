@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, X, Sparkles, Lock, Trophy, Info } from 'lucide-react';
+import { Bell, X, Sparkles, Lock, Trophy, Info, CheckCircle2 } from 'lucide-react';
 import {
   AppNotification,
   getNotifications,
@@ -9,12 +9,13 @@ import {
 } from '../../lib/appNotifications';
 
 const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-  ai: Sparkles, lock: Lock, result: Trophy, info: Info,
+  ai: Sparkles, lock: Lock, result: Trophy, success: CheckCircle2, info: Info,
 };
 const ACCENT: Record<string, string> = {
   ai: 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10',
   lock: 'text-amber-400 border-amber-500/40 bg-amber-500/10',
   result: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
+  success: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
   info: 'text-slate-300 border-slate-700 bg-slate-800/40',
 };
 

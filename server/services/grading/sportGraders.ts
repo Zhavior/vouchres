@@ -157,14 +157,21 @@ function comingSoonGrader(sport: string): SportGrader {
   };
 }
 
-export const sportGraders: Record<string, SportGrader> = {
+/**
+ * Supported sports. Mirror of the client `SportId` (src/sports/registry.ts).
+ * Adding an id here forces a matching entry in `sportGraders` (won't compile
+ * until you provide one) — the compile-time guarantee for new-sport completeness.
+ */
+export type SportId = "mlb" | "nba" | "nfl";
+
+export const sportGraders: Record<SportId, SportGrader> = {
   mlb: mlbGrader,
   nba: comingSoonGrader("nba"),
   nfl: comingSoonGrader("nfl"),
 };
 
 export function getGrader(sport: string): SportGrader {
-  return sportGraders[sport?.toLowerCase()] ?? comingSoonGrader(sport || "unknown");
+  return sportGraders[(sport?.toLowerCase() as SportId)] ?? comingSoonGrader(sport || "unknown");
 }
 
 /* ============================================================
