@@ -786,6 +786,19 @@ export default function App() {
       case 'intel':
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
       case 'ai_judge_lab':
+        if (!canSeeThemeStore) {
+          return (
+            <div className="min-h-screen bg-slate-950 p-6 text-white">
+              <div className="mx-auto max-w-3xl rounded-3xl border border-red-400/30 bg-red-950/30 p-6">
+                <div className="text-xs font-black uppercase tracking-[0.25em] text-red-200">Admin Only</div>
+                <h1 className="mt-3 text-3xl font-black">AI Judge Lab is restricted</h1>
+                <p className="mt-3 text-slate-300">
+                  This internal tool is only available to admins, developers, and site operators.
+                </p>
+              </div>
+            </div>
+          );
+        }
         return <AiJudgeSocialLab />;
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
