@@ -271,7 +271,7 @@ function availabilityTone(status?: string) {
   return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
 }
 
-async function copyJudgeParlayLegs(judge: AiJudge) {
+async function copyJudgeParlayLegs(judge: AiJudge, onCopied?: (message: string) => void) {
   const picks = safeArray<AiJudgePick>(judge.topPicks)
     .filter((pick) => pick.parlayEligible)
     .slice(0, 5);
@@ -288,7 +288,9 @@ async function copyJudgeParlayLegs(judge: AiJudge) {
   ];
 
   await navigator.clipboard.writeText(lines.join('\n'));
+  onCopied?.(`${judge.displayName} parlay legs copied.`);
 }
+
 
 function JudgeCard({ judge }: { judge: AiJudge }) {
   const isRisk = judge.id === 'risk_auditor';
@@ -328,7 +330,12 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
           {!isRisk && (
             <button
               type="button"
-              onClick={() => void copyJudgeParlayLegs(judge)}
+              onClick={() => {
+                void copyJudgeParlayLegs(judge, (message) => {
+                  setCopyMessage(message);
+                  window.setTimeout(() => setCopyMessage(null), 2500);
+                });
+              }}
               disabled={eligibleLegs.length === 0}
               className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
               title={eligibleLegs.length === 0 ? "No parlay-ready picks yet" : "Copy this judge's parlay legs"}
@@ -398,6 +405,7 @@ export default function MlbIntelligenceHub(_props: Props) {
   const [judgeBoard, setJudgeBoard] = useState<AiJudgeLeaderboard | null>(null);
   const [judgeLoading, setJudgeLoading] = useState(false);
   const [judgeError, setJudgeError] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
