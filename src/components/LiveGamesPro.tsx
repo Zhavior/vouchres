@@ -328,7 +328,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
             <p className="text-xs text-slate-300 leading-relaxed">{m.aiVerdict}</p>
           </div>
 
-          <p className="text-[10px] text-slate-600 text-center">Probability-based research for entertainment — not betting advice. Lineups/weather are projected placeholders.</p>
+          <p className="text-[10px] text-slate-600 text-center">Live game research for entertainment — not betting advice. Some lineups/weather may be projected until official feeds confirm.</p>
         </div>
       </div>
     </div>
@@ -341,12 +341,13 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
   const [selected, setSelected] = useState<GameMatchup | null>(null);
-  const [sourceNote, setSourceNote] = useState('Loading live projection context...');
+  const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
+  const [sourceNote, setSourceNote] = useState('Loading live games...');
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setSourceNote('Loading fast HR board preview...');
+    setSourceNote('Loading live games...');
 
     let fastLoaded = false;
     try {
@@ -355,11 +356,11 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       if (fastMatchups.length > 0) {
         fastLoaded = true;
         setMatchups(fastMatchups);
-        setSourceNote('Fast preview loaded from verified HR board. Enriching matchup model...');
+        setSourceNote('Live games loaded. Enriching game context...');
         setLoading(false);
       }
     } catch {
-      setSourceNote('Fast preview unavailable. Trying matchup model...');
+      setSourceNote('Live games preview unavailable. Trying matchup model...');
     }
 
     try {
@@ -368,17 +369,17 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       if (next.length > 0) {
         setMatchups(next);
         setError(null);
-        setSourceNote('Full matchup model loaded.');
+        setSourceNote('Live game model loaded.');
       } else if (!fastLoaded) {
-        setError('No live projection data available. No fake games shown.');
-        setSourceNote('No verified live projection rows returned.');
+        setError('No live game data available. No fake games shown.');
+        setSourceNote('No verified live game rows returned.');
       }
     } catch {
       if (fastLoaded) {
         setError(null);
-        setSourceNote('Full matchup model is slow/unavailable. Showing verified HR-board preview.');
+        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
       } else {
-        setError('Live projections unavailable right now. No fake games shown.');
+        setError('Live games unavailable right now. No fake games shown.');
         setMatchups([]);
         setSourceNote('Backend unavailable.');
       }
@@ -391,6 +392,22 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
   const liveCount = matchups.filter((m) => m.isLive).length;
   const shown = liveOnly ? matchups.filter((m) => m.isLive) : matchups;
+
+  const preferredGame =
+    shown.find((m) => m.isLive) ??
+    shown.find((m) => String(m.status ?? '').toLowerCase().includes('scheduled')) ??
+    shown[0] ??
+    null;
+
+  const activeGame =
+    shown.find((m) => String(m.gamePk) === String(activeGamePk)) ??
+    preferredGame;
+
+  useEffect(() => {
+    if (!activeGamePk && preferredGame?.gamePk) {
+      setActiveGamePk(preferredGame.gamePk);
+    }
+  }, [activeGamePk, preferredGame?.gamePk]);
 
   const addLeg = (w: HrWatch) => {
     onAddLegToParlay({ name: w.playerName, team: w.team } as MLBPlayer, {
@@ -407,8 +424,8 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-sky-950/30 via-[#0b1120] to-[#0b1120] p-5 mb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Projections</h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-md">Fast MLB game cards with verified HR watch first, then deeper matchup model when available. No fake win, RBI, run, or hit data.</p>
+            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Games Center</h1>
+            <p className="text-xs text-slate-400 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
             <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-cyan-300">{sourceNote}</p>
           </div>
           <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-500/50 transition-colors">
@@ -431,10 +448,87 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
       {!error && matchups.length > 0 && (
         shown.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">No live games right now. Switch to “All games”.</div>
+          <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">No active live games right now. Switch to “All games”.</div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {shown.map((m) => <GameCard key={m.gamePk} m={m} onOpen={() => setSelected(m)} />)}
+          <div className="space-y-4">
+            {activeGame && (
+              <div className="rounded-2xl border border-sky-500/30 bg-sky-500/5 p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-[10px] font-black font-mono uppercase tracking-wider text-sky-300">Selected live game</p>
+                    <h2 className="text-xl font-black text-slate-100">
+                      {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      {activeGame.status ?? 'Game status unavailable'} · {activeGame.venue ?? 'Venue TBD'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelected(activeGame)}
+                    className="text-xs font-black rounded-xl px-3 py-2 bg-sky-500/15 border border-sky-500/40 text-sky-200 hover:bg-sky-500/25"
+                  >
+                    Open details
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono">AWAY</p>
+                    <p className="text-lg font-black">{activeGame.away.abbreviation}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono">HOME</p>
+                    <p className="text-lg font-black">{activeGame.home.abbreviation}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono">LIVE STATE</p>
+                    <p className="text-sm font-black">{activeGame.isLive ? 'Live now' : 'Not live'}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono">HR WATCH</p>
+                    <p className="text-sm font-black">{activeGame.hrWatch?.length ?? 0} players</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl bg-slate-950/40 border border-slate-800 p-3">
+                  <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300 mb-1">Pro live stats coming next</p>
+                  <p className="text-xs text-slate-400">
+                    Stolen bases, RBI tracker, total bases, pitch mix, pitch velocity, bullpen fatigue, runner-on-base context, and live parlay impact.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {shown.map((m) => (
+                <button
+                  key={m.gamePk}
+                  onClick={() => setActiveGamePk(m.gamePk)}
+                  className={`min-w-[180px] text-left rounded-xl border p-3 transition-all ${
+                    String(activeGame?.gamePk) === String(m.gamePk)
+                      ? 'bg-sky-500/15 border-sky-500/50'
+                      : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
+                  }`}
+                >
+                  <p className="text-[10px] font-mono text-slate-500">{m.isLive ? 'LIVE' : (m.status ?? 'GAME')}</p>
+                  <p className="text-sm font-black text-slate-100">{m.away.abbreviation} @ {m.home.abbreviation}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{m.venue ?? 'Venue TBD'}</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {shown.map((m) => (
+                <GameCard
+                  key={m.gamePk}
+                  m={m}
+                  onOpen={() => {
+                    setActiveGamePk(m.gamePk);
+                    setSelected(m);
+                  }}
+                />
+              ))}
+            </div>
           </div>
         )
       )}
