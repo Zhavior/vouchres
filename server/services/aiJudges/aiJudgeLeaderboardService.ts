@@ -274,8 +274,8 @@ function selectTopPicks(judgeId: JudgeId, candidates: Candidate[]) {
 }
 
 async function getCapperStatsByNames(_names: string[]) {
-  // Safe fallback for local/dev and hidden prototype mode.
-  // Later, when AI Judge picks are saved as real cappers, this can read Supabase trust_scores again.
+  // Safe mode: judge win-rate memory comes later when Supabase keys are configured.
+  // This keeps the AI Judge Leaderboard working from HR Board data only.
   return {
     capperMap: new Map<string, any>(),
     scoreMap: new Map<string, any>(),
