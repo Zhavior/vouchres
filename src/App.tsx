@@ -21,8 +21,6 @@ import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
 import LiveGamesPro from './components/LiveGamesPro';
-import WelcomePortal from './components/WelcomePortal';
-import TheEdgePage from './components/TheEdgePage';
 import TheEdgeShell from './components/theEdge/TheEdgeShell';
 import TodayDashboard from './components/TodayDashboard';
 import { apiUrl } from './lib/apiBase';

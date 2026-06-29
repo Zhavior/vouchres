@@ -73,10 +73,11 @@ const featureCards = [
   },
 ];
 
+// Route keys verified against src/App.tsx renderMainView switch cases.
 const islandCards = [
-  ['Today’s Board', 'daily_players', Waves],
-  ['Notifications', 'notifications', Bell],
-  ['Parlay Lab', 'parlay_lab', Layers3],
+  ['Today’s Board', 'today', Waves],
+  ['Live Parlays', 'live_parlays', Bell],
+  ['Parlay Lab', 'build', Layers3],
   ['Results Ledger', 'results', Trophy],
 ] as const;
 
