@@ -113,7 +113,9 @@ function GameCard({ game, search }: { game: DailyGame; search: string }) {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-slate-500">{game.totalPlayers} players</span>
+          <span className="text-xs text-slate-500">
+            {game.totalPlayers > 0 ? `${game.totalPlayers} players` : 'Lineup pending'}
+          </span>
           {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
         </div>
       </button>
@@ -136,8 +138,20 @@ function GameCard({ game, search }: { game: DailyGame; search: string }) {
               </div>
 
               {players.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-slate-600">
-                  {search ? 'No matching players' : 'Lineup not yet posted'}
+                <div className="px-4 py-6 text-center">
+                  <div className="text-xs font-bold text-slate-400">
+                    {search ? 'No matching players' : 'Lineup pending from MLB'}
+                  </div>
+                  {!search && pitcher && (
+                    <div className="mt-2 text-[11px] text-amber-300">
+                      Probable starter: {pitcher.name} ({pitcher.throws})
+                    </div>
+                  )}
+                  {!search && (
+                    <div className="mt-2 text-[10px] text-slate-600">
+                      This game is loaded, but confirmed batting order is not posted yet.
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="divide-y divide-slate-800/30">
