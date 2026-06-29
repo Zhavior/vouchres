@@ -392,7 +392,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         source: "vercel-serverless-lightweight",
         candidateCount: candidates.length,
         date,
-        scheduledFor,
+        scheduledFor: "staggered_daily_rotation",
         drafts: created,
       });
     }
