@@ -3,10 +3,18 @@ import {
   Activity, Flame, Search, CloudRain, Bot, AlertTriangle, ShieldCheck, RefreshCw, Gavel,
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
-import type { DailyMlbReport } from '../types/mlb';
+import type { DailyMlbReport, VulnerablePitcher } from '../types/mlb';
 import type { AgentPicksResponse, CapperAgent } from '../types/agents';
+import type { CreatorProofProfile } from '../types';
+import { hasTierAccess } from './pro/ProAccessGate';
+import PitcherProfileDrawer from './intel/PitcherProfileDrawer';
 
 type Tab = 'pitchers' | 'hr' | 'sneaky' | 'runs' | 'agents';
+
+interface MlbIntelligenceHubProps {
+  profile?: CreatorProofProfile;
+  onSectionChange?: (section: string) => void;
+}
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'pitchers', label: 'Vulnerable Pitchers', icon: Activity },
@@ -45,11 +53,13 @@ const RISK_COLOR: Record<string, string> = {
   Safe: '#34d399', Balanced: '#22d3ee', Risky: '#fb923c', Sneaky: '#a78bfa', Lotto: '#f87171',
 };
 
-export default function MlbIntelligenceHub() {
+export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbIntelligenceHubProps = {}) {
   const [report, setReport] = useState<DailyMlbReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('pitchers');
+  const [selectedPitcher, setSelectedPitcher] = useState<VulnerablePitcher | null>(null);
+  const isPro = profile ? hasTierAccess(profile, 'GOLD') : false;
 
   const [cappers, setCappers] = useState<CapperAgent[]>([]);
   const [activeAgent, setActiveAgent] = useState('hr-hunter');
@@ -146,10 +156,15 @@ export default function MlbIntelligenceHub() {
             <div className="grid sm:grid-cols-2 gap-3">
               {report.vulnerablePitchers.length === 0 && <Empty />}
               {report.vulnerablePitchers.map((p) => (
-                <div key={p.pitcherId} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
+                <button
+                  key={p.pitcherId}
+                  type="button"
+                  onClick={() => setSelectedPitcher(p)}
+                  className="group p-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-left transition-all hover:border-sky-500/40 hover:bg-slate-900"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h3 className="text-sm font-bold">{p.pitcherName}</h3>
+                      <h3 className="text-sm font-bold group-hover:text-sky-200">{p.pitcherName}</h3>
                       <p className="text-[10px] text-slate-500 font-mono">{p.team} vs {p.opponent} · {p.throws}HP</p>
                     </div>
                     <Badge text={p.riskTier} color={RISK_COLOR[p.riskTier] ?? '#94a3b8'} />
@@ -161,8 +176,11 @@ export default function MlbIntelligenceHub() {
                   <ul className="text-[11px] text-slate-400 space-y-0.5">
                     {p.attackReasons.slice(0, 2).map((r, i) => <li key={i}>• {r}</li>)}
                   </ul>
-                  <p className="text-[10px] text-slate-600 font-mono mt-2">Markets: {p.recommendedMarkets.join(' · ')}</p>
-                </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-[10px] text-slate-600 font-mono">Markets: {p.recommendedMarkets.join(' · ')}</p>
+                    <span className="text-[10px] font-bold text-sky-400 opacity-0 transition-opacity group-hover:opacity-100">View profile →</span>
+                  </div>
+                </button>
               ))}
             </div>
           )}
@@ -270,6 +288,13 @@ export default function MlbIntelligenceHub() {
           )}
         </>
       )}
+
+      <PitcherProfileDrawer
+        pitcher={selectedPitcher}
+        isPro={isPro}
+        onClose={() => setSelectedPitcher(null)}
+        onUpgrade={() => { setSelectedPitcher(null); onSectionChange?.('premium'); }}
+      />
     </div>
   );
 }
