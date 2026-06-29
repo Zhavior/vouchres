@@ -135,6 +135,20 @@ function probability(c: Candidate): string {
   return n <= 1 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
 }
 
+function addDays(date: string, days: number): string {
+  const base = new Date(`${date}T12:00:00Z`);
+  base.setUTCDate(base.getUTCDate() + days);
+  return base.toISOString().slice(0, 10);
+}
+
+function scheduledTimeForJudge(date: string, judgeIndex: number): string {
+  const time = process.env.AI_JUDGE_PICK_TIME ?? "10:30";
+  const timezone = process.env.AI_JUDGE_TIMEZONE ?? "America/Halifax";
+  const postDate = addDays(date, judgeIndex);
+
+  return `${postDate} ${time} ${timezone}`;
+}
+
 async function loadHrCandidates(req: VercelRequest): Promise<Candidate[]> {
   try {
     const proto = req.headers["x-forwarded-proto"] || "https";
@@ -255,10 +269,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "POST" && path[0] === "generate-hr-drafts") {
       const body = req.body ?? {};
       const date = body.date || new Date().toISOString().slice(0, 10);
-      const scheduledFor = body.scheduledFor || `${date} 10:30 America/Halifax`;
       const candidates = await loadHrCandidates(req);
 
-      const created = judges.map((judge) => {
+      const created = judges.map((judge, judgeIndex) => {
+        const scheduledFor = scheduledTimeForJudge(date, judgeIndex);
         const picks = selectPicks(judge.id, candidates);
         const now = new Date().toISOString();
 

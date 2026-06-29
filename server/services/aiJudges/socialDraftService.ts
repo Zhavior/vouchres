@@ -115,13 +115,18 @@ function opponent(c: Candidate): string {
   return c.opponent || c.opponentTeam || "TBD";
 }
 
-function scheduledTime(date: string, override?: string): string {
-  if (override) return override;
+function addDays(date: string, days: number): string {
+  const base = new Date(`${date}T12:00:00Z`);
+  base.setUTCDate(base.getUTCDate() + days);
+  return base.toISOString().slice(0, 10);
+}
 
+function scheduledTimeForJudge(date: string, judgeIndex: number): string {
   const time = process.env.AI_JUDGE_PICK_TIME ?? "10:30";
   const timezone = process.env.AI_JUDGE_TIMEZONE ?? "America/Halifax";
+  const postDate = addDays(date, judgeIndex);
 
-  return `${date} ${time} ${timezone}`;
+  return `${postDate} ${time} ${timezone}`;
 }
 
 function selectPicks(judgeId: JudgeId, candidates: Candidate[]): Candidate[] {
@@ -232,10 +237,10 @@ export async function generateHrSocialDrafts(options?: {
     ...safeArray<Candidate>(payload.projectedCandidates),
   ];
 
-  const scheduledFor = scheduledTime(date, options?.scheduledFor);
   const created: SocialDraft[] = [];
 
-  for (const judge of AI_JUDGES) {
+  for (const [judgeIndex, judge] of AI_JUDGES.entries()) {
+    const scheduledFor = scheduledTimeForJudge(date, judgeIndex);
     const picks = selectPicks(judge.id, candidates);
     const now = new Date().toISOString();
 
@@ -265,7 +270,7 @@ export async function generateHrSocialDrafts(options?: {
 
   return {
     date,
-    scheduledFor,
+    scheduledFor: "staggered_daily_rotation",
     candidateCount: candidates.length,
     drafts: created,
   };
