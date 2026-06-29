@@ -103,32 +103,20 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   };
 
   return (
-    <aside className="hidden md:flex flex-col h-screen sticky top-0 w-[76px] xl:w-[286px] border-r border-cyan-400/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_34%),linear-gradient(180deg,#07111f_0%,#060914_48%,#03050b_100%)] px-2.5 xl:px-4 py-5 text-slate-100 justify-between select-none backdrop-blur-2xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none shadow-2xl shadow-cyan-950/20">
+    <aside className="hidden md:flex flex-col h-screen sticky top-0 px-2 xl:px-4 py-6 border-r border-white/[0.06] w-[70px] xl:w-[264px] text-slate-100 justify-between select-none bg-gradient-to-b from-[#0b1120] via-[#080c15] to-[#06090f] backdrop-blur-xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none">
       <div className="space-y-6">
-        {/* Premium VouchEdge Brand */}
-        <div
+        {/* VouchEdge BRAND Logo with Epic Cinematic Star Wars crawler styling and Trust Badge */}
+        <div 
           onClick={() => onSectionChange('feed')}
-          className="group relative flex items-center gap-3 rounded-3xl border border-cyan-400/10 bg-white/[0.03] p-2.5 shadow-xl shadow-black/20 cursor-pointer transition hover:border-cyan-300/25 hover:bg-cyan-300/[0.04]"
+          className="flex items-center gap-2.5 px-1 relative group cursor-pointer"
           id="brand-logo-id"
         >
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-cyan-300/20 via-sky-500/10 to-indigo-500/20 text-cyan-100 shadow-[0_0_26px_-10px_rgba(34,211,238,0.9)]">
-            <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.28),transparent_32%)]" />
-            <span className="relative text-sm font-black tracking-tight">VE</span>
+          <div className="w-11 h-11 rounded-2xl bg-amber-950/40 border-2 border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-extrabold text-sm shadow-[0_0_15px_rgba(255,232,31,0.25)] shrink-0 select-none transform group-hover:rotate-12 transition-transform duration-300">
+            ★
           </div>
-
-          <div className="hidden xl:block min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-lg font-black tracking-tight text-white">
-                VouchEdge
-              </span>
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">
-                Live
-              </span>
-            </div>
-            <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">
-              MLB Intelligence Command
-            </p>
-          </div>
+          <span className="hidden xl:inline starwars-font-crawl text-xl tracking-wider select-none leading-none nav-link3d-crawl hover:scale-[1.03] transition-all">
+            VOUCH<span className="text-[#FFE81F] starwars-font-solid">EDGE</span>
+          </span>
         </div>
 
         {/* Sport Switcher */}
