@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Response } from "express";
 import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
+import { saveCurrentAiJudgePicksToLedger } from "../services/aiJudges/aiJudgePickLedgerService";
 
 /**
  * Public routes — world-readable data used by the home feed, leaderboard,
@@ -24,6 +25,20 @@ export const publicRoutes = Router();
 // =========================================================
 // AI Judge Leaderboard
 // =========================================================
+
+
+publicRoutes.post("/ai-judges/save-current-picks", async (_req, res: Response) => {
+  try {
+    const payload = await saveCurrentAiJudgePicksToLedger();
+    return res.json(payload);
+  } catch (error: any) {
+    console.error("[ai-judges] save current picks failed", error?.message);
+    return res.status(500).json({
+      status: "error",
+      message: error?.message ?? "Failed to save AI Judge picks",
+    });
+  }
+});
 
 publicRoutes.get("/ai-judges/leaderboard", async (_req, res: Response) => {
   try {
