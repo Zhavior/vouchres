@@ -51,6 +51,22 @@ async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promis
   }
 }
 
+function normalizeDailyReport(raw: any): DailyMlbReport {
+  const source = raw?.payload ?? raw?.report ?? raw?.data ?? raw ?? {};
+
+  return {
+    ...source,
+    date: source.date ?? raw?.date ?? new Date().toISOString().slice(0, 10),
+    gameCount: source.gameCount ?? source.games?.length ?? raw?.gameCount ?? 0,
+    dataQuality: source.dataQuality ?? raw?.dataQuality ?? raw?.status ?? "limited",
+    games: source.games ?? [],
+    vulnerablePitchers: source.vulnerablePitchers ?? [],
+    hrTargets: source.hrTargets ?? [],
+    sneakyHr: source.sneakyHr ?? [],
+    runEnvironments: source.runEnvironments ?? [],
+  } as DailyMlbReport;
+}
+
 async function hrBoardTodayWithDevFallback(previewLimit?: number): Promise<HrBoardResponse> {
   const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
   const localPath = `/api/mlb/hr-board/today${query}`;
@@ -80,11 +96,13 @@ export const vouchedgeApi = {
   // MLB
   todayGames: () => getJson<{ date: string; games: ApiGame[] }>("/api/mlb/games/today"),
   gamesByDate: (date: string) => getJson<{ date: string; games: ApiGame[] }>(`/api/mlb/games/date/${date}`),
-  dailyReport: (date?: string) =>
-    withFallback(
-      () => getJson<DailyMlbReport>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
+  dailyReport: async (date?: string) => {
+    const raw = await withFallback<any>(
+      () => getJson<any>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
       () => dailyReportDirect(date)
-    ),
+    );
+    return normalizeDailyReport(raw);
+  },
   vulnerablePitchers: () => getJson<{ report: VulnerablePitcher[] }>("/api/mlb/reports/vulnerable-pitchers"),
   hrTargets: () => getJson<{ targets: HrTarget[] }>("/api/mlb/reports/hr-targets"),
   sneakyHr: () => getJson<{ sneaky: SneakyHrTarget[] }>("/api/mlb/reports/sneaky-hr"),
