@@ -138,7 +138,7 @@ async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
     dataQuality: payload.dataQuality ?? payload.data_quality ?? 'hr_board_projection',
     disclaimer:
       payload.disclaimer ??
-      'Game Intelligence is powered by the HR Board engine. Research only — not betting advice.',
+      'AI Edge Lab is powered by the HR Board engine. Research only — not betting advice.',
     candidates,
   };
 }
@@ -414,12 +414,12 @@ export default function MlbIntelligenceHub(_props: Props) {
       const data = await loadHrBoardIntelligence();
       setReport(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Game Intelligence unavailable.');
+      setError(err instanceof Error ? err.message : 'AI Edge Lab unavailable.');
       setReport({
         date: new Date().toISOString().slice(0, 10),
         gameCount: 0,
         dataQuality: 'offline',
-        disclaimer: 'Game Intelligence is temporarily unavailable. No fake data shown.',
+        disclaimer: 'AI Edge Lab is temporarily unavailable. No fake data shown.',
         candidates: [],
       });
     } finally {
@@ -524,7 +524,7 @@ export default function MlbIntelligenceHub(_props: Props) {
               </p>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white">
-              Game Intelligence Center
+              AI Edge Lab Center
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-400">
               A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
@@ -581,8 +581,8 @@ export default function MlbIntelligenceHub(_props: Props) {
           ['overview', 'Overview', Brain],
           ['targets', 'HR Targets', Target],
           ['pitchers', 'Pitcher Pressure', Activity],
-          ['games', 'Run Environments', Zap],
-          ['judges', 'AI Judges', Flame],
+          ['games', 'Game Environments', Zap],
+          ['judges', 'Judge Leaderboard', Flame],
         ].map(([id, label, Icon]) => {
           const active = tab === id;
           const I = Icon as typeof Brain;
@@ -605,7 +605,7 @@ export default function MlbIntelligenceHub(_props: Props) {
 
       {loading && (
         <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-8 text-center text-slate-400">
-          Loading Game Intelligence…
+          Loading AI Edge Lab…
         </div>
       )}
 
@@ -696,12 +696,12 @@ export default function MlbIntelligenceHub(_props: Props) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-300">
-                  Premium AI Judge Board
+                  Premium Judge Edge Board
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-slate-400">
-                  See each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
-                  Risk Auditor is an avoid board, not a parlay builder.
+                  Compare each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
+                  Risk Auditor is your trap-watch board, not a parlay builder.
                 </p>
               </div>
               <button
