@@ -121,6 +121,76 @@ function score(c: Candidate): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function metric(c: Candidate, key: string): number {
+  const n = Number((c as any).scoreBreakdown?.[key] ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function warningCount(c: Candidate): number {
+  return safeArray(c.warnings).length;
+}
+
+function confidenceBonus(c: Candidate): number {
+  const tier = (c as any).confidenceTier;
+  if (tier === "elite") return 10;
+  if (tier === "strong") return 7;
+  if (tier === "watchlist") return 3;
+  if (tier === "thin") return -5;
+  if (tier === "avoid") return -12;
+  return 0;
+}
+
+function agentScore(judgeId: JudgeId, c: Candidate): number {
+  const base = score(c);
+  const hitterPower = metric(c, "hitterPower");
+  const pitcherVulnerability = metric(c, "pitcherVulnerability");
+  const parkContext = metric(c, "parkContext");
+  const lineupVolume = metric(c, "lineupVolume");
+  const handednessEdge = metric(c, "handednessEdge");
+  const recentForm = metric(c, "recentForm");
+  const penalties = Math.abs(metric(c, "penalties"));
+  const warnings = warningCount(c);
+
+  if (judgeId === "data_scout") {
+    return base * 0.35 + lineupVolume * 0.18 + handednessEdge * 0.14 + confidenceBonus(c) + hitterPower * 0.12 + pitcherVulnerability * 0.12 - warnings * 4 - penalties * 0.35;
+  }
+
+  if (judgeId === "power_hunter") {
+    return base * 0.40 + hitterPower * 0.28 + pitcherVulnerability * 0.22 + parkContext * 0.10 + recentForm * 0.08 - penalties * 0.20;
+  }
+
+  if (judgeId === "momentum_reader") {
+    return base * 0.25 + recentForm * 0.38 + lineupVolume * 0.16 + parkContext * 0.10 + handednessEdge * 0.10 + confidenceBonus(c) * 0.5 - warnings * 2;
+  }
+
+  if (judgeId === "risk_auditor") {
+    return warnings * 18 + penalties * 1.2 + ((c as any).confidenceTier === "avoid" ? 30 : 0) + ((c as any).confidenceTier === "thin" ? 18 : 0) + (base < 55 ? 12 : 0) - hitterPower * 0.10 - pitcherVulnerability * 0.10;
+  }
+
+  return base * 0.34 + hitterPower * 0.18 + pitcherVulnerability * 0.18 + recentForm * 0.14 + lineupVolume * 0.10 + handednessEdge * 0.08 + parkContext * 0.08 + confidenceBonus(c) - warnings * 3 - penalties * 0.45;
+}
+
+function agentReason(judgeId: JudgeId, c: Candidate): string {
+  if (judgeId === "data_scout") {
+    return `Data Scout likes the cleaner profile: HR Edge ${score(c)}/100, lineup volume ${metric(c, "lineupVolume")}, handedness edge ${metric(c, "handednessEdge")}, confidence ${(c as any).confidenceTier ?? "unknown"}.`;
+  }
+
+  if (judgeId === "power_hunter") {
+    return `Power Hunter is chasing upside: hitter power ${metric(c, "hitterPower")}, pitcher vulnerability ${metric(c, "pitcherVulnerability")}, park context ${metric(c, "parkContext")}.`;
+  }
+
+  if (judgeId === "momentum_reader") {
+    return `Momentum Reader sees rhythm: recent form ${metric(c, "recentForm")}, lineup volume ${metric(c, "lineupVolume")}, HR Edge ${score(c)}/100.`;
+  }
+
+  if (judgeId === "risk_auditor") {
+    const warning = safeArray<string>(c.warnings)[0] ?? "This profile needs extra review before trusting it.";
+    return `Risk Auditor flag: ${warning}`;
+  }
+
+  return `Pro Edge blends power, matchup, recent form, lineup volume, confidence tier, and risk penalties into one premium read.`;
+}
+
 function playerName(c: Candidate): string {
   return c.playerName || c.name || "Unknown player";
 }
@@ -186,16 +256,17 @@ function selectPicks(judgeId: JudgeId, candidates: Candidate[]): Candidate[] {
 
   if (judgeId === "risk_auditor") {
     return rows
-      .filter((c) => safeArray(c.warnings).length > 0 || score(c) < 55)
-      .sort((a, b) => safeArray(b.warnings).length - safeArray(a.warnings).length)
+      .filter((c) => warningCount(c) > 0 || (c as any).confidenceTier === "thin" || (c as any).confidenceTier === "avoid" || score(c) < 55)
+      .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
       .slice(0, 3);
   }
 
-  if (judgeId === "pro_edge_agent") {
-    return rows.sort((a, b) => score(b) - score(a)).slice(0, 3);
-  }
+  const limit = judgeId === "power_hunter" ? 4 : 3;
 
-  return rows.sort((a, b) => score(b) - score(a)).slice(0, judgeId === "power_hunter" ? 4 : 3);
+  return rows
+    .filter((c) => score(c) >= 45)
+    .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
+    .slice(0, limit);
 }
 
 function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: string): string {
@@ -214,8 +285,7 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
 
   if (judge.id === "risk_auditor") {
     const lines = picks.map((p, i) => {
-      const warning = safeArray<string>(p.warnings)[0] ?? "Risk needs review.";
-      return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nRisk note: ${warning}`;
+      return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nRisk Score: ${agentScore(judge.id, p).toFixed(1)}\n${agentReason(judge.id, p)}`;
     });
 
     return [
@@ -245,8 +315,8 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
   }
 
   const lines = picks.map((p, i) => {
-    const reason = safeArray<string>(p.reasons)[0] ?? "HR board signal supports this watchlist spot.";
-    return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nHR Edge: ${score(p)}/100 · Est HR: ${probability(p)}\nWhy: ${reason}`;
+    const reason = agentReason(judge.id, p);
+    return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nHR Edge: ${score(p)}/100 · Agent Score: ${agentScore(judge.id, p).toFixed(1)} · Est HR: ${probability(p)}\nWhy: ${reason}`;
   });
 
   return [
