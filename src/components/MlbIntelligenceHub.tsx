@@ -88,24 +88,35 @@ async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
 }
 
 function PixelAgentIcon({ code }: { code: string }) {
+  const theme: Record<string, { main: string; glow: string; accent: string; active: number[] }> = {
+    DS: { main: 'bg-sky-300', glow: 'bg-sky-500/25', accent: 'bg-cyan-300/80', active: [1, 2, 5, 6, 9, 10, 13, 14] },
+    PH: { main: 'bg-red-300', glow: 'bg-red-500/25', accent: 'bg-orange-300/80', active: [0, 3, 5, 6, 9, 10, 12, 15] },
+    MR: { main: 'bg-violet-300', glow: 'bg-violet-500/25', accent: 'bg-fuchsia-300/80', active: [1, 4, 6, 9, 11, 13, 14] },
+    RA: { main: 'bg-amber-300', glow: 'bg-amber-500/25', accent: 'bg-yellow-200/80', active: [0, 1, 2, 4, 8, 12, 13, 14] },
+    PE: { main: 'bg-emerald-300', glow: 'bg-emerald-500/25', accent: 'bg-lime-300/80', active: [2, 5, 6, 7, 8, 9, 10, 13] },
+  };
+
+  const t = theme[code] ?? theme.DS;
+
   return (
-    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-emerald-400/30 bg-slate-950 shadow-inner">
+    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-inner">
+      <div className={`absolute inset-0 ${t.glow} blur-xl`} />
       <div className="absolute inset-1 grid grid-cols-4 grid-rows-4 gap-[2px]">
         {Array.from({ length: 16 }).map((_, i) => (
           <span
             key={i}
             className={`rounded-[2px] ${
-              [1, 2, 4, 7, 8, 11, 13, 14].includes(i)
-                ? 'bg-emerald-300'
+              t.active.includes(i)
+                ? t.main
                 : [0, 5, 10, 15].includes(i)
-                  ? 'bg-sky-400/80'
+                  ? t.accent
                   : 'bg-slate-800'
             }`}
           />
         ))}
       </div>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-black font-mono text-white">
+        <span className="rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] font-black font-mono text-white shadow">
           {code}
         </span>
       </div>
@@ -276,11 +287,11 @@ export default function MlbIntelligenceHub(_props: Props) {
   }, [candidates]);
 
   const agents = [
-    { code: 'DS', name: 'Data Scout', role: 'Math-first game reads', focus: 'Score quality, slate rank, data warnings' },
-    { code: 'PH', name: 'Power Hunter', role: 'HR threat radar', focus: 'Power profiles and pitcher mistakes' },
-    { code: 'MR', name: 'Momentum Reader', role: 'Game rhythm', focus: 'Recent form and pressure windows' },
-    { code: 'RA', name: 'Risk Auditor', role: 'Skeptical filter', focus: 'Avoids weak data and fake confidence' },
-    { code: 'PE', name: 'Pro Edge Agent', role: 'Premium paths', focus: 'RBI, stolen bases, bullpen, prop impact' },
+    { code: 'DS', name: 'Data Scout', role: 'Math-first game reads', focus: 'Checks slate rank, data quality, score logic, and weak spots.', signal: 'Clean math' },
+    { code: 'PH', name: 'Power Hunter', role: 'HR threat radar', focus: 'Finds hitters with power paths, HR edge, and pitcher mistake zones.', signal: 'Power spike' },
+    { code: 'MR', name: 'Momentum Reader', role: 'Game rhythm', focus: 'Reads recent form, pressure windows, and late-game opportunity.', signal: 'Momentum' },
+    { code: 'RA', name: 'Risk Auditor', role: 'Skeptical filter', focus: 'Flags missing data, projected lineups, and fake confidence traps.', signal: 'Risk check' },
+    { code: 'PE', name: 'Pro Edge Agent', role: 'Premium paths', focus: 'Unlocks RBI, stolen bases, bullpen fatigue, and live parlay impact.', signal: 'Pro locked' },
   ];
 
   return (
@@ -323,7 +334,7 @@ export default function MlbIntelligenceHub(_props: Props) {
 
         <div className="relative mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           {agents.map((agent) => (
-            <div key={agent.code} className="rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 hover:border-emerald-400/35 transition">
+            <div key={agent.code} className="group rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 hover:border-emerald-400/35 hover:bg-slate-900/70 transition">
               <div className="flex items-center gap-3">
                 <PixelAgentIcon code={agent.code} />
                 <div>
@@ -331,7 +342,10 @@ export default function MlbIntelligenceHub(_props: Props) {
                   <p className="text-[10px] text-slate-500 font-mono uppercase">{agent.role}</p>
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-slate-400">{agent.focus}</p>
+              <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">{agent.focus}</p>
+              <div className="mt-3 inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/5 px-2 py-1 text-[10px] font-black font-mono uppercase tracking-wider text-emerald-300">
+                {agent.signal}
+              </div>
             </div>
           ))}
         </div>
