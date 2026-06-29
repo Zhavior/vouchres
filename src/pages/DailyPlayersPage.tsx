@@ -241,6 +241,56 @@ function GameCard({ game, search }: { game: Game; search: string }) {
 
 
 
+
+async function fetchTeamRosterPlayers(
+  teamId: number | string,
+  teamName: string,
+  opponent: string
+): Promise<Player[]> {
+  try {
+    const rosterUrl = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=active`;
+    const response = await fetch(rosterUrl, {
+      headers: { accept: 'application/json' },
+    });
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const roster = Array.isArray(data?.roster) ? data.roster : [];
+
+    return roster
+      .filter((item: any) => {
+        const pos =
+          item?.position?.abbreviation ||
+          item?.person?.primaryPosition?.abbreviation ||
+          '';
+        return pos && pos !== 'P';
+      })
+      .slice(0, 14)
+      .map((item: any) => {
+        const pos =
+          item?.position?.abbreviation ||
+          item?.person?.primaryPosition?.abbreviation ||
+          '—';
+
+        return {
+          playerId: item?.person?.id,
+          playerName: item?.person?.fullName || item?.person?.name || 'Unknown Player',
+          team: teamName,
+          opponent,
+          position: pos,
+          bats: undefined,
+          throws: undefined,
+          battingOrder: undefined,
+          source: 'active_roster_fallback',
+          confidence: 0.45,
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
 async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
   const date = todayISO();
   const scheduleUrl =
@@ -259,48 +309,65 @@ async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
   const schedule = await response.json();
   const rawGames = schedule?.dates?.flatMap((d: any) => d?.games || []) || [];
 
-  const games: Game[] = rawGames.map((game: any) => {
-    const awayTeam = game?.teams?.away?.team?.name || 'Away';
-    const homeTeam = game?.teams?.home?.team?.name || 'Home';
-    const awayPitcherRaw = game?.teams?.away?.probablePitcher;
-    const homePitcherRaw = game?.teams?.home?.probablePitcher;
+  const games: Game[] = await Promise.all(
+    rawGames.map(async (game: any) => {
+      const awayTeam = game?.teams?.away?.team?.name || 'Away';
+      const homeTeam = game?.teams?.home?.team?.name || 'Home';
+      const awayTeamId = game?.teams?.away?.team?.id;
+      const homeTeamId = game?.teams?.home?.team?.id;
 
-    return {
-      gamePk: game?.gamePk,
-      awayTeam,
-      homeTeam,
-      gameTime: game?.gameDate || '',
-      venue: game?.venue?.name || '',
-      status: game?.status?.detailedState || game?.status?.abstractGameState || 'Scheduled',
-      awayPitcher: awayPitcherRaw
-        ? {
-            id: awayPitcherRaw.id,
-            name: awayPitcherRaw.fullName || awayPitcherRaw.name || 'TBD',
-            throws: awayPitcherRaw?.pitchHand?.code || '',
-          }
-        : null,
-      homePitcher: homePitcherRaw
-        ? {
-            id: homePitcherRaw.id,
-            name: homePitcherRaw.fullName || homePitcherRaw.name || 'TBD',
-            throws: homePitcherRaw?.pitchHand?.code || '',
-          }
-        : null,
-      lineupConfirmed: false,
-      awayLineup: [],
-      homeLineup: [],
-      players: [],
-      totalPlayers: 0,
-    };
-  });
+      const awayPitcherRaw = game?.teams?.away?.probablePitcher;
+      const homePitcherRaw = game?.teams?.home?.probablePitcher;
+
+      const awayLineup = awayTeamId
+        ? await fetchTeamRosterPlayers(awayTeamId, awayTeam, homeTeam)
+        : [];
+
+      const homeLineup = homeTeamId
+        ? await fetchTeamRosterPlayers(homeTeamId, homeTeam, awayTeam)
+        : [];
+
+      const players = [...awayLineup, ...homeLineup];
+
+      return {
+        gamePk: game?.gamePk,
+        awayTeam,
+        homeTeam,
+        gameTime: game?.gameDate || '',
+        venue: game?.venue?.name || '',
+        status: game?.status?.detailedState || game?.status?.abstractGameState || 'Scheduled',
+        awayPitcher: awayPitcherRaw
+          ? {
+              id: awayPitcherRaw.id,
+              name: awayPitcherRaw.fullName || awayPitcherRaw.name || 'TBD',
+              throws: awayPitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        homePitcher: homePitcherRaw
+          ? {
+              id: homePitcherRaw.id,
+              name: homePitcherRaw.fullName || homePitcherRaw.name || 'TBD',
+              throws: homePitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        lineupConfirmed: false,
+        awayLineup,
+        homeLineup,
+        players,
+        totalPlayers: players.length,
+      };
+    })
+  );
+
+  const totalPlayers = games.reduce((sum, game) => sum + getGamePlayers(game).length, 0);
 
   return {
     ok: true,
     date,
     games,
     totalGames: games.length,
-    totalPlayers: 0,
-    source: 'direct_mlb_statsapi_browser_fallback',
+    totalPlayers,
+    source: 'direct_mlb_statsapi_browser_roster_fallback',
     updatedAt: new Date().toISOString(),
   };
 }
