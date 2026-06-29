@@ -783,13 +783,7 @@ export default function App() {
           />
         );
       case 'intel':
-        return (
-          <MlbIntelligenceHub
-            profile={profile}
-            onSectionChange={navigateSection}
-            onSaveParlay={handleSaveParlaySlip}
-          />
-        );
+        return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
