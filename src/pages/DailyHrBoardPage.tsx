@@ -319,7 +319,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
   const boardSummary = board
     ? boardMode === 'preview'
       ? `${board.date} · ${board.gameCount} games · Showing Top ${displayedPreviewCount} of ${totalPreviewPool} MLB-verified preview hitters · Projection Preview · data: ${board.dataQuality}`
-      : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'waiting for lineups'} · data: ${board.dataQuality}`
+      : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'Projected HR Board · official lineups not confirmed yet'} · data: ${board.dataQuality}`
     : 'Loading today’s slate…';
 
   const missingStarChecks = Array.isArray((board as any)?.debug?.missingStarChecks)
