@@ -23,6 +23,10 @@ type Candidate = {
   reasons?: string[];
   warnings?: string[];
   scoreBreakdown?: Record<string, number>;
+  status?: string;
+  lineupStatus?: string;
+  injuryStatus?: string;
+  activeRosterStatus?: boolean;
 };
 
 const AI_JUDGES: Array<{
@@ -102,6 +106,88 @@ function confidenceBonus(c: Candidate): number {
   return 0;
 }
 
+function availabilityForPick(candidate: Candidate, judgeId: JudgeId) {
+  const warnings = safeArray<string>(candidate.warnings);
+  const reasons: string[] = [];
+
+  const lineupStatus = String(candidate.lineupStatus ?? "unknown");
+  const injuryStatus = String(candidate.injuryStatus ?? "unknown");
+  const status = String(candidate.status ?? "unknown");
+  const activeRosterStatus = candidate.activeRosterStatus !== false;
+
+  if (!activeRosterStatus) {
+    return {
+      status: "avoid",
+      label: "Not active-roster eligible",
+      parlayEligible: false,
+      reasons: ["Player is not active on today's verified roster."],
+    };
+  }
+
+  if (["injured_list", "scratched"].includes(injuryStatus)) {
+    return {
+      status: "avoid",
+      label: injuryStatus === "scratched" ? "Scratched" : "Injured list",
+      parlayEligible: false,
+      reasons: [`Injury status: ${injuryStatus}`],
+    };
+  }
+
+  if (judgeId === "risk_auditor") {
+    return {
+      status: "avoid",
+      label: "Trap Watch / Avoid Board",
+      parlayEligible: false,
+      reasons: warnings.length ? warnings.slice(0, 3) : ["Risk Auditor flagged this as a caution profile."],
+    };
+  }
+
+  if (lineupStatus === "confirmed" || status === "confirmed") {
+    return {
+      status: "confirmed",
+      label: "Confirmed in lineup",
+      parlayEligible: true,
+      reasons: ["Official lineup/validated candidate feed confirms this player."],
+    };
+  }
+
+  if (lineupStatus === "projected" || lineupStatus === "projected_unconfirmed" || status === "projected") {
+    reasons.push("Player is roster-valid, but official lineup is not confirmed yet.");
+    if (injuryStatus === "day_to_day" || injuryStatus === "questionable") {
+      reasons.push(`Injury status: ${injuryStatus}. Use caution.`);
+      return {
+        status: "questionable",
+        label: "Projected but questionable",
+        parlayEligible: false,
+        reasons,
+      };
+    }
+
+    return {
+      status: "projected",
+      label: "Projected / wait for lineup",
+      parlayEligible: true,
+      reasons,
+    };
+  }
+
+  if (injuryStatus === "day_to_day" || injuryStatus === "questionable" || warnings.length > 0) {
+    return {
+      status: "questionable",
+      label: "Questionable / needs review",
+      parlayEligible: false,
+      reasons: warnings.length ? warnings.slice(0, 3) : [`Injury status: ${injuryStatus}`],
+    };
+  }
+
+  return {
+    status: "questionable",
+    label: "Availability unknown",
+    parlayEligible: false,
+    reasons: ["Lineup and availability are not confirmed enough for parlay use."],
+  };
+}
+
 function agentScore(judgeId: JudgeId, c: Candidate): number {
   const base = score(c);
   const hitterPower = metric(c, "hitterPower");
@@ -146,33 +232,45 @@ function selectTopPicks(judgeId: JudgeId, candidates: Candidate[]) {
           .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
           .slice(0, 5);
 
-  return picked.map((p, index) => ({
-    rank: index + 1,
-    playerId: p.playerId ?? null,
-    playerName: p.playerName ?? p.name ?? "Unknown player",
-    team: p.team ?? "TBD",
-    opponent: p.opponent ?? p.opponentTeam ?? "TBD",
-    opponentPitcherName: p.opponentPitcherName ?? "TBD",
-    venue: p.venue ?? "TBD",
-    pickType: "HR",
-    market: "Home Run",
-    hrScore: score(p),
-    agentScore: Number(agentScore(judgeId, p).toFixed(1)),
-    estimatedHrProbability: p.estimatedHrProbability ?? null,
-    confidenceTier: p.confidenceTier ?? null,
-    riskTier: p.riskTier ?? null,
-    reasons: safeArray<string>(p.reasons).slice(0, 3),
-    warnings: safeArray<string>(p.warnings).slice(0, 3),
-    parlayLeg: {
-      type: "player_prop",
-      sport: "mlb",
-      market: "home_run",
-      playerName: p.playerName ?? p.name ?? "Unknown player",
+  return picked.map((p, index) => {
+    const availability = availabilityForPick(p, judgeId);
+    const playerName = p.playerName ?? p.name ?? "Unknown player";
+
+    return {
+      rank: index + 1,
+      playerId: p.playerId ?? null,
+      playerName,
       team: p.team ?? "TBD",
       opponent: p.opponent ?? p.opponentTeam ?? "TBD",
-      label: `${p.playerName ?? p.name ?? "Unknown player"} HR`,
-    },
-  }));
+      opponentPitcherName: p.opponentPitcherName ?? "TBD",
+      venue: p.venue ?? "TBD",
+      pickType: judgeId === "risk_auditor" ? "AVOID" : "HR",
+      market: judgeId === "risk_auditor" ? "Trap Watch" : "Home Run",
+      hrScore: score(p),
+      agentScore: Number(agentScore(judgeId, p).toFixed(1)),
+      estimatedHrProbability: p.estimatedHrProbability ?? null,
+      confidenceTier: p.confidenceTier ?? null,
+      riskTier: p.riskTier ?? null,
+      lineupStatus: p.lineupStatus ?? null,
+      injuryStatus: p.injuryStatus ?? null,
+      activeRosterStatus: p.activeRosterStatus ?? null,
+      availability,
+      reasons: safeArray<string>(p.reasons).slice(0, 3),
+      warnings: safeArray<string>(p.warnings).slice(0, 3),
+      parlayEligible: availability.parlayEligible,
+      parlayLeg: availability.parlayEligible
+        ? {
+            type: "player_prop",
+            sport: "mlb",
+            market: "home_run",
+            playerName,
+            team: p.team ?? "TBD",
+            opponent: p.opponent ?? p.opponentTeam ?? "TBD",
+            label: `${playerName} HR`,
+          }
+        : null,
+    };
+  });
 }
 
 async function getCapperStatsByNames(_names: string[]) {
@@ -224,7 +322,10 @@ export async function buildAiJudgeLeaderboard() {
         judgeName: judge.displayName,
         suggestedParlayName: `${judge.displayName} Top HR Parlay`,
         maxLegs: 5,
-        legs: selectTopPicks(judge.id, candidates).slice(0, 5).map((p) => p.parlayLeg),
+        legs: selectTopPicks(judge.id, candidates)
+          .filter((p: any) => p.parlayEligible && p.parlayLeg)
+          .slice(0, 5)
+          .map((p: any) => p.parlayLeg),
       },
     };
   });
