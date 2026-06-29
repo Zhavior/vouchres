@@ -99,6 +99,12 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
 
   useEffect(() => { if (tab === 'agents' && !agentPicks) loadAgentPicks(activeAgent); }, [tab]); // eslint-disable-line
 
+  const vulnerablePitchers = report?.vulnerablePitchers ?? [];
+  const hrTargets = report?.hrTargets ?? [];
+  const sneakyHr = report?.sneakyHr ?? [];
+  const runEnvironments = report?.runEnvironments ?? [];
+  const safeAgentPicks = agentPicks?.picks ?? [];
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 text-slate-100">
       {/* Header */}
@@ -154,8 +160,8 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
           {/* Vulnerable Pitchers */}
           {tab === 'pitchers' && (
             <div className="grid sm:grid-cols-2 gap-3">
-              {report.vulnerablePitchers.length === 0 && <Empty />}
-              {report.vulnerablePitchers.map((p) => (
+              {vulnerablePitchers.length === 0 && <Empty />}
+              {vulnerablePitchers.map((p) => (
                 <button
                   key={p.pitcherId}
                   type="button"
@@ -188,8 +194,8 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
           {/* HR Targets */}
           {tab === 'hr' && (
             <div className="grid sm:grid-cols-2 gap-3">
-              {report.hrTargets.length === 0 && <Empty />}
-              {report.hrTargets.map((t) => (
+              {hrTargets.length === 0 && <Empty />}
+              {hrTargets.map((t) => (
                 <div key={t.targetId} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                   <div className="flex items-center justify-between mb-2">
                     <div>
@@ -214,8 +220,8 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
           {/* Sneaky HR */}
           {tab === 'sneaky' && (
             <div className="space-y-3">
-              {report.sneakyHr.length === 0 && <Empty />}
-              {report.sneakyHr.map((s) => (
+              {sneakyHr.length === 0 && <Empty />}
+              {sneakyHr.map((s) => (
                 <div key={s.sneakyRank} className="p-4 rounded-2xl bg-slate-900/50 border border-violet-500/20">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="text-sm font-bold flex items-center gap-2"><span className="text-violet-400">#{s.sneakyRank}</span> {s.team} <span className="text-slate-500 font-normal text-xs">vs {s.opposingPitcher}</span></h3>
@@ -231,8 +237,8 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
           {/* Run Environments */}
           {tab === 'runs' && (
             <div className="grid sm:grid-cols-2 gap-3">
-              {report.runEnvironments.length === 0 && <Empty />}
-              {report.runEnvironments.map((r) => (
+              {runEnvironments.length === 0 && <Empty />}
+              {runEnvironments.map((r) => (
                 <div key={r.gamePk} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-bold font-mono">{r.matchup}</h3>
@@ -262,8 +268,8 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
               {agentLoading && <div className="h-24 rounded-2xl bg-slate-900/60 border border-slate-800 animate-pulse" />}
               {!agentLoading && agentPicks && (
                 <div className="space-y-3">
-                  {agentPicks.picks.length === 0 && <Empty label="No picks from this capper for today's slate." />}
-                  {agentPicks.picks.map((jp, i) => (
+                  {safeAgentPicks.length === 0 && <Empty label="No picks from this capper for today's slate." />}
+                  {safeAgentPicks.map((jp, i) => (
                     <div key={i} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
                       <div className="flex items-center justify-between mb-2 gap-2">
                         <h3 className="text-sm font-bold">{jp.pick.selection}</h3>
