@@ -553,7 +553,7 @@ export default function MlbIntelligenceHub(_props: Props) {
           ['targets', 'HR Targets', Target],
           ['pitchers', 'Pitcher Pressure', Activity],
           ['games', 'Run Environments', Zap],
-          ['agents', 'AI Agents', Flame],
+          ['judges', 'AI Judges', Flame],
         ].map(([id, label, Icon]) => {
           const active = tab === id;
           const I = Icon as typeof Brain;
@@ -661,27 +661,49 @@ export default function MlbIntelligenceHub(_props: Props) {
         </div>
       )}
 
-      {!loading && tab === 'agents' && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {agents.map((agent) => (
-            <div key={agent.code} className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
-              <div className="flex items-center gap-3">
-                <PixelAgentIcon code={agent.code} />
-                <div>
-                  <h3 className="font-black text-white">{agent.name}</h3>
-                  <p className="text-xs text-slate-500">{agent.role}</p>
-                </div>
+      {!loading && tab === 'judges' && (
+        <section className="space-y-5">
+          <div className="rounded-3xl border border-sky-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/20 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-300">
+                  Premium AI Judge Board
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
+                <p className="mt-2 max-w-3xl text-sm text-slate-400">
+                  See each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
+                  Risk Auditor is an avoid board, not a parlay builder.
+                </p>
               </div>
-              <p className="mt-3 text-sm text-slate-400">{agent.focus}</p>
-              <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3">
-                <div className="flex items-center gap-2 text-amber-300">
-                  <Lock className="h-4 w-4" />
-                  <p className="text-xs font-black">Pro judge automation later</p>
-                </div>
-              </div>
+              <button
+                onClick={loadJudges}
+                className="rounded-2xl border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-sm font-black text-sky-200 hover:bg-sky-400/20"
+              >
+                Refresh Judges
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {judgeLoading && (
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 text-slate-300">
+              Loading AI Judge leaderboard...
+            </div>
+          )}
+
+          {judgeError && (
+            <div className="rounded-3xl border border-red-400/30 bg-red-950/30 p-6 text-red-200">
+              {judgeError}
+            </div>
+          )}
+
+          {!judgeLoading && !judgeError && (
+            <div className="space-y-5">
+              {safeArray<AiJudge>(judgeBoard?.leaderboard).map((judge) => (
+                <JudgeCard key={judge.id} judge={judge} />
+              ))}
+            </div>
+          )}
+        </section>
       )}
     </div>
   );
