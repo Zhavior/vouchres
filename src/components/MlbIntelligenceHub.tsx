@@ -53,6 +53,129 @@ const RISK_COLOR: Record<string, string> = {
   Safe: '#34d399', Balanced: '#22d3ee', Risky: '#fb923c', Sneaky: '#a78bfa', Lotto: '#f87171',
 };
 
+async function buildIntelligenceFromHrBoard(): Promise<DailyMlbReport> {
+  const res = await fetch('/api/mlb/hr-board/today');
+  if (!res.ok) throw new Error('HR board intelligence source unavailable');
+
+  const raw = await res.json();
+  const payload = raw?.payload ?? raw ?? {};
+  const candidates = [
+    ...(payload.candidates ?? []),
+    ...(payload.projectedCandidates ?? []),
+  ];
+
+  const byPitcher = new Map<string, any[]>();
+  const byGame = new Map<string, any[]>();
+
+  for (const c of candidates) {
+    const pitcherKey = c.opponentPitcherName || 'Pitcher TBD';
+    byPitcher.set(pitcherKey, [...(byPitcher.get(pitcherKey) ?? []), c]);
+
+    const gameKey = `${c.team || 'TBD'}-${c.opponent || c.opponentTeam || 'TBD'}-${c.gamePk || c.gameId || 'game'}`;
+    byGame.set(gameKey, [...(byGame.get(gameKey) ?? []), c]);
+  }
+
+  const vulnerablePitchers = Array.from(byPitcher.entries())
+    .map(([pitcherName, rows]) => {
+      const maxScore = Math.max(...rows.map((r) => Number(r.hrScore ?? 0)));
+      const avgScore = Math.round(rows.reduce((sum, r) => sum + Number(r.hrScore ?? 0), 0) / Math.max(rows.length, 1));
+      const first = rows[0] ?? {};
+
+      return {
+        id: first.opponentPitcherId ?? pitcherName,
+        pitcherId: first.opponentPitcherId,
+        name: pitcherName,
+        pitcherName,
+        team: first.opponentTeam ?? first.opponent ?? 'TBD',
+        opponent: first.team ?? 'TBD',
+        venue: first.venue ?? 'Venue TBD',
+        riskScore: maxScore,
+        score: maxScore,
+        riskTier: maxScore >= 75 ? 'EXTREME' : maxScore >= 65 ? 'HIGH' : maxScore >= 52 ? 'MEDIUM' : 'LOW',
+        hrThreats: rows.length,
+        targetCount: rows.length,
+        avgHrScore: avgScore,
+        reasons: [
+          `${rows.length} HR candidates are targeting this matchup.`,
+          `Top HR score against this pitcher group: ${maxScore}.`,
+          first.venue ? `Venue context: ${first.venue}.` : 'Venue context unavailable.',
+        ],
+        warnings: first.warnings ?? [],
+        targets: rows.slice(0, 5),
+      };
+    })
+    .sort((a, b) => b.riskScore - a.riskScore);
+
+  const hrTargets = [...candidates]
+    .sort((a, b) => Number(b.hrScore ?? 0) - Number(a.hrScore ?? 0))
+    .slice(0, 25)
+    .map((c, index) => ({
+      ...c,
+      id: c.playerId ?? `${c.playerName}-${index}`,
+      name: c.playerName,
+      player: c.playerName,
+      score: c.hrScore ?? 0,
+      confidence: c.hrScore ?? 0,
+      tier: c.riskTier ?? c.confidenceTier ?? 'Watchlist',
+      matchup: `${c.team ?? 'TBD'} vs ${c.opponent ?? c.opponentTeam ?? 'TBD'}`,
+    }));
+
+  const sneakyHr = [...candidates]
+    .filter((c) => ['Sneaky', 'Longshot', 'Playable', 'watchlist', 'thin'].includes(String(c.riskTier ?? c.confidenceTier ?? '')))
+    .sort((a, b) => Number(b.hrScore ?? 0) - Number(a.hrScore ?? 0))
+    .slice(0, 25)
+    .map((c, index) => ({
+      ...c,
+      id: c.playerId ?? `${c.playerName}-sneaky-${index}`,
+      name: c.playerName,
+      player: c.playerName,
+      score: c.hrScore ?? 0,
+      confidence: c.hrScore ?? 0,
+      tier: c.riskTier ?? 'Sneaky',
+      matchup: `${c.team ?? 'TBD'} vs ${c.opponent ?? c.opponentTeam ?? 'TBD'}`,
+    }));
+
+  const runEnvironments = Array.from(byGame.values())
+    .map((rows) => {
+      const first = rows[0] ?? {};
+      const avgScore = Math.round(rows.reduce((sum, r) => sum + Number(r.hrScore ?? 0), 0) / Math.max(rows.length, 1));
+      const topThreats = rows.filter((r) => Number(r.hrScore ?? 0) >= 65).length;
+
+      return {
+        id: first.gamePk ?? first.gameId ?? `${first.team}-${first.opponent}`,
+        gamePk: first.gamePk,
+        gameId: first.gameId,
+        away: first.team ?? 'TBD',
+        home: first.opponent ?? first.opponentTeam ?? 'TBD',
+        matchup: `${first.team ?? 'TBD'} vs ${first.opponent ?? first.opponentTeam ?? 'TBD'}`,
+        venue: first.venue ?? 'Venue TBD',
+        score: Math.min(100, avgScore + topThreats * 3),
+        runScore: Math.min(100, avgScore + topThreats * 3),
+        hrThreats: topThreats,
+        candidateCount: rows.length,
+        reasons: [
+          `${rows.length} hitters analyzed in this game environment.`,
+          `${topThreats} hitters grade as strong HR threats.`,
+          first.venue ? `Venue: ${first.venue}.` : 'Venue unavailable.',
+        ],
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  return {
+    date: payload.date ?? raw.date ?? new Date().toISOString().slice(0, 10),
+    gameCount: payload.gameCount ?? runEnvironments.length,
+    dataQuality: payload.dataQuality ?? payload.data_quality ?? 'hr_board_projection',
+    disclaimer: payload.disclaimer ?? 'Game Intelligence is powered by the HR Board engine. Research only — not betting advice.',
+    games: payload.games ?? [],
+    vulnerablePitchers,
+    hrTargets,
+    sneakyHr,
+    runEnvironments,
+  } as any;
+}
+
+
 export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbIntelligenceHubProps = {}) {
   const [report, setReport] = useState<DailyMlbReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,10 +193,15 @@ export default function MlbIntelligenceHub({ profile, onSectionChange }: MlbInte
     setLoading(true);
     setError(null);
     try {
-      const data = await vouchedgeApi.dailyReport();
+      const data = await buildIntelligenceFromHrBoard();
       setReport(data);
     } catch {
-      setError('Backend unavailable — run the dev server (npm run dev) to load live MLB intelligence.');
+      try {
+        const fallback = await vouchedgeApi.dailyReport();
+        setReport(fallback);
+      } catch {
+        setError('Backend unavailable — run the dev server (npm run dev) to load live MLB intelligence.');
+      }
     } finally {
       setLoading(false);
     }
