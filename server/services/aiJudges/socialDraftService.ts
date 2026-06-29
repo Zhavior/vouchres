@@ -107,6 +107,14 @@ function probability(c: Candidate): string {
   return n <= 1 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
 }
 
+function premiumCta(judgeName: string): string {
+  return [
+    `Want the full card? Open VouchEdge to see every AI Judge pick, each judge’s win rate, full result history, and live HR board movement.`,
+    `Track ${judgeName} against the other judges and see which AI style is winning today.`,
+    `VouchEdge: AI-powered MLB research, HR signals, parlays, results, and judge leaderboards in one premium dashboard.`,
+  ].join("\n");
+}
+
 function playerName(c: Candidate): string {
   return c.playerName || c.name || "Unknown player";
 }
@@ -175,6 +183,8 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
       ``,
       ...lines,
       ``,
+      premiumCta(judge.name),
+      ``,
       `Research only. Not betting advice. No guarantees.`,
       `Generated for ${date}.`,
     ].join("\n");
@@ -191,6 +201,8 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
       ``,
       `Pro unlock later: RBI windows, bullpen fatigue, stolen bases, pitch mix, and live parlay impact.`,
       ``,
+      premiumCta(judge.name),
+      ``,
       `Research only. Not betting advice.`,
       `Generated for ${date}.`,
     ].join("\n");
@@ -205,6 +217,8 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
     `🔥 VouchEdge ${judge.name} HR Picks`,
     ``,
     ...lines,
+    ``,
+    premiumCta(judge.name),
     ``,
     `Research only. Not betting advice. Lineups may be projected.`,
     `Generated for ${date}.`,

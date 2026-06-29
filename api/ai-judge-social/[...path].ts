@@ -135,6 +135,14 @@ function probability(c: Candidate): string {
   return n <= 1 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
 }
 
+function premiumCta(judgeName: string): string {
+  return [
+    `Want the full card? Open VouchEdge to see every AI Judge pick, each judge’s win rate, full result history, and live HR board movement.`,
+    `Track ${judgeName} against the other judges and see which AI style is winning today.`,
+    `VouchEdge: AI-powered MLB research, HR signals, parlays, results, and judge leaderboards in one premium dashboard.`,
+  ].join("\n");
+}
+
 function addDays(date: string, days: number): string {
   const base = new Date(`${date}T12:00:00Z`);
   base.setUTCDate(base.getUTCDate() + days);
@@ -195,9 +203,11 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
     return [
       `VouchEdge ${judge.name} HR Draft`,
       ``,
-      `No HR board candidates were available to this live Vercel function yet.`,
-      `Safe prototype only. Nothing posted to X/Twitter.`,
+      `No HR board candidates were available yet, but the VouchEdge judges are warming up.`,
       ``,
+      premiumCta(judge.name),
+      ``,
+      `Safe prototype only. Nothing posted to X/Twitter.`,
       `Generated for ${date}.`,
     ].join("\n");
   }
@@ -213,6 +223,8 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
       ``,
       ...lines,
       ``,
+      premiumCta(judge.name),
+      ``,
       `Research only. Not betting advice.`,
       `Generated for ${date}.`,
     ].join("\n");
@@ -224,6 +236,8 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
       ``,
       `The Pro model found ${picks.length} HR paths today.`,
       `Top visible teaser: ${playerName(picks[0])} — HR Edge ${score(picks[0])}/100`,
+      ``,
+      premiumCta(judge.name),
       ``,
       `Research only. Not betting advice.`,
       `Generated for ${date}.`,
@@ -239,6 +253,8 @@ function composeDraft(judge: (typeof judges)[number], picks: Candidate[], date: 
     `🔥 VouchEdge ${judge.name} HR Picks`,
     ``,
     ...lines,
+    ``,
+    premiumCta(judge.name),
     ``,
     `Research only. Not betting advice. Lineups may be projected.`,
     `Generated for ${date}.`,
