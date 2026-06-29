@@ -138,7 +138,7 @@ async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
     dataQuality: payload.dataQuality ?? payload.data_quality ?? 'hr_board_projection',
     disclaimer:
       payload.disclaimer ??
-      'AI Edge Lab is powered by the HR Board engine. Research only — not betting advice.',
+      'Premium MLB AI research powered by the HR Board engine. Track HR targets, pitcher pressure, game environments, judge rankings, and parlay-ready signals.',
     candidates,
   };
 }
@@ -340,7 +340,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
               className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
               title={eligibleLegs.length === 0 ? "No parlay-ready picks yet" : "Copy this judge's parlay legs"}
             >
-              Copy Parlay Legs
+              Copy Parlay Card
             </button>
           )}
         </div>
@@ -524,7 +524,7 @@ export default function MlbIntelligenceHub(_props: Props) {
               </p>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white">
-              AI Edge Lab Center
+              VouchEdge AI Edge Lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-400">
               A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
@@ -696,12 +696,12 @@ export default function MlbIntelligenceHub(_props: Props) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-300">
-                  Premium Judge Edge Board
+                  Premium AI Judge Board
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-slate-400">
                   Compare each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
-                  Risk Auditor is your trap-watch board, not a parlay builder.
+                  Risk Auditor flags avoid spots and should not be used to build parlays.
                 </p>
               </div>
               <button
