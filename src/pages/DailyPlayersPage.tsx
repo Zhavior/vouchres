@@ -1,343 +1,425 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Users, RefreshCw, AlertTriangle, ChevronDown, ChevronUp, Search } from 'lucide-react';
-import { safeJsonFetch } from '../api/safeApiClient';
+import { useEffect, useMemo, useState } from 'react';
 
-interface DailyPlayer {
-  playerId: number;
-  playerName: string;
-  position: string;
-  battingOrder: number;
-  bats: string;
-  team: string;
-  teamId: number;
-  teamAbbrev: string;
-  headshot: string;
-}
-
-interface DailyPitcher {
-  id: number;
-  name: string;
-  throws: string;
-  headshot: string;
-}
-
-interface DailyGame {
-  gamePk: number;
-  gameDate: string;
-  status: string;
-  venue: string;
-  awayTeam: { id: number; name: string; abbrev: string };
-  homeTeam: { id: number; name: string; abbrev: string };
-  awayPitcher: DailyPitcher | null;
-  homePitcher: DailyPitcher | null;
-  awayLineup: DailyPlayer[];
-  homeLineup: DailyPlayer[];
-  lineupConfirmed: boolean;
-  totalPlayers: number;
-}
-
-interface LineupResponse {
-  ok: boolean;
-  date: string;
-  games: DailyGame[];
-  totalGames: number;
-  totalPlayers: number;
-  source: string;
-  updatedAt: string;
-  error?: string;
-}
-
-const POSITION_ORDER: Record<string, number> = {
-  C: 1, '1B': 2, '2B': 3, '3B': 4, SS: 5, LF: 6, CF: 7, RF: 8,
-  DH: 9, OF: 10, IF: 11, P: 12, RP: 13, SP: 14,
+type Pitcher = {
+  id?: number | string;
+  name?: string;
+  fullName?: string;
+  throws?: string;
+  hand?: string;
 };
 
-function positionColor(pos: string) {
-  if (['SP', 'RP', 'P'].includes(pos)) return 'text-amber-400';
-  if (['C'].includes(pos)) return 'text-cyan-400';
-  if (['1B', '2B', '3B', 'SS'].includes(pos)) return 'text-emerald-400';
-  if (['LF', 'CF', 'RF', 'OF'].includes(pos)) return 'text-violet-400';
-  if (pos === 'DH') return 'text-orange-400';
-  return 'text-slate-400';
-}
+type Player = {
+  playerId?: number | string;
+  id?: number | string;
+  playerName?: string;
+  name?: string;
+  team?: string;
+  opponent?: string;
+  position?: string;
+  bats?: string;
+  throws?: string;
+  battingOrder?: number | string;
+  source?: string;
+  confidence?: number;
+  headshot?: string;
+};
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+type Game = {
+  gamePk?: number | string;
+  id?: number | string;
+  awayTeam?: string;
+  homeTeam?: string;
+  away?: string;
+  home?: string;
+  gameTime?: string;
+  startTime?: string;
+  venue?: string;
+  status?: string;
+  lineupConfirmed?: boolean;
+  awayPitcher?: Pitcher | null;
+  homePitcher?: Pitcher | null;
+  awayLineup?: Player[];
+  homeLineup?: Player[];
+  players?: Player[];
+  totalPlayers?: number;
+};
 
-function GameCard({ game, search }: { game: DailyGame; search: string }) {
-  const [expanded, setExpanded] = useState(true);
-
-  const filterPlayers = (players: DailyPlayer[]) => {
-    if (!search) return players;
-    const q = search.toLowerCase();
-    return players.filter(
-      p => p.playerName.toLowerCase().includes(q) || p.position.toLowerCase().includes(q)
-    );
-  };
-
-  const awayFiltered = filterPlayers(game.awayLineup);
-  const homeFiltered = filterPlayers(game.homeLineup);
-  const noResults = search && awayFiltered.length === 0 && homeFiltered.length === 0;
-
-  if (noResults) return null;
-
-  const isLive = game.status.toLowerCase().includes('progress') || game.status.toLowerCase().includes('inning');
-  const isFinal = game.status.toLowerCase() === 'final';
-  const statusColor = isLive ? 'text-emerald-400' : isFinal ? 'text-slate-500' : 'text-cyan-300';
-
-  return (
-    <div className="rounded-2xl border border-slate-800/70 bg-slate-950/40 overflow-hidden">
-      {/* Game header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-900/40 transition-colors"
-      >
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-base font-black text-slate-100">
-              {game.awayTeam.abbrev} <span className="text-slate-500">@</span> {game.homeTeam.abbrev}
-            </span>
-            <span className={`text-xs font-semibold ${statusColor}`}>{game.status}</span>
-            {game.lineupConfirmed && (
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300">
-                Lineup Posted
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span>{game.venue}</span>
-            {game.awayPitcher && <span>{game.awayTeam.abbrev}: {game.awayPitcher.name} ({game.awayPitcher.throws}HP)</span>}
-            {game.homePitcher && <span>{game.homeTeam.abbrev}: {game.homePitcher.name} ({game.homePitcher.throws}HP)</span>}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-slate-500">
-            {game.totalPlayers > 0 ? `${game.totalPlayers} players` : 'Lineup pending'}
-          </span>
-          {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="grid gap-0 sm:grid-cols-2 border-t border-slate-800/50">
-          {[
-            { team: game.awayTeam, players: awayFiltered, pitcher: game.awayPitcher },
-            { team: game.homeTeam, players: homeFiltered, pitcher: game.homePitcher },
-          ].map(({ team, players, pitcher }) => (
-            <div key={team.id} className="border-b sm:border-b-0 sm:border-r border-slate-800/50 last:border-0">
-              {/* Team header */}
-              <div className="px-4 py-2 bg-slate-900/30 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300">{team.name}</span>
-                {pitcher && (
-                  <span className="text-[10px] text-amber-400 font-semibold">
-                    SP: {pitcher.name} ({pitcher.throws})
-                  </span>
-                )}
-              </div>
-
-              {players.length === 0 ? (
-                <div className="px-4 py-6 text-center">
-                  <div className="text-xs font-bold text-slate-400">
-                    {search ? 'No matching players' : 'Lineup pending from MLB'}
-                  </div>
-                  {!search && pitcher && (
-                    <div className="mt-2 text-[11px] text-amber-300">
-                      Probable starter: {pitcher.name} ({pitcher.throws})
-                    </div>
-                  )}
-                  {!search && (
-                    <div className="mt-2 text-[10px] text-slate-600">
-                      This game is loaded, but confirmed batting order is not posted yet.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-800/30">
-                  {players.map((player) => (
-                    <div key={player.playerId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-900/20 transition-colors">
-                      <span className="w-5 text-right text-[10px] font-mono font-bold text-slate-600 flex-shrink-0">
-                        {player.battingOrder || '—'}
-                      </span>
-                      <img
-                        src={player.headshot}
-                        alt={player.playerName}
-                        loading="lazy"
-                        className="h-7 w-7 rounded-lg border border-slate-700/60 bg-slate-900 object-cover flex-shrink-0"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      <span className="flex-1 min-w-0 text-sm font-semibold text-slate-200 truncate">
-                        {player.playerName}
-                      </span>
-                      <span className={`text-xs font-black flex-shrink-0 w-8 text-right ${positionColor(player.position)}`}>
-                        {player.position}
-                      </span>
-                      <span className="text-[10px] text-slate-600 flex-shrink-0">
-                        {player.bats}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+type DailyBoardResponse = {
+  ok?: boolean;
+  date?: string;
+  games?: Game[];
+  totalGames?: number;
+  totalPlayers?: number;
+  source?: string;
+  updatedAt?: string;
+};
 
 interface DailyPlayersPageProps {
   onAddLegToParlay?: (player: any, prop: any) => void;
 }
 
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+function playerName(player: Player) {
+  return player.playerName || player.name || 'Unknown Player';
+}
+
+function pitcherName(pitcher?: Pitcher | null) {
+  if (!pitcher) return 'TBD';
+  return pitcher.name || pitcher.fullName || 'TBD';
+}
+
+function teamName(value?: string) {
+  return value || 'TBD';
+}
+
+function getGamePlayers(game: Game): Player[] {
+  const away = Array.isArray(game.awayLineup) ? game.awayLineup : [];
+  const home = Array.isArray(game.homeLineup) ? game.homeLineup : [];
+  const players = Array.isArray(game.players) ? game.players : [];
+  return [...away, ...home, ...players];
+}
+
+function normalizeResponse(raw: any): DailyBoardResponse {
+  const data = raw?.payload || raw?.data || raw || {};
+  const games = Array.isArray(data.games) ? data.games : [];
+
+  return {
+    ok: data.ok ?? raw?.ok ?? true,
+    date: data.date || todayISO(),
+    games,
+    totalGames: data.totalGames ?? games.length,
+    totalPlayers:
+      data.totalPlayers ??
+      games.reduce((sum: number, game: Game) => sum + getGamePlayers(game).length, 0),
+    source: data.source || 'daily-player-board',
+    updatedAt: data.updatedAt || new Date().toISOString(),
+  };
+}
+
+function dataQuality(game: Game) {
+  const total = getGamePlayers(game).length;
+  if (game.lineupConfirmed && total > 0) return 'CONFIRMED';
+  if (total > 0) return 'PROJECTED';
+  if (game.awayPitcher || game.homePitcher) return 'PITCHERS';
+  return 'GAME SHELL';
+}
+
+function qualityClass(label: string) {
+  if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (label === 'PROJECTED') return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
+  if (label === 'PITCHERS') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
+  return 'border-slate-500/30 bg-slate-500/10 text-slate-300';
+}
+
+function positionClass(pos?: string) {
+  const p = String(pos || '').toUpperCase();
+  if (p === 'P') return 'text-cyan-300';
+  if (['C', '1B', '2B', '3B', 'SS'].includes(p)) return 'text-emerald-300';
+  if (['LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-amber-300';
+  return 'text-slate-400';
+}
+
+function GameCard({ game, search }: { game: Game; search: string }) {
+  const allPlayers = getGamePlayers(game);
+  const filteredPlayers = allPlayers.filter((player) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      playerName(player),
+      player.team,
+      player.opponent,
+      player.position,
+      player.source,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q);
+  });
+
+  const awayTeam = teamName(game.awayTeam || game.away);
+  const homeTeam = teamName(game.homeTeam || game.home);
+  const quality = dataQuality(game);
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20">
+      <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <span className={`rounded-full border px-3 py-1 text-[10px] font-black tracking-[0.18em] ${qualityClass(quality)}`}>
+            {quality}
+          </span>
+          <span className="text-xs text-slate-500">
+            {game.status || 'Scheduled'}
+          </span>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
+          <div>
+            <div className="text-lg font-black text-slate-100">{awayTeam}</div>
+            <div className="mt-1 text-xs text-slate-500">
+              SP: <span className="text-cyan-200">{pitcherName(game.awayPitcher)}</span>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">at</div>
+            <div className="text-xs text-slate-400">{game.gameTime || game.startTime || 'Time TBD'}</div>
+          </div>
+
+          <div className="md:text-right">
+            <div className="text-lg font-black text-slate-100">{homeTeam}</div>
+            <div className="mt-1 text-xs text-slate-500">
+              SP: <span className="text-cyan-200">{pitcherName(game.homePitcher)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span>{game.venue || 'Venue TBD'}</span>
+          <span>•</span>
+          <span>
+            {allPlayers.length > 0
+              ? `${allPlayers.length} player${allPlayers.length === 1 ? '' : 's'} loaded`
+              : 'Lineup pending from MLB'}
+          </span>
+        </div>
+      </div>
+
+      {filteredPlayers.length === 0 ? (
+        <div className="p-6 text-center">
+          <div className="text-sm font-bold text-slate-300">
+            {search ? 'No matching players' : 'No confirmed batting order yet'}
+          </div>
+          <div className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500">
+            This game is loaded. Probable pitchers and matchup shell are visible, but MLB has not posted a usable player lineup for this game yet.
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredPlayers.map((player, index) => (
+            <div
+              key={`${player.playerId || player.id || playerName(player)}-${index}`}
+              className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 hover:border-cyan-400/30 hover:bg-slate-900"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black text-slate-100">
+                    {playerName(player)}
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-500">
+                    {player.team || 'Team TBD'} vs {player.opponent || 'Opponent TBD'}
+                  </div>
+                </div>
+                <div className={`text-xs font-black ${positionClass(player.position)}`}>
+                  {player.position || '—'}
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2 text-[10px]">
+                {player.bats && (
+                  <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+                    Bats {player.bats}
+                  </span>
+                )}
+                {player.battingOrder && (
+                  <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+                    Order {player.battingOrder}
+                  </span>
+                )}
+                <span className="rounded-full bg-cyan-400/10 px-2 py-1 text-cyan-200">
+                  {player.source || (game.lineupConfirmed ? 'confirmed_lineup' : 'projected')}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
-  const [data, setData] = useState<LineupResponse | null>(null);
+  const [data, setData] = useState<DailyBoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'confirmed' | 'unconfirmed'>('all');
+  const [filter, setFilter] = useState<'all' | 'confirmed' | 'pending' | 'pitchers'>('all');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchLineups = async () => {
+  async function fetchBoard() {
     setLoading(true);
-    const result = await safeJsonFetch<LineupResponse>('/api/mlb/lineup/today', {
-      fallbackData: { ok: false, date: todayISO(), games: [], totalGames: 0, totalPlayers: 0, source: 'fallback', updatedAt: new Date().toISOString() },
-      timeoutMs: 14000,
-    });
-    if (result.ok) {
-      setData(result.data);
-      setError(null);
-    } else {
-      setError(result.error || 'Could not load lineup data');
-      setData(result.data);
+    setError(null);
+
+    const endpoints = [
+      '/api/mlb/daily-player-board',
+      '/api/mlb/lineup/today',
+      '/api/daily-players',
+    ];
+
+    let finalData: DailyBoardResponse | null = null;
+    let finalError = '';
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          finalError = `${endpoint} returned ${response.status}`;
+          continue;
+        }
+        const json = await response.json();
+        const normalized = normalizeResponse(json);
+        finalData = normalized;
+        break;
+      } catch (err: any) {
+        finalError = err?.message || String(err);
+      }
     }
+
+    if (!finalData) {
+      finalData = {
+        ok: false,
+        date: todayISO(),
+        games: [],
+        totalGames: 0,
+        totalPlayers: 0,
+        source: 'empty-fallback',
+        updatedAt: new Date().toISOString(),
+      };
+      setError(finalError || 'Could not load Daily Player Board.');
+    }
+
+    setData(finalData);
     setLastUpdated(new Date());
     setLoading(false);
-  };
+  }
 
-  useEffect(() => { fetchLineups(); }, []);
+  useEffect(() => {
+    fetchBoard();
+  }, []);
 
-  const filteredGames = useMemo(() => {
-    if (!data?.games) return [];
-    return data.games.filter(g => {
-      if (filter === 'confirmed') return g.lineupConfirmed;
-      if (filter === 'unconfirmed') return !g.lineupConfirmed;
+  const games = useMemo(() => {
+    const list = data?.games || [];
+
+    return list.filter((game) => {
+      const quality = dataQuality(game);
+      if (filter === 'confirmed') return quality === 'CONFIRMED';
+      if (filter === 'pending') return quality !== 'CONFIRMED';
+      if (filter === 'pitchers') return Boolean(game.awayPitcher || game.homePitcher);
       return true;
     });
   }, [data?.games, filter]);
 
-  const date = todayISO();
+  const totalPlayers = useMemo(
+    () => (data?.games || []).reduce((sum, game) => sum + getGamePlayers(game).length, 0),
+    [data?.games]
+  );
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
       <div className="mx-auto max-w-7xl space-y-5">
+        <header className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                  Daily Player Board
+                </span>
+                <span className="text-xs text-slate-500">{data?.date || todayISO()}</span>
+              </div>
 
-        {/* Header */}
-        <div className="flex flex-col gap-4 rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-                Daily Roster
-              </span>
-              <span className="text-xs text-slate-500">{date}</span>
-            </div>
-            <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-white">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-400/10">
-                <Users className="h-4 w-4 text-cyan-300" />
-              </span>
-              Daily Players
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-              All players confirmed or projected in today's MLB games. Lineups update as teams post them. Batting orders, positions, and pitchers from the official MLB Stats API.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-right text-xs">
-            <div className="font-black text-slate-200">
-              {loading ? 'Loading...' : `${data?.totalGames ?? 0} games · ${data?.totalPlayers ?? 0} players`}
-            </div>
-            {lastUpdated && (
-              <div className="mt-1 text-slate-500">Updated {lastUpdated.toLocaleTimeString()}</div>
-            )}
-          </div>
-        </div>
+              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                Today’s MLB Players
+              </h1>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search player or position..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-900 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(['all', 'confirmed', 'unconfirmed'] as const).map(f => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className={`rounded-xl border px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-colors ${
-                  filter === f
-                    ? 'border-cyan-400/40 bg-cyan-400/15 text-cyan-200'
-                    : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                {f === 'all' ? 'All Games' : f === 'confirmed' ? 'Lineup Posted' : 'Pending'}
-              </button>
-            ))}
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                Games, probable pitchers, confirmed lineups when available, and fallback states when MLB has not posted batting orders yet.
+              </p>
+            </div>
+
             <button
               type="button"
-              onClick={fetchLineups}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2.5 text-xs font-black text-slate-400 transition-colors hover:border-slate-700 disabled:opacity-50"
+              onClick={fetchBoard}
+              className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 text-sm font-black text-cyan-100 hover:bg-cyan-300/20"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              Refresh Board
             </button>
           </div>
-        </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
-            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-            {error}. Showing available data below.
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Games Loaded</div>
+              <div className="mt-1 text-2xl font-black text-white">{data?.totalGames ?? games.length}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Players Loaded</div>
+              <div className="mt-1 text-2xl font-black text-white">{totalPlayers}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Last Updated</div>
+              <div className="mt-1 text-sm font-bold text-white">
+                {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
+              </div>
+            </div>
           </div>
-        )}
+        </header>
 
-        {/* Loading skeleton */}
-        {loading && (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 animate-pulse rounded-2xl border border-slate-800/50 bg-slate-900/30" />
+        <section className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-950/80 p-4 md:flex-row md:items-center md:justify-between">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search player, team, position..."
+            className="w-full rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 md:max-w-md"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setFilter(item)}
+                className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wide ${
+                  filter === item
+                    ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-100'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-100'
+                }`}
+              >
+                {item}
+              </button>
             ))}
           </div>
+        </section>
+
+        {loading && (
+          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-400">
+            Loading Daily Player Board...
+          </div>
         )}
 
-        {/* Game cards */}
-        {!loading && (
-          <div className="space-y-4">
-            {filteredGames.length === 0 ? (
-              <div className="rounded-2xl border border-slate-800/50 bg-slate-950/40 p-10 text-center">
-                <Users className="mx-auto h-8 w-8 text-slate-700" />
-                <p className="mt-3 text-sm text-slate-500">
-                  {data?.totalGames === 0
-                    ? 'No games scheduled today or lineup data is unavailable.'
-                    : 'No games match your current filter.'}
-                </p>
-              </div>
-            ) : (
-              filteredGames.map(game => (
-                <React.Fragment key={game.gamePk}>
-                  <GameCard game={game} search={search} />
-                </React.Fragment>
-              ))
-            )}
+        {!loading && error && (
+          <div className="rounded-3xl border border-red-400/20 bg-red-950/20 p-5 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+
+        {!loading && games.length === 0 && (
+          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center">
+            <div className="text-lg font-black text-white">No games found for this filter.</div>
+            <div className="mt-2 text-sm text-slate-500">
+              Try All or Refresh Board. If it still shows empty, the backend endpoint is not returning today’s MLB schedule.
+            </div>
+          </div>
+        )}
+
+        {!loading && games.length > 0 && (
+          <div className="grid gap-5">
+            {games.map((game, index) => (
+              <GameCard
+                key={`${game.gamePk || game.id || index}`}
+                game={game}
+                search={search}
+              />
+            ))}
           </div>
         )}
       </div>
