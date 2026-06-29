@@ -504,10 +504,44 @@ export default function App() {
     syncPosts(updated);
   };
 
+  // Update saved parlay from Parlay Hub
+  const handleUpdateParlaySlip = (updatedParlay: Parlay) => {
+    const updated = savedSlips.map((slip) =>
+      slip.id === updatedParlay.id ? { ...slip, ...updatedParlay } : slip
+    );
+
+    syncSlips(updated);
+
+    notify({
+      kind: 'success',
+      title: '✅ Parlay Updated',
+      body: `${updatedParlay.title || 'Your parlay'} was updated.`,
+      section: 'live_parlays',
+    });
+  };
+
   // Save new parlay created in ParlayLab
   const handleSaveParlaySlip = (newParlay: Parlay) => {
-    const updated = [...savedSlips, newParlay];
+    const savedParlay = {
+      ...newParlay,
+      id: newParlay.id || `parlay-${Date.now()}`,
+      status: newParlay.status || 'PENDING',
+      mode: newParlay.mode || 'PRACTICE',
+      createdAt: newParlay.createdAt || new Date().toISOString(),
+      lockNotified: false,
+    };
+
+    const updated = [savedParlay, ...savedSlips];
     syncSlips(updated);
+
+    notify({
+      kind: 'success',
+      title: '✅ Parlay Saved',
+      body: `${savedParlay.title || 'Your parlay'} was saved to Parlay Hub.`,
+      section: 'live_parlays',
+    });
+
+    navigateSection('live_parlays');
   };
 
   // Grade pending parlays against the live MLB feed and reflect outcomes in
@@ -577,7 +611,7 @@ export default function App() {
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays for today`,
-      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Live Parlays.',
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay Hub.',
       section: 'live_parlays',
     });
   };
@@ -596,7 +630,7 @@ export default function App() {
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays`,
-      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Live Parlays.',
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay Hub.',
       section: 'live_parlays',
     });
   };
@@ -612,7 +646,7 @@ export default function App() {
         notify({
           kind: 'lock',
           title: `🔒 Locked: ${p.title}`,
-          body: 'Moved to Live Parlays. It will auto-grade when the games are final.',
+          body: 'Moved to Parlay Hub. It will auto-grade when the games are final.',
           section: 'live_parlays',
         });
         return { ...p, lockNotified: true };
@@ -755,7 +789,7 @@ export default function App() {
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} />;
+        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onUpdateParlay={handleUpdateParlaySlip} />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
