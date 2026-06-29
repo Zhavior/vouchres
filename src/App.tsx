@@ -923,6 +923,8 @@ export default function App() {
             mode={isOpenEdgeDashboardMode ? 'dashboard' : 'public'}
             presentation="page"
             activeSection={activeSection}
+            savedParlays={savedSlips}
+            profile={profile}
             onSectionChange={navigateSection}
           />
         );
