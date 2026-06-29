@@ -239,6 +239,72 @@ function GameCard({ game, search }: { game: Game; search: string }) {
   );
 }
 
+
+
+async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
+  const date = todayISO();
+  const scheduleUrl =
+    `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher,team,venue`;
+
+  const response = await fetch(scheduleUrl, {
+    headers: {
+      accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`MLB direct schedule failed: ${response.status}`);
+  }
+
+  const schedule = await response.json();
+  const rawGames = schedule?.dates?.flatMap((d: any) => d?.games || []) || [];
+
+  const games: Game[] = rawGames.map((game: any) => {
+    const awayTeam = game?.teams?.away?.team?.name || 'Away';
+    const homeTeam = game?.teams?.home?.team?.name || 'Home';
+    const awayPitcherRaw = game?.teams?.away?.probablePitcher;
+    const homePitcherRaw = game?.teams?.home?.probablePitcher;
+
+    return {
+      gamePk: game?.gamePk,
+      awayTeam,
+      homeTeam,
+      gameTime: game?.gameDate || '',
+      venue: game?.venue?.name || '',
+      status: game?.status?.detailedState || game?.status?.abstractGameState || 'Scheduled',
+      awayPitcher: awayPitcherRaw
+        ? {
+            id: awayPitcherRaw.id,
+            name: awayPitcherRaw.fullName || awayPitcherRaw.name || 'TBD',
+            throws: awayPitcherRaw?.pitchHand?.code || '',
+          }
+        : null,
+      homePitcher: homePitcherRaw
+        ? {
+            id: homePitcherRaw.id,
+            name: homePitcherRaw.fullName || homePitcherRaw.name || 'TBD',
+            throws: homePitcherRaw?.pitchHand?.code || '',
+          }
+        : null,
+      lineupConfirmed: false,
+      awayLineup: [],
+      homeLineup: [],
+      players: [],
+      totalPlayers: 0,
+    };
+  });
+
+  return {
+    ok: true,
+    date,
+    games,
+    totalGames: games.length,
+    totalPlayers: 0,
+    source: 'direct_mlb_statsapi_browser_fallback',
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   const [data, setData] = useState<DailyBoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -277,16 +343,21 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
     }
 
     if (!finalData) {
-      finalData = {
-        ok: false,
-        date: todayISO(),
-        games: [],
-        totalGames: 0,
-        totalPlayers: 0,
-        source: 'empty-fallback',
-        updatedAt: new Date().toISOString(),
-      };
-      setError(finalError || 'Could not load Daily Player Board.');
+      try {
+        finalData = await fetchDirectMlbScheduleBoard();
+        finalError = '';
+      } catch (directErr: any) {
+        finalData = {
+          ok: false,
+          date: todayISO(),
+          games: [],
+          totalGames: 0,
+          totalPlayers: 0,
+          source: 'empty-fallback',
+          updatedAt: new Date().toISOString(),
+        };
+        setError(finalError || directErr?.message || 'Could not load Daily Player Board.');
+      }
     }
 
     setData(finalData);
