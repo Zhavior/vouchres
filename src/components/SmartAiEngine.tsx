@@ -140,7 +140,13 @@ export default function SmartAiEngine({
     safeJsonFetch<any>('/api/mlb/hr-board/today?limit=75', { fallbackData: { candidates: [] }, timeoutMs: 14000 })
       .then((r) => {
         if (!alive) return;
-        const raw: any[] = r.data?.candidates ?? r.data?.rows ?? [];
+        // Use confirmed candidates when available, else fall back to projected
+        // candidates (pre-lineup), so the vault always has real players to build
+        // from instead of showing "no eligible players".
+        const confirmed: any[] = Array.isArray(r.data?.candidates) ? r.data.candidates : [];
+        const projected: any[] = Array.isArray(r.data?.projectedCandidates) ? r.data.projectedCandidates : [];
+        const rows: any[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
+        const raw: any[] = confirmed.length ? confirmed : projected.length ? projected : rows;
         const mapped: RealCandidate[] = raw
           .filter((c) => c && (c.gamePk ?? c.gameId) != null)
           .map((c) => ({

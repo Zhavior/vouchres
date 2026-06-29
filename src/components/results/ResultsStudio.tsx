@@ -127,19 +127,36 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
 
   return (
     <div className="min-h-screen pb-12" style={{ background: "#040810", color: "#e2e8f0" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-40" style={{ background: "rgba(8,12,20,0.9)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
-              <BarChart3 className="w-3.5 h-3.5 text-slate-950" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+        {/* Premium hero header */}
+        <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/30 p-5 shadow-2xl">
+          <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">
+                <BarChart3 className="h-3.5 w-3.5" /> Proof Ledger
+              </span>
+              <h1 className="text-3xl font-black tracking-tight text-white">Results Studio</h1>
+              <p className="mt-1.5 max-w-xl text-sm text-slate-400">
+                Every saved slip, graded after final from the official box score. Unverified until settled — no faked records.
+              </p>
             </div>
-            <span className="font-bold text-white text-sm">Results Studio</span>
-            <span className="text-[9px] text-slate-600 hidden sm:inline">Proof after final</span>
+            <div className="flex gap-2">
+              {[
+                { label: 'Slips', value: stats.total, tone: 'text-white' },
+                { label: 'Graded', value: stats.settled, tone: 'text-cyan-300' },
+                { label: 'Win rate', value: stats.settled > 0 ? `${stats.winRate ?? Math.round((stats.won / stats.settled) * 100)}%` : '—', tone: 'text-emerald-300' },
+              ].map((kpi) => (
+                <div key={kpi.label} className="min-w-[78px] rounded-2xl border border-white/[0.06] bg-slate-950/50 px-3 py-2.5 text-center">
+                  <div className={`text-xl font-black ${kpi.tone}`}>{kpi.value}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{kpi.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <span className="text-[9px] text-slate-600 font-mono">{stats.total} slips · {stats.settled} graded</span>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-5">
