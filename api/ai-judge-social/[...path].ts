@@ -76,6 +76,21 @@ const judges = [
   },
 ] as const;
 
+function isAuthorized(req: VercelRequest): boolean {
+  const expected = process.env.AI_JUDGE_ADMIN_KEY;
+
+  // If no key is configured, keep local/dev prototype usable.
+  // Production should always set AI_JUDGE_ADMIN_KEY in Vercel.
+  if (!expected) {
+    return process.env.NODE_ENV !== "production";
+  }
+
+  const headerKey = req.headers["x-ai-judge-admin-key"];
+  const provided = Array.isArray(headerKey) ? headerKey[0] : headerKey;
+
+  return typeof provided === "string" && provided === expected;
+}
+
 function getPath(req: VercelRequest): string[] {
   const raw = req.query.path;
   if (Array.isArray(raw) && raw.length > 0) return raw.map(String);
@@ -220,6 +235,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const path = getPath(req);
 
   try {
+    if (!isAuthorized(req)) {
+      return res.status(403).json({
+        status: "error",
+        message: "Admin/developer access required for AI Judge Social API.",
+        source: "vercel-serverless-lightweight",
+      });
+    }
+
     if (req.method === "GET" && path[0] === "judges") {
       return res.status(200).json({
         status: "ready",
