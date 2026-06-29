@@ -515,6 +515,81 @@ function scoreCandidate(
 
   hrScore = clamp(Math.round(hrScore), 1, 100);
 
+  const hitterPower = clamp(
+    (hrRate * 1000 * 1.8) +
+    (iso * 120) +
+    (slug * 35) +
+    (seasonHR * 1.2) +
+    (recentHr * 5),
+    0,
+    100
+  );
+
+  const pitcherVulnerability = clamp(
+    ((pitcherHr9 || 1.0) * 34) +
+    ((pitcherStats?.inningsPitched ?? 0) > 0
+      ? (((pitcherStats?.baseOnBalls ?? 0) / (pitcherStats?.inningsPitched ?? 1)) * 9) * 3
+      : 0),
+    0,
+    100
+  );
+
+  const parkContext = clamp(50 + parkBoost * 6, 0, 100);
+
+  const lineupVolume = player.lineupStatus === "confirmed"
+    ? clamp(80 - ((player.battingOrder ?? 6) - 1) * 7, 35, 90)
+    : 55;
+
+  const handednessEdge =
+    player.battingHand === "S" ? 65 :
+    pitcher?.throws && (
+      (player.battingHand === "L" && pitcher.throws === "R") ||
+      (player.battingHand === "R" && pitcher.throws === "L")
+    ) ? 70 :
+    pitcher?.throws ? 45 : 50;
+
+  const recentForm = clamp(45 + recentHr * 14 + recentHrGames * 8, 0, 100);
+
+  const penalties = clamp(
+    smallSamplePenalty +
+    (player.lineupStatus !== "confirmed" ? 7 : 0) +
+    (player.injuryStatus === "day_to_day" || player.injuryStatus === "questionable" ? 15 : 0) +
+    (player.injuryStatus === "unknown" ? 5 : 0),
+    0,
+    100
+  );
+
+  const scoreBreakdown = {
+    hitterPower: Math.round(hitterPower),
+    pitcherVulnerability: Math.round(pitcherVulnerability),
+    parkContext: Math.round(parkContext),
+    lineupVolume: Math.round(lineupVolume),
+    handednessEdge: Math.round(handednessEdge),
+    recentForm: Math.round(recentForm),
+    penalties: Math.round(penalties),
+  };
+
+  const baseHrProbability = plateAppearances > 0
+    ? (seasonHR / plateAppearances) * 4.25
+    : 0.018;
+
+  const estimatedHrProbability = Number(clamp(
+    baseHrProbability *
+      (0.75 + hitterPower / 160) *
+      (0.85 + pitcherVulnerability / 250) *
+      hrMultiplier *
+      (0.9 + lineupVolume / 500) *
+      (1 - penalties / 500),
+    0.003,
+    0.14
+  ).toFixed(4));
+
+  const confidenceTier =
+    hrScore >= 82 ? "elite" :
+    hrScore >= 68 ? "strong" :
+    hrScore >= 53 ? "watchlist" :
+    hrScore >= 38 ? "thin" : "avoid";
+
   // Risk tier
   let riskTier =
     hrScore >= 80 ? "Strong" :
@@ -582,7 +657,10 @@ function scoreCandidate(
     battingOrder: player.battingOrder ?? null,
     injuryStatus: player.injuryStatus,
     hrScore,
+    estimatedHrProbability,
+    confidenceTier,
     dataConfidence,
+    scoreBreakdown,
     riskTier,
     status,
     reasons,
