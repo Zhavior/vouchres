@@ -341,9 +341,14 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
       : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'Projected HR Board · official lineups not confirmed yet'} · data: ${board.dataQuality}`
     : 'Loading today’s slate…';
 
-  const missingStarChecks = Array.isArray((board as any)?.debug?.missingStarChecks)
-    ? (board as any).debug.missingStarChecks
-    : [];
+  // Star Watch source — resilient to where the engine puts it (dev emits it under
+  // debug.missingStarChecks; alternate builds may surface it top-level).
+  const missingStarChecks = (() => {
+    const b = board as any;
+    const candidates = [b?.debug?.missingStarChecks, b?.missingStarChecks, b?.starWatch, b?.debug?.starWatch];
+    for (const c of candidates) if (Array.isArray(c) && c.length) return c;
+    return [];
+  })();
 
   const getStarWatchBadgeClass = (status: string) => {
     switch (status) {

@@ -573,51 +573,53 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       )}
 
       {/* Main header banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-            <BookmarkCheck className="w-5.5 h-5.5 text-sky-400" />
-            Vouch Board & Graphic Studio
+      <div className="overflow-hidden rounded-3xl border border-sky-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/30 p-5 shadow-2xl relative">
+        <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-sky-500/15 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-sky-300">
+            <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
+          </span>
+          <h2 className="text-2xl font-black tracking-tight text-white">
+            Vouch Board &amp; Graphic Studio
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="mt-1.5 max-w-2xl text-sm text-slate-400">
             Build bespoke circular player portfolios, customize metrics, toggle sabermeter charts, and generate high-contrast cards for Twitter/X.
           </p>
         </div>
 
-        {/* Tab switch controller */}
-        <div className="flex bg-[#121824] p-1 rounded-xl border border-slate-900 self-start sm:self-center" id="board-tabs-belt">
-          <button
-            onClick={() => setActiveBoardTab('portfolio')}
-            className={`px-3 py-1.5 text-xs font-bold font-mono rounded-lg transition-all ${
-              activeBoardTab === 'portfolio'
-                ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            📊 Portfolio Analytics
-          </button>
-
-          <button
-            onClick={() => setActiveBoardTab('studio')}
-            className={`px-3 py-1.5 text-xs font-bold font-mono rounded-lg transition-all ${
-              activeBoardTab === 'studio'
-                ? 'bg-sky-950 text-sky-400 border border-sky-900/60'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            🎨 Orbit Studio
-          </button>
-          
-          <button
-            onClick={() => setActiveBoardTab('saved')}
-            className={`px-3 py-1.5 text-xs font-bold font-mono rounded-lg transition-all relative ${
-              activeBoardTab === 'saved'
-                ? 'bg-orange-950 text-orange-400 border border-orange-900/60'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            📋 Feed Board ({savedVouches.length})
-          </button>
+        {/* Prominent full-width section switcher (was a small corner pill) */}
+        <div className="relative mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3" id="board-tabs-belt">
+          {([
+            { id: 'portfolio', emoji: '📊', label: 'Portfolio Analytics', sub: 'Risk + variance dashboard', accent: 'emerald' },
+            { id: 'studio', emoji: '🎨', label: 'Orbit Studio', sub: 'Design shareable cards', accent: 'sky' },
+            { id: 'saved', emoji: '📋', label: `Feed Board (${savedVouches.length})`, sub: 'Your saved vouches', accent: 'orange' },
+          ] as const).map((t) => {
+            const active = activeBoardTab === t.id;
+            const ring = active
+              ? t.accent === 'emerald'
+                ? 'border-emerald-400/50 bg-emerald-400/10 shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]'
+                : t.accent === 'sky'
+                  ? 'border-sky-400/50 bg-sky-400/10 shadow-[0_0_20px_-6px_rgba(56,189,248,0.5)]'
+                  : 'border-orange-400/50 bg-orange-400/10 shadow-[0_0_20px_-6px_rgba(251,146,60,0.5)]'
+              : 'border-slate-800 bg-slate-950/50 hover:border-slate-600 hover:bg-slate-900/60';
+            const text = active
+              ? t.accent === 'emerald' ? 'text-emerald-300' : t.accent === 'sky' ? 'text-sky-300' : 'text-orange-300'
+              : 'text-slate-200';
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveBoardTab(t.id as 'portfolio' | 'studio' | 'saved')}
+                className={`group relative flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${ring}`}
+              >
+                <span className="text-xl leading-none">{t.emoji}</span>
+                <span className="min-w-0">
+                  <span className={`block text-sm font-black ${text}`}>{t.label}</span>
+                  <span className="block text-[11px] text-slate-500">{t.sub}</span>
+                </span>
+                {active && <span className="ml-auto h-2 w-2 flex-shrink-0 rounded-full bg-current opacity-80" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 

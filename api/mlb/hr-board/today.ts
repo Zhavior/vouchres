@@ -9,10 +9,14 @@ const clamp = (value: number, min: number, max: number) =>
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const date = typeof req.query.date === "string" ? req.query.date : todayISO();
-    const rawLimit =
+    // Accept both `previewLimit` and the client's `limit` param (alias).
+    const rawLimitStr =
       typeof req.query.previewLimit === "string"
-        ? Number.parseInt(req.query.previewLimit, 10)
-        : 50;
+        ? req.query.previewLimit
+        : typeof req.query.limit === "string"
+          ? req.query.limit
+          : "";
+    const rawLimit = rawLimitStr ? Number.parseInt(rawLimitStr, 10) : 50;
     const previewLimit = clamp(Number.isFinite(rawLimit) ? rawLimit : 50, 10, 350);
 
     const board = await buildHrBoardResponse({
