@@ -21,6 +21,16 @@
   --edge-portal-card: var(--theme-card-bg-fallback, rgba(15, 23, 42, 0.72));
 }
 
+.ve-theme-root {
+  --ve-current-accent: #22d3ee;
+  --ve-current-accent-2: #38bdf8;
+  --ve-current-accent-3: #e0f2fe;
+  --ve-current-border: rgba(125, 211, 252, 0.28);
+  --ve-current-glow: rgba(34, 211, 238, 0.48);
+  --ve-theme-rgb: 34, 211, 238;
+  isolation: isolate;
+}
+
 .edge-portal-backdrop {
   animation: edge-backdrop-in var(--edge-motion-base) var(--edge-ease-out) both;
 }
@@ -110,6 +120,396 @@
   .edge-portal-shine::before {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Space-front treatment for the public Edge screen */
+.edge-space-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(14, 165, 233, 0.22), transparent 28%),
+    radial-gradient(circle at 18% 12%, rgba(99, 102, 241, 0.18), transparent 34%),
+    radial-gradient(circle at 48% 78%, rgba(16, 185, 129, 0.08), transparent 34%),
+    linear-gradient(180deg, #01030a 0%, #050816 48%, #020617 100%);
+}
+
+.edge-starfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+  opacity: 0.55;
+}
+
+.edge-starfield-far {
+  background-image:
+    radial-gradient(1px 1px at 12px 18px, rgba(226, 244, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 70px 82px, rgba(226, 244, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 134px 38px, rgba(125, 211, 252, 0.62), transparent);
+  background-size: 160px 120px;
+  animation: edgeStarDrift 38s linear infinite;
+}
+
+.edge-starfield-near {
+  background-image:
+    radial-gradient(1.5px 1.5px at 42px 40px, rgba(240, 249, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 116px 18px, rgba(167, 243, 208, 0.68), transparent),
+    radial-gradient(1px 1px at 188px 92px, rgba(186, 230, 253, 0.74), transparent);
+  background-size: 220px 150px;
+  opacity: 0.4;
+  animation: edgeStarDrift 24s linear infinite reverse;
+}
+
+.edge-space-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.edge-space-particle {
+  position: absolute;
+  left: var(--edge-particle-x);
+  top: var(--edge-particle-y);
+  width: var(--edge-particle-size);
+  height: var(--edge-particle-size);
+  border-radius: 999px;
+  background: #e0f2fe;
+  box-shadow:
+    0 0 16px rgba(125, 211, 252, 0.88),
+    0 0 32px rgba(34, 211, 238, 0.36);
+  opacity: 0.68;
+  animation:
+    edgeParticleFloat var(--edge-particle-duration) ease-in-out infinite alternate,
+    edgeParticlePulse 3.8s ease-in-out infinite;
+  animation-delay: var(--edge-particle-delay);
+}
+
+.edge-space-particle.is-bright {
+  background: #ffffff;
+  opacity: 0.88;
+}
+
+.edge-orbit-ring {
+  position: absolute;
+  border: 1px solid rgba(125, 211, 252, 0.12);
+  border-radius: 999px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.14));
+}
+
+.edge-orbit-ring-one {
+  right: -18vw;
+  top: 14vh;
+  width: min(56vw, 720px);
+  height: min(56vw, 720px);
+  animation: edgeOrbitSpin 44s linear infinite;
+}
+
+.edge-orbit-ring-two {
+  left: -22vw;
+  bottom: -30vh;
+  width: min(62vw, 780px);
+  height: min(62vw, 780px);
+  border-color: rgba(16, 185, 129, 0.09);
+  animation: edgeOrbitSpin 58s linear infinite reverse;
+}
+
+.edge-hero-copy {
+  animation: edgeHeroFloat 7s ease-in-out infinite;
+}
+
+.edge-glass-card {
+  border: 1px solid rgba(186, 230, 253, 0.2);
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.56), rgba(2, 6, 23, 0.34)),
+    radial-gradient(circle at 20% 0%, rgba(125, 211, 252, 0.14), transparent 40%);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 28px 80px rgba(0, 0, 0, 0.42);
+  animation: edgeGlassHover 8s ease-in-out infinite;
+}
+
+.edge-glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 24%, rgba(255, 255, 255, 0.13) 48%, transparent 68%);
+  transform: translateX(-120%) skewX(-14deg);
+  animation: edgeGlassShine 5.8s ease-in-out infinite;
+}
+
+.edge-mini-glass {
+  border: 1px solid rgba(186, 230, 253, 0.14);
+  background: rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(18px);
+}
+
+.edge-astronaut-stage {
+  position: relative;
+  min-height: 560px;
+}
+
+.edge-astronaut-scene {
+  position: absolute;
+  inset: -42px -20px auto -20px;
+  height: 315px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.edge-moon {
+  position: absolute;
+  right: 8%;
+  top: 18px;
+  width: 116px;
+  height: 116px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), rgba(224, 242, 254, 0.68) 36%, rgba(56, 189, 248, 0.18) 68%, transparent 70%),
+    #dbeafe;
+  box-shadow:
+    0 0 45px rgba(125, 211, 252, 0.3),
+    inset -18px -16px 34px rgba(15, 23, 42, 0.28);
+  opacity: 0.86;
+  z-index: 0;
+}
+
+.edge-astronaut {
+  position: absolute;
+  left: 60%;
+  top: -2px;
+  width: 128px;
+  height: 176px;
+  transform-origin: 50% 45%;
+  animation: edgeAstronautFloat 6.5s ease-in-out infinite;
+  z-index: 2;
+}
+
+.edge-astronaut-helmet,
+.edge-astronaut-body,
+.edge-astronaut-pack,
+.edge-astronaut-arm,
+.edge-astronaut-leg,
+.edge-astronaut-tether {
+  position: absolute;
+  display: block;
+}
+
+.edge-astronaut-helmet {
+  left: 34px;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  border: 3px solid rgba(224, 242, 254, 0.95);
+  border-radius: 999px;
+  background: linear-gradient(145deg, #f8fafc, #bae6fd);
+  box-shadow: 0 0 30px rgba(125, 211, 252, 0.28);
+}
+
+.edge-astronaut-visor {
+  position: absolute;
+  left: 11px;
+  top: 16px;
+  width: 42px;
+  height: 27px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.72), transparent 22%),
+    linear-gradient(145deg, #07111f, #0e7490 62%, #67e8f9);
+  box-shadow: inset 0 0 14px rgba(2, 6, 23, 0.7);
+}
+
+.edge-astronaut-body {
+  left: 36px;
+  top: 62px;
+  width: 58px;
+  height: 72px;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(160deg, #f8fafc, #cbd5e1 62%, #38bdf8);
+  box-shadow: inset -10px -8px 18px rgba(15, 23, 42, 0.22);
+}
+
+.edge-astronaut-body::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 18px;
+  width: 29px;
+  height: 20px;
+  border-radius: 9px;
+  border: 1px solid rgba(14, 116, 144, 0.4);
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.35), rgba(16, 185, 129, 0.22));
+}
+
+.edge-astronaut-pack {
+  left: 27px;
+  top: 72px;
+  width: 18px;
+  height: 54px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #94a3b8, #334155);
+}
+
+.edge-astronaut-arm {
+  top: 73px;
+  width: 20px;
+  height: 62px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f8fafc, #94a3b8);
+}
+
+.edge-astronaut-arm-left {
+  left: 18px;
+  rotate: 28deg;
+}
+
+.edge-astronaut-arm-right {
+  right: 16px;
+  rotate: -34deg;
+}
+
+.edge-astronaut-leg {
+  top: 126px;
+  width: 22px;
+  height: 58px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f8fafc, #64748b);
+}
+
+.edge-astronaut-leg-left {
+  left: 42px;
+  rotate: 10deg;
+}
+
+.edge-astronaut-leg-right {
+  left: 71px;
+  rotate: -16deg;
+}
+
+.edge-astronaut-tether {
+  left: -96px;
+  top: 96px;
+  width: 130px;
+  height: 60px;
+  border-top: 2px solid rgba(186, 230, 253, 0.34);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+
+@keyframes edgeStarDrift {
+  to {
+    background-position: 220px -150px;
+  }
+}
+
+@keyframes edgeParticleFloat {
+  to {
+    transform: translate3d(26px, -38px, 0) scale(1.35);
+  }
+}
+
+@keyframes edgeParticlePulse {
+  0%, 100% {
+    opacity: 0.32;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes edgeOrbitSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes edgeHeroFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes edgeGlassHover {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes edgeGlassShine {
+  0%, 30% {
+    transform: translateX(-120%) skewX(-14deg);
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 0.75;
+  }
+
+  72%, 100% {
+    transform: translateX(120%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+@keyframes edgeAstronautFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-7deg);
+  }
+
+  50% {
+    transform: translate3d(14px, -18px, 0) rotate(5deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .edge-astronaut-stage {
+    min-height: 520px;
+  }
+
+  .edge-astronaut-scene {
+    opacity: 0.76;
+  }
+}
+
+@media (max-width: 640px) {
+  .edge-hero-copy {
+    animation: none;
+  }
+
+  .edge-astronaut-stage {
+    min-height: 500px;
+  }
+
+  .edge-astronaut-scene {
+    inset: -28px -12px auto -12px;
+    transform: scale(0.82);
+    transform-origin: top right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-starfield,
+  .edge-space-particle,
+  .edge-orbit-ring,
+  .edge-hero-copy,
+  .edge-glass-card,
+  .edge-glass-card::before,
+  .edge-astronaut {
+    animation: none !important;
   }
 }
 

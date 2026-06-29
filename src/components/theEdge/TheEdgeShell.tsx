@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import type { CSSProperties } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
@@ -118,6 +119,19 @@ const PRIMARY = 'rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3
 const SECONDARY = 'rounded-2xl border border-cyan-300/25 bg-cyan-300/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5';
 const GHOST = 'rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-3.5 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:text-white';
 
+const SPACE_PARTICLES = [
+  { x: '6%', y: '18%', size: '2px', delay: '0s', duration: '8s' },
+  { x: '12%', y: '70%', size: '3px', delay: '-2s', duration: '10s' },
+  { x: '21%', y: '34%', size: '2px', delay: '-5s', duration: '9s' },
+  { x: '34%', y: '12%', size: '4px', delay: '-1s', duration: '11s' },
+  { x: '42%', y: '78%', size: '2px', delay: '-4s', duration: '8s' },
+  { x: '55%', y: '28%', size: '3px', delay: '-6s', duration: '12s' },
+  { x: '68%', y: '66%', size: '2px', delay: '-3s', duration: '9s' },
+  { x: '76%', y: '16%', size: '3px', delay: '-7s', duration: '10s' },
+  { x: '88%', y: '44%', size: '2px', delay: '-1.5s', duration: '8s' },
+  { x: '94%', y: '82%', size: '4px', delay: '-4.5s', duration: '13s' },
+];
+
 export default function TheEdgeShell({
   mode,
   presentation,
@@ -222,9 +236,26 @@ export default function TheEdgeShell({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
-      {/* Calm, single-accent backdrop — no rainbow */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 15% -10%, rgba(34,211,238,.16), transparent 40%), linear-gradient(180deg,#020617,#060b18 55%,#020617)' }} />
-      <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(148,163,184,.6)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.6)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <div className="edge-space-backdrop" />
+      <div className="edge-starfield edge-starfield-far" />
+      <div className="edge-starfield edge-starfield-near" />
+      <div className="edge-space-particles" aria-hidden="true">
+        {SPACE_PARTICLES.map((particle, index) => (
+          <span
+            key={`${particle.x}-${particle.y}`}
+            style={{
+              '--edge-particle-x': particle.x,
+              '--edge-particle-y': particle.y,
+              '--edge-particle-size': particle.size,
+              '--edge-particle-delay': particle.delay,
+              '--edge-particle-duration': particle.duration,
+            } as CSSProperties}
+            className={index % 3 === 0 ? 'edge-space-particle is-bright' : 'edge-space-particle'}
+          />
+        ))}
+      </div>
+      <div className="edge-orbit-ring edge-orbit-ring-one" aria-hidden="true" />
+      <div className="edge-orbit-ring edge-orbit-ring-two" aria-hidden="true" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {/* Compact top bar (single hero lives in the layer, not duplicated here) */}
@@ -275,7 +306,7 @@ export default function TheEdgeShell({
               >
                 <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                   {/* Left: the pitch */}
-                  <div>
+                  <div className="edge-hero-copy">
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
                       <ShieldCheck className="h-3.5 w-3.5" /> Proof before hype
                     </div>
@@ -311,54 +342,79 @@ export default function TheEdgeShell({
                     </div>
                   </div>
 
-                  {/* Right: live scoreboard (real slate) — replaces the fake code panel */}
-                  <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/70 shadow-2xl shadow-black/40 backdrop-blur-xl">
-                    <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-                      <div className="flex items-center gap-2 text-xs font-black text-white">
-                        <Radio className="h-4 w-4 text-cyan-300" /> Today’s MLB slate
+                  <motion.div
+                    className="edge-astronaut-stage"
+                    initial={{ opacity: 0, scale: 0.96, y: 24 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.1, ease }}
+                  >
+                    <div className="edge-astronaut-scene" aria-hidden="true">
+                      <div className="edge-moon" />
+                      <div className="edge-astronaut">
+                        <span className="edge-astronaut-helmet">
+                          <span className="edge-astronaut-visor" />
+                        </span>
+                        <span className="edge-astronaut-pack" />
+                        <span className="edge-astronaut-body" />
+                        <span className="edge-astronaut-arm edge-astronaut-arm-left" />
+                        <span className="edge-astronaut-arm edge-astronaut-arm-right" />
+                        <span className="edge-astronaut-leg edge-astronaut-leg-left" />
+                        <span className="edge-astronaut-leg edge-astronaut-leg-right" />
+                        <span className="edge-astronaut-tether" />
                       </div>
-                      <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-400">{slate.length} games</span>
                     </div>
-                    <div className="max-h-[420px] divide-y divide-slate-800/60 overflow-y-auto">
-                      {slate.length === 0 ? (
-                        <div className="px-4 py-10 text-center text-xs text-slate-500">Loading today’s verified slate…</div>
-                      ) : (
-                        slate.map((g, i) => (
-                          <motion.div
-                            key={`${g.away}-${g.home}-${i}`}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04, duration: 0.3 }}
-                            className="flex items-center justify-between px-4 py-2.5"
-                          >
-                            <div className="flex items-center gap-2 font-mono text-sm font-black text-slate-200">
-                              <span className="w-10">{g.away}</span>
-                              <span className="text-slate-600">@</span>
-                              <span className="w-10">{g.home}</span>
+
+                    <div className="edge-glass-card relative overflow-hidden rounded-3xl p-5 shadow-2xl shadow-black/40">
+                      <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs font-black text-white">
+                          <Radio className="h-4 w-4 text-cyan-300" /> Today’s MLB slate
+                        </div>
+                        <span className="rounded-full border border-cyan-200/20 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-bold text-cyan-100">{slate.length} games</span>
+                      </div>
+
+                      <div className="max-h-[340px] divide-y divide-white/10 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/20">
+                        {slate.length === 0 ? (
+                          <div className="px-4 py-10 text-center text-xs text-slate-400">Loading today’s verified slate...</div>
+                        ) : (
+                          slate.map((g, i) => (
+                            <motion.div
+                              key={`${g.away}-${g.home}-${i}`}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04, duration: 0.3 }}
+                              className="flex items-center justify-between px-4 py-2.5"
+                            >
+                              <div className="flex items-center gap-2 font-mono text-sm font-black text-slate-100">
+                                <span className="w-10">{g.away}</span>
+                                <span className="text-slate-500">@</span>
+                                <span className="w-10">{g.home}</span>
+                              </div>
+                              {g.live ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-rose-300">
+                                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-mono text-slate-400">{g.time}</span>
+                              )}
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                        {[['Proof', ShieldCheck], ['Research', TrendingUp], ['Community', Users]].map(([label, Icon]) => {
+                          const I = Icon as typeof ShieldCheck;
+                          return (
+                            <div key={label as string} className="edge-mini-glass rounded-2xl px-2 py-3">
+                              <I className="mx-auto h-4 w-4 text-cyan-300" />
+                              <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-300">{label as string}</div>
                             </div>
-                            {g.live ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-rose-300">
-                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
-                              </span>
-                            ) : (
-                              <span className="text-[11px] font-mono text-slate-500">{g.time}</span>
-                            )}
-                          </motion.div>
-                        ))
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-px border-t border-slate-800 bg-slate-800/40 text-center">
-                      {[['Proof', ShieldCheck], ['Research', TrendingUp], ['Community', Users]].map(([label, Icon]) => {
-                        const I = Icon as typeof ShieldCheck;
-                        return (
-                          <div key={label as string} className="bg-slate-950/80 px-2 py-3">
-                            <I className="mx-auto h-4 w-4 text-cyan-300" />
-                            <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">{label as string}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  </motion.div>
+
                 </div>
               </motion.section>
             )}
