@@ -6,7 +6,7 @@ import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, 
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 
-/** Sidebar section order. Ungrouped items (e.g. Welcome) render first, headerless. */
+/** Sidebar section order. Ungrouped items (e.g. The Edge) render first, headerless. */
 const GROUP_ORDER = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -160,7 +160,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
 
         {/* Navigation Items */}
         <nav className="space-y-1" id="sidebar-nav-container">
-          {/* Ungrouped (e.g. Welcome) */}
+          {/* Ungrouped (e.g. The Edge) */}
           {ungrouped.map(renderItem)}
 
           {/* Grouped sections */}

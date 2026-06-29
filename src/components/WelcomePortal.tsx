@@ -1,493 +1,676 @@
-import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
 import {
-  ArrowRight, ShieldCheck, Lock, CheckCircle2, Sparkles,
-  Tv, Flame, Activity, Search, Sliders, ScanLine,
-  Cpu, Palette, Trophy, Zap, Eye, EyeOff, X,
-  TrendingUp, BarChart3, Users, ShoppingBag,
-} from "lucide-react";
-import ParticleBackground from "./vouchedge/ParticleBackground";
-import FeatureCard3D from "./vouchedge/FeatureCard3D";
-import OnboardingSlideshow, { BETA_THEMES } from "./vouchedge/OnboardingSlideshow";
-import AuthModal from "./auth/AuthModal";
-import { canAccessThemeStore } from "../lib/adminDevAccess";
+  ArrowRight,
+  Bot,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Crown,
+  Layers3,
+  Lock,
+  Palette,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Waves,
+  X,
+} from 'lucide-react';
+import { EDGE_PORTAL_FEATURES } from './edgePortal/edgePortalRegistry';
+import './edgePortal/edgePortalTheme.css';
+import {
+  AMPLIFIER_SLIDES,
+  PRICING_TIERS,
+  THEME_CHOICES,
+  WELCOME_PILLARS,
+  type WelcomeThemeId,
+} from './welcomePortal/welcomePortalRegistry';
 
-/**
- * WelcomePortal — Premium front page
- *
- * Sections:
- *   1. Hero — "Proof over hype" + 3D floating card preview + CTAs
- *   2. 3D Feature card grid (8 cards with tilt on hover)
- *   3. How it works (4 steps)
- *   4. Product preview cards (demo-labeled)
- *   5. Beta themes (3 free themes with preview + choose)
- *   6. Disclaimer footer
- *
- * Auth: opens AuthModal or OnboardingSlideshow → then AuthModal
- */
-
-interface Props {
+type Props = {
   onSectionChange: (section: string) => void;
+};
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+function themeRootClass(themeId: WelcomeThemeId) {
+  if (themeId === 'midnight') {
+    return 'from-violet-400/20 via-indigo-500/10 to-slate-950';
+  }
+
+  if (themeId === 'gold') {
+    return 'from-amber-300/20 via-yellow-600/10 to-slate-950';
+  }
+
+  return 'from-cyan-300/20 via-sky-500/10 to-slate-950';
+}
+
+function saveTheme(themeId: WelcomeThemeId) {
+  localStorage.setItem('vouchedge_theme_choice', themeId);
+  document.documentElement.setAttribute('data-vouchedge-theme', themeId);
+}
+
+function PillarIcon({ id }: { id: string }) {
+  if (id === 'vouch') return <ShieldCheck className="h-6 w-6" />;
+  if (id === 'social') return <Users className="h-6 w-6" />;
+  return <Layers3 className="h-6 w-6" />;
+}
+
+function accentClasses(accent: 'cyan' | 'violet' | 'amber') {
+  if (accent === 'violet') {
+    return {
+      card: 'hover:border-violet-300/40',
+      icon: 'border-violet-300/20 bg-violet-300/10 text-violet-100',
+      text: 'text-violet-200',
+      glow: 'from-violet-300/20',
+    };
+  }
+
+  if (accent === 'amber') {
+    return {
+      card: 'hover:border-amber-300/40',
+      icon: 'border-amber-300/20 bg-amber-300/10 text-amber-100',
+      text: 'text-amber-200',
+      glow: 'from-amber-300/20',
+    };
+  }
+
+  return {
+    card: 'hover:border-cyan-300/40',
+    icon: 'border-cyan-300/20 ve-theme-soft-bg text-white',
+    text: 'text-cyan-200',
+    glow: 'from-cyan-300/20',
+  };
 }
 
 export default function WelcomePortal({ onSectionChange }: Props) {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<string>("beta-cyber-blue");
+  const [isEntering, setIsEntering] = useState(false);
+  const [amplifierOpen, setAmplifierOpen] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [selectedTheme, setSelectedTheme] = useState<WelcomeThemeId>(() => {
+    const saved = localStorage.getItem('vouchedge_theme_choice') as WelcomeThemeId | null;
+    return saved || 'ocean';
+  });
+  const [themeMorphing, setThemeMorphing] = useState(false);
 
-  const handleEnterApp = () => onSectionChange("today");
-  const handleExplore = () => onSectionChange("live_games");
-  const handleDemoCard = () => onSectionChange("board");
+  const topFeatures = useMemo(
+    () => EDGE_PORTAL_FEATURES.filter((feature) => feature.enabled !== false).sort((a, b) => a.priority - b.priority).slice(0, 6),
+    []
+  );
 
-  const handleStartBeta = () => setShowOnboarding(true);
+  const currentSlide = AMPLIFIER_SLIDES[slideIndex];
+  const isThemeStep = slideIndex >= AMPLIFIER_SLIDES.length;
 
-  const handleOnboardingComplete = (themeId: string) => {
+  function chooseTheme(themeId: WelcomeThemeId) {
+    if (themeId === selectedTheme) return;
+
+    setThemeMorphing(true);
     setSelectedTheme(themeId);
-    localStorage.setItem("vouchedge_beta_theme_choice", themeId);
-    setShowOnboarding(false);
-    setShowAuth(true);
-  };
+    saveTheme(themeId);
 
-  const handleOnboardingSkip = () => {
-    setShowOnboarding(false);
-    setShowAuth(true);
-  };
+    window.setTimeout(() => {
+      setThemeMorphing(false);
+    }, 720);
+  }
 
-  const features = [
-    { icon: ScanLine, color: "#22d3ee", title: "Vouch Cards", desc: "Turn every pick into a proof card with posted time, lock time, risk tier, and result status.", onClick: handleDemoCard },
-    { icon: ShieldCheck, color: "#34d399", title: "Trust Score Profiles", desc: "Build credibility through verified records, not empty hype.", onClick: () => onSectionChange("profile") },
-    { icon: Sliders, color: "#a78bfa", title: "Parlay Lab", desc: "Create singles, doubles, triples, and parlays with risk labels and weakest-leg notes.", onClick: () => onSectionChange("build") },
-    { icon: Tv, color: "#38bdf8", title: "Live MLB Intelligence", desc: "View live matchups, HR board, pitcher vulnerability, and game environment signals.", onClick: handleExplore },
-    { icon: Cpu, color: "#fbbf24", title: "AI Picks Hub", desc: "Use AI-assisted research for HR targets, undervalued players, and watchlists.", onClick: () => onSectionChange("ai_engine") },
-    { icon: CheckCircle2, color: "#10b981", title: "Verified Result Ledger", desc: "Every graded pick updates the user's public proof history.", onClick: () => onSectionChange("results") },
-    { icon: Users, color: "#f472b6", title: "AI Capper League", desc: "Follow different AI capper personalities with unique styles, notes, and proof records.", onClick: () => onSectionChange("ai_engine") },
-    ...(canAccessThemeStore()
-      ? [{ icon: Palette, color: "#22d3ee", title: "Theme Identity", desc: "Customize your profile with themes, borders, and proof identity.", onClick: () => onSectionChange("themestore") }]
-      : []),
-  ];
+  function enterApp(section = 'feed') {
+    if (isEntering) return;
+    saveTheme(selectedTheme);
+    setIsEntering(true);
 
-  const steps = [
-    { num: "01", icon: Zap, title: "Post or tail a pick", desc: "Publish your own pick or tail another capper's. AI cappers post daily from real MLB data.", color: "#22d3ee" },
-    { num: "02", icon: Lock, title: "Pick locks before game start", desc: "Every pick is timestamped and locked before first pitch. No edits after lock.", color: "#34d399" },
-    { num: "03", icon: CheckCircle2, title: "Result grades after final", desc: "When the game goes final, the grader runs automatically. Win, loss, push — tracked honestly.", color: "#fbbf24" },
-    { num: "04", icon: ShieldCheck, title: "Trust score updates", desc: "Your profile trust score reflects your real graded record. No fake credibility.", color: "#a78bfa" },
-  ];
+    window.setTimeout(() => {
+      onSectionChange(section);
+    }, 620);
+  }
+
+  function startAmplifier() {
+    setAmplifierOpen(true);
+    setSlideIndex(0);
+  }
+
+  function nextAmplifier() {
+    if (slideIndex < AMPLIFIER_SLIDES.length) {
+      setSlideIndex((value) => value + 1);
+      return;
+    }
+
+    enterApp('feed');
+  }
+
+  function openPillar(section: string) {
+    setAmplifierOpen(true);
+    const matchingIndex = AMPLIFIER_SLIDES.findIndex((slide) => slide.section === section);
+    setSlideIndex(matchingIndex >= 0 ? matchingIndex : 0);
+  }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden" style={{ background: "#040810", color: "#e2e8f0" }}>
-      <ParticleBackground />
-
-      <div className="relative z-10">
-        {/* ====== NAV BAR ====== */}
-        <header className="sticky top-0 z-50" style={{ background: "rgba(8,12,20,0.8)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-slate-950 text-xs" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)", boxShadow: "0 0 20px rgba(34,211,238,0.3)" }}>
-                VE
+    <AnimatePresence mode="wait">
+      <motion.main
+        key="welcome-funnel"
+        initial={{ opacity: 1, scale: 1, y: 0 }}
+        animate={
+          isEntering
+            ? { opacity: 0, scale: 0.965, y: -28, filter: 'blur(10px)' }
+            : { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
+        }
+        exit={{ opacity: 0, scale: 0.965, y: -28, filter: 'blur(10px)' }}
+        transition={{ duration: 0.58, ease }}
+        data-vouchedge-theme={selectedTheme}
+        className="ve-theme-transition min-h-screen overflow-hidden bg-slate-950 text-white"
+      >
+        {isEntering && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="pointer-events-none fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/75 backdrop-blur-xl"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.46, ease }}
+              className="rounded-[2rem] border border-cyan-300/20 bg-slate-950/90 px-6 py-5 text-center shadow-2xl shadow-cyan-950/40"
+            >
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border ve-theme-border ve-theme-soft-bg text-white">
+                <Waves className="h-6 w-6" />
               </div>
-              <span className="font-bold text-white text-sm">Vouch<span className="text-cyan-400">Edge</span></span>
-              <span className="ml-1 text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full" style={{ background: "rgba(34,211,238,0.1)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.2)" }}>Beta</span>
-            </div>
+              <div className="text-sm font-black text-white">Opening Open Edge</div>
+              <div className="mt-1 text-xs text-slate-500">Your Open Edge is becoming the command layer.</div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {themeMorphing && (
+          <motion.div
+            key={`theme-morph-${selectedTheme}`}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: [0, 0.72, 0], scale: [0.98, 1.015, 1.04] }}
+            transition={{ duration: 0.72, ease }}
+            className="pointer-events-none fixed inset-0 z-[70]"
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 40%, var(--ve-welcome-soft), transparent 28%), radial-gradient(circle at 50% 100%, var(--ve-welcome-hero-1), transparent 38%)',
+              }}
+            />
+            <div className="absolute inset-x-0 bottom-0 h-[46vh] bg-gradient-to-t from-[var(--ve-welcome-accent)]/20 to-transparent blur-2xl" />
+          </motion.div>
+        )}
+
+        <div className="pointer-events-none fixed inset-0">
+          <div
+            className="absolute inset-0 ve-theme-transition"
+            style={{
+              background:
+                'radial-gradient(circle at 15% 10%, var(--ve-welcome-hero-1), transparent 28%), radial-gradient(circle at 80% 8%, var(--ve-welcome-hero-2), transparent 30%), linear-gradient(180deg, #020617 0%, #050816 45%, #020617 100%)',
+            }}
+          />
+          <div className="absolute inset-0 opacity-[0.22] [background-image:radial-gradient(rgba(148,163,184,0.38)_1px,transparent_1px)] [background-size:28px_28px]" />
+          <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-cyan-950/20 to-transparent" />
+        </div>
+
+        <header className="relative z-10 border-b border-white/[0.06] bg-slate-950/50 backdrop-blur-2xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+            <button onClick={() => enterApp('feed')} className="group flex items-center gap-3">
+              <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-cyan-300/25 ve-theme-soft-bg text-white shadow-lg shadow-cyan-950/30">
+                <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_30%)]" />
+                <span className="relative text-sm font-black">VE</span>
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-black text-white">
+                  Vouch<span className="ve-theme-accent-text">Edge</span>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Edge Command Center</div>
+              </div>
+            </button>
+
             <div className="flex items-center gap-2">
-              <button onClick={handleStartBeta} className="text-xs font-bold text-slate-300 hover:text-white px-3 py-1.5 transition-colors hidden sm:inline-flex">Sign in</button>
-              <button onClick={handleStartBeta} className="text-xs font-bold text-slate-950 px-3.5 py-1.5 rounded-lg flex items-center gap-1.5" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
-                Start Beta <ArrowRight className="w-3 h-3" />
+              <button onClick={() => enterApp('feed')} className="hidden rounded-xl px-3 py-2 text-xs font-bold text-slate-300 transition hover:text-white sm:inline-flex">
+                Sign in
+              </button>
+              <button
+                onClick={startAmplifier}
+                className="rounded-xl ve-theme-accent-bg px-4 py-2 text-xs font-black text-slate-950 shadow-lg shadow-cyan-950/30 transition hover:-translate-y-0.5"
+              >
+                Get Started
               </button>
             </div>
           </div>
         </header>
 
-        {/* ====== 1. SPACE HERO ====== */}
-        <section className="landing-space-hero relative overflow-hidden pt-16 md:pt-20 pb-24">
-          {/* Space background layers */}
-          <div className="landing-space-layer absolute inset-0" />
-          <div className="landing-stars-layer absolute inset-0" />
+        <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:pb-20 lg:pt-16">
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease }}
+              className="mb-6 inline-flex items-center gap-2 rounded-full border ve-theme-border ve-theme-soft-bg px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-white"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Vouch · Social · Research
+              <span className="ml-1 rounded-full border ve-theme-border px-2 py-0.5 ve-theme-accent-text">
+                {selectedTheme === 'ocean' ? 'Ocean Edge' : selectedTheme === 'midnight' ? 'Midnight Pro' : 'Gold Vouch'}
+              </span>
+            </motion.div>
 
-          {/* Orbit ring behind astronaut */}
-          <div className="absolute top-1/2 right-[15%] -translate-y-1/2 w-[500px] h-[500px] rounded-full hidden lg:block pointer-events-none"
-            style={{ border: "1px solid rgba(34,211,238,0.08)", animation: "landing-orbit-spin 60s linear infinite" }} />
-          <div className="absolute top-1/2 right-[15%] -translate-y-1/2 w-[380px] h-[380px] rounded-full hidden lg:block pointer-events-none"
-            style={{ border: "1px solid rgba(59,130,246,0.06)", animation: "landing-orbit-spin 40s linear infinite reverse" }} />
+            <motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.05, ease }}
+              className="max-w-4xl text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl"
+            >
+              A premium sports command portal for{' '}
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                proof, people, and research.
+              </span>
+            </motion.h1>
 
-          {/* Hero content */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid lg:grid-cols-2 gap-8 items-center min-h-[70vh]">
-              {/* Left: Copy */}
-              <div className="max-w-2xl">
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6" style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)", color: "#22d3ee" }}>
-                    <ShieldCheck className="w-3.5 h-3.5" /> Proof over hype · Beta build
-                  </span>
-                </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.14, ease }}
+              className="mt-6 max-w-2xl text-base leading-8 text-slate-400 sm:text-lg"
+            >
+              New users get a beautiful full portal first. After signing in, it transforms into the compact Open Edge command drawer available from anywhere.
+            </motion.p>
 
-                <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.05 }} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white leading-[1.02]">
-                  Proof over hype{" "}
-                  <span style={{ background: "linear-gradient(135deg, #ffffff, #67e8f9, #22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                    for sports picks.
-                  </span>
-                </motion.h1>
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.23, ease }}
+              className="mt-8 flex flex-wrap gap-3"
+            >
+              <button
+                onClick={startAmplifier}
+                className="edge-portal-shine relative overflow-hidden rounded-2xl ve-theme-accent-bg px-6 py-3.5 text-sm font-black text-slate-950 shadow-2xl shadow-cyan-950/30 transition hover:-translate-y-0.5"
+              >
+                <span className="relative flex items-center gap-2">
+                  Start the Portal <ArrowRight className="h-4 w-4" />
+                </span>
+              </button>
 
-                <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }} className="mt-6 text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed">
-                  Post picks before game time, lock them before start, grade them after final, and build a public record people can actually trust.
-                </motion.p>
+              <button
+                onClick={() => enterApp('daily_players')}
+                className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-6 py-3.5 text-sm font-black text-cyan-50 shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-200/35"
+              >
+                Preview Daily Board
+              </button>
+            </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }} className="mt-8 flex flex-wrap items-center gap-3">
-                  <button onClick={handleStartBeta} className="text-sm font-bold text-slate-950 px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)", boxShadow: "0 8px 30px -8px rgba(34,211,238,0.5)" }}>
-                    Start Beta <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button onClick={handleExplore} className="text-sm font-bold text-white px-6 py-3.5 rounded-xl flex items-center gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <Eye className="w-4 h-4 text-cyan-400" /> Explore Features
-                  </button>
-                  <button onClick={handleDemoCard} className="text-sm text-slate-400 hover:text-white px-3 py-3.5 transition-colors">
-                    View Demo Proof Card →
-                  </button>
-                </motion.div>
+            <div className="mt-6 flex flex-wrap gap-3 text-[11px] font-bold text-slate-500">
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+                Proof-first design
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 ve-theme-accent-text" />
+                AI-seat ready
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-violet-300" />
+                Theme choice included
+              </span>
+            </div>
+          </div>
 
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-5 text-[10px] text-slate-600">
-                  Sports research and social proof platform. Probability-based. No guarantees.
-                </motion.p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.18, ease }}
+            className="relative"
+          >
+            <div className="absolute -inset-10 rounded-full bg-cyan-400/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[2.25rem] border ve-theme-border bg-slate-950/80 p-5 shadow-2xl shadow-cyan-950/30 backdrop-blur-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 rounded-full border ve-theme-border ve-theme-soft-bg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                  <Waves className="h-3.5 w-3.5" />
+                  Tidal Glass Motion
+                </div>
+                <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase text-emerald-100">
+                  Live
+                </span>
               </div>
 
-              {/* Right: Astronaut + floating chips */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="relative flex items-center justify-center lg:justify-end"
-              >
-                {/* Glow behind astronaut */}
-                <div className="landing-astronaut-glow absolute w-[400px] h-[400px] rounded-full pointer-events-none"
-                  style={{ background: "radial-gradient(circle, rgba(34,211,238,0.18) 0%, rgba(59,130,246,0.08) 40%, transparent 70%)" }} />
+              <div className="grid gap-3">
+                {topFeatures.map((feature) => {
+                  const Icon = feature.icon;
 
-                {/* Astronaut */}
-                <motion.img
-                  src="/astronaut.png"
-                  alt="VouchEdge astronaut"
-                  draggable={false}
-                  className="landing-astronaut-wrap relative z-10 w-[60%] sm:w-[55%] lg:w-[70%] max-w-[450px] object-contain select-none"
-                  animate={{ y: [-12, 12, -12] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                />
-
-                {/* Floating proof chips */}
-                <motion.div
-                  animate={{ y: [-6, 6, -6] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="floating-proof-chip absolute top-[10%] left-[5%] sm:left-[2%] z-20 hidden sm:block"
-                >
-                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(52,211,153,0.2)" }}>
-                    <Lock className="w-3 h-3 text-emerald-400" />
-                    <span className="text-[10px] font-bold text-white">Posted before start</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  animate={{ y: [6, -6, 6] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                  className="floating-proof-chip absolute bottom-[15%] left-[8%] sm:left-[0%] z-20 hidden sm:block"
-                >
-                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(34,211,238,0.2)" }}>
-                    <CheckCircle2 className="w-3 h-3 text-cyan-400" />
-                    <span className="text-[10px] font-bold text-white">Graded after final</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  animate={{ y: [-8, 8, -8] }}
-                  transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="floating-proof-chip absolute top-[20%] right-[0%] z-20 hidden sm:block"
-                >
-                  <div className="px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                    <ShieldCheck className="w-3 h-3 text-violet-400" />
-                    <span className="text-[10px] font-bold text-white">Trust score updates</span>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Fade into particle background */}
-          <div className="landing-hero-fade absolute inset-x-0 bottom-0 h-32 pointer-events-none" />
-        </section>
-
-        {/* ====== 2. 3D FEATURE CARDS ====== */}
-        <section className="relative py-16" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-10">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-400">Features</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-2">Everything inside the portal</h2>
-              <p className="text-sm text-slate-500 mt-2">Click any card to jump into the app.</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {features.map((f, i) => (
-                <FeatureCard3D key={f.title} icon={f.icon} iconColor={f.color} title={f.title} desc={f.desc} onClick={f.onClick} index={i} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ====== 3. HOW IT WORKS ====== */}
-        <section className="relative py-16" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-10">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-400">How it works</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-2">Post. Lock. Grade. Build proof.</h2>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {steps.map((s, i) => {
-                const Icon = s.icon;
-                return (
-                  <motion.div
-                    key={s.num}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.08 }}
-                    className="rounded-2xl p-5"
-                    style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center border" style={{ background: `${s.color}12`, borderColor: `${s.color}30` }}>
-                        <Icon className="w-5 h-5" style={{ color: s.color }} />
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() => enterApp(feature.section)}
+                      className="group rounded-3xl border border-slate-800 bg-slate-900/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border ve-theme-border ve-theme-soft-bg text-white">
+                          {Icon ? <Icon className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-black text-white">{feature.title}</div>
+                          <div className="mt-1 truncate text-xs text-slate-500">{feature.subtitle}</div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-cyan-200" />
                       </div>
-                      <span className="text-2xl font-bold font-mono text-slate-700">{s.num}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-white mb-1.5">{s.title}</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
-                  </motion.div>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
-        {/* ====== 4. PRODUCT PREVIEWS ====== */}
-        <section className="relative py-16" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-8">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-400">Product previews</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-2">Real product surfaces. Not marketing blocks.</h2>
-              <p className="text-sm text-slate-500 mt-2">Sample previews for layout testing — not real capper records.</p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <DemoVouchCard />
-              <DemoParlayCard />
-              <DemoResultCard />
-            </div>
+        <section className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="mb-8 max-w-3xl">
+            <div className="text-[11px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">Three product worlds</div>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+              VouchEdge sells trust, community, and research.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-slate-400">
+              Each world becomes part of the full welcome page and the compact Open Edge command portal.
+            </p>
           </div>
-        </section>
 
-        {/* ====== 5. BETA THEMES ====== */}
-        <section className="relative py-16" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-8">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-400">Beta themes</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-2">Choose your proof identity</h2>
-              <p className="text-sm text-slate-500 mt-2">3 free beta themes. Pick one during onboarding.</p>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {BETA_THEMES.map((t, i) => (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 16 }}
+          <div className="grid gap-4 lg:grid-cols-3">
+            {WELCOME_PILLARS.map((pillar, index) => {
+              const classes = accentClasses(pillar.accent);
+
+              return (
+                <motion.button
+                  key={pillar.id}
+                  onClick={() => openPillar(pillar.section)}
+                  initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="rounded-2xl p-5"
-                  style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${t.colors[1]}25` }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: index * 0.08, ease }}
+                  className={`group relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950/70 p-5 text-left shadow-2xl shadow-black/20 transition hover:-translate-y-1 ${classes.card}`}
                 >
-                  <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: `${t.colors[1]}12`, color: t.colors[1], border: `1px solid ${t.colors[1]}30` }}>
-                    Free Beta Theme
-                  </span>
-                  <div className="flex gap-1.5 my-4">
-                    {t.colors.map((c, j) => (
-                      <div key={j} className="flex-1 h-8 rounded-lg" style={{ background: c, boxShadow: `0 0 8px ${c}40` }} />
+                  <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${classes.glow} to-transparent`} />
+
+                  <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-3xl border ${classes.icon}`}>
+                    <PillarIcon id={pillar.id} />
+                  </div>
+
+                  <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${classes.text}`}>{pillar.eyebrow}</div>
+                  <h3 className="mt-2 text-2xl font-black tracking-tight text-white">{pillar.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-400">{pillar.description}</p>
+
+                  <div className="mt-5 grid gap-2">
+                    {pillar.bullets.map((bullet) => (
+                      <div key={bullet} className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                        <Check className="h-3.5 w-3.5 text-emerald-300" />
+                        {bullet}
+                      </div>
                     ))}
                   </div>
-                  <h3 className="text-sm font-bold text-white">{t.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">{t.desc}</p>
+
+                  <div className="mt-6 inline-flex items-center gap-2 text-xs font-black text-white">
+                    Explore {pillar.title}
+                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div className="max-w-3xl">
+              <div className="text-[11px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">Pricing</div>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                Clear plans. Simple comparison.
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-400">
+                Show users what is included, what is locked, and why Pro matters.
+              </p>
+            </div>
+            <button onClick={startAmplifier} className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-5 py-3 text-sm font-black text-white">
+              Start with Free
+            </button>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            {PRICING_TIERS.map((tier, index) => (
+              <motion.div
+                key={tier.id}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: index * 0.08, ease }}
+                className={`relative overflow-hidden rounded-[2rem] border p-5 shadow-2xl shadow-black/20 ${
+                  tier.id === 'edge'
+                    ? 'border-cyan-300/30 bg-cyan-300/[0.08]'
+                    : 'border-slate-800 bg-slate-950/70'
+                }`}
+              >
+                {tier.badge && (
+                  <div className="absolute right-4 top-4 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-black uppercase text-amber-100">
+                    {tier.badge}
+                  </div>
+                )}
+
+                <div className="text-sm font-black text-white">{tier.name}</div>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="text-4xl font-black text-white">{tier.price}</span>
+                  <span className="pb-1 text-xs font-bold text-slate-500">/mo</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-400">{tier.subtitle}</p>
+
+                <button
+                  onClick={() => enterApp(tier.section)}
+                  className={`mt-5 w-full rounded-2xl px-4 py-3 text-sm font-black transition hover:-translate-y-0.5 ${
+                    tier.id === 'edge'
+                      ? 'bg-gradient-to-r from-cyan-300 to-blue-600 text-slate-950'
+                      : 'border border-slate-700 bg-slate-900 text-white'
+                  }`}
+                >
+                  {tier.cta}
+                </button>
+
+                <div className="mt-5 grid gap-2">
+                  {tier.features.map((feature) => (
+                    <div key={feature.label} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-black/20 px-3 py-2">
+                      <span className={`text-xs font-bold ${feature.included ? 'text-slate-200' : 'text-slate-600'}`}>{feature.label}</span>
+                      {feature.included ? (
+                        <Check className="h-4 w-4 text-emerald-300" />
+                      ) : (
+                        <X className="h-4 w-4 text-slate-600" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-[2rem] border ve-theme-border bg-gradient-to-br from-cyan-300/10 via-slate-900/80 to-slate-950 p-5 shadow-2xl shadow-cyan-950/20">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl border ve-theme-border ve-theme-soft-bg text-white">
+                  <Bot className="h-7 w-7" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-black text-white">AI Seat Ready</h3>
+                    <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                      Offline-safe
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    Built to plug in OpenAI, Gemini, Claude, Z.ai, or your own model later without breaking the portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-slate-800 bg-slate-950/70 p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">Theme choice</div>
+                  <h3 className="mt-1 text-2xl font-black text-white">Pick your first look.</h3>
+                  <p className="mt-1 text-xs font-bold ve-theme-accent-text">The portal transforms instantly as you choose.</p>
+                </div>
+                <Palette className="h-6 w-6 text-cyan-200" />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {THEME_CHOICES.map((theme) => (
                   <button
-                    onClick={() => { setSelectedTheme(t.id); handleStartBeta(); }}
-                    className="mt-4 w-full text-xs font-bold uppercase tracking-wider py-2 rounded-lg text-slate-950"
-                    style={{ background: `linear-gradient(135deg, ${t.colors[1]}, ${t.colors[3] || t.colors[2]})` }}
+                    key={theme.id}
+                    onClick={() => {
+                      chooseTheme(theme.id);
+                    }}
+                    className={`rounded-3xl border p-3 text-left transition hover:-translate-y-0.5 ${
+                      selectedTheme === theme.id
+                        ? 'border-cyan-300/50 ve-theme-soft-bg'
+                        : 'border-slate-800 bg-slate-900/50'
+                    }`}
                   >
-                    Choose Theme
+                    <div className={`mb-3 h-20 rounded-2xl bg-gradient-to-br ${theme.className}`} />
+                    <div className="text-sm font-black text-white">{theme.name}</div>
+                    <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-500">{theme.subtitle}</div>
+                    <p className="mt-2 text-xs leading-5 text-slate-400">{theme.description}</p>
                   </button>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ====== 6. DISCLAIMER ====== */}
-        <footer className="relative py-12" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <ShieldCheck className="w-8 h-8 text-cyan-400/40 mx-auto mb-3" />
-            <p className="text-[11px] text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              VouchEdge is for sports research, social proof, and entertainment. AI insights are probability-based. No guarantees. Always follow your local laws and play responsibly. 21+ only. Mock data shown on this page is for layout testing only — not real capper performance.
+        <section className="relative z-10 border-t border-white/[0.06] bg-slate-950/70 px-4 py-12 text-center sm:px-6">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Sign in. Amplify features. Pick a theme.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-slate-400">
+              Then the full Open Edge becomes the compact Open Edge command layer inside the app.
             </p>
-            <div className="mt-4 flex items-center justify-center gap-4 text-[10px] text-slate-700">
-              <span>© {new Date().getFullYear()} VouchEdge</span>
-              <span>·</span>
-              <span>Proof over hype</span>
-              <span>·</span>
-              <span className="font-mono">beta · research · 21+</span>
-            </div>
+
+            <button
+              onClick={startAmplifier}
+              className="mt-6 rounded-2xl ve-theme-accent-bg px-7 py-3.5 text-sm font-black text-slate-950 shadow-2xl shadow-cyan-950/30 transition hover:-translate-y-0.5"
+            >
+              Begin New User Flow
+            </button>
           </div>
-        </footer>
-      </div>
+        </section>
 
-      {/* ====== MODALS ====== */}
-      {showOnboarding && (
-        <OnboardingSlideshow onComplete={handleOnboardingComplete} onSkip={handleOnboardingSkip} />
-      )}
-      {showAuth && (
-        <AuthModal open={true} onClose={() => setShowAuth(false)} />
-      )}
-    </div>
-  );
-}
+        <AnimatePresence>
+          {amplifierOpen && (
+            <motion.div
+              className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/75 p-3 backdrop-blur-xl sm:items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 42, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 28, scale: 0.98 }}
+                transition={{ duration: 0.48, ease }}
+                className="w-full max-w-2xl overflow-hidden rounded-[2rem] border ve-theme-border bg-slate-950 text-white shadow-2xl shadow-cyan-950/40"
+              >
+                <div className="border-b border-slate-800 bg-gradient-to-br from-cyan-300/10 via-slate-950 to-slate-950 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">
+                        New User Amplifier
+                      </div>
+                      <h3 className="mt-2 text-2xl font-black">
+                        {isThemeStep ? 'Choose your theme' : currentSlide.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-400">
+                        {isThemeStep ? 'Pick 1 of 3 premium styles before entering the app.' : currentSlide.description}
+                      </p>
+                    </div>
 
-/* ============ Floating Vouch Card (hero visual) ============ */
-function FloatingVouchCard() {
-  return (
-    <motion.div
-      animate={{ y: [-8, 8, -8] }}
-      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      className="rounded-2xl p-5 relative overflow-hidden"
-      style={{
-        background: "rgba(15,23,42,0.6)",
-        border: "1px solid rgba(34,211,238,0.2)",
-        backdropFilter: "blur(16px)",
-        boxShadow: "0 30px 60px -20px rgba(0,0,0,0.5), 0 0 40px -10px rgba(34,211,238,0.15)",
-      }}
-    >
-      <div className="absolute top-3 right-3 text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
-        Sample
-      </div>
-      <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-slate-950 text-sm" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>VE</div>
-        <div>
-          <div className="text-xs font-bold text-white">Sample Capper</div>
-          <div className="text-[10px] text-slate-500 font-mono">@sample_capper · Demo</div>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[9px] text-emerald-400 font-mono">LOCKED</span>
-        </div>
-      </div>
-      <div className="space-y-1.5 mb-3">
-        {[
-          { leg: "A. Judge OVR 1.5+", odds: "+145" },
-          { leg: "S. Ohtani 1+ HR", odds: "+310" },
-        ].map((l, i) => (
-          <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-            <span className="text-xs text-slate-300">{l.leg}</span>
-            <span className="text-xs font-mono font-bold text-cyan-300">{l.odds}</span>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.15)" }}>
-        <span className="text-[10px] font-bold font-mono text-slate-400">VOUCHCHECK</span>
-        <span className="text-xs font-mono font-bold text-cyan-300">4/4 judges · Approved</span>
-      </div>
-      <div className="mt-2 flex items-center gap-2 text-[9px] text-slate-600">
-        <span>Posted 2h before first pitch</span><span>·</span><span>Awaiting final</span>
-      </div>
-    </motion.div>
-  );
-}
+                    <button
+                      onClick={() => setAmplifierOpen(false)}
+                      className="rounded-2xl border border-slate-700 bg-slate-900 p-2 text-slate-300 hover:text-white"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
 
-/* ============ Demo Vouch Card ============ */
-function DemoVouchCard() {
-  return (
-    <div className="relative rounded-2xl p-5" style={{ background: "rgba(15,23,42,0.5)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <DemoLabel text="Sample vouch card" />
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xs" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>VE</div>
-        <div><div className="text-xs font-bold text-white">Sample Capper</div><div className="text-[10px] text-slate-500 font-mono">@sample · Demo</div></div>
-        <Lock className="w-3.5 h-3.5 text-emerald-400 ml-auto" />
-      </div>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <span className="text-xs text-slate-300">Judge OVR 1.5+</span><span className="text-xs font-mono text-cyan-300">+145</span>
-        </div>
-        <div className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <span className="text-xs text-slate-300">Ohtani 1+ HR</span><span className="text-xs font-mono text-cyan-300">+310</span>
-        </div>
-      </div>
-      <div className="mt-2 text-[10px] text-slate-600">Posted 2h before · Awaiting final</div>
-    </div>
-  );
-}
+                <div className="p-5">
+                  {!isThemeStep ? (
+                    <div>
+                      <div className="mb-4 inline-flex rounded-full border ve-theme-border ve-theme-soft-bg px-3 py-1 text-xs font-black text-white">
+                        {currentSlide.subtitle}
+                      </div>
 
-/* ============ Demo Parlay Card ============ */
-function DemoParlayCard() {
-  return (
-    <div className="relative rounded-2xl p-5" style={{ background: "rgba(15,23,42,0.5)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <DemoLabel text="Sample parlay" />
-      <div className="flex items-center justify-between mb-3">
-        <div><div className="text-[10px] text-slate-500 font-mono uppercase">3-leg parlay</div><div className="text-xs font-bold text-white">Slip #VE-DEMO-001</div></div>
-        <span className="text-[9px] font-bold px-2 py-0.5 rounded" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>DRAFT</span>
-      </div>
-      <div className="space-y-1.5">
-        {["Judge OVR 1.5+ · +145", "Ohtani 1+ HR · +310", "Witt 2+ TB · +125"].map((l, i) => (
-          <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <span className="text-xs text-slate-300">{l.split(" · ")[0]}</span><span className="text-xs font-mono text-slate-400">{l.split(" · ")[1]}</span>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-3 gap-1.5 mt-3">
-        <div className="text-center p-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <div className="text-[8px] text-slate-600 font-mono uppercase">Combined</div><div className="text-xs font-bold font-mono text-white">+1842</div>
-        </div>
-        <div className="text-center p-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <div className="text-[8px] text-slate-600 font-mono uppercase">Judge</div><div className="text-xs font-bold font-mono text-emerald-400">64</div>
-        </div>
-        <div className="text-center p-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <div className="text-[8px] text-slate-600 font-mono uppercase">Risk</div><div className="text-xs font-bold text-amber-400">Lotto</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+                      <div className="grid gap-2">
+                        {currentSlide.bullets.map((bullet) => (
+                          <div key={bullet} className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-3 text-sm font-bold text-slate-200">
+                            <Check className="h-4 w-4 text-emerald-300" />
+                            {bullet}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {THEME_CHOICES.map((theme) => (
+                        <button
+                          key={theme.id}
+                          onClick={() => {
+                            chooseTheme(theme.id);
+                          }}
+                          className={`rounded-3xl border p-3 text-left transition ${
+                            selectedTheme === theme.id
+                              ? 'border-cyan-300/50 ve-theme-soft-bg'
+                              : 'border-slate-800 bg-slate-900/60'
+                          }`}
+                        >
+                          <div className={`mb-3 h-24 rounded-2xl bg-gradient-to-br ${theme.className}`} />
+                          <div className="text-sm font-black text-white">{theme.name}</div>
+                          <p className="mt-1 text-xs leading-5 text-slate-400">{theme.description}</p>
+                          <div className="mt-3 flex items-center gap-2 text-[11px] font-black text-cyan-200">
+                            {selectedTheme === theme.id ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                            {selectedTheme === theme.id ? 'Selected' : 'Choose'}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-/* ============ Demo Result Card ============ */
-function DemoResultCard() {
-  return (
-    <div className="relative rounded-2xl p-5" style={{ background: "rgba(15,23,42,0.5)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <DemoLabel text="Sample result" />
-      <div className="flex items-center justify-between mb-3">
-        <div><div className="text-[10px] text-slate-500 font-mono uppercase">Graded result</div><div className="text-xs font-bold text-white">Slip #VE-DEMO-042</div></div>
-        <span className="text-[9px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.3)" }}>
-          <CheckCircle2 className="w-3 h-3" /> WON
-        </span>
-      </div>
-      <div className="space-y-1.5">
-        {[
-          { leg: "Judge OVR 1.5+", result: "2 TB · WON" },
-          { leg: "Ohtani 1+ HR", result: "1 HR · WON" },
-          { leg: "Witt 2+ TB", result: "3 TB · WON" },
-        ].map((l, i) => (
-          <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-400" /><span className="text-xs text-slate-300">{l.leg}</span></div>
-            <span className="text-[10px] font-mono text-emerald-400">{l.result}</span>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between p-2 mt-2 rounded-lg" style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.15)" }}>
-        <span className="text-[10px] font-bold font-mono text-slate-400">PAYOUT</span>
-        <span className="text-sm font-mono font-bold text-emerald-400">+19.42u</span>
-      </div>
-    </div>
-  );
-}
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                    <div className="flex gap-1.5">
+                      {[...AMPLIFIER_SLIDES, { id: 'theme' }].map((item, index) => (
+                        <div
+                          key={item.id}
+                          className={`h-1.5 rounded-full transition-all ${
+                            index === slideIndex ? 'w-8 bg-cyan-300' : 'w-2 bg-slate-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
 
-/* ============ Demo label badge ============ */
-function DemoLabel({ text }: { text: string }) {
-  return (
-    <span className="absolute top-3 right-3 z-10 text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
-      {text}
-    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => enterApp('feed')}
+                        className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-black text-slate-300"
+                      >
+                        Skip
+                      </button>
+                      <button
+                        onClick={nextAmplifier}
+                        className="rounded-2xl ve-theme-accent-bg px-5 py-3 text-sm font-black text-slate-950"
+                      >
+                        {isThemeStep ? 'Enter App' : 'Next'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.main>
+    </AnimatePresence>
   );
 }
