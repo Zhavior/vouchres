@@ -894,7 +894,7 @@ export default function TheEdgeShell({
                 {/* Quick jumps — routes verified against App.tsx */}
                 <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    ['Today’s Board', 'today', TrendingUp],
+                    
                     ['Live Parlays', 'live_parlays', Radio],
                     ['Parlay Lab', 'build', Layers3],
                     ['Results Ledger', 'results', Trophy],

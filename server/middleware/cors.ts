@@ -51,7 +51,8 @@ export const helmetMiddleware = helmet({
       scriptSrc: process.env.NODE_ENV === "production"
         ? ["'self'"]
         : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"], // Tailwind v4 needs unsafe-inline
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind v4 needs unsafe-inline
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
       connectSrc: [
         "'self'",
         "https://statsapi.mlb.com",

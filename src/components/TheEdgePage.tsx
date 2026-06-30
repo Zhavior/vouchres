@@ -1,5 +1,4 @@
 import WelcomePortal from './WelcomePortal';
-import TodayDashboard from './TodayDashboard';
 import EdgeIslandCommandCenter from './theEdge/EdgeIslandCommandCenter';
 
 type TheEdgePageProps = {
@@ -20,6 +19,7 @@ export default function TheEdgePage({
   return (
     <EdgeIslandCommandCenter
       onSectionChange={onSectionChange}
+      savedSlips={savedSlips}
     />
   );
 }

@@ -10,6 +10,7 @@ interface CacheEntry<T> {
 
 export class TTLCache<T = unknown> {
   private store = new Map<string, CacheEntry<T>>();
+  private inflight = new Map<string, Promise<T>>();
   constructor(private defaultTtlMs: number) {}
 
   get(key: string): T | undefined {
@@ -49,20 +50,32 @@ export class TTLCache<T = unknown> {
 
   /**
    * Return the cached value or run `producer`, cache its result, and return it.
+   * Also de-dupes concurrent async calls so expensive producers only run once per key.
    * If the producer throws and a stale value exists, the stale value is returned.
    */
   async getOrSet(key: string, producer: () => Promise<T>, ttlMs?: number): Promise<T> {
     const cached = this.get(key);
     if (cached !== undefined) return cached;
-    try {
-      const value = await producer();
-      this.set(key, value, ttlMs);
-      return value;
-    } catch (err) {
-      const stale = this.store.get(key);
-      if (stale) return stale.value;
-      throw err;
-    }
+
+    const running = this.inflight.get(key);
+    if (running) return running;
+
+    const task = producer()
+      .then((value) => {
+        this.set(key, value, ttlMs);
+        return value;
+      })
+      .catch((err) => {
+        const stale = this.store.get(key);
+        if (stale) return stale.value;
+        throw err;
+      })
+      .finally(() => {
+        this.inflight.delete(key);
+      });
+
+    this.inflight.set(key, task);
+    return task;
   }
 }
 

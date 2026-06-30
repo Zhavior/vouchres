@@ -24,6 +24,7 @@ import { gradePendingPicks } from "../services/grading/gradingService";
  * limit is lower than the 3-pick/day limit for singles).
  */
 export const parlayRoutes = Router();
+console.log("[parlayRoutes] mounted");
 
 /* ============================================================
    POST /api/parlays/grade  — stateless grading (no auth, no DB)
@@ -111,6 +112,25 @@ parlayRoutes.get("/parlays/grade-due", requireAuth, gradingLimiter, async (req: 
     const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
 
     console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
+
+    // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
+    try {
+      const logRows = [
+        ...settled.map((r) => ({ pick_id: r.pick_id, status: r.status, reason: "graded", source: "grade-due" })),
+        ...pending.map((r) => ({ pick_id: r.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
+        ...errors.map((r) => ({ pick_id: r.pick_id, status: "graded_error", reason: r.error ?? "error", source: "grade-due" })),
+      ];
+      if (logRows.length > 0) {
+        const supabaseAdmin = await getSupabaseAdmin();
+        const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
+        if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
+          console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
+        }
+      }
+    } catch (logErr: any) {
+      // table missing or transient — never block grading on the audit log
+      console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
+    }
 
     return res.json({
       gradedParlays: settled.length,
@@ -479,7 +499,375 @@ parlayRoutes.get("/me/parlays", requireAuth, async (req: AuthedRequest, res: Res
 
   if (error) return res.status(500).json({ error: "fetch_failed" });
 
-  return res.json({ parlays: data ?? [], total: count ?? 0, limit, offset });
+  // Join legs for each parlay
+  const picks = data ?? [];
+  let legsMap: Record<string, any[]> = {};
+  if (picks.length > 0) {
+    const pickIds = picks.map((p: any) => p.id);
+    const { data: legs } = await supabaseAdmin
+      .from("pick_legs")
+      .select("*")
+      .in("pick_id", pickIds)
+      .order("leg_index", { ascending: true });
+    for (const leg of legs ?? []) {
+      const pid = String(leg.pick_id);
+      if (!legsMap[pid]) legsMap[pid] = [];
+      legsMap[pid].push(leg);
+    }
+  }
+
+  const parlays = picks.map((p: any) => ({ ...p, legs: legsMap[String(p.id)] ?? [] }));
+  return res.json({ parlays, total: count ?? 0, limit, offset });
+});
+
+function americanToDecimal(odds: number): number {
+  if (odds >= 100) return 1 + odds / 100;
+  if (odds <= -100) return 1 + 100 / Math.abs(odds);
+  return Math.max(1.01, odds); // already decimal
+}
+
+/**
+ * Normalize a leg's odds to DECIMAL, or null when the price is unknown.
+ * NEVER fabricates a price (no 1 / 1.01 placeholders). Accepts either an
+ * American `odds` field (preferred) or a `odds_decimal` field.
+ *   - American (|x| >= 100) → decimal
+ *   - decimal that is clearly real (> 1.01) → kept
+ *   - 0 / NaN / missing / tiny placeholder → null
+ */
+function legOddsToDecimalOrNull(leg: any): number | null {
+  const raw =
+    typeof leg?.odds === "number" ? leg.odds
+    : typeof leg?.odds_decimal === "number" ? leg.odds_decimal
+    : null;
+  if (raw === null || !Number.isFinite(raw) || raw === 0) return null;
+  if (Math.abs(raw) >= 100) {
+    const d = raw > 0 ? 1 + raw / 100 : 1 + 100 / Math.abs(raw);
+    return Number(d.toFixed(3));
+  }
+  if (raw > 1.01) return Number(raw.toFixed(3));
+  return null;
+}
+
+/** Postgres "column does not exist" / schema-cache-miss codes — used to detect
+ *  whether migration 0003 (client_ref/source) has been applied yet. */
+const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
+/** Postgres "function does not exist" / PostgREST RPC-not-found codes. */
+const MISSING_FUNCTION_CODES = new Set(["42883", "PGRST202"]);
+
+const MAX_LEGS = 12;
+const VALID_SOURCES = new Set(["manual", "scanner", "ai_pick", "edge_island"]);
+const NORMALIZED_STATUSES = new Set(["pending", "live", "won", "lost", "void", "partially_void"]);
+/** Map the app's normalized status onto the DB pick_status enum. */
+function toDbStatus(normalized: string): "pending" | "won" | "lost" | "void" | "push" {
+  switch (normalized) {
+    case "won": return "won";
+    case "lost": return "lost";
+    case "void": return "void";
+    case "partially_void": return "void";
+    // 'live' has no DB column — it is derived client-side; persist as pending.
+    case "live":
+    case "pending":
+    default: return "pending";
+  }
+}
+
+interface MeParlayValidation {
+  ok: boolean;
+  error?: string;
+  detail?: string;
+}
+
+/** Validate + normalize the POST /api/me/parlays body. Returns clean errors. */
+function validateMeParlayBody(body: any): MeParlayValidation {
+  if (!body || typeof body !== "object") return { ok: false, error: "invalid_body" };
+
+  const legs = body.legs;
+  if (!Array.isArray(legs) || legs.length < 1) {
+    return { ok: false, error: "legs_required", detail: "At least 1 leg is required." };
+  }
+  if (legs.length > MAX_LEGS) {
+    return { ok: false, error: "too_many_legs", detail: `Max ${MAX_LEGS} legs.` };
+  }
+  for (let i = 0; i < legs.length; i++) {
+    const leg = legs[i];
+    if (!leg || typeof leg !== "object") {
+      return { ok: false, error: "invalid_leg", detail: `Leg ${i} is not an object.` };
+    }
+    const odds = typeof leg.odds === "number" ? leg.odds : leg.odds_decimal;
+    if (odds !== undefined && (typeof odds !== "number" || !Number.isFinite(odds))) {
+      return { ok: false, error: "invalid_odds", detail: `Leg ${i} odds must be numeric.` };
+    }
+  }
+  if (body.title !== undefined && (typeof body.title !== "string" || body.title.length > 200)) {
+    return { ok: false, error: "invalid_title", detail: "Title must be a string ≤ 200 chars." };
+  }
+  if (body.wagerAmount !== undefined) {
+    const stake = body.wagerAmount;
+    if (typeof stake !== "number" || !Number.isFinite(stake) || stake < 0 || stake > 100000) {
+      return { ok: false, error: "invalid_stake", detail: "Stake must be a non-negative number." };
+    }
+  }
+  if (body.source !== undefined && !VALID_SOURCES.has(String(body.source))) {
+    return { ok: false, error: "invalid_source", detail: `source must be one of ${[...VALID_SOURCES].join(", ")}.` };
+  }
+  if (body.status !== undefined && !NORMALIZED_STATUSES.has(String(body.status).toLowerCase())) {
+    return { ok: false, error: "invalid_status", detail: `status must be one of ${[...NORMALIZED_STATUSES].join(", ")}.` };
+  }
+  return { ok: true };
+}
+
+/**
+ * POST /api/me/parlays
+ * Auth-only save for user-built parlays (no legal gate, no quota).
+ *
+ * Safety:
+ *   - Full input validation (clean 400s, never crashes).
+ *   - Duplicate protection via client_ref (idempotency key = the frontend's
+ *     local parlay id). Re-saving the same parlay returns the existing row.
+ *   - Atomic parent+legs insert via create_parlay_with_legs RPC when present;
+ *     otherwise a parent-insert + leg-insert with rollback (no orphan parents).
+ *   - Graceful degradation if migration 0003 (client_ref/source/RPC) is not
+ *     applied yet.
+ */
+parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRoutes] POST /api/me/parlays hit"); next(); }, requireAuth, async (req: AuthedRequest, res: Response) => {
+  const body = req.body ?? {};
+  const userId = req.user!.id;
+
+  const v = validateMeParlayBody(body);
+  if (!v.ok) {
+    return res.status(400).json({ error: v.error, detail: v.detail });
+  }
+
+  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
+  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
+  const rawLegs: any[] = body.legs;
+  const wagerAmount = typeof body.wagerAmount === "number" && body.wagerAmount > 0 ? body.wagerAmount : 1.0;
+  const aiGenerated = body.aiGenerated === true;
+  const source = VALID_SOURCES.has(String(body.source))
+    ? String(body.source)
+    : aiGenerated ? "ai_pick" : "manual";
+  const clientRef = typeof body.clientRef === "string" && body.clientRef
+    ? body.clientRef.slice(0, 128)
+    : (typeof body.id === "string" && body.id ? body.id.slice(0, 128) : null);
+  const dbStatus = toDbStatus(String(body.status ?? "pending").toLowerCase());
+
+  // Normalize each leg's odds to decimal-or-null. Combined odds are only
+  // computed when EVERY leg has a real price — otherwise the total is unknown
+  // (null), never fabricated from placeholders.
+  const legOdds: (number | null)[] = rawLegs.map((leg: any) => legOddsToDecimalOrNull(leg));
+  const allLegsPriced = legOdds.length > 0 && legOdds.every((o) => o !== null);
+  const combinedOdds: number | null = allLegsPriced
+    ? Number((legOdds as number[]).reduce((prod, d) => prod * d, 1).toFixed(3))
+    : null;
+
+  const selectionSummary = rawLegs
+    .map((l: any) => String(l.selection || l.market || "").slice(0, 60))
+    .filter(Boolean)
+    .join(" | ")
+    .slice(0, 500);
+
+  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
+  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
+
+  const legsJson = rawLegs.map((leg: any, i: number) => ({
+    leg_index: i,
+    event_id: String(leg.gamePk || leg.event_id || leg.game || "manual").slice(0, 64),
+    market: String(leg.market || leg.marketCode || "prop").slice(0, 64),
+    selection: String(leg.selection || "").slice(0, 280) || "—",
+    odds_decimal: legOdds[i], // decimal or null — never a placeholder
+  }));
+
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const respond = (parlay: any, legsForResponse: any[], deduped = false) =>
+    res.status(deduped ? 200 : 201).json({
+      id: parlay.id,
+      ...parlay,
+      legs: legsForResponse,
+      combined_odds: Number(combinedOdds.toFixed(3)),
+      ai_generated: aiGenerated,
+      deduped,
+    });
+
+  // 0. Duplicate protection — if this client_ref already exists, return it.
+  if (clientRef) {
+    try {
+      const { data: existing } = await supabaseAdmin
+        .from("picks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("client_ref", clientRef)
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        const { data: legs } = await supabaseAdmin
+          .from("pick_legs").select("*").eq("pick_id", existing.id).order("leg_index", { ascending: true });
+        return respond(existing, legs ?? [], true);
+      }
+    } catch (err: any) {
+      // client_ref column missing (migration 0003 not applied) — skip dedup.
+      if (!MISSING_COLUMN_CODES.has(err?.code)) {
+        console.warn("[me/parlays] dedup lookup failed (continuing)", err?.code, err?.message);
+      }
+    }
+  }
+
+  // 1. Preferred path: atomic RPC.
+  try {
+    const { data: rpcPick, error: rpcError } = await supabaseAdmin.rpc("create_parlay_with_legs", {
+      p_user_id: userId,
+      p_sport: sport,
+      p_event_id: parentEventId,
+      p_market: `${rawLegs.length}-leg parlay`,
+      p_selection: selectionSummary || title,
+      p_odds_decimal: Number(combinedOdds.toFixed(3)),
+      p_stake_units: wagerAmount,
+      p_confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
+      p_explanation: title,
+      p_is_demo: mode === "PRACTICE",
+      p_source: source,
+      p_client_ref: clientRef,
+      p_legs: legsJson,
+    });
+
+    if (!rpcError && rpcPick) {
+      const pick = Array.isArray(rpcPick) ? rpcPick[0] : rpcPick;
+      const { data: legs } = await supabaseAdmin
+        .from("pick_legs").select("*").eq("pick_id", pick.id).order("leg_index", { ascending: true });
+      return respond(pick, legs ?? []);
+    }
+    if (rpcError && !MISSING_FUNCTION_CODES.has(rpcError.code)) {
+      // Real RPC failure (not just "function missing") — surface it.
+      console.error("[me/parlays] RPC create failed", rpcError.code, rpcError.message);
+      return res.status(500).json({ error: "save_failed" });
+    }
+    // else: RPC not installed → fall through to manual path.
+  } catch (err: any) {
+    if (!MISSING_FUNCTION_CODES.has(err?.code)) {
+      console.error("[me/parlays] RPC threw", err?.code, err?.message);
+    }
+    // fall through to manual path
+  }
+
+  // 2. Fallback path: parent insert + legs insert with rollback.
+  try {
+    // Build parent payload; include source/client_ref only — strip on missing-col retry.
+    const buildParent = (withExtras: boolean) => ({
+      user_id: userId,
+      capper_id: null,
+      leg_type: "parlay" as const,
+      sport,
+      event_id: parentEventId,
+      market: `${rawLegs.length}-leg parlay`,
+      selection: selectionSummary || title,
+      odds_decimal: Number(combinedOdds.toFixed(3)),
+      stake_units: wagerAmount,
+      confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
+      explanation: title,
+      is_demo: mode === "PRACTICE",
+      status: dbStatus,
+      ...(withExtras ? { source, client_ref: clientRef } : {}),
+    });
+
+    let parlay: any;
+    let insertRes = await supabaseAdmin.from("picks").insert(buildParent(true)).select("*").single();
+    if (insertRes.error && MISSING_COLUMN_CODES.has(insertRes.error.code)) {
+      // Migration 0003 not applied — retry without source/client_ref.
+      insertRes = await supabaseAdmin.from("picks").insert(buildParent(false)).select("*").single();
+    }
+    if (insertRes.error || !insertRes.data) {
+      console.error("[me/parlays] parent insert failed", insertRes.error?.code, insertRes.error?.message);
+      return res.status(500).json({ error: "save_failed" });
+    }
+    parlay = insertRes.data;
+
+    const legsToInsert = legsJson.map((l) => ({ ...l, pick_id: parlay.id, status: "pending" as const }));
+    const { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+    if (legsError) {
+      // ROLLBACK: do not leave an orphan parent pick without legs.
+      console.error("[me/parlays] legs insert failed — rolling back parent", legsError.code, legsError.message);
+      await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
+      return res.status(500).json({ error: "parlay_creation_failed", detail: "Leg insert failed; parlay rolled back." });
+    }
+
+    const { data: legs } = await supabaseAdmin
+      .from("pick_legs").select("*").eq("pick_id", parlay.id).order("leg_index", { ascending: true });
+    return respond(parlay, legs ?? []);
+  } catch (err: any) {
+    console.error("[me/parlays] save failed", err?.message);
+    return res.status(500).json({ error: "save_failed" });
+  }
+});
+
+/**
+ * PATCH /api/parlays/:id
+ * Update parlay title, status, or settled_units. Ownership enforced.
+ */
+parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+  const { id } = req.params;
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  // Verify ownership first
+  const { data: existing, error: fetchErr } = await supabaseAdmin
+    .from("picks")
+    .select("id, user_id")
+    .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .single();
+
+  if (fetchErr || !existing) {
+    return res.status(404).json({ error: "parlay_not_found" });
+  }
+
+  const allowed: Record<string, true> = { explanation: true, status: true, stake_units: true };
+  const updates: Record<string, unknown> = {};
+
+  if (typeof req.body.title === "string") updates.explanation = req.body.title.slice(0, 200);
+  if (["pending", "won", "lost", "void", "push"].includes(String(req.body.status || ""))) {
+    updates.status = req.body.status;
+  }
+  if (typeof req.body.stake_units === "number" && req.body.stake_units > 0) {
+    updates.stake_units = req.body.stake_units;
+  }
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: "no_valid_fields" });
+  }
+
+  updates.updated_at = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) return res.status(500).json({ error: "update_failed" });
+  return res.json(data);
+});
+
+/**
+ * DELETE /api/parlays/:id
+ * Soft-deletes a parlay by setting status='void'. Ownership enforced.
+ */
+parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+  const { id } = req.params;
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const { data: existing } = await supabaseAdmin
+    .from("picks")
+    .select("id, user_id")
+    .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .single();
+
+  if (!existing) return res.status(404).json({ error: "parlay_not_found" });
+
+  await supabaseAdmin
+    .from("picks")
+    .update({ status: "void", updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  return res.json({ deleted: true, id });
 });
 
 /**

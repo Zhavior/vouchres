@@ -47,10 +47,8 @@ export interface FeatureLayout {
 /* ============ All features (master list) ============ */
 
 export const ALL_FEATURES: FeatureConfig[] = [
-  { id: "welcome", label: "Welcome Portal", icon: "Trophy", enabled: false, order: 0, locked: true },
 
   // Daily — sport-scoped boards and slates
-  { id: "today", label: "Today", icon: "LayoutDashboard", enabled: true, order: 1, group: "Daily" },
   { id: "hr_board", label: "Daily Edge Board", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },
   { id: "live_games", label: "Live Projections", icon: "Tv", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS },

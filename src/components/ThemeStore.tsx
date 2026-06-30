@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { apiUrl } from '../lib/apiBase';
-import { 
-  Sparkles, 
-  ShoppingBag, 
-  CheckCircle, 
-  Shield, 
-  Flame, 
-  Star, 
-  Award, 
-  Zap, 
-  Heart, 
-  RefreshCw, 
-  DollarSign, 
-  User, 
-  Layout, 
-  Eye, 
-  BadgeCheck, 
+import {
+  Sparkles,
+  ShoppingBag,
+  CheckCircle,
+  Shield,
+  Flame,
+  Star,
+  Award,
+  Zap,
+  Heart,
+  RefreshCw,
+  DollarSign,
+  Lock,
+  User,
+  Layout,
+  Eye,
+  BadgeCheck,
   Grid,
   Laptop,
   Video
@@ -295,12 +296,13 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             <DollarSign className="w-5 h-5 text-amber-500" />
             <span>{userCredits.toLocaleString()} pts</span>
           </div>
-          <button
-            onClick={handleClaimCredits}
-            className="w-full mt-1.5 py-1.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black text-[10px] rounded-lg tracking-wider uppercase shadow-md transition-all hover:scale-105"
+          <div
+            title="Theme pts are allocated by your plan tier — 250 pts (Basic) or 750 pts (Gold / Seller Pro)"
+            className="w-full mt-1.5 py-1.5 px-3 flex items-center justify-center gap-1.5 bg-slate-800/60 border border-slate-700/60 text-slate-500 font-black text-[10px] rounded-lg tracking-wider uppercase cursor-not-allowed select-none"
           >
-            Claim Free +500 pts
-          </button>
+            <Lock className="w-3 h-3 shrink-0" />
+            Theme Pts Locked
+          </div>
         </div>
       </div>
 

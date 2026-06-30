@@ -1,45 +1,15 @@
-import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
-import HomeFeedPage from './social/feed/HomeFeedPage';
-import ParlayLab from './components/ParlayLab';
 import ParlayStudio from './components/ParlayStudio';
-import VouchBoard from './components/VouchBoard';
-import ResultsPage from './components/ResultsPage';
-import ProfilePage from './components/ProfilePage';
-import SettingsPage from './components/SettingsPage';
-import PremiumSubPage from './components/PremiumSubPage';
-import AisLandingPage from './components/AisLandingPage';
-import PlayerResearchConsole from './components/PlayerResearchConsole';
-import PlayerResearchHub from './components/PlayerResearchHub';
-import CustomizePage from './components/CustomizePage';
-import ResultsStudio from './components/results/ResultsStudio';
-import SmartAiEngine from './components/SmartAiEngine';
-import MlbIntelligenceHub from './components/MlbIntelligenceHub';
-import DailyHrBoardPage from './pages/DailyHrBoardPage';
-import LiveGameLabPage from './pages/LiveGameLabPage';
-import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
-import NotificationsPage from './components/notifications/NotificationsPage';
-import LiveGamesPro from './components/LiveGamesPro';
-import TheEdgeShell from './components/theEdge/TheEdgeShell';
-import TodayDashboard from './components/TodayDashboard';
 import { apiUrl } from './lib/apiBase';
-import Leaderboard from './components/Leaderboard';
-import ThemeStore from './components/ThemeStore';
-import { EpicThemeShowcase } from './components/vouchedge/EpicThemeShowcase';
-import SubscriberHub from './components/SubscriberHub';
-import { Crown, Home, X } from 'lucide-react';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
-import PlayerEdgeLabPage from './pages/pro/PlayerEdgeLabPage';
-import TeamMatchupLabPage from './pages/pro/TeamMatchupLabPage';
-import ProGraphsLabPage from './pages/pro/ProGraphsLabPage';
-import DailyPlayersPage from './pages/DailyPlayersPage';
 import LiveParlaysPage from './pages/LiveParlaysPage';
 import { ProAccessGate } from './components/pro/ProAccessGate';
 import { resolveMarket } from './sports/markets';
@@ -49,7 +19,37 @@ import { isLive } from './lib/parlayLifecycle';
 import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
+import { decimalToAmerican, decimalLabel } from './lib/odds';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
+
+const TheEdgeShell = lazy(() => import('./components/theEdge/TheEdgeShell'));
+const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
+const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
+const VouchBoard = lazy(() => import('./components/VouchBoard'));
+const ProfilePage = lazy(() => import('./components/ProfilePage'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
+const PremiumSubPage = lazy(() => import('./components/PremiumSubPage'));
+const PlayerResearchHub = lazy(() => import('./components/PlayerResearchHub'));
+const CustomizePage = lazy(() => import('./components/CustomizePage'));
+const ResultsStudio = lazy(() => import('./components/results/ResultsStudio'));
+const SmartAiEngine = lazy(() => import('./components/SmartAiEngine'));
+const MlbIntelligenceHub = lazy(() => import('./components/MlbIntelligenceHub'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
+const ThemeStore = lazy(() => import('./components/ThemeStore'));
+const EpicThemeShowcase = lazy(() =>
+  import('./components/vouchedge/EpicThemeShowcase').then((module) => ({
+    default: module.EpicThemeShowcase,
+  })),
+);
+const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
+const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
+const DailyHrBoardPage = lazy(() => import('./pages/DailyHrBoardPage'));
+const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
+const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
+const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
+const PlayerEdgeLabPage = lazy(() => import('./pages/pro/PlayerEdgeLabPage'));
+const TeamMatchupLabPage = lazy(() => import('./pages/pro/TeamMatchupLabPage'));
+const ProGraphsLabPage = lazy(() => import('./pages/pro/ProGraphsLabPage'));
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -218,6 +218,57 @@ function resolveDevSectionFromLocation() {
   }
 
   return null;
+}
+
+function mapBackendParlay(pick: any): Parlay {
+  // Backend stores DECIMAL odds (or null when unknown). Leg.odds is AMERICAN
+  // (or null) — convert decimal→American, preserving "unknown" as null.
+  const legs: Leg[] = (pick.legs || []).map((leg: any, i: number) => {
+    const dec = typeof leg.odds_decimal === 'number' ? leg.odds_decimal : null;
+    return {
+      id: leg.id || `${pick.id}-leg-${i}`,
+      sport: pick.sport || 'mlb',
+      game: leg.event_id || '',
+      market: leg.market || '',
+      selection: leg.selection || '',
+      odds: dec && dec > 1.01 ? decimalToAmerican(dec) : null,
+      status: (['WON', 'LOST', 'VOID'].includes(String(leg.status || '').toUpperCase())
+        ? (String(leg.status).toUpperCase() as Leg['status'])
+        : 'PENDING'),
+      gamePk: leg.event_id && leg.event_id !== 'manual' ? leg.event_id : undefined,
+      marketCode: leg.market || undefined,
+      actual: leg.actual ?? null,
+      gameStartTime: leg.game_start_time || undefined,
+    };
+  });
+
+  const status = ((): Parlay['status'] => {
+    const s = String(pick.status || 'pending').toLowerCase();
+    if (s === 'won') return 'WON';
+    if (s === 'lost') return 'LOST';
+    if (s === 'void' || s === 'push') return 'VOID';
+    return 'PENDING';
+  })();
+
+  const decOdds = typeof pick.odds_decimal === 'number' ? pick.odds_decimal : null;
+  const totalOdds = decimalLabel(decOdds); // "Odds TBD" when null/invalid
+
+  return {
+    id: pick.id,
+    title: pick.explanation || pick.market || 'Saved Parlay',
+    legs,
+    totalOdds,
+    oddsValue: decOdds && decOdds > 1.01 ? decOdds : 0,
+    riskTier: 'MEDIUM',
+    status,
+    mode: pick.is_demo ? 'PRACTICE' : 'REAL',
+    createdAt: pick.created_at,
+    wagerAmount: pick.stake_units,
+    backendPickId: pick.id,
+    backendSyncState: 'synced',
+    backendSyncedAt: pick.updated_at || pick.created_at,
+    aiGenerated: Boolean(pick.ai_generated),
+  };
 }
 
 export default function App() {
@@ -481,6 +532,46 @@ export default function App() {
       setProfile(INITIAL_PROFILE);
     }
   }, []);
+
+  // Load backend parlays on startup if user is authenticated.
+  // Merges with localStorage: local-only parlays (no backendPickId) are kept;
+  // backend parlays are authoritative for anything with a matching ID.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const token = await getAuthToken();
+        if (!token || cancelled) return;
+
+        const result = await apiClient.get<{ parlays: any[] }>('/api/me/parlays?limit=100');
+        if (import.meta.env.DEV) console.debug('[parlays] loaded from backend', result?.parlays?.length ?? 0);
+        if (!result?.parlays?.length || cancelled) return;
+
+        const backendParlays = result.parlays.map(mapBackendParlay);
+        const backendIds = new Set(backendParlays.map(p => p.id));
+
+        const localSlips = savedSlipsRef.current;
+        // Keep local parlays that have no backend record yet (new unsaved slips)
+        const localOnly = localSlips.filter(p => !p.backendPickId || !backendIds.has(p.backendPickId));
+
+        const merged = [...backendParlays, ...localOnly];
+        const seen = new Set<string>();
+        const deduped = merged.filter(p => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+
+        syncSlips(deduped);
+      } catch (err) {
+        console.warn('[parlays] backend load failed (localStorage parlays still active)', err);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync state modifications helper
   const syncPosts = (newPosts: FeedPost[]) => {
@@ -812,17 +903,92 @@ export default function App() {
     });
   };
 
-  // Save new parlay created in ParlayLab
-  const handleSaveParlaySlip = (newParlay: Parlay) => {
-    const savedParlay = {
+  // Save new parlay created in ParlayLab / ParlayStudio
+  // Push a single parlay to the backend (POST /api/me/parlays) and reflect the
+  // sync state back into savedSlips. Shared by save + retry. Best-effort:
+  // never throws — the parlay always survives in localStorage.
+  const pushParlayToBackend = async (parlay: Parlay): Promise<void> => {
+    if (!isSupabaseConfigured) return;
+
+    // Duplicate protection (client-side): never fire two saves for one parlay.
+    // If it is already synced or mid-save, do nothing. The backend also
+    // de-dupes on client_ref, so this is defense-in-depth.
+    const current = savedSlipsRef.current.find((p) => p.id === parlay.id);
+    if (current?.backendPickId && current?.backendSyncState === 'synced') {
+      if (import.meta.env.DEV) console.debug('[parlays] skip save — already synced', parlay.id);
+      return;
+    }
+    if (current?.backendSyncState === 'saving' && current !== parlay) {
+      if (import.meta.env.DEV) console.debug('[parlays] skip save — already in flight', parlay.id);
+      return;
+    }
+
+    // Mark as saving so the card can show a spinner.
+    const markState = (state: Parlay['backendSyncState'], extra?: Partial<Parlay>) => {
+      syncSlips(
+        savedSlipsRef.current.map((p) =>
+          p.id === parlay.id ? { ...p, backendSyncState: state, ...extra } : p
+        )
+      );
+    };
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        markState('auth_required', {
+          backendSyncError: 'Sign in to save this parlay to your account.',
+        });
+        return;
+      }
+
+      markState('saving', { backendSyncError: undefined });
+      if (import.meta.env.DEV) console.debug('[parlays] POST /api/me/parlays', { clientRef: parlay.id });
+
+      const result = await apiClient.post<{ id: string; deduped?: boolean }>('/api/me/parlays', {
+        // client_ref / idempotency key — the local parlay id.
+        clientRef: parlay.id,
+        title: parlay.title,
+        legs: parlay.legs,
+        wagerAmount: parlay.wagerAmount,
+        mode: parlay.mode,
+        riskTier: parlay.riskTier,
+        aiGenerated: parlay.aiGenerated ?? false,
+        source: parlay.aiGenerated ? 'ai_pick' : 'manual',
+        edgeScore: parlay.edgeScore,
+        sport: (parlay.legs?.[0] as any)?.sport || 'mlb',
+      });
+
+      if (result?.id) {
+        if (import.meta.env.DEV) console.debug('[parlays] synced', { id: result.id, deduped: result.deduped });
+        markState('synced', {
+          backendPickId: result.id,
+          backendSyncedAt: new Date().toISOString(),
+          backendSyncError: undefined,
+        });
+      } else {
+        markState('failed', { backendSyncError: 'Backend did not return a parlay id.' });
+      }
+    } catch (err: any) {
+      // Non-fatal — parlay is preserved in localStorage
+      console.warn('[parlays] backend save failed (kept in localStorage)', err);
+      markState('failed', {
+        backendSyncError: err?.error || err?.message || 'Backend save failed.',
+      });
+    }
+  };
+
+  const handleSaveParlaySlip = async (newParlay: Parlay) => {
+    const savedParlay: Parlay = {
       ...newParlay,
       id: newParlay.id || `parlay-${Date.now()}`,
       status: newParlay.status || 'PENDING',
       mode: newParlay.mode || 'PRACTICE',
       createdAt: newParlay.createdAt || new Date().toISOString(),
       lockNotified: false,
+      backendSyncState: 'saving',
     };
 
+    // Optimistic localStorage save — instant
     const updated = [savedParlay, ...savedSlips];
     syncSlips(updated);
 
@@ -834,6 +1000,16 @@ export default function App() {
     });
 
     navigateSection('live_parlays');
+
+    // Background backend sync — non-blocking, best-effort
+    await pushParlayToBackend(savedParlay);
+  };
+
+  // Retry backend sync for a local-only or failed parlay.
+  const handleRetryParlaySync = async (parlayId: string) => {
+    const parlay = savedSlipsRef.current.find((p) => p.id === parlayId);
+    if (!parlay) return;
+    await pushParlayToBackend(parlay);
   };
 
   // Grade pending parlays against the live MLB feed and reflect outcomes in
@@ -992,7 +1168,7 @@ export default function App() {
 
   const savedVouchIds = savedVouches.map((v) => v.id);
 
-  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => {
+  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number }) => {
     // Check if player's game has played already and status is Final
     const playerTeam = player.team ? player.team.toLowerCase() : '';
     const matchedGame = liveGames.find((g: any) => 
@@ -1094,7 +1270,7 @@ export default function App() {
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onUpdateParlay={handleUpdateParlaySlip} onRefreshGrades={handleGradeResults} isGrading={isGrading} lastGraded={gradingLastChecked} />;
+        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onBuildParlay={() => navigateSection('build')} onUpdateParlay={handleUpdateParlaySlip} onRetrySync={handleRetryParlaySync} onRefreshGrades={handleGradeResults} isGrading={isGrading} lastGraded={gradingLastChecked} />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
@@ -1269,7 +1445,15 @@ export default function App() {
           savedSlips={savedSlips}
           isRouteSwitching={isRouteSwitching || isPendingRoute}
         >
-          {renderMainView()}
+          <Suspense
+            fallback={
+              <div className="flex min-h-[50vh] items-center justify-center p-8 text-sm font-bold text-slate-400">
+                Loading view...
+              </div>
+            }
+          >
+            {renderMainView()}
+          </Suspense>
           {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
         </HomeFeedLayout>
         <AppNotificationsHost onNavigate={navigateSection} />

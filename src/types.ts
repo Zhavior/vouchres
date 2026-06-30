@@ -4,7 +4,7 @@ export interface Leg {
   game: string;
   market: string;
   selection: string;
-  odds: number; // e.g. -110 or 1.91 (decimal representation is cleaner for math)
+  odds: number | null; // AMERICAN odds (e.g. -110, +450). null = price unknown ("Odds TBD"). Never a placeholder like 1/1.01.
   status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
 
   // ── Grading fields (MLB→results pipeline; future-proof for NBA/NFL) ──
@@ -47,7 +47,7 @@ export interface Parlay {
   /** Backend pick id after /api/parlays accepts this slip. */
   backendPickId?: string;
   /** Whether the backend knows about this slip yet. */
-  backendSyncState?: 'synced' | 'auth_required' | 'legal_required' | 'failed' | 'not_syncable';
+  backendSyncState?: 'synced' | 'saving' | 'auth_required' | 'legal_required' | 'failed' | 'not_syncable';
   /** Last backend sync timestamp for this slip. */
   backendSyncedAt?: string;
   /** Most recent backend sync error, if any. */

@@ -82,12 +82,15 @@ interface ThemeProviderProps {
 export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProviderProps) {
   const [overrideThemeId, setOverrideThemeId] = useState<string | null>(null);
   
-  // Manage user credits in localStorage
+  // Manage user credits in localStorage.
+  // Initial allocation: 250 pts for Basic, 750 pts for Gold / Seller Pro.
   const [userCredits, setUserCreditsState] = useState<number>(() => {
     const cached = localStorage.getItem('vouchedge_theme_credits');
     if (cached) return parseInt(cached, 10);
-    localStorage.setItem('vouchedge_theme_credits', '1000');
-    return 1000;
+    const tier = profile.subscriptionTier;
+    const initial = (tier === 'GOLD' || tier === 'SELLER_PRO') ? 750 : 250;
+    localStorage.setItem('vouchedge_theme_credits', String(initial));
+    return initial;
   });
 
   const setUserCredits = (val: number) => {

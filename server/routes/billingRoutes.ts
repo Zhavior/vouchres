@@ -1,15 +1,15 @@
 import { Router } from "express";
 import type { Response } from "express";
 import Stripe from "stripe";
-import { AuthedRequest, requireAuth } from "../middleware/auth";
+import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { webhookLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import { z } from "zod";
 import {
   stripe,
-  STRIPE_PRICES,
   createCheckoutSession,
   createPortalSession,
+  isStripeConfigured,
   syncSubscription,
 } from "../services/billing/stripeService";
 
@@ -53,25 +53,39 @@ const CheckoutSchema = z.object({
   tier: z.enum(["gold", "seller_pro"]),
 });
 
+function billingErrorMessage(err: unknown) {
+  return err instanceof Error ? err.message : "billing_request_failed";
+}
+
 billingRoutes.post(
   "/checkout",
   requireAuth,
   validate({ body: CheckoutSchema }),
   async (req: AuthedRequest, res: Response) => {
     const { tier } = req.body as z.infer<typeof CheckoutSchema>;
+    if (!isStripeConfigured()) {
+      return res.status(503).json({
+        error: "stripe_not_configured",
+        message: "Stripe secret key is not configured on the server.",
+      });
+    }
+
     const priceId =
       tier === "gold"
         ? process.env.STRIPE_PRICE_GOLD
         : process.env.STRIPE_PRICE_SELLER_PRO;
 
     if (!priceId) {
-      return res.status(500).json({ error: "stripe_price_not_configured" });
+      return res.status(503).json({
+        error: "stripe_price_not_configured",
+        message: `Stripe price id is missing for ${tier}.`,
+      });
     }
 
     try {
       const safeOrigin = getSafeFrontendOrigin();
-      const successUrl = new URL("/premium?checkout=success", safeOrigin).toString();
-      const cancelUrl = new URL("/premium?checkout=cancelled", safeOrigin).toString();
+      const successUrl = new URL("/settings?checkout=success", safeOrigin).toString();
+      const cancelUrl = new URL("/settings?checkout=cancelled", safeOrigin).toString();
       console.log("[billing] checkout successUrl:", successUrl);
       console.log("[billing] checkout cancelUrl:", cancelUrl);
 
@@ -85,7 +99,7 @@ billingRoutes.post(
       return res.json({ url: session.url });
     } catch (err) {
       console.error("[billing] checkout failed", err);
-      return res.status(500).json({ error: "checkout_failed" });
+      return res.status(500).json({ error: "checkout_failed", message: billingErrorMessage(err) });
     }
   }
 );
@@ -95,6 +109,13 @@ billingRoutes.post(
  * Return a Stripe Billing Portal URL for managing an existing subscription.
  */
 billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Response) => {
+  if (!isStripeConfigured()) {
+    return res.status(503).json({
+      error: "stripe_not_configured",
+      message: "Stripe secret key is not configured on the server.",
+    });
+  }
+
   try {
     const safeOrigin = getSafeFrontendOrigin();
     const returnUrl = new URL("/settings", safeOrigin).toString();
@@ -102,12 +123,21 @@ billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Respo
 
     const session = await createPortalSession({
       profileId: req.user!.id,
+      email: req.user!.email ?? "",
       returnUrl,
     });
     return res.json({ url: session.url });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[billing] portal failed", err);
-    return res.status(400).json({ error: "no_subscription" });
+    if (err?.message === "billing_portal_not_configured") {
+      return res.status(503).json({
+        error: "portal_not_configured",
+        message:
+          "The Stripe Billing Portal is not configured. " +
+          "Go to dashboard.stripe.com → Settings → Billing → Customer portal and activate it.",
+      });
+    }
+    return res.status(400).json({ error: "billing_portal_failed", message: billingErrorMessage(err) });
   }
 });
 
@@ -116,7 +146,7 @@ billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Respo
  * Returns the user's current subscription state.
  */
 billingRoutes.get("/status", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { data: sub } = await supabaseAdmin
+  const { data: sub, error } = await supabaseAdmin
     .from("subscriptions")
     .select(
       "tier, status, current_period_start, current_period_end, cancel_at_period_end, stripe_price_id"
@@ -124,10 +154,21 @@ billingRoutes.get("/status", requireAuth, async (req: AuthedRequest, res: Respon
     .eq("profile_id", req.user!.id)
     .order("current_period_end", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  if (error) {
+    console.error("[billing] status lookup failed", error);
+    return res.status(500).json({ error: "billing_status_failed" });
+  }
+
+  const profileTier = req.user!.profile.tier;
 
   return res.json({
-    tier: req.user!.profile.tier,
+    tier: profileTier,
+    status: sub?.status ?? (profileTier === "free" ? "free" : "active"),
+    currentPeriodStart: sub?.current_period_start ?? null,
+    currentPeriodEnd: sub?.current_period_end ?? null,
+    cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
     subscription: sub ?? null,
     prices: {
       gold: process.env.STRIPE_PRICE_GOLD ?? null,
@@ -135,9 +176,6 @@ billingRoutes.get("/status", requireAuth, async (req: AuthedRequest, res: Respon
     },
   });
 });
-
-// Need to import supabaseAdmin here for the status endpoint above
-import { supabaseAdmin } from "../middleware/auth";
 
 /**
  * POST /api/billing/webhook
@@ -154,6 +192,15 @@ billingRoutes.post(
   webhookLimiter,
   // Stripe requires the raw body — see note below
   async (req: AuthedRequest, res: Response) => {
+    if (!isStripeConfigured()) {
+      return res.status(503).send("stripe not configured");
+    }
+
+    if (!WEBHOOK_SECRET) {
+      console.error("[stripe] webhook secret is not configured");
+      return res.status(503).send("webhook secret not configured");
+    }
+
     const signature = req.headers["stripe-signature"];
     if (!signature) {
       return res.status(400).send("missing signature");
@@ -176,8 +223,15 @@ billingRoutes.post(
     try {
       switch (event.type) {
         case "checkout.session.completed": {
-          // Customer finished checkout — subscription will be created next
-          // Handled by customer.subscription.created below
+          const session = event.data.object as Stripe.Checkout.Session;
+          const subscriptionId =
+            typeof session.subscription === "string"
+              ? session.subscription
+              : session.subscription?.id;
+          if (subscriptionId) {
+            const sub = await stripe.subscriptions.retrieve(subscriptionId);
+            await syncSubscription(sub);
+          }
           break;
         }
         case "customer.subscription.created":
@@ -196,7 +250,7 @@ billingRoutes.post(
           await supabaseAdmin
             .from("profiles")
             .update({ tier: "free", stripe_subscription_id: null })
-            .eq("id", sub.metadata.profile_id);
+            .eq("stripe_subscription_id", sub.id);
           break;
         }
         case "invoice.payment_failed": {

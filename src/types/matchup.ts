@@ -49,3 +49,13 @@ export interface MatchupsResponse {
   matchups: GameMatchup[];
   generatedAt: string;
 }
+
+export interface LiveScore {
+  gamePk: number;
+  status: string;
+  isLive: boolean;
+  isFinal: boolean;
+  inning: number | null;
+  inningState: string | null;
+  score: { away: number; home: number };
+}

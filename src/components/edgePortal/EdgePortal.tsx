@@ -59,8 +59,6 @@ function PillarIcon({ id }: { id: string }) {
 }
 
 const tabs: { id: EdgeTab; label: string; icon: typeof Sparkles }[] = [
-  { id: 'welcome', label: 'Welcome', icon: Sparkles },
-  { id: 'today', label: 'Today', icon: Waves },
   { id: 'notifications', label: 'Alerts', icon: Bell },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'features', label: 'Features', icon: Layers3 },
@@ -139,7 +137,7 @@ export default function EdgePortal({
         type="button"
         onClick={() => {
           setOpen(true);
-          setActiveTab('welcome');
+          setActiveTab('dashboard');
           setEdgeStage('storefront');
         }}
         className="edge-portal-shine ve-theme-gradient ve-theme-glow fixed bottom-5 right-5 z-[70] overflow-hidden rounded-full px-5 py-4 text-sm font-black shadow-2xl transition hover:-translate-y-0.5"
@@ -210,7 +208,6 @@ export default function EdgePortal({
                         The <span className="ve-theme-gradient-text">Edge</span>
                       </h2>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-                        The Edge is the welcome portal itself. New users see Sign Up, Login, features, pricing, and themes first. Logged-in users continue into My Edge dashboard, notifications, Today’s Board, and research tools.
                       </p>
                     </div>
 
@@ -297,7 +294,6 @@ export default function EdgePortal({
                             </h3>
 
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-                              The Edge starts as the premium welcome portal. Click it, and it transforms into the user dashboard with Today’s Board, notifications, research, pricing, themes, and My Edge tools.
                             </p>
 
                             <div className="mt-7 flex flex-wrap gap-3">
@@ -314,11 +310,11 @@ export default function EdgePortal({
                               <button
                                 onClick={() => {
                                   setEdgeStage('dashboard');
-                                  setActiveTab('today');
+                                  setActiveTab('dashboard');
                                 }}
                                 className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5"
                               >
-                                Preview Today’s Board
+                                Preview Edge Island
                               </button>
                             </div>
                           </div>
@@ -365,7 +361,7 @@ export default function EdgePortal({
                                   The storefront transformed. Now this is your operating layer.
                                 </p>
                               </div>
-                              <button onClick={() => setActiveTab('today')} className="ve-theme-gradient rounded-2xl px-4 py-2 text-xs font-black">
+                              <button onClick={() => setActiveTab('dashboard')} className="ve-theme-gradient rounded-2xl px-4 py-2 text-xs font-black">
                                 Today
                               </button>
                             </div>
@@ -395,7 +391,7 @@ export default function EdgePortal({
                               </div>
                               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 {[
-                                  ['Today’s Board', 'daily_players'],
+                                  ['Upcoming Games', 'daily_players'],
                                   ['Notifications', 'notifications'],
                                   ['My Results', 'results'],
                                   ['Parlay Lab', 'parlay_lab'],
@@ -428,61 +424,6 @@ export default function EdgePortal({
                         </motion.section>
                       )}
                     </AnimatePresence>
-                  )}
-
-                  {activeTab === 'today' && (
-                    <section className="rounded-[2rem] border ve-theme-border bg-black/20 p-4">
-                      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                        <div>
-                          <div className="text-[10px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">Today’s Board</div>
-                          <h3 className="mt-1 text-2xl font-black text-white">Start where the action is.</h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-400">Daily players, live games, HR board, parlay lab, and results.</p>
-                        </div>
-                        <button onClick={() => go('daily_players')} className="ve-theme-gradient rounded-2xl px-5 py-3 text-sm font-black">
-                          Open Full Board
-                        </button>
-                      </div>
-
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {topFeatures.slice(0, 8).map((feature) => {
-                          const Icon = feature.icon;
-                          return (
-                            <button
-                              key={feature.id}
-                              onClick={() => go(feature.section)}
-                              className="rounded-3xl border border-slate-800 bg-slate-900/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--ve-current-border)]"
-                            >
-                              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border ve-theme-border ve-theme-soft-bg ve-theme-accent-text">
-                                {Icon ? <Icon className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-                              </div>
-                              <div className="text-sm font-black text-white">{feature.title}</div>
-                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{feature.subtitle}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  )}
-
-                  {activeTab === 'notifications' && (
-                    <section className="grid gap-4 lg:grid-cols-3">
-                      {[
-                        ['HR Alerts', 'When a watched home run pick goes live or grades.'],
-                        ['Parlay Updates', 'Saved parlays, pending tickets, and final results.'],
-                        ['System Watch', 'Lineup posted, pitcher changed, weather risk, and game final.'],
-                      ].map(([title, body]) => (
-                        <div key={title} className="rounded-[2rem] border ve-theme-border bg-black/20 p-4">
-                          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border ve-theme-border ve-theme-soft-bg ve-theme-accent-text">
-                            <Bell className="h-5 w-5" />
-                          </div>
-                          <h3 className="text-lg font-black text-white">{title}</h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-400">{body}</p>
-                          <button className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-black text-slate-300">
-                            Configure
-                          </button>
-                        </div>
-                      ))}
-                    </section>
                   )}
 
                   {activeTab === 'dashboard' && (

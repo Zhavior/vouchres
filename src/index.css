@@ -38,9 +38,9 @@ body {
 /* ================== GLOBAL TRANS-LUCENT CONTAINER OVERRIDES ================== */
 .premium-card-bg,
 [id^="panel-"],
-[class*="bg-[#121824]"],
-[class*="bg-[#0e1320]"],
-[class*="bg-[#090d16]"],
+[class*="bg-\[\#121824\]"],
+[class*="bg-\[\#0e1320\]"],
+[class*="bg-\[\#090d16\]"],
 [class*="bg-slate-900"],
 [class*="bg-slate-950"],
 .bg-slate-900,
@@ -197,12 +197,12 @@ button.bg-slate-950:hover,
 /* Complete frame transition borders & glows for any active premium theme */
 .has-active-theme .premium-card-bg,
 .has-active-theme [id^="panel-"],
-.has-active-theme [class*="bg-[#121824]"],
-.has-active-theme [class*="bg-[#0e1320]"],
-.has-active-theme [class*="bg-[#090d16]"],
+.has-active-theme [class*="bg-\[\#121824\]"],
+.has-active-theme [class*="bg-\[\#0e1320\]"],
+.has-active-theme [class*="bg-\[\#090d16\]"],
 .has-active-theme .bg-slate-900:not(#brand-logo-id),
 .has-active-theme .bg-slate-950,
-.has-active-theme .bg-[#121824]\/30 {
+.has-active-theme .bg-\[\#121824\]\/30 {
   background-color: var(--theme-card-bg-fallback, rgba(14, 18, 28, 0.65)) !important;
   border-color: var(--theme-border-color) !important;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 18px var(--theme-shadow-glow) !important;
@@ -229,8 +229,8 @@ button.bg-slate-950:hover,
 
 .has-active-theme .border-slate-850,
 .has-active-theme .border-slate-900,
-.has-active-theme .border-[#3b82f6]\/10,
-.has-active-theme .border-[#1e293b]\/50 {
+.has-active-theme .border-\[\#3b82f6\]\/10,
+.has-active-theme .border-\[\#1e293b\]\/50 {
   border-color: var(--theme-border-color) !important;
 }
 

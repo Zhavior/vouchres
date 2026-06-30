@@ -1,4 +1,4 @@
-import { getAuthToken } from "./supabaseClient";
+import { getAuthToken, supabase } from "./supabaseClient";
 
 /**
  * Authenticated fetch helper — replaces apiBase.getJson / postJson.
@@ -62,7 +62,6 @@ async function request<T = any>(
 
   // Handle 401 — token expired or invalid
   if (res.status === 401) {
-    const { supabase } = await import("./supabaseClient");
     await supabase.auth.signOut();
     throw { error: "unauthorized", status: 401 } as ApiError;
   }

@@ -3,23 +3,18 @@ import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
-import type { GameMatchup, HrWatch } from '../types/matchup';
+import type { GameMatchup, HrWatch, LiveScore } from '../types/matchup';
 import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
+import { parseAmericanOdds } from '../lib/odds';
 
 interface Props {
   onSectionChange: (section: string) => void;
-  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
 
 const REFRESH_MS = 3 * 60_000;
-
-function americanToDecimal(am: string): number {
-  const n = parseInt(am, 10);
-  if (isNaN(n)) return 2.0;
-  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
-}
 function vulnColor(v: number): string {
   if (v >= 70) return '#f87171';
   if (v >= 55) return '#fbbf24';
@@ -350,8 +345,26 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
   );
 }
 
+/** Merge live scores into matchup list by gamePk. */
+function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
+  if (!scores.length) return matchups;
+  const map = new Map(scores.map((s) => [s.gamePk, s]));
+  return matchups.map((m) => {
+    const s = map.get(m.gamePk);
+    if (!s) return m;
+    return {
+      ...m,
+      score: s.score,
+      isLive: s.isLive,
+      isFinal: s.isFinal,
+      status: s.status,
+    };
+  });
+}
+
 export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Props) {
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
+  const [liveScores, setLiveScores] = useState<LiveScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
@@ -359,10 +372,23 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
 
+  // Scores poll independently at 45s — much faster than the heavy matchup model.
+  const loadScores = useCallback(async () => {
+    try {
+      const res = await vouchedgeApi.scoresToday();
+      if (Array.isArray(res.scores)) setLiveScores(res.scores);
+    } catch {
+      // silent — scores are best-effort
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     setSourceNote('Loading live games...');
+
+    // Kick off a fast scores fetch in parallel with everything else.
+    loadScores();
 
     let fastLoaded = false;
     try {
@@ -401,12 +427,20 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadScores]);
 
   useEffect(() => { load(); const id = setInterval(load, REFRESH_MS); return () => clearInterval(id); }, [load]);
 
-  const liveCount = matchups.filter((m) => m.isLive).length;
-  const shown = liveOnly ? matchups.filter((m) => m.isLive) : matchups;
+  // Poll scores every 45s independently so the scoreboard stays fresh.
+  useEffect(() => {
+    const id = setInterval(loadScores, 45_000);
+    return () => clearInterval(id);
+  }, [loadScores]);
+
+  // Always overlay the latest scores from the fast scores endpoint.
+  const scoredMatchups = applyScores(matchups, liveScores);
+  const liveCount = scoredMatchups.filter((m) => m.isLive).length;
+  const shown = liveOnly ? scoredMatchups.filter((m) => m.isLive) : scoredMatchups;
 
   const preferredGame =
     shown.find((m) => m.isLive) ??
@@ -428,7 +462,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     onAddLegToParlay({ name: w.playerName, team: w.team } as MLBPlayer, {
       id: `hrwatch-${w.playerId}`,
       market: 'Anytime HR',
-      odds: americanToDecimal(w.impliedOdds),
+      odds: parseAmericanOdds(w.impliedOdds),
       spec: `${w.playerName} Anytime HR`,
     });
   };

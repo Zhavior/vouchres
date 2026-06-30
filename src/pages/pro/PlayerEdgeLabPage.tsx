@@ -101,8 +101,8 @@ export default function PlayerEdgeLabPage() {
           />
         </section>
 
-        <aside className="rounded-[1.75rem] border border-sky-300/15 bg-slate-950/70 p-4 shadow-xl shadow-slate-950/50 backdrop-blur">
-          <div className="mb-4 flex items-center justify-between gap-3">
+        <aside className="flex flex-col overflow-hidden rounded-[1.75rem] border border-sky-300/15 bg-slate-950/70 p-4 shadow-xl shadow-slate-950/50 backdrop-blur lg:sticky lg:top-6 lg:max-h-[calc(100vh-5rem)]">
+          <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
                 Player Queue
@@ -113,7 +113,7 @@ export default function PlayerEdgeLabPage() {
               <Crown className="h-4 w-4" />
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {loading ? <div className="rounded-xl border border-slate-800 p-3 text-xs text-slate-500">Loading verified HR board candidates...</div> : null}
             {!loading && !rows.length ? <div className="rounded-xl border border-slate-800 p-3 text-xs text-slate-500">No verified player rows available.</div> : null}
             {rows.slice(0, 30).map((row, index) => {

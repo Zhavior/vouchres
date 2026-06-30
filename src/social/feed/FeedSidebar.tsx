@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell } from 'lucide-react';
+import { UserCircle, Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
@@ -43,7 +43,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   const enabledFeatures = getEnabledFeatures(layout, {
     canAccessThemeStore: canAccessThemeStore(profile),
     activeSport,
-  });
+  }).filter((feature) => !['feed', 'profile', 'settings'].includes(feature.id));
 
   // Split into ungrouped (top) + grouped sections, preserving order
   const ungrouped = enabledFeatures.filter((f) => !f.group);
@@ -95,6 +95,29 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
     );
   };
 
+  const topIconButton = (
+    section: string,
+    label: string,
+    Icon: React.ComponentType<{ className?: string }>,
+  ) => {
+    const isActive = activeSection === section;
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        onClick={() => onSectionChange(section)}
+        className={`grid h-11 w-11 place-items-center rounded-2xl border transition ${
+          isActive
+            ? 'border-cyan-300/50 bg-cyan-300/15 text-cyan-100 shadow-[0_0_18px_-8px_rgba(34,211,238,0.9)]'
+            : 'border-white/10 bg-white/5 text-slate-200 hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100'
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </button>
+    );
+  };
+
   const toggleMode = () => {
     const newMode = layout.mode === "beginner" ? "pro" : "beginner";
     const next = setViewMode(layout, newMode);
@@ -131,6 +154,11 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           </div>
         </div>
 
+        <div className="flex items-center justify-center gap-3" aria-label="Primary shortcuts">
+          {topIconButton('feed', 'Home Feed', Home)}
+          {topIconButton('profile', 'Profile', UserCircle)}
+        </div>
+
         {/* Sport Switcher */}
         <div className="flex flex-col xl:flex-row gap-1 rounded-2xl border border-white/[0.06] bg-black/30 p-1 shadow-inner shadow-black/40" id="sidebar-sport-switcher">
           {SPORT_LIST.map((sport) => {
@@ -165,16 +193,16 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
 
           {/* Grouped sections */}
           {grouped.map((section, idx) => (
-            <div
-              key={section.group}
-              className={`space-y-0.5 ${idx === 0 && ungrouped.length === 0 ? 'pt-1' : 'mt-2 pt-3 border-t border-white/[0.05]'}`}
-            >
-              <p className="hidden xl:block px-3.5 pb-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                {section.group}
-              </p>
-              {section.items.map(renderItem)}
-            </div>
-          ))}
+              <div
+                key={section.group}
+                className={`space-y-0.5 ${idx === 0 && ungrouped.length === 0 ? 'pt-1' : 'mt-2 pt-3 border-t border-white/[0.05]'}`}
+              >
+                <p className="hidden xl:block px-3.5 pb-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                  {section.group}
+                </p>
+                {section.items.map(renderItem)}
+              </div>
+            ))}
         </nav>
 
         {/* Primary CTA: Build Parlay */}
@@ -235,6 +263,21 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         >
           <Palette className="w-3 h-3" />
           <span className="hidden xl:inline">Customize Layout</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSectionChange("settings")}
+          aria-label="Settings"
+          title="Settings"
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors ${
+            activeSection === 'settings'
+              ? 'border border-cyan-300/30 bg-cyan-300/10 text-cyan-100'
+              : 'text-slate-500 hover:text-slate-300'
+          }`}
+          style={{ background: activeSection === 'settings' ? undefined : "rgba(255,255,255,0.02)", border: activeSection === 'settings' ? undefined : "1px solid rgba(255,255,255,0.04)" }}
+        >
+          <Settings className="w-3 h-3" />
+          <span className="hidden xl:inline">Settings</span>
         </button>
       </div>
     </aside>

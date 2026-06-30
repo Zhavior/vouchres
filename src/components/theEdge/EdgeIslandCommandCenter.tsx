@@ -1,13 +1,15 @@
 import { Bell, Crown, FlaskConical, Gauge, Map, Radio, ScrollText, Shield, Sparkles, Target, Trophy, UserCircle } from "lucide-react";
+import IslandWidgetGrid from "./IslandWidgetGrid";
 
 type Props = {
   onSectionChange?: (section: string) => void;
+  savedSlips?: unknown[];
 };
 
 const zones = [
   {
-    title: "Today’s Board",
-    subtitle: "AI picks, live games, high-run spots",
+    title: "Upcoming Games",
+    subtitle: "Live slate, upcoming games, high-run spots",
     section: "dashboard",
     icon: Target,
     tag: "Start here",
@@ -49,7 +51,7 @@ const zones = [
   },
 ];
 
-export default function EdgeIslandCommandCenter({ onSectionChange }: Props) {
+export default function EdgeIslandCommandCenter({ onSectionChange, savedSlips = [] }: Props) {
   const go = (section: string) => {
     if (onSectionChange) onSectionChange(section);
   };
@@ -70,7 +72,6 @@ export default function EdgeIslandCommandCenter({ onSectionChange }: Props) {
                 Your sports command island.
               </h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold text-slate-300 sm:text-base">
-                Start with today’s board, build parlays, research matchups, track your ledger, and unlock Pro tools without going back to the Welcome Portal.
               </p>
             </div>
 
@@ -93,6 +94,9 @@ export default function EdgeIslandCommandCenter({ onSectionChange }: Props) {
             </div>
           </div>
         </section>
+
+
+        <IslandWidgetGrid onSectionChange={onSectionChange} />
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[1.6fr_0.9fr]">
           <div className="rounded-[2rem] border border-white/10 bg-slate-900/60 p-5 backdrop-blur">
@@ -137,14 +141,14 @@ export default function EdgeIslandCommandCenter({ onSectionChange }: Props) {
                 Vouch AI Captain
               </h2>
               <p className="mt-3 text-sm font-semibold text-amber-50/85">
-                Today’s route: review the board first, save your strongest parlay, then check the Ledger Vault after games finish.
+                Island route: review upcoming games first, save your strongest parlay, then check the Ledger Vault after games finish.
               </p>
             </div>
 
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
               <h2 className="text-xl font-black">Daily Missions</h2>
               <div className="mt-4 space-y-3 text-sm font-bold text-slate-300">
-                <div className="rounded-2xl bg-white/5 p-3">✅ Open Today’s Board</div>
+                <div className="rounded-2xl bg-white/5 p-3">✅ Open Upcoming Games</div>
                 <div className="rounded-2xl bg-white/5 p-3">⬜ Save 1 parlay</div>
                 <div className="rounded-2xl bg-white/5 p-3">⬜ Review yesterday’s results</div>
               </div>
@@ -161,7 +165,62 @@ export default function EdgeIslandCommandCenter({ onSectionChange }: Props) {
             </div>
           </aside>
         </section>
-      </div>
-    </div>
-  );
-}
+        <section className="mt-5 rounded-[2rem] border border-white/10 bg-slate-900/60 p-5 backdrop-blur">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black">Upcoming Games</h2>
+              <p className="text-sm font-semibold text-slate-400">
+                Daily matchups, parlay starting points, and research shortcuts now live directly on The Edge Island.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => go("dashboard")}
+              className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-100 transition hover:bg-cyan-300/20"
+            >
+              Full Board
+            </button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[
+              {
+                game: "High-Run Watch",
+                matchup: "Best run environment",
+                note: "Use this card for totals, RBI, hits, and parlay starters.",
+                action: "Open Game Research",
+                section: "research",
+              },
+              {
+                game: "Pitcher Vulnerability",
+                matchup: "HR / hit-friendly arms",
+                note: "Jump into pitcher lab before choosing HR or bases props.",
+                action: "Open Pitcher Lab",
+                section: "pitchers",
+              },
+              {
+                game: "Saved Parlays Live Soon",
+                matchup: "Your tracked slips",
+                note: "Review saved slips before lock and track them in the ledger.",
+                action: "Open Parlay Dock",
+                section: "parlays",
+              },
+            ].map((card) => (
+              <button
+                key={card.game}
+                type="button"
+                onClick={() => go(card.section)}
+                className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-left transition hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-cyan-300/10"
+              >
+                <div className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">
+                  {card.game}
+                </div>
+                <h3 className="mt-2 text-lg font-black text-white">{card.matchup}</h3>
+                <p className="mt-2 text-sm font-semibold text-slate-400">{card.note}</p>
+                <div className="mt-4 text-xs font-black uppercase tracking-wide text-amber-200">
+                  {card.action} →
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>

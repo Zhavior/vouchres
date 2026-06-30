@@ -8,6 +8,12 @@ import {
 } from "lucide-react";
 import { Parlay, Leg, Vouch, FeedPost, CreatorProofProfile } from "../types";
 import { apiUrl } from "../lib/apiBase";
+import { americanToDecimal, decimalToAmerican, americanLabel } from "../lib/odds";
+
+/** A leg has a real, usable price only when odds is a finite American number. */
+function hasOdds(leg: Leg): leg is Leg & { odds: number } {
+  return typeof leg.odds === "number" && Number.isFinite(leg.odds) && leg.odds !== 0;
+}
 
 /**
  * ParlayStudio — Premium 3-panel parlay builder
@@ -125,12 +131,15 @@ export default function ParlayStudio({
   };
 
   // === Computed values ===
-  const combinedOdds = useMemo(() => {
-    if (legs.length === 0) return 0;
-    const decimal = legs.reduce((acc, leg) => acc * (leg.odds > 0 ? leg.odds / 100 + 1 : 100 / Math.abs(leg.odds) + 1), 1);
-    const american = decimal > 2 ? Math.round((decimal - 1) * 100) : Math.round(-100 / (decimal - 1));
-    return american;
+  // Combined odds are UNKNOWN (null) unless every leg has a real price. We never
+  // fabricate a total from placeholder odds.
+  const combined = useMemo<{ american: number | null; decimal: number | null }>(() => {
+    if (legs.length === 0) return { american: null, decimal: null };
+    if (!legs.every(hasOdds)) return { american: null, decimal: null };
+    const decimal = legs.reduce((acc, leg) => acc * americanToDecimal(leg.odds as number), 1);
+    return { american: decimalToAmerican(decimal), decimal: Number(decimal.toFixed(3)) };
   }, [legs]);
+  const combinedOdds = combined.american; // number | null
 
   const riskTier = useMemo(() => {
     if (legs.length === 0) return "—";
@@ -141,18 +150,16 @@ export default function ParlayStudio({
   }, [legs.length]);
 
   const weakestLeg = useMemo(() => {
-    if (legs.length === 0) return null;
-    return legs.reduce((min, leg) => {
-      const legScore = leg.odds > 0 ? 100 - Math.min(leg.odds, 50) : 100 - Math.min(Math.abs(leg.odds), 100);
-      const minScore = min.odds > 0 ? 100 - Math.min(min.odds, 50) : 100 - Math.min(Math.abs(min.odds), 100);
-      return legScore < minScore ? leg : min;
-    });
+    const priced = legs.filter(hasOdds);
+    if (priced.length === 0) return null;
+    const score = (o: number) => (o > 0 ? 100 - Math.min(o, 50) : 100 - Math.min(Math.abs(o), 100));
+    return priced.reduce((min, leg) => (score(leg.odds) < score(min.odds) ? leg : min));
   }, [legs]);
 
   const volatility = useMemo(() => {
     if (legs.length === 0) return 0;
     const base = legs.length * 15;
-    const highOddsLegs = legs.filter((l) => l.odds > 200).length * 10;
+    const highOddsLegs = legs.filter((l) => hasOdds(l) && l.odds > 200).length * 10;
     return Math.min(100, base + highOddsLegs);
   }, [legs]);
 
@@ -172,7 +179,7 @@ export default function ParlayStudio({
 
       if (legs.length > 4) warnings.push("5+ legs is high variance by construction");
       if (legs.length > 2) warnings.push("Each added leg lowers realistic hit rate");
-      if (weakestLeg && weakestLeg.odds > 300) warnings.push(`${weakestLeg.selection} is a longshot leg — high variance`);
+      if (weakestLeg && hasOdds(weakestLeg) && weakestLeg.odds > 300) warnings.push(`${weakestLeg.selection} is a longshot leg — high variance`);
       if (legs.some((l) => !l.game)) warnings.push("Some legs are missing game info");
 
       score = Math.max(10, Math.min(95, score + (legs.length <= 2 ? 15 : 0)));
@@ -201,8 +208,8 @@ export default function ParlayStudio({
       id: `parlay-${Date.now()}`,
       title: title || "Untitled Parlay",
       legs: [...legs],
-      totalOdds: combinedOdds > 0 ? `+${combinedOdds}` : `${combinedOdds}`,
-      oddsValue: combinedOdds,
+      totalOdds: americanLabel(combinedOdds), // "Odds TBD" when any leg price is unknown
+      oddsValue: combined.decimal ?? 0,
       riskTier: legs.length <= 1 ? "LOW" : legs.length <= 2 ? "MEDIUM" : "HIGH",
       status: "PENDING",
       createdAt: new Date().toISOString(),
@@ -453,7 +460,7 @@ function PickLibrary({ picks, search, setSearch, onAdd, activeLegIds, onSectionC
                   <div className="text-[9px] text-slate-500 truncate">{pick.game} · {pick.market}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-mono font-bold text-cyan-300">{pick.odds > 0 ? `+${pick.odds}` : pick.odds}</div>
+                  <div className="text-xs font-mono font-bold text-cyan-300">{americanLabel(pick.odds)}</div>
                   <div className="text-[8px] text-slate-600">{isActive ? "Added" : "Add"}</div>
                 </div>
               </button>
@@ -474,7 +481,7 @@ function ParlayCanvas({ legs, title, setTitle, onRemove, onMove, combinedOdds, r
   setTitle: (s: string) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: "up" | "down") => void;
-  combinedOdds: number;
+  combinedOdds: number | null;
   riskTier: string;
   weakestLeg: Leg | null;
   volatility: number;
@@ -531,7 +538,7 @@ function ParlayCanvas({ legs, title, setTitle, onRemove, onMove, combinedOdds, r
         </div>
         <div className="text-right">
           <div className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1">Combined</div>
-          <div className="text-sm font-mono font-bold text-cyan-300">{combinedOdds > 0 ? `+${combinedOdds}` : combinedOdds}</div>
+          <div className="text-sm font-mono font-bold text-cyan-300">{americanLabel(combinedOdds)}</div>
         </div>
       </div>
 
@@ -558,7 +565,7 @@ function ParlayCanvas({ legs, title, setTitle, onRemove, onMove, combinedOdds, r
         <div className="mt-4 p-3 rounded-xl flex items-start gap-2" style={{ background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.15)" }}>
           <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-red-300/80">
-            <span className="font-bold">Weakest leg:</span> {weakestLeg.selection} ({weakestLeg.odds > 0 ? `+${weakestLeg.odds}` : weakestLeg.odds})
+            <span className="font-bold">Weakest leg:</span> {weakestLeg.selection} ({americanLabel(weakestLeg.odds)})
           </div>
         </div>
       )}
@@ -582,7 +589,7 @@ function LegCard({ leg, index, isWeak, onRemove, onMoveUp, onMoveDown, isFirst, 
   isFirst: boolean;
   isLast: boolean;
 }) {
-  const legColor = isWeak ? "#f87171" : leg.odds > 200 ? "#fbbf24" : "#22d3ee";
+  const legColor = isWeak ? "#f87171" : (typeof leg.odds === "number" && leg.odds > 200) ? "#fbbf24" : "#22d3ee";
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -609,7 +616,7 @@ function LegCard({ leg, index, isWeak, onRemove, onMoveUp, onMoveDown, isFirst, 
           <div className="text-[9px] text-slate-500 truncate">{leg.game} · {leg.market}</div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-xs font-mono font-bold" style={{ color: legColor }}>{leg.odds > 0 ? `+${leg.odds}` : leg.odds}</div>
+          <div className="text-xs font-mono font-bold" style={{ color: legColor }}>{americanLabel(leg.odds)}</div>
         </div>
         {/* Reorder + remove */}
         <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -633,7 +640,7 @@ function LegCard({ leg, index, isWeak, onRemove, onMoveUp, onMoveDown, isFirst, 
    ===================================================================== */
 function SlipAndJudge({ legs, combinedOdds, riskTier, weakestLeg, volatility, mode, isAnalyzing, onJudge, judgeVerdict, onSave, onPost, onShare }: {
   legs: Leg[];
-  combinedOdds: number;
+  combinedOdds: number | null;
   riskTier: string;
   weakestLeg: Leg | null;
   volatility: number;
@@ -657,7 +664,7 @@ function SlipAndJudge({ legs, combinedOdds, riskTier, weakestLeg, volatility, mo
           </div>
           <div>
             <div className="text-[8px] text-slate-600 font-mono uppercase">Combined</div>
-            <div className="text-lg font-mono font-bold text-cyan-300">{legs.length > 0 ? (combinedOdds > 0 ? `+${combinedOdds}` : combinedOdds) : "—"}</div>
+            <div className="text-lg font-mono font-bold text-cyan-300">{legs.length > 0 ? americanLabel(combinedOdds) : "—"}</div>
           </div>
           <div>
             <div className="text-[8px] text-slate-600 font-mono uppercase">Risk</div>
@@ -754,7 +761,7 @@ function SlipAndJudge({ legs, combinedOdds, riskTier, weakestLeg, volatility, mo
 function VouchPreview({ legs, title, combinedOdds, riskTier, profile, onPost, onSave }: {
   legs: Leg[];
   title: string;
-  combinedOdds: number;
+  combinedOdds: number | null;
   riskTier: string;
   profile?: CreatorProofProfile;
   onPost: () => void;
@@ -801,7 +808,7 @@ function VouchPreview({ legs, title, combinedOdds, riskTier, profile, onPost, on
                 <span className="text-[9px] font-mono text-slate-600">{i + 1}.</span>
                 <span className="text-xs text-slate-300">{leg.selection}</span>
               </div>
-              <span className="text-xs font-mono text-slate-400">{leg.odds > 0 ? `+${leg.odds}` : leg.odds}</span>
+              <span className="text-xs font-mono text-slate-400">{americanLabel(leg.odds)}</span>
             </div>
           ))}
         </div>
@@ -810,7 +817,7 @@ function VouchPreview({ legs, title, combinedOdds, riskTier, profile, onPost, on
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="text-center p-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
             <div className="text-[8px] text-slate-600 font-mono uppercase">Combined</div>
-            <div className="text-xs font-bold font-mono text-cyan-300">{combinedOdds > 0 ? `+${combinedOdds}` : combinedOdds}</div>
+            <div className="text-xs font-bold font-mono text-cyan-300">{americanLabel(combinedOdds)}</div>
           </div>
           <div className="text-center p-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
             <div className="text-[8px] text-slate-600 font-mono uppercase">Risk</div>

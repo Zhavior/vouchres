@@ -16,7 +16,7 @@ import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
-import type { MatchupsResponse, GameMatchup } from "../types/matchup";
+import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
 
@@ -135,6 +135,7 @@ export const vouchedgeApi = {
   // Live Games matchups
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
+  scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),
 
   // Daily HR Board
   hrBoardToday: (previewLimit?: number) => hrBoardTodayWithDevFallback(previewLimit),

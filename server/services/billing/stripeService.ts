@@ -15,6 +15,16 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   typescript: true,
 });
 
+export function isStripeConfigured(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+}
+
+function assertStripeConfigured() {
+  if (!isStripeConfigured()) {
+    throw new Error("stripe_secret_key_not_configured");
+  }
+}
+
 /**
  * Price IDs per tier. Configure in Stripe dashboard, then paste IDs here
  * (or load from env). These are product/price IDs, not plan IDs.
@@ -34,6 +44,7 @@ export const STRIPE_PRICES: Record<string, { tier: "gold" | "seller_pro"; priceI
  * Create or reuse a Stripe customer for a profile.
  */
 export async function ensureStripeCustomer(profileId: string, email: string) {
+  assertStripeConfigured();
   const supabaseAdmin = await getSupabaseAdmin();
   // Check if profile already has a stripe_customer_id
   const { data: profile } = await supabaseAdmin
@@ -44,7 +55,8 @@ export async function ensureStripeCustomer(profileId: string, email: string) {
 
   if (profile?.stripe_customer_id) {
     try {
-      return await stripe.customers.retrieve(profile.stripe_customer_id);
+      const existing = await stripe.customers.retrieve(profile.stripe_customer_id);
+      if (!existing.deleted) return existing;
     } catch (err) {
       // Customer was deleted in Stripe dashboard — fall through to create
     }
@@ -74,6 +86,7 @@ export async function createCheckoutSession(opts: {
   successUrl: string;
   cancelUrl: string;
 }) {
+  assertStripeConfigured();
   const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
 
   return stripe.checkout.sessions.create({
@@ -82,6 +95,7 @@ export async function createCheckoutSession(opts: {
     line_items: [{ price: opts.priceId, quantity: 1 }],
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
+    client_reference_id: opts.profileId,
     metadata: {
       profile_id: opts.profileId,
       target_tier: STRIPE_PRICES[opts.priceId]?.tier ?? "unknown",
@@ -89,6 +103,7 @@ export async function createCheckoutSession(opts: {
     subscription_data: {
       metadata: {
         profile_id: opts.profileId,
+        target_tier: STRIPE_PRICES[opts.priceId]?.tier ?? "unknown",
       },
     },
     allow_promotion_codes: true,
@@ -101,23 +116,45 @@ export async function createCheckoutSession(opts: {
  */
 export async function createPortalSession(opts: {
   profileId: string;
+  email?: string;
   returnUrl: string;
 }) {
+  assertStripeConfigured();
   const supabaseAdmin = await getSupabaseAdmin();
-  const { data: profile } = await supabaseAdmin
+  const { data: profile, error: profileErr } = await supabaseAdmin
     .from("profiles")
     .select("stripe_customer_id")
     .eq("id", opts.profileId)
     .single();
 
-  if (!profile?.stripe_customer_id) {
-    throw new Error("No Stripe customer found for this profile");
+  if (profileErr) {
+    console.error("[stripe] profile lookup failed:", profileErr.message);
   }
 
-  return stripe.billingPortal.sessions.create({
-    customer: profile.stripe_customer_id,
-    return_url: opts.returnUrl,
-  });
+  const customerId = profile?.stripe_customer_id
+    ? profile.stripe_customer_id
+    : ((await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer).id;
+
+  try {
+    return await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: opts.returnUrl,
+    });
+  } catch (err: any) {
+    // Detect the most common setup mistake: portal not configured in Stripe Dashboard.
+    const msg: string = err?.message ?? "";
+    if (
+      err?.type === "StripeInvalidRequestError" &&
+      (err?.code === "no_default_portal_configuration" ||
+        msg.toLowerCase().includes("no default configuration") ||
+        msg.toLowerCase().includes("no configuration was provided"))
+    ) {
+      const cfg = new Error("billing_portal_not_configured") as Error & { stripeRaw?: unknown };
+      cfg.stripeRaw = err;
+      throw cfg;
+    }
+    throw err;
+  }
 }
 
 /**
@@ -132,8 +169,18 @@ export function tierFromPriceId(priceId: string): "gold" | "seller_pro" | null {
  * Called from the webhook handler on every subscription event.
  */
 export async function syncSubscription(subscription: Stripe.Subscription) {
+  assertStripeConfigured();
   const supabaseAdmin = await getSupabaseAdmin();
-  const profileId = subscription.metadata.profile_id;
+  let profileId = subscription.metadata.profile_id;
+  if (!profileId) {
+    const { data: existing } = await supabaseAdmin
+      .from("subscriptions")
+      .select("profile_id")
+      .eq("stripe_subscription_id", subscription.id)
+      .maybeSingle();
+    profileId = existing?.profile_id ?? "";
+  }
+
   if (!profileId) {
     console.error("[stripe] subscription has no profile_id metadata", subscription.id);
     return;

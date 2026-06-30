@@ -3,11 +3,12 @@ import { Flame, Plus, ChevronRight } from 'lucide-react';
 import type { HrBoardGame, HrBoardRow } from '../../types/hrBoard';
 import type { MLBPlayer } from '../../types';
 import { Card, RiskBadge, ScorePill } from '../ui/primitives';
+import { parseAmericanOdds } from '../../lib/odds';
 
 interface Props {
   games: HrBoardGame[];
   onSelect: (row: HrBoardRow) => void;
-  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
+  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number }) => void;
 }
 
 const TIERS: { key: string; title: string; sub: string; color: string; match: (r: HrBoardRow) => boolean }[] = [
@@ -17,11 +18,6 @@ const TIERS: { key: string; title: string; sub: string; color: string; match: (r
   { key: 'avoid', title: 'Avoid / Trap Picks', sub: 'Weak modeled HR equity', color: '#f87171', match: (r) => r.grade === 'D' || r.grade === 'F' },
 ];
 
-function americanToDecimal(am?: string | null): number {
-  const n = parseInt(String(am ?? ""), 10);
-  if (!Number.isFinite(n) || Number.isNaN(n)) return 1;
-  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
-}
 
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
@@ -149,12 +145,12 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
               <div
                 role="button"
                 tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk }); }}
+                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk }); }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
-                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: americanToDecimal(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk });
+                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk });
                   }
                 }}
                 className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10 cursor-pointer">

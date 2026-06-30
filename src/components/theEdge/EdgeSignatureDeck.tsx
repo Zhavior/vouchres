@@ -36,7 +36,7 @@ const proofCards = [
 ];
 
 const islandActions = [
-  ['Open Today’s Board', 'daily_players', Flame],
+  ['Open Upcoming Games', 'upcoming_games', Flame],
   ['Check Alerts', 'notifications', Bell],
   ['Build Parlay', 'parlay_lab', Compass],
   ['View Results', 'results', Activity],
@@ -93,7 +93,7 @@ export default function EdgeSignatureDeck({ mode, onGo }: EdgeSignatureDeckProps
               onClick={() => onGo('daily_players')}
               className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5"
             >
-              Preview Today’s Board
+              Preview Upcoming Games
             </button>
           </div>
         </div>
