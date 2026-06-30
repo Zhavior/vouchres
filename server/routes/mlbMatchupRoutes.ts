@@ -1,6 +1,6 @@
 /** Premium Live Games matchup routes. */
 import type { Express, Request, Response } from "express";
-import { getGameMatchups, getGameMatchup } from "../services/mlb/gameMatchupService";
+import { getGameMatchups, getGameMatchup, getMatchupMatrix } from "../services/mlb/gameMatchupService";
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { TTLCache } from "../lib/cache";
 
@@ -38,6 +38,18 @@ export function registerMatchupRoutes(app: Express): void {
   app.get("/api/mlb/matchups/date/:date", async (req: Request, res: Response) => {
     const matchups = await getGameMatchups(req.params.date);
     res.json({ count: matchups.length, matchups, generatedAt: new Date().toISOString() });
+  });
+
+  app.get("/api/mlb/matchup-matrix", async (req: Request, res: Response) => {
+    try {
+      const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const matrix = await getMatchupMatrix(date);
+      res.json(matrix);
+    } catch (err: any) {
+      console.error("[matchup-matrix] failed:", err?.message);
+      res.status(500).json({ error: "matchup_matrix_fetch_failed" });
+    }
   });
 
   app.get("/api/mlb/matchup/:gamePk", async (req: Request, res: Response) => {
