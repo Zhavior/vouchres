@@ -1001,6 +1001,36 @@ ${legs.map((leg: any, i: number) => {
     }
   });
 
+  app.get("/api/mlb/matchup-matrix/live", async (req, res) => {
+    try {
+      const requestedDate = typeof req.query.date === "string" ? req.query.date : undefined;
+      const date = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : undefined;
+      const { getLiveMatchupMatrix } = await import("./server/services/mlb/gameMatchupService");
+      const matrix = await getLiveMatchupMatrix(date);
+      res.json(matrix);
+    } catch (error: any) {
+      res.status(500).json({
+        error: "Failed to load live matchup matrix",
+        message: error?.message || "Unknown error",
+      });
+    }
+  });
+
+  app.get("/api/mlb/matchup-matrix", async (req, res) => {
+    try {
+      const requestedDate = typeof req.query.date === "string" ? req.query.date : undefined;
+      const date = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : undefined;
+      const { getMatchupMatrix } = await import("./server/services/mlb/gameMatchupService");
+      const matrix = await getMatchupMatrix(date);
+      res.json(matrix);
+    } catch (error: any) {
+      res.status(500).json({
+        error: "Failed to load matchup matrix",
+        message: error?.message || "Unknown error",
+      });
+    }
+  });
+
   app.get("/api/mlb/matchup/:gamePk", async (req, res) => {
     try {
       const report = await fetchMlbSchedule();
@@ -1018,6 +1048,29 @@ ${legs.map((leg: any, i: number) => {
     } catch (error: any) {
       res.status(500).json({
         error: "Failed to load matchup",
+        message: error?.message || "Unknown error",
+      });
+    }
+  });
+
+  app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", async (req, res) => {
+    try {
+      const gamePk = Number(req.params.gamePk);
+      const pitcherId = Number(req.params.pitcherId);
+      if (!Number.isFinite(gamePk) || !Number.isFinite(pitcherId)) {
+        return res.status(400).json({ error: "invalid_ids" });
+      }
+
+      const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
+        ? req.query.date
+        : undefined;
+      const { getPitcherMatchup } = await import("./server/services/mlb/pitcherMatchupService");
+      const result = await getPitcherMatchup(gamePk, pitcherId, date);
+      if (!result) return res.status(404).json({ error: "pitcher_matchup_not_found" });
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({
+        error: "Failed to load pitcher matchup",
         message: error?.message || "Unknown error",
       });
     }

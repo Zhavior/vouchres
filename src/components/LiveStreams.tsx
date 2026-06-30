@@ -31,6 +31,7 @@ import {
   Lock
 } from 'lucide-react';
 import { Vouch } from '../types';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface LiveStreamsProps {
   onSaveVouch: (vouch: Vouch) => void;

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Settings, Play, Pause, Zap, Grid, EyeOff, Sparkles } from 'lucide-react';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface LaserLine {
   coord: number; // static position

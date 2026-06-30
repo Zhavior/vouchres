@@ -1,0 +1,1193 @@
+:root {
+  --ve-bg: #020617;
+  --ve-bg-soft: #07111f;
+  --ve-panel: rgba(15, 23, 42, 0.72);
+  --ve-panel-strong: rgba(2, 6, 23, 0.92);
+
+  --ve-border: rgba(148, 163, 184, 0.16);
+  --ve-border-strong: rgba(34, 211, 238, 0.32);
+
+  --ve-text: #f8fafc;
+  --ve-muted: #94a3b8;
+  --ve-faint: #64748b;
+
+  --ve-cyan: #22d3ee;
+  --ve-blue: #38bdf8;
+  --ve-emerald: #34d399;
+  --ve-purple: #a78bfa;
+  --ve-amber: #fbbf24;
+  --ve-rose: #fb7185;
+
+  --ve-radius-lg: 1rem;
+  --ve-radius-xl: 1.25rem;
+  --ve-radius-2xl: 1.5rem;
+  --ve-radius-3xl: 2rem;
+
+  --ve-shadow-cyber: 0 24px 80px rgba(8, 47, 73, 0.32);
+  --ve-shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.ve-app-bg {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(34, 211, 238, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 15%, rgba(167, 139, 250, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 95%, rgba(16, 185, 129, 0.08), transparent 36%),
+    var(--ve-bg);
+  color: var(--ve-text);
+}
+
+.ve-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ve-border);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(2, 6, 23, 0.92));
+  border-radius: var(--ve-radius-3xl);
+  box-shadow: var(--ve-shadow-soft);
+}
+
+.ve-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.75), transparent);
+  pointer-events: none;
+}
+
+.ve-panel-glow {
+  box-shadow: var(--ve-shadow-cyber);
+}
+
+.ve-card {
+  border: 1px solid var(--ve-border);
+  background: rgba(15, 23, 42, 0.58);
+  border-radius: var(--ve-radius-2xl);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+.ve-card-hover {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.ve-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--ve-border-strong);
+  box-shadow: 0 24px 70px rgba(8, 47, 73, 0.28);
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.ve-button-primary {
+  border: 1px solid rgba(103, 232, 249, 0.25);
+  background: linear-gradient(90deg, #0284c7, #06b6d4, #10b981);
+  color: white;
+  border-radius: 1rem;
+  font-weight: 900;
+  box-shadow: 0 18px 45px rgba(8, 145, 178, 0.28);
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
+.ve-button-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 24px 65px rgba(8, 145, 178, 0.38);
+}
+
+.ve-button-ghost {
+  border: 1px solid var(--ve-border);
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--ve-muted);
+  border-radius: 1rem;
+  transition: all 180ms ease;
+}
+
+.ve-button-ghost:hover {
+  border-color: rgba(34, 211, 238, 0.28);
+  color: var(--ve-text);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.ve-kicker {
+  color: var(--ve-cyan);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.ve-title-gradient {
+  background: linear-gradient(90deg, #f8fafc, #22d3ee, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ve-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  background: rgba(34, 211, 238, 0.09);
+  color: #a5f3fc;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ve-badge-good {
+  border-color: rgba(52, 211, 153, 0.24);
+  background: rgba(52, 211, 153, 0.1);
+  color: #a7f3d0;
+}
+
+.ve-badge-risk {
+  border-color: rgba(251, 191, 36, 0.24);
+  background: rgba(251, 191, 36, 0.1);
+  color: #fde68a;
+}
+
+.ve-badge-danger {
+  border-color: rgba(251, 113, 133, 0.24);
+  background: rgba(251, 113, 133, 0.1);
+  color: #fecdd3;
+}
+
+.ve-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.18), transparent);
+}
+
+.ve-grid-bg {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.ve-page {
+  min-height: 100vh;
+  color: var(--ve-text);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.11), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(167, 139, 250, 0.10), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 34%),
+    #020617;
+}
+
+.ve-page-shell {
+  width: min(100%, 1280px);
+  margin-inline: auto;
+  padding: 1.5rem;
+}
+
+.ve-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(8, 47, 73, 0.22), rgba(2, 6, 23, 0.96));
+  border-radius: 2rem;
+  box-shadow: 0 28px 90px rgba(8, 47, 73, 0.28);
+}
+
+.ve-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.8), transparent);
+}
+
+.ve-stat {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.76), rgba(2, 6, 23, 0.86));
+  border-radius: 1.5rem;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.24);
+}
+
+.ve-input {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.72);
+  color: var(--ve-text);
+  border-radius: 1rem;
+  outline: none;
+}
+
+.ve-input:focus {
+  border-color: rgba(34, 211, 238, 0.42);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.09);
+}
+
+.ve-sidebar {
+  border-right: 1px solid rgba(34, 211, 238, 0.14);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.12), transparent 35%),
+    rgba(2, 6, 23, 0.9);
+  backdrop-filter: blur(18px);
+}
+
+.ve-nav-item {
+  border: 1px solid transparent;
+  color: var(--ve-muted);
+  border-radius: 1rem;
+  transition: all 180ms ease;
+}
+
+.ve-nav-item:hover {
+  border-color: rgba(34, 211, 238, 0.18);
+  background: rgba(34, 211, 238, 0.06);
+  color: var(--ve-text);
+}
+
+.ve-nav-item-active {
+  border-color: rgba(34, 211, 238, 0.34);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.14), rgba(59, 130, 246, 0.08));
+  color: white;
+  box-shadow: 0 18px 48px rgba(8, 47, 73, 0.24);
+}
+
+/* --------------------------------------------------------------------------
+   VouchEdge Legacy Slate Skin
+   Purpose: make old hardcoded bg-slate/border-slate pages inherit the new
+   cyber theme before every component is manually migrated.
+   -------------------------------------------------------------------------- */
+
+.ve-page [class*="bg-slate-950"],
+.ve-app-bg [class*="bg-slate-950"] {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.94)) !important;
+}
+
+.ve-page [class*="bg-slate-900"],
+.ve-app-bg [class*="bg-slate-900"] {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(8, 47, 73, 0.18)) !important;
+}
+
+.ve-page [class*="border-slate-8"],
+.ve-page [class*="border-slate-9"],
+.ve-app-bg [class*="border-slate-8"],
+.ve-app-bg [class*="border-slate-9"] {
+  border-color: rgba(34, 211, 238, 0.14) !important;
+}
+
+.ve-page [class*="rounded-3xl"],
+.ve-app-bg [class*="rounded-3xl"] {
+  box-shadow: 0 20px 70px rgba(8, 47, 73, 0.16);
+}
+
+.ve-page [class*="shadow-2xl"],
+.ve-app-bg [class*="shadow-2xl"] {
+  box-shadow: 0 28px 90px rgba(8, 47, 73, 0.22) !important;
+}
+
+.ve-page input,
+.ve-page select,
+.ve-page textarea,
+.ve-app-bg input,
+.ve-app-bg select,
+.ve-app-bg textarea {
+  border-color: rgba(34, 211, 238, 0.18) !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+}
+
+.ve-page input:focus,
+.ve-page select:focus,
+.ve-page textarea:focus,
+.ve-app-bg input:focus,
+.ve-app-bg select:focus,
+.ve-app-bg textarea:focus {
+  border-color: rgba(34, 211, 238, 0.44) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08) !important;
+}
+
+.ve-page button[class*="bg-slate-"],
+.ve-app-bg button[class*="bg-slate-"] {
+  border-color: rgba(34, 211, 238, 0.16) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+}
+
+.ve-page button[class*="bg-slate-"]:hover,
+.ve-app-bg button[class*="bg-slate-"]:hover {
+  border-color: rgba(34, 211, 238, 0.34) !important;
+  background: rgba(8, 47, 73, 0.34) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Home Feed Width + Border Softening Pass
+   -------------------------------------------------------------------------- */
+
+.ve-page [class*="border-white/"],
+.ve-app-bg [class*="border-white/"] {
+  border-color: rgba(34, 211, 238, 0.12) !important;
+}
+
+.ve-page [class*="ring-white/"],
+.ve-app-bg [class*="ring-white/"] {
+  --tw-ring-color: rgba(34, 211, 238, 0.14) !important;
+}
+
+.ve-page [class*="divide-white/"],
+.ve-app-bg [class*="divide-white/"] {
+  border-color: rgba(34, 211, 238, 0.10) !important;
+}
+
+.ve-feed-glass {
+  border: 1px solid rgba(34, 211, 238, 0.13);
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.58), rgba(2, 6, 23, 0.72));
+  box-shadow: 0 20px 70px rgba(8, 47, 73, 0.16);
+  backdrop-filter: blur(18px);
+}
+
+.ve-feed-soft-border {
+  border-color: rgba(34, 211, 238, 0.12) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 18px 55px rgba(0, 0, 0, 0.22);
+}
+
+.ve-feed-center-wide {
+  width: min(100%, 860px);
+  margin-inline: auto;
+}
+
+/* Strong feed de-white pass */
+.ve-page [class*="border-white"],
+.ve-app-bg [class*="border-white"],
+[class*="HomeFeed"] [class*="border-white"] {
+  border-color: rgba(34, 211, 238, 0.08) !important;
+}
+
+.ve-page [class*="ring-white"],
+.ve-app-bg [class*="ring-white"] {
+  --tw-ring-color: rgba(34, 211, 238, 0.10) !important;
+}
+
+.ve-page [class*="bg-black"],
+.ve-app-bg [class*="bg-black"] {
+  background-color: rgba(2, 6, 23, 0.36) !important;
+}
+
+.ve-soft-feed-card {
+  border-color: rgba(34, 211, 238, 0.08) !important;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(2, 6, 23, 0.58)) !important;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 70px rgba(8, 47, 73, 0.14);
+}
+
+/* Home feed final de-border pass */
+.ve-feed-shell,
+.ve-feed-shell * {
+  --ve-feed-border: rgba(34, 211, 238, 0.055);
+}
+
+.ve-feed-shell [class*="border-"] {
+  border-color: var(--ve-feed-border) !important;
+}
+
+.ve-feed-shell [class*="bg-slate-950"],
+.ve-feed-shell [class*="bg-[#020617]"],
+.ve-feed-shell [class*="bg-black"] {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.28), rgba(2, 6, 23, 0.48)) !important;
+  backdrop-filter: blur(18px);
+}
+
+.ve-feed-shell [class*="shadow-"] {
+  box-shadow: 0 18px 65px rgba(8, 47, 73, 0.10) !important;
+}
+
+/* ==========================================================
+   VOUCH EDGE PLUG-IN BACKGROUND THEMES
+   Change <html data-ve-theme="..."> to swap the whole app.
+   ========================================================== */
+
+:root,
+[data-ve-theme="cyber"] {
+  --ve-bg-base: #020617;
+  --ve-bg-radial-1: rgba(34, 211, 238, 0.13);
+  --ve-bg-radial-2: rgba(167, 139, 250, 0.11);
+  --ve-bg-radial-3: rgba(16, 185, 129, 0.08);
+  --ve-bg-grid: rgba(34, 211, 238, 0.045);
+  --ve-bg-panel: rgba(2, 6, 23, 0.58);
+  --ve-accent: #22d3ee;
+}
+
+[data-ve-theme="gold"] {
+  --ve-bg-base: #080504;
+  --ve-bg-radial-1: rgba(251, 191, 36, 0.16);
+  --ve-bg-radial-2: rgba(249, 115, 22, 0.12);
+  --ve-bg-radial-3: rgba(168, 85, 247, 0.08);
+  --ve-bg-grid: rgba(251, 191, 36, 0.045);
+  --ve-bg-panel: rgba(24, 12, 4, 0.58);
+  --ve-accent: #fbbf24;
+}
+
+[data-ve-theme="royal"] {
+  --ve-bg-base: #07051a;
+  --ve-bg-radial-1: rgba(168, 85, 247, 0.16);
+  --ve-bg-radial-2: rgba(59, 130, 246, 0.12);
+  --ve-bg-radial-3: rgba(236, 72, 153, 0.08);
+  --ve-bg-grid: rgba(168, 85, 247, 0.045);
+  --ve-bg-panel: rgba(13, 8, 32, 0.58);
+  --ve-accent: #a78bfa;
+}
+
+[data-ve-theme="fire"] {
+  --ve-bg-base: #090202;
+  --ve-bg-radial-1: rgba(239, 68, 68, 0.16);
+  --ve-bg-radial-2: rgba(249, 115, 22, 0.13);
+  --ve-bg-radial-3: rgba(251, 191, 36, 0.08);
+  --ve-bg-grid: rgba(248, 113, 113, 0.045);
+  --ve-bg-panel: rgba(30, 6, 6, 0.58);
+  --ve-accent: #fb7185;
+}
+
+[data-ve-theme="ocean"] {
+  --ve-bg-base: #021014;
+  --ve-bg-radial-1: rgba(45, 212, 191, 0.16);
+  --ve-bg-radial-2: rgba(14, 165, 233, 0.13);
+  --ve-bg-radial-3: rgba(16, 185, 129, 0.09);
+  --ve-bg-grid: rgba(45, 212, 191, 0.045);
+  --ve-bg-panel: rgba(4, 22, 27, 0.58);
+  --ve-accent: #2dd4bf;
+}
+
+.ve-themed-bg,
+.ve-page,
+.ve-app-bg,
+body {
+  background:
+    radial-gradient(circle at 18% 8%, var(--ve-bg-radial-1), transparent 26%),
+    radial-gradient(circle at 82% 16%, var(--ve-bg-radial-2), transparent 30%),
+    radial-gradient(circle at 50% 100%, var(--ve-bg-radial-3), transparent 36%),
+    var(--ve-bg-base) !important;
+}
+
+.ve-grid-bg {
+  background-image:
+    linear-gradient(var(--ve-bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ve-bg-grid) 1px, transparent 1px),
+    radial-gradient(circle at 18% 8%, var(--ve-bg-radial-1), transparent 26%),
+    radial-gradient(circle at 82% 16%, var(--ve-bg-radial-2), transparent 30%) !important;
+  background-size: 36px 36px, 36px 36px, auto, auto !important;
+}
+
+.ve-theme-panel,
+.ve-panel,
+.ve-card,
+.ve-feed-shell [class*="border"] {
+  background-color: var(--ve-bg-panel) !important;
+}
+
+.ve-theme-accent {
+  color: var(--ve-accent) !important;
+}
+
+/* ==========================================================
+   THEME-REACTIVE TRANSLUCENT SIDEBAR
+   Sidebar now reacts to data-ve-theme changes.
+   ========================================================== */
+
+:root,
+[data-ve-theme="cyber"] {
+  --ve-sidebar-bg: rgba(2, 6, 23, 0.44);
+  --ve-sidebar-bg-strong: rgba(2, 6, 23, 0.62);
+  --ve-sidebar-border: rgba(34, 211, 238, 0.10);
+  --ve-sidebar-glow: rgba(34, 211, 238, 0.18);
+  --ve-sidebar-active: rgba(34, 211, 238, 0.16);
+}
+
+[data-ve-theme="gold"] {
+  --ve-sidebar-bg: rgba(20, 12, 2, 0.42);
+  --ve-sidebar-bg-strong: rgba(28, 16, 3, 0.60);
+  --ve-sidebar-border: rgba(251, 191, 36, 0.13);
+  --ve-sidebar-glow: rgba(251, 191, 36, 0.20);
+  --ve-sidebar-active: rgba(251, 191, 36, 0.16);
+}
+
+[data-ve-theme="royal"] {
+  --ve-sidebar-bg: rgba(9, 5, 26, 0.42);
+  --ve-sidebar-bg-strong: rgba(12, 8, 34, 0.60);
+  --ve-sidebar-border: rgba(167, 139, 250, 0.13);
+  --ve-sidebar-glow: rgba(167, 139, 250, 0.20);
+  --ve-sidebar-active: rgba(167, 139, 250, 0.16);
+}
+
+[data-ve-theme="fire"] {
+  --ve-sidebar-bg: rgba(22, 3, 3, 0.42);
+  --ve-sidebar-bg-strong: rgba(31, 6, 6, 0.60);
+  --ve-sidebar-border: rgba(251, 113, 133, 0.13);
+  --ve-sidebar-glow: rgba(251, 113, 133, 0.20);
+  --ve-sidebar-active: rgba(251, 113, 133, 0.16);
+}
+
+[data-ve-theme="ocean"] {
+  --ve-sidebar-bg: rgba(2, 18, 20, 0.42);
+  --ve-sidebar-bg-strong: rgba(4, 25, 28, 0.60);
+  --ve-sidebar-border: rgba(45, 212, 191, 0.13);
+  --ve-sidebar-glow: rgba(45, 212, 191, 0.20);
+  --ve-sidebar-active: rgba(45, 212, 191, 0.16);
+}
+
+.ve-sidebar {
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 0%, var(--ve-sidebar-glow), transparent 34%),
+    linear-gradient(180deg, var(--ve-sidebar-bg-strong), var(--ve-sidebar-bg)) !important;
+  border-right: 1px solid var(--ve-sidebar-border) !important;
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.025),
+    20px 0 80px rgba(0, 0, 0, 0.18) !important;
+}
+
+.ve-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.025), transparent),
+    radial-gradient(circle at 20% 12%, var(--ve-sidebar-glow), transparent 26%);
+  opacity: 0.8;
+}
+
+.ve-sidebar [class*="bg-slate-"],
+.ve-sidebar [class*="bg-black"],
+.ve-sidebar [class*="bg-[#020617]"] {
+  background: rgba(2, 6, 23, 0.22) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ve-sidebar [class*="border-"] {
+  border-color: var(--ve-sidebar-border) !important;
+}
+
+.ve-sidebar button,
+.ve-sidebar a {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ve-sidebar button:hover,
+.ve-sidebar a:hover {
+  background: var(--ve-sidebar-active) !important;
+  border-color: var(--ve-sidebar-border) !important;
+}
+
+.ve-sidebar .ve-sidebar-active,
+.ve-sidebar [aria-current="page"] {
+  background: var(--ve-sidebar-active) !important;
+  border-color: var(--ve-sidebar-border) !important;
+}
+
+/* ==========================================================
+   NATURAL SIDEBAR RESET
+   Dark translucent glass, soft white lift, subtle theme border.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+    linear-gradient(180deg, rgba(2,6,23,0.72), rgba(1,3,10,0.58)) !important;
+  border-right: 1px solid rgba(255,255,255,0.075) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255,255,255,0.055),
+    18px 0 70px rgba(0,0,0,0.28) !important;
+  backdrop-filter: blur(26px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.15) !important;
+}
+
+/* Sidebar cards: soft glass, not neon */
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.065), rgba(2,6,23,0.34)) !important;
+  border-color: rgba(255,255,255,0.075) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.045),
+    0 14px 34px rgba(0,0,0,0.18) !important;
+}
+
+/* Nav rows natural by default */
+#root .ve-sidebar button,
+#root .ve-sidebar a {
+  background: transparent !important;
+  color: rgba(226,232,240,0.82) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Icons slightly brighter than words */
+#root .ve-sidebar svg {
+  color: rgba(226,232,240,0.86) !important;
+  stroke: currentColor !important;
+  filter: none !important;
+}
+
+/* Group labels muted */
+#root .ve-sidebar [class*="uppercase"],
+#root .ve-sidebar [class*="tracking"] {
+  color: rgba(148,163,184,0.72) !important;
+}
+
+/* Active + hover: soft white with tiny theme tint */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.082), rgba(255,255,255,0.032)) !important;
+  color: rgba(248,250,252,0.96) !important;
+  border-color: rgba(255,255,255,0.105) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 12px 30px rgba(0,0,0,0.18) !important;
+}
+
+#root .ve-sidebar button:hover *,
+#root .ve-sidebar a:hover *,
+#root .ve-sidebar .ve-nav-item-active *,
+#root .ve-sidebar [aria-current="page"] * {
+  color: rgba(248,250,252,0.96) !important;
+}
+
+/* Keep account/pro badges readable */
+#root .ve-sidebar [class*="rounded-full"] {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: rgba(248,250,252,0.90) !important;
+}
+
+/* ==========================================================
+   SIDEBAR FINAL NATURAL FIX
+   Words white. Sidebar transparent. Icons keep original colors.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+    linear-gradient(180deg, rgba(2,6,23,0.70), rgba(1,3,10,0.52)) !important;
+  border-right: 1px solid rgba(255,255,255,0.085) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255,255,255,0.055),
+    18px 0 70px rgba(0,0,0,0.26) !important;
+  backdrop-filter: blur(26px) saturate(1.14) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.14) !important;
+}
+
+/* Natural transparent inner cards */
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.060), rgba(2,6,23,0.30)) !important;
+  border-color: rgba(255,255,255,0.075) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.040),
+    0 14px 34px rgba(0,0,0,0.16) !important;
+}
+
+/* Sidebar words white */
+#root .ve-sidebar button,
+#root .ve-sidebar a,
+#root .ve-sidebar span,
+#root .ve-sidebar p,
+#root .ve-sidebar div {
+  color: rgba(248,250,252,0.90) !important;
+}
+
+/* Group labels softer white/gray */
+#root .ve-sidebar [class*="uppercase"],
+#root .ve-sidebar [class*="tracking"],
+#root .ve-sidebar small {
+  color: rgba(203,213,225,0.62) !important;
+}
+
+/* IMPORTANT: icons stay same/original */
+#root .ve-sidebar svg {
+  color: inherit;
+  stroke: currentColor;
+  filter: none !important;
+}
+
+/* Nav rows natural */
+#root .ve-sidebar button,
+#root .ve-sidebar a {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hover/active = soft glass, words white */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.090), rgba(255,255,255,0.035)) !important;
+  color: rgba(255,255,255,0.98) !important;
+  border-color: rgba(255,255,255,0.110) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.060),
+    0 12px 30px rgba(0,0,0,0.16) !important;
+}
+
+#root .ve-sidebar button:hover *,
+#root .ve-sidebar a:hover *,
+#root .ve-sidebar .ve-nav-item-active *,
+#root .ve-sidebar [aria-current="page"] * {
+  color: rgba(255,255,255,0.98) !important;
+}
+
+/* But do not add icon glow/filter */
+#root .ve-sidebar button:hover svg,
+#root .ve-sidebar a:hover svg,
+#root .ve-sidebar .ve-nav-item-active svg,
+#root .ve-sidebar [aria-current="page"] svg {
+  filter: none !important;
+}
+
+/* Badges readable, natural */
+#root .ve-sidebar [class*="rounded-full"] {
+  background: rgba(255,255,255,0.070) !important;
+  border-color: rgba(255,255,255,0.105) !important;
+  color: rgba(248,250,252,0.92) !important;
+}
+
+/* ==========================================================
+   SIDEBAR NEUTRAL GLASS — REMOVE EMERALD/BLUE/GREEN TINT
+   Words white. Sidebar transparent. Icons keep their original classes.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.060), rgba(255,255,255,0.018)),
+    linear-gradient(180deg, rgba(8,10,16,0.72), rgba(3,5,10,0.54)) !important;
+  border-right: 1px solid rgba(255,255,255,0.090) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255,255,255,0.055),
+    18px 0 70px rgba(0,0,0,0.28) !important;
+  backdrop-filter: blur(26px) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.05) !important;
+}
+
+/* Remove cyan/emerald/blue tint from sidebar glass panels */
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"],
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-cyan"],
+#root .ve-sidebar [class*="bg-sky"],
+#root .ve-sidebar [class*="bg-blue"],
+#root .ve-sidebar [class*="bg-emerald"],
+#root .ve-sidebar [class*="from-cyan"],
+#root .ve-sidebar [class*="from-sky"],
+#root .ve-sidebar [class*="from-blue"],
+#root .ve-sidebar [class*="from-emerald"],
+#root .ve-sidebar [class*="to-cyan"],
+#root .ve-sidebar [class*="to-sky"],
+#root .ve-sidebar [class*="to-blue"],
+#root .ve-sidebar [class*="to-emerald"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.060), rgba(5,7,12,0.34)) !important;
+  border-color: rgba(255,255,255,0.080) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.040),
+    0 14px 34px rgba(0,0,0,0.18) !important;
+}
+
+/* Sidebar text white */
+#root .ve-sidebar button,
+#root .ve-sidebar a,
+#root .ve-sidebar span,
+#root .ve-sidebar p,
+#root .ve-sidebar div {
+  color: rgba(248,250,252,0.92) !important;
+}
+
+/* Muted labels neutral gray */
+#root .ve-sidebar [class*="uppercase"],
+#root .ve-sidebar [class*="tracking"],
+#root .ve-sidebar small {
+  color: rgba(203,213,225,0.64) !important;
+}
+
+/* Icons: do not force cyan/green/blue */
+#root .ve-sidebar svg {
+  filter: none !important;
+}
+
+/* Hover/active = neutral white glass, no green/blue fill */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.095), rgba(255,255,255,0.035)) !important;
+  color: rgba(255,255,255,0.98) !important;
+  border-color: rgba(255,255,255,0.120) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.060),
+    0 12px 30px rgba(0,0,0,0.18) !important;
+}
+
+#root .ve-sidebar button:hover *,
+#root .ve-sidebar a:hover *,
+#root .ve-sidebar .ve-nav-item-active *,
+#root .ve-sidebar [aria-current="page"] * {
+  color: rgba(255,255,255,0.98) !important;
+}
+
+/* Remove colored badge fills in sidebar */
+#root .ve-sidebar [class*="rounded-full"] {
+  background: rgba(255,255,255,0.070) !important;
+  border-color: rgba(255,255,255,0.105) !important;
+  color: rgba(248,250,252,0.92) !important;
+}
+
+/* ==========================================================
+   SIDEBAR BACKGROUND REMOVED
+   Fully transparent sidebar. Keep text/icons/cards readable.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background: transparent !important;
+  background-image: none !important;
+  border-right: 1px solid rgba(255,255,255,0.075) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Remove colored/glass fills inside sidebar containers */
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-white"],
+#root .ve-sidebar [class*="bg-cyan"],
+#root .ve-sidebar [class*="bg-sky"],
+#root .ve-sidebar [class*="bg-blue"],
+#root .ve-sidebar [class*="bg-emerald"],
+#root .ve-sidebar [class*="from-"],
+#root .ve-sidebar [class*="to-"],
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Keep words white */
+#root .ve-sidebar button,
+#root .ve-sidebar a,
+#root .ve-sidebar span,
+#root .ve-sidebar p,
+#root .ve-sidebar div {
+  color: rgba(248,250,252,0.92) !important;
+}
+
+/* Keep icons from being force-tinted */
+#root .ve-sidebar svg {
+  filter: none !important;
+}
+
+/* Hover/active only gets a faint neutral highlight */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background: rgba(255,255,255,0.060) !important;
+  background-image: none !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================
+   PREMIUM APP SHELL LOCK
+   No sideways sliding. Sidebar stays anchored. Page feels fixed.
+   ========================================================== */
+
+/* Stop whole website from sliding left/right */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: clip !important;
+  overscroll-behavior-x: none;
+}
+
+/* Fallback for older browsers */
+body {
+  overflow-x: hidden !important;
+}
+
+/* Prevent wide children from forcing horizontal scroll */
+#root,
+#root * {
+  box-sizing: border-box;
+}
+
+#root img,
+#root video,
+#root canvas,
+#root svg {
+  max-width: 100%;
+}
+
+/* App layout should never exceed viewport width */
+#root main,
+.ve-page,
+.ve-app-bg,
+.ve-page-shell,
+.ve-grid-bg,
+.ve-themed-bg {
+  max-width: 100vw !important;
+  overflow-x: clip !important;
+}
+
+/* Sidebar anchored like a premium SaaS app shell */
+#root .ve-sidebar {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  flex-shrink: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Make sidebar scrolling feel clean */
+#root .ve-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+#root .ve-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#root .ve-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+/* Stop long labels/cards from pushing layout sideways */
+#root .ve-sidebar *,
+#root main * {
+  min-width: 0;
+}
+
+/* Tables/charts can scroll inside themselves, not the whole website */
+#root table,
+#root [class*="chart"],
+#root [class*="Chart"],
+#root [class*="recharts"] {
+  max-width: 100%;
+}
+
+/* Main content uses available width without pushing page */
+#root main {
+  min-width: 0 !important;
+}
+
+
+/* ==========================================================
+   HARD APP SHELL LOCK — NO SIDEWAYS WEBSITE SLIDE
+   Sidebar anchored. Main area owns scrolling.
+   ========================================================== */
+
+html,
+body {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100% !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+}
+
+#root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+  overflow-x: clip !important;
+  overscroll-behavior-x: none !important;
+}
+
+/* Any top app wrapper should not exceed viewport */
+#root > div {
+  max-width: 100vw !important;
+  overflow-x: clip !important;
+}
+
+/* The main feed/app shell becomes a locked two-column app */
+#root .ve-sidebar {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-width: 280px !important;
+  width: 280px !important;
+  flex: 0 0 280px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Remove the white strip / accidental visible gutter beside sidebar */
+#root .ve-sidebar,
+#root .ve-sidebar + *,
+#root main {
+  border-left-color: transparent !important;
+}
+
+/* Main content cannot push the page wider */
+#root main {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: calc(100vw - 280px) !important;
+  overflow-x: clip !important;
+}
+
+/* Stop common wide elements from causing page-level horizontal scroll */
+#root * {
+  box-sizing: border-box !important;
+}
+
+#root img,
+#root video,
+#root canvas,
+#root svg,
+#root table,
+#root iframe {
+  max-width: 100% !important;
+}
+
+/* Wide cards/charts scroll internally only if needed */
+#root [class*="overflow-x-auto"],
+#root [class*="overflow-auto"] {
+  max-width: 100% !important;
+}
+
+/* Long text cannot push cards wider */
+#root p,
+#root span,
+#root div,
+#root button,
+#root a {
+  min-width: 0;
+}
+
+/* On smaller screens, sidebar can collapse naturally without forcing width */
+@media (max-width: 900px) {
+  #root .ve-sidebar {
+    width: 84px !important;
+    min-width: 84px !important;
+    flex-basis: 84px !important;
+  }
+
+  #root main {
+    max-width: calc(100vw - 84px) !important;
+  }
+}
+
+/* ==========================================================
+   REAL APP SHELL LOCK
+   Sidebar fixed. Main content cannot drag the whole website.
+   ========================================================== */
+
+html,
+body,
+#root {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100% !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+}
+
+/* Sidebar is now anchored to viewport */
+#root .ve-sidebar {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 40 !important;
+}
+
+/* Everything that is not sidebar must start after sidebar */
+#root .ve-sidebar ~ main,
+#root .ve-sidebar + main,
+#root .ve-sidebar ~ div,
+#root .ve-sidebar + div {
+  margin-left: 280px !important;
+  width: calc(100vw - 280px) !important;
+  max-width: calc(100vw - 280px) !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+
+/* Main content locked */
+#root main {
+  width: calc(100vw - 280px) !important;
+  max-width: calc(100vw - 280px) !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent any child from forcing page sideways */
+#root * {
+  box-sizing: border-box !important;
+}
+
+#root img,
+#root video,
+#root canvas,
+#root table,
+#root iframe {
+  max-width: 100% !important;
+}
+
+/* Wide charts/tables scroll internally only */
+#root [class*="overflow-x-auto"],
+#root [class*="overflow-auto"] {
+  max-width: 100% !important;
+}
+
+/* Mobile/tablet */
+@media (max-width: 900px) {
+  #root .ve-sidebar {
+    width: 84px !important;
+    min-width: 84px !important;
+    max-width: 84px !important;
+  }
+
+  #root .ve-sidebar ~ main,
+  #root .ve-sidebar + main,
+  #root .ve-sidebar ~ div,
+  #root .ve-sidebar + div,
+  #root main {
+    margin-left: 84px !important;
+    width: calc(100vw - 84px) !important;
+    max-width: calc(100vw - 84px) !important;
+  }
+}

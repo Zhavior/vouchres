@@ -109,6 +109,7 @@ export interface MatchupMatrixResponse {
   date: string;
   generatedAt: string;
   rows: MatchupMatrixRow[];
+  mode?: "live" | "enriched";
 }
 
 function teamLogo(teamId: number): string {
@@ -259,6 +260,58 @@ function buildMatrixRow(
       recentForm: roundMetric(recentForm, 0),
       context: roundMetric(context, 0),
       availableWeight: availableWeightRounded,
+    },
+  };
+}
+
+function buildLiveMatrixRow(
+  game: NormalizedGame,
+  pitcher: NormalizedPitcher | null,
+  team: NormalizedTeam,
+  opponent: NormalizedTeam
+): MatchupMatrixRow {
+  const park = getParkFactor(game.venue);
+  const weather = weatherText(game);
+
+  return {
+    pitcherId: pitcher?.pitcherId ?? null,
+    pitcherName: pitcher?.pitcherName ?? "Probable pitcher TBD",
+    team: team.abbreviation || team.name,
+    opponent: opponent.abbreviation || opponent.name,
+    gameId: game.gamePk,
+    gameTime: game.gameDate,
+    pitcherHand: pitcher?.throws ?? "U",
+    score: null,
+    label: "NEUTRAL",
+    metrics: {
+      k9: null,
+      kPerGame: null,
+      era: null,
+      whip: null,
+      ip: null,
+      gs: null,
+      whiffPct: null,
+      kPct: null,
+      xera: null,
+      oppKPct: null,
+      opponentVsHand: null,
+      parkFactor: park.source === "table" ? park.factor : null,
+      weather,
+    },
+    dataQuality: {
+      probablePitcher: pitcher ? "official" : "unknown",
+      statcast: "missing",
+      weather: weather ? "available" : "missing",
+    },
+    confidence: "Low",
+    scoring: {
+      pitcherStrikeoutSkill: null,
+      opponentStrikeoutWeakness: null,
+      workloadSafety: null,
+      runPreventionControl: null,
+      recentForm: null,
+      context: null,
+      availableWeight: 0,
     },
   };
 }
@@ -466,6 +519,18 @@ export async function getGameMatchup(gamePk: number, date = todayISO()): Promise
   return all.find((m) => m.gamePk === gamePk) ?? null;
 }
 
+export async function getLiveMatchupMatrix(date = todayISO()): Promise<MatchupMatrixResponse> {
+  const games = await getScheduleByDate(date);
+  const rows: MatchupMatrixRow[] = [];
+
+  for (const game of games) {
+    rows.push(buildLiveMatrixRow(game, game.probablePitchers.away, game.awayTeam, game.homeTeam));
+    rows.push(buildLiveMatrixRow(game, game.probablePitchers.home, game.homeTeam, game.awayTeam));
+  }
+
+  return { date, generatedAt: new Date().toISOString(), rows, mode: "live" };
+}
+
 export async function getMatchupMatrix(date = todayISO()): Promise<MatchupMatrixResponse> {
   return reportCache.getOrSet(`matchup_matrix_v1:${date}`, async () => {
     const games = await getScheduleByDate(date);
@@ -518,6 +583,6 @@ export async function getMatchupMatrix(date = todayISO()): Promise<MatchupMatrix
     }
 
     rows.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
-    return { date, generatedAt: new Date().toISOString(), rows };
+    return { date, generatedAt: new Date().toISOString(), rows, mode: "enriched" };
   }, 4 * 60_000) as Promise<MatchupMatrixResponse>;
 }

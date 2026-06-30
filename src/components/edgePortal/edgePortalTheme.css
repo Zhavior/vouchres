@@ -239,7 +239,7 @@
 }
 
 .edge-orbit-ring-one {
-  right: -18vw;
+  right: 0;
   top: 14vh;
   width: min(56vw, 720px);
   height: min(56vw, 720px);
@@ -247,7 +247,7 @@
 }
 
 .edge-orbit-ring-two {
-  left: -22vw;
+  left: 0;
   bottom: -30vh;
   width: min(62vw, 780px);
   height: min(62vw, 780px);

@@ -14,7 +14,7 @@ export default function ProGraphsLabPage() {
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
+    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-slate-100">
       <div className="mx-auto max-w-7xl space-y-5">
         <ProPageHeader
           title="Pro Graphs Lab"

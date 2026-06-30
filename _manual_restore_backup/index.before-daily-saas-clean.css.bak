@@ -1,0 +1,3903 @@
+@import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+@import "./styles/cyber-theme.css";
+@import "tailwindcss";
+@import "./styles/feed-layout.css";
+
+/* Baseball Team brand fonts */
+.baseball-script {
+  font-family: 'Playball', cursive, sans-serif !important;
+}
+
+.baseball-varsity {
+  font-family: 'Graduate', serif !important;
+}
+
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Core Theme definitions */
+@theme {
+  --color-primary: #1d9bf0;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+}
+
+body {
+  background-color: #0b0f19;
+  color: #f8fafc;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  overflow-y: scroll;
+}
+
+/* ================== GLOBAL TRANS-LUCENT CONTAINER OVERRIDES ================== */
+.premium-card-bg,
+[id^="panel-"],
+[class*="bg-\[\#121824\]"],
+[class*="bg-\[\#0e1320\]"],
+[class*="bg-\[\#090d16\]"],
+[class*="bg-slate-900"],
+[class*="bg-slate-950"],
+.bg-slate-900,
+.bg-slate-950 {
+  background-color: rgba(18, 24, 36, 0.42) !important;
+  backdrop-filter: blur(14px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(130%) !important;
+  border-color: rgba(255, 255, 255, 0.075) !important;
+  transition: background-color 0.4s ease, border-color 0.4s ease !important;
+}
+
+/* Special adjustments for buttons & action overlays */
+button.bg-slate-900:hover,
+button.bg-slate-950:hover,
+[class*="bg-slate-900/40"]:hover {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* ================== GLOBAL CSS MOVEMENT NEON LIGHT LINES ================== */
+@keyframes neonMoveHorizontal {
+  0% {
+    left: -120%;
+  }
+  100% {
+    left: 220%;
+  }
+}
+
+@keyframes neonMoveDiagonalUp {
+  0% {
+    transform: translate(-100%, 100%) rotate(-35deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.75;
+  }
+  90% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(250%, -250%) rotate(-35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes neonMoveDiagonalDown {
+  0% {
+    transform: translate(-100%, -100%) rotate(35deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.75;
+  }
+  90% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(250%, 250%) rotate(35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseNeonGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 12px currentColor) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 24px currentColor) brightness(1.3);
+  }
+}
+
+.css-neon-stream {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  opacity: 0.65;
+}
+
+.stream-cyan {
+  height: 2px;
+  width: 300px;
+  background: linear-gradient(90deg, transparent, #06b6d4 50%, transparent);
+  color: #06b6d4;
+  animation: neonMoveHorizontal 14s linear infinite, pulseNeonGlow 4s ease-in-out infinite;
+}
+
+.stream-pink {
+  height: 2px;
+  width: 420px;
+  background: linear-gradient(90deg, transparent, #ec4899 50%, transparent);
+  color: #ec4899;
+  animation: neonMoveHorizontal 20s linear infinite reverse, pulseNeonGlow 5s ease-in-out infinite;
+}
+
+.stream-purple {
+  height: 2px;
+  width: 380px;
+  background: linear-gradient(90deg, transparent, #a855f7 50%, transparent);
+  color: #a855f7;
+  animation: neonMoveHorizontal 17s linear infinite, pulseNeonGlow 3s ease-in-out infinite;
+}
+
+.stream-emerald {
+  height: 2px;
+  width: 250px;
+  background: linear-gradient(90deg, transparent, #10b981 50%, transparent);
+  color: #10b981;
+  animation: neonMoveHorizontal 12s linear infinite, pulseNeonGlow 4.5s ease-in-out infinite;
+}
+
+/* Diagonal scanning neon line streams */
+.stream-diagonal-gold {
+  width: 6px;
+  height: 350px;
+  background: linear-gradient(180deg, transparent, #fbbf24 50%, transparent);
+  color: #fbbf24;
+  animation: neonMoveDiagonalUp 25s cubic-bezier(0.25, 1, 0.5, 1) infinite, pulseNeonGlow 6s ease-in-out infinite;
+}
+
+.stream-diagonal-violet {
+  width: 5px;
+  height: 420px;
+  background: linear-gradient(180deg, transparent, #8b5cf6 50%, transparent);
+  color: #8b5cf6;
+  animation: neonMoveDiagonalDown 30s cubic-bezier(0.25, 1, 0.5, 1) infinite, pulseNeonGlow 7s ease-in-out infinite;
+}
+
+/* ================== PREMIUM DYNAMIC EXTENSIVE THEME ACTIONS ================== */
+@keyframes themeParticleDrift {
+  0% {
+    transform: translateY(115vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--theme-particle-opacity, 0.3);
+  }
+  90% {
+    opacity: var(--theme-particle-opacity, 0.3);
+  }
+  100% {
+    transform: translateY(-20vh) translateX(var(--drift-x, 60px)) rotate(var(--drift-rot, 360deg));
+    opacity: 0;
+  }
+}
+
+.animate-theme-drift {
+  animation: themeParticleDrift var(--drift-duration, 20s) linear infinite;
+  animation-delay: var(--drift-delay, 0s);
+  position: absolute;
+}
+
+/* Complete frame transition borders & glows for any active premium theme */
+.has-active-theme .premium-card-bg,
+.has-active-theme [id^="panel-"],
+.has-active-theme [class*="bg-\[\#121824\]"],
+.has-active-theme [class*="bg-\[\#0e1320\]"],
+.has-active-theme [class*="bg-\[\#090d16\]"],
+.has-active-theme .bg-slate-900:not(#brand-logo-id),
+.has-active-theme .bg-slate-950,
+.has-active-theme .bg-\[\#121824\]\/30 {
+  background-color: var(--theme-card-bg-fallback, rgba(14, 18, 28, 0.65)) !important;
+  border-color: var(--theme-border-color) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 18px var(--theme-shadow-glow) !important;
+  background-image: var(--theme-card-bg-gradient) !important;
+  border-width: 1px !important;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* High Definition Page margins glow borders and pillars */
+.has-active-theme aside {
+  border-right-color: var(--theme-border-color) !important;
+  box-shadow: 4px 0 25px -5px var(--theme-shadow-glow) !important;
+}
+
+.has-active-theme main {
+  border-right-color: var(--theme-border-color) !important;
+  border-left-color: var(--theme-border-color) !important;
+}
+
+.has-active-theme header {
+  border-bottom-color: var(--theme-border-color) !important;
+  box-shadow: 0 4px 20px -2px var(--theme-shadow-glow) !important;
+}
+
+.has-active-theme .border-slate-850,
+.has-active-theme .border-slate-900,
+.has-active-theme .border-\[\#3b82f6\]\/10,
+.has-active-theme .border-\[\#1e293b\]\/50 {
+  border-color: var(--theme-border-color) !important;
+}
+
+/* Text glow & customization accents */
+.has-active-theme .theme-text-accent {
+  color: var(--theme-accent-color) !important;
+  text-shadow: 0 0 8px var(--theme-shadow-glow) !important;
+}
+
+/* Beautiful color themes navigation indicator */
+.has-active-theme .bg-sky-950\/40 {
+  background-color: var(--theme-shadow-glow) !important;
+  color: var(--theme-accent-color) !important;
+  border-color: var(--theme-border-color) !important;
+}
+
+/* Gokū luxury serif cinematic typography inspired by high fashion editorial display and serif contrast */
+.goku-cinematic-display {
+  font-family: 'Cinzel Decorative', 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.goku-serif-italic {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+}
+
+/* ================== STAR WARS CINEMATIC TYPOGRAPHY & TIMELINE ================== */
+.starwars-font-crawl {
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #020617; /* Deep midnight void fill */
+  letter-spacing: 0.12em;
+  -webkit-text-stroke: 2px #FFE81F;
+  text-shadow: 0 0 10px rgba(255, 232, 31, 0.75), 0 0 25px rgba(217, 119, 6, 0.4);
+}
+
+.starwars-font-solid {
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #FFE81F;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 15px rgba(255, 232, 31, 0.95), 0 0 35px rgba(245, 158, 11, 0.6);
+}
+
+.starwars-logo-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 0.85;
+  transform: perspective(300px) rotateX(16deg);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.starwars-logo-stacked:hover {
+  transform: perspective(300px) rotateX(8deg) scale(1.05);
+}
+
+.timeline-glow-line {
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+}
+
+.timeline-dot-pulse {
+  animation: pulse-dot-keyframe 2.5s infinite;
+}
+
+@keyframes pulse-dot-keyframe {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 232, 31, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(255, 232, 31, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 232, 31, 0);
+  }
+}
+
+/* ==========================================================================
+   EPIC STAR WARS & TRUST CINEMATIC CRAWL STYLINGS
+   ========================================================================== */
+
+/* Perspective context for cinematic crawls */
+.trust-crawl-perspective {
+  perspective: 350px;
+  transform-style: preserve-3d;
+}
+
+/* Rolling infinite 3D Star Wars Crawl Effect for theater and logs */
+@keyframes trust-infinite-scroll-crawl {
+  0% {
+    transform: rotateX(25deg) translateY(240px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(25deg) translateY(-320px);
+    opacity: 0;
+  }
+}
+
+.starwars-movie-crawl-active {
+  animation: trust-infinite-scroll-crawl 20s linear infinite;
+  transform-origin: 50% 100%;
+}
+
+/* Epic micro transitions for navigation items using 3D crawl values */
+.nav-link3d-crawl {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.nav-link3d-crawl:hover {
+  transform: perspective(100px) rotateX(12deg) translateY(-2px) translateZ(5px);
+  text-shadow: 0 0 10px rgba(255, 232, 31, 0.95);
+  -webkit-text-stroke: 0.5px rgba(255, 232, 31, 0.7);
+  color: #FFE81F !important;
+}
+
+/* Majestic hover crawls for landing page section headings */
+.heading-epic-3dcrawl {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.heading-epic-3dcrawl:hover {
+  transform: perspective(300px) rotateX(14deg) translateY(-3px) scale(1.02);
+  text-shadow: 0 0 15px rgba(255, 232, 31, 0.8), 0 0 30px rgba(245, 158, 11, 0.5);
+  color: #FFE81F !important;
+}
+
+/* Star-space backdrop wrapper for the Trust Theater */
+.trust-theater-stars {
+  background-image: 
+    radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+    radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+    radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+  background-size: 550px 550px, 350px 350px, 250px 250px;
+  background-position: 0 0, 40px 60px, 130px 270px;
+}
+
+
+
+
+
+/* ===== Welcome Portal (spaceman landing) ===== */
+@keyframes ve-twinkle { 0%,100%{opacity:.25} 50%{opacity:1} }
+@keyframes ve-pulse-glow {
+  0%,100%{ filter: drop-shadow(0 0 10px rgba(100,200,255,.45)) drop-shadow(0 0 40px rgba(60,180,255,.25)); }
+  50%{ filter: drop-shadow(0 0 30px rgba(100,200,255,.9)) drop-shadow(0 0 90px rgba(60,180,255,.45)); }
+}
+.ve-star { position:absolute; border-radius:50%; background:#fff; animation: ve-twinkle var(--td,3s) ease-in-out infinite; animation-delay: var(--tdl,0s); }
+.ve-astro-glow { animation: ve-pulse-glow 3.5s ease-in-out infinite; }
+.ve-glass { background: rgba(255,255,255,.03); backdrop-filter: blur(12px); border:1px solid rgba(255,255,255,.08); transition: all .3s ease; }
+.ve-glass:hover { background: rgba(255,255,255,.06); border-color: rgba(100,200,255,.35); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.35), 0 0 30px rgba(100,200,255,.12); }
+.ve-nebula { background:
+  radial-gradient(ellipse at 18% 28%, rgba(88,28,135,.20) 0%, transparent 50%),
+  radial-gradient(ellipse at 82% 18%, rgba(14,116,144,.16) 0%, transparent 50%),
+  radial-gradient(ellipse at 50% 88%, rgba(30,64,175,.14) 0%, transparent 50%); }
+.ve-grad-text { background: linear-gradient(135deg,#60d0f0 0%,#a0e0ff 40%,#fff 60%,#80c0e0 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+/* ===== EPIC THEME SYSTEM — 3D depth, real textures, 4D animated backgrounds ===== */
+
+.ve-3d-scene {
+  perspective: 1200px;
+  perspective-origin: 50% 30%;
+  transform-style: preserve-3d;
+}
+.ve-3d-layer {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.ve-3d-card-lift {
+  transform: translateZ(40px) rotateX(2deg);
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.8),
+    0 18px 36px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.ve-3d-floor {
+  position: absolute;
+  bottom: -20%;
+  left: 0;
+  right: 0;
+  height: 80%;
+  background-image:
+    linear-gradient(45deg, rgba(56,189,248,0.18) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(56,189,248,0.18) 1px, transparent 1px),
+    linear-gradient(to right, rgba(34,211,238,0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34,211,238,0.12) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 40px 40px, 40px 40px;
+  transform: rotateX(75deg) translateZ(-100px);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 80%);
+  pointer-events: none;
+  animation: ve-3d-floor-scroll 20s linear infinite;
+}
+@keyframes ve-3d-floor-scroll {
+  0%   { background-position: 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 80px 80px, -80px 80px, 40px 0, 0 40px; }
+}
+
+.ve-metallic-gold {
+  background:
+    linear-gradient(135deg,
+      #6B4F0D 0%, #D4AF37 15%, #FACC15 30%, #FEF3C7 45%,
+      #D4AF37 60%, #927A1A 75%, #D4AF37 90%, #6B4F0D 100%);
+  background-size: 200% 200%;
+  animation: ve-metallic-shift 6s ease-in-out infinite;
+  position: relative;
+}
+.ve-metallic-gold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+@keyframes ve-metallic-shift {
+  0%, 100% { background-position: 0% 0%; }
+  50%      { background-position: 100% 100%; }
+}
+
+.ve-aurora-flow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ve-aurora-flow::before, .ve-aurora-flow::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse 50% 30% at 20% 30%, rgba(167,139,250,0.25), transparent 60%),
+    radial-gradient(ellipse 40% 25% at 70% 20%, rgba(34,211,238,0.20), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(244,114,182,0.18), transparent 60%);
+  filter: blur(40px);
+  animation: ve-aurora-drift 12s ease-in-out infinite alternate;
+}
+.ve-aurora-flow::after {
+  background:
+    radial-gradient(ellipse 40% 25% at 80% 60%, rgba(251,191,36,0.15), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 30% 70%, rgba(52,211,153,0.18), transparent 60%);
+  animation-duration: 16s;
+  animation-direction: alternate-reverse;
+}
+@keyframes ve-aurora-drift {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate(30px, -20px) rotate(2deg) scale(1.1); }
+  100% { transform: translate(-20px, 30px) rotate(-1deg) scale(1.05); }
+}
+
+.ve-mesh-flow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(at 20% 20%, var(--mesh-1, rgba(34,211,238,0.15)) 0px, transparent 50%),
+    radial-gradient(at 80% 0%,  var(--mesh-2, rgba(167,139,250,0.15)) 0px, transparent 50%),
+    radial-gradient(at 0% 80%,  var(--mesh-3, rgba(74,222,128,0.12))  0px, transparent 50%),
+    radial-gradient(at 80% 80%, var(--mesh-4, rgba(251,191,36,0.12))  0px, transparent 50%);
+  background-size: 200% 200%;
+  animation: ve-mesh-shift 14s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ve-mesh-shift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%; }
+  50%      { background-position: 100% 100%, 0% 100%, 100% 0%, 0% 0%; }
+}
+
+.ve-pixel-rain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    rgba(34, 211, 238, 0.04) 1px,
+    transparent 2px,
+    transparent 32px
+  );
+}
+.ve-pixel-rain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(244, 114, 182, 0.08) 0px,
+    transparent 2px,
+    transparent 6px
+  );
+  animation: ve-pixel-rain-scroll 8s linear infinite;
+}
+@keyframes ve-pixel-rain-scroll {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+
+.ve-3d-cube {
+  width: 24px;
+  height: 24px;
+  transform-style: preserve-3d;
+  animation: ve-3d-cube-rotate 8s linear infinite;
+  position: relative;
+}
+.ve-3d-cube div {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  background: currentColor;
+  opacity: 0.15;
+}
+.ve-3d-cube div:nth-child(1) { transform: translateZ(12px); }
+.ve-3d-cube div:nth-child(2) { transform: rotateY(90deg) translateZ(12px); }
+.ve-3d-cube div:nth-child(3) { transform: rotateY(180deg) translateZ(12px); }
+.ve-3d-cube div:nth-child(4) { transform: rotateY(-90deg) translateZ(12px); }
+.ve-3d-cube div:nth-child(5) { transform: rotateX(90deg) translateZ(12px); }
+.ve-3d-cube div:nth-child(6) { transform: rotateX(-90deg) translateZ(12px); }
+@keyframes ve-3d-cube-rotate {
+  0%   { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+@keyframes ve-sparkle-burst {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  20%      { opacity: 1; transform: scale(1.3) rotate(72deg); }
+  60%      { opacity: 0.6; transform: scale(0.9) rotate(216deg); }
+}
+.ve-sparkle-burst { animation: ve-sparkle-burst 3s ease-in-out infinite; }
+
+@keyframes ve-diamond-spark {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  20%      { opacity: 1; transform: scale(1.5) rotate(72deg); }
+  80%      { opacity: 0.4; transform: scale(0.8) rotate(288deg); }
+}
+.ve-diamond-spark { animation: ve-diamond-spark 2.5s ease-in-out infinite; }
+
+@keyframes ve-text-glow-pulse {
+  0%, 100% { text-shadow: 0 0 8px currentColor, 0 0 16px currentColor; }
+  50%      { text-shadow: 0 0 12px currentColor, 0 0 28px currentColor, 0 0 40px currentColor; }
+}
+.ve-text-glow-pulse { animation: ve-text-glow-pulse 3s ease-in-out infinite; }
+
+@keyframes ve-snow-fall {
+  0%   { transform: translate3d(0, -20px, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.9; }
+  90%  { opacity: 0.9; }
+  100% { transform: translate3d(var(--drift, 30px), 100vh, 0) rotate(360deg); opacity: 0; }
+}
+@keyframes ve-ember-rise {
+  0%   { transform: translate3d(0, 100vh, 0) scale(0.5); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.8; }
+  100% { transform: translate3d(var(--drift, -20px), -20px, 0) scale(0.2); opacity: 0; }
+}
+@keyframes ve-coin-fall {
+  0%   { transform: translate3d(0, -30px, 0) rotateY(0deg) rotateZ(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.9; }
+  100% { transform: translate3d(var(--drift, 10px), 100vh, 0) rotateY(720deg) rotateZ(180deg); opacity: 0; }
+}
+@keyframes ve-star-3d {
+  0%, 100% { opacity: 0.2; transform: scale(0.6) translateZ(-50px); }
+  50%      { opacity: 1; transform: scale(1.2) translateZ(50px); }
+}
+
+/* =================================================================
+   LANDING SPACE HERO — Premium cinematic astronaut hero
+   ================================================================= */
+
+.landing-space-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 75% 25%, rgba(56,189,248,0.18), transparent 34%),
+    radial-gradient(circle at 20% 10%, rgba(59,130,246,0.12), transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(139,92,246,0.06), transparent 40%),
+    linear-gradient(180deg, #020617 0%, #06111f 58%, #040810 100%);
+}
+
+.landing-space-layer {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 70% 30%, rgba(34,211,238,0.08), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 30% 20%, rgba(59,130,246,0.06), transparent 60%);
+  pointer-events: none;
+}
+
+.landing-stars-layer {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(226,244,255,0.75), transparent),
+    radial-gradient(1px 1px at 25% 35%, rgba(226,244,255,0.5), transparent),
+    radial-gradient(1px 1px at 45% 10%, rgba(226,244,255,0.6), transparent),
+    radial-gradient(1px 1px at 65% 25%, rgba(226,244,255,0.75), transparent),
+    radial-gradient(1px 1px at 80% 40%, rgba(226,244,255,0.4), transparent),
+    radial-gradient(1px 1px at 15% 55%, rgba(226,244,255,0.6), transparent),
+    radial-gradient(1px 1px at 35% 70%, rgba(226,244,255,0.3), transparent),
+    radial-gradient(1px 1px at 55% 50%, rgba(226,244,255,0.5), transparent),
+    radial-gradient(1px 1px at 75% 65%, rgba(226,244,255,0.4), transparent),
+    radial-gradient(1px 1px at 90% 20%, rgba(226,244,255,0.6), transparent),
+    radial-gradient(2px 2px at 50% 30%, rgba(226,244,255,0.3), transparent),
+    radial-gradient(1px 1px at 5% 80%, rgba(226,244,255,0.2), transparent);
+  background-size: 100% 100%;
+  animation: landing-star-drift 30s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes landing-star-drift {
+  0%   { transform: translateY(0); opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 0.6; }
+}
+
+@keyframes landing-orbit-spin {
+  0%   { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+.landing-astronaut-glow {
+  filter: blur(30px);
+  animation: landing-glow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes landing-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.1); }
+}
+
+.landing-hero-fade {
+  background: linear-gradient(180deg, transparent 0%, #040810 100%);
+}
+
+.floating-proof-chip {
+  animation: landing-chip-float 4s ease-in-out infinite;
+}
+
+@keyframes landing-chip-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+@media (max-width: 768px) {
+  .landing-space-hero {
+    min-height: auto;
+  }
+  .landing-astronaut-wrap {
+    max-width: 280px !important;
+  }
+  .landing-astronaut-glow {
+    width: 280px !important;
+    height: 280px !important;
+  }
+}
+
+/* ============================================================
+   VouchEdgeLoader — cinematic boot loading overlay
+   ============================================================ */
+.vel-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(14, 165, 233, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 50% 120%, rgba(16, 185, 129, 0.12), transparent 60%),
+    #020617;
+  color: #e2e8f0;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  opacity: 1;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+.vel-leaving { opacity: 0; visibility: hidden; }
+
+/* Background FX layers */
+.vel-bg { position: absolute; inset: 0; pointer-events: none; }
+.vel-grid {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 70%);
+  animation: vel-grid-pan 16s linear infinite;
+}
+.vel-radar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 720px;
+  max-width: 100%;
+  max-height: 130vw;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(34, 211, 238, 0.16), transparent 28%);
+  mask-image: radial-gradient(circle, black 0%, black 40%, transparent 71%);
+  -webkit-mask-image: radial-gradient(circle, black 0%, black 40%, transparent 71%);
+  animation: vel-spin 5.5s linear infinite;
+  opacity: 0.7;
+}
+.vel-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  animation: vel-float 7s ease-in-out infinite;
+}
+.vel-glow-a { top: 14%; left: 18%; width: 320px; height: 320px; background: rgba(14, 165, 233, 0.45); }
+.vel-glow-b { bottom: 12%; right: 16%; width: 300px; height: 300px; background: rgba(16, 185, 129, 0.4); animation-delay: -3.5s; }
+
+/* Center content */
+.vel-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  width: 100%;
+  max-width: 460px;
+}
+.vel-badge {
+  width: 60px; height: 60px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px;
+  font-weight: 900; font-size: 22px; letter-spacing: 0.5px;
+  color: #04121f;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #10b981);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4), 0 12px 40px rgba(34, 211, 238, 0.35);
+  margin-bottom: 18px;
+  animation: vel-pulse 2.4s ease-in-out infinite;
+}
+.vel-title {
+  font-size: clamp(30px, 7vw, 46px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #f8fafc;
+  text-shadow: 0 2px 30px rgba(34, 211, 238, 0.25);
+}
+.vel-title-accent {
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Rotating subtitle (stacked, cross-faded) */
+.vel-sub {
+  position: relative;
+  height: 22px;
+  margin-top: 14px;
+  width: 100%;
+}
+.vel-sub-line {
+  position: absolute;
+  inset: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.vel-sub-line.is-active { opacity: 1; transform: translateY(0); }
+
+/* Percent */
+.vel-pct {
+  margin-top: 22px;
+  font-size: clamp(44px, 12vw, 72px);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+}
+.vel-pct-sign { font-size: 0.45em; color: #38bdf8; margin-left: 2px; vertical-align: super; }
+
+/* Progress bar */
+.vel-bar {
+  margin-top: 18px;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.12);
+}
+.vel-bar-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5e9, #22d3ee 60%, #10b981);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.6);
+  transition: width 0.12s linear;
+}
+.vel-bar-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-100%);
+  animation: vel-shine 1.4s ease-in-out infinite;
+}
+
+/* Disclaimer */
+.vel-disclaimer {
+  position: absolute;
+  bottom: 24px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  padding: 0 24px;
+  margin: 0;
+}
+
+/* Keyframes */
+@keyframes vel-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes vel-grid-pan { to { background-position: 44px 44px; } }
+@keyframes vel-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-22px) scale(1.06); }
+}
+@keyframes vel-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4), 0 12px 40px rgba(34, 211, 238, 0.35); }
+  50% { box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7), 0 16px 52px rgba(34, 211, 238, 0.6); }
+}
+@keyframes vel-shine { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
+
+/* Reduced motion: keep progress + cross-fades, drop heavy looping FX */
+.vel-reduced .vel-grid,
+.vel-reduced .vel-radar,
+.vel-reduced .vel-glow,
+.vel-reduced .vel-badge,
+.vel-reduced .vel-bar-shine { animation: none; }
+.vel-reduced .vel-glow { opacity: 0.3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vel-grid, .vel-radar, .vel-glow, .vel-badge, .vel-bar-shine { animation: none !important; }
+}
+
+/* ==========================================================
+   EDGE ISLAND ENTRANCE ANIMATIONS
+   Used after Welcome Portal / login / onboarding.
+   ========================================================== */
+
+.ve-edge-island-enter {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ve-edge-island-enter-delay-1 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+}
+
+.ve-edge-island-enter-delay-2 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 170ms both;
+}
+
+.ve-edge-island-enter-delay-3 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+}
+
+@keyframes veEdgeIslandEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.975);
+    filter: blur(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.ve-portal-welcome-exit {
+  animation: vePortalWelcomeExit 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vePortalWelcomeExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(14px);
+  }
+}
+
+/* ===== VouchEdge premium layout system ===== */
+:root {
+  --ve-bg: #050506;
+  --ve-bg-2: #0a0b0d;
+  --ve-panel: rgba(17, 18, 21, 0.86);
+  --ve-panel-strong: rgba(24, 25, 29, 0.94);
+  --ve-line: rgba(255, 255, 255, 0.10);
+  --ve-line-soft: rgba(255, 255, 255, 0.065);
+  --ve-text: #f5f5f7;
+  --ve-muted: #a8abb2;
+  --ve-muted-2: #6f737d;
+  --ve-accent: #7dd3c7;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--ve-bg);
+  color: var(--ve-text);
+}
+
+#root {
+  color-scheme: dark;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ve-shell-width {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+}
+
+.ve-premium-surface {
+  border: 1px solid var(--ve-line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028)), var(--ve-panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.ve-premium-button {
+  border: 1px solid rgba(255,255,255,0.72);
+  background: #f5f5f7;
+  color: #050506;
+  box-shadow: 0 18px 42px rgba(255,255,255,0.10);
+}
+
+.ve-premium-button-secondary {
+  border: 1px solid var(--ve-line);
+  background: rgba(255,255,255,0.055);
+  color: var(--ve-text);
+}
+
+#root .ve-sidebar {
+  opacity: 1;
+  pointer-events: auto;
+  background:
+    linear-gradient(180deg, rgba(11, 12, 15, 0.98), rgba(5, 6, 9, 0.98)) !important;
+  border-right-color: rgba(255,255,255,0.09) !important;
+  box-shadow: 18px 0 70px rgba(0,0,0,0.34) !important;
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+
+#root .ve-sidebar svg {
+  filter: none !important;
+}
+
+/* ===== VouchEdge public landing and auth shell ===== */
+#root #center-main-content-column,
+#root #inner-view-slot,
+#root .edge-space-shell {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#root .edge-space-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(255,255,255,0.12), transparent 28%),
+    radial-gradient(circle at 86% 20%, rgba(125,211,199,0.08), transparent 28%),
+    linear-gradient(180deg, #08090b 0%, #050506 50%, #020203 100%);
+}
+
+#root .edge-space-shell .edge-space-backdrop {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 18%),
+    radial-gradient(circle at 50% 110%, rgba(148,163,184,0.10), transparent 34%);
+}
+
+#root .edge-space-header {
+  border-color: rgba(255,255,255,0.09);
+}
+
+#root .edge-landing-section {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+}
+
+#root .edge-space-hero {
+  min-height: min(820px, calc(100vh - 104px));
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    radial-gradient(circle at 74% 18%, rgba(125,211,199,0.10), transparent 30%),
+    radial-gradient(circle at 22% 92%, rgba(255,255,255,0.07), transparent 28%),
+    linear-gradient(180deg, rgba(16,17,21,0.86), rgba(5,6,9,0.96));
+  box-shadow: 0 32px 100px rgba(0,0,0,0.42);
+}
+
+#root .edge-product-panel,
+#root .edge-feature-panel,
+#root .edge-tour-panel,
+#root .edge-workflow-panel,
+#root .edge-auth-panel,
+#root .edge-island-panel {
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.026)),
+    rgba(9,10,13,0.88);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.34);
+}
+
+#root .edge-product-screen {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, #17181d, #090a0d);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 34px 90px rgba(0,0,0,0.46);
+}
+
+#root .edge-space-primary,
+#root .edge-auth-primary {
+  border: 1px solid rgba(255,255,255,0.78);
+  background: #f5f5f7;
+  color: #050506;
+  box-shadow: 0 18px 48px rgba(255,255,255,0.11);
+}
+
+#root .edge-space-secondary,
+#root .edge-space-ghost,
+#root .edge-auth-secondary {
+  border: 1px solid rgba(255,255,255,0.13);
+  background: rgba(255,255,255,0.055);
+  color: #f5f5f7;
+  box-shadow: none;
+}
+
+#root .edge-space-primary:hover,
+#root .edge-auth-primary:hover,
+#root .edge-space-secondary:hover,
+#root .edge-space-ghost:hover,
+#root .edge-auth-secondary:hover {
+  transform: translateY(-1px);
+}
+
+#root .edge-slate-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.22) transparent;
+}
+
+@media (max-width: 767px) {
+  #root .edge-space-hero {
+    min-height: auto;
+  }
+}
+
+/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+/* Public landing should fill the browser without creating the right dotted strip */
+.ve-public-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+.ve-public-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+}
+
+/* App pages: sidebar + content should fit viewport */
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Main app area should never use viewport width past the sidebar */
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Right rail must fit, not push page sideways */
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+/* Remove harsh debug-looking outlines */
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card,
+.ve-composer,
+.ve-auth-card,
+.ve-command-island {
+  border-color: rgba(255,255,255,0.085) !important;
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+/* Quiet graphite surface system */
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card {
+  background:
+    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
+}
+
+/* Kill the remaining purple/blue glow only inside VouchEdge shells */
+.ve-public-shell [class*="shadow-cyan"],
+.ve-public-shell [class*="shadow-blue"],
+.ve-public-shell [class*="shadow-purple"],
+.ve-app-shell [class*="shadow-cyan"],
+.ve-app-shell [class*="shadow-blue"],
+.ve-app-shell [class*="shadow-purple"],
+.ve-shell [class*="shadow-cyan"],
+.ve-shell [class*="shadow-blue"],
+.ve-shell [class*="shadow-purple"] {
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+/* Make oversized white borders subtle */
+.ve-public-shell [class*="border-white"],
+.ve-app-shell [class*="border-white"],
+.ve-shell [class*="border-white"] {
+  border-color: rgba(255,255,255,0.085) !important;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+
+
+/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.ve-public-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+.ve-public-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+}
+
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card,
+.ve-composer,
+.ve-auth-card,
+.ve-command-island {
+  border-color: rgba(255,255,255,0.085) !important;
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card {
+  background:
+    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
+}
+
+.ve-public-shell [class*="shadow-cyan"],
+.ve-public-shell [class*="shadow-blue"],
+.ve-public-shell [class*="shadow-purple"],
+.ve-app-shell [class*="shadow-cyan"],
+.ve-app-shell [class*="shadow-blue"],
+.ve-app-shell [class*="shadow-purple"],
+.ve-shell [class*="shadow-cyan"],
+.ve-shell [class*="shadow-blue"],
+.ve-shell [class*="shadow-purple"] {
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+.ve-public-shell [class*="border-white"],
+.ve-app-shell [class*="border-white"],
+.ve-shell [class*="border-white"] {
+  border-color: rgba(255,255,255,0.085) !important;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+
+
+/* ===== Daily Players page stability patch ===== */
+
+#root [data-page="daily-players"],
+#root .daily-players-page,
+#root .daily-players-shell,
+#root .daily-players-layout {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+#root [data-page="daily-players"] *,
+#root .daily-players-page *,
+#root .daily-players-shell *,
+#root .daily-players-layout * {
+  min-width: 0;
+}
+
+#root [data-page="daily-players"] main,
+#root .daily-players-page main,
+#root .daily-players-shell main,
+#root .daily-players-layout main {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 2vw, 28px);
+}
+
+#root [data-page="daily-players"] [class*="grid"],
+#root .daily-players-page [class*="grid"],
+#root .daily-players-shell [class*="grid"],
+#root .daily-players-layout [class*="grid"] {
+  min-width: 0;
+}
+
+#root [data-page="daily-players"] table,
+#root .daily-players-page table,
+#root .daily-players-shell table,
+#root .daily-players-layout table {
+  width: 100%;
+  max-width: 100%;
+}
+
+#root [data-page="daily-players"] .overflow-x-auto,
+#root .daily-players-page .overflow-x-auto,
+#root .daily-players-shell .overflow-x-auto,
+#root .daily-players-layout .overflow-x-auto {
+  max-width: 100%;
+}
+
+
+/* ===== Manual fix: remove Daily Players left gutter / shell double-offset ===== */
+
+/* The app content after the fixed sidebar should start once, not twice */
+.ve-app-shell,
+.ve-shell {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Main app region must own the available width */
+.ve-app-main,
+.ve-page-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0 !important;
+}
+
+/* Daily Players specific: cancel accidental centering/gutter caused by inherited wrappers */
+#root [data-page="daily-players"],
+#root .daily-players-page,
+#root .daily-players-shell,
+#root .daily-players-layout {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* The actual Daily Players content should sit close to the sidebar with normal padding */
+#root [data-page="daily-players"] > *,
+#root .daily-players-page > *,
+#root .daily-players-shell > *,
+#root .daily-players-layout > * {
+  margin-left: 0 !important;
+  min-width: 0;
+}
+
+/* Remove old centered page behavior only for Daily Players */
+#root [data-page="daily-players"] main,
+#root .daily-players-page main,
+#root .daily-players-shell main,
+#root .daily-players-layout main {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: clamp(18px, 2vw, 32px) !important;
+  padding-right: clamp(18px, 2vw, 32px) !important;
+}
+
+/* If Daily Players is inside a generic app container, stop auto-centering it */
+#root .ve-app-main:has(.daily-players-page),
+#root .ve-app-main:has(.daily-players-shell),
+#root .ve-app-main:has([data-page="daily-players"]),
+#root .ve-page-main:has(.daily-players-page),
+#root .ve-page-main:has(.daily-players-shell),
+#root .ve-page-main:has([data-page="daily-players"]) {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  max-width: none !important;
+}
+
+/* Keep matchup carousel scroll inside its own box only */
+#root [data-page="daily-players"] .overflow-x-auto,
+#root .daily-players-page .overflow-x-auto,
+#root .daily-players-shell .overflow-x-auto,
+#root .daily-players-layout .overflow-x-auto {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+
+/* ===== Actual Daily Players wrapper fix ===== */
+#root [data-page="daily-players"].daily-players-page {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: clamp(16px, 1.6vw, 28px) !important;
+  padding-right: clamp(16px, 1.6vw, 28px) !important;
+  overflow-x: hidden;
+}
+
+#root [data-page="daily-players"].daily-players-page > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#root [data-page="daily-players"] .max-w-7xl,
+#root [data-page="daily-players"] .max-w-6xl,
+#root [data-page="daily-players"] .max-w-screen-xl,
+#root [data-page="daily-players"] .container {
+  max-width: none !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#root [data-page="daily-players"] [class*="grid"] {
+  min-width: 0 !important;
+}
+
+#root [data-page="daily-players"] [class*="overflow-x"] {
+  max-width: 100% !important;
+}
+
+
+/* ===== Emergency beta fix: remove duplicated app-shell sidebar gutter ===== */
+
+/* On authenticated app pages, the sidebar already occupies width.
+   The main content must not add another fake sidebar offset. */
+#root .ve-app-shell > main,
+#root .ve-shell > main,
+#root .app-shell > main,
+#root .app-layout > main,
+#root .dashboard-shell > main {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  min-width: 0 !important;
+  flex: 1 1 0 !important;
+  max-width: none !important;
+}
+
+/* Common wrappers directly after sidebar */
+#root .ve-app-shell > div:not(.ve-sidebar),
+#root .ve-shell > div:not(.ve-sidebar),
+#root .app-shell > div:not(.ve-sidebar),
+#root .app-layout > div:not(.ve-sidebar),
+#root .dashboard-shell > div:not(.ve-sidebar) {
+  min-width: 0 !important;
+}
+
+/* If the route wrapper is using Tailwind sidebar offsets, cancel them only inside app shells */
+#root .ve-app-shell [class*="ml-[240"],
+#root .ve-app-shell [class*="ml-[250"],
+#root .ve-app-shell [class*="ml-[260"],
+#root .ve-app-shell [class*="pl-[240"],
+#root .ve-app-shell [class*="pl-[250"],
+#root .ve-app-shell [class*="pl-[260"],
+#root .ve-shell [class*="ml-[240"],
+#root .ve-shell [class*="ml-[250"],
+#root .ve-shell [class*="ml-[260"],
+#root .ve-shell [class*="pl-[240"],
+#root .ve-shell [class*="pl-[250"],
+#root .ve-shell [class*="pl-[260"] {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Daily Players should use the full remaining space beside sidebar */
+#root [data-page="daily-players"] {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  transform: none !important;
+}
+
+
+/* ===== Right rail / Today's Matchup containment fix ===== */
+#right-sidebar-column,
+#right-rail-column,
+.ve-right-rail,
+.ve-feed-right-rail,
+aside[aria-label*="Today"],
+aside[aria-label*="Matchup"] {
+  width: clamp(300px, 22vw, 360px) !important;
+  max-width: 360px !important;
+  min-width: 0 !important;
+  flex: 0 1 360px !important;
+  overflow-x: hidden !important;
+}
+
+#right-sidebar-column *,
+#right-rail-column *,
+.ve-right-rail *,
+.ve-feed-right-rail * {
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+#right-sidebar-column [class*="w-[4"],
+#right-sidebar-column [class*="w-[5"],
+#right-rail-column [class*="w-[4"],
+#right-rail-column [class*="w-[5"],
+.ve-right-rail [class*="w-[4"],
+.ve-feed-right-rail [class*="w-[4"] {
+  width: 100% !important;
+}
+
+@media (max-width: 1279px) {
+  #right-sidebar-column,
+  #right-rail-column,
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    display: none !important;
+  }
+}
+
+
+/* ===== Daily Players beta redesign: smaller cards + Live Teams slider ===== */
+
+#root [data-page="daily-players"].daily-players-page {
+  padding-top: 18px !important;
+}
+
+/* Top Live Teams slider */
+.daily-live-teams-strip {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 22px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.085);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(18,18,20,0.92), rgba(7,7,9,0.96));
+  box-shadow: 0 24px 70px rgba(0,0,0,0.34);
+  overflow: hidden;
+}
+
+.daily-live-teams-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.daily-live-teams-header h2 {
+  margin: 0;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #f5f5f7;
+}
+
+.daily-live-teams-header p {
+  margin: 0;
+  color: rgba(245,245,247,0.58);
+  font-size: 13px;
+}
+
+.daily-live-eyebrow {
+  margin-bottom: 6px !important;
+  color: rgba(245,245,247,0.48) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px !important;
+  font-weight: 700;
+}
+
+.daily-live-teams-scroller {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 260px);
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+}
+
+.daily-live-teams-scroller::-webkit-scrollbar {
+  height: 8px;
+}
+
+.daily-live-teams-scroller::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+.daily-live-team-card {
+  scroll-snap-align: start;
+  min-height: 132px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.022));
+  box-shadow: none;
+}
+
+.daily-live-status,
+.daily-live-card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(245,245,247,0.52);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+}
+
+.daily-live-status strong {
+  color: rgba(245,245,247,0.74);
+  font-weight: 700;
+}
+
+.daily-live-matchup {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0 14px;
+  color: #f5f5f7;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 16px;
+}
+
+.daily-live-matchup b {
+  color: rgba(245,245,247,0.35);
+  font-size: 12px;
+}
+
+/* Make Daily Players player cards feel less huge */
+#root [data-page="daily-players"] article,
+#root [data-page="daily-players"] .rounded-3xl,
+#root [data-page="daily-players"] .rounded-2xl {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Tighter card internals only on Daily Players */
+#root [data-page="daily-players"] article {
+  padding: clamp(12px, 1.2vw, 16px) !important;
+}
+
+/* Reduce oversized typography inside Daily Players cards */
+#root [data-page="daily-players"] article h3,
+#root [data-page="daily-players"] article h4 {
+  font-size: clamp(14px, 1.2vw, 17px) !important;
+  line-height: 1.1 !important;
+}
+
+/* Keep rows/grids contained */
+#root [data-page="daily-players"] {
+  overflow-x: hidden;
+}
+
+#root [data-page="daily-players"] [class*="grid"] {
+  min-width: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .daily-live-teams-strip {
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  .daily-live-teams-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .daily-live-teams-scroller {
+    grid-auto-columns: minmax(205px, 82vw);
+  }
+}
+
+
+/* ===== Daily Players Live Teams infinite marquee ===== */
+
+.daily-live-teams-strip {
+  position: relative;
+}
+
+/* soft fade edges so it feels premium */
+.daily-live-teams-strip::before,
+.daily-live-teams-strip::after {
+  content: "";
+  position: absolute;
+  top: 64px;
+  bottom: 14px;
+  width: 76px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.daily-live-teams-strip::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(7,7,9,0.98), rgba(7,7,9,0));
+}
+
+.daily-live-teams-strip::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(7,7,9,0.98), rgba(7,7,9,0));
+}
+
+.daily-live-teams-scroller {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100%;
+  padding-bottom: 0 !important;
+}
+
+.daily-live-teams-track {
+  display: flex;
+  width: max-content;
+  gap: 12px;
+  will-change: transform;
+  animation: ve-live-teams-marquee 42s linear infinite;
+}
+
+.daily-live-teams-strip:hover .daily-live-teams-track {
+  animation-play-state: paused;
+}
+
+.daily-live-team-card {
+  flex: 0 0 242px;
+}
+
+@keyframes ve-live-teams-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .daily-live-teams-track {
+    animation: none;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .daily-live-teams-track {
+    animation-duration: 34s;
+  }
+
+  .daily-live-team-card {
+    flex-basis: 218px;
+  }
+
+  .daily-live-teams-strip::before,
+  .daily-live-teams-strip::after {
+    width: 38px;
+  }
+}
+
+
+/* ===== Daily Players: premium Team vs Team slideshow ===== */
+
+.daily-team-showcase {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 22px;
+  padding: 14px;
+  border-radius: 26px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(15,15,17,0.94), rgba(7,7,9,0.97));
+  box-shadow: 0 22px 70px rgba(0,0,0,0.36);
+  overflow: hidden;
+}
+
+.daily-team-shortcuts {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 12px;
+  scroll-snap-type: x proximity;
+}
+
+.daily-team-shortcuts::-webkit-scrollbar,
+.daily-team-showcase-track::-webkit-scrollbar {
+  height: 7px;
+}
+
+.daily-team-shortcuts::-webkit-scrollbar-thumb,
+.daily-team-showcase-track::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+.daily-team-shortcut {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.085);
+  background: rgba(255,255,255,0.045);
+  color: rgba(245,245,247,0.78);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.daily-team-shortcut b {
+  color: rgba(245,245,247,0.34);
+  font-size: 10px;
+}
+
+.daily-team-shortcut:hover {
+  background: rgba(255,255,255,0.075);
+  color: #f5f5f7;
+}
+
+.daily-team-showcase-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(520px, 62vw);
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+}
+
+.daily-team-slide {
+  scroll-snap-align: center;
+  min-height: 190px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.085);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.075), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018));
+  box-shadow: none !important;
+}
+
+.daily-team-slide-top,
+.daily-team-slide-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(245,245,247,0.48);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.daily-team-slide-top strong {
+  color: rgba(245,245,247,0.76);
+}
+
+.daily-team-versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  margin: 22px 0 20px;
+}
+
+.daily-team-side {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-areas:
+    "logo name"
+    "logo pitcher";
+  align-items: center;
+  column-gap: 13px;
+  min-width: 0;
+}
+
+.daily-team-side-right {
+  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-areas:
+    "name logo"
+    "pitcher logo";
+  text-align: right;
+}
+
+.daily-team-logo {
+  grid-area: logo;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.075);
+  overflow: hidden;
+  color: #f5f5f7;
+  font-weight: 900;
+}
+
+.daily-team-logo img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.daily-team-side h3 {
+  grid-area: name;
+  margin: 0;
+  color: #f5f5f7;
+  font-size: clamp(17px, 1.6vw, 24px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-team-side p {
+  grid-area: pitcher;
+  margin: 6px 0 0;
+  color: rgba(245,245,247,0.54);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-team-vs-pill {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.07);
+  color: rgba(245,245,247,0.72);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.daily-team-slide-footer {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Make the big game/player blocks beneath feel less huge */
+#root [data-page="daily-players"] article:not(.daily-team-slide):not(.daily-live-team-card) {
+  border-radius: 18px !important;
+}
+
+#root [data-page="daily-players"] article:not(.daily-team-slide):not(.daily-live-team-card) img {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+@media (max-width: 900px) {
+  .daily-team-showcase-track {
+    grid-auto-columns: minmax(310px, 90vw);
+  }
+
+  .daily-team-versus {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .daily-team-side,
+  .daily-team-side-right {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas:
+      "logo name"
+      "logo pitcher";
+    text-align: left;
+  }
+
+  .daily-team-vs-pill {
+    width: auto;
+    height: auto;
+    padding: 7px 10px;
+    justify-self: start;
+  }
+}
+
+
+/* ===== Daily Players: smaller team/player cards + horizontal team rows ===== */
+
+/* Make each game matchup section less massive */
+#root [data-page="daily-players"] article {
+  max-width: 100%;
+}
+
+/* Team lineup columns become compact horizontal lanes */
+#root [data-page="daily-players"] article > div:has(img) {
+  min-width: 0;
+}
+
+/* Any team/player list grid inside Daily Players should allow horizontal scrolling instead of giant stacked blocks */
+#root [data-page="daily-players"] .grid:has(img) {
+  min-width: 0;
+}
+
+/* Player cards: smaller, denser, pro style */
+#root [data-page="daily-players"] article img {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+}
+
+#root [data-page="daily-players"] article h3,
+#root [data-page="daily-players"] article h4,
+#root [data-page="daily-players"] article strong {
+  font-size: 14px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.02em;
+}
+
+#root [data-page="daily-players"] article p,
+#root [data-page="daily-players"] article span {
+  font-size: 11px;
+}
+
+/* Reduce oversized player-card padding */
+#root [data-page="daily-players"] article [class*="p-5"],
+#root [data-page="daily-players"] article [class*="p-6"],
+#root [data-page="daily-players"] article [class*="px-5"],
+#root [data-page="daily-players"] article [class*="px-6"] {
+  padding: 12px !important;
+}
+
+/* Less tall player rows */
+#root [data-page="daily-players"] article [class*="gap-4"],
+#root [data-page="daily-players"] article [class*="gap-5"],
+#root [data-page="daily-players"] article [class*="gap-6"] {
+  gap: 10px !important;
+}
+
+/* Team panels: slimmer */
+#root [data-page="daily-players"] article [class*="rounded-3xl"] {
+  border-radius: 20px !important;
+}
+
+#root [data-page="daily-players"] article [class*="rounded-2xl"] {
+  border-radius: 16px !important;
+}
+
+/* Make two team columns feel contained */
+#root [data-page="daily-players"] article [class*="grid-cols-2"] {
+  gap: 14px !important;
+}
+
+/* On smaller screens, team columns should slide horizontally instead of crushing */
+@media (max-width: 1180px) {
+  #root [data-page="daily-players"] article [class*="grid-cols-2"] {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(340px, 82vw);
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+
+  #root [data-page="daily-players"] article [class*="grid-cols-2"] > * {
+    scroll-snap-align: start;
+    min-width: 0;
+  }
+}
+
+/* Desktop: keep two teams visible but more compact */
+@media (min-width: 1181px) {
+  #root [data-page="daily-players"] article [class*="grid-cols-2"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+}
+
+/* Better scrollbar for team/player sliders */
+#root [data-page="daily-players"] article [class*="overflow-x"]::-webkit-scrollbar,
+#root [data-page="daily-players"] article [class*="grid-cols-2"]::-webkit-scrollbar {
+  height: 7px;
+}
+
+#root [data-page="daily-players"] article [class*="overflow-x"]::-webkit-scrollbar-thumb,
+#root [data-page="daily-players"] article [class*="grid-cols-2"]::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+/* Kill oversized game block height */
+#root [data-page="daily-players"] article {
+  margin-bottom: 18px !important;
+}
+
+/* Premium compact status chips */
+#root [data-page="daily-players"] article [class*="Projected"],
+#root [data-page="daily-players"] article [class*="projected"] {
+  font-size: 10px !important;
+}
+
+
+/* ===== Daily Players: real horizontal player rails ===== */
+
+#root [data-page="daily-players"] .daily-player-rail {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: minmax(178px, 210px) !important;
+  grid-template-columns: none !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x proximity;
+  padding: 2px 2px 10px !important;
+  max-width: 100%;
+}
+
+#root [data-page="daily-players"] .daily-player-rail::-webkit-scrollbar {
+  height: 7px;
+}
+
+#root [data-page="daily-players"] .daily-player-rail::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+#root [data-page="daily-players"] .daily-player-mini-card {
+  scroll-snap-align: start;
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 142px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.022)) !important;
+  box-shadow: none !important;
+}
+
+#root [data-page="daily-players"] .daily-player-mini-card img {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 13px !important;
+}
+
+#root [data-page="daily-players"] .daily-player-mini-card h3,
+#root [data-page="daily-players"] .daily-player-mini-card h4,
+#root [data-page="daily-players"] .daily-player-mini-card strong {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+
+#root [data-page="daily-players"] .daily-player-mini-card p,
+#root [data-page="daily-players"] .daily-player-mini-card span {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+}
+
+@media (max-width: 760px) {
+  #root [data-page="daily-players"] .daily-player-rail {
+    grid-auto-columns: minmax(160px, 74vw) !important;
+  }
+}
+
+
+/* ===== Daily Players: FB/IG-style horizontal player photo carousel ===== */
+
+#root [data-page="daily-players"] .daily-player-photo-rail {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: minmax(210px, 240px) !important;
+  grid-template-columns: none !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  padding: 2px 4px 12px !important;
+  max-width: 100%;
+}
+
+/* premium scrollbar */
+#root [data-page="daily-players"] .daily-player-photo-rail::-webkit-scrollbar {
+  height: 8px;
+}
+
+#root [data-page="daily-players"] .daily-player-photo-rail::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+#root [data-page="daily-players"] .daily-player-photo-rail::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px;
+}
+
+/* Every direct player card becomes a slide */
+#root [data-page="daily-players"] .daily-player-photo-rail > * {
+  scroll-snap-align: start;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Compact player slide card */
+#root [data-page="daily-players"] .daily-player-photo-rail article,
+#root [data-page="daily-players"] .daily-player-photo-rail > div {
+  min-height: 128px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,0.085) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025)) !important;
+  box-shadow: none !important;
+}
+
+/* Player image smaller */
+#root [data-page="daily-players"] .daily-player-photo-rail img {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+/* Text smaller */
+#root [data-page="daily-players"] .daily-player-photo-rail h3,
+#root [data-page="daily-players"] .daily-player-photo-rail h4,
+#root [data-page="daily-players"] .daily-player-photo-rail strong {
+  font-size: 13px !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em;
+}
+
+#root [data-page="daily-players"] .daily-player-photo-rail p,
+#root [data-page="daily-players"] .daily-player-photo-rail span {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Team container should be shorter now */
+#root [data-page="daily-players"] .daily-player-photo-rail + * {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 760px) {
+  #root [data-page="daily-players"] .daily-player-photo-rail {
+    grid-auto-columns: minmax(190px, 78vw) !important;
+  }
+}
+
+
+/* ===== HARD FIX: Daily player rail must carousel even without data-page wrapper ===== */
+
+.daily-player-photo-rail {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: 220px !important;
+  grid-template-columns: none !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  padding: 4px 4px 14px !important;
+  max-width: 100% !important;
+}
+
+.daily-player-photo-rail > * {
+  scroll-snap-align: start;
+  width: 220px !important;
+  max-width: 220px !important;
+  min-width: 220px !important;
+}
+
+.daily-player-photo-rail article,
+.daily-player-photo-rail > div {
+  min-height: 132px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,0.085) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025)) !important;
+  box-shadow: none !important;
+}
+
+.daily-player-photo-rail img {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.daily-player-photo-rail h3,
+.daily-player-photo-rail h4,
+.daily-player-photo-rail strong {
+  font-size: 13px !important;
+  line-height: 1.08 !important;
+}
+
+.daily-player-photo-rail p,
+.daily-player-photo-rail span {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+}
+
+.daily-player-photo-rail::-webkit-scrollbar {
+  height: 8px;
+}
+
+.daily-player-photo-rail::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .daily-player-photo-rail {
+    grid-auto-columns: 78vw !important;
+  }
+
+  .daily-player-photo-rail > * {
+    width: 78vw !important;
+    max-width: 78vw !important;
+    min-width: 78vw !important;
+  }
+}
+
+
+/* ===== FINAL: Team vs Team single-card infinite slideshow ===== */
+
+/* Keep the showcase sleek and compact */
+.daily-team-showcase {
+  max-width: 980px !important;
+  margin: 0 auto 22px !important;
+  padding: 12px !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+
+/* Top shortcuts stay small */
+.daily-team-shortcuts {
+  padding: 2px 2px 10px !important;
+}
+
+/* One visible slide area */
+.daily-team-showcase-track {
+  display: flex !important;
+  grid-auto-flow: unset !important;
+  grid-auto-columns: unset !important;
+  grid-template-columns: none !important;
+  width: max-content !important;
+  gap: 14px !important;
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+  animation: ve-team-one-card-slide 48s linear infinite;
+  will-change: transform;
+}
+
+.daily-team-showcase:hover .daily-team-showcase-track {
+  animation-play-state: paused;
+}
+
+/* Each slide takes the showcase width */
+.daily-team-slide {
+  flex: 0 0 min(956px, calc(100vw - 360px)) !important;
+  width: min(956px, calc(100vw - 360px)) !important;
+  min-height: 172px !important;
+  padding: 14px !important;
+  border-radius: 20px !important;
+}
+
+/* Cleaner smaller team logo/card */
+.daily-team-logo {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+}
+
+.daily-team-logo img {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.daily-team-side {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+}
+
+.daily-team-side-right {
+  grid-template-columns: minmax(0, 1fr) 46px !important;
+}
+
+.daily-team-side h3 {
+  font-size: clamp(16px, 1.45vw, 22px) !important;
+}
+
+.daily-team-side p {
+  font-size: 11px !important;
+}
+
+.daily-team-versus {
+  margin: 18px 0 16px !important;
+}
+
+/* Move half the duplicated track for seamless loop */
+@keyframes ve-team-one-card-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Put players back to normal: disable the experimental player carousel styles */
+.daily-player-photo-rail,
+.daily-player-rail {
+  display: grid !important;
+  grid-auto-flow: unset !important;
+  grid-auto-columns: unset !important;
+  grid-template-columns: none !important;
+  gap: 0.5rem !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.daily-player-photo-rail > *,
+.daily-player-rail > * {
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .daily-team-showcase {
+    max-width: 100% !important;
+  }
+
+  .daily-team-slide {
+    flex-basis: calc(100vw - 36px) !important;
+    width: calc(100vw - 36px) !important;
+  }
+
+  .daily-team-showcase-track {
+    animation-duration: 38s;
+  }
+}
+
+
+/* ===== Daily Players: full GameCard slideshow ===== */
+
+/* The parent that directly contains game cards becomes the slideshow track */
+div:has(> .daily-game-card-slide) {
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: minmax(100%, 100%) !important;
+  grid-template-columns: none !important;
+  gap: 18px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  max-width: 100% !important;
+  padding-bottom: 14px !important;
+}
+
+/* Each full game card is one FB/IG-style slide */
+.daily-game-card-slide {
+  scroll-snap-align: start;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+/* Keep players normal inside the slide */
+.daily-game-card-slide .grid.gap-2 {
+  display: grid !important;
+  grid-auto-flow: unset !important;
+  grid-template-columns: none !important;
+  overflow: visible !important;
+}
+
+/* Slideshow scrollbar */
+div:has(> .daily-game-card-slide)::-webkit-scrollbar {
+  height: 9px;
+}
+
+div:has(> .daily-game-card-slide)::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+
+div:has(> .daily-game-card-slide)::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.045);
+  border-radius: 999px;
+}
+
+/* Make the full game card feel compact enough inside one slide */
+.daily-game-card-slide {
+  border-radius: 24px !important;
+}
+
+.daily-game-card-slide > div:first-child {
+  padding: 16px !important;
+}
+
+.daily-game-card-slide > div:last-child {
+  padding: 14px !important;
+}
+
+/* Mobile: one clean slide */
+@media (max-width: 760px) {
+  div:has(> .daily-game-card-slide) {
+    grid-auto-columns: 100% !important;
+    gap: 14px !important;
+  }
+}
+
+
+/* ===== Daily Players: one-game-at-a-time UX ===== */
+
+.daily-active-game-shell {
+  width: 100%;
+  max-width: 100%;
+}
+
+.daily-active-game-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(18,18,20,0.94), rgba(7,7,9,0.96));
+}
+
+.daily-active-game-nav button,
+.daily-game-shortcut-row button {
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.055);
+  color: rgba(245,245,247,0.88);
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.daily-active-game-nav button:hover,
+.daily-game-shortcut-row button:hover,
+.daily-game-shortcut-row button.is-active {
+  background: rgba(255,255,255,0.11);
+  color: #f5f5f7;
+}
+
+.daily-active-game-count {
+  text-align: center;
+  display: grid;
+  gap: 2px;
+}
+
+.daily-active-game-count span {
+  color: rgba(245,245,247,0.46);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+}
+
+.daily-active-game-count strong {
+  color: #f5f5f7;
+  font-size: 13px;
+}
+
+.daily-game-shortcut-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 2px 12px;
+  margin-bottom: 4px;
+}
+
+.daily-game-shortcut-row button {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 8px 11px;
+}
+
+@media (max-width: 760px) {
+  .daily-active-game-nav {
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+  }
+
+  .daily-active-game-nav button {
+    padding: 8px 10px;
+  }
+}
+
+
+/* ===== Daily Players: premium Team vs Team shortcuts ===== */
+
+/* Hide the older plain shortcut row if it still exists */
+.daily-game-shortcut-row {
+  display: none !important;
+}
+
+.daily-matchup-shortcuts {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 14px;
+  margin: 0 0 4px;
+  scroll-snap-type: x proximity;
+  max-width: 100%;
+}
+
+.daily-matchup-shortcuts::-webkit-scrollbar {
+  height: 7px;
+}
+
+.daily-matchup-shortcuts::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+.daily-matchup-shortcuts button {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 118px;
+  padding: 9px 11px 9px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.085);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025));
+  color: rgba(245,245,247,0.78);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.daily-matchup-shortcuts button:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.085);
+  border-color: rgba(255,255,255,0.13);
+  color: #f5f5f7;
+}
+
+.daily-matchup-shortcuts button.is-active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.055));
+  border-color: rgba(255,255,255,0.20);
+  color: #f5f5f7;
+}
+
+.daily-matchup-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.10);
+  color: rgba(245,245,247,0.86);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.daily-matchup-shortcuts button.is-active .daily-matchup-dot {
+  background: #f5f5f7;
+  color: #08080a;
+}
+
+.daily-matchup-teams {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.daily-matchup-teams em {
+  font-style: normal;
+  color: rgba(245,245,247,0.38);
+  font-size: 10px;
+}
+
+@media (max-width: 760px) {
+  .daily-matchup-shortcuts {
+    padding-bottom: 12px;
+  }
+
+  .daily-matchup-shortcuts button {
+    min-width: 108px;
+  }
+}
+
+
+/* ===== Daily Players: bigger matchup shortcut boxes + team icons ===== */
+
+.daily-matchup-shortcuts {
+  gap: 12px !important;
+  padding: 4px 2px 16px !important;
+}
+
+.daily-matchup-shortcuts button {
+  min-width: 172px !important;
+  min-height: 64px !important;
+  padding: 10px 14px !important;
+  border-radius: 22px !important;
+  gap: 12px !important;
+  justify-content: flex-start !important;
+}
+
+.daily-matchup-icon-pair {
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+}
+
+.daily-matchup-icon-pair .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -8px;
+}
+
+.daily-team-initial-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 13px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.14);
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,0.18), rgba(255,255,255,0.045));
+  color: #f5f5f7;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+}
+
+.daily-matchup-shortcuts button.is-active .daily-team-initial-icon {
+  background: #f5f5f7;
+  color: #08080a;
+  border-color: rgba(255,255,255,0.7);
+}
+
+.daily-matchup-teams {
+  display: grid !important;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 6px !important;
+  font-size: 12px !important;
+}
+
+.daily-matchup-teams b {
+  max-width: 42px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Team/player box header with icon */
+.daily-team-box-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-bottom: 10px;
+}
+
+.daily-team-box-title h2,
+.daily-team-box-title h3,
+.daily-team-box-title h4 {
+  margin: 0 !important;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Icons inside player/team boxes slightly bigger */
+.daily-team-box-title .daily-team-initial-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+}
+
+@media (max-width: 760px) {
+  .daily-matchup-shortcuts button {
+    min-width: 152px !important;
+    min-height: 58px !important;
+  }
+
+  .daily-team-initial-icon {
+    width: 31px;
+    height: 31px;
+    border-radius: 12px;
+    font-size: 10px;
+  }
+}
+
+
+/* ===== HARD FIX: visible team icons in Daily Players shortcuts/cards ===== */
+
+.daily-matchup-shortcuts button {
+  min-width: 180px !important;
+  min-height: 66px !important;
+}
+
+.daily-matchup-icon-pair {
+  display: flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  isolation: isolate;
+}
+
+.daily-matchup-icon-pair .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -9px;
+}
+
+.daily-team-initial-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 14px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,0.22), rgba(255,255,255,0.06)) !important;
+  color: #f5f5f7 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important;
+}
+
+.daily-matchup-shortcuts button.is-active .daily-team-initial-icon {
+  background: #f5f5f7 !important;
+  color: #08080a !important;
+}
+
+.daily-team-box-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.daily-team-box-title h2,
+.daily-team-box-title h3,
+.daily-team-box-title h4 {
+  margin: 0 !important;
+}
+
+.daily-team-box-title .daily-team-initial-icon {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+
+/* ===== Daily Players: hide search bar safely without breaking component state ===== */
+#root [data-page="daily-players"] input[value],
+#root .daily-players-page input[value],
+#root input[placeholder*="Search player"],
+#root input[placeholder*="Search"] {
+  display: none !important;
+}
+
+
+/* ===== Daily Players: pro compact matchup workspace ===== */
+
+/* Hide old/basic shortcut row if it exists */
+.daily-game-shortcut-row {
+  display: none !important;
+}
+
+/* Pro Team vs Team shortcut carousel */
+.daily-matchup-shortcuts-pro {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 4px 2px 14px;
+  margin-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar {
+  height: 7px;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+.daily-matchup-shortcuts-pro button {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 178px;
+  min-height: 66px;
+  padding: 10px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+  color: rgba(245,245,247,0.84);
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.daily-matchup-shortcuts-pro button:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.daily-matchup-shortcuts-pro button.is-active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+  border-color: rgba(255,255,255,0.22);
+  color: #f5f5f7;
+}
+
+.daily-matchup-icons-pro {
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+  flex: 0 0 auto;
+}
+
+.daily-matchup-icons-pro .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -9px;
+}
+
+.daily-team-initial-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 14px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.24), rgba(255,255,255,0.065)) !important;
+  color: #f5f5f7 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.34) !important;
+}
+
+.daily-matchup-shortcuts-pro button.is-active .daily-team-initial-icon {
+  background: #f5f5f7 !important;
+  color: #08080a !important;
+}
+
+.daily-matchup-copy-pro {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.daily-matchup-copy-pro em {
+  font-style: normal;
+  color: rgba(245,245,247,0.38);
+  font-size: 10px;
+}
+
+/* Compact the selected game card so users do not scroll forever */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+.daily-game-card-slide,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl {
+  max-height: calc(100vh - 260px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-color: rgba(255,255,255,0.085) !important;
+  background: linear-gradient(180deg, rgba(15,15,17,0.94), rgba(7,7,9,0.97)) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.36) !important;
+}
+
+/* Inner player area scrolls inside the selected matchup, not the whole page */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child {
+  max-height: calc(100vh - 410px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 12px !important;
+}
+
+/* Smaller player cards, but keep original layout */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl article {
+  padding: 10px !important;
+  border-radius: 16px !important;
+  border-color: rgba(255,255,255,0.075) !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl img,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl img {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 13px !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl h4,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl strong,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl h3,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl h4,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl strong {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl p,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl span,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl p,
+#root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl span {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Make the inner scrollbar clean */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child::-webkit-scrollbar {
+  width: 8px;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .daily-matchup-shortcuts-pro button {
+    min-width: 154px;
+    min-height: 58px;
+  }
+
+  .daily-team-initial-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+  #root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl {
+    max-height: none !important;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+  #root [data-page="daily-players"] .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
+
+
+/* ===== FINAL Daily Players compact pro layout ===== */
+
+/* Hide older duplicate shortcut rows if they still exist */
+.daily-game-shortcut-row,
+.daily-matchup-shortcuts {
+  display: none !important;
+}
+
+/* Team vs Team shortcut cards */
+.daily-matchup-shortcuts-pro {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 4px 2px 12px;
+  margin: 0 0 8px;
+  scroll-snap-type: x proximity;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar {
+  height: 7px;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+.daily-matchup-shortcuts-pro button {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 178px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
+  color: rgba(245,245,247,0.84);
+  cursor: pointer;
+}
+
+.daily-matchup-shortcuts-pro button:hover {
+  background: rgba(255,255,255,0.095);
+}
+
+.daily-matchup-shortcuts-pro button.is-active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.17), rgba(255,255,255,0.06));
+  border-color: rgba(255,255,255,0.23);
+  color: #f5f5f7;
+}
+
+.daily-matchup-icons-pro {
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+  flex: 0 0 auto;
+}
+
+.daily-matchup-icons-pro .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -9px;
+}
+
+.daily-team-initial-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 14px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.24), rgba(255,255,255,0.065)) !important;
+  color: #f5f5f7 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.34) !important;
+}
+
+.daily-matchup-shortcuts-pro button.is-active .daily-team-initial-icon {
+  background: #f5f5f7 !important;
+  color: #08080a !important;
+}
+
+.daily-matchup-copy-pro {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.daily-matchup-copy-pro em {
+  font-style: normal;
+  color: rgba(245,245,247,0.38);
+  font-size: 10px;
+}
+
+/* Main selected game card: make it fit the page */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+  max-height: calc(100vh - 238px) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-color: rgba(255,255,255,0.085) !important;
+  background: linear-gradient(180deg, rgba(15,15,17,0.94), rgba(7,7,9,0.97)) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.36) !important;
+}
+
+/* Shrink the game header */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child {
+  padding: 12px 14px !important;
+  min-height: 86px !important;
+}
+
+/* Player area scrolls inside the selected matchup */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child {
+  max-height: calc(100vh - 382px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 10px !important;
+}
+
+/* Two team columns stay visible */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child > div {
+  gap: 10px !important;
+}
+
+/* Compact player cards */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article {
+  min-height: 62px !important;
+  padding: 7px 9px !important;
+  border-radius: 14px !important;
+  border-color: rgba(255,255,255,0.07) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018)) !important;
+}
+
+/* Smaller player images */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article img,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article img {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 11px !important;
+}
+
+/* Compact text */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h4,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article strong,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h3,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h4,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article strong {
+  font-size: 12px !important;
+  line-height: 1.08 !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article p,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article span,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article p,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article span {
+  font-size: 9.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Reduce vertical spacing inside player lists */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2 {
+  gap: 6px !important;
+}
+
+/* Clean inner scrollbar */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child::-webkit-scrollbar,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child::-webkit-scrollbar {
+  width: 8px;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child::-webkit-scrollbar-thumb,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+}
+
+@media (max-width: 900px) {
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+    max-height: none !important;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
+
+
+/* ===== DAILY PLAYERS: COMPACT PRO COCKPIT FINAL PASS ===== */
+
+/* Make the whole Daily Players workspace tighter */
+.daily-active-game-shell {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: calc(100vh - 132px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Top previous/next nav: thinner */
+.daily-active-game-nav {
+  min-height: 46px !important;
+  padding: 7px 10px !important;
+  margin-bottom: 8px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(15,15,17,0.94), rgba(6,6,8,0.97)) !important;
+  border-color: rgba(255,255,255,0.075) !important;
+}
+
+.daily-active-game-nav button {
+  min-height: 34px !important;
+  padding: 7px 11px !important;
+  font-size: 11px !important;
+}
+
+.daily-active-game-count span {
+  font-size: 9px !important;
+}
+
+.daily-active-game-count strong {
+  font-size: 12px !important;
+}
+
+/* Shortcut strip: bigger icons, lower height, more premium */
+.daily-matchup-shortcuts-pro {
+  min-height: 58px !important;
+  padding: 0 2px 9px !important;
+  margin-bottom: 8px !important;
+}
+
+.daily-matchup-shortcuts-pro button {
+  min-width: 154px !important;
+  min-height: 52px !important;
+  padding: 8px 10px !important;
+  border-radius: 18px !important;
+  gap: 10px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.018)) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+.daily-matchup-shortcuts-pro button.is-active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+}
+
+.daily-team-initial-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 12px !important;
+  font-size: 10px !important;
+}
+
+.daily-matchup-copy-pro {
+  font-size: 11px !important;
+  gap: 5px !important;
+}
+
+/* Selected matchup card: becomes the main viewport panel */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  border-color: rgba(255,255,255,0.075) !important;
+  background:
+    linear-gradient(180deg, rgba(13,13,16,0.96), rgba(5,5,7,0.98)) !important;
+  box-shadow: 0 22px 65px rgba(0,0,0,0.38) !important;
+}
+
+/* Matchup header: much shorter */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child {
+  min-height: 68px !important;
+  padding: 10px 13px !important;
+  align-items: center !important;
+}
+
+/* Header text should not dominate */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child h2,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child strong,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child h2,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child h3,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child strong {
+  font-size: 15px !important;
+  line-height: 1.05 !important;
+}
+
+/* Main player zone: no page scroll, inner content fits */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child {
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding: 9px !important;
+}
+
+/* Team columns: equal height, contained */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child > div {
+  height: 100% !important;
+  min-height: 0 !important;
+  gap: 9px !important;
+}
+
+/* Each team column becomes an internal compact panel */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div > div,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child > div > div {
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+}
+
+/* Player list itself scrolls if needed, not the whole page */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2 {
+  gap: 5px !important;
+  max-height: calc(100vh - 395px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 4px !important;
+}
+
+/* Player card: true compact row */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article {
+  min-height: 46px !important;
+  max-height: 50px !important;
+  padding: 5px 8px !important;
+  border-radius: 12px !important;
+  border-color: rgba(255,255,255,0.065) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.014)) !important;
+  box-shadow: none !important;
+}
+
+/* Player face: smaller, more like roster row */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article img,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article img {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 10px !important;
+}
+
+/* Text density */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h4,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article strong,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h3,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h4,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article strong {
+  font-size: 11px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article p,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article span,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article p,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article span {
+  font-size: 8.8px !important;
+  line-height: 1.08 !important;
+}
+
+/* Hide less important duplicated matchup text inside tiny rows */
+.daily-active-game-shell article p,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article p {
+  opacity: 0.58 !important;
+}
+
+/* Tiny projected badges */
+.daily-active-game-shell article [class*="rounded-full"],
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article [class*="rounded-full"] {
+  padding: 2px 6px !important;
+  font-size: 8.5px !important;
+}
+
+/* Pro internal scrollbars */
+.daily-active-game-shell .grid.gap-2::-webkit-scrollbar,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2::-webkit-scrollbar {
+  width: 6px;
+}
+
+.daily-active-game-shell .grid.gap-2::-webkit-scrollbar-thumb,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 999px;
+}
+
+/* Desktop only: make the whole thing feel like one app screen */
+@media (min-width: 901px) {
+  body:has(.daily-active-game-shell) {
+    overflow: hidden;
+  }
+}
+
+/* Mobile can scroll normally */
+@media (max-width: 900px) {
+  .daily-active-game-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .daily-active-game-shell .grid.gap-2,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2 {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
+
+
+/* ===== Daily Players: one-screen compact pro layout ===== */
+
+/* Hide duplicate older shortcut rows */
+.daily-game-shortcut-row,
+.daily-matchup-shortcuts {
+  display: none !important;
+}
+
+/* Whole selected-game workspace should fit one viewport */
+.daily-active-game-shell {
+  height: calc(100vh - 118px) !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  overflow: hidden !important;
+}
+
+/* Top prev/next bar */
+.daily-active-game-nav {
+  min-height: 42px !important;
+  padding: 6px 10px !important;
+  margin-bottom: 8px !important;
+  border-radius: 15px !important;
+  border-color: rgba(255,255,255,0.075) !important;
+  background: linear-gradient(180deg, rgba(14,14,16,0.96), rgba(6,6,8,0.98)) !important;
+}
+
+.daily-active-game-nav button {
+  min-height: 32px !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+}
+
+/* Team vs Team shortcut cards */
+.daily-matchup-shortcuts-pro {
+  display: flex !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100% !important;
+  min-height: 54px !important;
+  padding: 0 2px 8px !important;
+  margin: 0 0 8px !important;
+  scroll-snap-type: x proximity;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar {
+  height: 6px;
+}
+
+.daily-matchup-shortcuts-pro::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+}
+
+.daily-matchup-shortcuts-pro button {
+  flex: 0 0 auto !important;
+  min-width: 154px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 7px 10px !important;
+  border-radius: 17px !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02)) !important;
+  color: rgba(245,245,247,0.86) !important;
+  cursor: pointer;
+}
+
+.daily-matchup-shortcuts-pro button.is-active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.055)) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+}
+
+.daily-matchup-icons-pro {
+  display: flex !important;
+  align-items: center !important;
+  isolation: isolate;
+  flex: 0 0 auto;
+}
+
+.daily-matchup-icons-pro .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -8px;
+}
+
+.daily-team-initial-icon {
+  width: 31px !important;
+  height: 31px !important;
+  border-radius: 12px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.23), rgba(255,255,255,0.06)) !important;
+  color: #f5f5f7 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.daily-matchup-shortcuts-pro button.is-active .daily-team-initial-icon {
+  background: #f5f5f7 !important;
+  color: #08080a !important;
+}
+
+.daily-matchup-copy-pro {
+  display: grid !important;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.daily-matchup-copy-pro em {
+  font-style: normal;
+  color: rgba(245,245,247,0.38);
+  font-size: 9px;
+}
+
+/* Main matchup card must become one compact viewport panel */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: 58px minmax(0, 1fr) !important;
+  overflow: hidden !important;
+  border-radius: 20px !important;
+  border-color: rgba(255,255,255,0.075) !important;
+  background: linear-gradient(180deg, rgba(13,13,16,0.96), rgba(5,5,7,0.98)) !important;
+  box-shadow: 0 22px 65px rgba(0,0,0,0.38) !important;
+}
+
+/* Compact game header */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child {
+  min-height: 58px !important;
+  padding: 8px 12px !important;
+  align-items: center !important;
+}
+
+/* Header text smaller */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child h2,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child strong,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child h2,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child h3,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:first-child strong {
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+/* Player area: no page scroll */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child {
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding: 8px !important;
+}
+
+/* The two team columns fill available height */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child > div {
+  height: 100% !important;
+  min-height: 0 !important;
+  gap: 8px !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+/* Team panels should not waste vertical space */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div > div,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 > div:last-child > div > div {
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+}
+
+/* Player list: show 9 compact rows without scrolling if possible */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2 {
+  display: grid !important;
+  grid-template-rows: repeat(9, minmax(34px, 1fr)) !important;
+  gap: 4px !important;
+  height: calc(100vh - 362px) !important;
+  max-height: calc(100vh - 362px) !important;
+  overflow: hidden !important;
+}
+
+/* Player card: very compact roster row */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article {
+  min-height: 34px !important;
+  max-height: 42px !important;
+  padding: 4px 7px !important;
+  border-radius: 11px !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.038), rgba(255,255,255,0.012)) !important;
+  box-shadow: none !important;
+}
+
+/* Player image */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article img,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article img {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9px !important;
+}
+
+/* Text density */
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h4,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article strong,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h3,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article h4,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article strong {
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article p,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article span,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article p,
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article span {
+  font-size: 8px !important;
+  line-height: 1 !important;
+}
+
+/* Badges smaller */
+.daily-active-game-shell article [class*="rounded-full"],
+#root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 article [class*="rounded-full"] {
+  padding: 1px 5px !important;
+  font-size: 8px !important;
+}
+
+/* Desktop: prevent body from scrolling on this workspace */
+@media (min-width: 901px) {
+  body:has(.daily-active-game-shell) {
+    overflow: hidden !important;
+  }
+}
+
+/* Mobile can scroll normally */
+@media (max-width: 900px) {
+  .daily-active-game-shell {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 {
+    height: auto !important;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2,
+  #root .scroll-mt-6.overflow-hidden.rounded-3xl.border.border-slate-800.bg-slate-950\/80 .grid.gap-2 {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+

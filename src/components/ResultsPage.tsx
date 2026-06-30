@@ -479,6 +479,133 @@ export default function ResultsPage({
     }
   };
 
+  // Merge backend/local saved AI slips into V.A.I Results.
+  // This is the missing pipe:
+  // savedParlays/backend ledger -> aiParlays -> AI deck -> calendar AI win %
+  useEffect(() => {
+    if (!Array.isArray(savedParlays) || savedParlays.length === 0) return;
+
+    const backendAiParlays = savedParlays
+      .filter((parlay: any) => {
+        const source = String(parlay.source || parlay.pickSource || parlay.origin || "").toLowerCase();
+        const explanation = String(parlay.explanation || parlay.notes || "").toLowerCase();
+
+        return (
+          parlay.aiGenerated === true ||
+          parlay.ai_generated === true ||
+          source.includes("ai") ||
+          source.includes("vai") ||
+          explanation.includes("aigenerated=true")
+        );
+      })
+      .map((parlay: any): AIParlayPick => {
+        const rawStatus = String(parlay.status || parlay.result || parlay.resultStatus || "UPCOMING").toUpperCase();
+
+        const normalizedStatus =
+          rawStatus === "WON" || rawStatus === "WIN"
+            ? "WON"
+            : rawStatus === "LOST" || rawStatus === "LOSS"
+              ? "LOST"
+              : "UPCOMING";
+
+        const rawLegs = Array.isArray(parlay.legs) ? parlay.legs : [];
+
+        const oddsValue = Number(
+          parlay.oddsValue ||
+          parlay.odds_decimal ||
+          parlay.combined_odds ||
+          parlay.combinedOdds ||
+          parlay.odds ||
+          2
+        );
+
+        const wager = Number(parlay.wager || parlay.stake || parlay.stake_units || 1);
+        const payout =
+          normalizedStatus === "WON"
+            ? Number(parlay.payout || Math.max(wager * oddsValue, wager))
+            : 0;
+
+        return {
+          id: String(parlay.backendPickId || parlay.pick_id || parlay.id || parlay.clientRef || `backend-ai-${Date.now()}`),
+          title: String(parlay.title || parlay.market || "V.A.I Smart Picks Parlay"),
+          createdAt: new Date(parlay.createdAt || parlay.created_at || parlay.timestamp || Date.now()),
+          status: normalizedStatus as any,
+          oddsDisplay: parlay.oddsDisplay || `${oddsValue.toFixed(2)}x`,
+          oddsValue: Number.isFinite(oddsValue) && oddsValue > 0 ? oddsValue : 2,
+          wager: Number.isFinite(wager) && wager > 0 ? wager : 1,
+          payout,
+          confidence: Number(parlay.confidence || 72),
+          riskLevel: parlay.riskLevel || parlay.risk || "Medium",
+          rationale: parlay.rationale || parlay.explanation || "Registered from V.A.I Smart Picks backend ledger.",
+          legs: rawLegs.map((leg: any, index: number) => {
+            const rawSelection = String(leg.selection || leg.label || leg.playerName || leg.player || `Leg ${index + 1}`);
+            const metaMatch = rawSelection.match(/\s\|\|meta:(\{.*\})$/);
+            let parsedMeta: any = {};
+
+            if (metaMatch) {
+              try {
+                parsedMeta = JSON.parse(metaMatch[1]);
+              } catch {
+                parsedMeta = {};
+              }
+            }
+
+            const cleanSelection = rawSelection.replace(/\s\|\|meta:\{.*\}$/, "");
+            const playerName = String(leg.playerName || leg.player || cleanSelection || `Leg ${index + 1}`);
+            const playerId =
+              leg.playerId ||
+              leg.player_id ||
+              leg.mlbPlayerId ||
+              leg.mlb_player_id ||
+              leg.personId ||
+              leg.person_id ||
+              parsedMeta.playerId ||
+              parsedMeta.p;
+
+            const fallbackHeadshot = playerId
+              ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${playerId}/headshot/67/current`
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=0f172a&color=e2e8f0&size=96`;
+
+            const rawLegStatus = String(leg.status || leg.result || "PENDING").toUpperCase();
+            const normalizedLegStatus =
+              rawLegStatus === "WON" || rawLegStatus === "WIN"
+                ? "WON"
+                : rawLegStatus === "LOST" || rawLegStatus === "LOSS"
+                  ? "LOST"
+                  : "PENDING";
+
+            return {
+              id: String(leg.id || leg.leg_id || `${parlay.id || "backend"}-leg-${index}`),
+              playerName,
+              playerId: playerId ? String(playerId) : undefined,
+              headshot: String(leg.headshot || leg.headshotUrl || leg.imageUrl || leg.photoUrl || parsedMeta.headshot || fallbackHeadshot),
+              team: String(leg.team || leg.game || leg.event_id || "MLB"),
+              marketName: String(leg.marketName || leg.market || "MLB Prop"),
+              spec: String(leg.spec || leg.selection || leg.label || "AI selection"),
+              odds: Number(leg.odds || leg.odds_decimal || leg.decimalOdds || 2),
+              status: normalizedLegStatus as any,
+            };
+          }),
+        };
+      });
+
+    if (backendAiParlays.length === 0) return;
+
+    setAiParlays((current) => {
+      const seen = new Set<string>();
+      const merged = [...backendAiParlays, ...current].filter((pick) => {
+        const key = String(pick.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      localStorage.setItem("vai_ai_parlay_picks_history", JSON.stringify(merged));
+      return merged;
+    });
+  }, [savedParlays]);
+
+
   // Settle lists
   const results = posts
     .filter((p) => p.postType === 'RESULT' && p.result)
@@ -908,6 +1035,43 @@ export default function ResultsPage({
           {getCalendarDays().map((dateItem, idx) => {
             const ymd = getLocalYMD(dateItem);
             const stats = getDateStats(ymd);
+
+            const aiForDate = aiParlays.filter((pick) => {
+              const rawDate =
+                (pick as any).timestamp ||
+                (pick as any).createdAt ||
+                (pick as any).created_at ||
+                (pick as any).date ||
+                (pick as any).gameDate ||
+                (pick as any).game_date;
+
+              if (!rawDate) return false;
+
+              try {
+                return getLocalYMD(new Date(rawDate)) === ymd;
+              } catch {
+                return false;
+              }
+            });
+
+            const settledAiForDate = aiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return ["won", "win", "lost", "loss"].includes(status);
+            });
+
+            const aiWinsForDate = settledAiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return status === "won" || status === "win";
+            }).length;
+
+            const aiLossesForDate = settledAiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return status === "lost" || status === "loss";
+            }).length;
+
+            const aiWinRateForDate =
+              settledAiForDate.length > 0 ? (aiWinsForDate / settledAiForDate.length) * 100 : null;
+
             const isSelected = selectedDateYMD === ymd;
             const dayName = dateItem.toLocaleDateString(undefined, { weekday: 'short' });
             const dayNum = dateItem.getDate();
@@ -915,7 +1079,13 @@ export default function ResultsPage({
             let statusText = "No Plays";
             let subColor = "text-slate-500";
             
-            if (stats.winRate !== null) {
+            if (aiWinRateForDate !== null) {
+              statusText = `AI ${aiWinRateForDate.toFixed(0)}%`;
+              subColor = aiWinRateForDate >= 50 ? "text-cyan-300" : "text-rose-500";
+            } else if (aiForDate.length > 0) {
+              statusText = `AI ${aiForDate.length} pending`;
+              subColor = "text-cyan-400 animate-pulse";
+            } else if (stats.winRate !== null) {
               statusText = `${stats.winRate.toFixed(0)}% WR`;
               subColor = stats.winRate >= 50 ? "text-emerald-400" : "text-rose-500";
             } else if (stats.hasUpcoming) {

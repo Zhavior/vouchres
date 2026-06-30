@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   Activity,
@@ -11,7 +11,9 @@ import {
   ShieldAlert,
   Target,
 } from 'lucide-react';
-import { ProPageHeader, VerifiedDataNotice } from '../../components/pro';
+import { VerifiedDataNotice } from '../../components/pro';
+import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
+import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { apiUrl } from '../../lib/apiBase';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
@@ -53,6 +55,7 @@ interface MatchupMatrixResponse {
   date: string;
   generatedAt: string;
   rows: MatchupMatrixRow[];
+  mode?: 'live' | 'enriched';
 }
 
 type SortKey = 'score' | 'kPct' | 'whiffPct' | 'oppKPct' | 'xera' | 'kPerGame';
@@ -83,6 +86,23 @@ interface LegacyMatchupsResponse {
   updatedAt?: string;
   matchups?: LegacyMatchup[];
   games?: LegacyMatchup[];
+}
+
+interface ScheduleGame {
+  gamePk: number;
+  gameDate: string;
+  awayTeam: { name?: string; abbreviation?: string };
+  homeTeam: { name?: string; abbreviation?: string };
+  probablePitchers?: {
+    away?: { pitcherId?: number; pitcherName?: string; throws?: 'L' | 'R' | 'U' | string } | null;
+    home?: { pitcherId?: number; pitcherName?: string; throws?: 'L' | 'R' | 'U' | string } | null;
+  };
+  weather?: { condition?: string; tempF?: number; windMph?: number; windDir?: string } | null;
+}
+
+interface ScheduleGamesResponse {
+  date?: string;
+  games?: ScheduleGame[];
 }
 
 const labelFilters: Array<'ALL' | MatrixLabel> = ['ALL', 'STRONG PLAY', 'LEAN OVER', 'NEUTRAL', 'AVOID'];
@@ -237,6 +257,55 @@ function fallbackMatrixFromMatchups(data: LegacyMatchupsResponse, requestedDate:
   };
 }
 
+function schedulePitcherRow(
+  game: ScheduleGame,
+  side: 'away' | 'home',
+  requestedDate: string
+): MatchupMatrixRow {
+  const team = side === 'away' ? game.awayTeam : game.homeTeam;
+  const opponent = side === 'away' ? game.homeTeam : game.awayTeam;
+  const pitcher = side === 'away' ? game.probablePitchers?.away : game.probablePitchers?.home;
+  const weather = game.weather
+    ? [
+        game.weather.condition,
+        typeof game.weather.tempF === 'number' ? `${game.weather.tempF}F` : null,
+        typeof game.weather.windMph === 'number' ? `${game.weather.windMph} mph${game.weather.windDir ? ` ${game.weather.windDir}` : ''}` : null,
+      ].filter(Boolean).join(' · ') || null
+    : null;
+
+  return {
+    pitcherId: pitcher?.pitcherId ?? null,
+    pitcherName: pitcher?.pitcherName ?? 'Probable pitcher TBD',
+    team: team.abbreviation || team.name || 'TBD',
+    opponent: opponent.abbreviation || opponent.name || 'TBD',
+    gameId: game.gamePk,
+    gameTime: game.gameDate,
+    pitcherHand: pitcher?.throws === 'L' || pitcher?.throws === 'R' ? pitcher.throws : 'U',
+    score: null,
+    label: 'NEUTRAL',
+    metrics: { ...emptyMetrics(), weather },
+    dataQuality: {
+      probablePitcher: pitcher ? 'official' : 'unknown',
+      statcast: 'missing',
+      weather: weather ? 'available' : 'missing',
+    },
+    confidence: 'Low',
+  };
+}
+
+function matrixFromSchedule(data: ScheduleGamesResponse, requestedDate: string): MatchupMatrixResponse {
+  const games = data.games ?? [];
+  return {
+    date: data.date ?? requestedDate,
+    generatedAt: new Date().toISOString(),
+    mode: 'live',
+    rows: games.flatMap((game) => [
+      schedulePitcherRow(game, 'away', requestedDate),
+      schedulePitcherRow(game, 'home', requestedDate),
+    ]),
+  };
+}
+
 async function fetchJsonResponse<T>(url: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(url, {
     signal,
@@ -253,6 +322,7 @@ export default function TeamMatchupLabPage() {
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [labelFilter, setLabelFilter] = useState<'ALL' | MatrixLabel>('ALL');
   const [teamFilter, setTeamFilter] = useState('ALL');
@@ -261,35 +331,72 @@ export default function TeamMatchupLabPage() {
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [selectedPitcher, setSelectedPitcher] = useState<MatchupMatrixRow | null>(null);
+  const hasRowsRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    setLoading(!hasRowsRef.current);
+    setEnriching(false);
     setError(null);
 
-    fetchJsonResponse<MatchupMatrixResponse>(
-      apiUrl(`/api/mlb/matchup-matrix?date=${encodeURIComponent(date)}`),
-      controller.signal
-    )
-      .catch(async () => {
-        const fallback = await fetchJsonResponse<LegacyMatchupsResponse>(
-          apiUrl('/api/mlb/matchups/today'),
+    async function loadMatrix() {
+      try {
+        const live = await fetchJsonResponse<MatchupMatrixResponse>(
+          apiUrl(`/api/mlb/matchup-matrix/live?date=${encodeURIComponent(date)}`),
+          controller.signal
+        ).catch(async () => {
+          const schedulePath = date === todayISO()
+            ? '/api/mlb/games/today'
+            : `/api/mlb/games/date/${encodeURIComponent(date)}`;
+          return matrixFromSchedule(
+            await fetchJsonResponse<ScheduleGamesResponse>(apiUrl(schedulePath), controller.signal),
+            date
+          );
+        }).catch(async () => {
+          const fallback = await fetchJsonResponse<LegacyMatchupsResponse>(
+            apiUrl('/api/mlb/matchups/today'),
+            controller.signal
+          );
+          return fallbackMatrixFromMatchups(fallback, date);
+        });
+
+        if (controller.signal.aborted) return;
+        setData(live);
+        setLoading(false);
+        setEnriching(true);
+
+        const enriched = await fetchJsonResponse<MatchupMatrixResponse>(
+          apiUrl(`/api/mlb/matchup-matrix?date=${encodeURIComponent(date)}`),
           controller.signal
         );
-        return fallbackMatrixFromMatchups(fallback, date);
-      })
-      .then(setData)
-      .catch((err) => {
-        if (err.name !== 'AbortError') setError(err.message || 'Matchup Matrix unavailable');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
+
+        if (!controller.signal.aborted && enriched.rows.length > 0) {
+          setData(enriched);
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setError(err.message || 'Matchup Matrix unavailable');
+          setLoading(false);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setEnriching(false);
+        }
+      }
+    }
+
+    loadMatrix();
 
     return () => controller.abort();
   }, [date]);
 
   const rows = data?.rows ?? [];
+
+  useEffect(() => {
+    hasRowsRef.current = rows.length > 0;
+  }, [rows.length]);
 
   const teams = useMemo(() => Array.from(new Set(rows.map((row) => row.team))).sort(), [rows]);
   const opponents = useMemo(() => Array.from(new Set(rows.map((row) => row.opponent))).sort(), [rows]);
@@ -354,57 +461,94 @@ export default function TeamMatchupLabPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-3 py-5 text-slate-100 sm:px-4 sm:py-6">
-      <div className="mx-auto max-w-7xl space-y-4">
-        <ProPageHeader
-          icon={Target}
-          title="Team Matchup Lab"
-          subtitle="Daily pitcher strikeout matchup matrix using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres."
-          badge="Matchup Matrix"
-          accent="#34d399"
-          kpiTiles={[
-            { icon: Flame, label: 'Strong Plays', value: summary.strong, accent: '#34d399' },
-            { icon: Activity, label: 'Lean Overs', value: summary.lean, accent: '#facc15' },
-            { icon: ShieldAlert, label: 'Avoid', value: summary.avoid, accent: '#fb7185' },
-            { icon: BarChart3, label: 'Highest Opp K%', value: summary.highestOppKPct, accent: '#38bdf8' },
-          ]}
-          right={
-            <div className="flex flex-col gap-2 sm:min-w-52">
+    <main className="ve-page ve-grid-bg relative min-h-screen overflow-hidden px-3 py-5 text-slate-100 sm:px-4 sm:py-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_8%,rgba(52,211,153,0.15),transparent_30%),radial-gradient(circle_at_82%_2%,rgba(56,189,248,0.13),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(5,7,17,1)_44%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(148,163,184,0.13)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.13)_1px,transparent_1px)] [background-size:42px_42px]" />
+      <div className="relative mx-auto max-w-7xl space-y-4">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-5">
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
+          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-200">
+                <Target className="h-3.5 w-3.5" />
+                Matchup Matrix
+              </div>
+              <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">Team Matchup Lab</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+                Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">Official probables only</span>
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">No fake Statcast</span>
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">Drawer-ready rows</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-slate-950/55 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] lg:min-w-64">
               <label className="text-[10px] font-black uppercase tracking-wider text-slate-500" htmlFor="matchup-date">
-                Date
+                Slate Date
               </label>
-              <div className="flex gap-2">
+              <div className="mt-2 flex gap-2">
                 <input
                   id="matchup-date"
                   type="date"
                   value={date}
                   onChange={(event) => setDate(event.target.value || todayISO())}
-                  className="min-h-10 rounded-xl border border-white/10 bg-slate-950/80 px-3 text-sm font-bold text-slate-100 outline-none focus:border-emerald-300/50"
+                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-100 outline-none transition focus:border-emerald-300/50"
                 />
                 <button
                   type="button"
                   onClick={() => setDate(todayISO())}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 text-emerald-100 hover:border-emerald-300/45"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-300/25 bg-emerald-300/12 px-3 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.08)] hover:border-emerald-300/50"
                   aria-label="Refresh today"
                   title="Refresh today"
                 >
                   <RefreshCcw className="h-4 w-4" />
                 </button>
               </div>
+              <div className="mt-3 text-xs font-bold text-slate-500">
+                {rows.length > 0
+                  ? enriching || loading
+                    ? `${rows.length} live rows locked · refreshing`
+                    : `${rows.length} pitcher rows loaded`
+                  : 'Preparing live MLB slate'}
+              </div>
             </div>
-          }
-        />
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { icon: Flame, label: 'Strong Plays', value: summary.strong, tone: 'emerald' },
+              { icon: Activity, label: 'Lean Overs', value: summary.lean, tone: 'yellow' },
+              { icon: ShieldAlert, label: 'Avoid', value: summary.avoid, tone: 'rose' },
+              { icon: BarChart3, label: 'Highest Opp K%', value: summary.highestOppKPct, tone: 'sky' },
+            ].map(({ icon: Icon, label, value, tone }) => (
+              <div key={label} className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <span className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${tone === 'emerald' ? 'via-emerald-300/70' : tone === 'yellow' ? 'via-yellow-300/70' : tone === 'rose' ? 'via-rose-300/70' : 'via-sky-300/70'} to-transparent`} />
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
+                    <Icon className={`h-4 w-4 ${tone === 'emerald' ? 'text-emerald-300' : tone === 'yellow' ? 'text-yellow-300' : tone === 'rose' ? 'text-rose-300' : 'text-sky-300'}`} />
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</span>
+                </div>
+                <div className={`mt-3 font-mono text-2xl font-black ${tone === 'emerald' ? 'text-emerald-200' : tone === 'yellow' ? 'text-yellow-200' : tone === 'rose' ? 'text-rose-200' : 'text-sky-200'}`}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <VerifiedDataNotice variant="feed-required" />
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-3 shadow-[0_0_40px_rgba(15,23,42,0.35)] sm:p-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/45 to-transparent" />
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm font-black text-white">
-                <Filter className="h-4 w-4 text-emerald-300" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-sky-100">
+                <Filter className="h-4 w-4" />
                 Pitcher K Matchups
               </div>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">
                 Missing Statcast, opponent split, or weather fields stay blank and lower confidence.
               </p>
             </div>
@@ -413,7 +557,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={teamFilter}
                 onChange={(event) => setTeamFilter(event.target.value)}
-                className="min-h-10 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm font-bold text-slate-200 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
               >
                 <option value="ALL">Team</option>
                 {teams.map((team) => <option key={team} value={team}>{team}</option>)}
@@ -421,7 +565,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={opponentFilter}
                 onChange={(event) => setOpponentFilter(event.target.value)}
-                className="min-h-10 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm font-bold text-slate-200 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
               >
                 <option value="ALL">Opponent</option>
                 {opponents.map((opponent) => <option key={opponent} value={opponent}>{opponent}</option>)}
@@ -429,7 +573,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={handFilter}
                 onChange={(event) => setHandFilter(event.target.value as 'ALL' | 'L' | 'R' | 'U')}
-                className="min-h-10 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm font-bold text-slate-200 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
               >
                 <option value="ALL">Pitcher hand</option>
                 <option value="R">Right</option>
@@ -439,14 +583,14 @@ export default function TeamMatchupLabPage() {
               <select
                 value={sortKey}
                 onChange={(event) => setSortKey(event.target.value as SortKey)}
-                className="min-h-10 rounded-xl border border-white/10 bg-slate-950 px-3 text-sm font-bold text-slate-200 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
               >
                 {sortOptions.map((option) => <option key={option.key} value={option.key}>Sort: {option.label}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
             {labelFilters.map((label) => (
               <button
                 key={label}
@@ -457,7 +601,7 @@ export default function TeamMatchupLabPage() {
                     ? label === 'ALL'
                       ? 'border-sky-300/50 bg-sky-300/15 text-sky-100'
                       : labelClass(label)
-                    : 'border-white/10 bg-slate-950/80 text-slate-400 hover:border-white/25 hover:text-slate-100'
+                    : 'border-white/10 bg-slate-950/75 text-slate-400 hover:border-white/25 hover:bg-white/[0.04] hover:text-slate-100'
                 }`}
               >
                 {label === 'ALL' ? 'All' : label.replace('LEAN OVER', 'Lean Over').replace('STRONG PLAY', 'Strong Play')}
@@ -465,15 +609,31 @@ export default function TeamMatchupLabPage() {
             ))}
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/70">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
-              <span className="text-xs font-bold text-slate-400">
-                {loading ? 'Loading matrix...' : `${filteredRows.length} of ${rows.length} rows`}
-              </span>
+          <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-white/[0.025] px-4 py-3">
+              <div className="min-w-0">
+                <span className="text-xs font-black uppercase tracking-wide text-slate-400">
+                  {rows.length > 0 ? `${filteredRows.length} of ${rows.length} rows` : 'Preparing live MLB slate'}
+                </span>
+                <p className="mt-0.5 hidden text-[11px] font-bold text-slate-500 sm:block">
+                  {enriching || (loading && rows.length > 0)
+                    ? 'The current matrix stays visible while fresh MLB data hydrates.'
+                    : 'Select a pitcher profile to open the premium matchup drawer.'}
+                </p>
+              </div>
+              {data?.mode && (
+                <span className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide sm:inline-flex ${
+                  data.mode === 'enriched'
+                    ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100'
+                    : 'border-sky-300/30 bg-sky-300/10 text-sky-100'
+                }`}>
+                  {data.mode === 'enriched' ? 'Enriched' : 'Live MLB'}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => setSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:border-white/25"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-black text-slate-300 hover:border-white/25 hover:text-white"
               >
                 <ArrowDownAZ className="h-3.5 w-3.5" />
                 {sortDirection === 'desc' ? 'High to low' : 'Low to high'}
@@ -492,16 +652,37 @@ export default function TeamMatchupLabPage() {
               </div>
             )}
 
+            {loading && rows.length === 0 && (
+              <div className="grid gap-2 p-3">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="grid grid-cols-[260px_80px_90px_90px_90px_1fr] gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 animate-pulse rounded-full bg-white/10" />
+                      <div className="space-y-2">
+                        <div className="h-3 w-32 animate-pulse rounded bg-white/10" />
+                        <div className="h-2.5 w-20 animate-pulse rounded bg-white/10" />
+                      </div>
+                    </div>
+                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                  </div>
+                ))}
+              </div>
+            )}
+
             {!error && rows.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="min-w-[1500px] border-separate border-spacing-0 text-left text-sm">
+                <table className="min-w-[1540px] border-separate border-spacing-0 text-left text-sm">
                   <thead>
                     <tr className="text-[10px] uppercase tracking-wider text-slate-500">
                       {['Pitcher', 'Team', 'Opponent', 'Game Time', 'Score', 'Label', 'K/9', 'K/Game', 'ERA', 'WHIP', 'IP', 'GS', 'Whiff%', 'K%', 'xERA', 'Opp K%', 'Opponent vs Hand', 'Park Factor', 'Weather', 'Confidence', 'Research'].map((heading) => (
                         <th
                           key={heading}
-                          className={`border-b border-white/10 bg-slate-950 px-3 py-3 font-black ${
-                            heading === 'Pitcher' ? 'sticky left-0 z-20 min-w-44' : 'min-w-24'
+                          className={`border-b border-white/10 bg-slate-950/95 px-3 py-3 font-black ${
+                            heading === 'Pitcher' ? 'sticky left-0 z-20 min-w-64' : 'min-w-24'
                           }`}
                         >
                           {['Score', 'K%', 'Whiff%', 'Opp K%', 'xERA', 'K/Game'].includes(heading) ? (
@@ -518,20 +699,33 @@ export default function TeamMatchupLabPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(loading ? [] : filteredRows).map((row) => {
+                    {filteredRows.map((row) => {
                       const rowKey = `${row.gameId}-${row.pitcherId ?? row.team}`;
                       return (
-                        <tr key={rowKey} className="group">
-                          <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950 px-3 py-3 align-top shadow-[10px_0_20px_rgba(2,6,23,0.28)]">
-                            <div className="font-black text-white">{row.pitcherName}</div>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              <span className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-black uppercase text-slate-400">
-                                {row.pitcherHand === 'U' ? 'Hand TBD' : `${row.pitcherHand}HP`}
-                              </span>
-                              <span className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-1.5 py-0.5 text-[10px] font-black uppercase text-emerald-200">
-                                {row.dataQuality.probablePitcher === 'official' ? 'Official' : 'Unknown'}
-                              </span>
-                            </div>
+                        <tr key={rowKey} className="group transition hover:bg-white/[0.035]">
+                          <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950/98 px-3 py-3 align-top shadow-[10px_0_20px_rgba(2,6,23,0.28)]">
+                            <button
+                              type="button"
+                              onClick={() => row.pitcherId && setSelectedPitcher(row)}
+                              disabled={!row.pitcherId}
+                              className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-emerald-300/20 hover:bg-emerald-300/[0.055] disabled:cursor-default disabled:hover:border-transparent disabled:hover:bg-transparent"
+                              title={row.pitcherId ? `Open ${row.pitcherName} matchup drawer` : row.pitcherName}
+                            >
+                              <div className="relative shrink-0 rounded-full bg-gradient-to-br from-emerald-300/45 via-sky-300/20 to-violet-300/20 p-0.5 shadow-[0_0_28px_rgba(52,211,153,0.12)]">
+                                <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="truncate font-black text-white group-hover:text-emerald-100">{row.pitcherName}</div>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  <span className="rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-black uppercase text-slate-400">
+                                    {row.pitcherHand === 'U' ? 'Hand TBD' : `${row.pitcherHand}HP`}
+                                  </span>
+                                  <span className="rounded-md border border-emerald-300/20 bg-emerald-300/10 px-1.5 py-0.5 text-[10px] font-black uppercase text-emerald-200">
+                                    {row.dataQuality.probablePitcher === 'official' ? 'Official' : 'Unknown'}
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
                           </td>
                           <td className="border-b border-white/10 px-3 py-3 font-black text-slate-200">{row.team}</td>
                           <td className="border-b border-white/10 px-3 py-3 font-black text-slate-200">{row.opponent}</td>
@@ -557,11 +751,14 @@ export default function TeamMatchupLabPage() {
                           <td className="border-b border-white/10 px-3 py-3">
                             <button
                               type="button"
-                              onClick={() => handleCopy(row)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1.5 text-xs font-black text-emerald-100 hover:border-emerald-300/45"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleCopy(row);
+                              }}
+                              className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-black text-emerald-100 shadow-[0_0_20px_rgba(52,211,153,0.06)] hover:border-emerald-300/45"
                             >
                               <ClipboardCopy className="h-3.5 w-3.5" />
-                              {copiedKey === rowKey ? 'Copied' : 'Use in Parlay Research'}
+                              {copiedKey === rowKey ? 'Copied' : 'Copy Research'}
                             </button>
                           </td>
                         </tr>
@@ -570,9 +767,9 @@ export default function TeamMatchupLabPage() {
                   </tbody>
                 </table>
 
-                {loading && (
-                  <div className="p-5 text-sm font-bold text-slate-400">
-                    Loading sourced matchup rows...
+                {(loading || enriching) && (
+                  <div className="border-t border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-emerald-200">
+                    Matrix locked while fresh MLB data syncs
                   </div>
                 )}
               </div>
@@ -580,19 +777,35 @@ export default function TeamMatchupLabPage() {
           </div>
         </section>
 
+        <PitcherMatchupDrawer
+          open={!!selectedPitcher}
+          gamePk={selectedPitcher?.gameId ?? null}
+          pitcherId={selectedPitcher?.pitcherId ?? null}
+          date={date}
+          matchupScore={selectedPitcher?.score ?? null}
+          matchupLabel={selectedPitcher?.label ?? null}
+          team={selectedPitcher?.team}
+          opponent={selectedPitcher?.opponent}
+          pitcherName={selectedPitcher?.pitcherName}
+          pitcherHand={selectedPitcher?.pitcherHand}
+          onClose={() => setSelectedPitcher(null)}
+        />
+
         <section className="grid gap-3 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-slate-900/45 p-4">
-            <div className="text-sm font-black text-white">Scoring model</div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
+            <div className="text-sm font-black uppercase tracking-wide text-white">Scoring Model</div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Score weights: 30% pitcher strikeout skill, 25% opponent strikeout weakness, 15% workload and innings safety,
               15% run prevention and control, 10% recent form, and 5% context. Missing components are excluded from the
               weighted average and reflected in confidence.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-slate-900/45 p-4">
-            <div className="text-sm font-black text-white">Best K Environment</div>
-            <p className="mt-2 font-mono text-lg font-black text-emerald-200">{summary.bestKEnvironment}</p>
-            <p className="mt-2 text-sm text-slate-400">
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent" />
+            <div className="text-sm font-black uppercase tracking-wide text-white">Best K Environment</div>
+            <p className="mt-3 font-mono text-2xl font-black text-emerald-200">{summary.bestKEnvironment}</p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Current version favors sourced pitcher skill, workload, control, recent logs, and lower run-environment context.
             </p>
           </div>

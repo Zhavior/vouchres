@@ -200,7 +200,14 @@ function ParlayCard({ p, onRetry }: { p: Parlay; onRetry?: (id: string) => void 
   const payout = formatPayout(p);
 
   return (
-    <div className={`overflow-hidden rounded-2xl border bg-slate-950/50 ${live ? 'border-emerald-500/30' : 'border-slate-800/70'}`}>
+    <div
+  className={`group relative overflow-hidden rounded-3xl border bg-slate-950/85 shadow-xl shadow-black/30 transition duration-200 hover:-translate-y-0.5 ${
+    live
+      ? 'border-emerald-300/30 shadow-emerald-950/20'
+      : 'border-white/10 hover:border-cyan-300/30 hover:shadow-cyan-950/25'
+  }`}
+>
+  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 border-b border-slate-800/50 p-4">
         <div className="min-w-0">
@@ -348,7 +355,7 @@ export default function LiveParlaysPage({
   const visibleCount = filtered.length;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
+    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-slate-100">
       <div className="mx-auto max-w-5xl space-y-5">
         {/* Hero */}
         <div className="flex flex-col gap-4 rounded-3xl border border-emerald-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-emerald-950/20 p-5 sm:flex-row sm:items-start sm:justify-between">

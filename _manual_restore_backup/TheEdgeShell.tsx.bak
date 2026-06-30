@@ -1,0 +1,1293 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import type { FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Bell, Bot, Check, CreditCard, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
+import '../edgePortal/edgePortalTheme.css';
+import Starfield from '../welcomePortal/Starfield';
+import { safeJsonFetch } from '../../api/safeApiClient';
+import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
+import type { Parlay, CreatorProofProfile } from '../../types';
+
+type TheEdgeMode = 'public' | 'dashboard';
+type TheEdgePresentation = 'page' | 'overlay';
+
+/** Trimmed funnel: one sell screen, guided signup wizard, quick handoff to the Island. */
+type EdgeLayer = 'intro' | 'login' | 'signup' | 'welcomeBack' | 'dashboard';
+
+/** Steps inside the signup wizard. */
+type SignupStep = 'features' | 'account' | 'plan' | 'payment' | 'policy';
+
+type PlanId = 'free' | 'pro_trial' | 'pro_elite';
+
+const PLANS: Record<PlanId, { name: string; price: string; sub: string; perks: string[]; accent: 'cyan' | 'emerald' | 'violet'; badge?: string; paid: boolean }> = {
+  free: {
+    name: 'Free',
+    price: '$0',
+    sub: 'Core research, forever',
+    perks: ['Daily board & player pages', 'Build & save parlays', 'Results ledger'],
+    accent: 'cyan',
+    paid: false,
+  },
+  pro_trial: {
+    name: 'Pro',
+    price: '1.5 weeks free',
+    sub: 'then $12.99/mo · cancel anytime',
+    perks: ['Everything in Free', 'All Pro Labs + AI Smart Picks', 'Pitcher Pro profiles & alerts'],
+    accent: 'emerald',
+    badge: 'Most popular',
+    paid: true,
+  },
+  pro_elite: {
+    name: 'Pro Elite',
+    price: '$49.99/mo',
+    sub: 'Deep research + sell your picks',
+    perks: ['Everything in Pro', 'Deep research suite', 'Sell picks + Subscriber Clubs'],
+    accent: 'violet',
+    badge: 'Top tier',
+    paid: true,
+  },
+};
+
+/** VouchEdge policy the user must read + agree to before an account is created. */
+const POLICY_TEXT = `VouchEdge — Terms, Privacy & Responsible Use
+
+1. Research & entertainment only. VouchEdge provides probability-based sports research, statistics, and tools. Nothing on the platform is betting advice, a guarantee of outcome, or a promise of profit. You are solely responsible for any decisions you make.
+
+2. Eligibility. You must be at least 21 years old and located in a jurisdiction where using sports research tools is permitted. You confirm you are not excluded or self-excluded from gaming services.
+
+3. No guaranteed outcomes. All grades, edges, projections, and AI outputs are estimates derived from public data (e.g. the MLB Stats API) and may be incomplete, delayed, or incorrect. Past results never guarantee future results.
+
+4. Your data. We store the account details, picks, and preferences you create to operate the product. We do not sell your personal data. Payment is processed by our payment provider; we do not store full card numbers.
+
+5. Subscriptions & trials. Free tiers remain free. Paid plans (including the 1.5-week Pro free trial) renew automatically at the stated price unless cancelled before the trial or billing period ends. You can cancel anytime from billing settings.
+
+6. Fair use. Do not scrape, resell, or redistribute VouchEdge data or attempt to manipulate grading. Accounts that abuse the platform may be suspended.
+
+7. Changes. We may update these terms; continued use means you accept the current version.
+
+By checking the boxes below you confirm you have read and agree to these terms, the Privacy Policy, and the Responsible Use notice.`;
+
+type TheEdgeShellProps = {
+  mode: TheEdgeMode;
+  presentation: TheEdgePresentation;
+  activeSection?: string;
+  slateLabel?: string;
+  savedParlays?: Parlay[];
+  profile?: Pick<CreatorProofProfile, 'displayName' | 'winRate' | 'totalPicks' | 'wonPicks'>;
+  onClose?: () => void;
+  onSectionChange: (section: string) => void;
+};
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+interface SlateGame {
+  away: string;
+  home: string;
+  time: string;
+  live: boolean;
+}
+
+/* ── small shared primitives (one accent: cyan; emerald=proof, rose=loss, amber=live) ── */
+
+function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' | 'violet' }) {
+  const color =
+    tone === 'cyan' ? 'text-teal-200' :
+    tone === 'emerald' ? 'text-emerald-200' :
+    tone === 'rose' ? 'text-rose-200' :
+    tone === 'violet' ? 'text-slate-200' :
+    'text-white';
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center">
+      <div className={`text-2xl font-black ${color}`}>{value}</div>
+      <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+const PRIMARY = 'edge-auth-primary rounded-2xl px-6 py-3.5 text-sm font-black transition';
+const GHOST = 'edge-auth-secondary rounded-2xl px-6 py-3.5 text-sm font-black transition';
+
+const TRUST_POINTS = [
+  'Official MLB data only',
+  'No fake confirmed lineups',
+  'Every saved pick stays visible',
+  'Research & entertainment only',
+];
+
+const HIGHLIGHTS = [
+  {
+    title: 'Daily Edge Board',
+    body: 'See the best HR spots, matchup grades, pitcher vulnerability, and park context in one board.',
+    visual: 'board',
+  },
+  {
+    title: 'Team Matchup Lab',
+    body: 'Compare pitchers, hitters, handedness, recent form, and game context before you build.',
+    visual: 'matchup',
+  },
+  {
+    title: 'Player Edge Lab',
+    body: 'Open a player and see the deeper research layer: trends, box score context, handedness, and opponent history.',
+    visual: 'player',
+  },
+  {
+    title: 'Parlay Hub',
+    body: 'Build, save, organize, and review parlays without losing track of your logic.',
+    visual: 'parlay',
+  },
+  {
+    title: 'Results Studio',
+    body: 'Grade outcomes, review your track record, and separate guesses from proof.',
+    visual: 'results',
+  },
+  {
+    title: 'Alerts & Notifications',
+    body: 'Follow the slate with saved research, game movement, and result updates.',
+    visual: 'alerts',
+  },
+] as const;
+
+const TOUR_TABS = [
+  {
+    id: 'board',
+    label: 'Board',
+    title: 'Start with the slate.',
+    body: 'Open the Daily Edge Board to review game context, HR spots, and lineup status before you build.',
+  },
+  {
+    id: 'labs',
+    label: 'Labs',
+    title: 'Go deeper when the board flags a spot.',
+    body: 'Move into player and team labs for handedness, recent form, matchup texture, and pro graph views.',
+  },
+  {
+    id: 'parlays',
+    label: 'Parlays',
+    title: 'Build without losing the reasoning.',
+    body: 'Save parlays, keep the logic attached, and return to the slip before lock.',
+  },
+  {
+    id: 'results',
+    label: 'Results',
+    title: 'Proof stays visible.',
+    body: 'Results Studio keeps outcomes, pending slips, and your record in the same workspace.',
+  },
+  {
+    id: 'alerts',
+    label: 'Alerts',
+    title: 'Keep the day moving.',
+    body: 'Use notifications to return to saved research, game movement, and graded outcomes.',
+  },
+] as const;
+
+type TourTabId = typeof TOUR_TABS[number]['id'];
+
+const WORKFLOW = ['Today’s Slate', 'Research Board', 'Player Lab', 'Team Matchup Lab', 'Save Parlay', 'Track Results'];
+
+const BETA_VALUE = [
+  'Daily MLB research board',
+  'Live game slate',
+  'Player research',
+  'Team matchup lab',
+  'Parlay hub',
+  'Results ledger',
+  'Profile track record',
+  'Alerts',
+  'Community feed',
+  'Pro labs preview',
+];
+
+const ISLAND_ACTIONS = [
+  ['Add Parlay', 'build', Layers3],
+  ['Daily Board', 'daily_players', Radio],
+  ['Results', 'results', Trophy],
+  ['AI Edge Lab', 'intel', Bot],
+  ['Alerts', 'notifications', Bell],
+] as const;
+
+function MiniProductVisual({ type }: { type: string }) {
+  if (type === 'matchup') {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {['Pitcher context', 'Lineup context'].map((title, index) => (
+          <div key={title} className="rounded-2xl border border-white/10 bg-black/25 p-3">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{title}</div>
+            <div className="mt-3 space-y-2">
+              {[74, 58, 86].map((width, row) => (
+                <div key={row} className="h-2 rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-slate-300/70" style={{ width: `${width - index * 8}%` }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'player') {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+        <div className="flex items-center gap-3">
+          <div className="h-14 w-14 rounded-2xl border border-white/10 bg-white/10" />
+          <div className="min-w-0 flex-1">
+            <div className="h-3 w-32 rounded bg-white/35" />
+            <div className="mt-2 h-2 w-44 rounded bg-white/12" />
+          </div>
+          <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-black text-slate-200">Trend</span>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {['Form', 'Split', 'History'].map((label) => (
+            <div key={label} className="rounded-xl border border-white/10 bg-white/[0.04] p-2">
+              <div className="text-[9px] font-black uppercase text-slate-500">{label}</div>
+              <div className="mt-2 h-8 rounded bg-white/10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'parlay') {
+    return (
+      <div className="space-y-2">
+        {['Leg 1 saved with note', 'Leg 2 linked to board', 'Leg 3 pending lock'].map((label, index) => (
+          <div key={label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-3 py-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 text-[10px] font-black">{index + 1}</span>
+            <span className="flex-1 text-xs font-bold text-slate-300">{label}</span>
+            <span className="font-mono text-[11px] text-slate-500">saved</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'results') {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+        <div className="flex h-28 items-end gap-2">
+          {[42, 70, 54, 86, 62, 76, 48].map((height, index) => (
+            <span key={index} className="flex-1 rounded-t bg-slate-200/70" style={{ height: `${height}%` }} />
+          ))}
+        </div>
+        <div className="mt-3 flex justify-between text-[10px] font-black uppercase tracking-wide text-slate-500">
+          <span>Wins</span>
+          <span>Losses visible</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'alerts') {
+    return (
+      <div className="space-y-2">
+        {['Lineup status updated', 'Saved parlay moves to live', 'Result ready for review'].map((label) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-xs font-bold text-slate-300">
+            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-teal-200" />
+            {label}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {['A', 'A-', 'B+'].map((grade, index) => (
+        <div key={grade} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-3 py-3">
+          <span className="w-6 font-mono text-[10px] text-slate-500">{index + 1}</span>
+          <span className="rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-black text-slate-100">{grade}</span>
+          <span className="flex-1 truncate text-xs font-bold text-slate-300">Verified board row</span>
+          <span className="h-2 w-16 rounded-full bg-white/15" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function friendlyAuthError(message?: string) {
+  const text = String(message ?? '').toLowerCase();
+  if (text.includes('invalid login')) return 'Email or password is incorrect.';
+  if (text.includes('email not confirmed')) return 'Confirm your email before logging in.';
+  if (text.includes('password')) return 'Password must be at least 6 characters.';
+  return message || 'Authentication failed. Try again.';
+}
+
+type DashboardSummaryResponse = {
+  widgets: {
+    savedPicks: number;
+    savedParlays: number;
+    pendingPicks: number;
+    winRate: number | null;
+    proofScore: number;
+  };
+  summary: {
+    total: number;
+    pending: number;
+    won: number;
+    lost: number;
+    void: number;
+    push: number;
+    parlays: number;
+    singles: number;
+  };
+  recent: Array<{
+    id: string;
+    status?: string | null;
+    leg_type?: string | null;
+    created_at?: string | null;
+  }>;
+};
+
+function triggerEdgeIslandTransition() {
+  sessionStorage.setItem("vouchedge_entering_edge_island", "true");
+}
+
+export default function TheEdgeShell({
+  mode,
+  presentation,
+  savedParlays = [],
+  profile,
+  onClose,
+  onSectionChange,
+}: TheEdgeShellProps) {
+  const [edgeLayer, setEdgeLayer] = useState<EdgeLayer>(mode === 'public' ? 'intro' : 'welcomeBack');
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummaryResponse | null>(null);
+  const [dashboardSummaryLoading, setDashboardSummaryLoading] = useState(false);
+  const [slate, setSlate] = useState<SlateGame[]>([]);
+  const [signupStep, setSignupStep] = useState<SignupStep>('features');
+  const [plan, setPlan] = useState<PlanId>('pro_trial');
+  const [agree, setAgree] = useState({ age: false, terms: false, research: false });
+  const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const [tourTab, setTourTab] = useState<TourTabId>('board');
+  const allAgreed = agree.age && agree.terms && agree.research;
+
+  function openSignup(p: PlanId = 'pro_trial') {
+    setPlan(p);
+    setSignupStep('features');
+    setAgree({ age: false, terms: false, research: false });
+    setAuthError(null);
+    setAuthNotice(null);
+    setEdgeLayer('signup');
+  }
+
+  // Wizard order — payment is skipped for the free plan.
+  const signupOrder: SignupStep[] = plan === 'free'
+    ? ['features', 'account', 'plan', 'policy']
+    : ['features', 'account', 'plan', 'payment', 'policy'];
+
+  async function signupNext() {
+    const i = signupOrder.indexOf(signupStep);
+    if (i < 0) return setSignupStep('account');
+    if (signupStep === 'account' && !validateAccountForm()) return;
+    if (i >= signupOrder.length - 1) { await completeSignup(); return; }
+    setAuthError(null);
+    setAuthNotice(null);
+    setSignupStep(signupOrder[i + 1]);
+  }
+  function signupBack() {
+    const i = signupOrder.indexOf(signupStep);
+    if (i <= 0) { setEdgeLayer('intro'); return; }
+    setSignupStep(signupOrder[i - 1]);
+  }
+
+  // Real today's slate for the scoreboard ticker (no fake games).
+  useEffect(() => {
+    let alive = true;
+    safeJsonFetch<any>('/api/mlb/lineup/today', { fallbackData: { games: [] }, timeoutMs: 12000 }).then((r) => {
+      if (!alive) return;
+      const games: SlateGame[] = (r.data?.games ?? []).slice(0, 12).map((g: any) => ({
+        away: g.awayTeam?.abbrev ?? g.awayTeam?.name ?? 'AWY',
+        home: g.homeTeam?.abbrev ?? g.homeTeam?.name ?? 'HOM',
+        time: g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '',
+        live: /progress|live|in play/i.test(String(g.status ?? '')),
+      }));
+      setSlate(games);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'dashboard') {
+      setEdgeLayer('welcomeBack');
+      const t = window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+      return () => window.clearTimeout(t);
+    }
+  }, [mode]);
+
+  // ── Real proof numbers (no placeholders) ──
+  const stats = useMemo(() => {
+    const saved = savedParlays.length;
+    const pending = savedParlays.filter((p) => p.status === 'PENDING').length;
+    const won = savedParlays.filter((p) => p.status === 'WON').length;
+    const lost = savedParlays.filter((p) => p.status === 'LOST').length;
+    const settled = won + lost;
+    const slipWinRate = settled > 0 ? Math.round((won / settled) * 100) : null;
+    const winRate = slipWinRate ?? (profile && profile.totalPicks > 0 ? Math.round(profile.winRate) : null);
+    const liveNow = slate.filter((g) => g.live).length;
+    const savedPicks = dashboardSummary?.widgets.savedPicks ?? saved;
+    const proofScore = dashboardSummary?.widgets.proofScore ?? (settled > 0 ? Math.min(100, Math.round((won / Math.max(settled, 1)) * 100)) : 0);
+    return { saved, savedPicks, pending, won, lost, settled, winRate, gamesToday: slate.length, liveNow, proofScore };
+  }, [savedParlays, profile, slate, dashboardSummary]);
+
+  useEffect(() => {
+    if (edgeLayer !== 'dashboard' && edgeLayer !== 'welcomeBack') return;
+
+    let cancelled = false;
+
+    async function loadDashboardSummary() {
+      const token =
+        localStorage.getItem('vouchedge_auth_token') ||
+        localStorage.getItem('mlb_ai_auth_token');
+
+      if (!token) return;
+
+      try {
+        setDashboardSummaryLoading(true);
+
+        const response = await fetch('/api/me/dashboard-summary', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as DashboardSummaryResponse;
+
+        if (!cancelled) {
+          setDashboardSummary(payload);
+        }
+      } catch {
+        // Keep local fallback stats if backend is unavailable.
+      } finally {
+        if (!cancelled) {
+          setDashboardSummaryLoading(false);
+        }
+      }
+    }
+
+    loadDashboardSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [edgeLayer]);
+
+  function enterSite(section = 'feed') {
+    triggerEdgeIslandTransition();
+    onSectionChange(section);
+    if (presentation === 'overlay') onClose?.();
+  }
+
+  function finishAuth() {
+    localStorage.setItem('vouchedge_after_auth_mode', 'island');
+    localStorage.setItem('vouchedge_signup_plan', plan);
+    localStorage.setItem('vouchedge_policy_agreed_at', new Date().toISOString());
+    setEdgeLayer('welcomeBack');
+    window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+  }
+
+  function validateAccountForm() {
+    setAuthError(null);
+    setAuthNotice(null);
+
+    if (!authForm.email.trim()) {
+      setAuthError('Enter your email.');
+      return false;
+    }
+    if (!authForm.password) {
+      setAuthError('Enter your password.');
+      return false;
+    }
+    if (authForm.password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return false;
+    }
+    if (edgeLayer === 'signup' && authForm.name.trim().length < 3) {
+      setAuthError('Pick a username or display name with at least 3 characters.');
+      return false;
+    }
+
+    return true;
+  }
+
+  async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!validateAccountForm()) return;
+
+    if (!isSupabaseConfigured) {
+      setAuthError("Accounts aren't enabled in this environment yet.");
+      return;
+    }
+
+    setAuthBusy(true);
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      const { error } = await signInWithEmail({
+        email: authForm.email.trim(),
+        password: authForm.password,
+      });
+      if (error) {
+        setAuthError(friendlyAuthError(error.message));
+        return;
+      }
+      finishAuth();
+    } catch (error: any) {
+      setAuthError(friendlyAuthError(error?.message));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function completeSignup() {
+    if (!allAgreed || !validateAccountForm()) return;
+
+    if (!isSupabaseConfigured) {
+      setAuthError("Accounts aren't enabled in this environment yet.");
+      return;
+    }
+
+    setAuthBusy(true);
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      const username = authForm.name.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24);
+      const { data, error } = await signUpWithEmail({
+        email: authForm.email.trim(),
+        password: authForm.password,
+        username: username || authForm.email.trim().split('@')[0],
+      });
+
+      if (error) {
+        setAuthError(friendlyAuthError(error.message));
+        return;
+      }
+
+      if (data.session) {
+        finishAuth();
+        return;
+      }
+
+      setAuthNotice('Account created. Check your email to confirm it, then log in.');
+      setEdgeLayer('login');
+    } catch (error: any) {
+      setAuthError(friendlyAuthError(error?.message));
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  const shellClass =
+    presentation === 'page'
+      ? 'edge-space-shell ve-page min-h-screen overflow-hidden text-white'
+      : 'edge-space-shell ve-page relative mx-auto flex h-[92vh] max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/10 text-white shadow-2xl shadow-black/40';
+
+  const isAuthLayer = edgeLayer === 'login' || edgeLayer === 'signup';
+
+  return (
+    <motion.main
+      className={`ve-theme-root ${shellClass}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4, ease }}
+    >
+      <div className="edge-space-backdrop" />
+      <Starfield />
+
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <header className="edge-space-header border-b border-white/10 bg-black/45 px-4 py-4 backdrop-blur-2xl sm:px-6">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-slate-100">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-black tracking-tight text-white">
+              Vouch<span className="text-slate-300">Edge</span>
+            </span>
+            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:inline">
+              Trust-first MLB research
+            </span>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {edgeLayer === 'intro' && (
+              <>
+                <button onClick={() => setEdgeLayer('login')} className="edge-space-secondary rounded-2xl px-3.5 py-2 text-xs font-black">
+                  <span className="inline-flex items-center gap-1.5"><LogIn className="h-3.5 w-3.5" /> Login</span>
+                </button>
+                <button onClick={() => openSignup('pro_trial')} className="edge-space-primary hidden rounded-2xl px-3.5 py-2 text-xs font-black sm:inline-flex">
+                  Get Started
+                </button>
+              </>
+            )}
+            {isAuthLayer && (
+              <button onClick={() => setEdgeLayer('intro')} className="edge-space-secondary rounded-2xl px-3.5 py-2 text-xs font-black">
+                Back
+              </button>
+            )}
+            {(edgeLayer === 'dashboard' || edgeLayer === 'welcomeBack') && (
+              <button onClick={() => enterSite('feed')} className="edge-space-primary rounded-2xl px-3.5 py-2 text-xs font-black">
+                Enter VouchEdge Site
+              </button>
+            )}
+            {presentation === 'overlay' && (
+              <button onClick={onClose} className="edge-space-secondary rounded-2xl p-2">
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+          </div>
+        </header>
+
+        <div className={presentation === 'page' ? 'flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8' : 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
+          <AnimatePresence mode="wait">
+
+            {/* ── INTRO: one sports-native sell screen (video + welcome merged) ── */}
+            {edgeLayer === 'intro' && (
+              <motion.section
+                key="intro"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.45, ease }}
+                className="edge-welcome-front edge-landing-section"
+              >
+                <section className="edge-space-hero relative overflow-hidden rounded-[2rem] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
+                  <div className="edge-space-orbit edge-space-orbit-one" />
+                  <div className="edge-space-orbit edge-space-orbit-two" />
+
+                  <div className="relative z-10 grid w-full gap-10 2xl:grid-cols-[minmax(0,0.76fr)_minmax(520px,1.24fr)] 2xl:items-center">
+                    <div className="max-w-3xl">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200">
+                        <ShieldCheck className="h-3.5 w-3.5" /> Open beta
+                      </div>
+
+                      <h1 className="mt-6 text-5xl font-black leading-[0.92] tracking-tight text-white sm:text-7xl 2xl:text-8xl">
+                        VouchEdge
+                      </h1>
+
+                      <p className="mt-5 max-w-2xl text-xl font-semibold leading-8 text-slate-200 sm:text-2xl">
+                        Built for the edge.
+                      </p>
+
+                      <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
+                        MLB research built like a command center. Study matchups, track picks, build parlays, and review results with one clean intelligence platform.
+                      </p>
+
+                      <div className="mt-7 flex flex-wrap gap-3">
+                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                          <span className="inline-flex items-center gap-2">Start Free <ArrowRight className="h-4 w-4" /></span>
+                        </button>
+                        <button onClick={() => setEdgeLayer('login')} className="edge-space-ghost rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                          <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
+                        </button>
+                      </div>
+
+                      <div className="mt-7 grid max-w-xl gap-2 sm:grid-cols-2">
+                        {TRUST_POINTS.map((point) => (
+                          <div key={point} className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                            <Check className="h-4 w-4 text-slate-100" />
+                            {point}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <motion.div
+                      className="edge-slate-stage min-w-0"
+                      initial={{ opacity: 0, scale: 0.96, y: 24 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.7, delay: 0.1, ease }}
+                    >
+                      <div className="edge-product-screen relative overflow-hidden rounded-[2rem] p-3 sm:p-4">
+                        <div className="grid min-h-[560px] gap-3 lg:grid-cols-[150px_minmax(0,1fr)_210px]">
+                          <aside className="hidden rounded-[1.4rem] border border-white/10 bg-black/25 p-3 lg:block">
+                            <div className="mb-5 flex items-center gap-2">
+                              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-[11px] font-black">VE</span>
+                              <div>
+                                <div className="text-xs font-black text-white">VouchEdge</div>
+                                <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">Command</div>
+                              </div>
+                            </div>
+                            {['Daily Board', 'Labs', 'Parlays', 'Results', 'Alerts'].map((item) => (
+                              <div key={item} className="mb-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-[11px] font-bold text-slate-300">
+                                {item}
+                              </div>
+                            ))}
+                          </aside>
+
+                          <div className="rounded-[1.4rem] border border-white/10 bg-black/25 p-4">
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Daily Edge Board</div>
+                                <div className="mt-1 text-xl font-black text-white">Research cockpit</div>
+                              </div>
+                              <span className="rounded-full border border-teal-200/20 bg-teal-200/10 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-teal-100">
+                                Live Slate
+                              </span>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              {['Saved Parlays', 'Results Ledger', 'Alerts'].map((chip) => (
+                                <div key={chip} className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center text-[10px] font-black uppercase tracking-wide text-slate-300">
+                                  {chip}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-4 space-y-2">
+                              {['HR context', 'Pitcher vulnerability', 'Park factor', 'Lineup status'].map((row, index) => (
+                                <div key={row} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-3">
+                                  <span className="w-6 font-mono text-[10px] text-slate-500">{index + 1}</span>
+                                  <span className="rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-black text-slate-100">{index === 0 ? 'A' : index === 1 ? 'A-' : index === 2 ? 'B+' : 'LIVE'}</span>
+                                  <span className="flex-1 text-xs font-bold text-slate-300">{row}</span>
+                                  <span className="h-2 w-20 rounded-full bg-white/15">
+                                    <span className="block h-full rounded-full bg-slate-200/70" style={{ width: `${86 - index * 12}%` }} />
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <aside className="rounded-[1.4rem] border border-white/10 bg-black/25 p-4">
+                            <div className="mb-3 flex items-center justify-between">
+                              <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Today’s MLB Games</div>
+                              <span className="text-[10px] font-black text-slate-300">{slate.length || '—'}</span>
+                            </div>
+                            <div className="edge-slate-list max-h-[300px] divide-y divide-white/10 overflow-y-auto">
+                              {slate.length === 0 ? (
+                                <div className="py-8 text-center text-xs text-slate-500">Loading official slate...</div>
+                              ) : (
+                                slate.slice(0, 8).map((g, i) => (
+                                  <div key={`${g.away}-${g.home}-${i}`} className="flex items-center justify-between gap-3 py-2.5">
+                                    <div className="font-mono text-xs font-black text-slate-200">{g.away} <span className="text-slate-600">@</span> {g.home}</div>
+                                    <span className="text-[10px] text-slate-500">{g.live ? 'Live' : g.time || 'TBD'}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </aside>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </section>
+
+                <section className="mt-16">
+                  <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Get the highlights.</h2>
+                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                    {HIGHLIGHTS.map((item, index) => (
+                      <article
+                        key={item.title}
+                        className={`edge-feature-panel rounded-[2rem] p-5 ${index === 0 || index === 3 ? 'lg:col-span-2' : ''}`}
+                      >
+                        <div className="mb-5 min-h-[150px]">
+                          <MiniProductVisual type={item.visual} />
+                        </div>
+                        <h3 className="text-2xl font-black text-white">{item.title}</h3>
+                        <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">{item.body}</p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="mt-16">
+                  <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Product tour</div>
+                      <h2 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">Take a closer look.</h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {TOUR_TABS.map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setTourTab(tab.id)}
+                          className={`rounded-full border px-4 py-2 text-xs font-black transition ${
+                            tourTab === tab.id ? 'border-white/35 bg-white text-black' : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/20'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {TOUR_TABS.filter((tab) => tab.id === tourTab).map((tab) => (
+                    <div key={tab.id} className="edge-tour-panel grid gap-6 rounded-[2rem] p-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+                      <div>
+                        <h3 className="text-3xl font-black text-white">{tab.title}</h3>
+                        <p className="mt-3 text-base font-semibold leading-8 text-slate-400">{tab.body}</p>
+                      </div>
+                      <MiniProductVisual type={tab.id} />
+                    </div>
+                  ))}
+                </section>
+
+                <section className="edge-workflow-panel mt-16 rounded-[2rem] p-5 sm:p-7">
+                  <div className="max-w-2xl">
+                    <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Pro workflow</div>
+                    <h2 className="mt-2 text-4xl font-black tracking-tight text-white">A command center for serious MLB research.</h2>
+                  </div>
+                  <div className="mt-8 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                    {WORKFLOW.map((step, index) => (
+                      <div key={step} className="relative rounded-2xl border border-white/10 bg-black/25 p-4">
+                        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Step {index + 1}</div>
+                        <div className="mt-2 text-sm font-black text-white">{step}</div>
+                        {index < WORKFLOW.length - 1 && <ArrowRight className="absolute -right-4 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-slate-600 xl:block" />}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="mt-16 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Open beta value</div>
+                    <h2 className="mt-2 text-4xl font-black tracking-tight text-white">Everything in one workspace.</h2>
+                    <p className="mt-4 text-base font-semibold leading-8 text-slate-400">
+                      VouchEdge brings the research, build, alert, and review loop into one premium workspace without hiding the responsible-use reality.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-6 py-3 text-sm font-black">Start Free</button>
+                      <button onClick={() => setEdgeLayer('login')} className="edge-space-secondary rounded-2xl px-6 py-3 text-sm font-black">Login</button>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {BETA_VALUE.map((item) => (
+                      <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm font-bold text-slate-300">
+                        <Check className="mr-2 inline h-4 w-4 text-teal-100" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="mt-16 grid gap-5 lg:grid-cols-[1fr_0.75fr]">
+                  <div className="edge-feature-panel rounded-[2rem] p-6">
+                    <h2 className="text-3xl font-black text-white">Built for research and entertainment.</h2>
+                    <p className="mt-3 text-base font-semibold leading-8 text-slate-400">
+                      VouchEdge helps organize information, track decisions, and review outcomes. It does not guarantee results.
+                    </p>
+                  </div>
+                  <div className="edge-feature-panel rounded-[2rem] p-6">
+                    <h2 className="text-3xl font-black text-white">Start building your edge.</h2>
+                    <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">
+                      Join the VouchEdge beta and bring your MLB research, parlays, alerts, and results into one workspace.
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-5 py-3 text-sm font-black">Start Free</button>
+                      <button onClick={() => setEdgeLayer('login')} className="edge-space-secondary rounded-2xl px-5 py-3 text-sm font-black">Login</button>
+                    </div>
+                  </div>
+                </section>
+              </motion.section>
+            )}
+
+            {/* ── LOGIN ── */}
+            {edgeLayer === 'login' && (
+              <motion.section
+                key="login"
+                initial={{ opacity: 0, x: 32 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -32 }}
+                transition={{ duration: 0.4, ease }}
+                className="edge-auth-panel mx-auto max-w-md rounded-[2rem] p-6"
+              >
+                <form onSubmit={handleLoginSubmit}>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">VouchEdge beta</div>
+                  <h2 className="mt-2 text-3xl font-black text-white">Login</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Use your account to return to saved research, parlays, alerts, and results.</p>
+                  <div className="mt-6 grid gap-3">
+                    <input
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/25"
+                      placeholder="Email"
+                      type="email"
+                      autoComplete="email"
+                      value={authForm.email}
+                      onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
+                    />
+                    <input
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/25"
+                      placeholder="Password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={authForm.password}
+                      onChange={(event) => setAuthForm((form) => ({ ...form, password: event.target.value }))}
+                    />
+                  </div>
+                  {authError && (
+                    <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                      {authError}
+                    </div>
+                  )}
+                  {authNotice && (
+                    <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                      {authNotice}
+                    </div>
+                  )}
+                  <button type="submit" disabled={authBusy} className={`mt-6 w-full ${PRIMARY} ${authBusy ? 'cursor-wait opacity-70 hover:translate-y-0' : ''}`}>
+                    {authBusy ? 'Logging in...' : 'Login'}
+                  </button>
+                  <div className="mt-4 flex items-center justify-between gap-3 text-xs font-bold">
+                    <button type="button" onClick={() => setEdgeLayer('intro')} className="text-slate-500 hover:text-slate-300">Back to home</button>
+                    <button type="button" onClick={() => openSignup('pro_trial')} className="text-slate-300 hover:text-white">Create account</button>
+                  </div>
+                </form>
+              </motion.section>
+            )}
+
+            {/* ── SIGNUP WIZARD: features → account → plan → payment → policy ── */}
+            {edgeLayer === 'signup' && (
+              <motion.section
+                key="signup"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.4, ease }}
+                className="mx-auto max-w-2xl"
+              >
+                {/* Stepper */}
+                <div className="mb-5 flex items-center gap-2">
+                  {signupOrder.map((s, i) => {
+                    const active = s === signupStep;
+                    const done = signupOrder.indexOf(signupStep) > i;
+                    return (
+                      <div key={s} className="flex flex-1 items-center gap-2">
+                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black ${active ? 'bg-cyan-400 text-slate-950' : done ? 'bg-emerald-400 text-slate-950' : 'border border-slate-700 bg-slate-900 text-slate-500'}`}>
+                          {done ? <Check className="h-3 w-3" /> : i + 1}
+                        </div>
+                        {i < signupOrder.length - 1 && <div className={`h-px flex-1 ${done ? 'bg-emerald-400/60' : 'bg-slate-800'}`} />}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="edge-auth-panel rounded-[2rem] p-6">
+                  <AnimatePresence mode="wait">
+
+                    {/* 1) FEATURES */}
+                    {signupStep === 'features' && (
+                      <motion.div key="s-features" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Open beta</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Start your VouchEdge beta.</h2>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">Create a clean workspace for MLB research, parlays, alerts, and outcome review.</p>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                          {[
+                            [Radio, 'Daily MLB research board', 'Slate context and lineup status in one place.'],
+                            [TrendingUp, 'Player and team labs', 'Deeper views for matchup research.'],
+                            [Layers3, 'Parlay hub', 'Save the slip and the logic behind it.'],
+                            [ShieldCheck, 'Results ledger', 'Review outcomes without hiding misses.'],
+                          ].map(([Icon, title, body]) => {
+                            const I = Icon as typeof ShieldCheck;
+                            return (
+                              <div key={title as string} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                                <I className="h-5 w-5 text-slate-200" />
+                                <div className="mt-3 text-sm font-black text-white">{title as string}</div>
+                                <p className="mt-1 text-[11px] leading-5 text-slate-500">{body as string}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Continue <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 2) ACCOUNT */}
+                    {signupStep === 'account' && (
+                      <motion.div key="s-account" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Create account</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Your VouchEdge profile.</h2>
+                        <div className="mt-5 grid gap-3">
+                          <input
+                            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/25"
+                            placeholder="Name"
+                            autoComplete="name"
+                            value={authForm.name}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, name: event.target.value }))}
+                          />
+                          <input
+                            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/25"
+                            placeholder="Email"
+                            type="email"
+                            autoComplete="email"
+                            value={authForm.email}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
+                          />
+                          <input
+                            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/25"
+                            placeholder="Password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={authForm.password}
+                            onChange={(event) => setAuthForm((form) => ({ ...form, password: event.target.value }))}
+                          />
+                        </div>
+                        {authError && (
+                          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                            {authError}
+                          </div>
+                        )}
+                        {authNotice && (
+                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                            {authNotice}
+                          </div>
+                        )}
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Choose plan <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 3) PLAN */}
+                    {signupStep === 'plan' && (
+                      <motion.div key="s-plan" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Pick your plan</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Start free, or go Pro.</h2>
+                        <div className="mt-5 grid gap-3">
+                          {(Object.entries(PLANS) as [PlanId, typeof PLANS[PlanId]][]).map(([id, p]) => {
+                            const selected = plan === id;
+                            const ring = selected
+                              ? 'border-white/35 bg-white/[0.075]'
+                              : 'border-white/10 bg-black/25 hover:border-white/20';
+                            return (
+                              <button key={id} onClick={() => setPlan(id)} className={`relative rounded-2xl border p-4 text-left transition ${ring}`}>
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-black text-white">{p.name}</span>
+                                      {p.badge && <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-300">{p.badge}</span>}
+                                    </div>
+                                    <div className="mt-0.5 text-[11px] text-slate-400">{p.sub}</div>
+                                    <ul className="mt-2 space-y-1">
+                                      {p.perks.map((perk) => (
+                                        <li key={perk} className="flex items-center gap-1.5 text-[11px] text-slate-300"><Check className="h-3 w-3 text-slate-200" /> {perk}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-black text-white">{p.price}</div>
+                                    <div className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-white bg-white text-black' : 'border-slate-600'}`}>
+                                      {selected && <Check className="h-3 w-3" />}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}>
+                            <span className="inline-flex items-center gap-2">{PLANS[plan].paid ? 'Continue to payment' : 'Continue'} <ArrowRight className="h-4 w-4" /></span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 4) PAYMENT (paid plans only) */}
+                    {signupStep === 'payment' && (
+                      <motion.div key="s-payment" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Payment</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">
+                          {plan === 'pro_trial' ? '1.5 weeks free, then $12.99/mo.' : `${PLANS[plan].name} — ${PLANS[plan].price}.`}
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">
+                          {plan === 'pro_trial'
+                            ? 'You won’t be charged today. Your card holds your trial; cancel anytime before it ends.'
+                            : 'Secure checkout. You can cancel your subscription anytime.'}
+                        </p>
+                        <div className="mt-5 grid gap-3">
+                          <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3">
+                            <CreditCard className="h-4 w-4 text-slate-500" />
+                            <input className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Card number" inputMode="numeric" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-white/25" placeholder="MM / YY" />
+                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-white/25" placeholder="CVC" />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-slate-500">
+                          <Lock className="h-3.5 w-3.5 text-slate-300" /> Encrypted checkout · processed by our payment provider
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Review terms <ArrowRight className="h-4 w-4" /></span></button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 5) POLICY + AGREEMENT VERIFICATION */}
+                    {signupStep === 'policy' && (
+                      <motion.div key="s-policy" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Terms &amp; agreement</div>
+                        <h2 className="mt-2 text-3xl font-black text-white">Read &amp; agree to continue.</h2>
+                        <div className="mt-4 max-h-56 overflow-y-auto whitespace-pre-line rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-[11px] leading-5 text-slate-400">
+                          {POLICY_TEXT}
+                        </div>
+                        <div className="mt-4 space-y-2.5">
+                          {([
+                            ['age', 'I am 21+ and in a permitted jurisdiction.'],
+                            ['terms', 'I have read and agree to the Terms & Privacy Policy.'],
+                            ['research', 'I understand VouchEdge is research/entertainment only — not betting advice.'],
+                          ] as const).map(([key, label]) => (
+                            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 transition hover:border-slate-700">
+                              <button
+                                type="button"
+                                onClick={() => setAgree((a) => ({ ...a, [key]: !a[key] }))}
+                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition ${agree[key] ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-950'}`}
+                                aria-pressed={agree[key]}
+                              >
+                                {agree[key] && <Check className="h-3.5 w-3.5" />}
+                              </button>
+                              <span className="text-xs leading-5 text-slate-300">{label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between gap-3">
+                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button
+                            onClick={signupNext}
+                            disabled={!allAgreed || authBusy}
+                            className={`${PRIMARY} ${!allAgreed || authBusy ? 'cursor-not-allowed opacity-40 hover:translate-y-0' : ''}`}
+                          >
+                            {authBusy ? 'Creating account...' : plan === 'free' ? 'Agree & create account' : plan === 'pro_trial' ? 'Agree & start free trial' : 'Agree & subscribe'}
+                          </button>
+                        </div>
+                        {authError && (
+                          <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-xs font-bold leading-5 text-rose-100">
+                            {authError}
+                          </div>
+                        )}
+                        {authNotice && (
+                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                            {authNotice}
+                          </div>
+                        )}
+                        {!allAgreed && <p className="mt-2 text-right text-[10px] font-bold text-slate-600">Check all three boxes to continue.</p>}
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+                </div>
+              </motion.section>
+            )}
+
+            {/* ── WELCOME BACK ── */}
+            {edgeLayer === 'welcomeBack' && (
+              <motion.section
+                key="welcomeBack"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.5, ease }}
+                className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-slate-800 bg-slate-950/70 p-10 text-center"
+              >
+                <motion.div
+                  className="flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300"
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Sparkles className="h-8 w-8" />
+                </motion.div>
+                <h2 className="mt-5 text-4xl font-black text-white">
+                  Welcome{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ' back'}.
+                </h2>
+                <p className="mt-3 text-sm text-slate-400">Building your Island dashboard…</p>
+              </motion.section>
+            )}
+
+            {/* ── ISLAND DASHBOARD (real data) ── */}
+            {edgeLayer === 'dashboard' && (
+              <motion.section
+                key="dashboard"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.45, ease }}
+                className="mx-auto max-w-5xl space-y-4"
+              >
+                <section className="edge-island-panel rounded-[2rem] p-5">
+                  <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">The Edge Island</div>
+                      <h2 className="mt-1.5 text-3xl font-black text-white sm:text-4xl">
+                        Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}.
+                      </h2>
+                      <p className="mt-1.5 max-w-2xl text-sm text-slate-400">A compact command dock for the routes you use most.</p>
+                    </div>
+                    <button onClick={() => enterSite('feed')} className={PRIMARY}>
+                      <span className="inline-flex items-center gap-2"><Home className="h-4 w-4" /> Enter VouchEdge Site</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    <Stat label="Today" value={stats.gamesToday || '—'} tone="white" />
+                    <Stat label="Saved" value={dashboardSummaryLoading ? '...' : stats.saved} tone="white" />
+                    <Stat label="Pending" value={dashboardSummaryLoading ? '...' : stats.pending} tone="white" />
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    {ISLAND_ACTIONS.map(([label, section, Icon]) => (
+                      <button
+                        key={label}
+                        onClick={() => enterSite(section)}
+                        className="group rounded-2xl border border-white/10 bg-black/25 p-4 text-left transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.055]"
+                      >
+                        <Icon className="h-5 w-5 text-slate-200" />
+                        <div className="mt-3 text-sm font-black text-white">{label}</div>
+                        <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 opacity-0 transition group-hover:opacity-100">
+                          Open <ArrowRight className="h-3 w-3" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_0.8fr]">
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                      <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-slate-300" /><h3 className="text-sm font-black text-white">Pending picks</h3></div>
+                      <div className="mt-4 space-y-2">
+                        {savedParlays.filter((p) => p.status === 'PENDING').slice(0, 4).map((p) => (
+                          <button key={p.id} onClick={() => enterSite('live_parlays')} className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-left hover:border-white/20">
+                            <span className="truncate text-xs font-bold text-slate-200">{p.title || 'Saved parlay'}</span>
+                            <span className="font-mono text-[11px] text-slate-400">{p.totalOdds}</span>
+                          </button>
+                        ))}
+                        {stats.pending === 0 && (
+                          <button onClick={() => enterSite('build')} className="w-full rounded-xl border border-dashed border-white/15 bg-white/[0.025] px-3 py-4 text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                            No pending picks — add a parlay
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                      <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-slate-300" /><h3 className="text-sm font-black text-white">AI Edge Lab</h3></div>
+                      <div className="mt-4 grid gap-2">
+                        {['Explain today’s board', 'Compare players', 'Build parlay logic'].map((tool) => (
+                          <button key={tool} onClick={() => enterSite('intel')} className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:border-white/20">
+                            {tool}
+                          </button>
+                        ))}
+                      </div>
+                      <button onClick={() => enterSite('themestore')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-200">
+                        <Palette className="h-4 w-4 text-slate-300" /> Theme Studio
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </motion.section>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.main>
+  );
+}

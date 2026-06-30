@@ -8,8 +8,6 @@ import { Sliders, ShieldCheck, Sparkles } from 'lucide-react';
 import AisFeatureAgent from '../../components/AisFeatureAgent';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
-import TheEdgeOverlay from '../../components/theEdge/TheEdgeOverlay';
-
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -21,7 +19,6 @@ interface HomeFeedLayoutProps {
   children: React.ReactNode;
   activeLegs?: Leg[];
   savedSlips?: Parlay[];
-  isRouteSwitching?: boolean;
 }
 
 export default function HomeFeedLayout({
@@ -34,10 +31,23 @@ export default function HomeFeedLayout({
   children,
   activeLegs = [],
   savedSlips = [],
-  isRouteSwitching = false,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
+  const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
+  const previousSectionRef = React.useRef(activeSection);
+
+  React.useEffect(() => {
+    if (previousSectionRef.current === activeSection) return;
+
+    setEdgeTransitioning(true);
+    const timer = window.setTimeout(() => {
+      setEdgeTransitioning(false);
+      previousSectionRef.current = activeSection;
+    }, reduceMotion ? 0 : 360);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSection, reduceMotion]);
 
   const getThemeVars = (theme: VisualTheme) => {
     return {
@@ -140,17 +150,19 @@ export default function HomeFeedLayout({
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
-      <div className={`flex w-full min-h-screen relative transition-all duration-300 z-10 mx-auto ${
-        activeSection === 'welcome' ? 'max-w-none' : activeSection === 'feed' ? 'max-w-[1300px]' : 'max-w-[1580px]'
+      <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
+        activeSection === 'welcome' ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
       }`} id="layout-inner-frame">
         
         {/* Column 1: Left Sticky Sidebar (hidden on mobile, responsive xl width) */}
         {activeSection !== 'welcome' && (
-          <FeedSidebar 
-            activeSection={activeSection} 
-            onSectionChange={onSectionChange} 
-            profile={profile} 
-          />
+          <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+            <FeedSidebar 
+              activeSection={activeSection} 
+              onSectionChange={onSectionChange} 
+              profile={profile} 
+            />
+          </div>
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
@@ -189,50 +201,31 @@ export default function HomeFeedLayout({
           )}
 
           {/* Render Active Page Content */}
-          <div className="relative min-h-screen w-full" id="inner-view-slot">
-            {isRouteSwitching && (
-              <div className="pointer-events-none absolute inset-x-4 top-4 z-50 rounded-2xl border border-cyan-300/20 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
-                  <div>
-                    <div className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Loading VouchEdge screen</div>
-                    <div className="text-xs text-slate-500">Keeping the app active while the next lab mounts.</div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className={`min-h-screen transition-opacity duration-150 ${isRouteSwitching ? 'opacity-60' : 'opacity-100'}`}>
-              {children}
-            </div>
+          <div className="w-full h-full" id="inner-view-slot">
+            {children}
           </div>
         </main>
 
         {/* Column 3: Right Sticky Rail (hidden on mobile, and only rendered on central feed for optimal focus) */}
         {activeSection === 'feed' && (
-          <FeedRightRail 
-            posts={posts} 
-            profile={profile} 
-            savedVouchIds={savedVouchIds} 
-            onSaveVouch={onSaveVouch} 
-          />
+          <div className={`ve-edge-rail ve-edge-rail-right ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+            <FeedRightRail 
+              posts={posts} 
+              profile={profile} 
+              savedVouchIds={savedVouchIds} 
+              onSaveVouch={onSaveVouch} 
+            />
+          </div>
         )}
         
       </div>
 
       {/* Persistent Bottom Mobile Nav */}
       {activeSection !== 'welcome' && (
-        <>
-          <TheEdgeOverlay
-            activeSection={activeSection}
-            onSectionChange={onSectionChange}
-          />
-
-          <FeedMobileNav
-            activeSection={activeSection}
-            onSectionChange={onSectionChange}
-            profile={profile}
-          />
-        </>
+        <FeedMobileNav 
+          activeSection={activeSection} 
+          onSectionChange={onSectionChange} 
+        />
       )}
 
       {/* Globally Floating VouchEdge AI Agent */}

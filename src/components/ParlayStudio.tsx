@@ -9,6 +9,7 @@ import {
 import { Parlay, Leg, Vouch, FeedPost, CreatorProofProfile } from "../types";
 import { apiUrl } from "../lib/apiBase";
 import { americanToDecimal, decimalToAmerican, americanLabel } from "../lib/odds";
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 /** A leg has a real, usable price only when odds is a finite American number. */
 function hasOdds(leg: Leg): leg is Leg & { odds: number } {

@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+@import "./styles/cyber-theme.css";
 @import "tailwindcss";
 @import "./styles/feed-layout.css";
 
@@ -427,8 +428,8 @@ button.bg-slate-950:hover,
 .ve-3d-floor {
   position: absolute;
   bottom: -20%;
-  left: -20%;
-  right: -20%;
+  left: 0;
+  right: 0;
   height: 80%;
   background-image:
     linear-gradient(45deg, rgba(56,189,248,0.18) 1px, transparent 1px),
@@ -712,3 +713,5606 @@ button.bg-slate-950:hover,
     height: 280px !important;
   }
 }
+
+/* ============================================================
+   VouchEdgeLoader — cinematic boot loading overlay
+   ============================================================ */
+.vel-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(14, 165, 233, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 50% 120%, rgba(16, 185, 129, 0.12), transparent 60%),
+    #020617;
+  color: #e2e8f0;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  opacity: 1;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+.vel-leaving { opacity: 0; visibility: hidden; }
+
+/* Background FX layers */
+.vel-bg { position: absolute; inset: 0; pointer-events: none; }
+.vel-grid {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 70%);
+  animation: vel-grid-pan 16s linear infinite;
+}
+.vel-radar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 720px;
+  max-width: 100%;
+  max-height: 130vw;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(34, 211, 238, 0.16), transparent 28%);
+  mask-image: radial-gradient(circle, black 0%, black 40%, transparent 71%);
+  -webkit-mask-image: radial-gradient(circle, black 0%, black 40%, transparent 71%);
+  animation: vel-spin 5.5s linear infinite;
+  opacity: 0.7;
+}
+.vel-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  animation: vel-float 7s ease-in-out infinite;
+}
+.vel-glow-a { top: 14%; left: 18%; width: 320px; height: 320px; background: rgba(14, 165, 233, 0.45); }
+.vel-glow-b { bottom: 12%; right: 16%; width: 300px; height: 300px; background: rgba(16, 185, 129, 0.4); animation-delay: -3.5s; }
+
+/* Center content */
+.vel-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  width: 100%;
+  max-width: 460px;
+}
+.vel-badge {
+  width: 60px; height: 60px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px;
+  font-weight: 900; font-size: 22px; letter-spacing: 0.5px;
+  color: #04121f;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #10b981);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4), 0 12px 40px rgba(34, 211, 238, 0.35);
+  margin-bottom: 18px;
+  animation: vel-pulse 2.4s ease-in-out infinite;
+}
+.vel-title {
+  font-size: clamp(30px, 7vw, 46px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #f8fafc;
+  text-shadow: 0 2px 30px rgba(34, 211, 238, 0.25);
+}
+.vel-title-accent {
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Rotating subtitle (stacked, cross-faded) */
+.vel-sub {
+  position: relative;
+  height: 22px;
+  margin-top: 14px;
+  width: 100%;
+}
+.vel-sub-line {
+  position: absolute;
+  inset: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.vel-sub-line.is-active { opacity: 1; transform: translateY(0); }
+
+/* Percent */
+.vel-pct {
+  margin-top: 22px;
+  font-size: clamp(44px, 12vw, 72px);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+}
+.vel-pct-sign { font-size: 0.45em; color: #38bdf8; margin-left: 2px; vertical-align: super; }
+
+/* Progress bar */
+.vel-bar {
+  margin-top: 18px;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.12);
+}
+.vel-bar-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5e9, #22d3ee 60%, #10b981);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.6);
+  transition: width 0.12s linear;
+}
+.vel-bar-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-100%);
+  animation: vel-shine 1.4s ease-in-out infinite;
+}
+
+/* Disclaimer */
+.vel-disclaimer {
+  position: absolute;
+  bottom: 24px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  padding: 0 24px;
+  margin: 0;
+}
+
+/* Keyframes */
+@keyframes vel-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes vel-grid-pan { to { background-position: 44px 44px; } }
+@keyframes vel-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-22px) scale(1.06); }
+}
+@keyframes vel-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4), 0 12px 40px rgba(34, 211, 238, 0.35); }
+  50% { box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7), 0 16px 52px rgba(34, 211, 238, 0.6); }
+}
+@keyframes vel-shine { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
+
+/* Reduced motion: keep progress + cross-fades, drop heavy looping FX */
+.vel-reduced .vel-grid,
+.vel-reduced .vel-radar,
+.vel-reduced .vel-glow,
+.vel-reduced .vel-badge,
+.vel-reduced .vel-bar-shine { animation: none; }
+.vel-reduced .vel-glow { opacity: 0.3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vel-grid, .vel-radar, .vel-glow, .vel-badge, .vel-bar-shine { animation: none !important; }
+}
+
+/* ==========================================================
+   VOUCH EDGE GLOBAL BORDER KILL SWITCH
+   Removes hard white/cyan outlines across the whole app.
+   Keep borders structurally, but make them transparent glass.
+   ========================================================== */
+
+#root [class*="border-white"],
+#root [class*="border-cyan"],
+#root [class*="border-slate"],
+#root [class*="border-zinc"],
+#root [class*="border-neutral"],
+#root [class*="border-gray"] {
+  border-color: rgba(34, 211, 238, 0.045) !important;
+}
+
+#root [class*="ring-white"],
+#root [class*="ring-cyan"],
+#root [class*="ring-slate"],
+#root [class*="ring-zinc"],
+#root [class*="ring-neutral"],
+#root [class*="ring-gray"] {
+  --tw-ring-color: rgba(34, 211, 238, 0.055) !important;
+}
+
+#root [class*="divide-white"] > :not([hidden]) ~ :not([hidden]),
+#root [class*="divide-cyan"] > :not([hidden]) ~ :not([hidden]),
+#root [class*="divide-slate"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(34, 211, 238, 0.04) !important;
+}
+
+/* Softer glass panels globally */
+#root [class*="bg-slate-950"],
+#root [class*="bg-[#020617]"],
+#root [class*="bg-black"] {
+  background-color: rgba(2, 6, 23, 0.54) !important;
+}
+
+/* Feed/right rail cards should look see-through, not boxed */
+#root main [class*="rounded-3xl"][class*="border"],
+#root main [class*="rounded-2xl"][class*="border"] {
+  border-color: rgba(34, 211, 238, 0.04) !important;
+  box-shadow: 0 18px 60px rgba(8, 47, 73, 0.10) !important;
+}
+
+/* Inputs/buttons: keep usable outline, not white boxes */
+#root input,
+#root select,
+#root textarea,
+#root button {
+  border-color: rgba(34, 211, 238, 0.075) !important;
+}
+
+#root input:focus,
+#root select:focus,
+#root textarea:focus,
+#root button:focus {
+  border-color: rgba(34, 211, 238, 0.18) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.055) !important;
+}
+
+/* ==========================================================
+   VOUCH EDGE GECKO SIDEBAR
+   Sidebar changes color + glass tint with active theme.
+   ========================================================== */
+
+html[data-ve-theme="cyber"] {
+  --gecko-1: 34, 211, 238;
+  --gecko-2: 16, 185, 129;
+  --gecko-3: 59, 130, 246;
+}
+
+html[data-ve-theme="gold"] {
+  --gecko-1: 251, 191, 36;
+  --gecko-2: 249, 115, 22;
+  --gecko-3: 168, 85, 247;
+}
+
+html[data-ve-theme="royal"] {
+  --gecko-1: 167, 139, 250;
+  --gecko-2: 236, 72, 153;
+  --gecko-3: 59, 130, 246;
+}
+
+html[data-ve-theme="fire"] {
+  --gecko-1: 251, 113, 133;
+  --gecko-2: 249, 115, 22;
+  --gecko-3: 239, 68, 68;
+}
+
+html[data-ve-theme="ocean"] {
+  --gecko-1: 45, 212, 191;
+  --gecko-2: 14, 165, 233;
+  --gecko-3: 16, 185, 129;
+}
+
+html:not([data-ve-theme]) {
+  --gecko-1: 34, 211, 238;
+  --gecko-2: 16, 185, 129;
+  --gecko-3: 59, 130, 246;
+}
+
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(var(--gecko-1), 0.26), transparent 34%),
+    radial-gradient(circle at 90% 20%, rgba(var(--gecko-2), 0.14), transparent 36%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.50), rgba(2, 6, 23, 0.26)) !important;
+  border-right: 1px solid rgba(var(--gecko-1), 0.16) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(var(--gecko-1), 0.10),
+    22px 0 90px rgba(var(--gecko-1), 0.10) !important;
+  backdrop-filter: blur(30px) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.35) !important;
+}
+
+#root .ve-sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(var(--gecko-1), 0.07), transparent 32%),
+    linear-gradient(315deg, rgba(var(--gecko-2), 0.06), transparent 36%),
+    linear-gradient(rgba(var(--gecko-1), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--gecko-1), 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 34px 34px, 34px 34px;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+#root .ve-sidebar * {
+  border-color: rgba(var(--gecko-1), 0.11) !important;
+}
+
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-[#020617]"],
+#root .ve-sidebar [class*="bg-white"] {
+  background:
+    linear-gradient(135deg, rgba(var(--gecko-1), 0.09), rgba(2, 6, 23, 0.18)) !important;
+  backdrop-filter: blur(18px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+}
+
+#root .ve-sidebar button,
+#root .ve-sidebar a {
+  color: rgba(226, 232, 240, 0.92) !important;
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover {
+  background:
+    linear-gradient(135deg, rgba(var(--gecko-1), 0.18), rgba(var(--gecko-2), 0.08)) !important;
+  border-color: rgba(var(--gecko-1), 0.22) !important;
+  box-shadow: 0 12px 38px rgba(var(--gecko-1), 0.13) !important;
+}
+
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"],
+#root .ve-sidebar button[data-active="true"] {
+  background:
+    linear-gradient(135deg, rgba(var(--gecko-1), 0.24), rgba(var(--gecko-2), 0.10)) !important;
+  border-color: rgba(var(--gecko-1), 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 48px rgba(var(--gecko-1), 0.16) !important;
+}
+
+#root .ve-sidebar svg {
+  color: rgb(var(--gecko-1)) !important;
+  filter: drop-shadow(0 0 10px rgba(var(--gecko-1), 0.35));
+}
+
+#root .ve-sidebar [class*="text-cyan"],
+#root .ve-sidebar [class*="text-emerald"],
+#root .ve-sidebar [class*="text-sky"],
+#root .ve-sidebar [class*="text-purple"],
+#root .ve-sidebar [class*="text-amber"] {
+  color: rgb(var(--gecko-1)) !important;
+}
+
+/* ==========================================================
+   EDGE ISLAND ENTRANCE ANIMATIONS
+   Used after Welcome Portal / login / onboarding.
+   ========================================================== */
+
+.ve-edge-island-enter {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ve-edge-island-enter-delay-1 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+}
+
+.ve-edge-island-enter-delay-2 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 170ms both;
+}
+
+.ve-edge-island-enter-delay-3 {
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+}
+
+@keyframes veEdgeIslandEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.975);
+    filter: blur(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.ve-portal-welcome-exit {
+  animation: vePortalWelcomeExit 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vePortalWelcomeExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(14px);
+  }
+}
+
+/* ==========================================================
+   FINAL PRODUCT-WIDE THEME CONSISTENCY PASS
+   Every page, island, sidebar, button, input, border follows skin.
+   ========================================================== */
+
+html {
+  --skin-1: 34, 211, 238;
+  --skin-2: 16, 185, 129;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 2, 6, 23;
+  --skin-card: rgba(3, 12, 26, 0.56);
+  --skin-border: rgba(34, 211, 238, 0.10);
+}
+
+/* Backward compatibility for old theme IDs */
+html[data-ve-theme="cyber"] {
+  --skin-1: 34, 211, 238;
+  --skin-2: 16, 185, 129;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 2, 6, 23;
+  --skin-card: rgba(3, 12, 26, 0.56);
+  --skin-border: rgba(34, 211, 238, 0.10);
+}
+
+html[data-ve-theme="gold"] {
+  --skin-1: 251, 191, 36;
+  --skin-2: 249, 115, 22;
+  --skin-3: 168, 85, 247;
+  --skin-bg: 13, 8, 2;
+  --skin-card: rgba(24, 14, 4, 0.58);
+  --skin-border: rgba(251, 191, 36, 0.13);
+}
+
+html[data-ve-theme="royal"] {
+  --skin-1: 167, 139, 250;
+  --skin-2: 236, 72, 153;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 8, 5, 24;
+  --skin-card: rgba(15, 9, 38, 0.60);
+  --skin-border: rgba(167, 139, 250, 0.13);
+}
+
+html[data-ve-theme="fire"] {
+  --skin-1: 251, 113, 133;
+  --skin-2: 249, 115, 22;
+  --skin-3: 239, 68, 68;
+  --skin-bg: 16, 3, 3;
+  --skin-card: rgba(31, 8, 8, 0.58);
+  --skin-border: rgba(251, 113, 133, 0.14);
+}
+
+html[data-ve-theme="ocean"] {
+  --skin-1: 45, 212, 191;
+  --skin-2: 14, 165, 233;
+  --skin-3: 16, 185, 129;
+  --skin-bg: 2, 16, 19;
+  --skin-card: rgba(4, 24, 28, 0.58);
+  --skin-border: rgba(45, 212, 191, 0.13);
+}
+
+/* Product background */
+body,
+#root,
+.ve-page,
+.ve-app-bg,
+.ve-themed-bg,
+.ve-grid-bg {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(var(--skin-1), 0.22), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(var(--skin-2), 0.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(var(--skin-3), 0.12), transparent 40%),
+    linear-gradient(135deg, rgb(var(--skin-bg)), #020617 52%, rgb(var(--skin-bg))) !important;
+}
+
+/* Every visible border becomes theme glass */
+#root [class*="border-white"],
+#root [class*="border-slate"],
+#root [class*="border-gray"],
+#root [class*="border-zinc"],
+#root [class*="border-neutral"],
+#root [class*="border-cyan"],
+#root [class*="border-sky"],
+#root [class*="border-emerald"],
+#root [class*="border-purple"],
+#root [class*="border-amber"],
+#root [class*="border-rose"],
+#root [class*="border-red"] {
+  border-color: var(--skin-border) !important;
+}
+
+/* Ring/focus follows theme */
+#root [class*="ring-white"],
+#root [class*="ring-slate"],
+#root [class*="ring-cyan"],
+#root [class*="ring-sky"],
+#root [class*="ring-purple"],
+#root [class*="ring-amber"] {
+  --tw-ring-color: rgba(var(--skin-1), 0.14) !important;
+}
+
+/* Dividers follow theme */
+#root [class*="divide-white"] > :not([hidden]) ~ :not([hidden]),
+#root [class*="divide-slate"] > :not([hidden]) ~ :not([hidden]),
+#root [class*="divide-cyan"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(var(--skin-1), 0.075) !important;
+}
+
+/* Product islands/cards */
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"],
+#root section[class*="rounded-"],
+.ve-island,
+.ve-panel,
+.ve-card,
+.ve-theme-panel {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.10), transparent 38%),
+    linear-gradient(135deg, rgba(var(--skin-1), 0.052), var(--skin-card)) !important;
+  border-color: var(--skin-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.035),
+    0 22px 70px rgba(var(--skin-1), 0.075) !important;
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+
+/* Sidebar full gecko behavior */
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(var(--skin-1), 0.34), transparent 35%),
+    radial-gradient(circle at 90% 20%, rgba(var(--skin-2), 0.18), transparent 38%),
+    linear-gradient(180deg, rgba(var(--skin-bg), 0.70), rgba(var(--skin-bg), 0.34)) !important;
+  border-right: 1px solid rgba(var(--skin-1), 0.18) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(var(--skin-1), 0.12),
+    24px 0 95px rgba(var(--skin-1), 0.13) !important;
+  backdrop-filter: blur(30px) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.35) !important;
+}
+
+#root .ve-sidebar * {
+  border-color: rgba(var(--skin-1), 0.12) !important;
+}
+
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-white"],
+#root .ve-sidebar [class*="bg-[#020617]"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.085), rgba(var(--skin-bg), 0.26)) !important;
+  backdrop-filter: blur(18px) saturate(1.22);
+  -webkit-backdrop-filter: blur(18px) saturate(1.22);
+}
+
+#root .ve-sidebar svg {
+  color: rgb(var(--skin-1)) !important;
+  filter: drop-shadow(0 0 12px rgba(var(--skin-1), 0.42));
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.22), rgba(var(--skin-2), 0.10)) !important;
+  border-color: rgba(var(--skin-1), 0.26) !important;
+  box-shadow: 0 14px 44px rgba(var(--skin-1), 0.15) !important;
+}
+
+/* Buttons */
+#root button[class*="bg-cyan"],
+#root button[class*="bg-sky"],
+#root button[class*="from-cyan"],
+#root button[class*="from-sky"],
+#root button[class*="from-emerald"],
+#root .ve-button-primary,
+#root .ve-theme-button {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.96), rgba(var(--skin-2), 0.82)) !important;
+  color: #020617 !important;
+  border-color: rgba(var(--skin-1), 0.22) !important;
+  box-shadow: 0 16px 45px rgba(var(--skin-1), 0.23) !important;
+}
+
+/* Text accents */
+#root [class*="text-cyan"],
+#root [class*="text-sky"],
+#root [class*="text-emerald"],
+#root [class*="text-amber"],
+#root [class*="text-purple"],
+#root [class*="text-fuchsia"],
+#root [class*="text-rose"] {
+  color: rgb(var(--skin-1)) !important;
+}
+
+/* Inputs */
+#root input,
+#root select,
+#root textarea {
+  border-color: rgba(var(--skin-1), 0.13) !important;
+  background: rgba(var(--skin-bg), 0.44) !important;
+  color: rgb(226, 232, 240) !important;
+}
+
+#root input:focus,
+#root select:focus,
+#root textarea:focus {
+  border-color: rgba(var(--skin-1), 0.30) !important;
+  box-shadow: 0 0 0 3px rgba(var(--skin-1), 0.075) !important;
+}
+
+/* Premium VouchEdge color correction */
+#root {
+  color-scheme: dark;
+}
+
+#root .ve-sidebar {
+  background:
+    linear-gradient(180deg, rgba(10, 14, 24, 0.98) 0%, rgba(7, 10, 18, 0.98) 55%, rgba(4, 6, 11, 0.98) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 24px 0 70px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Kill loud neon cyan/green surfaces */
+#root .ve-sidebar [class*="cyan"],
+#root .ve-sidebar [class*="emerald"],
+#root .ve-sidebar [class*="teal"] {
+  filter: saturate(0.45) brightness(0.92);
+}
+
+/* Premium hover: quiet glass, not arcade glow */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* Keep accent small and expensive-looking */
+#root .ve-sidebar svg {
+  color: rgba(203, 213, 225, 0.86) !important;
+  filter: none !important;
+}
+
+#root .ve-sidebar .bg-gradient-to-r {
+  background-image: linear-gradient(90deg, #e5e7eb, #94a3b8) !important;
+}
+
+/* ===== VouchEdge layout lock / centering fix ===== */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Keep the app inside the screen */
+#root > * {
+  max-width: 100vw;
+}
+
+/* Main page content should center inside available area */
+#root main,
+#root [role="main"] {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Prevent sections/cards from creating right-side overflow */
+#root section,
+#root article,
+#root header,
+#root footer {
+  max-width: 100%;
+}
+
+/* Kill accidental viewport-width overflow */
+#root .w-screen,
+#root [class*="w-screen"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Big dashboard/page containers */
+#root [class*="max-w-7xl"],
+#root [class*="max-w-6xl"],
+#root [class*="max-w-screen"] {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+
+/* ===== VouchEdge Premium Apple-Style No-Neon Theme ===== */
+
+:root {
+  --ve-bg: #050505;
+  --ve-surface: #0b0b0d;
+  --ve-surface-2: #111114;
+  --ve-surface-3: #17171a;
+  --ve-border: rgba(255, 255, 255, 0.10);
+  --ve-border-soft: rgba(255, 255, 255, 0.065);
+  --ve-text: #f5f5f7;
+  --ve-muted: #a1a1aa;
+  --ve-muted-2: #71717a;
+}
+
+/* kill childish blue/cyan/green gradients */
+#root [class*="from-cyan"],
+#root [class*="to-cyan"],
+#root [class*="via-cyan"],
+#root [class*="from-blue"],
+#root [class*="to-blue"],
+#root [class*="via-blue"],
+#root [class*="from-emerald"],
+#root [class*="to-emerald"],
+#root [class*="via-emerald"],
+#root [class*="from-teal"],
+#root [class*="to-teal"],
+#root [class*="via-teal"] {
+  --tw-gradient-from: rgba(255,255,255,0.12) !important;
+  --tw-gradient-to: rgba(255,255,255,0.035) !important;
+  --tw-gradient-stops: rgba(255,255,255,0.12), rgba(255,255,255,0.035) !important;
+}
+
+/* premium dark background */
+html,
+body,
+#root {
+  background: #050505 !important;
+  color: var(--ve-text);
+}
+
+/* no arcade glow */
+#root [class*="shadow-cyan"],
+#root [class*="shadow-blue"],
+#root [class*="shadow-emerald"],
+#root [class*="shadow-teal"] {
+  box-shadow: 0 24px 70px rgba(0,0,0,0.35) !important;
+}
+
+/* soften loud text colors */
+#root [class*="text-cyan"],
+#root [class*="text-blue"],
+#root [class*="text-emerald"],
+#root [class*="text-teal"] {
+  color: rgba(245,245,247,0.88) !important;
+}
+
+/* premium cards */
+#root [class*="border-cyan"],
+#root [class*="border-blue"],
+#root [class*="border-emerald"],
+#root [class*="border-teal"] {
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+/* buttons should feel expensive, not casino */
+#root button,
+#root a {
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, opacity 180ms ease;
+}
+
+/* sidebar: Apple graphite */
+#root .ve-sidebar {
+  background:
+    linear-gradient(180deg, #0b0b0d 0%, #08080a 52%, #050505 100%) !important;
+  border-color: rgba(255,255,255,0.085) !important;
+  box-shadow: 24px 0 80px rgba(0,0,0,0.42) !important;
+}
+
+/* active sidebar item */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background: rgba(255,255,255,0.075) !important;
+  border-color: rgba(255,255,255,0.13) !important;
+  color: #f5f5f7 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.055) !important;
+}
+
+/* badges/pills */
+#root .ve-sidebar [class*="rounded-full"] {
+  background: rgba(255,255,255,0.075) !important;
+  border-color: rgba(255,255,255,0.11) !important;
+  color: rgba(245,245,247,0.92) !important;
+}
+
+
+/* ===== Remove heavy background layers behind card groups ===== */
+
+/* Kill oversized decorative panels/washes behind cards */
+#root [class*="bg-[radial-gradient"],
+#root [class*="bg-[linear-gradient"],
+#root [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+}
+
+/* Make card-section wrappers invisible unless they are actual cards */
+#root section > div[class*="rounded-"],
+#root main > div[class*="rounded-"] {
+  background: transparent !important;
+}
+
+/* Keep actual cards visible, but remove the big parent layer feel */
+#root article,
+#root [class*="card"],
+#root [class*="Card"],
+#root [class*="feed-card"],
+#root [class*="post-card"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025)) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  box-shadow: 0 18px 55px rgba(0,0,0,0.28) !important;
+}
+
+/* Remove cheap glowing blobs under grids/cards */
+#root [class*="blur-2xl"],
+#root [class*="blur-3xl"],
+#root [class*="opacity-20"],
+#root [class*="opacity-30"],
+#root [class*="opacity-40"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Page background should be flat premium black/graphite */
+#root main,
+#root [role="main"] {
+  background: transparent !important;
+}
+
+
+/* ===== Kill blue glow around landing cards ===== */
+
+/* Remove cyan/blue outer glow from landing cards/panels */
+#root [class*="shadow-cyan"],
+#root [class*="shadow-blue"],
+#root [class*="shadow-sky"],
+#root [class*="shadow-teal"],
+#root [class*="shadow-emerald"] {
+  box-shadow: 0 22px 60px rgba(0,0,0,0.34) !important;
+}
+
+/* Remove blue/cyan borders */
+#root [class*="border-cyan"],
+#root [class*="border-blue"],
+#root [class*="border-sky"],
+#root [class*="border-teal"],
+#root [class*="border-emerald"] {
+  border-color: rgba(255,255,255,0.095) !important;
+}
+
+/* Make large landing panels graphite, not blue glass */
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-[2"],
+#root main [class*="rounded-[3"] {
+  background:
+    linear-gradient(180deg, rgba(18,18,20,0.92), rgba(8,8,10,0.92)) !important;
+  border-color: rgba(255,255,255,0.09) !important;
+  box-shadow: 0 28px 80px rgba(0,0,0,0.38) !important;
+}
+
+/* Kill blue radial wash inside panels */
+#root [class*="bg-[radial-gradient"],
+#root [class*="bg-[linear-gradient"] {
+  background-image:
+    linear-gradient(180deg, rgba(18,18,20,0.92), rgba(7,7,9,0.94)) !important;
+}
+
+/* Remove blue glow pseudo/decorative absolute layers */
+#root main [class*="absolute"][class*="blur"],
+#root main [class*="absolute"][class*="cyan"],
+#root main [class*="absolute"][class*="blue"],
+#root main [class*="absolute"][class*="teal"],
+#root main [class*="absolute"][class*="emerald"] {
+  display: none !important;
+}
+
+/* Keep only tiny accent pills, but neutral */
+#root main [class*="bg-cyan"],
+#root main [class*="bg-blue"],
+#root main [class*="bg-teal"],
+#root main [class*="bg-emerald"] {
+  background-color: rgba(255,255,255,0.10) !important;
+}
+
+/* ===== Welcome front page: simple space theme + layout stickiness ===== */
+#root #center-main-content-column,
+#root #inner-view-slot,
+#root .edge-space-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#root .edge-space-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 56% -8%, rgba(148, 163, 184, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 28%, rgba(56, 189, 248, 0.08), transparent 28%),
+    linear-gradient(180deg, #02030a 0%, #05070d 44%, #020203 100%) !important;
+}
+
+#root .edge-space-shell .edge-space-backdrop {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 22%),
+    radial-gradient(circle at 50% 110%, rgba(148, 163, 184, 0.10), transparent 34%) !important;
+}
+
+#root .edge-space-header {
+  border-color: rgba(255,255,255,0.09) !important;
+}
+
+#root .edge-space-hero {
+  min-height: min(760px, calc(100vh - 132px));
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(125, 211, 252, 0.14), transparent 26%),
+    radial-gradient(circle at 22% 88%, rgba(148, 163, 184, 0.09), transparent 28%),
+    linear-gradient(180deg, rgba(12, 14, 20, 0.82), rgba(3, 5, 10, 0.94)) !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.42) !important;
+}
+
+#root .edge-space-orbit {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgba(226, 232, 240, 0.10);
+  border-radius: 9999px;
+}
+
+#root .edge-space-orbit-one {
+  right: -18%;
+  top: 8%;
+  width: min(680px, 58vw);
+  aspect-ratio: 1;
+}
+
+#root .edge-space-orbit-two {
+  right: -10%;
+  top: 20%;
+  width: min(460px, 42vw);
+  aspect-ratio: 1;
+  opacity: 0.7;
+}
+
+#root .edge-product-panel,
+#root .edge-space-module {
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.070), rgba(255,255,255,0.030)),
+    rgba(3, 5, 10, 0.78) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.34) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+}
+
+#root .edge-space-module:hover {
+  border-color: rgba(255,255,255,0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.090), rgba(255,255,255,0.040)),
+    rgba(5, 7, 12, 0.86) !important;
+}
+
+#root .edge-space-primary {
+  border: 1px solid rgba(255,255,255,0.74) !important;
+  background: #f5f5f7 !important;
+  color: #020203 !important;
+  box-shadow: 0 18px 48px rgba(255,255,255,0.12) !important;
+}
+
+#root .edge-space-secondary,
+#root .edge-space-ghost {
+  border: 1px solid rgba(255,255,255,0.13) !important;
+  background: rgba(255,255,255,0.055) !important;
+  color: #f5f5f7 !important;
+  box-shadow: none !important;
+}
+
+#root .edge-slate-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.22) transparent;
+}
+
+#root .ve-sidebar {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 767px) {
+  #root .edge-space-hero {
+    min-height: auto;
+  }
+}
+
+/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+/* Public landing should fill the browser without creating the right dotted strip */
+.ve-public-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+.ve-public-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+}
+
+/* App pages: sidebar + content should fit viewport */
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Main app area should never use viewport width past the sidebar */
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Right rail must fit, not push page sideways */
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+/* Remove harsh debug-looking outlines */
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card,
+.ve-composer,
+.ve-auth-card,
+.ve-command-island {
+  border-color: rgba(255,255,255,0.085) !important;
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+/* Quiet graphite surface system */
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card {
+  background:
+    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
+}
+
+/* Kill the remaining purple/blue glow only inside VouchEdge shells */
+.ve-public-shell [class*="shadow-cyan"],
+.ve-public-shell [class*="shadow-blue"],
+.ve-public-shell [class*="shadow-purple"],
+.ve-app-shell [class*="shadow-cyan"],
+.ve-app-shell [class*="shadow-blue"],
+.ve-app-shell [class*="shadow-purple"],
+.ve-shell [class*="shadow-cyan"],
+.ve-shell [class*="shadow-blue"],
+.ve-shell [class*="shadow-purple"] {
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+/* Make oversized white borders subtle */
+.ve-public-shell [class*="border-white"],
+.ve-app-shell [class*="border-white"],
+.ve-shell [class*="border-white"] {
+  border-color: rgba(255,255,255,0.085) !important;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+
+
+/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.ve-public-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #050506;
+}
+
+.ve-public-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+}
+
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card,
+.ve-composer,
+.ve-auth-card,
+.ve-command-island {
+  border-color: rgba(255,255,255,0.085) !important;
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+.ve-surface,
+.ve-card,
+.ve-panel,
+.ve-feed-card,
+.ve-rail-card {
+  background:
+    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
+}
+
+.ve-public-shell [class*="shadow-cyan"],
+.ve-public-shell [class*="shadow-blue"],
+.ve-public-shell [class*="shadow-purple"],
+.ve-app-shell [class*="shadow-cyan"],
+.ve-app-shell [class*="shadow-blue"],
+.ve-app-shell [class*="shadow-purple"],
+.ve-shell [class*="shadow-cyan"],
+.ve-shell [class*="shadow-blue"],
+.ve-shell [class*="shadow-purple"] {
+  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
+}
+
+.ve-public-shell [class*="border-white"],
+.ve-app-shell [class*="border-white"],
+.ve-shell [class*="border-white"] {
+  border-color: rgba(255,255,255,0.085) !important;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+
+
+/* The app content after the fixed sidebar should start once, not twice */
+.ve-app-shell,
+.ve-shell {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Main app region must own the available width */
+.ve-app-main,
+.ve-page-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0 !important;
+}
+
+/* Keep matchup carousel scroll inside its own box only */
+
+/* ===== VouchEdge Daily Players — clean compact SaaS layout ===== */
+
+.daily-active-game-shell {
+  height: calc(100vh - 118px);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.daily-active-game-nav {
+  min-height: 40px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background: linear-gradient(180deg, rgba(14,14,16,0.96), rgba(6,6,8,0.98));
+}
+
+.daily-active-game-nav button {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.daily-game-shortcut-row,
+.daily-matchup-shortcuts {
+  display: none !important;
+}
+
+.daily-matchup-shortcuts-pro {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  min-height: 52px;
+  padding: 0 2px 8px;
+  margin: 0;
+  scroll-snap-type: x proximity;
+}
+
+.daily-matchup-shortcuts-pro button {
+  flex: 0 0 auto;
+  min-width: 154px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02));
+  color: rgba(245,245,247,0.86);
+  cursor: pointer;
+}
+
+.daily-matchup-shortcuts-pro button.is-active {
+  background: linear-gradient(180deg, rgba(255,255,255,0.17), rgba(255,255,255,0.055));
+  border-color: rgba(255,255,255,0.2);
+  color: #f5f5f7;
+}
+
+.daily-matchup-icons-pro {
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+  flex: 0 0 auto;
+}
+
+.daily-matchup-icons-pro .daily-team-initial-icon + .daily-team-initial-icon {
+  margin-left: -8px;
+}
+
+.daily-team-initial-icon {
+  width: 31px;
+  height: 31px;
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.23), rgba(255,255,255,0.06));
+  color: #f5f5f7;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.daily-matchup-shortcuts-pro button.is-active .daily-team-initial-icon {
+  background: #f5f5f7;
+  color: #08080a;
+}
+
+.daily-matchup-copy-pro {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.daily-matchup-copy-pro em {
+  font-style: normal;
+  color: rgba(245,245,247,0.38);
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 18px;
+  border-color: rgba(255,255,255,0.075);
+  background: linear-gradient(180deg, rgba(12,12,15,0.96), rgba(5,5,7,0.98));
+  box-shadow: 0 18px 55px rgba(0,0,0,0.36);
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:first-child {
+  min-height: 48px;
+  padding: 6px 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child {
+  min-height: 0;
+  overflow: hidden;
+  padding: 7px;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl > div:last-child > div {
+  height: 100%;
+  min-height: 0;
+  gap: 7px;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2 {
+  display: grid;
+  grid-template-rows: repeat(9, minmax(30px, 1fr));
+  gap: 3px;
+  height: calc(100vh - 322px);
+  max-height: calc(100vh - 322px);
+  overflow: hidden;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article {
+  min-height: 30px;
+  max-height: 38px;
+  padding: 3px 6px;
+  border-radius: 10px;
+  border-color: rgba(255,255,255,0.055);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+  box-shadow: none;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article img {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h3,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article h4,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article strong {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article p,
+.daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl article span {
+  font-size: 7.6px;
+  line-height: 1;
+}
+
+.daily-active-game-shell article p {
+  display: none;
+}
+
+.daily-active-game-shell article [class*="rounded-full"] {
+  padding: 1px 4px;
+  font-size: 7.5px;
+}
+
+@media (min-width: 901px) {
+  body:has(.daily-active-game-shell) {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 900px) {
+  .daily-active-game-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl {
+    height: auto;
+  }
+
+  .daily-active-game-shell .scroll-mt-6.overflow-hidden.rounded-3xl .grid.gap-2 {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+
+/* ===== Daily Players compact roster rebuild ===== */
+
+.daily-game-workspace {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background: linear-gradient(180deg, rgba(12,12,15,0.96), rgba(5,5,7,0.98));
+  box-shadow: 0 18px 55px rgba(0,0,0,0.36);
+}
+
+.daily-game-workspace-head {
+  min-height: 52px;
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.065);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+}
+
+.daily-game-workspace > div:last-child {
+  min-height: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.daily-game-workspace > div:last-child > div {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.daily-roster-column {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 44px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.025);
+}
+
+.daily-roster-column-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.055);
+}
+
+.daily-roster-team-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #f5f5f7;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.daily-roster-team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f5f5f7;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.daily-roster-team-meta {
+  margin-top: 3px;
+  color: rgba(245,245,247,0.42);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.daily-roster-list {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(9, minmax(30px, 1fr));
+  gap: 3px;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.daily-roster-row {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.055);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+  color: #f5f5f7;
+  text-align: left;
+}
+
+.daily-roster-slot {
+  color: rgba(245,245,247,0.35);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.daily-roster-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(255,255,255,0.075);
+  color: rgba(245,245,247,0.78);
+  font-size: 8px;
+  font-weight: 950;
+}
+
+.daily-roster-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.daily-roster-main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.daily-roster-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.daily-roster-main em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(245,245,247,0.45);
+  font-style: normal;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.daily-roster-badge {
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.16);
+  color: rgba(165,243,252,0.9);
+  font-size: 7.5px;
+  font-weight: 900;
+}
+
+.daily-roster-badge.is-projected {
+  background: rgba(251,191,36,0.10);
+  border-color: rgba(251,191,36,0.16);
+  color: rgba(253,230,138,0.9);
+}
+
+.daily-roster-empty {
+  margin: 6px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  color: rgba(245,245,247,0.55);
+  font-size: 11px;
+}
+
+.daily-roster-empty span {
+  color: rgba(245,245,247,0.35);
+  font-size: 9px;
+}
+
+@media (max-width: 900px) {
+  .daily-game-workspace,
+  .daily-game-workspace > div:last-child,
+  .daily-game-workspace > div:last-child > div {
+    height: auto;
+    overflow: visible;
+  }
+
+  .daily-game-workspace > div:last-child > div {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-roster-list {
+    grid-template-rows: none;
+  }
+}
+
+
+/* ===== Daily Players compact roster rebuild ===== */
+
+.daily-game-workspace {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background: linear-gradient(180deg, rgba(12,12,15,0.96), rgba(5,5,7,0.98));
+  box-shadow: 0 18px 55px rgba(0,0,0,0.36);
+}
+
+.daily-game-workspace-head {
+  min-height: 52px;
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.065);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+}
+
+.daily-game-workspace > div:last-child {
+  min-height: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.daily-game-workspace > div:last-child > div {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.daily-roster-column {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 44px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.025);
+}
+
+.daily-roster-column-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.055);
+}
+
+.daily-roster-team-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #f5f5f7;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.daily-roster-team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f5f5f7;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.daily-roster-team-meta {
+  margin-top: 3px;
+  color: rgba(245,245,247,0.42);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.daily-roster-list {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(9, minmax(30px, 1fr));
+  gap: 3px;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.daily-roster-row {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.055);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+  color: #f5f5f7;
+  text-align: left;
+}
+
+.daily-roster-slot {
+  color: rgba(245,245,247,0.35);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.daily-roster-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(255,255,255,0.075);
+  color: rgba(245,245,247,0.78);
+  font-size: 8px;
+  font-weight: 950;
+}
+
+.daily-roster-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.daily-roster-main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.daily-roster-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.daily-roster-main em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(245,245,247,0.45);
+  font-style: normal;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.daily-roster-badge {
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.16);
+  color: rgba(165,243,252,0.9);
+  font-size: 7.5px;
+  font-weight: 900;
+}
+
+.daily-roster-badge.is-projected {
+  background: rgba(251,191,36,0.10);
+  border-color: rgba(251,191,36,0.16);
+  color: rgba(253,230,138,0.9);
+}
+
+.daily-roster-empty {
+  margin: 6px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  color: rgba(245,245,247,0.55);
+  font-size: 11px;
+}
+
+.daily-roster-empty span {
+  color: rgba(245,245,247,0.35);
+  font-size: 9px;
+}
+
+@media (max-width: 900px) {
+  .daily-game-workspace,
+  .daily-game-workspace > div:last-child,
+  .daily-game-workspace > div:last-child > div {
+    height: auto;
+    overflow: visible;
+  }
+
+  .daily-game-workspace > div:last-child > div {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-roster-list {
+    grid-template-rows: none;
+  }
+}
+
+
+/* =========================================================
+   DAILY PLAYERS — PREMIUM COMPACT MATCHUP FIX
+   ========================================================= */
+
+.daily-players-page,
+.daily-players-board,
+.daily-players-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.dp-matchup-shell {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.12), transparent 35%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  padding: 18px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.dp-matchup-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dp-team-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dp-team-head.home {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.dp-team-copy {
+  min-width: 0;
+}
+
+.dp-team-kicker {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.8);
+  font-weight: 800;
+}
+
+.dp-team-name {
+  font-size: 18px;
+  font-weight: 950;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-vs-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  background: rgba(45, 212, 191, 0.12);
+  color: #67e8f9;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.dp-team-badge {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #f8fafc;
+  font-weight: 950;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.3), transparent 35%),
+    linear-gradient(135deg, rgba(45, 212, 191, 0.35), rgba(59, 130, 246, 0.18));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.dp-roster-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+.dp-roster-column {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.58);
+  overflow: hidden;
+}
+
+.dp-roster-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.dp-roster-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dp-roster-team {
+  font-size: 14px;
+  font-weight: 950;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-roster-sub {
+  font-size: 11px;
+  color: rgba(203, 213, 225, 0.68);
+  font-weight: 700;
+}
+
+.dp-roster-count {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 950;
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+}
+
+.dp-player-list {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+}
+
+.dp-player-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 7px 9px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.dp-player-row:hover {
+  background: rgba(15, 23, 42, 0.84);
+  border-color: rgba(45, 212, 191, 0.24);
+}
+
+.dp-batting-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #67e8f9;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.dp-player-main {
+  min-width: 0;
+}
+
+.dp-player-name {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  line-height: 1.1;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-player-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  color: rgba(203, 213, 225, 0.66);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dp-player-status {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+}
+
+.dp-empty-card {
+  padding: 18px;
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+@media (max-width: 1050px) {
+  .dp-roster-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dp-matchup-header {
+    grid-template-columns: 1fr;
+  }
+
+  .dp-team-head.home {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .dp-vs-pill {
+    justify-self: start;
+  }
+}
+
+
+
+/* =========================================================
+   DAILY PLAYERS — MATCHUP THEATER PRO REDESIGN
+   ========================================================= */
+
+.daily-theater-pro {
+  width: 100%;
+  max-width: 100%;
+  outline: none;
+  overflow-x: hidden;
+}
+
+.daily-theater-topbar-pro {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(45, 212, 191, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.94));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+.daily-nav-arrow-pro {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.24);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e0f2fe;
+  font-size: 18px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.daily-nav-arrow-pro:hover {
+  transform: translateY(-1px);
+  border-color: rgba(45, 212, 191, 0.5);
+  background: rgba(8, 47, 73, 0.72);
+}
+
+.daily-matchup-count-pro {
+  display: grid;
+  gap: 1px;
+  min-width: 88px;
+}
+
+.daily-matchup-count-pro span {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(148, 163, 184, 0.78);
+}
+
+.daily-matchup-count-pro strong {
+  font-size: 14px;
+  font-weight: 1000;
+  color: #f8fafc;
+}
+
+.daily-shortcut-rail-pro {
+  display: flex;
+  gap: 9px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  padding: 2px 2px 6px;
+}
+
+.daily-shortcut-rail-pro::-webkit-scrollbar {
+  height: 6px;
+}
+
+.daily-shortcut-rail-pro::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.28);
+}
+
+.daily-matchup-chip-pro {
+  flex: 0 0 auto;
+  min-width: 174px;
+  display: grid;
+  grid-template-columns: 30px 1fr 30px;
+  grid-template-areas:
+    "away copy home"
+    "away status home";
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.daily-matchup-chip-pro:hover,
+.daily-matchup-chip-pro.is-active {
+  border-color: rgba(45, 212, 191, 0.48);
+  background:
+    radial-gradient(circle at 30% 0%, rgba(45, 212, 191, 0.18), transparent 42%),
+    rgba(8, 47, 73, 0.64);
+  box-shadow: 0 12px 34px rgba(8, 47, 73, 0.28);
+}
+
+.daily-matchup-chip-pro .daily-team-icon:first-child {
+  grid-area: away;
+}
+
+.daily-matchup-chip-pro .daily-team-icon:nth-child(3) {
+  grid-area: home;
+}
+
+.daily-chip-copy-pro {
+  grid-area: copy;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.daily-chip-copy-pro strong {
+  font-size: 12px;
+  font-weight: 1000;
+  color: #f8fafc;
+}
+
+.daily-chip-copy-pro em {
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 950;
+  color: #67e8f9;
+  text-transform: uppercase;
+}
+
+.daily-matchup-chip-pro small {
+  grid-area: status;
+  justify-self: center;
+  font-size: 9px;
+  font-weight: 950;
+  color: rgba(167, 243, 208, 0.92);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.daily-team-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.28), transparent 38%),
+    linear-gradient(135deg, rgba(45, 212, 191, 0.28), rgba(59, 130, 246, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.daily-team-icon .daily-team-initial-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.daily-matchup-card-pro {
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.16), transparent 34%),
+    radial-gradient(circle at 80% 0%, rgba(59, 130, 246, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(2, 6, 23, 0.98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+}
+
+.daily-faceoff-header-pro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.daily-faceoff-team-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.daily-faceoff-team-pro.is-home {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.daily-faceoff-team-pro .daily-team-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+}
+
+.daily-faceoff-team-pro div {
+  min-width: 0;
+}
+
+.daily-faceoff-team-pro span {
+  display: block;
+  font-size: 10px;
+  font-weight: 950;
+  color: rgba(148, 163, 184, 0.82);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.daily-faceoff-team-pro strong {
+  display: block;
+  margin-top: 2px;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 1000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-faceoff-team-pro small {
+  display: block;
+  margin-top: 3px;
+  color: rgba(203, 213, 225, 0.64);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.daily-vs-stack-pro {
+  min-width: 124px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  background: rgba(45, 212, 191, 0.1);
+  text-align: center;
+}
+
+.daily-vs-stack-pro span {
+  display: block;
+  font-size: 9px;
+  font-weight: 950;
+  color: #86efac;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.daily-vs-stack-pro strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 1000;
+  color: #67e8f9;
+  letter-spacing: 0.06em;
+}
+
+.daily-rosters-grid-pro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+}
+
+.daily-roster-panel-pro {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.daily-roster-panel-head-pro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(2, 6, 23, 0.28);
+}
+
+.daily-roster-title-pro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.daily-roster-title-pro strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-roster-title-pro span {
+  display: block;
+  margin-top: 1px;
+  color: rgba(203, 213, 225, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.daily-starter-count-pro {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  background: rgba(16, 185, 129, 0.1);
+  color: #a7f3d0;
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.daily-starters-list-pro {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+}
+
+.daily-player-row-pro {
+  display: grid;
+  grid-template-columns: 30px 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 7px 9px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.daily-player-row-pro:hover,
+.daily-player-row-pro.is-search-match {
+  border-color: rgba(45, 212, 191, 0.34);
+  background: rgba(8, 47, 73, 0.44);
+}
+
+.daily-batting-order-pro {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  background: rgba(45, 212, 191, 0.1);
+  color: #67e8f9;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.daily-player-avatar-pro {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+}
+
+.daily-player-avatar-pro img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.daily-player-avatar-pro span {
+  color: #e0f2fe;
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.daily-player-main-pro {
+  min-width: 0;
+}
+
+.daily-player-main-pro strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 13px;
+  line-height: 1.1;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-player-main-pro span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(203, 213, 225, 0.66);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-player-status-pro {
+  padding: 5px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  font-size: 9px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.daily-lineup-pending-pro {
+  padding: 22px;
+  color: rgba(203, 213, 225, 0.72);
+}
+
+.daily-lineup-pending-pro strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.daily-lineup-pending-pro span {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 980px) {
+  .daily-theater-topbar-pro {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .daily-matchup-count-pro {
+    display: none;
+  }
+
+  .daily-faceoff-header-pro,
+  .daily-rosters-grid-pro {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-vs-stack-pro {
+    justify-self: stretch;
+  }
+
+  .daily-faceoff-team-pro.is-home {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .daily-faceoff-team-pro.is-home .daily-team-icon {
+    order: -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .daily-theater-topbar-pro {
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  .daily-matchup-chip-pro {
+    min-width: 150px;
+  }
+
+  .daily-faceoff-header-pro {
+    padding: 13px;
+  }
+
+  .daily-faceoff-team-pro strong {
+    font-size: 16px;
+  }
+
+  .daily-rosters-grid-pro {
+    padding: 9px;
+  }
+
+  .daily-player-row-pro {
+    grid-template-columns: 28px 34px minmax(0, 1fr);
+  }
+
+  .daily-player-status-pro {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   DAILY PLAYERS — LOGOS, HEADSHOTS, CLICKABLE PREMIUM CARDS
+   ========================================================= */
+
+.daily-team-logo-pro {
+  position: relative;
+  isolation: isolate;
+}
+
+.daily-team-logo-pro img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+}
+
+.daily-team-fallback-logo {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.daily-logo-failed .daily-team-fallback-logo {
+  display: grid;
+  place-items: center;
+}
+
+.daily-player-click-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.daily-player-click-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(45, 212, 191, 0.42);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(45, 212, 191, 0.16), transparent 42%),
+    rgba(8, 47, 73, 0.5);
+  box-shadow: 0 12px 30px rgba(2, 132, 199, 0.13);
+}
+
+.daily-player-click-card:active {
+  transform: translateY(0);
+}
+
+.daily-player-avatar-pro {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.2), transparent 45%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(2, 6, 23, 0.95));
+}
+
+.daily-player-avatar-pro img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.daily-player-fallback-avatar {
+  display: none;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.daily-headshot-failed .daily-player-fallback-avatar {
+  display: grid;
+}
+
+.daily-player-status-stack {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.daily-player-status-stack small {
+  color: rgba(103, 232, 249, 0.72);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.daily-faceoff-team-pro .daily-team-logo-pro {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.2), transparent 38%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(8, 47, 73, 0.88));
+}
+
+.daily-matchup-chip-pro .daily-team-logo-pro {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.18), transparent 38%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88));
+}
+
+@media (max-width: 620px) {
+  .daily-player-status-stack {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   DAILY PLAYERS — COMPACT FIT RESET
+   Make the matchup board fit correctly instead of oversized.
+   ========================================================= */
+
+.daily-theater-pro {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.daily-theater-topbar-pro {
+  position: sticky;
+  top: 8px;
+  grid-template-columns: 34px 78px minmax(0, 1fr) 34px;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+}
+
+.daily-nav-arrow-pro {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.daily-matchup-count-pro span {
+  font-size: 8px;
+}
+
+.daily-matchup-count-pro strong {
+  font-size: 12px;
+}
+
+.daily-shortcut-rail-pro {
+  gap: 6px;
+  padding-bottom: 3px;
+}
+
+.daily-matchup-chip-pro {
+  min-width: 132px;
+  height: 42px;
+  grid-template-columns: 24px 1fr 24px;
+  gap: 2px 5px;
+  padding: 5px 7px;
+  border-radius: 13px;
+}
+
+.daily-matchup-chip-pro small {
+  display: none;
+}
+
+.daily-chip-copy-pro {
+  gap: 4px;
+}
+
+.daily-chip-copy-pro strong {
+  font-size: 10px;
+}
+
+.daily-chip-copy-pro em {
+  font-size: 8px;
+}
+
+.daily-team-icon,
+.daily-team-logo-pro,
+.daily-matchup-chip-pro .daily-team-icon,
+.daily-faceoff-team-pro .daily-team-icon {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 999px !important;
+}
+
+.daily-matchup-chip-pro .daily-team-icon {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+}
+
+.daily-matchup-card-pro {
+  border-radius: 18px;
+}
+
+.daily-faceoff-header-pro {
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.daily-faceoff-team-pro {
+  gap: 8px;
+}
+
+.daily-faceoff-team-pro strong {
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.daily-faceoff-team-pro span {
+  font-size: 8px;
+}
+
+.daily-faceoff-team-pro small {
+  font-size: 9px;
+  margin-top: 1px;
+}
+
+.daily-vs-stack-pro {
+  min-width: 84px;
+  padding: 7px 9px;
+}
+
+.daily-vs-stack-pro span {
+  font-size: 8px;
+}
+
+.daily-vs-stack-pro strong {
+  font-size: 10px;
+}
+
+.daily-rosters-grid-pro {
+  gap: 8px;
+  padding: 8px;
+}
+
+.daily-roster-panel-pro {
+  border-radius: 15px;
+}
+
+.daily-roster-panel-head-pro {
+  padding: 7px 9px;
+}
+
+.daily-roster-title-pro {
+  gap: 7px;
+}
+
+.daily-roster-title-pro strong {
+  font-size: 12px;
+}
+
+.daily-roster-title-pro span {
+  font-size: 9px;
+}
+
+.daily-starter-count-pro {
+  padding: 4px 7px;
+  font-size: 10px;
+}
+
+.daily-starters-list-pro {
+  gap: 4px;
+  padding: 6px;
+}
+
+.daily-player-row-pro {
+  grid-template-columns: 24px 30px minmax(0, 1fr) 38px;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 11px;
+}
+
+.daily-batting-order-pro {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.daily-player-avatar-pro {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.daily-player-main-pro strong {
+  font-size: 11.5px;
+  line-height: 1.05;
+}
+
+.daily-player-main-pro span {
+  margin-top: 2px;
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+}
+
+.daily-player-status-pro {
+  padding: 3px 5px;
+  font-size: 7.5px;
+}
+
+.daily-player-status-stack {
+  gap: 0;
+}
+
+.daily-player-status-stack small {
+  display: none;
+}
+
+.daily-player-click-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (min-width: 981px) {
+  .daily-rosters-grid-pro {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .daily-matchup-card-pro {
+    max-height: calc(100vh - 190px);
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 720px) {
+  .daily-theater-pro {
+    max-width: 100%;
+  }
+
+  .daily-faceoff-header-pro {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-rosters-grid-pro {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   VOUCHEDGE GLOBAL ROUTE CURTAIN
+   Left/right rails close in during page changes, then open out.
+   ========================================================= */
+
+.ve-route-stage {
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+.ve-route-content {
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ve-route-content-switching {
+  opacity: 0.46;
+  transform: translateY(4px) scale(0.992);
+}
+
+.ve-page-curtain {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 60;
+  width: min(22vw, 260px);
+  opacity: 0;
+  transform: translateX(0);
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(34, 211, 238, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.98));
+  border-color: rgba(34, 211, 238, 0.14);
+  box-shadow: 0 0 60px rgba(34, 211, 238, 0.1);
+}
+
+.ve-page-curtain-left {
+  left: 0;
+  transform: translateX(-105%);
+  border-right: 1px solid rgba(34, 211, 238, 0.16);
+}
+
+.ve-page-curtain-right {
+  right: 0;
+  transform: translateX(105%);
+  border-left: 1px solid rgba(34, 211, 238, 0.16);
+}
+
+.ve-route-stage-switching .ve-page-curtain {
+  opacity: 1;
+}
+
+.ve-route-stage-switching .ve-page-curtain-left,
+.ve-route-stage-switching .ve-page-curtain-right {
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .ve-page-curtain {
+    width: min(30vw, 150px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-route-content,
+  .ve-page-curtain {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .ve-page-curtain {
+    display: none !important;
+  }
+}
+
+
+/* =========================================================
+   VOUCHEDGE REFERENCE SIDE RAIL TRANSITION
+   Zip file is reference only. Current sidebar/nav stays intact.
+   ========================================================= */
+
+.ve-edge-rail {
+  position: relative;
+  z-index: 20;
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    filter 320ms ease;
+}
+
+.ve-edge-rail-left {
+  transform-origin: left center;
+}
+
+.ve-edge-rail-right {
+  transform-origin: right center;
+}
+
+.ve-edge-rail-left.ve-edge-rail-switching {
+  transform: translateX(18px) scale(0.985);
+  opacity: 0.72;
+  filter: blur(0.4px);
+}
+
+.ve-edge-rail-right.ve-edge-rail-switching {
+  transform: translateX(-18px) scale(0.985);
+  opacity: 0.72;
+  filter: blur(0.4px);
+}
+
+#inner-view-slot {
+  transition:
+    opacity 220ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Keep animation respectful and fast for users who reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .ve-edge-rail,
+  #inner-view-slot {
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+
+/* =========================================================
+   VOUCHEDGE SHELL ALIGNMENT RESET
+   Purpose: stop pages from shifting/misalignment across sidebar/feed/labs.
+   ========================================================= */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+#center-main-content-column {
+  min-width: 0 !important;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#inner-view-slot {
+  min-width: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Give every major page a sane center alignment without breaking full-width pages */
+#inner-view-slot > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Prevent cards/grids/tables from forcing the whole app sideways */
+#inner-view-slot img,
+#inner-view-slot video,
+#inner-view-slot canvas,
+#inner-view-slot svg {
+  max-width: 100%;
+}
+
+/* Fix common flex children that refuse to shrink */
+.flex,
+[class*="flex"] {
+  min-width: 0;
+}
+
+/* Page sections should center consistently inside the main column */
+.page-shell,
+.page-container,
+.dashboard-shell,
+.daily-theater-pro,
+.daily-players-page,
+.daily-players-board,
+.daily-players-content,
+.home-feed-shell,
+.feed-main,
+.results-studio,
+.profile-page,
+.settings-page,
+.live-games-pro,
+.player-research-hub,
+.team-matchup-lab,
+.daily-hr-board {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 0;
+}
+
+/* Lab/data pages can breathe slightly wider */
+.team-matchup-lab,
+.player-research-hub,
+.live-games-pro,
+.daily-hr-board,
+.results-studio {
+  max-width: 1280px;
+}
+
+/* Feed should stay Twitter/X-like, not stretch too wide */
+.home-feed-shell,
+.feed-main {
+  max-width: 680px;
+}
+
+/* Transition wrappers must not change actual layout width */
+.ve-edge-rail {
+  flex: 0 0 auto;
+  will-change: transform, opacity;
+}
+
+.ve-edge-rail-left,
+.ve-edge-rail-right {
+  min-width: 0;
+}
+
+/* Animation is visual only; it should not push pages around */
+.ve-edge-rail-left.ve-edge-rail-switching {
+  transform: translateX(10px) scale(0.992);
+}
+
+.ve-edge-rail-right.ve-edge-rail-switching {
+  transform: translateX(-10px) scale(0.992);
+}
+
+/* Stop accidental page-breaking horizontal scroll from oversized grids */
+[class*="grid"] {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .page-shell,
+  .page-container,
+  .dashboard-shell,
+  .daily-theater-pro,
+  .daily-players-page,
+  .daily-players-board,
+  .daily-players-content,
+  .home-feed-shell,
+  .feed-main,
+  .results-studio,
+  .profile-page,
+  .settings-page,
+  .live-games-pro,
+  .player-research-hub,
+  .team-matchup-lab,
+  .daily-hr-board {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   VOUCHEDGE SHELL GRID FIX
+   Fixes sidebar overlapping center feed/content.
+   ========================================================= */
+
+#layout-inner-frame.ve-layout-frame {
+  display: grid !important;
+  align-items: stretch;
+  gap: 0;
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Feed: left nav + X-style center + right rail */
+#layout-inner-frame.ve-layout-feed {
+  max-width: 1300px;
+  grid-template-columns: 292px minmax(0, 1fr) 330px;
+}
+
+/* Labs/pages: left nav + wider center, no right rail */
+#layout-inner-frame.ve-layout-wide {
+  max-width: 1580px;
+  grid-template-columns: 292px minmax(0, 1fr);
+}
+
+/* Welcome has no sidebar frame */
+#layout-inner-frame.ve-layout-welcome {
+  max-width: none;
+  display: block !important;
+}
+
+/* The animated rail wrapper must occupy a real column, not overlay the page */
+#layout-inner-frame .ve-edge-rail {
+  position: relative !important;
+  width: 100%;
+  min-width: 0;
+  flex: none !important;
+}
+
+/* Left sidebar column */
+#layout-inner-frame .ve-edge-rail-left {
+  grid-column: 1;
+}
+
+/* Center column */
+#layout-inner-frame #center-main-content-column {
+  grid-column: 2;
+  width: 100%;
+  min-width: 0 !important;
+  overflow-x: hidden;
+}
+
+/* Right rail column */
+#layout-inner-frame .ve-edge-rail-right {
+  grid-column: 3;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Stop older sidebar widths from pushing over the content */
+#layout-inner-frame .ve-edge-rail-left > * {
+  width: 100% !important;
+  max-width: 292px !important;
+}
+
+#layout-inner-frame .ve-edge-rail-right > * {
+  width: 100% !important;
+  max-width: 330px !important;
+}
+
+/* When not on feed, center should not reserve a right rail column */
+#layout-inner-frame.ve-layout-wide #center-main-content-column {
+  border-right: 0 !important;
+}
+
+/* Keep route content contained */
+#inner-view-slot {
+  width: 100%;
+  min-width: 0 !important;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Desktop feed should stay centered and readable */
+#layout-inner-frame.ve-layout-feed #inner-view-slot {
+  max-width: 678px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Wide app pages should use available center space */
+#layout-inner-frame.ve-layout-wide #inner-view-slot {
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Tablet/mobile: remove desktop columns */
+@media (max-width: 1100px) {
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    display: block !important;
+    max-width: 100%;
+  }
+
+  #layout-inner-frame .ve-edge-rail-left,
+  #layout-inner-frame .ve-edge-rail-right {
+    display: none !important;
+  }
+
+  #layout-inner-frame #center-main-content-column {
+    width: 100%;
+    border-right: 0 !important;
+  }
+
+  #layout-inner-frame.ve-layout-feed #inner-view-slot,
+  #layout-inner-frame.ve-layout-wide #inner-view-slot {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   HARD FIX — HOME FEED REAL 3-COLUMN SHELL
+   Sidebar | Feed | Right Rail
+   No overlap. No drifting.
+   ========================================================= */
+
+#layout-inner-frame.ve-layout-feed {
+  display: grid !important;
+  grid-template-columns: 260px 680px 320px !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 1308px !important;
+  margin: 0 auto !important;
+  align-items: start !important;
+  justify-content: center !important;
+}
+
+/* Left rail must occupy column 1 */
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left {
+  grid-column: 1 !important;
+  position: sticky !important;
+  top: 0 !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  min-width: 260px !important;
+  transform: none !important;
+}
+
+/* Center feed must occupy column 2 */
+#layout-inner-frame.ve-layout-feed #center-main-content-column {
+  grid-column: 2 !important;
+  width: 680px !important;
+  max-width: 680px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+  border-right: 0 !important;
+  overflow: visible !important;
+}
+
+/* Feed content cannot auto-center somewhere weird inside the center column.
+   NOTE: overflow is intentionally NOT set here — this selector is more
+   specific (#id.class #id) than the later #inner-view-slot scroll rules, so
+   declaring overflow here would always win and silently break the feed's
+   scroll container. Let the single-ID rules further down own overflow. */
+#layout-inner-frame.ve-layout-feed #inner-view-slot {
+  width: 680px !important;
+  max-width: 680px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+/* Right rail must occupy column 3, not overlay */
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-right {
+  grid-column: 3 !important;
+  position: sticky !important;
+  top: 0 !important;
+  width: 320px !important;
+  max-width: 320px !important;
+  min-width: 320px !important;
+  transform: none !important;
+}
+
+/* Children inside rails must not keep old giant/fixed widths */
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left > *,
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-right > * {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  transform: none !important;
+}
+
+/* Disable rail transition until layout is stable */
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-switching {
+  transform: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Non-feed pages: sidebar + full center only */
+#layout-inner-frame.ve-layout-wide {
+  display: grid !important;
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 1500px !important;
+  margin: 0 auto !important;
+  align-items: start !important;
+}
+
+#layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
+  grid-column: 1 !important;
+  width: 260px !important;
+  max-width: 260px !important;
+  min-width: 260px !important;
+  transform: none !important;
+}
+
+#layout-inner-frame.ve-layout-wide #center-main-content-column {
+  grid-column: 2 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+/* Mobile */
+@media (max-width: 1180px) {
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  #layout-inner-frame .ve-edge-rail-left,
+  #layout-inner-frame .ve-edge-rail-right {
+    display: none !important;
+  }
+
+  #layout-inner-frame #center-main-content-column,
+  #layout-inner-frame #inner-view-slot {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — ALGORITHMIC INFINITE SCROLL
+   Twitter/Instagram-style progressive stream loading.
+   ========================================================= */
+
+.ve-feed-infinite-sentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.ve-feed-load-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 58px;
+  margin: 8px auto 18px;
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.ve-feed-load-state strong {
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.ve-feed-loader-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #38bdf8;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.8);
+  animation: veFeedPulse 900ms ease-in-out infinite;
+}
+
+@keyframes veFeedPulse {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-feed-loader-dot {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   VOUCHEDGE APP SHELL — STICKY SIDEBARS + CENTER SCROLL
+   Goal: no hollow sidebar gaps. Only the center page/feed scrolls.
+   ========================================================= */
+
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden !important;
+}
+
+/* Main app frame fills the browser viewport */
+#layout-inner-frame.ve-layout-frame,
+#layout-inner-frame.ve-layout-feed,
+#layout-inner-frame.ve-layout-wide {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  align-items: stretch !important;
+}
+
+/* Left sidebar lives for the full viewport height */
+#layout-inner-frame .ve-edge-rail-left {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  align-self: stretch !important;
+}
+
+/* Right rail lives for the full viewport height */
+#layout-inner-frame .ve-edge-rail-right {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  align-self: stretch !important;
+}
+
+/* Sidebar inner content may scroll inside itself if it is taller */
+#layout-inner-frame .ve-edge-rail-left > *,
+#layout-inner-frame .ve-edge-rail-right > * {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+/* Center column becomes the only main scrolling area */
+#layout-inner-frame #center-main-content-column {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Actual page/feed content scrolls here */
+#inner-view-slot {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Keep the feed content padded so it does not feel cut off at bottom */
+#feed-stream-outer {
+  padding-bottom: 96px !important;
+}
+
+/* Cleaner internal scrollbars */
+#inner-view-slot::-webkit-scrollbar,
+#layout-inner-frame .ve-edge-rail-left > *::-webkit-scrollbar,
+#layout-inner-frame .ve-edge-rail-right > *::-webkit-scrollbar {
+  width: 8px;
+}
+
+#inner-view-slot::-webkit-scrollbar-thumb,
+#layout-inner-frame .ve-edge-rail-left > *::-webkit-scrollbar-thumb,
+#layout-inner-frame .ve-edge-rail-right > *::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(51, 65, 85, 0.75);
+}
+
+#inner-view-slot::-webkit-scrollbar-track,
+#layout-inner-frame .ve-edge-rail-left > *::-webkit-scrollbar-track,
+#layout-inner-frame .ve-edge-rail-right > *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Mobile can go back to normal page scroll */
+@media (max-width: 1180px) {
+  html,
+  body,
+  #root {
+    overflow: auto !important;
+  }
+
+  #layout-inner-frame.ve-layout-frame,
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide,
+  #layout-inner-frame #center-main-content-column,
+  #inner-view-slot {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — MATCH DASHBOARD VISUAL SYSTEM
+   Dashboard glass / cyan glow / premium SaaS consistency.
+   ========================================================= */
+
+:root {
+  --ve-home-bg: #020617;
+  --ve-home-panel: rgba(15, 23, 42, 0.78);
+  --ve-home-panel-strong: rgba(15, 23, 42, 0.92);
+  --ve-home-card: rgba(8, 13, 27, 0.82);
+  --ve-home-card-hover: rgba(15, 23, 42, 0.94);
+  --ve-home-border: rgba(148, 163, 184, 0.16);
+  --ve-home-border-hot: rgba(45, 212, 191, 0.34);
+  --ve-home-text: #f8fafc;
+  --ve-home-muted: rgba(203, 213, 225, 0.66);
+  --ve-home-faint: rgba(148, 163, 184, 0.42);
+  --ve-home-cyan: #67e8f9;
+  --ve-home-teal: #2dd4bf;
+  --ve-home-green: #86efac;
+  --ve-home-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
+}
+
+/* Full social shell background should feel like Dashboard */
+#layout-inner-frame.ve-layout-feed,
+#layout-inner-frame.ve-layout-wide {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.08), transparent 32%),
+    radial-gradient(circle at 84% 0%, rgba(59, 130, 246, 0.08), transparent 34%),
+    linear-gradient(180deg, #020617 0%, #030712 52%, #020617 100%);
+}
+
+/* Center feed surface */
+#layout-inner-frame.ve-layout-feed #center-main-content-column {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 23, 0.35), rgba(2, 6, 23, 0.86));
+  border-left: 1px solid rgba(148, 163, 184, 0.10);
+  border-right: 1px solid rgba(148, 163, 184, 0.10);
+}
+
+/* Sticky feed top header, tabs, search bars, composer containers */
+#inner-view-slot :is(
+  .feed-header,
+  .home-feed-header,
+  .feed-tabs,
+  .home-feed-tabs,
+  .feed-composer,
+  .composer-card,
+  .post-composer,
+  [class*="composer"],
+  [class*="FeedHeader"],
+  [class*="feedHeader"]
+) {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.10), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.82)) !important;
+  border-color: var(--ve-home-border) !important;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(18px);
+}
+
+/* Common feed/post/card styling */
+#inner-view-slot :is(
+  article,
+  .feed-post,
+  .post-card,
+  .vouch-post,
+  .vouch-card,
+  .feed-card,
+  [class*="PostCard"],
+  [class*="post-card"],
+  [class*="feed-card"],
+  [class*="vouch-card"]
+) {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(45, 212, 191, 0.08), transparent 34%),
+    linear-gradient(180deg, var(--ve-home-card), rgba(2, 6, 23, 0.92)) !important;
+  border: 1px solid var(--ve-home-border) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.22);
+  color: var(--ve-home-text);
+}
+
+/* Post hover should match dashboard cards, but not jump too much */
+#inner-view-slot :is(
+  article,
+  .feed-post,
+  .post-card,
+  .vouch-post,
+  .vouch-card,
+  .feed-card,
+  [class*="PostCard"],
+  [class*="post-card"],
+  [class*="feed-card"],
+  [class*="vouch-card"]
+):hover {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(45, 212, 191, 0.12), transparent 34%),
+    linear-gradient(180deg, var(--ve-home-card-hover), rgba(2, 6, 23, 0.96)) !important;
+  border-color: var(--ve-home-border-hot) !important;
+}
+
+/* Make text hierarchy more dashboard-like */
+#inner-view-slot :is(h1, h2, h3, strong) {
+  color: var(--ve-home-text);
+}
+
+#inner-view-slot :is(p, small, time, label, span) {
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+#inner-view-slot :is(.text-slate-500, .text-slate-400, .text-gray-500, .text-gray-400) {
+  color: var(--ve-home-muted) !important;
+}
+
+/* Buttons/pills inside feed should match Dashboard cyan accent */
+#inner-view-slot :is(
+  button,
+  .btn,
+  .pill,
+  [role="tab"],
+  [class*="tab"],
+  [class*="Tab"],
+  [class*="filter"],
+  [class*="Filter"]
+) {
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+#inner-view-slot :is(
+  button:hover,
+  .btn:hover,
+  [role="tab"]:hover,
+  [class*="tab"]:hover,
+  [class*="filter"]:hover
+) {
+  border-color: rgba(45, 212, 191, 0.32);
+}
+
+/* Active tabs/pills */
+#inner-view-slot :is(
+  .active,
+  .is-active,
+  [aria-selected="true"],
+  [data-state="active"]
+) {
+  border-color: rgba(45, 212, 191, 0.38) !important;
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.10), 0 12px 28px rgba(8, 47, 73, 0.22);
+}
+
+/* Inputs/search should feel same as dashboard */
+#inner-view-slot :is(input, textarea, select) {
+  background: rgba(2, 6, 23, 0.72) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  color: #f8fafc !important;
+  border-radius: 14px !important;
+}
+
+#inner-view-slot :is(input, textarea, select):focus {
+  outline: none !important;
+  border-color: rgba(45, 212, 191, 0.46) !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10) !important;
+}
+
+/* Sidebar + right rail should match Dashboard surface */
+#layout-inner-frame .ve-edge-rail-left > *,
+#layout-inner-frame .ve-edge-rail-right > * {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(45, 212, 191, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96)) !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+/* Right rail cards */
+#layout-inner-frame .ve-edge-rail-right :is(
+  section,
+  article,
+  .card,
+  [class*="card"],
+  [class*="Card"],
+  [class*="panel"],
+  [class*="Panel"]
+) {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.86)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.13) !important;
+  border-radius: 20px !important;
+}
+
+/* Avatar treatment: cleaner premium ring */
+#inner-view-slot :is(img[alt*="avatar" i], .avatar, [class*="avatar"], [class*="Avatar"]) {
+  border-color: rgba(45, 212, 191, 0.20) !important;
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.08);
+}
+
+/* The infinite scroll loader should match dashboard */
+.ve-feed-load-state {
+  margin-top: 14px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(12px);
+}
+
+/* Keep Home Feed feed-width like X/Twitter, not full dashboard width */
+#layout-inner-frame.ve-layout-feed #inner-view-slot > * {
+  max-width: 100%;
+}
+
+/* Soft separators between feed items */
+#inner-view-slot .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(148, 163, 184, 0.10) !important;
+}
+
+/* Reduce visual chaos from previous patches */
+#inner-view-slot :is(article, .feed-post, .post-card, .vouch-card) * {
+  text-shadow: none;
+}
+
+
+/* =========================================================
+   HOME FEED CLEANUP — REAL SOCIAL STREAM
+   Remove mock-dashboard modules and tighten composer/feed.
+   ========================================================= */
+
+/* Browser-safe fallback using known visible text containers/classes from this page */
+#inner-view-slot [class*="indicator" i],
+#inner-view-slot [class*="cheat" i],
+#inner-view-slot [class*="sharp" i],
+#inner-view-slot [class*="premium-indicator" i] {
+  display: none !important;
+}
+
+/* Keep the feed clean: header -> filters -> composer -> posts */
+#inner-view-slot {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(2, 6, 23, 1));
+}
+
+/* Composer becomes the hero action, not buried below mock widgets */
+#inner-view-slot :is([class*="composer" i], [class*="publisher" i]) {
+  margin-top: 18px !important;
+  margin-bottom: 16px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(45, 212, 191, 0.10), transparent 38%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.86), rgba(2, 6, 23, 0.94)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+/* Make feed posts read like premium VouchEdge cards */
+#inner-view-slot :is(article, [class*="post" i], [class*="vouch" i]) {
+  border-radius: 22px;
+}
+
+/* Right rail stays useful, not overpowering */
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-right {
+  opacity: 0.96;
+}
+
+
+/* =========================================================
+   HOME FEED — CLEAN SOCIAL STREAM COMMAND CARD
+   Replaces fake sharp-sheet/mock widgets with real feed summary.
+   ========================================================= */
+
+.ve-social-stream-command {
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 24px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 38%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.86), rgba(2, 6, 23, 0.94));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
+.ve-social-stream-command__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+}
+
+.ve-social-stream-kicker {
+  display: block;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.ve-social-stream-command h2 {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 1000;
+  letter-spacing: -0.03em;
+}
+
+.ve-social-stream-command p {
+  margin: 5px 0 0;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.ve-social-stream-mode {
+  flex: 0 0 auto;
+  min-width: 98px;
+  padding: 9px 11px;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.08);
+  text-align: right;
+}
+
+.ve-social-stream-mode span {
+  display: block;
+  color: rgba(148, 163, 184, 0.72);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ve-social-stream-mode strong {
+  display: block;
+  margin-top: 2px;
+  color: #a7f3d0;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.ve-social-stream-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ve-social-stream-metrics div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  background: rgba(2, 6, 23, 0.46);
+}
+
+.ve-social-stream-metrics span {
+  display: block;
+  color: rgba(148, 163, 184, 0.74);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ve-social-stream-metrics strong {
+  display: block;
+  margin-top: 4px;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+@media (max-width: 620px) {
+  .ve-social-stream-command__header {
+    display: grid;
+  }
+
+  .ve-social-stream-mode {
+    width: 100%;
+    text-align: left;
+  }
+
+  .ve-social-stream-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — CLEAN REAL SOCIAL STREAM
+   Replaces removed mock modules with VouchEdge-native feed command.
+   ========================================================= */
+
+.ve-social-stream-command {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 24px;
+  padding: 16px;
+  margin: 18px 24px 14px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.13), transparent 38%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.94));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
+.ve-social-stream-command__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+}
+
+.ve-social-stream-kicker {
+  display: block;
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.ve-social-stream-command h2 {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 1000;
+  letter-spacing: -0.03em;
+}
+
+.ve-social-stream-command p {
+  margin: 5px 0 0;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.ve-social-stream-mode {
+  flex: 0 0 auto;
+  min-width: 98px;
+  padding: 9px 11px;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.08);
+  text-align: right;
+}
+
+.ve-social-stream-mode span {
+  display: block;
+  color: rgba(148, 163, 184, 0.72);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ve-social-stream-mode strong {
+  display: block;
+  margin-top: 2px;
+  color: #a7f3d0;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.ve-social-stream-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ve-social-stream-metrics div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  background: rgba(2, 6, 23, 0.46);
+}
+
+.ve-social-stream-metrics span {
+  display: block;
+  color: rgba(148, 163, 184, 0.74);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ve-social-stream-metrics strong {
+  display: block;
+  margin-top: 4px;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+/* Empty state should feel like a real feed state, not a broken page */
+#inner-view-slot :is(.empty-state, [class*="empty" i]) {
+  margin: 18px 24px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.92)) !important;
+}
+
+@media (max-width: 620px) {
+  .ve-social-stream-command {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .ve-social-stream-command__header {
+    display: grid;
+  }
+
+  .ve-social-stream-mode {
+    width: 100%;
+    text-align: left;
+  }
+
+  .ve-social-stream-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — REAL POST COMPOSER
+   Clean social posting system, VouchEdge dashboard style.
+   ========================================================= */
+
+.ve-real-composer {
+  margin: 18px 24px 16px;
+  padding: 16px;
+  border-radius: 26px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.13), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.96));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
+.ve-real-composer__top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.ve-real-composer__avatar {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background:
+    radial-gradient(circle at 30% 10%, rgba(255, 255, 255, 0.22), transparent 38%),
+    linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(59, 130, 246, 0.16));
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.ve-real-composer__identity {
+  display: grid;
+  min-width: 0;
+}
+
+.ve-real-composer__identity strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.ve-real-composer__identity span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  color: rgba(203, 213, 225, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ve-real-composer__types {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.ve-real-composer__types button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  background: rgba(2, 6, 23, 0.38);
+  color: rgba(226, 232, 240, 0.82);
+  cursor: pointer;
+}
+
+.ve-real-composer__types button.is-active {
+  border-color: rgba(45, 212, 191, 0.42);
+  background: rgba(45, 212, 191, 0.1);
+  color: #f8fafc;
+}
+
+.ve-real-composer__types button span {
+  display: grid;
+  text-align: left;
+  min-width: 0;
+}
+
+.ve-real-composer__types button strong {
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.ve-real-composer__types button em {
+  overflow: hidden;
+  color: rgba(203, 213, 225, 0.56);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-real-composer__textarea {
+  width: 100%;
+  min-height: 118px;
+  margin-top: 12px;
+  resize: vertical;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.56);
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ve-real-composer__textarea::placeholder {
+  color: rgba(148, 163, 184, 0.62);
+}
+
+.ve-real-composer__details {
+  display: grid;
+  grid-template-columns: 0.7fr 1.4fr 0.9fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ve-real-composer__details label,
+.ve-real-composer__tags {
+  display: grid;
+  gap: 5px;
+}
+
+.ve-real-composer__details span {
+  color: rgba(148, 163, 184, 0.76);
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+}
+
+.ve-real-composer :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(2, 6, 23, 0.58);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ve-real-composer__tags {
+  margin-top: 8px;
+}
+
+.ve-real-composer__media {
+  position: relative;
+  overflow: hidden;
+  margin-top: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.ve-real-composer__media img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  display: block;
+}
+
+.ve-real-composer__media button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.18);
+  background: rgba(2, 6, 23, 0.82);
+  color: #f8fafc;
+}
+
+.ve-real-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.ve-real-composer__tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(203, 213, 225, 0.66);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.ve-real-composer__tools .is-warning {
+  color: #fbbf24;
+}
+
+.ve-real-composer__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #67e8f9;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.ve-real-composer__upload input {
+  display: none;
+}
+
+.ve-real-composer__submit {
+  min-width: 104px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.34);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.9), rgba(14, 165, 233, 0.82));
+  color: #02111f;
+  font-size: 12px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+
+.ve-real-composer__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ve-posting-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #02111f;
+  animation: veFeedPulse 900ms ease-in-out infinite;
+}
+
+.ve-real-composer__trust {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  color: rgba(167, 243, 208, 0.78);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+@media (max-width: 700px) {
+  .ve-real-composer {
+    margin-left: 12px;
+    margin-right: 12px;
+    padding: 13px;
+  }
+
+  .ve-real-composer__types {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ve-real-composer__details {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-real-composer__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ve-real-composer__submit {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — BOTTOM NO-POSTS EMPTY STATE
+   Shows a clear end/feed-empty message when there are no posts.
+   ========================================================= */
+
+.ve-feed-load-state-empty {
+  min-height: 96px;
+  margin: 16px 24px 34px;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.10), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.76), rgba(2, 6, 23, 0.94));
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
+}
+
+.ve-bottom-empty-state {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.ve-bottom-empty-state strong {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+  letter-spacing: -0.02em;
+}
+
+.ve-bottom-empty-state span {
+  max-width: 420px;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+  .ve-feed-load-state-empty {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — SOCIAL APP SCROLL BEHAVIOR
+   Middle feed scrolls like Twitter/Instagram.
+   Sidebars stay fixed. Empty feed still has scroll space.
+   ========================================================= */
+
+/* Desktop app shell: body should not be the main scroller */
+@media (min-width: 1181px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+  }
+
+  /* Side rails do not create the main scroll */
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left,
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right,
+  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > *,
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right > *,
+  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  /* Center column holds the feed scroll viewport */
+  #layout-inner-frame.ve-layout-feed #center-main-content-column,
+  #layout-inner-frame.ve-layout-wide #center-main-content-column {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* This is the actual social media scroll area */
+  #inner-view-slot {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 120px !important;
+  }
+}
+
+/* Empty feeds need real vertical space so scrolling still feels possible */
+#inner-view-slot:has(.ve-feed-load-state-empty),
+#inner-view-slot:has(.ve-bottom-empty-state) {
+  min-height: 100dvh !important;
+}
+
+#inner-view-slot:has(.ve-feed-load-state-empty)::after,
+#inner-view-slot:has(.ve-bottom-empty-state)::after {
+  content: "";
+  display: block;
+  height: 42vh;
+  min-height: 260px;
+}
+
+/* Make the bottom empty state look like a real end-of-feed card */
+.ve-feed-load-state-empty {
+  min-height: 112px !important;
+  margin: 18px 24px 38px !important;
+  padding: 20px !important;
+  border: 1px solid rgba(45, 212, 191, 0.16) !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.95)) !important;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
+}
+
+.ve-bottom-empty-state::before {
+  content: "↓";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.24);
+  background: rgba(45, 212, 191, 0.08);
+  color: #67e8f9;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.ve-bottom-empty-state strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.ve-bottom-empty-state span {
+  display: block;
+  max-width: 430px;
+  margin-top: 5px;
+  color: rgba(203, 213, 225, 0.7);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+/* Clean scrollbars */
+#inner-view-slot::-webkit-scrollbar {
+  width: 8px;
+}
+
+#inner-view-slot::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.26);
+}
+
+#inner-view-slot::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Mobile should use natural document scroll */
+@media (max-width: 1180px) {
+  html,
+  body,
+  #root {
+    overflow: auto !important;
+  }
+
+  #inner-view-slot {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 80px !important;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — SOCIAL APP SCROLL BEHAVIOR
+   Middle feed scrolls like Twitter/Instagram.
+   Sidebars stay fixed. Empty feed still has scroll space.
+   ========================================================= */
+
+/* Desktop app shell: body should not be the main scroller */
+@media (min-width: 1181px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+  }
+
+  /* Side rails do not create the main scroll */
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left,
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right,
+  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > *,
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right > *,
+  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  /* Center column holds the feed scroll viewport */
+  #layout-inner-frame.ve-layout-feed #center-main-content-column,
+  #layout-inner-frame.ve-layout-wide #center-main-content-column {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* This is the actual social media scroll area */
+  #inner-view-slot {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 120px !important;
+  }
+}
+
+/* Empty feeds need real vertical space so scrolling still feels possible */
+#inner-view-slot:has(.ve-feed-load-state-empty),
+#inner-view-slot:has(.ve-bottom-empty-state) {
+  min-height: 100dvh !important;
+}
+
+#inner-view-slot:has(.ve-feed-load-state-empty)::after,
+#inner-view-slot:has(.ve-bottom-empty-state)::after {
+  content: "";
+  display: block;
+  height: 42vh;
+  min-height: 260px;
+}
+
+/* Make the bottom empty state look like a real end-of-feed card */
+.ve-feed-load-state-empty {
+  min-height: 112px !important;
+  margin: 18px 24px 38px !important;
+  padding: 20px !important;
+  border: 1px solid rgba(45, 212, 191, 0.16) !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.95)) !important;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
+}
+
+.ve-bottom-empty-state::before {
+  content: "↓";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.24);
+  background: rgba(45, 212, 191, 0.08);
+  color: #67e8f9;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.ve-bottom-empty-state strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.ve-bottom-empty-state span {
+  display: block;
+  max-width: 430px;
+  margin-top: 5px;
+  color: rgba(203, 213, 225, 0.7);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+/* Clean scrollbars */
+#inner-view-slot::-webkit-scrollbar {
+  width: 8px;
+}
+
+#inner-view-slot::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.26);
+}
+
+#inner-view-slot::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Mobile should use natural document scroll */
+@media (max-width: 1180px) {
+  html,
+  body,
+  #root {
+    overflow: auto !important;
+  }
+
+  #inner-view-slot {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 80px !important;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — SHARE A VOUCH COMPOSER
+   Product-specific social composer, not generic AI form UI.
+   ========================================================= */
+
+.ve-vouch-composer {
+  margin: 18px 24px 16px;
+  padding: 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.10), transparent 38%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.96));
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.24);
+}
+
+.ve-vouch-composer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ve-vouch-composer__header span {
+  color: #67e8f9;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ve-vouch-composer__header h2 {
+  margin: 3px 0 0;
+  color: #f8fafc;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+}
+
+.ve-vouch-composer__header p {
+  margin: 4px 0 0;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ve-vouch-composer__profile {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.24), transparent 38%),
+    linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(59, 130, 246, 0.14));
+}
+
+.ve-vouch-composer__profile strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.ve-vouch-composer__textarea {
+  width: 100%;
+  min-height: 96px;
+  margin-top: 12px;
+  padding: 13px 14px;
+  resize: vertical;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(2, 6, 23, 0.54);
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ve-vouch-composer__textarea::placeholder {
+  color: rgba(148, 163, 184, 0.62);
+}
+
+.ve-vouch-composer__textarea:focus {
+  outline: none;
+  border-color: rgba(45, 212, 191, 0.44);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.09);
+}
+
+.ve-vouch-composer__mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.ve-vouch-composer__mode-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.38);
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 11px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.ve-vouch-composer__mode-row button.is-active {
+  border-color: rgba(45, 212, 191, 0.42);
+  background: rgba(45, 212, 191, 0.11);
+  color: #f8fafc;
+}
+
+.ve-vouch-composer__details {
+  display: grid;
+  grid-template-columns: 0.7fr 1.35fr 0.9fr 0.85fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ve-vouch-composer__details :is(input, select) {
+  min-width: 0;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 13px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.56);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ve-vouch-composer__details :is(input, select):focus {
+  outline: none;
+  border-color: rgba(45, 212, 191, 0.4);
+}
+
+.ve-vouch-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ve-vouch-composer__ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  background: rgba(2, 6, 23, 0.34);
+  color: rgba(103, 232, 249, 0.9);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.ve-vouch-composer__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ve-vouch-composer__actions span {
+  color: rgba(203, 213, 225, 0.66);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.ve-vouch-composer__actions span.is-low {
+  color: #fbbf24;
+}
+
+.ve-vouch-composer__actions button {
+  min-width: 116px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.34);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.92), rgba(14, 165, 233, 0.84));
+  color: #02111f;
+  font-size: 12px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+
+.ve-vouch-composer__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+@media (max-width: 700px) {
+  .ve-vouch-composer {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .ve-vouch-composer__details {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ve-vouch-composer__actions {
+    justify-content: space-between;
+  }
+
+  .ve-vouch-composer__actions button {
+    min-width: 140px;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — COMPOSER QUALITY RESET
+   Fixes AI-looking oversized layout + text popping out borders.
+   ========================================================= */
+
+.ve-vouch-composer,
+.ve-vouch-composer *,
+.ve-vouch-composer *::before,
+.ve-vouch-composer *::after {
+  box-sizing: border-box;
+}
+
+.ve-vouch-composer {
+  width: calc(100% - 48px);
+  max-width: 632px;
+  margin: 14px auto 14px;
+  padding: 14px;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.96));
+  box-shadow: none;
+}
+
+.ve-vouch-composer__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__header > div:first-child {
+  min-width: 0;
+}
+
+.ve-vouch-composer__header span {
+  display: block;
+  max-width: 100%;
+  color: #67e8f9;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__header h2 {
+  margin: 2px 0 0;
+  max-width: 100%;
+  color: #f8fafc;
+  font-size: 17px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__header p {
+  margin: 4px 0 0;
+  max-width: 100%;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 11.5px;
+  line-height: 1.35;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__profile {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 999px;
+}
+
+.ve-vouch-composer__textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 88px;
+  max-height: 180px;
+  margin-top: 11px;
+  padding: 12px;
+  overflow: auto;
+  resize: vertical;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.ve-vouch-composer__mode-row button {
+  flex: 0 1 auto;
+  max-width: 128px;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+}
+
+.ve-vouch-composer__mode-row button svg {
+  flex: 0 0 auto;
+}
+
+.ve-vouch-composer__details {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 92px 86px;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.ve-vouch-composer__details :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ve-vouch-composer__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.ve-vouch-composer__ghost {
+  max-width: 128px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ve-vouch-composer__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__actions span {
+  min-width: 28px;
+  text-align: right;
+  font-size: 10.5px;
+}
+
+.ve-vouch-composer__actions button {
+  width: auto;
+  min-width: 104px;
+  max-width: 132px;
+  height: 36px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+
+/* Stop old broad feed CSS from making composer controls ugly */
+#inner-view-slot .ve-vouch-composer :is(button, input, select, textarea) {
+  max-width: 100%;
+}
+
+/* Mobile: single-column controls, no border overflow */
+@media (max-width: 700px) {
+  .ve-vouch-composer {
+    width: calc(100% - 24px);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 12px;
+  }
+
+  .ve-vouch-composer__details {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ve-vouch-composer__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__ghost {
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .ve-vouch-composer__actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .ve-vouch-composer__actions button {
+    min-width: 132px;
+  }
+}
+
+@media (max-width: 430px) {
+  .ve-vouch-composer__details {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__mode-row button {
+    flex: 1 1 calc(50% - 6px);
+    max-width: none;
+    justify-content: center;
+  }
+}
+
+
+/* =========================================================
+   HOME FEED — COMPOSER QUALITY RESET
+   Fixes AI-looking oversized layout + text popping out borders.
+   ========================================================= */
+
+.ve-vouch-composer,
+.ve-vouch-composer *,
+.ve-vouch-composer *::before,
+.ve-vouch-composer *::after {
+  box-sizing: border-box;
+}
+
+.ve-vouch-composer {
+  width: calc(100% - 48px);
+  max-width: 632px;
+  margin: 14px auto 14px;
+  padding: 14px;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.96));
+  box-shadow: none;
+}
+
+.ve-vouch-composer__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__header > div:first-child {
+  min-width: 0;
+}
+
+.ve-vouch-composer__header span {
+  display: block;
+  max-width: 100%;
+  color: #67e8f9;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__header h2 {
+  margin: 2px 0 0;
+  max-width: 100%;
+  color: #f8fafc;
+  font-size: 17px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__header p {
+  margin: 4px 0 0;
+  max-width: 100%;
+  color: rgba(203, 213, 225, 0.68);
+  font-size: 11.5px;
+  line-height: 1.35;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__profile {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 999px;
+}
+
+.ve-vouch-composer__textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 88px;
+  max-height: 180px;
+  margin-top: 11px;
+  padding: 12px;
+  overflow: auto;
+  resize: vertical;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.ve-vouch-composer__mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.ve-vouch-composer__mode-row button {
+  flex: 0 1 auto;
+  max-width: 128px;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+}
+
+.ve-vouch-composer__mode-row button svg {
+  flex: 0 0 auto;
+}
+
+.ve-vouch-composer__details {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 92px 86px;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.ve-vouch-composer__details :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ve-vouch-composer__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.ve-vouch-composer__ghost {
+  max-width: 128px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ve-vouch-composer__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__actions span {
+  min-width: 28px;
+  text-align: right;
+  font-size: 10.5px;
+}
+
+.ve-vouch-composer__actions button {
+  width: auto;
+  min-width: 104px;
+  max-width: 132px;
+  height: 36px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+
+/* Stop old broad feed CSS from making composer controls ugly */
+#inner-view-slot .ve-vouch-composer :is(button, input, select, textarea) {
+  max-width: 100%;
+}
+
+/* Mobile: single-column controls, no border overflow */
+@media (max-width: 700px) {
+  .ve-vouch-composer {
+    width: calc(100% - 24px);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 12px;
+  }
+
+  .ve-vouch-composer__details {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ve-vouch-composer__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__ghost {
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .ve-vouch-composer__actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .ve-vouch-composer__actions button {
+    min-width: 132px;
+  }
+}
+
+@media (max-width: 430px) {
+  .ve-vouch-composer__details {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__mode-row button {
+    flex: 1 1 calc(50% - 6px);
+    max-width: none;
+    justify-content: center;
+  }
+}
+

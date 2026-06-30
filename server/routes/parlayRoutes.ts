@@ -292,6 +292,161 @@ parlayRoutes.post(
   }
 );
 
+
+/**
+ * POST /api/me/parlays
+ *
+ * Frontend-safe parlay registration route.
+ * Used by manual saved slips and VAI Smart Picks AI parlays.
+ *
+ * This creates the real Results Ledger record because /api/me/ledger
+ * reads from picks + pick_legs.
+ */
+parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
+  const body = (req.body ?? {}) as any;
+  const rawLegs = Array.isArray(body.legs) ? body.legs : [];
+
+  if (rawLegs.length < 2 || rawLegs.length > 8) {
+    return res.status(400).json({ error: "validation_error", detail: "Parlay must have 2-8 legs." });
+  }
+
+  const clientRef = typeof body.clientRef === "string" ? body.clientRef.slice(0, 120) : null;
+  const aiGenerated = Boolean(body.aiGenerated);
+  const source =
+    typeof body.source === "string"
+      ? body.source.slice(0, 80)
+      : aiGenerated
+        ? "ai_pick"
+        : "manual";
+
+  const normalizedLegs = rawLegs.map((leg: any, index: number) => {
+    const eventId = String(
+      leg.event_id ??
+        leg.eventId ??
+        leg.game_id ??
+        leg.gameId ??
+        leg.matchupId ??
+        leg.id ??
+        `${clientRef ?? "local"}-${index + 1}`
+    ).slice(0, 64);
+
+    const market = String(
+      leg.market ??
+        leg.pickType ??
+        leg.type ??
+        leg.category ??
+        "MLB parlay leg"
+    ).slice(0, 64);
+
+    const selection = String(
+      leg.selection ??
+        leg.label ??
+        leg.playerName ??
+        leg.player ??
+        leg.title ??
+        `Leg ${index + 1}`
+    ).slice(0, 280);
+
+    const rawOdds = Number(
+      leg.odds_decimal ??
+        leg.oddsDecimal ??
+        leg.decimalOdds ??
+        leg.odds ??
+        2
+    );
+
+    const oddsDecimal =
+      Number.isFinite(rawOdds) && rawOdds > 0
+        ? Math.min(rawOdds, 1000)
+        : 2;
+
+    const playerId =
+      leg.playerId ??
+      leg.player_id ??
+      leg.mlbPlayerId ??
+      leg.mlb_player_id ??
+      leg.personId ??
+      leg.person_id ??
+      null;
+
+    const meta = playerId ? ` ||meta:${JSON.stringify({ p: String(playerId) })}` : "";
+    const safeSelection = `${selection.slice(0, Math.max(1, 280 - meta.length))}${meta}`;
+
+    return {
+      event_id: eventId,
+      market,
+      selection: safeSelection,
+      odds_decimal: oddsDecimal,
+    };
+  });
+
+  const combinedOdds = normalizedLegs.reduce((product, leg) => product * leg.odds_decimal, 1);
+  const parentEventId = normalizedLegs[0].event_id;
+
+  try {
+    const parlay = await createPick({
+      user_id: req.user!.id,
+      capper_id: null,
+      leg_type: "parlay",
+      sport: "mlb",
+      event_id: parentEventId,
+      market: `${normalizedLegs.length}-leg parlay`,
+      selection: normalizedLegs.map((l) => l.selection).join(" | ").slice(0, 280),
+      odds_decimal: Number(combinedOdds.toFixed(3)),
+      stake_units: Number.isFinite(Number(body.stake_units)) ? Number(body.stake_units) : 1.0,
+      confidence: Number.isFinite(Number(body.confidence)) ? Number(body.confidence) : null,
+      judge_quality: null,
+      judge_risk: null,
+      judge_bias: null,
+      judge_trust: null,
+      judge_verdict: null,
+      explanation: [
+        body.explanation ? String(body.explanation).slice(0, 3200) : null,
+        `source=${source}`,
+        clientRef ? `clientRef=${clientRef}` : null,
+        aiGenerated ? "aiGenerated=true" : null,
+      ].filter(Boolean).join("\n"),
+      is_demo: false,
+    });
+
+    const legsToInsert = normalizedLegs.map((leg, index) => ({
+      pick_id: parlay.id,
+      leg_index: index,
+      event_id: leg.event_id,
+      market: leg.market,
+      selection: leg.selection,
+      odds_decimal: leg.odds_decimal,
+      status: "pending" as const,
+    }));
+
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+
+    if (legsError) {
+      console.error("[me/parlays] legs insert failed, rolling back parent", legsError);
+      await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
+      return res.status(500).json({ error: "parlay_creation_failed" });
+    }
+
+    return res.status(201).json({
+      ...parlay,
+      backendPickId: parlay.id,
+      clientRef,
+      aiGenerated,
+      source,
+      legs: legsToInsert.map((l, i) => ({
+        ...l,
+        id: `${parlay.id}-leg-${i}`,
+      })),
+      combined_odds: Number(combinedOdds.toFixed(3)),
+    });
+  } catch (err) {
+    console.error("[me/parlays] create failed", err);
+    return res.status(500).json({ error: "parlay_creation_failed" });
+  }
+});
+
+
 /**
  * GET /api/parlays/:id
  * Returns a parlay pick with all its legs.

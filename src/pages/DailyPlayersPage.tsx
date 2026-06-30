@@ -202,8 +202,8 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
   return (
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
-          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
+        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
         </div>
       )}
 
@@ -334,6 +334,169 @@ function DailyPlayersSkeleton() {
   );
 }
 
+
+
+function TeamVsTeamShowcase({ games }: { games: any[] }) {
+  const getTeam = (game: any, side: "away" | "home") => {
+    const raw =
+      side === "away"
+        ? game?.awayTeam || game?.away || game?.teams?.away?.team
+        : game?.homeTeam || game?.home || game?.teams?.home?.team;
+
+    if (!raw) return { name: "TBD", abbr: "TBD", logo: "" };
+    if (typeof raw === "string") return { name: raw, abbr: raw.slice(0, 3).toUpperCase(), logo: "" };
+
+    return {
+      name: raw.name || raw.teamName || raw.shortName || raw.abbreviation || "TBD",
+      abbr: raw.abbreviation || raw.teamName || raw.shortName || raw.name?.slice(0, 3)?.toUpperCase() || "TBD",
+      logo: raw.logo || raw.logoUrl || raw.teamLogo || raw.image || "",
+    };
+  };
+
+  const getTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const getPitcher = (game: any, side: "away" | "home") => {
+    const value =
+      side === "away"
+        ? game?.awayPitcher || game?.away_sp || game?.probablePitchers?.away || game?.teams?.away?.probablePitcher
+        : game?.homePitcher || game?.home_sp || game?.probablePitchers?.home || game?.teams?.home?.probablePitcher;
+
+    if (!value) return "Projected SP";
+    if (typeof value === "string") return value;
+    return value.fullName || value.name || "Projected SP";
+  };
+
+  const visibleGames = games.slice(0, 18);
+  const loopingGames = visibleGames.length > 0 ? [...visibleGames, ...visibleGames] : [];
+
+  return (
+    <section className="daily-team-showcase" aria-label="Team versus team slideshow">
+      <div className="daily-team-shortcuts" aria-label="Team shortcuts">
+        {loopingGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <a className="daily-team-shortcut" href={`#daily-game-${index}`} key={`shortcut-${game?.gamePk || game?.game_id || game?.id || index}`}>
+              <span>{away.abbr}</span>
+              <b>vs</b>
+              <span>{home.abbr}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <div className="daily-team-showcase-track">
+        {visibleGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <article className="daily-team-slide" id={`daily-game-${index % Math.max(visibleGames.length, 1)}`} key={`slide-${index}-${game?.gamePk || game?.game_id || game?.id || "game"}`}>
+              <div className="daily-team-slide-top">
+                <span>Game {index + 1}</span>
+                <strong>{getTime(game)}</strong>
+              </div>
+
+              <div className="daily-team-versus">
+                <div className="daily-team-side">
+                  <div className="daily-team-logo">
+                    {away.logo ? <img src={away.logo} alt="" /> : <span>{away.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{away.name}</h3>
+                  <p>SP: {getPitcher(game, "away")}</p>
+                </div>
+
+                <div className="daily-team-vs-pill">VS</div>
+
+                <div className="daily-team-side daily-team-side-right">
+                  <div className="daily-team-logo">
+                    {home.logo ? <img src={home.logo} alt="" /> : <span>{home.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{home.name}</h3>
+                  <p>SP: {getPitcher(game, "home")}</p>
+                </div>
+              </div>
+
+              <div className="daily-team-slide-footer">
+                <span>Projected matchup</span>
+                <span>Scroll for next team →</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function LiveTeamsStrip({ games }: { games: any[] }) {
+  const getTeamName = (team: any) => {
+    if (!team) return "TBD";
+    if (typeof team === "string") return team;
+    return team.name || team.teamName || team.abbreviation || team.shortName || "TBD";
+  };
+
+  const getGameTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const marqueeGames = games.length > 0 ? [...games, ...games] : [];
+
+  return (
+    <section className="daily-live-teams-strip" aria-label="Live teams today">
+      <div className="daily-live-teams-header">
+        <div>
+          <p className="daily-live-eyebrow">Today’s slate</p>
+          <h2>Live Teams</h2>
+        </div>
+        <p>{games.length} games loaded</p>
+      </div>
+
+      <div className="daily-live-teams-scroller" aria-live="off">
+        <div className="daily-live-teams-track">
+        {marqueeGames.map((game: any, index: number) => {
+          const away = getTeamName(game?.awayTeam || game?.away || game?.teams?.away?.team);
+          const home = getTeamName(game?.homeTeam || game?.home || game?.teams?.home?.team);
+
+          return (
+            <article className="daily-live-team-card" key={game?.gamePk || game?.game_id || game?.id || index}>
+              <div className="daily-live-status">
+                <span>MLB</span>
+                <strong>{getGameTime(game)}</strong>
+              </div>
+
+              <div className="daily-live-matchup">
+                <span>{away}</span>
+                <b>@</b>
+                <span>{home}</span>
+              </div>
+
+              <div className="daily-live-card-footer">
+                <span>Open matchup</span>
+                <span>Research board →</span>
+              </div>
+            </article>
+          );
+        })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 function MatchupRail({ games }: { games: Game[] }) {
   if (!games.length) return null;
 
@@ -423,6 +586,23 @@ function sortLineup(players: Player[]): Player[] {
   });
 }
 
+
+function TeamInitialIcon({ name }: { name: string }) {
+  const safe = name || "TBD";
+  const words = safe.split(/\s+/).filter(Boolean);
+  const initials =
+    words.length >= 2
+      ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+      : safe.slice(0, 2).toUpperCase();
+
+  return (
+    <span className="daily-team-initial-icon" aria-hidden="true">
+      {initials}
+    </span>
+  );
+}
+
+
 function PlayerCard({ player, index }: { player: Player; index: number }) {
   const headshot = playerHeadshot(player);
   const isProjected = String(player.source || '').toLowerCase().includes('projected');
@@ -490,145 +670,130 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
   );
 }
 
-function LineupColumn({
-  title,
-  pitcher,
-  players,
-  search,
-}: {
-  title: string;
-  pitcher?: Pitcher | null;
-  players: Player[];
-  search: string;
-}) {
-  const q = search.trim().toLowerCase();
 
-  const filtered = sortLineup(players).filter((player) => {
-    if (!q) return true;
-    return [
-      playerName(player),
-      player.team,
-      player.opponent,
-      player.position,
-      player.source,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-      .includes(q);
-  });
-
+function getPlayerImage(player: Player) {
+  const raw = player as any;
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-3">
-      <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <div>
-          <div className="text-base font-black text-white">{title}</div>
-          <div className="mt-1 text-[11px] text-slate-500">
-            SP: <span className="font-bold text-cyan-200">{pitcherName(pitcher)}</span>
-          </div>
-        </div>
-
-        <div className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-black text-slate-300">
-          {filtered.length}/9
-        </div>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-5 text-center">
-          <div className="text-sm font-black text-slate-300">Lineup pending</div>
-          <div className="mt-1 text-xs text-slate-500">
-            No posted hitters found yet for this side.
-          </div>
-        </div>
-      ) : (
-        <div className="grid gap-2">
-          {filtered.map((player, index) => (
-            <PlayerCard
-              key={`${player.playerId || player.id || playerName(player)}-${teamName(player.team)}-${index}`}
-              player={player}
-              index={index}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    raw.headshotUrl ||
+    raw.headshot ||
+    raw.imageUrl ||
+    raw.image ||
+    raw.photoUrl ||
+    raw.mlbHeadshotUrl ||
+    ""
   );
 }
 
-function GameCard({ game, search }: { game: Game; search: string }) {
-  const awayTeam = teamName(game.awayTeam || game.away);
-  const homeTeam = teamName(game.homeTeam || game.home);
-
-  const awayPlayers = sortLineup(Array.isArray(game.awayLineup) ? game.awayLineup : []);
-  const homePlayers = sortLineup(Array.isArray(game.homeLineup) ? game.homeLineup : []);
-
-  const quality = dataQuality(game);
-  const totalLoaded = awayPlayers.length + homePlayers.length;
+function CompactRosterColumn({
+  team,
+  opponent,
+  players,
+}: {
+  team: string;
+  opponent: string;
+  players: Player[];
+}) {
+  const roster = sortLineup(players).slice(0, 9);
 
   return (
-    <section id={`daily-game-${game.gamePk || game.id}`} className="scroll-mt-6 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20">
-      <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <span className={`rounded-full border px-3 py-1 text-[10px] font-black tracking-[0.18em] ${qualityClass(quality)}`}>
-            {quality}
-          </span>
-
-          <span className="text-xs text-slate-500">
-            {game.status || 'Scheduled'}
-          </span>
+    <section className="dp-roster-column">
+      <header className="dp-roster-head">
+        <TeamInitialIcon name={team} />
+        <div>
+          <h3>{team}</h3>
+          <p>{roster.length}/9 hitters loaded</p>
         </div>
+      </header>
 
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <div>
-            <div className="text-lg font-black text-slate-100">{awayTeam}</div>
-            <div className="mt-1 text-xs text-slate-500">
-              SP: <span className="text-cyan-200">{pitcherName(game.awayPitcher)}</span>
-            </div>
-          </div>
+      <div className="dp-roster-list">
+        {roster.map((player, index) => {
+          const name = playerName(player);
+          const img = getPlayerImage(player);
+          const isProjected = player.source === "projected";
 
-          <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">at</div>
-            <div className="text-xs text-slate-400">{game.gameTime || game.startTime || 'Time TBD'}</div>
-          </div>
+          return (
+            <article className="dp-player-row" key={`${player.playerId || player.id || name}-${index}`}>
+              <span className="dp-slot">{index + 1}</span>
 
-          <div className="md:text-right">
-            <div className="text-lg font-black text-slate-100">{homeTeam}</div>
-            <div className="mt-1 text-xs text-slate-500">
-              SP: <span className="text-cyan-200">{pitcherName(game.homePitcher)}</span>
-            </div>
-          </div>
-        </div>
+              <span className="dp-avatar">
+                {img ? <img src={img} alt="" /> : name.slice(0, 2).toUpperCase()}
+              </span>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span>{game.venue || 'Venue TBD'}</span>
-          <span>•</span>
-          <span>
-            {totalLoaded > 0
-              ? `${totalLoaded} hitters loaded`
-              : 'Lineup pending from MLB'}
-          </span>
-        </div>
-      </div>
+              <span className="dp-player-main">
+                <strong>{name}</strong>
+                <em>
+                  {player.position || "BAT"}
+                  {player.bats ? ` · ${player.bats}` : ""}
+                </em>
+              </span>
 
-      <div className="grid gap-4 p-4 lg:grid-cols-2">
-        <LineupColumn
-          title={awayTeam}
-          pitcher={game.awayPitcher}
-          players={awayPlayers}
-          search={search}
-        />
+              <span className={isProjected ? "dp-status is-projected" : "dp-status"}>
+                {isProjected ? "Proj" : "Live"}
+              </span>
+            </article>
+          );
+        })}
 
-        <LineupColumn
-          title={homeTeam}
-          pitcher={game.homePitcher}
-          players={homePlayers}
-          search={search}
-        />
+        {Array.from({ length: Math.max(0, 9 - roster.length) }).map((_, index) => (
+          <article className="dp-player-row is-empty" key={`empty-${team}-${index}`}>
+            <span className="dp-slot">–</span>
+            <span className="dp-avatar">–</span>
+            <span className="dp-player-main">
+              <strong>Lineup pending</strong>
+              <em>{opponent}</em>
+            </span>
+          </article>
+        ))}
       </div>
     </section>
   );
 }
 
+function GameCard({ game }: { game: any; search?: string }) {
+  const awayTeam = teamName(game.awayTeam || game.away);
+  const homeTeam = teamName(game.homeTeam || game.home);
+  const allPlayers = getGamePlayers(game);
+
+  let awayPlayers = allPlayers.filter((player) => teamName(player.team) === awayTeam);
+  let homePlayers = allPlayers.filter((player) => teamName(player.team) === homeTeam);
+
+  if (!awayPlayers.length || !homePlayers.length) {
+    awayPlayers = allPlayers.slice(0, 9);
+    homePlayers = allPlayers.slice(9, 18);
+  }
+
+  return (
+    <section className="dp-game-card">
+      <header className="dp-game-head">
+        <div className="dp-team-title">
+          <TeamInitialIcon name={awayTeam} />
+          <div>
+            <h2>{awayTeam}</h2>
+            <p>Away lineup</p>
+          </div>
+        </div>
+
+        <div className="dp-vs">
+          <span>Matchup</span>
+          <strong>VS</strong>
+        </div>
+
+        <div className="dp-team-title is-right">
+          <div>
+            <h2>{homeTeam}</h2>
+            <p>Home lineup</p>
+          </div>
+          <TeamInitialIcon name={homeTeam} />
+        </div>
+      </header>
+
+      <div className="dp-roster-grid">
+        <CompactRosterColumn team={awayTeam} opponent={homeTeam} players={awayPlayers} />
+        <CompactRosterColumn team={homeTeam} opponent={awayTeam} players={homePlayers} />
+      </div>
+    </section>
+  );
+}
 
 async function fetchProjectedHitters(
   teamId: number | string,
@@ -743,6 +908,462 @@ async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
   };
 }
 
+
+
+
+function getTeamLabel(team: any): string {
+  if (!team) return "Team TBD";
+
+  if (typeof team === "string") {
+    return team.trim() || "Team TBD";
+  }
+
+  const raw =
+    team.name ||
+    team.teamName ||
+    team.clubName ||
+    team.fullName ||
+    team.displayName ||
+    team.shortName ||
+    team.abbreviation ||
+    team.abbrev ||
+    team.teamAbbr ||
+    team.code ||
+    "Team TBD";
+
+  return String(raw).trim() || "Team TBD";
+}
+
+function getSafeArray(value: any): any[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function getTeamAbbrSafe(team: any): string {
+  if (!team) return "TBD";
+  if (typeof team === "string") {
+    const parts = team.trim().split(/\s+/);
+    return parts.length >= 2 ? parts.map((part) => part[0]).join("").slice(0, 3).toUpperCase() : team.slice(0, 3).toUpperCase();
+  }
+
+  const raw =
+    team.abbreviation ||
+    team.abbrev ||
+    team.teamAbbr ||
+    team.code ||
+    team.fileCode ||
+    team.shortName ||
+    team.name ||
+    team.teamName ||
+    "TBD";
+
+  const value = String(raw).trim();
+  if (value.length <= 4) return value.toUpperCase();
+
+  const words = value.split(/\s+/).filter(Boolean);
+  return words.length >= 2 ? words.map((word) => word[0]).join("").slice(0, 3).toUpperCase() : value.slice(0, 3).toUpperCase();
+}
+
+
+function getTeamIdSafe(team: any): string {
+  const raw =
+    team?.id ||
+    team?.teamId ||
+    team?.team_id ||
+    team?.mlbId ||
+    team?.mlb_id ||
+    team?.sportRadarId ||
+    "";
+
+  return raw ? String(raw).trim() : "";
+}
+
+function getDailyPlayerIdSafe(player: any): string {
+  const raw =
+    player?.id ||
+    player?.playerId ||
+    player?.player_id ||
+    player?.mlbId ||
+    player?.mlb_id ||
+    player?.person?.id ||
+    player?.personId ||
+    "";
+
+  return raw ? String(raw).trim() : "";
+}
+
+function getDailyPlayerHeadshotUrl(player: any): string {
+  const direct =
+    player?.headshot ||
+    player?.headshotUrl ||
+    player?.image ||
+    player?.imageUrl ||
+    player?.playerImage ||
+    player?.photo ||
+    "";
+
+  if (direct) return String(direct);
+
+  const id = getDailyPlayerIdSafe(player);
+  if (!id) return "";
+
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
+}
+
+function getTeamLogoUrl(team: any): string {
+  const direct =
+    team?.logo ||
+    team?.logoUrl ||
+    team?.image ||
+    team?.imageUrl ||
+    team?.teamLogo ||
+    "";
+
+  if (direct) return String(direct);
+
+  const id = getTeamIdSafe(team);
+  if (!id) return "";
+
+  return `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${id}.svg`;
+}
+
+function getMlbPlayerUrl(player: any): string {
+  const id = getDailyPlayerIdSafe(player);
+  return id ? `https://www.mlb.com/player/${id}` : "";
+}
+
+
+function getDailyPlayersForSide(game: any, side: "away" | "home"): any[] {
+  const team = side === "away" ? game?.awayTeam : game?.homeTeam;
+
+  const candidates = [
+    game?.[`${side}Players`],
+    game?.[`${side}Lineup`],
+    game?.[`${side}Hitters`],
+    game?.[`${side}Starters`],
+    game?.[side]?.players,
+    game?.[side]?.lineup,
+    game?.[side]?.hitters,
+    game?.teams?.[side]?.players,
+    game?.teams?.[side]?.lineup,
+    game?.lineups?.[side],
+    team?.players,
+    team?.lineup,
+    team?.hitters,
+    team?.starters,
+  ];
+
+  const firstArray = candidates.find((candidate) => Array.isArray(candidate));
+  return getSafeArray(firstArray)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const ao = Number(a?.battingOrder ?? a?.batting_order ?? a?.order ?? a?.lineupSpot ?? a?.spot ?? 99);
+      const bo = Number(b?.battingOrder ?? b?.batting_order ?? b?.order ?? b?.lineupSpot ?? b?.spot ?? 99);
+      return ao - bo;
+    })
+    .slice(0, 9);
+}
+
+function getDailyPlayerName(player: any): string {
+  return String(
+    player?.fullName ||
+      player?.name ||
+      player?.playerName ||
+      player?.displayName ||
+      player?.person?.fullName ||
+      player?.person?.name ||
+      "Player TBD"
+  );
+}
+
+function getDailyPlayerInitials(player: any): string {
+  const name = getDailyPlayerName(player);
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getDailyPlayerPosition(player: any): string {
+  return String(
+    player?.position ||
+      player?.primaryPosition?.abbreviation ||
+      player?.primaryPosition?.name ||
+      player?.pos ||
+      player?.fieldPosition ||
+      "UTIL"
+  );
+}
+
+function getDailyPlayerHand(player: any): string {
+  return String(
+    player?.batSide?.code ||
+      player?.batSide ||
+      player?.bats ||
+      player?.batHand ||
+      player?.hand ||
+      "—"
+  ).slice(0, 1).toUpperCase();
+}
+
+function getDailyPlayerOrder(player: any, index: number): string {
+  return String(player?.battingOrder ?? player?.batting_order ?? player?.order ?? player?.lineupSpot ?? player?.spot ?? index + 1);
+}
+
+function getDailyStatus(game: any): string {
+  const raw = String(game?.lineupStatus || game?.status || game?.gameStatus || "").toLowerCase();
+  if (raw.includes("confirm") || raw.includes("final")) return "Confirmed";
+  if (raw.includes("pending") || raw.includes("preview")) return "Pending";
+  if (raw.includes("project")) return "Projected";
+
+  const awayCount = getDailyPlayersForSide(game, "away").length;
+  const homeCount = getDailyPlayersForSide(game, "home").length;
+  if (awayCount >= 9 && homeCount >= 9) return "Projected";
+  return "Pending";
+}
+
+function DailyTeamIcon({ team }: { team: any }) {
+  const name = getTeamLabel(team);
+  const logoUrl = getTeamLogoUrl(team);
+
+  return (
+    <span className="daily-team-icon daily-team-logo-pro" aria-hidden="true">
+      {logoUrl ? (
+        <>
+          <img
+            src={logoUrl}
+            alt=""
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+              event.currentTarget.parentElement?.classList.add("daily-logo-failed");
+            }}
+          />
+          <span className="daily-team-fallback-logo">
+            <TeamInitialIcon name={name} />
+          </span>
+        </>
+      ) : (
+        <TeamInitialIcon name={name} />
+      )}
+    </span>
+  );
+}
+
+function DailyStarterRow({ player, index, teamAbbr, search }: { player: any; index: number; teamAbbr: string; search: string }) {
+  const name = getDailyPlayerName(player);
+  const position = getDailyPlayerPosition(player);
+  const hand = getDailyPlayerHand(player);
+  const order = getDailyPlayerOrder(player, index);
+  const playerImage = getDailyPlayerHeadshotUrl(player);
+  const playerUrl = getMlbPlayerUrl(player);
+  const query = search.trim().toLowerCase();
+  const isMatch =
+    query.length > 0 &&
+    `${name} ${position} ${hand} ${teamAbbr}`.toLowerCase().includes(query);
+
+  return (
+    <button
+      type="button"
+      className={`daily-player-row-pro daily-player-click-card ${isMatch ? "is-search-match" : ""}`}
+      onClick={() => {
+        if (playerUrl) window.open(playerUrl, "_blank", "noopener,noreferrer");
+      }}
+      aria-label={playerUrl ? `Open ${name} MLB profile` : `${name} starter card`}
+    >
+      <div className="daily-batting-order-pro">{order}</div>
+
+      <div className="daily-player-avatar-pro">
+        {playerImage ? (
+          <>
+            <img
+              src={playerImage}
+              alt={name}
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                event.currentTarget.parentElement?.classList.add("daily-headshot-failed");
+              }}
+            />
+            <span className="daily-player-fallback-avatar">{getDailyPlayerInitials(player)}</span>
+          </>
+        ) : (
+          <span>{getDailyPlayerInitials(player)}</span>
+        )}
+      </div>
+
+      <div className="daily-player-main-pro">
+        <strong>{name}</strong>
+        <span>
+          {teamAbbr} · {position || "UTIL"} · Bats {hand || "—"}
+        </span>
+      </div>
+
+      <div className="daily-player-status-stack">
+        <span className="daily-player-status-pro">Live</span>
+        <small>View</small>
+      </div>
+    </button>
+  );
+}
+
+function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "home"; search: string }) {
+  const team = side === "away" ? game?.awayTeam : game?.homeTeam;
+  const teamName = getTeamLabel(team);
+  const teamAbbr = getTeamAbbrSafe(team);
+  const players = getDailyPlayersForSide(game, side);
+  const sideLabel = side === "away" ? "Away starters" : "Home starters";
+
+  return (
+    <section className="daily-roster-panel-pro">
+      <div className="daily-roster-panel-head-pro">
+        <div className="daily-roster-title-pro">
+          <DailyTeamIcon team={team} />
+          <div>
+            <strong>{teamName}</strong>
+            <span>{sideLabel}</span>
+          </div>
+        </div>
+
+        <div className="daily-starter-count-pro">{players.length}/9</div>
+      </div>
+
+      {players.length > 0 ? (
+        <div className="daily-starters-list-pro">
+          {players.map((player, index) => (
+            <DailyStarterRow
+              key={`${side}-${player?.id || player?.playerId || player?.mlbId || getDailyPlayerName(player)}-${index}`}
+              player={player}
+              index={index}
+              teamAbbr={teamAbbr}
+              search={search}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="daily-lineup-pending-pro">
+          <strong>Lineup pending</strong>
+          <span>Starters will appear here once MLB data is available.</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DailyMatchupTheater({
+  games,
+  selectedGame,
+  selectedGameIndex,
+  setSelectedGameIndex,
+  goToPreviousGame,
+  goToNextGame,
+  search,
+}: {
+  games: any[];
+  selectedGame: any;
+  selectedGameIndex: number;
+  setSelectedGameIndex: (index: number) => void;
+  goToPreviousGame: () => void;
+  goToNextGame: () => void;
+  search: string;
+}) {
+  if (!selectedGame) return null;
+
+  const away = selectedGame.awayTeam;
+  const home = selectedGame.homeTeam;
+  const awayName = getTeamLabel(away);
+  const homeName = getTeamLabel(home);
+  const awayAbbr = getTeamAbbrSafe(away);
+  const homeAbbr = getTeamAbbrSafe(home);
+  const awayPlayers = getDailyPlayersForSide(selectedGame, "away");
+  const homePlayers = getDailyPlayersForSide(selectedGame, "home");
+  const status = getDailyStatus(selectedGame);
+
+  return (
+    <section
+      className="daily-theater-pro"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") goToPreviousGame();
+        if (event.key === "ArrowRight") goToNextGame();
+      }}
+    >
+      <div className="daily-theater-topbar-pro">
+        <button type="button" onClick={goToPreviousGame} className="daily-nav-arrow-pro" aria-label="Previous matchup">
+          ←
+        </button>
+
+        <div className="daily-matchup-count-pro">
+          <span>Matchup</span>
+          <strong>{selectedGameIndex + 1} / {games.length}</strong>
+        </div>
+
+        <div className="daily-shortcut-rail-pro" aria-label="Matchup shortcuts">
+          {games.map((game, index) => {
+            const chipAway = game.awayTeam;
+            const chipHome = game.homeTeam;
+            const isActive = index === selectedGameIndex;
+
+            return (
+              <button
+                type="button"
+                key={`daily-chip-${game?.gamePk || game?.game_id || game?.id || index}`}
+                className={`daily-matchup-chip-pro ${isActive ? "is-active" : ""}`}
+                onClick={() => setSelectedGameIndex(index)}
+                aria-label={`Open ${getTeamLabel(chipAway)} versus ${getTeamLabel(chipHome)}`}
+              >
+                <DailyTeamIcon team={chipAway} />
+                <span className="daily-chip-copy-pro">
+                  <strong>{getTeamAbbrSafe(chipAway)}</strong>
+                  <em>vs</em>
+                  <strong>{getTeamAbbrSafe(chipHome)}</strong>
+                </span>
+                <DailyTeamIcon team={chipHome} />
+                <small>{getDailyStatus(game)}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        <button type="button" onClick={goToNextGame} className="daily-nav-arrow-pro" aria-label="Next matchup">
+          →
+        </button>
+      </div>
+
+      <article className="daily-matchup-card-pro">
+        <header className="daily-faceoff-header-pro">
+          <div className="daily-faceoff-team-pro">
+            <DailyTeamIcon team={away} />
+            <div>
+              <span>Away</span>
+              <strong>{awayName}</strong>
+              <small>{awayPlayers.length}/9 starters loaded</small>
+            </div>
+          </div>
+
+          <div className="daily-vs-stack-pro">
+            <span>{status}</span>
+            <strong>{awayAbbr} VS {homeAbbr}</strong>
+          </div>
+
+          <div className="daily-faceoff-team-pro is-home">
+            <div>
+              <span>Home</span>
+              <strong>{homeName}</strong>
+              <small>{homePlayers.length}/9 starters loaded</small>
+            </div>
+            <DailyTeamIcon team={home} />
+          </div>
+        </header>
+
+        <div className="daily-rosters-grid-pro">
+          <DailyRosterPanel game={selectedGame} side="away" search={search} />
+          <DailyRosterPanel game={selectedGame} side="home" search={search} />
+        </div>
+      </article>
+    </section>
+  );
+}
+
+
 export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   const [data, setData] = useState<DailyBoardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -750,6 +1371,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'pending' | 'pitchers'>('all');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [selectedGameIndex, setSelectedGameIndex] = useState(0);
 
   async function fetchBoard() {
     setLoading(true);
@@ -808,9 +1430,33 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
     [data?.games]
   );
 
+  useEffect(() => {
+    if (selectedGameIndex > Math.max(games.length - 1, 0)) {
+      setSelectedGameIndex(0);
+    }
+  }, [games.length, selectedGameIndex]);
+
+  const getTeamLabel = (team: any) => {
+    if (!team) return "TBD";
+    if (typeof team === "string") return team;
+    return team.name || team.teamName || team.shortName || team.abbreviation || "TBD";
+  };
+
+  const selectedGame = games[selectedGameIndex] || null;
+
+  const goToPreviousGame = () => {
+    if (!games.length) return;
+    setSelectedGameIndex((current) => (current - 1 + games.length) % games.length);
+  };
+
+  const goToNextGame = () => {
+    if (!games.length) return;
+    setSelectedGameIndex((current) => (current + 1) % games.length);
+  };
+
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
-      <div className="mx-auto max-w-7xl space-y-5">
+    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-slate-100">
+      <div className="mx-0 max-w-none space-y-5">
         <header className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -904,18 +1550,18 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
           </div>
         )}
 
-        {!loading && games.length > 0 && <MatchupRail games={games} />}
+        {false && !loading && games.length > 0 && <TeamVsTeamShowcase games={games} />}
 
         {!loading && games.length > 0 && (
-          <div className="grid gap-5">
-            {games.map((game, index) => (
-              <GameCard
-                key={`${game.gamePk || game.id || index}`}
-                game={game}
-                search={search}
-              />
-            ))}
-          </div>
+          <DailyMatchupTheater
+            games={games}
+            selectedGame={selectedGame}
+            selectedGameIndex={selectedGameIndex}
+            setSelectedGameIndex={setSelectedGameIndex}
+            goToPreviousGame={goToPreviousGame}
+            goToNextGame={goToNextGame}
+            search={search}
+          />
         )}
       </div>
     </main>

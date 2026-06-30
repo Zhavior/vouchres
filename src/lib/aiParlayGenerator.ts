@@ -11,6 +11,7 @@ import type { Parlay, Leg } from '../types';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { LOCK_MINUTES } from './parlayLifecycle';
 import type { SportId } from '../sports/registry';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface StarterCandidate {
   playerName: string;

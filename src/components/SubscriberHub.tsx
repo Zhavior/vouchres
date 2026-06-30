@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile, Parlay, Vouch } from '../types';
 import { decimalToAmerican } from '../utils/oddsHelper';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface SubscriberHubProps {
   profile: CreatorProofProfile;
@@ -1133,7 +1134,7 @@ export default function SubscriberHub({
 
             {/* Disclaimer & Balance Indicator */}
             <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 font-mono border-t border-slate-900 pt-4 gap-2">
-              <span>Your credit balance: <strong className="text-indigo-400 font-bold">{credits} pts</strong></span>
+              <span>Your credit balance: <strong className="text-indigo-400 font-bold">{getFounderPointsLabel(user?.email) ?? credits} pts</strong></span>
               <span>All subscriptions are processed instantly</span>
             </div>
 

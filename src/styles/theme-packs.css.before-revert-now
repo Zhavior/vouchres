@@ -1,0 +1,1181 @@
+/* ==========================================================
+   VOUCH EDGE THEME PACK SYSTEM — CLEAN VERSION
+   One source of truth for sellable app/profile themes.
+   ========================================================== */
+
+html {
+  --skin-1: 34, 211, 238;
+  --skin-2: 16, 185, 129;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 2, 6, 23;
+  --skin-card: rgba(2, 6, 23, 0.76);
+  --skin-border: rgba(34, 211, 238, 0.10);
+  --skin-soft-border: rgba(34, 211, 238, 0.055);
+  --skin-name: "Cyber Edge";
+}
+
+html[data-ve-theme="cyber-edge"],
+html[data-ve-theme="cyber"] {
+  --skin-1: 34, 211, 238;
+  --skin-2: 16, 185, 129;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 2, 6, 23;
+  --skin-card: rgba(2, 6, 23, 0.76);
+  --skin-border: rgba(34, 211, 238, 0.10);
+  --skin-soft-border: rgba(34, 211, 238, 0.055);
+  --skin-name: "Cyber Edge";
+}
+
+html[data-ve-theme="gold-whale"],
+html[data-ve-theme="gold"] {
+  --skin-1: 251, 191, 36;
+  --skin-2: 249, 115, 22;
+  --skin-3: 168, 85, 247;
+  --skin-bg: 13, 8, 2;
+  --skin-card: rgba(12, 7, 2, 0.78);
+  --skin-border: rgba(251, 191, 36, 0.13);
+  --skin-soft-border: rgba(251, 191, 36, 0.065);
+  --skin-name: "Gold Whale";
+}
+
+html[data-ve-theme="royal-sharp"],
+html[data-ve-theme="royal"] {
+  --skin-1: 167, 139, 250;
+  --skin-2: 236, 72, 153;
+  --skin-3: 59, 130, 246;
+  --skin-bg: 8, 5, 24;
+  --skin-card: rgba(8, 5, 24, 0.78);
+  --skin-border: rgba(167, 139, 250, 0.13);
+  --skin-soft-border: rgba(167, 139, 250, 0.065);
+  --skin-name: "Royal Sharp";
+}
+
+html[data-ve-theme="redline"],
+html[data-ve-theme="fire"] {
+  --skin-1: 251, 113, 133;
+  --skin-2: 249, 115, 22;
+  --skin-3: 239, 68, 68;
+  --skin-bg: 16, 3, 3;
+  --skin-card: rgba(16, 3, 3, 0.78);
+  --skin-border: rgba(251, 113, 133, 0.14);
+  --skin-soft-border: rgba(251, 113, 133, 0.07);
+  --skin-name: "Redline";
+}
+
+html[data-ve-theme="ocean-glass"],
+html[data-ve-theme="ocean"] {
+  --skin-1: 45, 212, 191;
+  --skin-2: 14, 165, 233;
+  --skin-3: 16, 185, 129;
+  --skin-bg: 2, 16, 19;
+  --skin-card: rgba(2, 16, 19, 0.78);
+  --skin-border: rgba(45, 212, 191, 0.13);
+  --skin-soft-border: rgba(45, 212, 191, 0.065);
+  --skin-name: "Ocean Glass";
+}
+
+html[data-ve-theme="midnight-vip"] {
+  --skin-1: 234, 179, 8;
+  --skin-2: 248, 250, 252;
+  --skin-3: 100, 116, 139;
+  --skin-bg: 4, 4, 5;
+  --skin-card: rgba(4, 4, 5, 0.82);
+  --skin-border: rgba(234, 179, 8, 0.16);
+  --skin-soft-border: rgba(234, 179, 8, 0.075);
+  --skin-name: "Midnight VIP";
+}
+
+html[data-ve-theme="neon-parlay"] {
+  --skin-1: 244, 114, 182;
+  --skin-2: 34, 211, 238;
+  --skin-3: 139, 92, 246;
+  --skin-bg: 10, 4, 20;
+  --skin-card: rgba(10, 4, 20, 0.80);
+  --skin-border: rgba(244, 114, 182, 0.15);
+  --skin-soft-border: rgba(244, 114, 182, 0.075);
+  --skin-name: "Neon Parlay";
+}
+
+/* Whole product environment */
+body,
+#root,
+.ve-page,
+.ve-app-bg,
+.ve-themed-bg,
+.ve-grid-bg {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(var(--skin-1), 0.105), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(var(--skin-2), 0.075), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(var(--skin-3), 0.055), transparent 40%),
+    linear-gradient(135deg, rgb(var(--skin-bg)), #020617 52%, rgb(var(--skin-bg))) !important;
+}
+
+#root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(var(--skin-1), 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--skin-1), 0.014) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(var(--skin-1), 0.032), transparent 34%);
+  background-size: 42px 42px, 42px 42px, auto;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+/* Product-wide border behavior */
+#root [class*="border-white"],
+#root [class*="border-slate"],
+#root [class*="border-gray"],
+#root [class*="border-zinc"],
+#root [class*="border-neutral"],
+#root [class*="border-cyan"],
+#root [class*="border-sky"],
+#root [class*="border-emerald"],
+#root [class*="border-purple"],
+#root [class*="border-amber"],
+#root [class*="border-rose"],
+#root [class*="border-red"] {
+  border-color: var(--skin-soft-border) !important;
+}
+
+#root [class*="ring-white"],
+#root [class*="ring-slate"],
+#root [class*="ring-cyan"],
+#root [class*="ring-sky"],
+#root [class*="ring-purple"],
+#root [class*="ring-amber"] {
+  --tw-ring-color: rgba(var(--skin-1), 0.07) !important;
+}
+
+/* Islands/cards */
+.ve-island,
+.ve-island-premium,
+.ve-island-hero,
+.ve-panel,
+.ve-card,
+.ve-theme-panel,
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"] {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.032), transparent 38%),
+    linear-gradient(135deg, rgba(var(--skin-1), 0.032), var(--skin-card)) !important;
+  border-color: var(--skin-soft-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.025),
+    0 18px 60px rgba(var(--skin-1), 0.032) !important;
+  backdrop-filter: blur(20px) saturate(1.16);
+  -webkit-backdrop-filter: blur(20px) saturate(1.16);
+}
+
+.ve-island-hero,
+.ve-island-premium {
+  border-color: var(--skin-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.045),
+    0 28px 90px rgba(var(--skin-1), 0.07) !important;
+}
+
+/* Sidebar gecko */
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(var(--skin-1), 0.12), transparent 35%),
+    radial-gradient(circle at 90% 20%, rgba(var(--skin-2), 0.065), transparent 38%),
+    linear-gradient(180deg, rgba(var(--skin-bg), 0.78), rgba(var(--skin-bg), 0.46)) !important;
+  border-right: 1px solid var(--skin-border) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(var(--skin-1), 0.032),
+    20px 0 80px rgba(var(--skin-1), 0.032) !important;
+  backdrop-filter: blur(30px) saturate(1.28) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.28) !important;
+}
+
+#root .ve-sidebar * {
+  border-color: rgba(var(--skin-1), 0.10) !important;
+}
+
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-white"],
+#root .ve-sidebar [class*="bg-[#020617]"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.035), rgba(var(--skin-bg), 0.24)) !important;
+  backdrop-filter: blur(16px) saturate(1.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.16);
+}
+
+#root .ve-sidebar svg {
+  color: rgb(var(--skin-1)) !important;
+  filter: drop-shadow(0 0 10px rgba(var(--skin-1), 0.34));
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.09), rgba(var(--skin-2), 0.045)) !important;
+  border-color: rgba(var(--skin-1), 0.14) !important;
+  box-shadow: 0 12px 36px rgba(var(--skin-1), 0.11) !important;
+}
+
+/* Accents/buttons/inputs */
+#root [class*="text-cyan"],
+#root [class*="text-sky"],
+#root [class*="text-emerald"],
+#root [class*="text-amber"],
+#root [class*="text-purple"],
+#root [class*="text-fuchsia"],
+#root [class*="text-rose"] {
+  color: rgb(var(--skin-1)) !important;
+}
+
+#root button[class*="bg-cyan"],
+#root button[class*="bg-sky"],
+#root button[class*="from-cyan"],
+#root button[class*="from-sky"],
+#root button[class*="from-emerald"],
+#root .ve-button-primary,
+#root .ve-theme-button {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.92), rgba(var(--skin-2), 0.78)) !important;
+  color: #020617 !important;
+  border-color: rgba(var(--skin-1), 0.105) !important;
+  box-shadow: 0 14px 38px rgba(var(--skin-1), 0.09) !important;
+}
+
+#root input,
+#root select,
+#root textarea {
+  border-color: rgba(var(--skin-1), 0.11) !important;
+  background: rgba(var(--skin-bg), 0.42) !important;
+  color: rgb(226, 232, 240) !important;
+}
+
+#root input:focus,
+#root select:focus,
+#root textarea:focus {
+  border-color: rgba(var(--skin-1), 0.26) !important;
+  box-shadow: 0 0 0 3px rgba(var(--skin-1), 0.035) !important;
+}
+
+/* Profile skin */
+.ve-profile-skin {
+  border-color: var(--skin-border) !important;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(var(--skin-1), 0.09), transparent 36%),
+    radial-gradient(circle at 88% 18%, rgba(var(--skin-2), 0.06), transparent 38%),
+    linear-gradient(135deg, rgba(var(--skin-bg), 0.68), rgba(2, 6, 23, 0.58)) !important;
+}
+
+.ve-profile-avatar-skin {
+  border-color: rgba(var(--skin-1), 0.34) !important;
+  box-shadow:
+    0 0 0 8px rgba(var(--skin-1), 0.07),
+    0 18px 50px rgba(var(--skin-1), 0.09) !important;
+}
+
+/* Dark premium correction pass */
+body,
+#root,
+.ve-page,
+.ve-app-bg,
+.ve-themed-bg,
+.ve-grid-bg {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(var(--skin-1), 0.095), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgba(var(--skin-2), 0.060), transparent 36%),
+    radial-gradient(circle at 50% 100%, rgba(var(--skin-3), 0.045), transparent 42%),
+    linear-gradient(135deg, rgb(var(--skin-bg)), #01030a 54%, rgb(var(--skin-bg))) !important;
+}
+
+#root::before {
+  opacity: 0.42 !important;
+}
+
+.ve-island,
+.ve-island-premium,
+.ve-island-hero,
+.ve-panel,
+.ve-card,
+.ve-theme-panel,
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"] {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.035), transparent 40%),
+    linear-gradient(135deg, rgba(var(--skin-1), 0.022), var(--skin-card)) !important;
+  border-color: var(--skin-soft-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.018),
+    0 18px 56px rgba(0, 0, 0, 0.28) !important;
+}
+
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(var(--skin-1), 0.10), transparent 36%),
+    radial-gradient(circle at 90% 20%, rgba(var(--skin-2), 0.055), transparent 40%),
+    linear-gradient(180deg, rgba(var(--skin-bg), 0.82), rgba(1, 3, 10, 0.68)) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(var(--skin-1), 0.055),
+    18px 0 70px rgba(0, 0, 0, 0.26) !important;
+}
+
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-white"],
+#root .ve-sidebar [class*="bg-[#020617]"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.028), rgba(1, 3, 10, 0.44)) !important;
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.095), rgba(var(--skin-2), 0.045)) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22) !important;
+}
+
+#root [class*="border-white"],
+#root [class*="border-slate"],
+#root [class*="border-gray"],
+#root [class*="border-zinc"],
+#root [class*="border-neutral"],
+#root [class*="border-cyan"],
+#root [class*="border-sky"],
+#root [class*="border-emerald"],
+#root [class*="border-purple"],
+#root [class*="border-amber"],
+#root [class*="border-rose"],
+#root [class*="border-red"] {
+  border-color: rgba(var(--skin-1), 0.045) !important;
+}
+
+/* ==========================================================
+   SIDEBAR DARK GLASS FIX
+   Keep sidebar transparent/dark. Theme only controls border glow.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(var(--skin-1), 0.075), transparent 34%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.62), rgba(1, 3, 10, 0.42)) !important;
+  border-right: 1px solid rgba(var(--skin-1), 0.16) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(var(--skin-1), 0.11),
+    8px 0 34px rgba(var(--skin-1), 0.055),
+    22px 0 80px rgba(0, 0, 0, 0.22) !important;
+  backdrop-filter: blur(28px) saturate(1.18) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.18) !important;
+}
+
+/* Stop inner sidebar tiles from becoming bright */
+#root .ve-sidebar [class*="bg-slate"],
+#root .ve-sidebar [class*="bg-black"],
+#root .ve-sidebar [class*="bg-white"],
+#root .ve-sidebar [class*="bg-[#020617]"],
+#root .ve-sidebar [class*="from-"],
+#root .ve-sidebar [class*="to-"] {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.34), rgba(1, 3, 10, 0.20)) !important;
+  backdrop-filter: blur(14px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.08) !important;
+}
+
+/* Normal sidebar borders = faded */
+#root .ve-sidebar * {
+  border-color: rgba(var(--skin-1), 0.075) !important;
+}
+
+/* Icons glow, but not too loud */
+#root .ve-sidebar svg {
+  color: rgba(var(--skin-1), 0.86) !important;
+  filter: drop-shadow(0 0 7px rgba(var(--skin-1), 0.28)) !important;
+}
+
+/* Nav items dark by default */
+#root .ve-sidebar button,
+#root .ve-sidebar a {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hover/active = border glow, not bright fill */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(var(--skin-1), 0.075), rgba(2, 6, 23, 0.22)) !important;
+  border-color: rgba(var(--skin-1), 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.025),
+    0 0 18px rgba(var(--skin-1), 0.085) !important;
+}
+
+/* Logo/profile/footer cards stay dark glass */
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.42), rgba(1, 3, 10, 0.24)) !important;
+  border-color: rgba(var(--skin-1), 0.09) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.018),
+    0 12px 36px rgba(0,0,0,0.18) !important;
+}
+
+/* ==========================================================
+   SIDEBAR TEXT + ICON MATCH FIX
+   Sidebar labels now match icon/theme color.
+   ========================================================== */
+
+#root .ve-sidebar {
+  --sidebar-text: rgba(var(--skin-1), 0.88);
+  --sidebar-text-muted: rgba(var(--skin-1), 0.58);
+  --sidebar-text-active: rgb(var(--skin-1));
+}
+
+/* Main sidebar labels */
+#root .ve-sidebar button,
+#root .ve-sidebar a,
+#root .ve-sidebar span,
+#root .ve-sidebar p {
+  color: var(--sidebar-text) !important;
+}
+
+/* Muted/group labels stay softer */
+#root .ve-sidebar [class*="uppercase"],
+#root .ve-sidebar [class*="tracking"],
+#root .ve-sidebar small {
+  color: var(--sidebar-text-muted) !important;
+}
+
+/* Active/hover labels match icons stronger */
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  color: var(--sidebar-text-active) !important;
+}
+
+#root .ve-sidebar button:hover *,
+#root .ve-sidebar a:hover *,
+#root .ve-sidebar .ve-nav-item-active *,
+#root .ve-sidebar [aria-current="page"] * {
+  color: var(--sidebar-text-active) !important;
+}
+
+/* Icons match text */
+#root .ve-sidebar svg {
+  color: var(--sidebar-text-active) !important;
+  stroke: currentColor !important;
+  filter: drop-shadow(0 0 7px rgba(var(--skin-1), 0.26)) !important;
+}
+
+/* Keep tiny badges readable */
+#root .ve-sidebar [class*="rounded-full"] {
+  color: var(--sidebar-text-active) !important;
+}
+
+/* ==========================================================
+   PAGE CARD + ICON THEME MATCH FIX
+   Cards, borders, glow, badges, titles now match active theme.
+   ========================================================== */
+
+/* Main page cards/islands use the same theme color as icons */
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"],
+#root main [class*="rounded-xl"],
+.ve-island,
+.ve-island-premium,
+.ve-island-hero,
+.ve-panel,
+.ve-card,
+.ve-theme-panel {
+  border-color: rgba(var(--skin-1), 0.105) !important;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(var(--skin-1), 0.055), transparent 38%),
+    linear-gradient(135deg, rgba(var(--skin-1), 0.026), rgba(2, 6, 23, 0.68)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(var(--skin-1), 0.045),
+    0 18px 58px rgba(0, 0, 0, 0.30),
+    0 0 32px rgba(var(--skin-1), 0.035) !important;
+}
+
+/* Card hover = same color as icon glow */
+#root main [class*="rounded-3xl"]:hover,
+#root main [class*="rounded-2xl"]:hover,
+#root main [class*="rounded-xl"]:hover,
+.ve-island:hover,
+.ve-card:hover,
+.ve-panel:hover {
+  border-color: rgba(var(--skin-1), 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(var(--skin-1), 0.07),
+    0 20px 70px rgba(0, 0, 0, 0.34),
+    0 0 42px rgba(var(--skin-1), 0.07) !important;
+}
+
+/* Page icons match the card theme */
+#root main svg {
+  color: rgb(var(--skin-1)) !important;
+  stroke: currentColor !important;
+  filter: drop-shadow(0 0 8px rgba(var(--skin-1), 0.24));
+}
+
+/* Page card headings/accent text match icons */
+#root main [class*="text-cyan"],
+#root main [class*="text-sky"],
+#root main [class*="text-emerald"],
+#root main [class*="text-amber"],
+#root main [class*="text-purple"],
+#root main [class*="text-fuchsia"],
+#root main [class*="text-rose"],
+#root main [class*="text-blue"],
+#root main [class*="text-indigo"] {
+  color: rgb(var(--skin-1)) !important;
+}
+
+/* Badges/pills inside cards match icons */
+#root main [class*="rounded-full"],
+#root main [class*="badge"],
+.ve-theme-badge {
+  border-color: rgba(var(--skin-1), 0.15) !important;
+  background: rgba(var(--skin-1), 0.075) !important;
+  color: rgb(var(--skin-1)) !important;
+}
+
+/* Buttons inside page cards match icons but stay darker */
+#root main button {
+  border-color: rgba(var(--skin-1), 0.12) !important;
+}
+
+#root main button:hover {
+  border-color: rgba(var(--skin-1), 0.20) !important;
+  box-shadow: 0 12px 34px rgba(var(--skin-1), 0.10) !important;
+}
+
+/* Inputs/search boxes inside cards match theme */
+#root main input,
+#root main select,
+#root main textarea {
+  border-color: rgba(var(--skin-1), 0.10) !important;
+  background: rgba(1, 3, 10, 0.42) !important;
+}
+
+#root main input:focus,
+#root main select:focus,
+#root main textarea:focus {
+  border-color: rgba(var(--skin-1), 0.24) !important;
+  box-shadow: 0 0 0 3px rgba(var(--skin-1), 0.055) !important;
+}
+
+/* ==========================================================
+   DEFAULT GALAXY SPACE BACKGROUND
+   Cyber Edge/original theme becomes black galaxy particle space.
+   ========================================================== */
+
+html[data-ve-theme="cyber-edge"],
+html[data-ve-theme="cyber"],
+html:not([data-ve-theme]) {
+  --space-star-1: rgba(255, 255, 255, 0.85);
+  --space-star-2: rgba(125, 211, 252, 0.60);
+  --space-star-3: rgba(34, 211, 238, 0.38);
+}
+
+/* Default/original galaxy space background */
+html[data-ve-theme="cyber-edge"] body,
+html[data-ve-theme="cyber"] body,
+html:not([data-ve-theme]) body,
+html[data-ve-theme="cyber-edge"] #root,
+html[data-ve-theme="cyber"] #root,
+html:not([data-ve-theme]) #root,
+html[data-ve-theme="cyber-edge"] .ve-page,
+html[data-ve-theme="cyber"] .ve-page,
+html:not([data-ve-theme]) .ve-page,
+html[data-ve-theme="cyber-edge"] .ve-app-bg,
+html[data-ve-theme="cyber"] .ve-app-bg,
+html:not([data-ve-theme]) .ve-app-bg,
+html[data-ve-theme="cyber-edge"] .ve-grid-bg,
+html[data-ve-theme="cyber"] .ve-grid-bg,
+html:not([data-ve-theme]) .ve-grid-bg {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(34, 211, 238, 0.085), transparent 24%),
+    radial-gradient(circle at 78% 12%, rgba(59, 130, 246, 0.070), transparent 28%),
+    radial-gradient(circle at 52% 82%, rgba(16, 185, 129, 0.045), transparent 32%),
+    radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.035), transparent 28%),
+    linear-gradient(135deg, #00030a 0%, #020617 42%, #00020a 100%) !important;
+}
+
+/* Galaxy particles/stars */
+html[data-ve-theme="cyber-edge"] #root::before,
+html[data-ve-theme="cyber"] #root::before,
+html:not([data-ve-theme]) #root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.72 !important;
+  background-image:
+    radial-gradient(circle, var(--space-star-1) 0 1px, transparent 1.5px),
+    radial-gradient(circle, var(--space-star-2) 0 1px, transparent 1.8px),
+    radial-gradient(circle, var(--space-star-3) 0 1px, transparent 2px),
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.08), transparent 38%);
+  background-size:
+    120px 120px,
+    190px 190px,
+    280px 280px,
+    auto;
+  background-position:
+    12px 24px,
+    64px 90px,
+    140px 40px,
+    center;
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+/* Soft moving galaxy dust */
+html[data-ve-theme="cyber-edge"] #root::after,
+html[data-ve-theme="cyber"] #root::after,
+html:not([data-ve-theme]) #root::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.08), transparent 22%),
+    radial-gradient(circle at 72% 20%, rgba(99, 102, 241, 0.07), transparent 24%),
+    radial-gradient(circle at 58% 72%, rgba(16, 185, 129, 0.045), transparent 26%);
+  filter: blur(18px);
+  animation: veGalaxyDrift 18s ease-in-out infinite alternate;
+}
+
+@keyframes veGalaxyDrift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(1.5%, 1%, 0) scale(1.04);
+  }
+}
+
+/* Make default cards sit on galaxy better */
+html[data-ve-theme="cyber-edge"] #root main [class*="rounded-3xl"],
+html[data-ve-theme="cyber"] #root main [class*="rounded-3xl"],
+html[data-ve-theme="cyber-edge"] #root main [class*="rounded-2xl"],
+html[data-ve-theme="cyber"] #root main [class*="rounded-2xl"],
+html[data-ve-theme="cyber-edge"] .ve-island,
+html[data-ve-theme="cyber"] .ve-island,
+html[data-ve-theme="cyber-edge"] .ve-panel,
+html[data-ve-theme="cyber"] .ve-panel,
+html[data-ve-theme="cyber-edge"] .ve-card,
+html[data-ve-theme="cyber"] .ve-card {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(34, 211, 238, 0.040), transparent 40%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.72), rgba(1, 3, 10, 0.60)) !important;
+  border-color: rgba(34, 211, 238, 0.060) !important;
+}
+
+/* Sidebar on original galaxy = dark glass, theme border only */
+html[data-ve-theme="cyber-edge"] #root .ve-sidebar,
+html[data-ve-theme="cyber"] #root .ve-sidebar,
+html:not([data-ve-theme]) #root .ve-sidebar {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.070), transparent 34%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.68), rgba(0, 3, 10, 0.48)) !important;
+  border-right-color: rgba(34, 211, 238, 0.14) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(34, 211, 238, 0.09),
+    18px 0 70px rgba(0, 0, 0, 0.32) !important;
+}
+
+/* ==========================================================
+   THEME STORE / EPIC VAULT REDESIGN
+   One fused sellable theme hub.
+   ========================================================== */
+
+.ve-theme-store-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(18px, 3vw, 38px);
+}
+
+.ve-theme-store-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 34px;
+  border: 1px solid rgba(var(--skin-1), 0.13);
+  background:
+    radial-gradient(circle at 14% 0%, rgba(var(--skin-1), 0.16), transparent 34%),
+    radial-gradient(circle at 88% 16%, rgba(var(--skin-2), 0.10), transparent 36%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.82), rgba(1, 3, 10, 0.68));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.035),
+    0 30px 110px rgba(0,0,0,0.36),
+    0 0 70px rgba(var(--skin-1),0.08);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.ve-theme-store-title {
+  background: linear-gradient(135deg, #fff, rgb(var(--skin-1)), rgb(var(--skin-2)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+.ve-theme-pack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.ve-theme-pack-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 250px;
+  border-radius: 30px;
+  border: 1px solid rgba(var(--skin-1), 0.105);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.13), transparent 36%),
+    radial-gradient(circle at 86% 14%, rgba(var(--skin-2), 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.80), rgba(1, 3, 10, 0.68));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.028),
+    0 22px 80px rgba(0,0,0,0.30);
+  backdrop-filter: blur(22px) saturate(1.18);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.ve-theme-pack-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(var(--skin-1), 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 28px 100px rgba(0,0,0,0.36),
+    0 0 48px rgba(var(--skin-1),0.10);
+}
+
+.ve-theme-pack-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 35% 20%, rgba(var(--skin-1), 0.17), transparent 22%),
+    radial-gradient(circle at 70% 62%, rgba(var(--skin-2), 0.10), transparent 24%);
+  opacity: 0.7;
+  filter: blur(18px);
+}
+
+.ve-theme-pack-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ve-theme-preview-orb {
+  height: 74px;
+  width: 74px;
+  border-radius: 24px;
+  border: 1px solid rgba(var(--skin-1), 0.22);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.22), transparent 26%),
+    linear-gradient(135deg, rgb(var(--skin-1)), rgb(var(--skin-2)));
+  box-shadow:
+    0 0 34px rgba(var(--skin-1), 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+.ve-theme-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--skin-1), 0.16);
+  background: rgba(var(--skin-1), 0.08);
+  color: rgb(var(--skin-1));
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ve-theme-price-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(var(--skin-1), 0.18);
+  background: rgba(1, 3, 10, 0.42);
+  color: white;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ve-theme-store-action {
+  border-radius: 18px;
+  border: 1px solid rgba(var(--skin-1), 0.18) !important;
+  background: linear-gradient(135deg, rgba(var(--skin-1),0.92), rgba(var(--skin-2),0.78)) !important;
+  color: #020617 !important;
+  font-weight: 900;
+  box-shadow: 0 16px 45px rgba(var(--skin-1),0.16) !important;
+}
+
+/* ==========================================================
+   SIDEBAR WHITER GLASS TUNING
+   Slightly brighter glass, not glowing too hard.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(var(--skin-1), 0.085), transparent 34%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.070), rgba(248, 250, 252, 0.030)),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.62), rgba(1, 3, 10, 0.44)) !important;
+  border-right: 1px solid rgba(var(--skin-1), 0.18) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.075),
+    inset 1px 0 0 rgba(255, 255, 255, 0.035),
+    8px 0 34px rgba(var(--skin-1), 0.050),
+    22px 0 80px rgba(0, 0, 0, 0.22) !important;
+}
+
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.075), rgba(2, 6, 23, 0.30)) !important;
+  border-color: rgba(255, 255, 255, 0.070) !important;
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.085), rgba(var(--skin-1), 0.075)) !important;
+  border-color: rgba(var(--skin-1), 0.20) !important;
+}
+
+/* ==========================================================
+   SIDEBAR WHITER GLASS TUNING
+   Slightly brighter glass, not glowing too hard.
+   ========================================================== */
+
+#root .ve-sidebar {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(var(--skin-1), 0.085), transparent 34%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.070), rgba(248, 250, 252, 0.030)),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.62), rgba(1, 3, 10, 0.44)) !important;
+  border-right: 1px solid rgba(var(--skin-1), 0.18) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.075),
+    inset 1px 0 0 rgba(255, 255, 255, 0.035),
+    8px 0 34px rgba(var(--skin-1), 0.050),
+    22px 0 80px rgba(0, 0, 0, 0.22) !important;
+}
+
+#root .ve-sidebar [class*="rounded-2xl"],
+#root .ve-sidebar [class*="rounded-3xl"] {
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.075), rgba(2, 6, 23, 0.30)) !important;
+  border-color: rgba(255, 255, 255, 0.070) !important;
+}
+
+#root .ve-sidebar button:hover,
+#root .ve-sidebar a:hover,
+#root .ve-sidebar .ve-nav-item-active,
+#root .ve-sidebar [aria-current="page"] {
+  background:
+    linear-gradient(135deg, rgba(248, 250, 252, 0.085), rgba(var(--skin-1), 0.075)) !important;
+  border-color: rgba(var(--skin-1), 0.20) !important;
+}
+
+/* ==========================================================
+   VOUCH EDGE STAR PARTICLE BACKGROUND — STRONG VERSION
+   Visible galaxy particles behind the whole product.
+   ========================================================== */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #00030a !important;
+}
+
+#root {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+/* Content always above stars */
+#root > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Main VouchEdge star particles */
+#root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 1 !important;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255,255,255,0.95) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 18% 28%, rgba(var(--skin-1),0.95) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 32% 18%, rgba(255,255,255,0.75) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 44% 34%, rgba(var(--skin-2),0.80) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 16%, rgba(255,255,255,0.90) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 72% 30%, rgba(var(--skin-1),0.85) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 86% 14%, rgba(255,255,255,0.75) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 92% 52%, rgba(var(--skin-3),0.75) 0 1px, transparent 2px),
+
+    radial-gradient(circle at 14% 66%, rgba(255,255,255,0.70) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 28% 82%, rgba(var(--skin-1),0.75) 0 1.1px, transparent 2px),
+    radial-gradient(circle at 50% 72%, rgba(255,255,255,0.85) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 66% 88%, rgba(var(--skin-2),0.70) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.75) 0 1px, transparent 1.8px),
+
+    radial-gradient(circle at 18% 18%, rgba(var(--skin-1),0.075), transparent 26%),
+    radial-gradient(circle at 78% 12%, rgba(var(--skin-2),0.055), transparent 30%),
+    linear-gradient(135deg, #00030a 0%, #020617 48%, #00020a 100%);
+  background-size:
+    420px 420px,
+    520px 520px,
+    460px 460px,
+    600px 600px,
+    540px 540px,
+    660px 660px,
+    500px 500px,
+    620px 620px,
+    560px 560px,
+    640px 640px,
+    520px 520px,
+    700px 700px,
+    580px 580px,
+    auto,
+    auto,
+    auto;
+  animation: veStarDrift 42s linear infinite;
+}
+
+/* Floating colored nebula dust */
+#root::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.38;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(var(--skin-1), 0.14), transparent 22%),
+    radial-gradient(circle at 74% 18%, rgba(var(--skin-2), 0.09), transparent 24%),
+    radial-gradient(circle at 54% 76%, rgba(var(--skin-3), 0.075), transparent 26%);
+  filter: blur(22px);
+  animation: veGalaxyDrift 22s ease-in-out infinite alternate;
+}
+
+@keyframes veStarDrift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      center,
+      center,
+      center;
+  }
+
+  to {
+    background-position:
+      160px 260px,
+      -180px 220px,
+      140px -240px,
+      -220px -180px,
+      200px 160px,
+      -260px 180px,
+      180px -220px,
+      -140px 260px,
+      220px 140px,
+      -180px -260px,
+      160px 220px,
+      -240px 180px,
+      200px -160px,
+      center,
+      center,
+      center;
+  }
+}
+
+@keyframes veGalaxyDrift {
+  from {
+    transform: translate3d(-1.2%, -0.8%, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(1.2%, 0.8%, 0) scale(1.04);
+  }
+}
+
+/* Let stars show through page backgrounds */
+.ve-page,
+.ve-app-bg,
+.ve-grid-bg,
+.ve-themed-bg {
+  background: transparent !important;
+}
+
+/* Keep cards dark enough over particles */
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"],
+#root main [class*="rounded-xl"],
+.ve-island,
+.ve-panel,
+.ve-card {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(var(--skin-1), 0.035), transparent 38%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.80), rgba(1, 3, 10, 0.72)) !important;
+}
+
+/* ==========================================================
+   VOUCH EDGE GALAXY FIX — LESS WALLPAPER, MORE PRODUCT BACKDROP
+   ========================================================== */
+
+/* Kill the giant top sky feeling */
+#root {
+  min-height: 100vh;
+  background: #00030a !important;
+}
+
+#root > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Better irregular particle field */
+#root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.72 !important;
+  background:
+    radial-gradient(circle at 7% 9%, rgba(255,255,255,0.60) 0 0.75px, transparent 1.35px),
+    radial-gradient(circle at 23% 17%, rgba(var(--skin-1),0.55) 0 0.8px, transparent 1.45px),
+    radial-gradient(circle at 41% 11%, rgba(255,255,255,0.46) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 63% 22%, rgba(var(--skin-2),0.42) 0 0.85px, transparent 1.55px),
+    radial-gradient(circle at 82% 8%, rgba(255,255,255,0.50) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 92% 31%, rgba(var(--skin-1),0.40) 0 0.8px, transparent 1.5px),
+
+    radial-gradient(circle at 12% 58%, rgba(255,255,255,0.38) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 31% 74%, rgba(var(--skin-1),0.42) 0 0.75px, transparent 1.4px),
+    radial-gradient(circle at 52% 63%, rgba(255,255,255,0.42) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 70% 82%, rgba(var(--skin-2),0.34) 0 0.75px, transparent 1.4px),
+    radial-gradient(circle at 88% 67%, rgba(255,255,255,0.36) 0 0.7px, transparent 1.3px),
+
+    radial-gradient(circle at 14% 14%, rgba(var(--skin-1),0.060), transparent 24%),
+    radial-gradient(circle at 84% 18%, rgba(var(--skin-2),0.045), transparent 28%),
+    radial-gradient(circle at 50% 82%, rgba(var(--skin-3),0.035), transparent 32%),
+    linear-gradient(135deg, #00030a 0%, #020617 48%, #00020a 100%);
+  background-size:
+    517px 421px,
+    691px 557px,
+    463px 593px,
+    743px 631px,
+    587px 467px,
+    809px 709px,
+    617px 503px,
+    733px 641px,
+    569px 719px,
+    821px 577px,
+    641px 683px,
+    auto,
+    auto,
+    auto,
+    auto;
+  background-position:
+    0 0,
+    83px 41px,
+    151px 73px,
+    32px 111px,
+    219px 13px,
+    377px 151px,
+    91px 229px,
+    261px 337px,
+    407px 193px,
+    173px 421px,
+    499px 271px,
+    center,
+    center,
+    center,
+    center;
+  animation: veStarDriftSubtle 80s linear infinite;
+}
+
+/* Softer nebula, not a bright cloud */
+#root::after {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.20;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(var(--skin-1), 0.08), transparent 24%),
+    radial-gradient(circle at 78% 22%, rgba(var(--skin-2), 0.055), transparent 26%),
+    radial-gradient(circle at 56% 76%, rgba(var(--skin-3), 0.045), transparent 28%);
+  filter: blur(24px);
+  animation: veGalaxyDrift 28s ease-in-out infinite alternate;
+}
+
+@keyframes veStarDriftSubtle {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-36px, 42px, 0);
+  }
+}
+
+/* Prevent page wrappers from painting over stars */
+.ve-page,
+.ve-app-bg,
+.ve-grid-bg,
+.ve-themed-bg {
+  background: transparent !important;
+}
+
+/* Keep the product readable over particles */
+#root main [class*="rounded-3xl"],
+#root main [class*="rounded-2xl"],
+#root main [class*="rounded-xl"],
+.ve-island,
+.ve-panel,
+.ve-card {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(var(--skin-1), 0.030), transparent 38%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.84), rgba(1, 3, 10, 0.76)) !important;
+}
+
+/* Remove any accidental big top padding/margin from themed shells */
+.ve-theme-store-shell,
+.ve-page-shell,
+main {
+  padding-top: min(var(--page-top-padding, 24px), 28px);
+}
+

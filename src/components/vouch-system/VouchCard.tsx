@@ -24,6 +24,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Vouch, Parlay, CreatorProofProfile, FeedPost } from '../../types';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 interface VouchCardProps {
   key?: any;

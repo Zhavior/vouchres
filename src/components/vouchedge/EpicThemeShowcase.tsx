@@ -23,6 +23,7 @@ import {
 import { THEME_REGISTRY, type VisualTheme } from "../../theme/themeRegistry";
 import { useTheme } from "../theme/ThemeProvider";
 import { ThemeParticleRouter } from "./ParticleFields";
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function extractHex(cls: string): string {

@@ -48,6 +48,13 @@ export interface FeatureLayout {
 
 export const ALL_FEATURES: FeatureConfig[] = [
 
+  // Edge Island — ungrouped, renders first/headerless above "Daily".
+  // Routes to the `welcome` section: when authenticated, TheEdgeShell renders
+  // its real "The Island" dashboard (stats, quick jumps, pending picks, AI
+  // seat) instead of the public sell screen. This is the only nav entry
+  // point back to that dashboard once a user has navigated elsewhere.
+  { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
+
   // Daily — sport-scoped boards and slates
   { id: "hr_board", label: "Daily Edge Board", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },
@@ -59,6 +66,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "player_edge_lab", label: "Player Edge Lab", icon: "UserRoundSearch", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "team_matchup_lab", label: "Team Matchup Lab", icon: "Swords", enabled: true, order: 8, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "pro_graphs_lab", label: "Pro Graphs Lab", icon: "LineChart", enabled: true, order: 9, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 9.5, group: "Pro Labs" },
 
   // Build & Track
   { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: true, order: 10, group: "Build & Track" },
@@ -70,15 +78,13 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },
 
   // Social
-  { id: "feed", label: "Home Feed", icon: "Home", enabled: true, order: 15, group: "Social" },
-  { id: "leaderboard", label: "Top Cappers", icon: "Award", enabled: true, order: 16, group: "Social" },
-  { id: "subscriber_hub", label: "Subscriber Clubs", icon: "MessageSquare", enabled: true, order: 17, group: "Social" },
+  { id: "feed", label: "Home", icon: "Home", enabled: true, order: 15, group: "Social" },
+  { id: "leaderboard", label: "Top Cappers", icon: "Trophy", enabled: true, order: 16, group: "Social" },
+  { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
   { id: "premium", label: "PRO Premium Tiers", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
-  { id: "epic_themes", label: "Epic Themes", icon: "Sparkles", enabled: true, order: 20, group: "Account" },
-  { id: "profile", label: "Profile", icon: "User", enabled: true, order: 21, group: "Account", locked: true },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 

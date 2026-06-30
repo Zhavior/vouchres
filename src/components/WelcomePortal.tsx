@@ -83,6 +83,10 @@ function accentClasses(accent: 'cyan' | 'violet' | 'amber') {
   };
 }
 
+function triggerEdgeIslandTransition() {
+  sessionStorage.setItem("vouchedge_entering_edge_island", "true");
+}
+
 export default function WelcomePortal({ onSectionChange }: Props) {
   const [isEntering, setIsEntering] = useState(false);
   const [amplifierOpen, setAmplifierOpen] = useState(false);
@@ -119,7 +123,8 @@ export default function WelcomePortal({ onSectionChange }: Props) {
     setIsEntering(true);
 
     window.setTimeout(() => {
-      onSectionChange(section);
+      triggerEdgeIslandTransition();
+    onSectionChange(section);
     }, 620);
   }
 

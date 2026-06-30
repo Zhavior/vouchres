@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
 import { startStripeCheckout, openBillingPortal, fetchBillingStatus, tierToSubscriptionTier } from '../lib/billingClient';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface PremiumSubPageProps {
   profile: CreatorProofProfile;

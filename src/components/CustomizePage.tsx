@@ -11,6 +11,7 @@ import {
   toggleFeature, moveFeature, setViewMode, resetLayout, getDefaultLayout,
 } from "../lib/featureConfig";
 import { canAccessThemeStore } from "../lib/adminDevAccess";
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 /* ============================================================================
    CustomizePage — modular feature management

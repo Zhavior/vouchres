@@ -60,6 +60,62 @@ export interface PitcherStats {
 const hitterCache = new TTLCache<HitterStats>(15 * 60_000);
 const pitcherCache = new TTLCache<PitcherStats>(15 * 60_000);
 
+export interface BatterVsPitcher {
+  ab: number;
+  h: number;
+  doubles: number;
+  triples: number;
+  hr: number;
+  bb: number;
+  k: number;
+  avg: number | null;
+  slg: number | null;
+  ops: number | null;
+  sampleSize: number; // = ab (convenience)
+}
+
+const bvpCache = new TTLCache<BatterVsPitcher | null>(60 * 60_000);
+
+/**
+ * Career batter-vs-pitcher totals from MLB Stats API (vsPlayerTotal).
+ * Returns null when there is no recorded history. Never synthesizes numbers.
+ */
+export async function getBatterVsPitcher(
+  batterId: number,
+  pitcherId: number
+): Promise<BatterVsPitcher | null> {
+  return bvpCache.getOrSet(`bvp:${batterId}:${pitcherId}`, async () => {
+    try {
+      const data = await fetchJson<any>(
+        `${BASE}/v1/people/${batterId}/stats?stats=vsPlayerTotal&opposingPlayerId=${pitcherId}&group=hitting&sportId=1`
+      );
+      const s = data?.stats?.[0]?.splits?.[0]?.stat;
+      if (!s) return null;
+      const ab = Number(s.atBats) || 0;
+      const num = (v: unknown) => {
+        const n = parseFloat(String(v));
+        return Number.isFinite(n) ? n : null;
+      };
+      return {
+        ab,
+        h: Number(s.hits) || 0,
+        doubles: Number(s.doubles) || 0,
+        triples: Number(s.triples) || 0,
+        hr: Number(s.homeRuns) || 0,
+        bb: Number(s.baseOnBalls) || 0,
+        k: Number(s.strikeOuts) || 0,
+        avg: num(s.avg),
+        slg: num(s.slg),
+        ops: num(s.ops),
+        sampleSize: ab,
+      };
+    } catch (err) {
+      console.warn(`[statsClient] BvP failed ${batterId} vs ${pitcherId}:`, (err as Error).message);
+      return null;
+    }
+  });
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`${res.status} ${url}`);

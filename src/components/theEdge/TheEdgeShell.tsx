@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Bell, Bot, Check, CreditCard, Crown, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
 import '../edgePortal/edgePortalTheme.css';
+import Starfield from '../welcomePortal/Starfield';
 import { safeJsonFetch } from '../../api/safeApiClient';
 import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
@@ -102,6 +103,40 @@ const PRIMARY = 'rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3
 const SECONDARY = 'rounded-2xl border border-cyan-300/25 bg-cyan-300/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5';
 const GHOST = 'rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-3.5 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:text-white';
 
+const TRUST_POINTS = [
+  'Official MLB data only',
+  'No fake confirmed lineups',
+  'Every saved pick stays visible',
+  'Research & entertainment only',
+];
+
+const WORKSPACE_MODULES = [
+  {
+    title: 'Daily Board',
+    body: 'Official slate context, with lineup status shown honestly before lock.',
+    section: 'daily_players',
+    icon: Radio,
+  },
+  {
+    title: 'Build',
+    body: 'Save parlays and keep the reasoning attached to the slip.',
+    section: 'build',
+    icon: Layers3,
+  },
+  {
+    title: 'Ledger',
+    body: 'Track pending, won, and lost results without hiding misses.',
+    section: 'results',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Pro Labs',
+    body: 'Move into deeper player, matchup, and graph research when data exists.',
+    section: 'player_edge_lab',
+    icon: TrendingUp,
+  },
+];
+
 function friendlyAuthError(message?: string) {
   const text = String(message ?? '').toLowerCase();
   if (text.includes('invalid login')) return 'Email or password is incorrect.';
@@ -135,6 +170,10 @@ type DashboardSummaryResponse = {
     created_at?: string | null;
   }>;
 };
+
+function triggerEdgeIslandTransition() {
+  sessionStorage.setItem("vouchedge_entering_edge_island", "true");
+}
 
 export default function TheEdgeShell({
   mode,
@@ -268,6 +307,7 @@ export default function TheEdgeShell({
   }, [edgeLayer]);
 
   function enterSite(section = 'feed') {
+    triggerEdgeIslandTransition();
     onSectionChange(section);
     if (presentation === 'overlay') onClose?.();
   }
@@ -373,8 +413,8 @@ export default function TheEdgeShell({
 
   const shellClass =
     presentation === 'page'
-      ? 'min-h-screen overflow-hidden bg-slate-950 text-white'
-      : 'relative mx-auto flex h-[92vh] max-w-7xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 text-white shadow-2xl shadow-black/60';
+      ? 'edge-space-shell ve-page min-h-screen overflow-hidden text-white'
+      : 'edge-space-shell ve-page relative mx-auto flex h-[92vh] max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/10 text-white shadow-2xl shadow-black/40';
 
   const isAuthLayer = edgeLayer === 'login' || edgeLayer === 'signup';
 
@@ -386,46 +426,47 @@ export default function TheEdgeShell({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
-      <div className="edge-home-backdrop" />
+      <div className="edge-space-backdrop" />
+      <Starfield />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className="border-b border-white/[0.07] bg-slate-950/75 px-4 py-4 backdrop-blur-xl sm:px-6">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <header className="edge-space-header border-b border-white/10 bg-black/45 px-4 py-4 backdrop-blur-2xl sm:px-6">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-slate-100">
               <Sparkles className="h-4 w-4" />
             </span>
             <span className="text-sm font-black tracking-tight text-white">
-              Vouch<span className="text-cyan-300">Edge</span>
+              Vouch<span className="text-slate-300">Edge</span>
             </span>
             <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:inline">
-              MLB Research
+              Trust-first MLB research
             </span>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
             {edgeLayer === 'intro' && (
               <>
-                <button onClick={() => setEdgeLayer('login')} className="rounded-xl border border-slate-700 bg-slate-900/80 px-3.5 py-2 text-xs font-black text-slate-300 transition hover:text-white">
+                <button onClick={() => setEdgeLayer('login')} className="ve-button-ghost px-3.5 py-2 text-xs font-black">
                   <span className="inline-flex items-center gap-1.5"><LogIn className="h-3.5 w-3.5" /> Login</span>
                 </button>
-                <button onClick={() => openSignup('pro_trial')} className="hidden rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5 sm:inline-flex">
+                <button onClick={() => openSignup('pro_trial')} className="ve-button-primary hidden px-3.5 py-2 text-xs font-black text-slate-950 sm:inline-flex">
                   Get Started
                 </button>
               </>
             )}
             {isAuthLayer && (
-              <button onClick={() => setEdgeLayer('intro')} className="rounded-xl border border-slate-700 bg-slate-900/80 px-3.5 py-2 text-xs font-black text-slate-300 transition hover:text-white">
+              <button onClick={() => setEdgeLayer('intro')} className="ve-button-ghost px-3.5 py-2 text-xs font-black">
                 Back
               </button>
             )}
             {(edgeLayer === 'dashboard' || edgeLayer === 'welcomeBack') && (
-              <button onClick={() => enterSite('feed')} className="rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5">
+              <button onClick={() => enterSite('feed')} className="ve-button-primary px-3.5 py-2 text-xs font-black text-slate-950">
                 Enter VouchEdge Site
               </button>
             )}
             {presentation === 'overlay' && (
-              <button onClick={onClose} className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 text-slate-300 transition hover:text-white">
+              <button onClick={onClose} className="ve-button-ghost p-2">
                 <X className="h-5 w-5" />
               </button>
             )}
@@ -433,7 +474,7 @@ export default function TheEdgeShell({
           </div>
         </header>
 
-        <div className={presentation === 'page' ? 'flex-1 overflow-y-auto p-4 sm:p-8' : 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
+        <div className={presentation === 'page' ? 'flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8' : 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
           <AnimatePresence mode="wait">
 
             {/* ── INTRO: one sports-native sell screen (video + welcome merged) ── */}
@@ -444,101 +485,135 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
-                className="edge-welcome-front mx-auto max-w-6xl"
+                className="edge-welcome-front mx-auto max-w-7xl"
               >
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-start">
-                  <div className="edge-home-panel rounded-3xl p-5 sm:p-7">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
-                      <ShieldCheck className="h-3.5 w-3.5" /> Verified research workspace
+                <div className="edge-space-hero relative overflow-hidden rounded-[2rem] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
+                  <div className="edge-space-orbit edge-space-orbit-one" />
+                  <div className="edge-space-orbit edge-space-orbit-two" />
+
+                  <div className="relative z-10 grid gap-8 2xl:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] 2xl:items-center">
+                    <div className="max-w-3xl">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200">
+                        <ShieldCheck className="h-3.5 w-3.5" /> MLB probability workspace
+                      </div>
+
+                      <h1 className="mt-6 text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl xl:text-7xl 2xl:text-8xl">
+                        VouchEdge
+                      </h1>
+
+                      <p className="mt-5 max-w-2xl text-xl font-semibold leading-8 text-slate-200 sm:text-2xl">
+                        Research the slate. Build the slip. Keep the receipts.
+                      </p>
+
+                      <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
+                        A simple, space-clean MLB command surface for daily boards, parlays, alerts, and proof tracking. Lineups and players stay labeled by their real status.
+                      </p>
+
+                      <div className="mt-7 flex flex-wrap gap-3">
+                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+                        </button>
+                        <button onClick={() => enterSite('daily_players')} className="edge-space-secondary rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                          Open Daily Board
+                        </button>
+                        <button onClick={() => setEdgeLayer('login')} className="edge-space-ghost rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                          <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
+                        </button>
+                      </div>
+
+                      <div className="mt-7 grid max-w-xl gap-2 sm:grid-cols-2">
+                        {TRUST_POINTS.map((point) => (
+                          <div key={point} className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                            <Check className="h-4 w-4 text-slate-100" />
+                            {point}
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl">
-                      VouchEdge
-                    </h1>
-
-                    <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-                      Clean MLB research, saved parlays, alerts, and tracked results in one dashboard.
-                    </p>
-
-                    <div className="mt-6 grid max-w-md grid-cols-3 gap-2">
-                      <Stat label="Games today" value={stats.gamesToday || '—'} tone="cyan" />
-                      <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
-                      <Stat label="Tracked" value="100%" tone="emerald" />
-                    </div>
-
-                    <div className="mt-7 flex flex-wrap gap-3">
-                      <button onClick={() => openSignup('pro_trial')} className={PRIMARY}>
-                        <span className="inline-flex items-center gap-2">Start 1.5-week free trial <ArrowRight className="h-4 w-4" /></span>
-                      </button>
-                      <button onClick={() => setEdgeLayer('login')} className={SECONDARY}>
-                        <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
-                      </button>
-                      <button onClick={() => enterSite('feed')} className={GHOST}>Explore site</button>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-bold text-slate-500">
-                      <span>Research &amp; entertainment only</span><span>·</span><span>No guaranteed outcomes</span>
-                    </div>
-                  </div>
-
-                  <motion.div
-                    className="edge-slate-stage"
-                    initial={{ opacity: 0, scale: 0.96, y: 24 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.1, ease }}
-                  >
-                    <div className="edge-home-card relative overflow-hidden rounded-3xl p-5 shadow-2xl shadow-black/40">
-                      <div className="mb-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs font-black text-white">
-                          <Radio className="h-4 w-4 text-cyan-300" /> Today’s MLB slate
+                    <motion.div
+                      className="edge-slate-stage"
+                      initial={{ opacity: 0, scale: 0.96, y: 24 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.7, delay: 0.1, ease }}
+                    >
+                      <div className="edge-product-panel relative overflow-hidden rounded-[1.75rem] p-4 shadow-2xl shadow-black/45 sm:p-5">
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Today</div>
+                            <div className="mt-1 text-lg font-black text-white">MLB slate monitor</div>
+                          </div>
+                          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-200">
+                            {slate.length ? `${slate.length} games` : 'Loading'}
+                          </span>
                         </div>
-                        <span className="rounded-full border border-cyan-200/20 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-bold text-cyan-100">{slate.length} games</span>
-                      </div>
 
-                      <div className="max-h-[340px] divide-y divide-white/10 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/20">
-                        {slate.length === 0 ? (
-                          <div className="px-4 py-10 text-center text-xs text-slate-400">Loading today’s verified slate...</div>
-                        ) : (
-                          slate.map((g, i) => (
-                            <motion.div
-                              key={`${g.away}-${g.home}-${i}`}
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.04, duration: 0.3 }}
-                              className="flex items-center justify-between px-4 py-2.5"
-                            >
-                              <div className="flex items-center gap-2 font-mono text-sm font-black text-slate-100">
-                                <span className="w-10">{g.away}</span>
-                                <span className="text-slate-500">@</span>
-                                <span className="w-10">{g.home}</span>
-                              </div>
-                              {g.live ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-rose-300">
-                                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
-                                </span>
-                              ) : (
-                                <span className="text-[11px] font-mono text-slate-400">{g.time}</span>
-                              )}
-                            </motion.div>
-                          ))
-                        )}
-                      </div>
+                        <div className="edge-slate-list max-h-[330px] divide-y divide-white/10 overflow-y-auto rounded-2xl border border-white/10 bg-black/25">
+                          {slate.length === 0 ? (
+                            <div className="px-4 py-10 text-center text-xs text-slate-400">Loading today’s official slate...</div>
+                          ) : (
+                            slate.map((g, i) => (
+                              <motion.div
+                                key={`${g.away}-${g.home}-${i}`}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.04, duration: 0.3 }}
+                                className="flex items-center justify-between gap-3 px-4 py-3"
+                              >
+                                <div className="min-w-0 flex items-center gap-2 font-mono text-sm font-black text-slate-100">
+                                  <span className="w-10 truncate">{g.away}</span>
+                                  <span className="text-slate-500">@</span>
+                                  <span className="w-10 truncate">{g.home}</span>
+                                </div>
+                                {g.live ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-rose-200">
+                                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-300" /> Live
+                                  </span>
+                                ) : (
+                                  <span className="text-[11px] font-mono text-slate-400">{g.time || 'TBD'}</span>
+                                )}
+                              </motion.div>
+                            ))
+                          )}
+                        </div>
 
-                      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                        {[['Proof', ShieldCheck], ['Research', TrendingUp], ['Community', Users]].map(([label, Icon]) => {
-                          const I = Icon as typeof ShieldCheck;
-                          return (
-                            <div key={label as string} className="edge-mini-glass rounded-2xl px-2 py-3">
-                              <I className="mx-auto h-4 w-4 text-cyan-300" />
-                              <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-300">{label as string}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </motion.div>
+                        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                          <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
+                          <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
+                          <Stat label="Saved slips" value={stats.saved} tone="white" />
+                        </div>
 
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold leading-5 text-slate-300">
+                          Official lineups are treated as confirmed only when the source says they are. Preview rows stay clearly marked until then.
+                        </div>
+                      </div>
+                    </motion.div>
+
+                  </div>
                 </div>
+
+                <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {WORKSPACE_MODULES.map((module) => {
+                    const Icon = module.icon;
+                    return (
+                      <button
+                        key={module.title}
+                        type="button"
+                        onClick={() => enterSite(module.section)}
+                        className="edge-space-module group rounded-3xl p-4 text-left transition hover:-translate-y-0.5"
+                      >
+                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="text-base font-black text-white">{module.title}</h3>
+                        <p className="mt-2 text-sm font-semibold leading-6 text-slate-400">{module.body}</p>
+                        <div className="mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-slate-300 opacity-70 transition group-hover:opacity-100">
+                          Open <ArrowRight className="h-3.5 w-3.5" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </section>
               </motion.section>
             )}
 
@@ -550,7 +625,7 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -32 }}
                 transition={{ duration: 0.4, ease }}
-                className="mx-auto max-w-md rounded-3xl border border-slate-800 bg-slate-950/70 p-6 shadow-2xl shadow-black/30"
+                className="ve-panel ve-panel-glow mx-auto max-w-md p-6"
               >
                 <form onSubmit={handleLoginSubmit}>
                   <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Login</div>
@@ -558,7 +633,7 @@ export default function TheEdgeShell({
                   <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then The Edge becomes your Island.</p>
                   <div className="mt-6 grid gap-3">
                     <input
-                      className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                      className="ve-input px-4 py-3 text-sm"
                       placeholder="Email"
                       type="email"
                       autoComplete="email"
@@ -566,7 +641,7 @@ export default function TheEdgeShell({
                       onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
                     />
                     <input
-                      className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                      className="ve-input px-4 py-3 text-sm"
                       placeholder="Password"
                       type="password"
                       autoComplete="current-password"
@@ -620,7 +695,7 @@ export default function TheEdgeShell({
                   })}
                 </div>
 
-                <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 shadow-2xl shadow-black/30">
+                <div className="ve-panel ve-panel-glow p-6">
                   <AnimatePresence mode="wait">
 
                     {/* 1) FEATURES */}
@@ -637,7 +712,7 @@ export default function TheEdgeShell({
                           ].map(([Icon, title, body]) => {
                             const I = Icon as typeof ShieldCheck;
                             return (
-                              <div key={title as string} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                              <div key={title as string} className="ve-card ve-card-hover p-4">
                                 <I className="h-5 w-5 text-cyan-300" />
                                 <div className="mt-3 text-sm font-black text-white">{title as string}</div>
                                 <p className="mt-1 text-[11px] leading-5 text-slate-500">{body as string}</p>
@@ -658,14 +733,14 @@ export default function TheEdgeShell({
                         <h2 className="mt-2 text-3xl font-black text-white">Your Edge profile.</h2>
                         <div className="mt-5 grid gap-3">
                           <input
-                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            className="ve-input px-4 py-3 text-sm"
                             placeholder="Name"
                             autoComplete="name"
                             value={authForm.name}
                             onChange={(event) => setAuthForm((form) => ({ ...form, name: event.target.value }))}
                           />
                           <input
-                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            className="ve-input px-4 py-3 text-sm"
                             placeholder="Email"
                             type="email"
                             autoComplete="email"
@@ -673,7 +748,7 @@ export default function TheEdgeShell({
                             onChange={(event) => setAuthForm((form) => ({ ...form, email: event.target.value }))}
                           />
                           <input
-                            className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50"
+                            className="ve-input px-4 py-3 text-sm"
                             placeholder="Password"
                             type="password"
                             autoComplete="new-password"

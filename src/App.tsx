@@ -3,6 +3,8 @@ import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import ParlayStudio from './components/ParlayStudio';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
+import EdgeIslandCommandCenter from './components/theEdge/EdgeIslandCommandCenter';
+import { Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { apiUrl } from './lib/apiBase';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
@@ -22,10 +24,15 @@ import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
 import { normalizePlayerId } from './lib/mlbHeadshot';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
+import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
+import NbaNflArena from './components/NbaNflArena';
+import { VouchEdgeLoadingScreen } from "./components/loading";
+import { EdgePortalTransition } from "./components/transitions";
 
 const TheEdgeShell = lazy(() => import('./components/theEdge/TheEdgeShell'));
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
+const EdgeIslandPage = lazy(() => import('./pages/EdgeIslandPage'));
 const VouchBoard = lazy(() => import('./components/VouchBoard'));
 const ProfilePage = lazy(() => import('./components/ProfilePage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
@@ -274,6 +281,21 @@ function mapBackendParlay(pick: any): Parlay {
 }
 
 export default function App() {
+  const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
+    return sessionStorage.getItem("vouchedge_entering_edge_island") === "true";
+  });
+
+  useEffect(() => {
+    if (!edgePortalTransitionActive) return;
+
+    const timer = window.setTimeout(() => {
+      sessionStorage.removeItem("vouchedge_entering_edge_island");
+      setEdgePortalTransitionActive(false);
+    }, 1700);
+
+    return () => window.clearTimeout(timer);
+  }, [edgePortalTransitionActive]);
+
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
@@ -292,6 +314,17 @@ export default function App() {
   const profileRef = useRef<CreatorProofProfile | null>(null);
   const [isPendingRoute, startRouteTransition] = useTransition();
   const [isRouteSwitching, setIsRouteSwitching] = useState(false);
+
+  // The Edge Island — quick-launch popup dock, opened from the floating
+  // launcher button (mounted globally, under the notification bell).
+  const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
+
+  // Boot loader: `appReady` flips once initial local data is loaded; the loader
+  // then rushes to 100% and unmounts itself via `hideBootLoader`.
+  const [appReady, setAppReady] = useState(false);
+  const [hideBootLoader, setHideBootLoader] = useState(false);
+  const [vouchEdgeLoadProgress, setVouchEdgeLoadProgress] = useState(8);
+  const [vouchEdgeLoadMessage, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
 
   const navigateSection = (section: string) => {
     if (PUBLIC_SECTIONS.has(section)) {
@@ -332,6 +365,30 @@ export default function App() {
     setActiveSection('welcome');
   };
   
+  useEffect(() => {
+    if (hideBootLoader) return;
+
+    const messages = [
+      "Starting VouchEdge systems...",
+      "Loading AI ledger...",
+      "Syncing V.A.I smart picks...",
+      "Checking result engine...",
+      "Preparing premium command center...",
+    ];
+
+    let tick = 0;
+    const timer = window.setInterval(() => {
+      tick += 1;
+      setVouchEdgeLoadProgress((current) => {
+        if (appReady) return Math.min(100, current + 18);
+        return Math.min(92, current + 7);
+      });
+      setVouchEdgeLoadMessage(messages[Math.min(messages.length - 1, tick % messages.length)]);
+    }, 260);
+
+    return () => window.clearInterval(timer);
+  }, [appReady, hideBootLoader]);
+
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
@@ -532,6 +589,9 @@ export default function App() {
       console.error('LocalStorage load failed, using fallbacks', e);
       setPosts(INITIAL_POSTS);
       setProfile(INITIAL_PROFILE);
+    } finally {
+      // Initial local data is loaded — let the boot loader finish to 100%.
+      setAppReady(true);
     }
   }, []);
 
@@ -1002,6 +1062,15 @@ export default function App() {
     await pushParlayToBackend(savedParlay);
   };
 
+  const pushAiParlaysToBackend = async (parlays: Parlay[]): Promise<void> => {
+    if (!isSupabaseConfigured) return;
+
+    for (const parlay of parlays) {
+      if (!parlay.aiGenerated) continue;
+      await pushParlayToBackend(parlay);
+    }
+  };
+
   // Retry backend sync for a local-only or failed parlay.
   const handleRetryParlaySync = async (parlayId: string) => {
     const parlay = savedSlipsRef.current.find((p) => p.id === parlayId);
@@ -1076,6 +1145,7 @@ export default function App() {
     // Dedupe: drop any prior still-pending AI parlays before adding the new slate.
     const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
     syncSlips([...created, ...kept]);
+    void pushAiParlaysToBackend(created);
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays for today`,
@@ -1095,6 +1165,7 @@ export default function App() {
     }
     const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
     syncSlips([...created, ...kept]);
+    void pushAiParlaysToBackend(created);
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays`,
@@ -1220,6 +1291,8 @@ export default function App() {
         );
       case 'today':
         return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+      case 'island':
+        return <EdgeIslandPage onSectionChange={navigateSection} savedSlips={savedSlips} />;
       case 'feed':
         return (
           <HomeFeedPage
@@ -1354,6 +1427,12 @@ export default function App() {
             savedParlays={savedSlips}
           />
         );
+      case 'nba_nfl':
+        return (
+          <NbaNflArena
+            onSectionChange={navigateSection}
+          />
+        );
       case 'premium':
         return (
           <PremiumSubPage 
@@ -1429,6 +1508,9 @@ export default function App() {
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
+      {!hideBootLoader && (
+        <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
+      )}
       <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
         <AuthStatusBadge
           hideGuest={activeSection === 'welcome'}
@@ -1458,6 +1540,28 @@ export default function App() {
           {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
         </HomeFeedLayout>
         <AppNotificationsHost onNavigate={navigateSection} />
+
+        {/* The Edge Island launcher — sits directly under the notification
+            bell (which lives at bottom-44/40 right-6/8 in AppNotificationsHost). */}
+        {activeSection !== 'welcome' && (
+          <button
+            type="button"
+            onClick={() => setEdgeIslandOpen(true)}
+            aria-label="Open The Edge Island"
+            title="The Edge Island"
+            className="fixed bottom-28 md:bottom-24 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
+          >
+            <EdgeIslandIcon className="w-5 h-5 text-cyan-300" />
+          </button>
+        )}
+
+        <EdgeIslandCommandCenter
+          open={edgeIslandOpen}
+          onClose={() => setEdgeIslandOpen(false)}
+          onSectionChange={navigateSection}
+          savedSlips={savedSlips}
+          profile={profile}
+        />
       </AppErrorBoundary>
     </ThemeProvider>
   );

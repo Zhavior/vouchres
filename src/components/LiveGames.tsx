@@ -281,7 +281,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
     <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="live-games-root">
       
       {/* SECTION BANNER HERO */}
-      <div className="relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="live-games-banner">
+      <div className="ve-hero p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="live-games-banner">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-500/5 rounded-full blur-[100px] pointer-events-none" />
         

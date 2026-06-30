@@ -7,6 +7,10 @@ type TheEdgePageProps = {
   savedSlips: any[];
 };
 
+function triggerEdgeIslandTransition() {
+  sessionStorage.setItem("vouchedge_entering_edge_island", "true");
+}
+
 export default function TheEdgePage({
   isLoggedIn,
   onSectionChange,

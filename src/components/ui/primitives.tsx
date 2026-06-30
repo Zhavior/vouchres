@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 /* ============================================================================
    Format helpers — never throw, always return fallback on bad data

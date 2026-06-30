@@ -62,9 +62,9 @@ import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
   return (
-    <div className="mt-2 text-left p-3 rounded-xl border border-slate-800/80 bg-[#070b13]/60 hover:border-slate-700 transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm select-none">
+    <div className="mt-2 text-left p-3 rounded-xl border border-cyan-300/[0.045] bg-[#070b13]/60 hover:border-cyan-300/[0.08] transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm select-none">
       <div className="flex items-center gap-1.5 text-[11px]">
-        <div className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 font-bold text-[9px] text-slate-300 flex items-center justify-center shrink-0">
+        <div className="w-5 h-5 rounded-full bg-slate-800 border border-cyan-300/[0.08] font-bold text-[9px] text-slate-300 flex items-center justify-center shrink-0">
           {quotedPost.displayName.split(' ').map(n => n[0]).join('')}
         </div>
         <span className="font-bold text-slate-200 truncate">{quotedPost.displayName}</span>
@@ -370,7 +370,7 @@ export default function FeedPostCard({
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
       <div 
-        className="bg-[#121824] rounded-3xl border border-slate-850 p-3 hover:border-slate-800 transition-all duration-200 animate-slide-up flex flex-col gap-1.5" 
+        className="bg-[#121824] rounded-3xl border border-cyan-300/[0.045] p-3 hover:border-cyan-300/[0.045] transition-all duration-200 animate-slide-up flex flex-col gap-1.5" 
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
@@ -433,7 +433,7 @@ export default function FeedPostCard({
 
         {/* Comments drawer */}
         {showComments && (
-          <div className="pt-2 border-t border-slate-850 space-y-3.5" id={`comments-expanded-${post.id}`}>
+          <div className="pt-2 border-t border-cyan-300/[0.045] space-y-3.5" id={`comments-expanded-${post.id}`}>
             {/* Create comment form */}
             <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
               <input 
@@ -441,7 +441,7 @@ export default function FeedPostCard({
                 placeholder="Post your reply..." 
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
+                className="flex-1 text-xs bg-[#0b0f19] text-white border border-cyan-300/[0.045] rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
                 required
                 id={`comment-input-${post.id}`}
               />
@@ -458,7 +458,7 @@ export default function FeedPostCard({
             {post.comments && post.comments.length > 0 && (
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1.5 scrollbar-thin mt-2" id={`comments-feed-${post.id}`}>
                 {post.comments.map((comment) => (
-                  <div key={comment.id} className="bg-slate-950/40 p-2.5 rounded-xl border border-slate-900 flex flex-col gap-1 text-left animate-slide-up">
+                  <div key={comment.id} className="bg-slate-950/24 backdrop-blur-xl p-2.5 rounded-xl border border-slate-900 flex flex-col gap-1 text-left animate-slide-up">
                     <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
                       <span className="font-bold text-slate-300">
                         {comment.displayName} <span className="text-slate-500">@{comment.username}</span>
@@ -482,7 +482,7 @@ export default function FeedPostCard({
 
   return (
     <article 
-      className="bg-[#121824] rounded-2xl border border-slate-850 p-4 hover:border-slate-800 transition-all duration-200 animate-slide-up relative overflow-hidden"
+      className="bg-[#121824] rounded-2xl border border-cyan-300/[0.045] p-4 hover:border-cyan-300/[0.045] transition-all duration-200 animate-slide-up relative overflow-hidden"
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
@@ -527,7 +527,7 @@ export default function FeedPostCard({
             {/* Badges bar */}
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {post.sportBadge && (
-                <span className="text-[9px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
+                <span className="text-[9px] bg-slate-900 border border-cyan-300/[0.045] text-slate-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
                   {post.sportBadge}
                 </span>
               )}
@@ -542,7 +542,7 @@ export default function FeedPostCard({
                   {post.sourceBadge}
                 </span>
               )}
-              <span className="text-[10px] text-slate-500 bg-slate-900/60 font-semibold border border-slate-850 px-1.5 py-0.2 rounded font-mono">
+              <span className="text-[10px] text-slate-500 bg-slate-900/60 font-semibold border border-cyan-300/[0.045] px-1.5 py-0.2 rounded font-mono">
                 {post.postType.replace('_', ' ')}
               </span>
             </div>
@@ -580,7 +580,7 @@ export default function FeedPostCard({
 
       {/* Attached Media Render container with Hover Navigation Slides */}
       {post.mediaUrl && !post.boardConfig && (
-        <div className="mb-3.5 bg-slate-950/40 rounded-xl overflow-hidden border border-slate-850 p-1 flex justify-center max-w-full relative group shadow-lg">
+        <div className="mb-3.5 bg-slate-950/24 backdrop-blur-xl rounded-xl overflow-hidden border border-cyan-300/[0.045] p-1 flex justify-center max-w-full relative group shadow-lg">
           {post.mediaType === 'video' ? (
             <video 
               src={post.mediaUrl} 
@@ -609,7 +609,7 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(0);
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-cyan-300/[0.045] text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Previous Image"
                       id={`slide-left-btn-${post.id}`}
                     >
@@ -624,7 +624,7 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(1);
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-cyan-300/[0.045] text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Next Image"
                       id={`slide-right-btn-${post.id}`}
                     >
@@ -633,7 +633,7 @@ export default function FeedPostCard({
                   )}
 
                   {/* Dot Indicators */}
-                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-slate-950/70 px-2.5 py-1 rounded-full border border-slate-800/40">
+                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-slate-950/30 backdrop-blur-xl px-2.5 py-1 rounded-full border border-cyan-300/[0.045]/40">
                     <span 
                       onClick={() => setActiveSlide(0)}
                       className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-150 ${activeSlide === 0 ? 'bg-sky-400 scale-125 shadow-glow' : 'bg-slate-500 hover:bg-slate-350'}`}
@@ -645,7 +645,7 @@ export default function FeedPostCard({
                   </div>
 
                   {/* Page indicator tag (e.g. 1/2, 2/2) */}
-                  <div className="absolute top-3 right-3 bg-slate-900/90 text-slate-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-slate-800/60 z-10">
+                  <div className="absolute top-3 right-3 bg-slate-900/90 text-slate-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-cyan-300/[0.045]/60 z-10">
                     {activeSlide + 1} / 2
                   </div>
                 </>
@@ -657,14 +657,14 @@ export default function FeedPostCard({
 
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#0b0f19] border border-sky-500/30 text-sky-400 rounded-full text-[10px] font-black tracking-wide shadow-2xl z-50 animate-bounce flex items-center gap-1.5">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#0b0f19] border border-sky-500/30 text-sky-400 rounded-full text-[10px] font-black tracking-wide shadow-xl z-50 animate-bounce flex items-center gap-1.5">
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Interactive Twitter Poll Render */}
       {localPoll && (
-        <div className="mb-3.5 bg-[#080c14]/80 border border-slate-850/80 rounded-xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up">
+        <div className="mb-3.5 bg-[#080c14]/80 border border-cyan-300/[0.045]/80 rounded-xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up">
           <p className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
             {localPoll.question || "Interactive Poll"}
@@ -682,7 +682,7 @@ export default function FeedPostCard({
                 <div key={idx} className="relative overflow-hidden rounded-lg">
                   {isVoted ? (
                     // Voted / Show Results Mode
-                    <div className="w-full flex items-center justify-between p-2.5 bg-slate-950/80 border border-slate-850/40 rounded-lg relative overflow-hidden">
+                    <div className="w-full flex items-center justify-between p-2.5 bg-slate-950/32 backdrop-blur-xl border border-cyan-300/[0.045]/40 rounded-lg relative overflow-hidden">
                       {/* Animated Percentage background fill */}
                       <div 
                         className={`absolute left-0 top-0 bottom-0 ${hasVotedThis ? 'bg-sky-500/10' : 'bg-slate-800/15'} transition-all duration-500`}
@@ -703,7 +703,7 @@ export default function FeedPostCard({
                     <button
                       type="button"
                       onClick={() => handleVote(idx)}
-                      className="w-full text-left p-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-sky-400 hover:text-sky-300 font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
+                      className="w-full text-left p-2.5 bg-slate-900 hover:bg-slate-850 border border-cyan-300/[0.045] text-sky-400 hover:text-sky-300 font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
                     >
                       {opt.text}
                     </button>
@@ -788,7 +788,7 @@ export default function FeedPostCard({
       )}
 
       {/* 4. Social interaction reaction bar */}
-      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-slate-850 text-slate-400 text-xs relative select-none">
+      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-cyan-300/[0.045] text-slate-400 text-xs relative select-none">
         {/* Comment icon button */}
         <button 
           onClick={() => setShowComments(!showComments)}
@@ -817,7 +817,7 @@ export default function FeedPostCard({
           </button>
 
           {showRepostMenu && (
-            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-[#0b0f19] border border-slate-800 rounded-xl shadow-xl p-1.5 z-40 animate-slide-up">
+            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-[#0b0f19] border border-cyan-300/[0.045] rounded-xl shadow-xl p-1.5 z-40 animate-slide-up">
               <button
                 onClick={() => {
                   onRepost(post.id);
@@ -878,7 +878,7 @@ export default function FeedPostCard({
         {/* Bookmark button */}
         <button
           onClick={handleBookmarkToggle}
-          className={`p-1.5 rounded-lg hover:bg-slate-950/40 transition-colors ${
+          className={`p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl transition-colors ${
             isBookmarked ? 'text-sky-400' : 'text-slate-500 hover:text-slate-350'
           }`}
           title="Bookmark"
@@ -889,7 +889,7 @@ export default function FeedPostCard({
         {/* Share Copy button */}
         <button
           onClick={handleCopyLink}
-          className="p-1.5 rounded-lg hover:bg-slate-950/40 text-slate-500 hover:text-slate-350 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl text-slate-500 hover:text-slate-350 transition-colors"
           title="Copy Link to Clipboard"
         >
           <Share className="w-4 h-4" />
@@ -908,7 +908,7 @@ export default function FeedPostCard({
               href={xShareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-slate-950/40 text-slate-500 hover:text-[#38bdf8] transition-colors flex items-center justify-center"
+              className="p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl text-slate-500 hover:text-[#38bdf8] transition-colors flex items-center justify-center"
               title="Share on X (Twitter)"
               id={`share-to-x-${post.id}`}
             >
@@ -920,12 +920,12 @@ export default function FeedPostCard({
 
       {/* Quote Vouch Modal overlay */}
       {showQuoteModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/32 backdrop-blur-xl backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <form 
             onSubmit={handleQuoteSubmit} 
-            className="w-full max-w-lg bg-[#0e131f] border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 animate-slide-up text-left"
+            className="w-full max-w-lg bg-[#0e131f] border border-cyan-300/[0.045] rounded-2xl p-5 shadow-xl space-y-4 animate-slide-up text-left"
           >
-            <div className="flex justify-between items-center border-b border-slate-850 pb-2.5">
+            <div className="flex justify-between items-center border-b border-cyan-300/[0.045] pb-2.5">
               <span className="font-bold text-slate-200 text-sm uppercase tracking-wide flex items-center gap-1.5">
                 <Quote className="w-4 h-4 text-sky-400" />
                 Quote Vouch Play
@@ -946,13 +946,13 @@ export default function FeedPostCard({
                 value={quoteText}
                 onChange={(e) => setQuoteText(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-slate-200 text-xs focus:outline-none focus:border-sky-500 transition-colors resize-none placeholder-slate-600 font-medium"
+                className="w-full bg-slate-950 border border-cyan-300/[0.045] rounded-xl p-3 text-slate-200 text-xs focus:outline-none focus:border-sky-500 transition-colors resize-none placeholder-slate-600 font-medium"
                 required
               />
             </div>
 
             {/* Quoted play embedded preview */}
-            <div className="border border-slate-850 rounded-xl p-3 bg-slate-950/50">
+            <div className="border border-cyan-300/[0.045] rounded-xl p-3 bg-slate-950/50">
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
                 <span className="font-bold text-slate-300">{post.displayName}</span>
                 <span>@{post.username}</span>
@@ -982,7 +982,7 @@ export default function FeedPostCard({
 
       {/* Extensible Comments area */}
       {showComments && (
-        <div className="mt-4 pt-3.5 border-t border-slate-850 space-y-3.5" id={`comments-expanded-${post.id}`}>
+        <div className="mt-4 pt-3.5 border-t border-cyan-300/[0.045] space-y-3.5" id={`comments-expanded-${post.id}`}>
           {/* Create comment form */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
             <input 
@@ -990,7 +990,7 @@ export default function FeedPostCard({
               placeholder="Post your reply..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
+              className="flex-1 text-xs bg-[#0b0f19] text-white border border-cyan-300/[0.045] rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
               required
               id={`comment-input-${post.id}`}
             />
@@ -1007,7 +1007,7 @@ export default function FeedPostCard({
           {post.comments && post.comments.length > 0 ? (
             <div className="space-y-2.5">
               {post.comments.map((comm) => (
-                <div key={comm.id} className="p-3 bg-slate-900/40 rounded-xl border border-slate-800/50 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
+                <div key={comm.id} className="p-3 bg-slate-900/40 rounded-xl border border-cyan-300/[0.045]/50 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
                   <div className="w-7 h-7 bg-slate-800 rounded-full font-bold text-[11px] text-slate-400 flex items-center justify-center shrink-0">
                     {comm.displayName.split(' ').map(n=>n[0]).join('')}
                   </div>

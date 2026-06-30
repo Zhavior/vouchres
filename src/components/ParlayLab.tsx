@@ -27,6 +27,7 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 import ParlaySlipSummary, { BuilderMode } from './parlay/ParlaySlipSummary';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface ParlayLabProps {
   onSaveParlay: (parlay: Parlay) => void;
@@ -446,7 +447,7 @@ export default function ParlayLab({
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen bg-slate-950/20 backdrop-blur-md text-slate-100 font-sans border border-slate-900/40 rounded-3xl" id="parlay-lab-view">
+    <div className="ve-page-shell ve-panel ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen text-slate-100 font-sans" id="parlay-lab-view">
       
       {/* Title & Hubtown style subline */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/25 backdrop-blur-sm p-4 rounded-3xl border border-slate-900/50">

@@ -25,6 +25,7 @@ import { CreatorProofProfile } from '../types';
 import { useTheme } from './theme/ThemeProvider';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface ThemeStoreProps {
   profile: CreatorProofProfile;

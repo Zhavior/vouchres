@@ -31,6 +31,7 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { resolveMarket } from '../sports/markets';
+import { CyberBadge } from "./ui";
 
 interface SmartAiEngineProps {
   onSectionChange: (section: string) => void;
@@ -660,7 +661,7 @@ export default function SmartAiEngine({
     <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-ledger-root">
       
       {/* HEADER HERO AREA */}
-      <div className="relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="ai-banner-container">
+      <div className="ve-hero p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="ai-banner-container">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
         
@@ -728,7 +729,7 @@ export default function SmartAiEngine({
               className={`flex-1 text-center py-2.5 rounded-xl font-mono text-[10px] font-extrabold tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                 activeLeftTab === 'builder'
                   ? 'bg-sky-500/10 border border-sky-500/30 text-sky-300 shadow-md'
-                  : 'bg-transparent text-slate-500 hover:text-slate-350 hover:bg-slate-900/20'
+                  : 'bg-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-900/20'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-sky-400" />
@@ -739,7 +740,7 @@ export default function SmartAiEngine({
               className={`flex-1 text-center py-2.5 rounded-xl font-mono text-[10px] font-extrabold tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                 activeLeftTab === 'extractor'
                   ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shadow-md'
-                  : 'bg-transparent text-slate-500 hover:text-slate-350 hover:bg-slate-900/20'
+                  : 'bg-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-900/20'
               }`}
             >
               <Database className="w-3.5 h-3.5 text-emerald-400" />
@@ -749,31 +750,57 @@ export default function SmartAiEngine({
 
           {/* TAB 1 CONTENT: DYNAMIC STATS-VERIFIED AI PARLAY CREATOR */}
           {activeLeftTab === 'builder' ? (
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-5 shadow-2xl animate-fade-in" id="dynamic-parlay-builder-deck">
-              <div className="flex items-center gap-2 border-b border-slate-905 pb-3">
-                <Cpu className="w-5 h-5 text-sky-400 animate-pulse" />
-                <h3 className="text-xs font-black text-slate-400 font-mono tracking-wider uppercase">
-                  STATS-VERIFIED AI PILOT
-                </h3>
+            <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/25 bg-gradient-to-br from-slate-950 via-cyan-950/20 to-slate-950 p-6 space-y-5 shadow-2xl shadow-cyan-950/40 animate-fade-in ring-1 ring-cyan-300/10" id="dynamic-parlay-builder-deck">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+              <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="pointer-events-none absolute -left-24 bottom-0 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 shadow-lg shadow-cyan-950/30">
+                    <Cpu className="w-5 h-5 text-cyan-300 animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-cyan-300 font-mono tracking-[0.26em] uppercase">
+                      V.A.I Dynamic Creator
+                    </p>
+                    <h3 className="text-xl font-black text-white tracking-tight">
+                      Stats-Verified AI Pilot
+                    </h3>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                      Build ledger-ready parlays from verified player trend profiles.
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-black text-emerald-300 font-mono uppercase">
+                  Live Model
+                </div>
               </div>
 
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Builds dynamic parlay slips from player profiles whose <b>historical game logs</b> verify they have successfully hit this metric.
-              </p>
+              <div className="relative rounded-2xl border border-white/10 bg-slate-950/55 p-4">
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Builds dynamic parlay slips from player profiles whose <b className="text-white">historical game logs</b>, matchup shape, and market context verify they have successfully hit this metric.
+                </p>
+              </div>
 
               {/* Legs selector (2 to 5 legs as requested) */}
-              <div className="space-y-2">
-                <label className="text-[9.5px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Multiplier Depth (Legs)</label>
-                <div className="grid grid-cols-4 gap-1.5">
+              <div className="relative space-y-2 rounded-2xl border border-cyan-300/10 bg-white/[0.03] p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-[10px] font-black text-cyan-300 font-mono uppercase tracking-[0.22em] block">Multiplier Depth</label>
+                  <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-black text-cyan-200 font-mono uppercase">
+                    Legs
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
                   {[2, 3, 4, 5].map(cnt => (
                     <button
                       key={cnt}
                       type="button"
                       onClick={() => setBuilderLegs(cnt)}
-                      className={`py-2 rounded-xl border text-center transition-all text-xs font-mono font-black ${
+                      className={`py-2.5 rounded-2xl border text-center transition-all text-xs font-mono font-black ${
                         builderLegs === cnt
-                          ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-md'
-                          : 'bg-slate-900/40 border-slate-850 text-slate-450 hover:bg-slate-900/80 hover:text-slate-300'
+                          ? 'bg-cyan-400/15 border-cyan-300/40 text-cyan-100 shadow-lg shadow-cyan-950/20'
+                          : 'bg-slate-950/50 border-white/10 text-slate-400 hover:-translate-y-0.5 hover:border-cyan-300/25 hover:bg-slate-900/80 hover:text-white'
                       }`}
                     >
                       {cnt} Legs
@@ -783,8 +810,13 @@ export default function SmartAiEngine({
               </div>
 
               {/* Focus Stat Category selector */}
-              <div className="space-y-2">
-                <label className="text-[9.5px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Target Analytics Spec</label>
+              <div className="relative space-y-2 rounded-2xl border border-indigo-300/10 bg-indigo-400/[0.04] p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-[10px] font-black text-indigo-200 font-mono uppercase tracking-[0.22em] block">Target Analytics Spec</label>
+                  <span className="rounded-full border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 text-[9px] font-black text-indigo-200 font-mono uppercase">
+                    Market
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 'HITS', label: '📈 1-3 Hits Focus' },
@@ -799,7 +831,7 @@ export default function SmartAiEngine({
                       className={`p-2.5 rounded-xl border text-left transition-all text-[11px] font-extrabold ${
                         builderCategory === cat.id
                           ? 'bg-indigo-950/20 border-indigo-500/40 text-indigo-300 shadow'
-                          : 'bg-slate-900/40 border-slate-850 text-slate-450 hover:bg-slate-900/85 hover:text-slate-350'
+                          : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-900/85 hover:text-slate-300'
                       }`}
                     >
                       {cat.label}
@@ -809,15 +841,20 @@ export default function SmartAiEngine({
               </div>
 
               {/* Threshold level option elements */}
-              <div className="space-y-2 bg-slate-900/35 border border-slate-900/70 p-3.5 rounded-2xl">
-                <label className="text-[9px] font-bold text-slate-500 font-mono uppercase tracking-wider block mb-1">Trigger Standard Value</label>
-                <div className="flex flex-wrap gap-1.5">
+              <div className="relative space-y-2 rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.04] p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-[10px] font-black text-emerald-200 font-mono uppercase tracking-[0.22em] block">Trigger Standard Value</label>
+                  <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black text-emerald-200 font-mono uppercase">
+                    Threshold
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   {builderCategory === 'HITS' && [1, 2, 3].map(val => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
+                      className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
                         builderThreshold === val
                           ? 'bg-slate-900 border-sky-500 text-sky-400'
                           : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
@@ -831,9 +868,9 @@ export default function SmartAiEngine({
                       key={val}
                       type="button"
                       onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
+                      className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
                         builderThreshold === val
-                          ? 'bg-slate-900 border-indigo-505 text-indigo-400'
+                          ? 'bg-slate-900 border-indigo-500 text-indigo-400'
                           : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
                       }`}
                     >
@@ -845,7 +882,7 @@ export default function SmartAiEngine({
                       key={val}
                       type="button"
                       onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
+                      className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
                         builderThreshold === val
                           ? 'bg-slate-900 border-amber-500 text-amber-400'
                           : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
@@ -859,7 +896,7 @@ export default function SmartAiEngine({
                       key={val}
                       type="button"
                       onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
+                      className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
                         builderThreshold === val
                           ? 'bg-slate-900 border-emerald-500 text-emerald-400'
                           : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
@@ -873,18 +910,28 @@ export default function SmartAiEngine({
 
               {/* Compiled Dynamic Parlay Card Result */}
               {dynamicParlay ? (
-                <div className="space-y-3.5 pt-3.5 border-t border-slate-900 animate-slide-up">
+                <div className="relative space-y-4 pt-4 border-t border-white/10 animate-slide-up">
                   
                   {/* Stats Parlay Top Header summary */}
-                  <div className="p-3 bg-gradient-to-br from-indigo-950/15 via-slate-900/60 to-slate-900/60 border border-indigo-900/30 rounded-2xl flex items-center justify-between">
-                    <div>
-                      <span className="block text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">CUMULATIVE RETURN</span>
-                      <span className="text-sm font-mono font-black text-rose-450">{dynamicParlay.totalOdds}</span>
-                      <span className="text-[9.5px] text-slate-400 font-mono ml-1.5">({dynamicParlay.oddsValue}x)</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="block text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">AI ACCURACY EDGE</span>
-                      <span className="text-xs font-mono font-black text-emerald-400">{dynamicParlay.aiConfidenceScore}% Accu</span>
+                  <div className="relative overflow-hidden rounded-3xl border border-cyan-300/15 bg-gradient-to-br from-cyan-950/20 via-slate-950/85 to-indigo-950/20 p-4 shadow-xl shadow-cyan-950/20">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
+                    <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-cyan-400/10 blur-2xl" />
+
+                    <div className="relative flex items-center justify-between gap-4">
+                      <div>
+                        <span className="block text-[9px] font-mono text-cyan-300 uppercase tracking-[0.22em] leading-none font-black">Cumulative Return</span>
+                        <div className="mt-1 flex items-end gap-2">
+                          <span className="text-xl font-mono font-black text-white">{dynamicParlay.totalOdds}</span>
+                          <span className="pb-0.5 text-[10px] text-slate-400 font-mono">({dynamicParlay.oddsValue}x)</span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="block text-[9px] font-mono text-emerald-300 uppercase tracking-[0.22em] leading-none font-black">AI Accuracy Edge</span>
+                        <div className="mt-1 inline-flex items-center rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-sm font-mono font-black text-emerald-300">
+                          {dynamicParlay.aiConfidenceScore}% Accu
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -893,31 +940,43 @@ export default function SmartAiEngine({
                     {dynamicParlay.legs.map((leg: any, idx: number) => {
                       const playerObj = dynamicParlay.players.find((p: any) => p.id === leg.playerId);
                       return (
-                        <div key={idx} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl space-y-2">
-                          <div className="flex gap-2.5 items-center">
-                            {playerObj?.headshot && (
-                              <img 
-                                src={playerObj.headshot} 
-                                alt={leg.playerName} 
-                                className="w-8 h-8 rounded-full border border-slate-800 bg-slate-950 flex-shrink-0" 
-                                referrerPolicy="no-referrer"
-                              />
-                            )}
+                        <div key={idx} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/65 p-3.5 space-y-3 shadow-lg shadow-black/20 transition-all hover:-translate-y-0.5 hover:border-cyan-300/25 hover:bg-slate-950/85">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/35 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+
+                          <div className="relative flex gap-3 items-center">
+                            <div className="relative flex-shrink-0">
+                              {playerObj?.headshot ? (
+                                <img 
+                                  src={playerObj.headshot} 
+                                  alt={leg.playerName} 
+                                  className="h-11 w-11 rounded-2xl border border-cyan-300/20 bg-slate-950 object-cover shadow-md shadow-cyan-950/25" 
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="grid h-11 w-11 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-xs font-black text-cyan-200">
+                                  {String(leg.playerName || "?").slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border border-slate-950 bg-emerald-400" />
+                            </div>
+
                             <div className="min-w-0 flex-1">
-                              <div className="flex justify-between items-start">
-                                <span className="text-[11px] font-black text-white truncate block leading-tight">{leg.playerName}</span>
-                                <span className="text-[9.5px] font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded-md font-extrabold flex-shrink-0">
+                              <div className="flex justify-between gap-2 items-start">
+                                <span className="text-sm font-black text-white truncate block leading-tight">{leg.playerName}</span>
+                                <span className="shrink-0 rounded-full border border-sky-300/20 bg-sky-400/10 px-2 py-0.5 text-[10px] font-mono text-sky-200 font-black">
                                   +{leg.odds.toFixed(2)}
                                 </span>
                               </div>
-                              <span className="text-[9px] text-slate-500 block truncate uppercase tracking-tight">{playerObj?.team || 'MLB'} · {leg.marketName}</span>
+                              <span className="mt-0.5 text-[10px] text-slate-400 block truncate uppercase tracking-[0.14em] font-mono">
+                                {playerObj?.team || 'MLB'} · {leg.marketName}
+                              </span>
                             </div>
                           </div>
                           
                           {/* Real historical validation proof list */}
-                          <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-mono">
-                            <span className="text-[8px] text-emerald-400 font-extrabold uppercase block tracking-wider mb-0.5">✓ Logs Verified</span>
-                            <p className="text-xs text-slate-300 font-sans tracking-tight">{leg.justification}</p>
+                          <div className="relative rounded-2xl border border-emerald-300/10 bg-emerald-400/5 p-3 text-[10px] text-slate-400 leading-relaxed font-mono">
+                            <span className="mb-1 block text-[9px] text-emerald-300 font-black uppercase tracking-[0.2em]">✓ Logs Verified</span>
+                            <p className="text-xs text-slate-300 font-sans leading-relaxed tracking-tight">{leg.justification}</p>
                           </div>
                         </div>
                       );
@@ -935,7 +994,7 @@ export default function SmartAiEngine({
                     </button>
                     <button
                       onClick={handleAddCustomParlayToSlip}
-                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
+                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
                     >
                       <Plus className="w-4 h-4 text-sky-100" />
                       TO BUILDER
@@ -954,16 +1013,30 @@ export default function SmartAiEngine({
             </div>
           ) : (
             /* TAB 2 CONTENT: THE COMPACT ORIGINAL EXTRACTION SLIPS TUNER (PRESERVED ACCORDING TO USER FLOWS) */
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-5 shadow-2xl animate-fade-in" id="alignment-form">
-              <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
-                <Compass className="w-5 h-5 text-emerald-400 animate-spin" />
-                <h3 className="text-xs font-black text-slate-400 font-mono tracking-wider uppercase">
-                  REAL-TIME VAULT EXTRACTOR
-                </h3>
+            <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/15 bg-slate-950/90 p-6 space-y-5 shadow-2xl shadow-cyan-950/20 animate-fade-in" id="alignment-form">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="pointer-events-none absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl border border-emerald-300/25 bg-emerald-400/10 shadow-lg shadow-emerald-950/20">
+                    <Compass className="w-5 h-5 text-emerald-300 animate-spin" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-cyan-300 font-mono tracking-[0.28em] uppercase">
+                      V.A.I SMART PICKS
+                    </p>
+                    <h3 className="text-lg font-black text-white tracking-tight">
+                      Real-Time Vault Extractor
+                    </h3>
+                  </div>
+                </div>
+                <CyberBadge tone="good">Ledger Sync</CyberBadge>
               </div>
 
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Match target weather conditions and parameters to instantly extract the most compatible parlay slip registered inside our cached 850+ sabermetric ledger.
+              <p className="relative text-sm text-slate-300 leading-relaxed">
+                Match target weather, market type, model entropy, and matchup profile to extract the most compatible parlay slip from the VouchEdge sabermetric ledger.
               </p>
 
               {/* Neural Bias mode selection */}
@@ -996,30 +1069,44 @@ export default function SmartAiEngine({
               </div>
 
               {/* Configured Pick Types List */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Target Pick Focus Spec</label>
-                <div className="grid grid-cols-1 gap-1.5 max-h-[170px] overflow-y-auto pr-1 text-xs" id="custom-simulation-scope">
+              <div className="relative space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-[10px] font-black text-cyan-300 font-mono uppercase tracking-[0.22em] block">
+                    Target Pick Focus
+                  </label>
+                  <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-black text-cyan-200 font-mono uppercase">
+                    Model Scope
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 max-h-[190px] overflow-y-auto pr-1 text-xs" id="custom-simulation-scope">
                   {[
-                    { id: 'most_probable', label: '🧠 Most Probable AI Edge Parlay' },
-                    { id: 'single_hr', label: '⚾ Single Home Run Prospect' },
-                    { id: 'double_hr', label: '🚀 Double Home Run Parlay' },
-                    { id: 'triple_hr', label: '🎰 Three Player HR Lottery' },
-                    { id: 'single_two_hr', label: '🔥 Single 2-HR Superstar' },
-                    { id: 'two_hits_four_players', label: '📈 2 Hits x 4 Players Combo' },
-                    { id: 'rbi_legs', label: '🎯 RBI Accumulator' },
-                    { id: 'run_legs', label: '🏃 Sparkplug Run Scorers' }
+                    { id: 'most_probable', label: '🧠 Most Probable AI Edge Parlay', tag: 'Safe Edge' },
+                    { id: 'single_hr', label: '⚾ Single Home Run Prospect', tag: 'HR' },
+                    { id: 'double_hr', label: '🚀 Double Home Run Parlay', tag: '2-Leg' },
+                    { id: 'triple_hr', label: '🎰 Three Player HR Lottery', tag: 'Risk' },
+                    { id: 'single_two_hr', label: '🔥 Single 2-HR Superstar', tag: 'Rare' },
+                    { id: 'two_hits_four_players', label: '📈 2 Hits x 4 Players Combo', tag: 'Volume' },
+                    { id: 'rbi_legs', label: '🎯 RBI Accumulator', tag: 'RBI' },
+                    { id: 'run_legs', label: '🏃 Sparkplug Run Scorers', tag: 'Runs' }
                   ].map(item => (
                     <button
                       key={item.id}
                       onClick={() => setPickType(item.id)}
-                      className={`flex items-center justify-between p-2 rounded-lg border text-left transition-colors ${
+                      className={`group flex items-center justify-between gap-3 rounded-2xl border p-3 text-left transition-all ${
                         pickType === item.id 
-                          ? 'bg-slate-900 border-sky-505 text-white font-semibold' 
-                          : 'bg-slate-950/40 border-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+                          ? 'border-cyan-300/40 bg-cyan-400/10 text-white shadow-lg shadow-cyan-950/25' 
+                          : 'border-white/10 bg-slate-950/45 text-slate-400 hover:-translate-y-0.5 hover:border-cyan-300/25 hover:bg-slate-900/70 hover:text-slate-100'
                       }`}
                     >
-                      <span className="truncate">{item.label}</span>
-                      {pickType === item.id && <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />}
+                      <span className="min-w-0 truncate font-semibold">{item.label}</span>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black font-mono uppercase ${
+                        pickType === item.id
+                          ? 'border-cyan-200/30 bg-cyan-300/15 text-cyan-100'
+                          : 'border-white/10 bg-white/5 text-slate-500 group-hover:text-cyan-200'
+                      }`}>
+                        {item.tag}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1027,10 +1114,10 @@ export default function SmartAiEngine({
 
               {/* Custom Legs Configuration for accumulators */}
               {(pickType === 'rbi_legs' || pickType === 'run_legs') && (
-                <div className="space-y-1.5 bg-slate-900/35 border border-slate-900 p-3 rounded-xl block">
+                <div className="space-y-2 rounded-2xl border border-amber-300/15 bg-amber-400/5 p-4 shadow-lg shadow-amber-950/10 block">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-400 font-mono uppercase tracking-wider text-[10px]">Multiplier Depth</span>
-                    <span className="font-bold text-sky-400 font-mono">{targetLegs} Legs</span>
+                    <span className="font-black text-amber-200 font-mono uppercase tracking-[0.2em] text-[10px]">Multiplier Depth</span>
+                    <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2 py-0.5 font-black text-amber-200 font-mono">{targetLegs} Legs</span>
                   </div>
                   <input 
                     type="range"
@@ -1044,10 +1131,10 @@ export default function SmartAiEngine({
               )}
 
               {/* Model Entropy Temperature */}
-              <div className="space-y-1 text-xs">
+              <div className="space-y-2 rounded-2xl border border-indigo-300/15 bg-indigo-400/5 p-4 text-xs shadow-lg shadow-indigo-950/10">
                 <div className="flex justify-between font-mono">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Model Drift (Entropy)</span>
-                  <span className="text-indigo-400 font-bold">{temperature.toFixed(2)}</span>
+                  <span className="font-black text-indigo-200 uppercase tracking-[0.2em] text-[10px]">Model Drift / Entropy</span>
+                  <span className="rounded-full border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 text-indigo-200 font-black">{temperature.toFixed(2)}</span>
                 </div>
                 <input 
                   type="range"
@@ -1064,11 +1151,12 @@ export default function SmartAiEngine({
                 type="button"
                 onClick={runActiveCustomSimulation}
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-sky-500 to-emerald-600 hover:from-sky-450 hover:to-emerald-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                className="group relative w-full overflow-hidden rounded-2xl border border-cyan-200/20 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 px-4 py-3.5 text-white shadow-xl shadow-cyan-950/30 transition-all hover:-translate-y-0.5 hover:from-sky-400 hover:via-cyan-400 hover:to-emerald-400 disabled:translate-y-0 disabled:opacity-50 active:scale-[0.98]"
               >
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.30),transparent_42%)] opacity-0 transition-opacity group-hover:opacity-100" />
                 {isGenerating ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-sky-205" />
+                    <RefreshCw className="w-4 h-4 animate-spin text-sky-200" />
                     <span className="text-xs">Extracting Matching Slips...</span>
                   </>
                 ) : (
@@ -1083,12 +1171,18 @@ export default function SmartAiEngine({
 
           {/* TELEMETRY CONSOLE TERMINAL OR FEATURED MATCH RESULTS (ONLY FOR THE EXTRACTION MODEL DETECTORS) */}
           {activeLeftTab === 'extractor' && (isGenerating || simulatedMatch) && (
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 font-mono text-[11px] space-y-4" id="telemetry-extraction-terminal">
-              <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                <span className="text-slate-500 font-bold tracking-wider">V.A.I SYNC TERMINAL</span>
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/15 bg-slate-950/90 p-5 font-mono text-[11px] space-y-4 shadow-2xl shadow-cyan-950/20" id="telemetry-extraction-terminal">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
+              <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
+
+              <div className="relative flex justify-between items-center border-b border-white/10 pb-3">
+                <div>
+                  <span className="text-cyan-300 font-black tracking-[0.24em] uppercase">V.A.I Sync Terminal</span>
+                  <p className="mt-1 text-[10px] text-slate-500">Live extraction telemetry · ledger alignment · model confidence stream</p>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-1">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[9px] font-black text-emerald-300 uppercase">Online</span>
                 </div>
               </div>
 
@@ -1107,7 +1201,7 @@ export default function SmartAiEngine({
                     <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded-xl flex gap-3 items-center">
                       <Cpu className="w-8 h-8 text-sky-400" />
                       <div className="min-w-0 flex-1">
-                        <span className="text-[9px] bg-sky-505/10 text-sky-400 font-bold px-1.5 py-0.5 rounded uppercase font-mono">
+                        <span className="text-[9px] bg-sky-500/10 text-sky-400 font-bold px-1.5 py-0.5 rounded uppercase font-mono">
                           {simulatedMatch.typeLabel} Match Found
                         </span>
                         <h4 className="text-xs font-black text-white truncate mt-1">
@@ -1182,7 +1276,7 @@ export default function SmartAiEngine({
                   placeholder="Search 850 precomputed entries by player name, ID (e.g. VAI-9004), matchup, spec..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 focus:border-sky-500/50 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all"
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-sky-500/50 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all"
                   id="catalog-text-search-input"
                 />
               </div>
@@ -1212,7 +1306,7 @@ export default function SmartAiEngine({
                 <select
                   value={selectedPlayerFilter}
                   onChange={(e) => setSelectedPlayerFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
                   id="filter-player-select"
                 >
                   <option value="all">ALL ATHLETES (No Filter)</option>
@@ -1228,7 +1322,7 @@ export default function SmartAiEngine({
                 <select
                   value={selectedMarketFilter}
                   onChange={(e) => setSelectedMarketFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
                   id="filter-market-select"
                 >
                   <option value="all">ALL PROP FORMATS</option>
@@ -1246,7 +1340,7 @@ export default function SmartAiEngine({
                 <select
                   value={selectedRiskFilter}
                   onChange={(e) => setSelectedRiskFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
                   id="filter-risk-select"
                 >
                   <option value="all">ALL RISK SECTIONS</option>
@@ -1262,7 +1356,7 @@ export default function SmartAiEngine({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-800 dark:text-slate-200 p-2.5 rounded-xl outline-none"
+                  className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-800 hover:border-slate-750 text-slate-800 dark:text-slate-200 p-2.5 rounded-xl outline-none"
                   id="filter-sort-select"
                 >
                   <option value="confidence_desc">🧠 CONFIDENCE: HIGH TO LOW</option>
@@ -1278,7 +1372,7 @@ export default function SmartAiEngine({
 
             {/* Results count message indicator */}
             <div className="pt-2 border-t border-slate-900 flex justify-between items-center text-[10.5px] text-slate-500 font-mono">
-              <span>Matching Pre-analyzed Slips: <b className="text-slate-350">{filteredPicks.length} of 852</b></span>
+              <span>Matching Pre-analyzed Slips: <b className="text-slate-300">{filteredPicks.length} of 852</b></span>
               <span>Showing Page {currentPage} of {totalPages || 1}</span>
             </div>
           </div>
@@ -1303,7 +1397,7 @@ export default function SmartAiEngine({
                     setSelectedRiskFilter('all');
                     setSearchQuery('');
                   }}
-                  className="bg-slate-900 border border-slate-850 text-slate-300 text-xs font-semibold py-1.5 px-3.5 rounded-xl hover:bg-slate-800 transition-colors"
+                  className="bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold py-1.5 px-3.5 rounded-xl hover:bg-slate-800 transition-colors"
                 >
                   Reset Catalog Search
                 </button>
@@ -1389,7 +1483,7 @@ export default function SmartAiEngine({
                                 </span>
                               </div>
                             </div>
-                            <span className="bg-slate-950 border border-slate-900/80 text-[10.5px] text-slate-350 font-bold px-1.5 py-0.5 rounded font-mono">
+                            <span className="bg-slate-950 border border-slate-900/80 text-[10.5px] text-slate-300 font-bold px-1.5 py-0.5 rounded font-mono">
                               dec {leg.odds.toFixed(2)}
                             </span>
                           </div>
@@ -1489,7 +1583,7 @@ export default function SmartAiEngine({
                       <button
                         onClick={() => handlePublishToFeed(pick)}
                         disabled={postedPicks[pick.id]}
-                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-450 hover:text-white transition-colors"
+                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
                         title="Publish this precomputed slip directly onto community Home Feed"
                       >
                         {postedPicks[pick.id] ? (
