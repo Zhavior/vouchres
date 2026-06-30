@@ -3,7 +3,7 @@
  * All data sourced from statsapi.mlb.com — no synthetic or seeded values.
  * Cached 15 minutes (stats change only after games complete).
  */
-import { TTLCache } from "../../lib/cache";
+import { TTLCache, TTL } from "../../lib/cache";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const SEASON = new Date().getFullYear();
@@ -57,8 +57,8 @@ export interface PitcherStats {
   recentGames: PitcherRecentGame[];
 }
 
-const hitterCache = new TTLCache<HitterStats>(15 * 60_000);
-const pitcherCache = new TTLCache<PitcherStats>(15 * 60_000);
+const hitterCache = new TTLCache<HitterStats>(TTL.trust, "mlb:hitterStats");
+const pitcherCache = new TTLCache<PitcherStats>(TTL.trust, "mlb:pitcherStats");
 
 export interface BatterVsPitcher {
   ab: number;
@@ -74,7 +74,8 @@ export interface BatterVsPitcher {
   sampleSize: number; // = ab (convenience)
 }
 
-const bvpCache = new TTLCache<BatterVsPitcher | null>(60 * 60_000);
+const bvpCache = new TTLCache<BatterVsPitcher | null>(60 * 60_000, "mlb:bvp");
+let statsRequestCount = 0;
 
 /**
  * Career batter-vs-pitcher totals from MLB Stats API (vsPlayerTotal).
@@ -117,9 +118,21 @@ export async function getBatterVsPitcher(
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
+  const requestNumber = ++statsRequestCount;
+  const start = Date.now();
+  console.log(`[statsClient] request #${requestNumber} ${url}`);
   const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
+  console.log(`[statsClient] request #${requestNumber} complete ${Date.now() - start}ms`);
   return res.json();
+}
+
+export function getStatsRequestCount(): number {
+  return statsRequestCount;
+}
+
+export function resetStatsRequestCount(): void {
+  statsRequestCount = 0;
 }
 
 function parseInnings(value: unknown): number {

@@ -8,21 +8,34 @@ import { NormalizedGame, NormalizedPitcher, headshotUrl } from "./mlbTypes";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
+let mlbRequestCount = 0;
 
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
+  const requestNumber = ++mlbRequestCount;
+  const start = Date.now();
+  console.log(`[mlbClient] request #${requestNumber} ${url}`);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) throw new Error(`MLB API ${res.status} for ${url}`);
+    console.log(`[mlbClient] request #${requestNumber} complete ${Date.now() - start}ms`);
     return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
   }
+}
+
+export function getMlbRequestCount(): number {
+  return mlbRequestCount;
+}
+
+export function resetMlbRequestCount(): void {
+  mlbRequestCount = 0;
 }
 
 /** Schedule for a date (YYYY-MM-DD), normalized. Falls back to [] on failure. */
