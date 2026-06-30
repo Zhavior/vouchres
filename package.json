@@ -15,7 +15,9 @@
     "verify:composer-options": "tsx scripts/verifyComposerOptions.ts",
     "verify:notifications": "tsx scripts/verifyNotifications.ts",
     "verify:ai-parlays": "tsx scripts/verifyAiParlays.ts",
-    "verify:entitlements": "tsx scripts/verifyEntitlements.ts"
+    "verify:entitlements": "tsx scripts/verifyEntitlements.ts",
+    "verify:auth-smoke": "tsx scripts/verifyAuthSmoke.ts",
+    "verify:billing-hardening": "tsx scripts/verifyBillingHardening.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -43,6 +43,16 @@ export interface StripePriceConfig {
   priceId: string;
 }
 
+const PAID_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
+const SAFE_DOWNGRADE_STATUSES = new Set([
+  "past_due",
+  "unpaid",
+  "canceled",
+  "incomplete",
+  "incomplete_expired",
+  "paused",
+]);
+
 export function getStripePriceConfigs(): StripePriceConfig[] {
   const configs: StripePriceConfig[] = [];
   for (const tier of ["pro", "creator"] as const) {
@@ -189,6 +199,76 @@ export function tierFromPriceId(priceId: string): Exclude<DatabaseTier, "free"> 
   return stripePriceConfigByPriceId(priceId)?.databaseTier ?? null;
 }
 
+export function effectiveTierForSubscriptionStatus(
+  status: string,
+  paidTier: Exclude<DatabaseTier, "free">
+): { tier: DatabaseTier; warning: string | null } {
+  if (PAID_SUBSCRIPTION_STATUSES.has(status)) {
+    return { tier: paidTier, warning: null };
+  }
+  if (SAFE_DOWNGRADE_STATUSES.has(status)) {
+    return { tier: "free", warning: `subscription status ${status} does not grant paid entitlements` };
+  }
+  return { tier: "free", warning: `unknown subscription status ${status}; defaulted entitlements to free` };
+}
+
+export async function beginStripeWebhookEvent(event: Stripe.Event): Promise<{
+  shouldProcess: boolean;
+  duplicate: boolean;
+  status?: string;
+}> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin.from("stripe_webhook_events").insert({
+    id: event.id,
+    type: event.type,
+    status: "processing",
+    received_at: now,
+  });
+
+  if (!error) return { shouldProcess: true, duplicate: false, status: "processing" };
+
+  if (error.code !== "23505") {
+    console.warn("[stripe] webhook idempotency insert failed", error.message);
+    throw error;
+  }
+
+  const { data, error: lookupError } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .select("status")
+    .eq("id", event.id)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+
+  if (data?.status === "failed") {
+    const retry = await supabaseAdmin
+      .from("stripe_webhook_events")
+      .update({ status: "processing", type: event.type, last_error: null, received_at: now })
+      .eq("id", event.id)
+      .eq("status", "failed");
+    if (retry.error) throw retry.error;
+    return { shouldProcess: true, duplicate: true, status: "processing" };
+  }
+
+  console.log(`[stripe] duplicate webhook skipped event=${event.id} status=${data?.status ?? "unknown"}`);
+  return { shouldProcess: false, duplicate: true, status: data?.status ?? "unknown" };
+}
+
+export async function finishStripeWebhookEvent(eventId: string, status: "processed" | "failed", errorMessage?: string): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .update({
+      status,
+      processed_at: status === "processed" ? new Date().toISOString() : null,
+      last_error: errorMessage ?? null,
+    })
+    .eq("id", eventId);
+  if (error) {
+    console.warn(`[stripe] webhook event finalization failed event=${eventId}`, error.message);
+  }
+}
+
 /**
  * Sync subscription state to Postgres.
  * Called from the webhook handler on every subscription event.
@@ -218,10 +298,8 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
     return;
   }
 
-  const status = subscription.status; // 'active' | 'past_due' | 'canceled' | etc.
-  // Treat 'active' and 'trialing' as entitled; everything else downgrades to free
-  const effectiveTier: DatabaseTier =
-    status === "active" || status === "trialing" ? tier : "free";
+  const status = subscription.status; // 'active' | 'trialing' | 'past_due' | 'canceled' | etc.
+  const effective = effectiveTierForSubscriptionStatus(status, tier);
 
   // Upsert subscription row
   await supabaseAdmin.from("subscriptions").upsert(
@@ -243,13 +321,13 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
   await supabaseAdmin
     .from("profiles")
     .update({
-      tier: effectiveTier,
+      tier: effective.tier,
       stripe_customer_id: subscription.customer as string,
       stripe_subscription_id: subscription.id,
     })
     .eq("id", profileId);
 
   console.log(
-    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effectiveTier} (${status})`
+    `[stripe] synced subscription ${subscription.id} for profile ${profileId}: ${effective.tier} (${status})${effective.warning ? ` warning=${effective.warning}` : ""}`
   );
 }

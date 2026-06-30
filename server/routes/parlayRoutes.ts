@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
 import { generationLimiter, gradingLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
+import { assertUserOwnsResource } from "../middleware/ownership";
 import { createPick } from "../services/persistence/pickService";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
@@ -878,24 +879,28 @@ parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Re
   const { id } = req.params;
   const supabaseAdmin = await getSupabaseAdmin();
 
-  const [pickRes, legsRes] = await Promise.all([
-    supabaseAdmin
-      .from("picks")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", req.user!.id)
-      .eq("leg_type", "parlay")
-      .single(),
-    supabaseAdmin
-      .from("pick_legs")
-      .select("*")
-      .eq("pick_id", id)
-      .order("leg_index", { ascending: true }),
-  ]);
+  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
+  if (!ownership.ok) {
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
+  }
+
+  const pickRes = await supabaseAdmin
+    .from("picks")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .eq("leg_type", "parlay")
+    .single();
 
   if (pickRes.error || !pickRes.data) {
     return res.status(404).json({ error: "parlay_not_found" });
   }
+
+  const legsRes = await supabaseAdmin
+    .from("pick_legs")
+    .select("*")
+    .eq("pick_id", id)
+    .order("leg_index", { ascending: true });
 
   return res.json({
     ...pickRes.data,
@@ -1437,16 +1442,9 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
   const { id } = req.params;
   const supabaseAdmin = await getSupabaseAdmin();
 
-  // Verify ownership first
-  const { data: existing, error: fetchErr } = await supabaseAdmin
-    .from("picks")
-    .select("id, user_id")
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .single();
-
-  if (fetchErr || !existing) {
-    return res.status(404).json({ error: "parlay_not_found" });
+  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
+  if (!ownership.ok) {
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
   }
 
   const allowed: Record<string, true> = { explanation: true, status: true, stake_units: true };
@@ -1468,6 +1466,8 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
     .from("picks")
     .update(updates)
     .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .eq("leg_type", "parlay")
     .select()
     .single();
 
@@ -1483,19 +1483,17 @@ parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res:
   const { id } = req.params;
   const supabaseAdmin = await getSupabaseAdmin();
 
-  const { data: existing } = await supabaseAdmin
-    .from("picks")
-    .select("id, user_id")
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .single();
-
-  if (!existing) return res.status(404).json({ error: "parlay_not_found" });
+  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
+  if (!ownership.ok) {
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
+  }
 
   await supabaseAdmin
     .from("picks")
     .update({ status: "void", updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .eq("leg_type", "parlay");
 
   return res.json({ deleted: true, id });
 });

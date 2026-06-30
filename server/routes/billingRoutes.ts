@@ -9,6 +9,8 @@ import {
   stripe,
   createCheckoutSession,
   createPortalSession,
+  beginStripeWebhookEvent,
+  finishStripeWebhookEvent,
   isStripeConfigured,
   syncSubscription,
 } from "../services/billing/stripeService";
@@ -58,7 +60,7 @@ function getSafeFrontendOrigin(): string {
  * Returns: { url: string }  (redirect the browser to this URL)
  */
 const CheckoutSchema = z.object({
-  tier: z.enum(["pro", "creator", "gold", "seller_pro"]),
+  tier: z.enum(["pro", "creator"]),
   interval: z.enum(["monthly", "yearly"]).default("monthly"),
 });
 
@@ -249,6 +251,15 @@ billingRoutes.post(
     }
 
     try {
+      const idempotency = await beginStripeWebhookEvent(event);
+      if (!idempotency.shouldProcess) {
+        return res.json({
+          received: true,
+          duplicate: true,
+          status: idempotency.status,
+        });
+      }
+
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;
@@ -270,7 +281,9 @@ billingRoutes.post(
         }
         case "customer.subscription.deleted": {
           const sub = event.data.object as Stripe.Subscription;
-          // Mark subscription as canceled, downgrade profile to free
+          await syncSubscription(sub);
+          // Mark subscription as canceled, downgrade profile to free. Keep this
+          // fallback for legacy rows if Stripe omits price data on delete events.
           await supabaseAdmin
             .from("subscriptions")
             .update({ status: "canceled" })
@@ -296,8 +309,10 @@ billingRoutes.post(
           console.log(`[stripe] unhandled event: ${event.type}`);
       }
 
+      await finishStripeWebhookEvent(event.id, "processed");
       return res.json({ received: true });
-    } catch (err) {
+    } catch (err: any) {
+      await finishStripeWebhookEvent(event.id, "failed", err?.message ?? "webhook_handler_failed");
       console.error("[stripe] webhook handler error", err);
       return res.status(500).json({ error: "webhook_handler_failed" });
     }

@@ -79,6 +79,7 @@ export async function requireAuth(
 ) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
+    console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
     return res.status(401).json({ error: "missing_token" });
   }
 
@@ -88,6 +89,7 @@ export async function requireAuth(
   const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
+    console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
     return res.status(401).json({ error: "invalid_token" });
   }
 
@@ -134,6 +136,7 @@ export async function requireAuth(
   }
 
   if (pErr || !profile) {
+    console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
     return res.status(403).json({ error: "profile_missing" });
   }
 
@@ -196,6 +199,7 @@ export async function optionalAuth(
  */
 export function requireStaff(req: AuthedRequest, res: Response, next: NextFunction) {
   if (!req.user?.profile.is_staff) {
+    console.warn(`[auth] rejected non-staff request user=${req.user?.id ?? "unknown"} ${req.method} ${req.originalUrl}`);
     return res.status(403).json({ error: "staff_only" });
   }
   next();
