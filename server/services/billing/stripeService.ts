@@ -1,5 +1,12 @@
 import Stripe from "stripe";
 import { getSupabaseAdmin } from "../../middleware/auth";
+import {
+  DATABASE_TIER_BY_CANONICAL,
+  getStripePriceId,
+  type DatabaseTier,
+  type PaidCanonicalTier,
+  type BillingInterval,
+} from "./tierConfig";
 
 /**
  * Stripe service — manages customers, checkout sessions, and syncs
@@ -29,16 +36,34 @@ function assertStripeConfigured() {
  * Price IDs per tier. Configure in Stripe dashboard, then paste IDs here
  * (or load from env). These are product/price IDs, not plan IDs.
  */
-export const STRIPE_PRICES: Record<string, { tier: "gold" | "seller_pro"; priceId: string }> = {
-  [process.env.STRIPE_PRICE_GOLD ?? "price_gold_monthly"]: {
-    tier: "gold",
-    priceId: process.env.STRIPE_PRICE_GOLD ?? "price_gold_monthly",
-  },
-  [process.env.STRIPE_PRICE_SELLER_PRO ?? "price_seller_pro_monthly"]: {
-    tier: "seller_pro",
-    priceId: process.env.STRIPE_PRICE_SELLER_PRO ?? "price_seller_pro_monthly",
-  },
-};
+export interface StripePriceConfig {
+  tier: PaidCanonicalTier;
+  databaseTier: Exclude<DatabaseTier, "free">;
+  interval: BillingInterval;
+  priceId: string;
+}
+
+export function getStripePriceConfigs(): StripePriceConfig[] {
+  const configs: StripePriceConfig[] = [];
+  for (const tier of ["pro", "creator"] as const) {
+    for (const interval of ["monthly", "yearly"] as const) {
+      const priceId = getStripePriceId(tier, interval);
+      if (priceId) {
+        configs.push({
+          tier,
+          databaseTier: DATABASE_TIER_BY_CANONICAL[tier] as Exclude<DatabaseTier, "free">,
+          interval,
+          priceId,
+        });
+      }
+    }
+  }
+  return configs;
+}
+
+export function stripePriceConfigByPriceId(priceId: string): StripePriceConfig | null {
+  return getStripePriceConfigs().find((config) => config.priceId === priceId) ?? null;
+}
 
 /**
  * Create or reuse a Stripe customer for a profile.
@@ -98,12 +123,12 @@ export async function createCheckoutSession(opts: {
     client_reference_id: opts.profileId,
     metadata: {
       profile_id: opts.profileId,
-      target_tier: STRIPE_PRICES[opts.priceId]?.tier ?? "unknown",
+      target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
     },
     subscription_data: {
       metadata: {
         profile_id: opts.profileId,
-        target_tier: STRIPE_PRICES[opts.priceId]?.tier ?? "unknown",
+        target_tier: stripePriceConfigByPriceId(opts.priceId)?.tier ?? "unknown",
       },
     },
     allow_promotion_codes: true,
@@ -160,8 +185,8 @@ export async function createPortalSession(opts: {
 /**
  * Map a Stripe Price ID to a tier.
  */
-export function tierFromPriceId(priceId: string): "gold" | "seller_pro" | null {
-  return STRIPE_PRICES[priceId]?.tier ?? null;
+export function tierFromPriceId(priceId: string): Exclude<DatabaseTier, "free"> | null {
+  return stripePriceConfigByPriceId(priceId)?.databaseTier ?? null;
 }
 
 /**
@@ -195,7 +220,7 @@ export async function syncSubscription(subscription: Stripe.Subscription) {
 
   const status = subscription.status; // 'active' | 'past_due' | 'canceled' | etc.
   // Treat 'active' and 'trialing' as entitled; everything else downgrades to free
-  const effectiveTier: "free" | "gold" | "seller_pro" =
+  const effectiveTier: DatabaseTier =
     status === "active" || status === "trialing" ? tier : "free";
 
   // Upsert subscription row

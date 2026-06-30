@@ -12,6 +12,14 @@ import {
   isStripeConfigured,
   syncSubscription,
 } from "../services/billing/stripeService";
+import {
+  getStripePriceId,
+  getStripePriceMatrix,
+  getTierEntitlements,
+  normalizeSubscriptionTier,
+  type BillingInterval,
+  type PaidCanonicalTier,
+} from "../services/billing/tierConfig";
 
 export const billingRoutes = Router();
 
@@ -46,11 +54,12 @@ function getSafeFrontendOrigin(): string {
  * POST /api/billing/checkout
  * Start a Stripe Checkout session for upgrading to a paid tier.
  *
- * Body: { tier: 'gold' | 'seller_pro' }
+ * Body: { tier: 'pro' | 'creator', interval?: 'monthly' | 'yearly' }
  * Returns: { url: string }  (redirect the browser to this URL)
  */
 const CheckoutSchema = z.object({
-  tier: z.enum(["gold", "seller_pro"]),
+  tier: z.enum(["pro", "creator", "gold", "seller_pro"]),
+  interval: z.enum(["monthly", "yearly"]).default("monthly"),
 });
 
 function billingErrorMessage(err: unknown) {
@@ -63,6 +72,18 @@ billingRoutes.post(
   validate({ body: CheckoutSchema }),
   async (req: AuthedRequest, res: Response) => {
     const { tier } = req.body as z.infer<typeof CheckoutSchema>;
+    const normalized = normalizeSubscriptionTier(tier);
+    const checkoutTier = normalized.tier as PaidCanonicalTier;
+    const interval = (req.body as z.infer<typeof CheckoutSchema>).interval as BillingInterval;
+
+    if (checkoutTier !== "pro" && checkoutTier !== "creator") {
+      return res.status(400).json({
+        error: "unsupported_billing_tier",
+        message: "Checkout supports pro and creator subscriptions.",
+        warnings: normalized.warnings,
+      });
+    }
+
     if (!isStripeConfigured()) {
       return res.status(503).json({
         error: "stripe_not_configured",
@@ -70,15 +91,13 @@ billingRoutes.post(
       });
     }
 
-    const priceId =
-      tier === "gold"
-        ? process.env.STRIPE_PRICE_GOLD
-        : process.env.STRIPE_PRICE_SELLER_PRO;
+    const priceId = getStripePriceId(checkoutTier, interval);
 
     if (!priceId) {
       return res.status(503).json({
         error: "stripe_price_not_configured",
-        message: `Stripe price id is missing for ${tier}.`,
+        message: `Stripe price id is missing for ${checkoutTier} ${interval}.`,
+        warnings: normalized.warnings,
       });
     }
 
@@ -96,7 +115,7 @@ billingRoutes.post(
         successUrl,
         cancelUrl,
       });
-      return res.json({ url: session.url });
+      return res.json({ url: session.url, warnings: normalized.warnings });
     } catch (err) {
       console.error("[billing] checkout failed", err);
       return res.status(500).json({ error: "checkout_failed", message: billingErrorMessage(err) });
@@ -145,7 +164,7 @@ billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Respo
  * GET /api/billing/status
  * Returns the user's current subscription state.
  */
-billingRoutes.get("/status", requireAuth, async (req: AuthedRequest, res: Response) => {
+async function billingStatusHandler(req: AuthedRequest, res: Response) {
   const { data: sub, error } = await supabaseAdmin
     .from("subscriptions")
     .select(
@@ -162,20 +181,29 @@ billingRoutes.get("/status", requireAuth, async (req: AuthedRequest, res: Respon
   }
 
   const profileTier = req.user!.profile.tier;
+  const entitlements = getTierEntitlements(profileTier);
+  const normalized = normalizeSubscriptionTier(profileTier);
 
   return res.json({
-    tier: profileTier,
+    tier: entitlements.tier,
+    legacyTier: normalized.sourceTier !== entitlements.tier ? normalized.sourceTier : null,
+    monthlyCustomizationPoints: entitlements.monthlyCustomizationPoints,
+    canUseProGraphs: entitlements.canUseProGraphs,
+    canUseTeamMatchupLab: entitlements.canUseTeamMatchupLab,
+    canUsePlayerEdgeLab: entitlements.canUsePlayerEdgeLab,
+    canAccessNotifications: entitlements.canAccessNotifications,
     status: sub?.status ?? (profileTier === "free" ? "free" : "active"),
     currentPeriodStart: sub?.current_period_start ?? null,
     currentPeriodEnd: sub?.current_period_end ?? null,
     cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
     subscription: sub ?? null,
-    prices: {
-      gold: process.env.STRIPE_PRICE_GOLD ?? null,
-      seller_pro: process.env.STRIPE_PRICE_SELLER_PRO ?? null,
-    },
+    prices: getStripePriceMatrix(),
+    warnings: entitlements.warnings,
   });
-});
+}
+
+billingRoutes.get("/status", requireAuth, billingStatusHandler);
+billingRoutes.get("/subscription", requireAuth, billingStatusHandler);
 
 /**
  * POST /api/billing/webhook

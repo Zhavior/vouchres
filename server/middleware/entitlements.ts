@@ -1,5 +1,10 @@
 import type { Response, NextFunction } from "express";
 import { AuthedRequest } from "./auth";
+import {
+  getTierEntitlements,
+  normalizeSubscriptionTier,
+  type TierEntitlements,
+} from "../services/billing/tierConfig";
 
 /**
  * Entitlements — server-side feature gates.
@@ -13,13 +18,17 @@ import { AuthedRequest } from "./auth";
  *   router.post("/api/ai/explain-pick", requireAuth, requireTierOrQuota("free", 20, "ai_explain"), ...);
  */
 
-type Tier = "free" | "gold" | "seller_pro";
+type Tier = "free" | "gold" | "seller_pro" | "pro" | "creator";
 
-const TIER_RANK: Record<Tier, number> = {
+const TIER_RANK: Record<"free" | "pro" | "creator", number> = {
   free: 0,
-  gold: 1,
-  seller_pro: 2,
+  pro: 1,
+  creator: 2,
 };
+
+function tierRank(tier: unknown): number {
+  return TIER_RANK[normalizeSubscriptionTier(tier).tier];
+}
 
 /**
  * Hard tier gate — reject if user's tier rank is below the required tier.
@@ -57,6 +66,29 @@ export function requireTierOrQuota(
   return (_req: AuthedRequest, _res: Response, next: NextFunction) => {
     next();
   };
+}
+
+export function getEntitlementsForTier(tier: unknown): TierEntitlements {
+  return getTierEntitlements(tier);
+}
+
+export async function getUserEntitlements(userId: string): Promise<TierEntitlements> {
+  const { supabaseAdmin } = await import("./auth");
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("tier")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[entitlements] profile lookup failed", error);
+    return {
+      ...getTierEntitlements("free"),
+      warnings: ["Unable to load subscription tier; defaulted entitlements to free."],
+    };
+  }
+
+  return getTierEntitlements(data?.tier ?? "free");
 }
 
 /**
