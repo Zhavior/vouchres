@@ -2,6 +2,8 @@
 import type { Express, Request, Response } from "express";
 import { listAgents, getAgent, generatePicks, JUDGE_AGENTS } from "../agents/agentRegistry";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
+import { generationLimiter } from "../middleware/rateLimit";
+import { requireAuth, requireStaff } from "../middleware/auth";
 
 export function registerAgentRoutes(app: Express): void {
   app.get("/api/agents", (_req: Request, res: Response) => {
@@ -20,7 +22,7 @@ export function registerAgentRoutes(app: Express): void {
    * the MLB schedule + pitcher stats are fetched ONLY ONCE and the
    * in-flight Promise is shared across all callers.
    */
-  app.post("/api/agents/:id/generate-picks", async (req: Request, res: Response) => {
+  app.post("/api/agents/:id/generate-picks", requireAuth, generationLimiter, async (req: Request, res: Response) => {
     const agent = getAgent(req.params.id);
     if (!agent) return res.status(404).json({ error: "Agent not found" });
     try {
@@ -41,7 +43,7 @@ export function registerAgentRoutes(app: Express): void {
    * Builds the daily report ONCE, then runs all 5 cappers against it.
    * This is the most efficient endpoint — one MLB data fetch, 5 cappers.
    */
-  app.post("/api/agents/generate-all-picks", async (req: Request, res: Response) => {
+  app.post("/api/agents/generate-all-picks", requireAuth, requireStaff, generationLimiter, async (req: Request, res: Response) => {
     try {
       const report = await getSharedDailyReport(req.body?.date);
       const cappers = listAgents();

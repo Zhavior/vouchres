@@ -1,10 +1,11 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
-import { pickLimiter } from "../middleware/rateLimit";
+import { gradingLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { createPick } from "../services/persistence/pickService";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
+import { gradePendingPicks } from "../services/grading/gradingService";
 
 /**
  * Parlay routes — multi-leg pick creation with transactional integrity.
@@ -31,7 +32,7 @@ export const parlayRoutes = Router();
    settle locally-stored parlays and reflect outcomes in Results.
    Body: { legs: [{ sport, gamePk, market, selection, threshold?, oddsDecimal? }], stakeUnits? }
    ============================================================ */
-parlayRoutes.post("/parlays/grade", async (req: Request, res: Response) => {
+parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Response) => {
   const body = req.body ?? {};
   const legs = body.legs;
   const stakeUnits = typeof body.stakeUnits === "number" && body.stakeUnits > 0 ? body.stakeUnits : 1.0;
@@ -91,6 +92,36 @@ parlayRoutes.post("/parlays/grade", async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error("[parlays/grade] failed", err?.message);
     return res.status(500).json({ error: "grade_failed", message: err?.message });
+  }
+});
+
+/* ============================================================
+   GET /api/parlays/grade-due  — lightweight DB-backed auto-grader
+   Finds pending picks/parlays from the last 2 days, grades any whose games
+   are now Final via MLB linescore, writes results to Supabase.
+   Returns a summary — no heavy report building.
+   ============================================================ */
+parlayRoutes.get("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
+  try {
+    const days = Math.min(Number(req.query.days ?? 2), 7);
+    const { graded, skipped } = await gradePendingPicks({ days });
+
+    const settled = graded.filter((r) => r.status !== "graded_error");
+    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
+    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
+
+    console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
+
+    return res.json({
+      gradedParlays: settled.length,
+      gradedLegs: graded.length,
+      pendingLegs: pending.length,
+      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error("[parlays/grade-due] failed", err?.message);
+    return res.status(500).json({ error: "grade_due_failed", message: err?.message });
   }
 });
 

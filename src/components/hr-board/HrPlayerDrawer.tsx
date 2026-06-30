@@ -226,7 +226,15 @@ function SignalBar({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | null; onClose: () => void }) {
+export default function HrPlayerDrawer({
+  row,
+  onClose,
+  isProUser = false,
+}: {
+  row: HrBoardRow | null;
+  onClose: () => void;
+  isProUser?: boolean;
+}) {
   const [activeProTab, setActiveProTab] = useState<ProTab>('Overview');
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
@@ -236,7 +244,6 @@ export default function HrPlayerDrawer({ row, onClose }: { row: HrBoardRow | nul
   };
 
   if (!row) return null;
-  const isProUser = false;
   const topReasons = row.reasons?.slice(0, 5) ?? [];
   const topWarnings = row.warnings?.slice(0, 3) ?? [];
   const recentForm = row.recentForm;

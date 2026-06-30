@@ -16,6 +16,33 @@ import {
 export const billingRoutes = Router();
 
 /**
+ * Returns a validated, slash-stripped frontend origin for Stripe redirect URLs.
+ * Preference order: FRONTEND_URL → CLIENT_URL → SITE_URL → PUBLIC_SITE_URL → APP_URL → localhost:3000
+ * Rejects any value that doesn't start with http:// or https://.
+ */
+function getSafeFrontendOrigin(): string {
+  const raw =
+    process.env.FRONTEND_URL ||
+    process.env.CLIENT_URL ||
+    process.env.SITE_URL ||
+    process.env.PUBLIC_SITE_URL ||
+    process.env.APP_URL ||
+    "http://localhost:3000";
+
+  const stripped = raw.replace(/\/+$/, ""); // strip trailing slashes
+
+  if (!stripped.startsWith("http://") && !stripped.startsWith("https://")) {
+    console.warn(
+      `[billing] getSafeFrontendOrigin: "${stripped}" is not a valid http(s) URL — falling back to http://localhost:3000`
+    );
+    return "http://localhost:3000";
+  }
+
+  console.log("[billing] safeFrontendOrigin:", stripped);
+  return stripped;
+}
+
+/**
  * POST /api/billing/checkout
  * Start a Stripe Checkout session for upgrading to a paid tier.
  *
@@ -41,15 +68,19 @@ billingRoutes.post(
       return res.status(500).json({ error: "stripe_price_not_configured" });
     }
 
-    const frontendOrigin = process.env.FRONTEND_URL ?? "http://localhost:3000";
-
     try {
+      const safeOrigin = getSafeFrontendOrigin();
+      const successUrl = new URL("/premium?checkout=success", safeOrigin).toString();
+      const cancelUrl = new URL("/premium?checkout=cancelled", safeOrigin).toString();
+      console.log("[billing] checkout successUrl:", successUrl);
+      console.log("[billing] checkout cancelUrl:", cancelUrl);
+
       const session = await createCheckoutSession({
         profileId: req.user!.id,
         email: req.user!.email ?? "",
         priceId,
-        successUrl: `${frontendOrigin}/premium?checkout=success`,
-        cancelUrl: `${frontendOrigin}/premium?checkout=cancelled`,
+        successUrl,
+        cancelUrl,
       });
       return res.json({ url: session.url });
     } catch (err) {
@@ -64,11 +95,14 @@ billingRoutes.post(
  * Return a Stripe Billing Portal URL for managing an existing subscription.
  */
 billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const frontendOrigin = process.env.FRONTEND_URL ?? "http://localhost:3000";
   try {
+    const safeOrigin = getSafeFrontendOrigin();
+    const returnUrl = new URL("/settings", safeOrigin).toString();
+    console.log("[billing] portal returnUrl:", returnUrl);
+
     const session = await createPortalSession({
       profileId: req.user!.id,
-      returnUrl: `${frontendOrigin}/settings`,
+      returnUrl,
     });
     return res.json({ url: session.url });
   } catch (err) {

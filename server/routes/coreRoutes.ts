@@ -156,14 +156,22 @@ coreRoutes.post(
 
 /**
  * GET /api/picks
- * Public ledger of all picks. Paginated.
+ * Current user's pick ledger. Staff may query another user explicitly.
  */
-coreRoutes.get("/picks", async (req, res: Response) => {
+coreRoutes.get("/picks", requireAuth, async (req: AuthedRequest, res: Response) => {
   const limit = Number(req.query.limit ?? 50);
   const offset = Number(req.query.offset ?? 0);
-  const userId = req.query.user_id as string | undefined;
+  const requestedUserId = req.query.user_id as string | undefined;
   const capperId = req.query.capper_id as string | undefined;
+  const userId = requestedUserId ?? (capperId && req.user!.profile.is_staff ? undefined : req.user!.id);
   const status = req.query.status as "pending" | "won" | "lost" | "push" | "void" | undefined;
+
+  if (requestedUserId && requestedUserId !== req.user!.id && !req.user!.profile.is_staff) {
+    return res.status(403).json({ error: "forbidden" });
+  }
+  if (capperId && !req.user!.profile.is_staff) {
+    return res.status(403).json({ error: "forbidden" });
+  }
 
   try {
     const { picks, total } = await getLedger({ userId, capperId, status, limit, offset });

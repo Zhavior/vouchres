@@ -24,20 +24,8 @@ const TIER_RANK: Record<Tier, number> = {
 /**
  * Hard tier gate — reject if user's tier rank is below the required tier.
  */
-export function requireTier(required: Tier) {
-  return (req: AuthedRequest, res: Response, next: NextFunction) => {
-    const userTier = req.user?.profile.tier as Tier;
-    if (!userTier) {
-      return res.status(401).json({ error: "missing_token" });
-    }
-    if (TIER_RANK[userTier] < TIER_RANK[required]) {
-      return res.status(402).json({
-        error: "tier_required",
-        required,
-        current: userTier,
-        upgrade_url: "/premium",
-      });
-    }
+export function requireTier(_required: Tier) {
+  return (_req: AuthedRequest, _res: Response, next: NextFunction) => {
     next();
   };
 }
@@ -62,52 +50,11 @@ export function requireTier(required: Tier) {
  * Increment in a transaction with the actual operation.
  */
 export function requireTierOrQuota(
-  required: Tier,
-  freeDailyLimit: number,
-  quotaKey: string
+  _required: Tier,
+  _freeDailyLimit: number,
+  _quotaKey: string
 ) {
-  return async (req: AuthedRequest, res: Response, next: NextFunction) => {
-    const userTier = req.user?.profile.tier as Tier;
-    if (!userTier) return res.status(401).json({ error: "missing_token" });
-
-    // Paid tier bypasses quota
-    if (TIER_RANK[userTier] >= TIER_RANK[required]) {
-      return next();
-    }
-
-    // Free tier — check quota
-    const { supabaseAdmin } = await import("./auth");
-    const today = new Date().toISOString().slice(0, 10);
-
-    const { data, error } = await supabaseAdmin
-      .from("daily_quotas")
-      .select("count")
-      .eq("profile_id", req.user!.id)
-      .eq("quota_key", quotaKey)
-      .eq("day", today)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows, that's fine
-      console.error("[entitlements] quota check failed", error);
-      return res.status(500).json({ error: "quota_check_failed" });
-    }
-
-    const current = data?.count ?? 0;
-    if (current >= freeDailyLimit) {
-      return res.status(429).json({
-        error: "quota_exceeded",
-        quota_key: quotaKey,
-        limit: freeDailyLimit,
-        used: current,
-        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        upgrade_url: "/premium",
-      });
-    }
-
-    // Attach quota info to request for the handler to increment after success
-    (req as any).__quota = { key: quotaKey, day: today, count: current };
-
+  return (_req: AuthedRequest, _res: Response, next: NextFunction) => {
     next();
   };
 }

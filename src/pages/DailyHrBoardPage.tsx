@@ -6,7 +6,8 @@ import HrBoardFilters from '../components/hr-board/HrBoardFilters';
 import HrBoardTable from '../components/hr-board/HrBoardTable';
 import HrTierView from '../components/hr-board/HrTierView';
 import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
-import type { MLBPlayer } from '../types';
+import type { CreatorProofProfile, MLBPlayer } from '../types';
+import { hasTierAccess } from '../components/pro/ProAccessGate';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = 5 * 60_000;
@@ -68,13 +69,14 @@ function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
 
 interface HrBoardPageProps {
   onAddLegToParlay?: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string; gamePk?: string | number }) => void;
+  profile?: CreatorProofProfile;
 }
 
 // Module-level cache (survives unmount/navigation) so re-opening the HR Edge
 // Board is instant and never flashes blank while the slow engine re-fetches.
 const hrBoardCache: Record<string, { data: HrBoardResponse; ts: number }> = {};
 
-export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps = {}) {
+export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardPageProps = {}) {
   const initialDate = todayISO();
   const [view, setView] = useState<'tier' | 'game'>('tier');
   const [date, setDate] = useState(initialDate);
@@ -497,7 +499,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay }: HrBoardPageProps 
         )
       )}
 
-      <HrPlayerDrawer row={selected} onClose={() => setSelected(null)} />
+      <HrPlayerDrawer row={selected} onClose={() => setSelected(null)} isProUser={profile ? hasTierAccess(profile, 'GOLD') : false} />
     </div>
   );
 }

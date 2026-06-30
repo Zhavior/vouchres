@@ -10,13 +10,20 @@ const TIER_RANK: Record<string, number> = {
   SELLER_PRO: 2,
 };
 
+function normalizeSubscriptionTier(tier?: string | null): keyof typeof TIER_RANK {
+  const normalized = String(tier ?? 'BASIC').trim().toUpperCase();
+  if (normalized === 'FREE') return 'BASIC';
+  if (normalized === 'GOLD') return 'GOLD';
+  if (normalized === 'SELLER_PRO' || normalized === 'SELLER PRO' || normalized === 'PRO') return 'SELLER_PRO';
+  return 'BASIC';
+}
+
 /** True if the profile meets at least the given tier (defaults to GOLD). */
 export function hasTierAccess(
   profile: Pick<CreatorProofProfile, 'subscriptionTier'>,
   required: RequiredTier = 'GOLD',
 ): boolean {
-  const current = TIER_RANK[profile.subscriptionTier || 'BASIC'] ?? 0;
-  return current >= TIER_RANK[required];
+  return TIER_RANK[normalizeSubscriptionTier(profile.subscriptionTier)] >= TIER_RANK[required];
 }
 
 /** Backwards-compatible helper: true for GOLD or SELLER_PRO. */
@@ -92,7 +99,7 @@ export function ProAccessGate({
   }
 
   const theme = TIER_THEMES[requiredTier];
-  const currentTier = profile.subscriptionTier || 'BASIC';
+  const currentTier = normalizeSubscriptionTier(profile.subscriptionTier);
   // A Gold user hitting a Seller Pro wall is "upgrading", not "subscribing"
   const isUpgradeFromGold = requiredTier === 'SELLER_PRO' && currentTier === 'GOLD';
 

@@ -66,6 +66,24 @@ export class TTLCache<T = unknown> {
   }
 }
 
+/** Run at most `limit` concurrent async tasks over `items`. */
+export async function limitConcurrency<T, I>(
+  items: I[],
+  limit: number,
+  fn: (item: I, index: number) => Promise<T>
+): Promise<T[]> {
+  const results: T[] = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 /** Recommended TTLs (ms) per the VouchEdge caching policy. */
 export const TTL = {
   schedule: 5 * 60_000,

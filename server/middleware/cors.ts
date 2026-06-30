@@ -48,7 +48,9 @@ export const helmetMiddleware = helmet({
     directives: {
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
+      scriptSrc: process.env.NODE_ENV === "production"
+        ? ["'self'"]
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"], // Tailwind v4 needs unsafe-inline
       connectSrc: [
         "'self'",

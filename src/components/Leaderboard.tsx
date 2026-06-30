@@ -42,7 +42,7 @@ interface Capper {
 }
 
 const AVATAR_COLORS = ['bg-indigo-600','bg-teal-600','bg-pink-600','bg-violet-600','bg-orange-600','bg-rose-600','bg-amber-600','bg-sky-600','bg-cyan-600','bg-emerald-600'];
-const SCOPE_MAP: Record<string, string> = { month: 'monthly', week: 'weekly', 'all-time': 'overall' };
+const SCOPE_MAP: Record<string, string> = { month: 'month', week: 'week', 'all-time': 'overall' };
 
 function entryToCapper(e: any, idx: number): Capper {
   const won = e.won_picks ?? 0;

@@ -23,6 +23,9 @@ interface Props {
   onGenerate?: () => void;
   onUpdateParlay?: (updatedParlay: Parlay) => void;
   generating?: boolean;
+  onRefreshGrades?: () => void;
+  isGrading?: boolean;
+  lastGraded?: Date | null;
 }
 
 const LEG_ICON: Record<string, React.ReactNode> = {
@@ -189,7 +192,7 @@ function ParlayCard({ p, live }: { p: Parlay; live: boolean }) {
   );
 }
 
-export default function LiveParlaysPage({ parlays, onGenerate, generating }: Props) {
+export default function LiveParlaysPage({ parlays, onGenerate, generating, onRefreshGrades, isGrading, lastGraded }: Props) {
   const [tab, setTab] = useState<'my' | 'practice' | 'real' | 'upcoming' | 'live' | 'results'>('my');
 
   const buckets = useMemo(() => bucketParlays(parlays || []), [parlays]);
@@ -248,16 +251,33 @@ export default function LiveParlaysPage({ parlays, onGenerate, generating }: Pro
             </p>
           </div>
 
-          {onGenerate && (
-            <button
-              onClick={onGenerate}
-              disabled={generating}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2.5 text-xs font-black text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${generating ? 'animate-spin' : ''}`} />
-              Generate Today's Parlays
-            </button>
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {onRefreshGrades && (
+              <button
+                onClick={onRefreshGrades}
+                disabled={isGrading}
+                className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2.5 text-xs font-black text-emerald-200 transition-colors hover:bg-emerald-400/20 disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isGrading ? 'animate-spin' : ''}`} />
+                {isGrading ? 'Checking results…' : 'Refresh Results'}
+              </button>
+            )}
+            {lastGraded && (
+              <span className="text-[10px] text-slate-500">
+                Last checked {lastGraded.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+            {onGenerate && (
+              <button
+                onClick={onGenerate}
+                disabled={generating}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2.5 text-xs font-black text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${generating ? 'animate-spin' : ''}`} />
+                Generate Today's Parlays
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">

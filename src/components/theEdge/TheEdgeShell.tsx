@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import type { CSSProperties, FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Bell, Bot, Check, CreditCard, Crown, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
 import '../edgePortal/edgePortalTheme.css';
@@ -101,19 +101,6 @@ function Stat({ label, value, tone = 'white' }: { label: string; value: string |
 const PRIMARY = 'rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3.5 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5';
 const SECONDARY = 'rounded-2xl border border-cyan-300/25 bg-cyan-300/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5';
 const GHOST = 'rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-3.5 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:text-white';
-
-const SPACE_PARTICLES = [
-  { x: '6%', y: '18%', size: '2px', delay: '0s', duration: '8s' },
-  { x: '12%', y: '70%', size: '3px', delay: '-2s', duration: '10s' },
-  { x: '21%', y: '34%', size: '2px', delay: '-5s', duration: '9s' },
-  { x: '34%', y: '12%', size: '4px', delay: '-1s', duration: '11s' },
-  { x: '42%', y: '78%', size: '2px', delay: '-4s', duration: '8s' },
-  { x: '55%', y: '28%', size: '3px', delay: '-6s', duration: '12s' },
-  { x: '68%', y: '66%', size: '2px', delay: '-3s', duration: '9s' },
-  { x: '76%', y: '16%', size: '3px', delay: '-7s', duration: '10s' },
-  { x: '88%', y: '44%', size: '2px', delay: '-1.5s', duration: '8s' },
-  { x: '94%', y: '82%', size: '4px', delay: '-4.5s', duration: '13s' },
-];
 
 function friendlyAuthError(message?: string) {
   const text = String(message ?? '').toLowerCase();
@@ -399,43 +386,34 @@ export default function TheEdgeShell({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
-      <div className="edge-space-backdrop" />
-      <div className="edge-starfield edge-starfield-far" />
-      <div className="edge-starfield edge-starfield-near" />
-      <div className="edge-space-particles" aria-hidden="true">
-        {SPACE_PARTICLES.map((particle, index) => (
-          <span
-            key={`${particle.x}-${particle.y}`}
-            style={{
-              '--edge-particle-x': particle.x,
-              '--edge-particle-y': particle.y,
-              '--edge-particle-size': particle.size,
-              '--edge-particle-delay': particle.delay,
-              '--edge-particle-duration': particle.duration,
-            } as CSSProperties}
-            className={index % 3 === 0 ? 'edge-space-particle is-bright' : 'edge-space-particle'}
-          />
-        ))}
-      </div>
-      <div className="edge-orbit-ring edge-orbit-ring-one" aria-hidden="true" />
-      <div className="edge-orbit-ring edge-orbit-ring-two" aria-hidden="true" />
+      <div className="edge-home-backdrop" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        {/* Compact top bar (single hero lives in the layer, not duplicated here) */}
-        <header className="flex items-center justify-between gap-4 border-b border-white/[0.07] px-4 py-3 sm:px-6">
+        <header className="border-b border-white/[0.07] bg-slate-950/75 px-4 py-4 backdrop-blur-xl sm:px-6">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300">
               <Sparkles className="h-4 w-4" />
             </span>
             <span className="text-sm font-black tracking-tight text-white">
-              The <span className="text-cyan-300">Edge</span>
+              Vouch<span className="text-cyan-300">Edge</span>
             </span>
             <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:inline">
-              · {edgeLayer === 'dashboard' || edgeLayer === 'welcomeBack' ? 'The Island' : 'MLB Proof Engine'}
+              MLB Research
             </span>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            {edgeLayer === 'intro' && (
+              <>
+                <button onClick={() => setEdgeLayer('login')} className="rounded-xl border border-slate-700 bg-slate-900/80 px-3.5 py-2 text-xs font-black text-slate-300 transition hover:text-white">
+                  <span className="inline-flex items-center gap-1.5"><LogIn className="h-3.5 w-3.5" /> Login</span>
+                </button>
+                <button onClick={() => openSignup('pro_trial')} className="hidden rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5 sm:inline-flex">
+                  Get Started
+                </button>
+              </>
+            )}
             {isAuthLayer && (
               <button onClick={() => setEdgeLayer('intro')} className="rounded-xl border border-slate-700 bg-slate-900/80 px-3.5 py-2 text-xs font-black text-slate-300 transition hover:text-white">
                 Back
@@ -452,6 +430,7 @@ export default function TheEdgeShell({
               </button>
             )}
           </div>
+          </div>
         </header>
 
         <div className={presentation === 'page' ? 'flex-1 overflow-y-auto p-4 sm:p-8' : 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
@@ -467,27 +446,24 @@ export default function TheEdgeShell({
                 transition={{ duration: 0.45, ease }}
                 className="edge-welcome-front mx-auto max-w-6xl"
               >
-                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-                  {/* Left: the pitch */}
-                  <div className="edge-hero-copy">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
-                      <ShieldCheck className="h-3.5 w-3.5" /> Proof before hype
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-start">
+                  <div className="edge-home-panel rounded-3xl p-5 sm:p-7">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
+                      <ShieldCheck className="h-3.5 w-3.5" /> Verified research workspace
                     </div>
 
-                    <h1 className="mt-5 text-5xl font-black leading-[0.98] tracking-tight text-white sm:text-7xl">
-                      The sharpest seat<br />in <span className="text-cyan-300">sports research.</span>
+                    <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl">
+                      VouchEdge
                     </h1>
 
                     <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
-                      VouchEdge tracks every pick to the final box score. Research the slate, build parlays,
-                      and follow members by receipts — not hype.
+                      Clean MLB research, saved parlays, alerts, and tracked results in one dashboard.
                     </p>
 
-                    {/* Real proof strip */}
                     <div className="mt-6 grid max-w-md grid-cols-3 gap-2">
                       <Stat label="Games today" value={stats.gamesToday || '—'} tone="cyan" />
                       <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
-                      <Stat label="Tracked to final" value="100%" tone="emerald" />
+                      <Stat label="Tracked" value="100%" tone="emerald" />
                     </div>
 
                     <div className="mt-7 flex flex-wrap gap-3">
@@ -501,33 +477,17 @@ export default function TheEdgeShell({
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-bold text-slate-500">
-                      <span>1.5-week free trial</span><span>·</span><span>Cancel anytime</span><span>·</span><span>Research &amp; entertainment only</span>
+                      <span>Research &amp; entertainment only</span><span>·</span><span>No guaranteed outcomes</span>
                     </div>
                   </div>
 
                   <motion.div
-                    className="edge-astronaut-stage"
+                    className="edge-slate-stage"
                     initial={{ opacity: 0, scale: 0.96, y: 24 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.7, delay: 0.1, ease }}
                   >
-                    <div className="edge-astronaut-scene" aria-hidden="true">
-                      <div className="edge-moon" />
-                      <div className="edge-astronaut">
-                        <span className="edge-astronaut-helmet">
-                          <span className="edge-astronaut-visor" />
-                        </span>
-                        <span className="edge-astronaut-pack" />
-                        <span className="edge-astronaut-body" />
-                        <span className="edge-astronaut-arm edge-astronaut-arm-left" />
-                        <span className="edge-astronaut-arm edge-astronaut-arm-right" />
-                        <span className="edge-astronaut-leg edge-astronaut-leg-left" />
-                        <span className="edge-astronaut-leg edge-astronaut-leg-right" />
-                        <span className="edge-astronaut-tether" />
-                      </div>
-                    </div>
-
-                    <div className="edge-glass-card relative overflow-hidden rounded-3xl p-5 shadow-2xl shadow-black/40">
+                    <div className="edge-home-card relative overflow-hidden rounded-3xl p-5 shadow-2xl shadow-black/40">
                       <div className="mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs font-black text-white">
                           <Radio className="h-4 w-4 text-cyan-300" /> Today’s MLB slate

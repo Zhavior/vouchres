@@ -61,10 +61,14 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
           });
         }
       });
-      // Clean up URL
-      const url = new URL(window.location.href);
-      url.searchParams.delete('checkout');
-      window.history.replaceState({}, '', url.toString());
+      // Clean up URL safely
+      try {
+        const url = new URL(window.location.href || '/', window.location.origin || 'http://localhost:3000');
+        url.searchParams.delete('checkout');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      } catch (error) {
+        console.warn('[premium] checkout URL cleanup skipped:', error);
+      }
     }
   }, []);
 

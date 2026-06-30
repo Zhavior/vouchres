@@ -94,6 +94,38 @@ export const aiLimiter = rateLimit({
 });
 
 /**
+ * Auth limiter — applied to auth-adjacent endpoints.
+ * Backend login/signup are handled by Supabase client-side today, but this
+ * still protects username checks and any future server auth endpoints.
+ */
+export const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
+/**
+ * Generation limiter — expensive AI/agent/image/social-draft generation.
+ */
+export const generationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  keyGenerator,
+  handler,
+});
+
+/**
+ * Grading limiter — live grading and judge endpoints.
+ */
+export const gradingLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
+/**
  * Pick creation limiter — /api/picks POST.
  * 10 picks/min per user. Prevents feed spam.
  */

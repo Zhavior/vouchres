@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, requireAuth, requireStaff, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { generationLimiter } from "../middleware/rateLimit";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 
 /**
@@ -26,7 +27,7 @@ export const publicRoutes = Router();
 // =========================================================
 
 
-publicRoutes.post("/ai-judges/save-current-picks", async (_req, res: Response) => {
+publicRoutes.post("/ai-judges/save-current-picks", requireAuth, requireStaff, generationLimiter, async (_req, res: Response) => {
   try {
     const { saveCurrentAiJudgePicksToLedger } = await import("../services/aiJudges/aiJudgePickLedgerService");
     const payload = await saveCurrentAiJudgePicksToLedger();
@@ -360,11 +361,15 @@ publicRoutes.get("/profile/:id/stats", async (req, res: Response) => {
 /**
  * GET /api/profile/:id/picks
  */
-publicRoutes.get("/profile/:id/picks", async (req, res: Response) => {
+publicRoutes.get("/profile/:id/picks", requireAuth, async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
   const status = req.query.status as string | undefined;
+
+  if (id !== req.user!.id && !req.user!.profile.is_staff) {
+    return res.status(403).json({ error: "forbidden" });
+  }
 
   let query = supabaseAdmin
     .from("picks")

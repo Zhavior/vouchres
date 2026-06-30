@@ -140,7 +140,7 @@ export default function HomeFeedLayout({
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
-      <div className={`flex w-full min-h-screen relative transition-all duration-300 z-10 ${
+      <div className={`flex w-full min-h-screen relative transition-all duration-300 z-10 mx-auto ${
         activeSection === 'welcome' ? 'max-w-none' : activeSection === 'feed' ? 'max-w-[1300px]' : 'max-w-[1580px]'
       }`} id="layout-inner-frame">
         

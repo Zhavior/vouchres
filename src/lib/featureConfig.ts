@@ -47,7 +47,7 @@ export interface FeatureLayout {
 /* ============ All features (master list) ============ */
 
 export const ALL_FEATURES: FeatureConfig[] = [
-  { id: "welcome", label: "Welcome Portal", icon: "Trophy", enabled: true, order: 0, locked: true },
+  { id: "welcome", label: "Welcome Portal", icon: "Trophy", enabled: false, order: 0, locked: true },
 
   // Daily — sport-scoped boards and slates
   { id: "today", label: "Today", icon: "LayoutDashboard", enabled: true, order: 1, group: "Daily" },
@@ -69,6 +69,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track" },
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
+  { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },
 
   // Social
   { id: "feed", label: "Home Feed", icon: "Home", enabled: true, order: 15, group: "Social" },

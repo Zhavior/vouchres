@@ -137,27 +137,25 @@ export async function gradePendingPicks(opts: {
 
 /**
  * Fetch the boxscore for a game. Throws if the game is not yet final.
+ * Uses linescore endpoint to verify finality before fetching player stats.
  */
 async function fetchBoxscore(gamePk: string): Promise<any> {
-  const url = `${MLB_API}/v1/game/${gamePk}/boxscore`;
-  const res = await fetch(url, {
+  // Step 1: linescore to verify the game is complete
+  const lsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/linescore`, {
+    signal: AbortSignal.timeout(8_000),
+    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+  });
+  if (!lsRes.ok) throw new Error(`linescore fetch ${lsRes.status}`);
+  const ls = await lsRes.json();
+  if (ls?.isComplete !== true) throw new Error(`game not final (isComplete=${ls?.isComplete})`);
+
+  // Step 2: boxscore for player batting stats
+  const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
     signal: AbortSignal.timeout(10_000),
     headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
   });
-
-  if (!res.ok) {
-    throw new Error(`boxscore fetch ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  // Verify game is final
-  const gameState = data?.info?.state ?? data?.status?.state ?? "unknown";
-  if (gameState !== "final") {
-    throw new Error(`game not final (state=${gameState})`);
-  }
-
-  return data;
+  if (!bsRes.ok) throw new Error(`boxscore fetch ${bsRes.status}`);
+  return bsRes.json();
 }
 
 /**

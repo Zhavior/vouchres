@@ -25,6 +25,7 @@ import {
 import { FeedPost, Leg, MLBPlayer, CreatorProofProfile, Parlay } from '../types';
 import ResultsLedgerSummary from './results/ResultsLedgerSummary';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
+import { isGuestMode } from '../lib/authDisplay';
 
 interface ResultsPageProps {
   posts: FeedPost[];
@@ -334,7 +335,9 @@ const INITIAL_AI_PARLAYS: AIParlayPick[] = [
   }
 ];
 
-export default function ResultsPage({ posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
+export default function ResultsPage({
+  const guestPreviewMode = isGuestMode();
+ posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
   // Navigation tabs: 'ai_model' (VAI AI Picks) vs 'community' (verified ledger) vs 'personal' (My Outcomes)
   const [activeSubTab, setActiveSubTab] = useState<'ai_model' | 'community' | 'personal'>('ai_model');
 
@@ -417,7 +420,13 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
 
     loadBackendLedger();
 
-    return () => {
+    return (
+      {guestPreviewMode ? (
+        <div className="mx-auto mb-4 max-w-7xl rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-100">
+          <strong>Guest results preview:</strong> no private account ledger is shown. Create an account or log in to save picks, track your own win rate, and see your personal results.
+        </div>
+      ) : null}
+) => {
       cancelled = true;
     };
   }, []);

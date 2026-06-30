@@ -11,9 +11,18 @@ let supabaseAdminClient: SupabaseClient | null = null;
 
 function initSupabaseAdmin(): SupabaseClient {
   if (!supabaseAdminClient) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error(
+        "Server Supabase admin client requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+      );
+    }
+
     supabaseAdminClient = createClient(
-      (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) ?? "",
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY) ?? "",
+      supabaseUrl,
+      serviceRoleKey,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
   }

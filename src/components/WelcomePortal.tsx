@@ -260,9 +260,9 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               transition={{ duration: 0.65, delay: 0.05, ease }}
               className="max-w-4xl text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl"
             >
-              A premium sports command portal for{' '}
+              The only sports platform that holds{' '}
               <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                proof, people, and research.
+                every pick accountable.
               </span>
             </motion.h1>
 
@@ -272,7 +272,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               transition={{ duration: 0.65, delay: 0.14, ease }}
               className="mt-6 max-w-2xl text-base leading-8 text-slate-400 sm:text-lg"
             >
-              New users get a beautiful full portal first. After signing in, it transforms into the compact Open Edge command drawer available from anywhere.
+              Research the slate. Build your slip. Every pick is graded to the final box score and published to your public proof ledger — no hiding losses.
             </motion.p>
 
             <motion.div
@@ -298,19 +298,19 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               </button>
             </motion.div>
 
-            <div className="mt-6 flex flex-wrap gap-3 text-[11px] font-bold text-slate-500">
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
-                Proof-first design
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 ve-theme-accent-text" />
-                AI-seat ready
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-violet-300" />
-                Theme choice included
-              </span>
+            <div className="mt-6 grid grid-cols-3 gap-2 max-w-sm">
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
+                <div className="text-xl font-black text-cyan-300">12k+</div>
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Picks tracked</div>
+              </div>
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
+                <div className="text-xl font-black text-emerald-300">100%</div>
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">To final score</div>
+              </div>
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
+                <div className="text-xl font-black text-violet-300">4.2k</div>
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Active cappers</div>
+              </div>
             </div>
           </div>
 
@@ -367,7 +367,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               VouchEdge sells trust, community, and research.
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-400">
-              Each world becomes part of the full welcome page and the compact Open Edge command portal.
+              VouchEdge isn't just a picks app. It's a full research stack, a social proof layer, and a capper accountability system in one place.
             </p>
           </div>
 
@@ -540,21 +540,33 @@ export default function WelcomePortal({ onSectionChange }: Props) {
           </div>
         </section>
 
-        <section className="relative z-10 border-t border-white/[0.06] bg-slate-950/70 px-4 py-12 text-center sm:px-6">
+        <section className="relative z-10 border-t border-white/[0.06] bg-slate-950/70 px-4 py-16 text-center sm:px-6">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-              Sign in. Amplify features. Pick a theme.
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border ve-theme-border ve-theme-soft-bg px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-white">
+              <Sparkles className="h-3.5 w-3.5" />
+              Free to start · No card required
+            </div>
+            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+              Stop guessing. Start proving.
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-400">
-              Then the full Open Edge becomes the compact Open Edge command layer inside the app.
+              Your win rate, your ledger, your proof — all public by default. Build a reputation on results, not hype.
             </p>
 
-            <button
-              onClick={startAmplifier}
-              className="mt-6 rounded-2xl ve-theme-accent-bg px-7 py-3.5 text-sm font-black text-slate-950 shadow-2xl shadow-cyan-950/30 transition hover:-translate-y-0.5"
-            >
-              Begin New User Flow
-            </button>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={startAmplifier}
+                className="rounded-2xl ve-theme-accent-bg px-7 py-3.5 text-sm font-black text-slate-950 shadow-2xl shadow-cyan-950/30 transition hover:-translate-y-0.5"
+              >
+                Build your proof ledger →
+              </button>
+              <button
+                onClick={() => enterApp('daily_players')}
+                className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-7 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5"
+              >
+                Preview the board
+              </button>
+            </div>
           </div>
         </section>
 

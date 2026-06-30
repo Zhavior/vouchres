@@ -222,7 +222,10 @@ function buildMatchup(
 
 export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]> {
   return reportCache.getOrSet(`matchups_v2:${date}`, async () => {
-    const [games, hittersByTeam] = await Promise.all([getScheduleByDate(date), getActiveHittersByTeam()]);
+    const games = await getScheduleByDate(date);
+    const todayTeamIds = [...new Set(games.flatMap((g) => [g.awayTeam.teamId, g.homeTeam.teamId]))];
+    console.log(`[matchupService] fetching hitters for ${todayTeamIds.length} teams in today's slate`);
+    const hittersByTeam = await getActiveHittersByTeam(todayTeamIds);
 
     // Collect all pitcher and hitter IDs
     const pitcherIds = new Set<number>();

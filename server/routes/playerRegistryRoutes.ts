@@ -1,5 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
+import { requireAuth, requireStaff } from "../middleware/auth";
+import { generationLimiter } from "../middleware/rateLimit";
 import {
   getActivePlayers,
   getPlayerById,
@@ -88,7 +90,7 @@ playerRegistryRoutes.get("/mlb/players/:playerId", async (req, res) => {
   }
 });
 
-playerRegistryRoutes.post("/mlb/players/refresh", async (_req, res) => {
+playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, async (_req, res) => {
   try {
     const result = await refreshPlayerRegistry();
     return res.json({

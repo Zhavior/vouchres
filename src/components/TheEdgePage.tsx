@@ -1,5 +1,6 @@
 import WelcomePortal from './WelcomePortal';
 import TodayDashboard from './TodayDashboard';
+import EdgeIslandCommandCenter from './theEdge/EdgeIslandCommandCenter';
 
 type TheEdgePageProps = {
   isLoggedIn: boolean;
@@ -16,5 +17,9 @@ export default function TheEdgePage({
     return <WelcomePortal onSectionChange={onSectionChange} />;
   }
 
-  return <TodayDashboard onSectionChange={onSectionChange} savedSlips={savedSlips} />;
+  return (
+    <EdgeIslandCommandCenter
+      onSectionChange={onSectionChange}
+    />
+  );
 }

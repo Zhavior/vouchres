@@ -1,4 +1,4 @@
-import { TTLCache } from "../../lib/cache";
+import { TTLCache, limitConcurrency } from "../../lib/cache";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { headshotUrl } from "./mlbTypes";
 
@@ -86,26 +86,25 @@ async function getTeamRoster(team: MlbTeam, rosterType: "active" | "40Man"): Pro
 
 async function buildRegistry(): Promise<PlayerRegistryEntry[]> {
   const teams = await getMlbTeams();
-  const rows = await Promise.allSettled(
-    teams.flatMap((team) => [
-      getTeamRoster(team, "active"),
-      getTeamRoster(team, "40Man"),
-    ])
-  );
+  console.log(`[playerRegistry] building registry for ${teams.length} teams (max 3 concurrent, active+40Man)`);
 
   const byPlayer = new Map<number, PlayerRegistryEntry>();
-  for (const result of rows) {
-    if (result.status !== "fulfilled") {
-      console.warn("[playerRegistry] roster fetch failed:", result.reason);
-      continue;
-    }
-    for (const player of result.value) {
-      const existing = byPlayer.get(player.playerId);
-      if (!existing || existing.rosterType !== "active") {
-        byPlayer.set(player.playerId, player);
+
+  await limitConcurrency(teams, 3, async (team) => {
+    for (const rosterType of ["active", "40Man"] as const) {
+      try {
+        const players = await getTeamRoster(team, rosterType);
+        for (const player of players) {
+          const existing = byPlayer.get(player.playerId);
+          if (!existing || existing.rosterType !== "active") {
+            byPlayer.set(player.playerId, player);
+          }
+        }
+      } catch (err) {
+        console.warn(`[playerRegistry] roster fetch failed for team ${team.id} (${rosterType}):`, (err as Error).message);
       }
     }
-  }
+  });
 
   return [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName));
 }

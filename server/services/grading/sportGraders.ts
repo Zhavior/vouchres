@@ -14,6 +14,56 @@
 
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
 
+// Module-level cache: avoids redundant fetches across concurrent grade requests.
+// Final games cached 10 min; non-final cached 2 min (will re-check soon).
+const _gameStore = new Map<string, { data: GameData; expiresAt: number }>();
+const _gameInFlight = new Map<string, Promise<GameData | null>>();
+
+async function fetchMLBGameData(gamePk: string): Promise<GameData | null> {
+  const cached = _gameStore.get(gamePk);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let p = _gameInFlight.get(gamePk);
+  if (!p) {
+    p = _doFetchMLBGame(gamePk).then((data) => {
+      if (data) {
+        const ttl = data.final ? 10 * 60 * 1000 : 2 * 60 * 1000;
+        _gameStore.set(gamePk, { data, expiresAt: Date.now() + ttl });
+      }
+      _gameInFlight.delete(gamePk);
+      return data;
+    });
+    _gameInFlight.set(gamePk, p);
+  }
+  return p;
+}
+
+async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
+  try {
+    // Step 1: linescore → check isComplete (fast, no player stat data)
+    const lsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/linescore`, {
+      signal: AbortSignal.timeout(8_000),
+      headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
+    });
+    if (!lsRes.ok) return null;
+    const ls = await lsRes.json();
+    if (ls?.isComplete !== true) {
+      return { final: false, raw: null };
+    }
+
+    // Step 2: boxscore for player batting stats (only for final games)
+    const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
+      signal: AbortSignal.timeout(10_000),
+      headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
+    });
+    if (!bsRes.ok) return null;
+    const raw = await bsRes.json();
+    return { final: true, raw };
+  } catch {
+    return null;
+  }
+}
+
 export type LegStatus = "won" | "lost" | "push" | "pending" | "error";
 
 export interface GradableLeg {
@@ -101,23 +151,7 @@ const mlbGrader: SportGrader = {
   supportedMarkets: Object.keys(MLB_MARKETS),
 
   async fetchGame(gamePk: string): Promise<GameData | null> {
-    try {
-      const res = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
-        signal: AbortSignal.timeout(10_000),
-        headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
-      });
-      if (!res.ok) return null;
-      const raw = await res.json();
-      const state = raw?.info?.state ?? raw?.status?.state ?? "unknown";
-      // Boxscore endpoint doesn't always carry a clean state; treat presence of
-      // batting stats as a proxy when state is unknown.
-      const looksFinal =
-        state === "final" ||
-        Boolean(raw?.teams?.home?.players && raw?.teams?.away?.players);
-      return { final: looksFinal, raw };
-    } catch {
-      return null;
-    }
+    return fetchMLBGameData(gamePk);
   },
 
   evaluateLeg(leg: GradableLeg, game: GameData): LegOutcome {

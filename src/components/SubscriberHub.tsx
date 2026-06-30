@@ -54,6 +54,7 @@ interface ChatMessage {
 }
 
 export default function SubscriberHub({
+
   profile,
   onUpdateProfile,
   onSectionChange
@@ -170,16 +171,16 @@ export default function SubscriberHub({
       } else {
         const initialMsgs: Record<string, ChatMessage[]> = {
           'c-user-current': [
-            { id: 'm1', userId: 'usr-9', displayName: 'Demo User', username: 'demo_user', text: 'Sample message — subscriber chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'm2', userId: 'usr-8', displayName: 'Demo User 2', username: 'demo_user_2', text: 'Demo message for layout testing.', timestamp: new Date(Date.now() - 18000000).toISOString() },
+            { id: 'm1', userId: 'usr-9', displayName: 'Preview Guest', username: 'preview_only', text: 'Preview message — create an account to unlock real subscriber chat.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'm2', userId: 'usr-8', displayName: 'Preview Guest 2', username: 'preview_only_2', text: 'Preview-only layout message. No real user data shown.', timestamp: new Date(Date.now() - 18000000).toISOString() },
             { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome to the subscriber chat. This is a demo — real messages appear once subscribers join.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
           ],
           'c-alpha-guru': [
-            { id: 'ag1', userId: 'usr-2', displayName: 'Demo User 3', username: 'demo_user_3', text: 'Sample question — demo chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'ag1', userId: 'usr-2', displayName: 'Preview Guest 3', username: 'preview_only_3', text: 'Preview question — real subscriber messages appear after login.', timestamp: new Date(Date.now() - 36000000).toISOString() },
             { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Demo Capper A', username: 'alphaguru', text: 'Demo response — subscriber chat is in development.', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
           ],
           'c-parabolics': [
-            { id: 'hp1', userId: 'usr-5', displayName: 'Demo User 4', username: 'demo_user_4', text: 'Demo message — subscriber chat in development.', timestamp: new Date(Date.now() - 20000000).toISOString() }
+            { id: 'hp1', userId: 'usr-5', displayName: 'Preview Guest 4', username: 'preview_only_4', text: 'Preview-only message. No real user data shown.', timestamp: new Date(Date.now() - 20000000).toISOString() }
           ]
         };
         setMessages(initialMsgs);

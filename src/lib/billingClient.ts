@@ -1,4 +1,5 @@
 /** Typed wrappers for the billing API (Stripe test mode). */
+import { apiClient } from "./apiClient";
 
 type CheckoutTier = 'gold' | 'seller_pro';
 
@@ -21,48 +22,29 @@ interface BillingStatus {
 /** Redirect to Stripe Checkout for the given tier (test mode). */
 export async function startStripeCheckout(tier: CheckoutTier): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
-    const res = await fetch('/api/billing/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      return { ok: false, error: body?.error || `Server error ${res.status}` };
-    }
-    const data: CheckoutResponse = await res.json();
+    const data = await apiClient.post<CheckoutResponse>('/api/billing/checkout', { tier });
     if (!data.url) return { ok: false, error: 'No checkout URL returned' };
     return { ok: true, url: data.url };
   } catch (err: any) {
-    return { ok: false, error: err?.message || 'Network error' };
+    return { ok: false, error: err?.message || err?.error || 'Network error' };
   }
 }
 
 /** Open the Stripe Customer Portal (manage subscription, cancel, update payment). */
 export async function openBillingPortal(): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
-    const res = await fetch('/api/billing/portal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      return { ok: false, error: body?.error || `Server error ${res.status}` };
-    }
-    const data: PortalResponse = await res.json();
+    const data = await apiClient.post<PortalResponse>('/api/billing/portal');
     if (!data.url) return { ok: false, error: 'No portal URL returned' };
     return { ok: true, url: data.url };
   } catch (err: any) {
-    return { ok: false, error: err?.message || 'Network error' };
+    return { ok: false, error: err?.message || err?.error || 'Network error' };
   }
 }
 
 /** Check current billing status from the server (authoritative, not from localStorage). */
 export async function fetchBillingStatus(): Promise<BillingStatus | null> {
   try {
-    const res = await fetch('/api/billing/status');
-    if (!res.ok) return null;
-    return await res.json() as BillingStatus;
+    return await apiClient.get<BillingStatus>('/api/billing/status');
   } catch {
     return null;
   }

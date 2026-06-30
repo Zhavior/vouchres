@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import HomeFeedPage from './social/feed/HomeFeedPage';
 import ParlayLab from './components/ParlayLab';
@@ -20,6 +20,7 @@ import LiveGameLabPage from './pages/LiveGameLabPage';
 import LiveGames from './components/LiveGames';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
+import NotificationsPage from './components/notifications/NotificationsPage';
 import LiveGamesPro from './components/LiveGamesPro';
 import TheEdgeShell from './components/theEdge/TheEdgeShell';
 import TodayDashboard from './components/TodayDashboard';
@@ -123,24 +124,8 @@ const PUBLIC_SECTIONS = new Set([
 
 function hasRealAuthToken() {
   try {
-    const directToken =
-      localStorage.getItem('vouchedge_auth_token') ||
-      localStorage.getItem('mlb_ai_auth_token');
-
-    const looksReal = (value: string | null) => {
-      if (!value) return false;
-      const clean = value.trim();
-      if (!clean || clean === 'null' || clean === 'undefined') return false;
-      if (clean.toLowerCase().includes('fake')) return false;
-      if (clean.toLowerCase().includes('demo')) return false;
-      if (clean.toLowerCase().includes('dev')) return false;
-      return clean.length >= 20;
-    };
-
-    if (looksReal(directToken)) return true;
-
-    // Supabase stores browser sessions under sb-... auth keys.
-    // Read them synchronously so App does not bounce before getSession() finishes.
+    // Only trust Supabase's real auth storage.
+    // Do not trust old VouchEdge/demo/local fallback keys.
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key) continue;
@@ -153,12 +138,14 @@ function hasRealAuthToken() {
         const parsed = JSON.parse(raw);
         const session = parsed?.currentSession ?? parsed;
         const accessToken = session?.access_token;
-        if (looksReal(accessToken)) {
+        const userId = session?.user?.id;
+
+        if (accessToken && userId && accessToken.length >= 20) {
           localStorage.setItem('vouchedge_auth_token', accessToken);
           return true;
         }
       } catch {
-        if (looksReal(raw)) return true;
+        return false;
       }
     }
   } catch {
@@ -169,12 +156,6 @@ function hasRealAuthToken() {
 }
 
 const PROTECTED_SECTIONS = new Set([
-  'profile',
-  'settings',
-  'results',
-  'notifications',
-  'parlay_lab',
-  'my_parlays',
   'billing',
   'admin',
 ]);
@@ -212,6 +193,10 @@ function resolveDevSectionFromLocation() {
     return 'live_parlays';
   }
 
+  if (target === 'notifications' || target === '/notifications' || target === 'alerts' || target === '/alerts') {
+    return 'notifications';
+  }
+
   if (target === 'live-game-lab' || target === '/live-game-lab') {
     return 'live_game_lab';
   }
@@ -242,9 +227,12 @@ export default function App() {
     if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
     return 'welcome';
   });
+  const [authStateVersion, setAuthStateVersion] = useState(0);
   const activeSectionRef = useRef(activeSection);
   const routeSwitchTimerRef = useRef<number | null>(null);
   const gradingRef = useRef(false);
+  const [isGrading, setIsGrading] = useState(false);
+  const [gradingLastChecked, setGradingLastChecked] = useState<Date | null>(null);
   const backendParlaySyncRef = useRef(false);
   const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
   const savedSlipsRef = useRef<Parlay[]>([]);
@@ -274,6 +262,22 @@ export default function App() {
     saveActiveSection(section);
     setActiveSection(section);
   }
+
+  const handleLoginSuccess = () => {
+    try {
+      localStorage.setItem('vouchedge_after_auth_mode', 'island');
+    } catch {
+      // ignore storage failures
+    }
+    setAuthStateVersion((version) => version + 1);
+    navigateSection('welcome');
+  };
+
+  const handleLogoutComplete = () => {
+    setAuthStateVersion((version) => version + 1);
+    saveActiveSection('welcome');
+    setActiveSection('welcome');
+  };
   
   useEffect(() => {
     activeSectionRef.current = activeSection;
@@ -318,11 +322,14 @@ export default function App() {
   // The Edge route mode:
   // logged-out users see the premium public portal;
   // logged-in/dev users see the personalized My Edge dashboard.
-  const isOpenEdgeDashboardMode =
-    DEV_BYPASS_AUTH ||
-    Boolean(localStorage.getItem('vouchedge_auth_token')) ||
-    Boolean(localStorage.getItem('mlb_ai_auth_token')) ||
-    localStorage.getItem('vouchedge_after_auth_mode') === 'island';
+  const isOpenEdgeDashboardMode = useMemo(
+    () =>
+      DEV_BYPASS_AUTH ||
+      Boolean(localStorage.getItem('vouchedge_auth_token')) ||
+      Boolean(localStorage.getItem('mlb_ai_auth_token')) ||
+      localStorage.getItem('vouchedge_after_auth_mode') === 'island',
+    [authStateVersion]
+  );
 
   useEffect(() => {
     if (activeSection === 'themestore' && !canSeeThemeStore) {
@@ -461,7 +468,9 @@ export default function App() {
 
       const storedProfile = localStorage.getItem('vouchedge_profile');
       if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
+        const loaded = JSON.parse(storedProfile);
+        if (loaded.subscriptionTier !== 'SELLER_PRO') loaded.subscriptionTier = 'SELLER_PRO';
+        setProfile(loaded);
       } else {
         setProfile(INITIAL_PROFILE);
         localStorage.setItem('vouchedge_profile', JSON.stringify(INITIAL_PROFILE));
@@ -833,6 +842,7 @@ export default function App() {
   const handleGradeResults = async () => {
     if (gradingRef.current) return;
     gradingRef.current = true;
+    setIsGrading(true);
     try {
       const { parlays, newlySettled, changed } = await gradePendingParlays(savedSlipsRef.current);
       if (!changed) return;
@@ -863,12 +873,14 @@ export default function App() {
       }
     } finally {
       gradingRef.current = false;
+      setIsGrading(false);
+      setGradingLastChecked(new Date());
     }
   };
 
-  // Auto-grade when the user opens Results.
+  // Auto-grade when the user opens Results or My Parlays.
   useEffect(() => {
-    if (activeSection === 'results') handleGradeResults();
+    if (activeSection === 'results' || activeSection === 'live_parlays') handleGradeResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
 
@@ -1078,11 +1090,11 @@ export default function App() {
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 
       case 'hr_board':
-        return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} />;
+        return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} profile={profile} />;
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onUpdateParlay={handleUpdateParlaySlip} />;
+        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onUpdateParlay={handleUpdateParlaySlip} onRefreshGrades={handleGradeResults} isGrading={isGrading} lastGraded={gradingLastChecked} />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
@@ -1148,6 +1160,8 @@ export default function App() {
             savedParlays={savedSlips}
           />
         );
+      case 'notifications':
+        return <NotificationsPage onSectionChange={navigateSection} />;
       case 'profile':
         return (
           <ProfilePage 
@@ -1239,6 +1253,11 @@ export default function App() {
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
       <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
+        <AuthStatusBadge
+          hideGuest={activeSection === 'welcome'}
+          onLoginSuccess={handleLoginSuccess}
+          onLogoutComplete={handleLogoutComplete}
+        />
         <HomeFeedLayout
           activeSection={activeSection}
           onSectionChange={navigateSection}
@@ -1252,8 +1271,8 @@ export default function App() {
         >
           {renderMainView()}
           {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
-          {activeSection !== 'welcome' && <AppNotificationsHost onNavigate={navigateSection} />}
         </HomeFeedLayout>
+        <AppNotificationsHost onNavigate={navigateSection} />
       </AppErrorBoundary>
     </ThemeProvider>
   );

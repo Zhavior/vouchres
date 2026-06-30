@@ -4,7 +4,7 @@
  * AND their currentTeam.id (from /v1/people?hydrate=currentTeam) must match.
  * Any mismatch is logged and dropped — no fallbacks, no synthetic pools.
  */
-import { TTLCache } from "../../lib/cache";
+import { TTLCache, limitConcurrency } from "../../lib/cache";
 import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
@@ -144,6 +144,12 @@ export async function getActiveHittersByTeam(
     ? `${CACHE_KEY}:teams:${teamIds.sort((a, b) => a - b).join(",")}`
     : CACHE_KEY;
 
+  const cached = hittersCache.get(cacheKey);
+  if (cached) {
+    console.log(`[teamRosterClient] cache hit for key=${cacheKey.slice(0, 40)}`);
+    return cached;
+  }
+
   return hittersCache.getOrSet(cacheKey, async () => {
     const map = new Map<number, NormalizedPlayer[]>();
 
@@ -175,19 +181,20 @@ export async function getActiveHittersByTeam(
         console.log(`[teamRosterClient] Fetching rosters for all ${teams.length} teams`);
       }
 
-      const results = await Promise.allSettled(
-        teams.map(async (team) => {
+      console.log(`[teamRosterClient] cache miss — fetching rosters for ${teams.length} teams (max 3 concurrent)`);
+      const results = await limitConcurrency(teams, 3, async (team) => {
+        console.log(`[teamRosterClient] starting roster fetch for team ${team.id} (${team.abbreviation})`);
+        try {
           const hitters = await getTeamActiveHitters(team);
-          return { team, hitters };
-        })
-      );
+          return { ok: true as const, team, hitters };
+        } catch (err) {
+          console.error(`[teamRosterClient] roster fetch failed for team ${team.id}:`, (err as Error).message);
+          return { ok: false as const, team, hitters: [] as NormalizedPlayer[] };
+        }
+      });
 
       for (const result of results) {
-        if (result.status !== "fulfilled") {
-          console.error("[teamRosterClient] roster fetch failed:", result.reason);
-          continue;
-        }
-        map.set(result.value.team.id, result.value.hitters);
+        map.set(result.team.id, result.hitters);
       }
     } catch (err) {
       console.error("[teamRosterClient] getActiveHittersByTeam failed:", (err as Error).message);

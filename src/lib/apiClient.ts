@@ -30,7 +30,8 @@ async function request<T = any>(
 ): Promise<T> {
   const url = new URL(
     path,
-    import.meta.env.VITE_API_BASE_URL ?? window.location.origin
+    // Use || not ?? — empty string VITE_API_BASE_URL="" must fall through to window.location.origin
+    import.meta.env.VITE_API_BASE_URL || window.location.origin
   );
   if (opts.query) {
     for (const [k, v] of Object.entries(opts.query)) {

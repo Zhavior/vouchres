@@ -1,62 +1,94 @@
 import { useEffect, useState } from 'react';
-import { LogOut, ShieldCheck, UserCircle } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, UserCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import AuthModal from './AuthModal';
 
-function readFallbackToken() {
-  try {
-    const directToken =
-      localStorage.getItem('vouchedge_auth_token') ||
-      localStorage.getItem('mlb_ai_auth_token');
-
-    if (directToken && directToken.length >= 20) return true;
-
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (!key) continue;
-      if (!key.startsWith('sb-') || !key.includes('auth-token')) continue;
-      const raw = localStorage.getItem(key);
-      if (raw && raw.length >= 20) return true;
-    }
-  } catch {
-    return false;
-  }
-
-  return false;
+interface AuthStatusBadgeProps {
+  hideGuest?: boolean;
+  onLoginSuccess?: () => void;
+  onLogoutComplete?: () => void;
 }
 
-export default function AuthStatusBadge() {
+function resetToLandingScreen() {
+  localStorage.removeItem('vouchedge_after_auth_destination');
+  localStorage.removeItem('vouchedge_after_auth_mode');
+  localStorage.setItem('vouchedge_active_section', 'welcome');
+  localStorage.setItem('activeSection', 'welcome');
+  localStorage.setItem('selectedSection', 'welcome');
+  sessionStorage.removeItem('vouchedge_active_section');
+}
+
+function clearVouchEdgeLocalAuth() {
+  localStorage.removeItem('vouchedge_auth_token');
+  localStorage.removeItem('mlb_ai_auth_token');
+  localStorage.removeItem('vouchedge_after_auth_destination');
+  localStorage.removeItem('vouchedge_after_auth_mode');
+
+  // remove old/demo/local auth-ish keys without deleting everything
+  Object.keys(localStorage).forEach((key) => {
+    const lower = key.toLowerCase();
+    if (
+      lower.includes('demo') ||
+      lower.includes('fake') ||
+      lower.includes('mock') ||
+      lower.includes('guest') ||
+      lower.includes('vouchedge_auth') ||
+      lower.includes('mlb_ai_auth')
+    ) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
+export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onLogoutComplete }: AuthStatusBadgeProps) {
   const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
-  const [hasFallbackToken, setHasFallbackToken] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!alive) return;
-      setEmail(data.session?.user?.email ?? null);
-      setHasFallbackToken(Boolean(data.session?.access_token) || readFallbackToken());
-      if (data.session?.access_token) {
-        localStorage.setItem('vouchedge_auth_token', data.session.access_token);
+    async function verifyRealUser() {
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        clearVouchEdgeLocalAuth();
+        if (alive) {
+          setEmail(null);
+          setChecking(false);
+        }
+        return;
       }
-      setLoading(false);
-    });
+
+      const { data: userData, error } = await supabase.auth.getUser();
+
+      if (!alive) return;
+
+      if (error || !userData.user) {
+        clearVouchEdgeLocalAuth();
+        setEmail(null);
+      } else {
+        localStorage.setItem('vouchedge_auth_token', sessionData.session.access_token);
+        setEmail(userData.user.email ?? 'Account');
+      }
+
+      setChecking(false);
+    }
+
+    verifyRealUser();
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setEmail(session?.user?.email ?? null);
-      setHasFallbackToken(Boolean(session?.access_token) || readFallbackToken());
-
-      if (session?.access_token) {
-        localStorage.setItem('vouchedge_auth_token', session.access_token);
+      if (!session?.user) {
+        clearVouchEdgeLocalAuth();
+        setEmail(null);
+        setChecking(false);
+        return;
       }
 
-      if (!session) {
-        localStorage.removeItem('vouchedge_auth_token');
-        localStorage.removeItem('mlb_ai_auth_token');
-      }
-
-      setLoading(false);
+      localStorage.setItem('vouchedge_auth_token', session.access_token);
+      setEmail(session.user.email ?? 'Account');
+      setChecking(false);
     });
 
     return () => {
@@ -65,34 +97,48 @@ export default function AuthStatusBadge() {
     };
   }, []);
 
+  async function handleAuthed() {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+
+    if (token) {
+      localStorage.setItem('vouchedge_auth_token', token);
+    }
+
+    setEmail(data.session?.user.email ?? 'Account');
+    setAuthOpen(false);
+    onLoginSuccess?.();
+  }
+
   async function logout() {
     setSigningOut(true);
 
     try {
       await supabase.auth.signOut({ scope: 'local' });
     } finally {
-      localStorage.removeItem('vouchedge_auth_token');
-      localStorage.removeItem('mlb_ai_auth_token');
-      localStorage.removeItem('vouchedge_after_auth_destination');
-      localStorage.setItem('vouchedge_active_section', 'welcome');
+      clearVouchEdgeLocalAuth();
+      resetToLandingScreen();
       setEmail(null);
-      setHasFallbackToken(false);
       setSigningOut(false);
-      window.location.href = '/';
+      window.history.replaceState(null, '', '/');
+      onLogoutComplete?.();
     }
   }
 
+  if (hideGuest && !email) {
+    return null;
+  }
+
   return (
-    <div className="fixed right-4 top-4 z-[99999]">
-      <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/95 px-3 py-2 text-xs font-black text-white shadow-2xl backdrop-blur">
-        {loading ? (
+    <>
+      <div className="fixed right-4 top-4 z-[80]">
+        <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/95 px-3 py-2 text-xs font-black text-white shadow-2xl backdrop-blur">
+        {checking ? (
           <span>Checking login...</span>
-        ) : email || hasFallbackToken ? (
+        ) : email ? (
           <>
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
-            <span className="hidden max-w-[180px] truncate sm:inline">
-              Logged in: {email ?? 'Account'}
-            </span>
+            <span className="hidden max-w-[180px] truncate sm:inline">Logged in: {email}</span>
             <span className="sm:hidden">Logged in</span>
             <button
               type="button"
@@ -107,10 +153,27 @@ export default function AuthStatusBadge() {
         ) : (
           <>
             <UserCircle className="h-4 w-4 text-slate-300" />
-            <span>Guest mode</span>
+            <span className="hidden sm:inline">Guest</span>
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-cyan-100 hover:bg-cyan-400/25"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              Login
+            </button>
           </>
         )}
+        </div>
       </div>
-    </div>
+
+      <AuthModal
+        open={authOpen}
+        initialMode="login"
+        onClose={() => setAuthOpen(false)}
+        onAuthed={handleAuthed}
+        onGuest={() => setAuthOpen(false)}
+      />
+    </>
   );
 }

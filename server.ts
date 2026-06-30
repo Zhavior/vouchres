@@ -4,6 +4,9 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { registerApiRoutes } from "./server/routes";
+import { corsMiddleware, helmetMiddleware } from "./server/middleware/cors";
+import { aiLimiter, generationLimiter, globalLimiter } from "./server/middleware/rateLimit";
+import { requireAuth } from "./server/middleware/auth";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
@@ -14,7 +17,16 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
+  app.use(helmetMiddleware);
+  app.use(corsMiddleware);
+
+  // Stripe signature verification requires the raw body. This must run before
+  // express.json(); the billing router handles the actual webhook route.
+  app.use("/api/billing/webhook", express.raw({ type: "application/json", limit: "1mb" }));
   app.use(express.json());
+  app.use("/api", globalLimiter);
+  app.use("/api/ai", aiLimiter);
 
   // VouchEdge intelligence backbone: MLB, agents, judges, AI, trust, results, skills.
   // Registered before the Vite/static catch-all so these API paths resolve first.
@@ -22,7 +34,7 @@ async function startServer() {
 
   // API endpoints config
   // VEdge chat endpoint
-  app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", requireAuth, generationLimiter, async (req, res) => {
     const { messages, systemInstruction } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
     
@@ -69,7 +81,7 @@ async function startServer() {
   });
 
   // Image generate endpoint proxying gemini-2.5-flash-image
-  app.post("/api/ai/generate-image", async (req, res) => {
+  app.post("/api/ai/generate-image", requireAuth, generationLimiter, async (req, res) => {
     const { prompt, aspectRatio } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
     
@@ -124,7 +136,7 @@ async function startServer() {
   });
 
   // Unique AI Theme Generator powered by Gemini 3.5
-  app.post("/api/ai/generate-theme", async (req, res) => {
+  app.post("/api/ai/generate-theme", requireAuth, generationLimiter, async (req, res) => {
     const { prompt } = req.body;
     
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
@@ -293,7 +305,7 @@ Ensure the Tailwind classes are genuine Tailwind CSS utility classes that fit a 
   });
 
   // Player Deep Research & AI Score endpoint using Google Search Grounding to check MLB websites
-  app.post("/api/ai/player-research", async (req, res) => {
+  app.post("/api/ai/player-research", requireAuth, generationLimiter, async (req, res) => {
     const { playerData } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -419,7 +431,7 @@ Status: **${playerData.injuryStatus}** · estimated workload **${healthy ? "100%
   });
 
   // AI Parlay Edge Report endpoint
-  app.post("/api/ai/parlay-edge", async (req, res) => {
+  app.post("/api/ai/parlay-edge", requireAuth, generationLimiter, async (req, res) => {
     const { legs } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -1191,6 +1203,8 @@ type DailyBoardCache = {
 };
 
 let dailyPlayerBoardCache: DailyBoardCache | null = null;
+// In-flight dedup: concurrent cold requests share one build instead of spawning N parallel fetches.
+const dailyPlayerBoardInFlight = new Map<string, Promise<any>>();
 
 function dailyBoardTodayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -1288,6 +1302,24 @@ async function fetchMlbBoxscorePlayers(gamePk: number, awayTeam: string, homeTea
   }
 }
 
+/** Run tasks with at most `limit` in flight at once to cap peak memory usage. */
+async function limitConcurrency<T>(
+  items: any[],
+  limit: number,
+  fn: (item: any, index: number) => Promise<T>
+): Promise<T[]> {
+  const results: T[] = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 async function buildDailyPlayerBoard(date = dailyBoardTodayISO()) {
   const scheduleUrl =
     `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher,team,venue`;
@@ -1295,8 +1327,8 @@ async function buildDailyPlayerBoard(date = dailyBoardTodayISO()) {
   const schedule = await fetchJsonSafe(scheduleUrl);
   const rawGames = schedule?.dates?.flatMap((d: any) => d?.games || []) || [];
 
-  const games = await Promise.all(
-    rawGames.map(async (game: any) => {
+  // Cap at 4 concurrent game fetches to prevent OOM from 12+ simultaneous boxscore+roster calls
+  const games = await limitConcurrency(rawGames, 4, async (game: any) => {
       const gamePk = game?.gamePk;
       const awayTeam = game?.teams?.away?.team?.name || 'Away';
       const homeTeam = game?.teams?.home?.team?.name || 'Home';
@@ -1351,8 +1383,7 @@ async function buildDailyPlayerBoard(date = dailyBoardTodayISO()) {
         players: [...awayLineup, ...homeLineup],
         totalPlayers
       };
-    })
-  );
+  });
 
   const totalPlayers = games.reduce((sum: number, game: any) => sum + Number(game.totalPlayers || 0), 0);
 
@@ -1371,24 +1402,30 @@ async function dailyPlayerBoardHandler(req: any, res: any) {
   try {
     const date = String(req.query.date || dailyBoardTodayISO());
 
+    // 1. Cache hit — return immediately
     if (
       dailyPlayerBoardCache &&
       dailyPlayerBoardCache.expiresAt > Date.now() &&
       dailyPlayerBoardCache.data?.date === date
     ) {
-      return res.json({
-        ...dailyPlayerBoardCache.data,
-        cached: true
-      });
+      return res.json({ ...dailyPlayerBoardCache.data, cached: true });
     }
 
-    const data = await buildDailyPlayerBoard(date);
+    // 2. In-flight dedup — concurrent cold requests share one build Promise
+    let buildPromise = dailyPlayerBoardInFlight.get(date);
+    if (!buildPromise) {
+      buildPromise = buildDailyPlayerBoard(date)
+        .then((data) => {
+          dailyPlayerBoardCache = { expiresAt: Date.now() + 1000 * 60 * 5, data };
+          return data;
+        })
+        .finally(() => {
+          dailyPlayerBoardInFlight.delete(date);
+        });
+      dailyPlayerBoardInFlight.set(date, buildPromise);
+    }
 
-    dailyPlayerBoardCache = {
-      expiresAt: Date.now() + 1000 * 60 * 5,
-      data
-    };
-
+    const data = await buildPromise;
     res.json(data);
   } catch (err: any) {
     console.error('[DailyPlayerBoard] failed', err?.message || err);

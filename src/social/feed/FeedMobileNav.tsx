@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, LayoutDashboard } from 'lucide-react';
+import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, LayoutDashboard, Bell } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 
@@ -16,6 +16,7 @@ export default function FeedMobileNav({ activeSection, onSectionChange, profile 
     { id: 'hr_board', label: 'Edge', icon: Flame },
     { id: 'build', label: 'My Parlays', icon: Sliders },
     { id: 'results', label: 'Results', icon: BarChart3 },
+    { id: 'notifications', label: 'Alerts', icon: Bell },
     { id: 'profile', label: 'Profile', icon: User },
     // Secondary (still reachable in the scrollable bar)
     { id: 'feed', label: 'Home', icon: Home },

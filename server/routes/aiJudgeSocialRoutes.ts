@@ -1,4 +1,6 @@
 import type { Express, Request, Response } from "express";
+import { requireAuth, requireStaff } from "../middleware/auth";
+import { generationLimiter } from "../middleware/rateLimit";
 import {
   generateHrSocialDrafts,
   listDrafts,
@@ -16,7 +18,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     });
   });
 
-  app.post("/api/ai-judge-social/generate-hr-drafts", async (req: Request, res: Response) => {
+  app.post("/api/ai-judge-social/generate-hr-drafts", requireAuth, requireStaff, generationLimiter, async (req: Request, res: Response) => {
     try {
       const result = await generateHrSocialDrafts({
         date: req.body?.date,
@@ -38,7 +40,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/ai-judge-social/drafts", (_req: Request, res: Response) => {
+  app.get("/api/ai-judge-social/drafts", requireAuth, requireStaff, (_req: Request, res: Response) => {
     res.json({
       status: "ready",
       mode: "safe_prototype",
@@ -46,7 +48,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     });
   });
 
-  app.post("/api/ai-judge-social/drafts/:draftId/queue", (req: Request, res: Response) => {
+  app.post("/api/ai-judge-social/drafts/:draftId/queue", requireAuth, requireStaff, generationLimiter, (req: Request, res: Response) => {
     try {
       res.json({
         status: "queued",
@@ -57,7 +59,7 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/ai-judge-social/drafts/:draftId/mock-post", (req: Request, res: Response) => {
+  app.post("/api/ai-judge-social/drafts/:draftId/mock-post", requireAuth, requireStaff, generationLimiter, (req: Request, res: Response) => {
     try {
       res.json({
         status: "mock_posted",
