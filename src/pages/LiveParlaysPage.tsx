@@ -18,6 +18,7 @@ import {
 import type { Parlay } from '../types';
 import { earliestStart, isLive } from '../lib/parlayLifecycle';
 import { americanLabel, decimalLabel } from '../lib/odds';
+import PlayerHeadshot from '../components/parlays/PlayerHeadshot';
 import {
   normalizeParlayStatus,
   statusLabel,
@@ -226,10 +227,15 @@ function ParlayCard({ p, onRetry }: { p: Parlay; onRetry?: (id: string) => void 
             const legStatus = String((leg as any).status || 'PENDING').toUpperCase();
             const oddsKnown = typeof (leg as any).odds === 'number' && (leg as any).odds !== 0;
             const oddsLabel = americanLabel((leg as any).odds);
+            const name = (leg as any).selection || (leg as any).market || '—';
+            const playerId = (leg as any).playerId ?? (leg as any).mlbPlayerId ?? null;
             return (
               <div key={(leg as any).id || `${(leg as any).selection}-${(leg as any).odds}`} className="flex items-center gap-3 px-4 py-2.5">
-                {LEG_ICON[legStatus] ?? LEG_ICON.PENDING}
-                <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{(leg as any).selection || (leg as any).market || '—'}</span>
+                <PlayerHeadshot name={name} playerId={playerId} headshotUrl={(leg as any).headshotUrl} size={40} />
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  {LEG_ICON[legStatus] ?? LEG_ICON.PENDING}
+                  <span className="min-w-0 flex-1 truncate text-sm text-slate-200">{name}</span>
+                </div>
                 {(leg as any).actual != null && (
                   <span className="font-mono text-[10px] text-slate-500">actual {(leg as any).actual}</span>
                 )}

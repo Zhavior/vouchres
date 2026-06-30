@@ -18,6 +18,14 @@ export interface Leg {
   actual?: number | null;
   /** ISO start time of this leg's game (drives the 30-min lock). */
   gameStartTime?: string;
+
+  // ── Player enrichment (optional; for headshots on parlay cards) ──
+  /** MLB person id for this leg's player, when known. */
+  playerId?: number | string | null;
+  /** Alias accepted from some data sources. */
+  mlbPlayerId?: number | string | null;
+  /** Pre-resolved headshot URL (rarely needed; id is preferred). */
+  headshotUrl?: string | null;
 }
 
 export interface Parlay {

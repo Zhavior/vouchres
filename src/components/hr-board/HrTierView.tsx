@@ -8,7 +8,7 @@ import { parseAmericanOdds } from '../../lib/odds';
 interface Props {
   games: HrBoardGame[];
   onSelect: (row: HrBoardRow) => void;
-  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number }) => void;
+  onAddLeg?: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => void;
 }
 
 const TIERS: { key: string; title: string; sub: string; color: string; match: (r: HrBoardRow) => boolean }[] = [
@@ -145,12 +145,12 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
               <div
                 role="button"
                 tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk }); }}
+                onClick={(e) => { e.stopPropagation(); onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk, playerId: row.playerId }); }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
-                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk });
+                    onAddLeg({ name: row.playerName, team: row.team } as MLBPlayer, { id: `hr-${row.playerId}`, market: 'Anytime HR', odds: parseAmericanOdds(row.impliedOdds), spec: `${row.playerName} Anytime HR`, gamePk: row.gamePk, playerId: row.playerId });
                   }
                 }}
                 className="flex items-center gap-1 text-[10px] font-bold text-sky-400 border border-sky-500/40 rounded-lg px-2 py-1 hover:bg-sky-500/10 cursor-pointer">

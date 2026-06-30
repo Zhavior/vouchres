@@ -77,25 +77,19 @@ export async function requireAuth(
   res: Response,
   next: NextFunction
 ) {
-  // Temporary safe diagnostics (no full token, no secrets).
   const header = req.headers.authorization;
-  const hasAuthHeader = !!header?.startsWith("Bearer ");
-  console.log(`[auth] ${req.method} ${req.originalUrl} hasAuthHeader=${hasAuthHeader}`);
-  if (!hasAuthHeader) {
-    console.log("[auth] reject: missing_token (401)");
+  if (!header?.startsWith("Bearer ")) {
     return res.status(401).json({ error: "missing_token" });
   }
 
-  const token = header!.slice(7);
+  const token = header.slice(7);
 
   // Verify the JWT via Supabase auth admin API
   const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
-    console.log(`[auth] reject: invalid_token (401) reason=${error?.message ?? "no_user"}`);
     return res.status(401).json({ error: "invalid_token" });
   }
-  console.log(`[auth] verified user id=${data.user.id} email=${data.user.email ?? "n/a"}`);
 
   const PROFILE_COLUMNS = `
     id, username, tier, is_banned, is_staff, is_demo,
@@ -118,7 +112,6 @@ export async function requireAuth(
     const shortId = data.user.id.replace(/-/g, "").slice(0, 12);
     const username = `user_${shortId}`; // 17 chars, within the 3–24 constraint
     const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
-    console.log(`[auth] profile missing — provisioning userId=${data.user.id} username=${username}`);
 
     const { data: created, error: cErr } = await supabaseAdmin
       .from("profiles")
@@ -137,19 +130,14 @@ export async function requireAuth(
         .maybeSingle();
       profile = reread.data ?? null;
       pErr = reread.error ?? cErr;
-      if (!profile) {
-        console.log(`[auth] provisioning failed userId=${data.user.id} err=${cErr.code}:${cErr.message}`);
-      }
     }
   }
 
   if (pErr || !profile) {
-    console.log(`[auth] reject: profile_missing (403) userId=${data.user.id} dbError=${pErr?.code ?? "none"}:${pErr?.message ?? "no_row"}`);
     return res.status(403).json({ error: "profile_missing" });
   }
 
   if (profile.is_banned) {
-    console.log(`[auth] reject: banned/deletion (403) userId=${data.user.id} deletion=${profile.deletion_scheduled_at ?? "no"}`);
     // Distinguish "banned by moderator" from "scheduled for deletion"
     if (profile.deletion_scheduled_at) {
       return res.status(403).json({

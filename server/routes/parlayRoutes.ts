@@ -24,7 +24,6 @@ import { gradePendingPicks } from "../services/grading/gradingService";
  * limit is lower than the 3-pick/day limit for singles).
  */
 export const parlayRoutes = Router();
-console.log("[parlayRoutes] mounted");
 
 /* ============================================================
    POST /api/parlays/grade  — stateless grading (no auth, no DB)
@@ -548,6 +547,52 @@ function legOddsToDecimalOrNull(leg: any): number | null {
   return null;
 }
 
+/** Normalize an id-ish value to a bare numeric MLB id string, or null.
+ *  Accepts aliases: playerId, mlbPlayerId, player_id, mlb_player_id, personId, id. */
+function normalizeBackendPlayerId(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return Number.isFinite(value) && value > 0 ? String(Math.trunc(value)) : null;
+  const m = String(value).match(/\d{3,}/);
+  return m ? m[0] : null;
+}
+
+/** Pull a player id from a leg object regardless of which alias the source used. */
+function legPlayerId(leg: any): string | null {
+  return normalizeBackendPlayerId(
+    leg?.playerId ?? leg?.mlbPlayerId ?? leg?.player_id ?? leg?.mlb_player_id ?? leg?.personId
+  );
+}
+
+/**
+ * Backfill pick_legs.player_id after create. This makes player_id persist even
+ * when the live create_parlay_with_legs RPC predates migration 0006 (i.e. it
+ * doesn't insert player_id). Idempotent: only fills rows that are still null.
+ * Best-effort — never fails the request.
+ */
+async function backfillLegPlayerIds(
+  admin: any,
+  pickId: string,
+  legsJson: Array<{ leg_index: number; player_id: string | null }>
+): Promise<void> {
+  const withPid = legsJson.filter((l) => l.player_id != null);
+  if (withPid.length === 0) return;
+  for (const l of withPid) {
+    const { error } = await admin
+      .from("pick_legs")
+      .update({ player_id: l.player_id })
+      .eq("pick_id", pickId)
+      .eq("leg_index", l.leg_index)
+      .is("player_id", null);
+    if (error) {
+      // Column missing (0006 not applied) or transient — stop, do not throw.
+      if (!MISSING_COLUMN_CODES.has(error.code)) {
+        console.warn("[me/parlays] player_id backfill error", error.code, error.message);
+      }
+      return;
+    }
+  }
+}
+
 /** Postgres "column does not exist" / schema-cache-miss codes — used to detect
  *  whether migration 0003 (client_ref/source) has been applied yet. */
 const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
@@ -629,7 +674,7 @@ function validateMeParlayBody(body: any): MeParlayValidation {
  *   - Graceful degradation if migration 0003 (client_ref/source/RPC) is not
  *     applied yet.
  */
-parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRoutes] POST /api/me/parlays hit"); next(); }, requireAuth, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
   const body = req.body ?? {};
   const userId = req.user!.id;
 
@@ -675,6 +720,7 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
     market: String(leg.market || leg.marketCode || "prop").slice(0, 64),
     selection: String(leg.selection || "").slice(0, 280) || "—",
     odds_decimal: legOdds[i], // decimal or null — never a placeholder
+    player_id: legPlayerId(leg), // alias-safe; null if unknown
   }));
 
   const supabaseAdmin = await getSupabaseAdmin();
@@ -684,7 +730,7 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
       id: parlay.id,
       ...parlay,
       legs: legsForResponse,
-      combined_odds: Number(combinedOdds.toFixed(3)),
+      combined_odds: combinedOdds, // decimal or null (unknown)
       ai_generated: aiGenerated,
       deduped,
     });
@@ -720,7 +766,7 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
       p_event_id: parentEventId,
       p_market: `${rawLegs.length}-leg parlay`,
       p_selection: selectionSummary || title,
-      p_odds_decimal: Number(combinedOdds.toFixed(3)),
+      p_odds_decimal: combinedOdds,
       p_stake_units: wagerAmount,
       p_confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
       p_explanation: title,
@@ -732,6 +778,8 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
 
     if (!rpcError && rpcPick) {
       const pick = Array.isArray(rpcPick) ? rpcPick[0] : rpcPick;
+      // Ensure player_id persists even if the live RPC predates 0006.
+      await backfillLegPlayerIds(supabaseAdmin, pick.id, legsJson);
       const { data: legs } = await supabaseAdmin
         .from("pick_legs").select("*").eq("pick_id", pick.id).order("leg_index", { ascending: true });
       return respond(pick, legs ?? []);
@@ -760,7 +808,7 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
       event_id: parentEventId,
       market: `${rawLegs.length}-leg parlay`,
       selection: selectionSummary || title,
-      odds_decimal: Number(combinedOdds.toFixed(3)),
+      odds_decimal: combinedOdds,
       stake_units: wagerAmount,
       confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
       explanation: title,
@@ -782,7 +830,12 @@ parlayRoutes.post("/me/parlays", (req, _res, next) => { console.log("[parlayRout
     parlay = insertRes.data;
 
     const legsToInsert = legsJson.map((l) => ({ ...l, pick_id: parlay.id, status: "pending" as const }));
-    const { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+    let { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+    if (legsError && MISSING_COLUMN_CODES.has(legsError.code)) {
+      // Migration 0006 (pick_legs.player_id) not applied — retry without player_id.
+      const legsNoPlayer = legsToInsert.map(({ player_id, ...rest }) => rest);
+      ({ error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsNoPlayer));
+    }
     if (legsError) {
       // ROLLBACK: do not leave an orphan parent pick without legs.
       console.error("[me/parlays] legs insert failed — rolling back parent", legsError.code, legsError.message);

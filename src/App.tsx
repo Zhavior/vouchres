@@ -20,6 +20,7 @@ import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
+import { normalizePlayerId } from './lib/mlbHeadshot';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 
 const TheEdgeShell = lazy(() => import('./components/theEdge/TheEdgeShell'));
@@ -239,6 +240,7 @@ function mapBackendParlay(pick: any): Parlay {
       marketCode: leg.market || undefined,
       actual: leg.actual ?? null,
       gameStartTime: leg.game_start_time || undefined,
+      playerId: normalizePlayerId(leg.player_id),
     };
   });
 
@@ -546,7 +548,6 @@ export default function App() {
         if (!token || cancelled) return;
 
         const result = await apiClient.get<{ parlays: any[] }>('/api/me/parlays?limit=100');
-        if (import.meta.env.DEV) console.debug('[parlays] loaded from backend', result?.parlays?.length ?? 0);
         if (!result?.parlays?.length || cancelled) return;
 
         const backendParlays = result.parlays.map(mapBackendParlay);
@@ -915,11 +916,9 @@ export default function App() {
     // de-dupes on client_ref, so this is defense-in-depth.
     const current = savedSlipsRef.current.find((p) => p.id === parlay.id);
     if (current?.backendPickId && current?.backendSyncState === 'synced') {
-      if (import.meta.env.DEV) console.debug('[parlays] skip save — already synced', parlay.id);
       return;
     }
     if (current?.backendSyncState === 'saving' && current !== parlay) {
-      if (import.meta.env.DEV) console.debug('[parlays] skip save — already in flight', parlay.id);
       return;
     }
 
@@ -942,7 +941,6 @@ export default function App() {
       }
 
       markState('saving', { backendSyncError: undefined });
-      if (import.meta.env.DEV) console.debug('[parlays] POST /api/me/parlays', { clientRef: parlay.id });
 
       const result = await apiClient.post<{ id: string; deduped?: boolean }>('/api/me/parlays', {
         // client_ref / idempotency key — the local parlay id.
@@ -959,7 +957,6 @@ export default function App() {
       });
 
       if (result?.id) {
-        if (import.meta.env.DEV) console.debug('[parlays] synced', { id: result.id, deduped: result.deduped });
         markState('synced', {
           backendPickId: result.id,
           backendSyncedAt: new Date().toISOString(),
@@ -1168,7 +1165,7 @@ export default function App() {
 
   const savedVouchIds = savedVouches.map((v) => v.id);
 
-  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number }) => {
+  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
     // Check if player's game has played already and status is Final
     const playerTeam = player.team ? player.team.toLowerCase() : '';
     const matchedGame = liveGames.find((g: any) => 
@@ -1187,6 +1184,9 @@ export default function App() {
     }
     const { marketCode, threshold } = resolveMarket('mlb', prop.market, prop.spec);
     const gamePk = prop.gamePk != null ? String(prop.gamePk) : (matchedGame?.gamePk != null ? String(matchedGame.gamePk) : undefined);
+    // Capture the MLB player id for headshots (prop.playerId, the player record,
+    // or parsed from prop.id like "hr-665487"). Never guessed from the name.
+    const playerId = normalizePlayerId(prop.playerId ?? player.id ?? prop.id);
     const newLeg: Leg = {
       id: `leg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       sport: "MLB",
@@ -1198,6 +1198,7 @@ export default function App() {
       gamePk,
       marketCode,
       threshold,
+      playerId,
     };
     setActiveLegs([...activeLegs, newLeg]);
     alert(`🎯 Added "${prop.spec}" to your active parlay slip context!`);
