@@ -37,6 +37,8 @@ async function main() {
     console.log("[gradeJob] summary:");
     console.log(`  Graded: ${result.graded.length}`);
     console.log(`  Skipped: ${result.skipped.length}`);
+    console.log(`  Pending remaining: ${result.summary.total_pending}`);
+    console.log(`  Wins/Losses/Pushes/Voids: ${result.summary.wins}/${result.summary.losses}/${result.summary.pushes}/${result.summary.voids}`);
 
     if (result.skipped.length > 0) {
       const errors = result.skipped.filter((r) => r.error);

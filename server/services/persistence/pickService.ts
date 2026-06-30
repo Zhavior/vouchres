@@ -26,6 +26,7 @@ export interface PickRecord {
   judge_trust: number | null;
   judge_verdict: string | null;
   status: "pending" | "won" | "lost" | "push" | "void" | "graded_error";
+  game_date: string | null;
   graded_at: string | null;
   settled_units: number | null;
   explanation: string | null;
@@ -74,22 +75,44 @@ export async function gradePick(opts: {
   status: "won" | "lost" | "push" | "void" | "graded_error";
   settledUnits: number | null;
   learningNote?: string;
-}): Promise<void> {
+  gameDate?: string | null;
+}): Promise<boolean> {
   const supabaseAdmin = await getSupabaseAdmin();
-  const { error } = await supabaseAdmin
-    .from("picks")
-    .update({
-      status: opts.status,
-      graded_at: new Date().toISOString(),
-      settled_units: opts.settledUnits,
-      learning_note: opts.learningNote ?? null,
-    })
-    .eq("id", opts.pickId);
+  const baseUpdate = {
+    status: opts.status,
+    graded_at: new Date().toISOString(),
+    settled_units: opts.settledUnits,
+    learning_note: opts.learningNote ?? null,
+  };
+  const buildUpdate = (includeGameDate: boolean) => ({
+    ...baseUpdate,
+    ...(includeGameDate && opts.gameDate ? { game_date: opts.gameDate } : {}),
+  });
 
-  if (error) throw error;
+  let result = await supabaseAdmin
+    .from("picks")
+    .update(buildUpdate(true))
+    .eq("id", opts.pickId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (result.error && ["42703", "PGRST204"].includes(result.error.code)) {
+    result = await supabaseAdmin
+      .from("picks")
+      .update(buildUpdate(false))
+      .eq("id", opts.pickId)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+  }
+
+  if (result.error) throw result.error;
+  if (!result.data) return false;
 
   // Recompute the author's trust score (roll up from graded picks)
   await recomputeTrustForPick(opts.pickId);
+  return true;
 }
 
 /**

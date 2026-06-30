@@ -22,6 +22,34 @@ export interface GradeResult {
   settled_units: number | null;
   learning_note?: string;
   error?: string;
+  game_date?: string | null;
+  warnings?: string[];
+  leg_results?: Array<{
+    leg_index: number;
+    status: "won" | "lost" | "push";
+    note?: string;
+  }>;
+}
+
+export interface GradeRunSummary {
+  total_pending: number;
+  total_graded: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  voids: number;
+  warnings: string[];
+}
+
+export interface GradeRunResult {
+  graded: GradeResult[];
+  skipped: GradeResult[];
+  summary: GradeRunSummary;
+}
+
+interface FinalGameData {
+  boxscore: any;
+  game_date: string | null;
 }
 
 /**
@@ -42,7 +70,7 @@ export interface GradeResult {
 export async function gradePendingPicks(opts: {
   days?: number;
   dryRun?: boolean;
-} = {}): Promise<{ graded: GradeResult[]; skipped: GradeResult[] }> {
+} = {}): Promise<GradeRunResult> {
   const supabaseAdmin = await getSupabaseAdmin();
   const days = opts.days ?? 3;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -50,7 +78,7 @@ export async function gradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at")
+    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, graded_at, status")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -63,7 +91,7 @@ export async function gradePendingPicks(opts: {
   }
 
   if (!pending || pending.length === 0) {
-    return { graded: [], skipped: [] };
+    return { graded: [], skipped: [], summary: summarizeGradeRun([], [], 0) };
   }
 
   // 2. Group by event_id
@@ -79,9 +107,9 @@ export async function gradePendingPicks(opts: {
 
   // 3. Process each event
   for (const [eventId, picks] of byEvent) {
-    let boxscore: any;
+    let gameData: FinalGameData;
     try {
-      boxscore = await fetchBoxscore(eventId);
+      gameData = await fetchBoxscore(eventId);
     } catch (err: any) {
       // Game not final yet, or fetch failed — skip all picks for this event
       console.log(`[grading] skipping event ${eventId}: ${err.message}`);
@@ -91,6 +119,7 @@ export async function gradePendingPicks(opts: {
           status: "graded_error",
           settled_units: null,
           error: err.message,
+          warnings: [`Game data missing for event ${eventId}: ${err.message}`],
         });
       }
       continue;
@@ -99,7 +128,14 @@ export async function gradePendingPicks(opts: {
     // 4. Evaluate each pick
     for (const pick of picks) {
       try {
-        const result = await evaluatePick(pick, boxscore);
+        const result = await evaluatePick(pick, gameData.boxscore);
+        result.game_date = gameData.game_date ?? String(pick.created_at ?? "").slice(0, 10) ?? null;
+        if (!gameData.game_date) {
+          result.warnings = [
+            ...(result.warnings ?? []),
+            "MLB linescore did not include game_date; using pick created_at date as fallback.",
+          ];
+        }
 
         if (result.status === "graded_error") {
           skipped.push({ ...result, pick_id: pick.id });
@@ -107,12 +143,26 @@ export async function gradePendingPicks(opts: {
         }
 
         if (!opts.dryRun) {
-          await gradePick({
+          const changed = await gradePick({
             pickId: pick.id,
             status: result.status,
             settledUnits: result.settled_units,
             learningNote: result.learning_note,
+            gameDate: result.game_date,
           });
+          if (!changed) {
+            skipped.push({
+              pick_id: pick.id,
+              status: "graded_error",
+              settled_units: null,
+              error: "already_graded_or_missing",
+              warnings: ["Pick was no longer pending when grading attempted."],
+            });
+            continue;
+          }
+          if (result.leg_results?.length) {
+            await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+          }
         }
 
         graded.push({ ...result, pick_id: pick.id });
@@ -132,14 +182,14 @@ export async function gradePendingPicks(opts: {
     `[grading] done: ${graded.length} graded, ${skipped.length} skipped (of ${pending.length} pending)`
   );
 
-  return { graded, skipped };
+  return { graded, skipped, summary: summarizeGradeRun(graded, skipped, pending.length) };
 }
 
 /**
  * Fetch the boxscore for a game. Throws if the game is not yet final.
  * Uses linescore endpoint to verify finality before fetching player stats.
  */
-async function fetchBoxscore(gamePk: string): Promise<any> {
+async function fetchBoxscore(gamePk: string): Promise<FinalGameData> {
   // Step 1: linescore to verify the game is complete
   const lsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/linescore`, {
     signal: AbortSignal.timeout(8_000),
@@ -148,6 +198,12 @@ async function fetchBoxscore(gamePk: string): Promise<any> {
   if (!lsRes.ok) throw new Error(`linescore fetch ${lsRes.status}`);
   const ls = await lsRes.json();
   if (ls?.isComplete !== true) throw new Error(`game not final (isComplete=${ls?.isComplete})`);
+  const gameDate =
+    typeof ls?.gameDate === "string"
+      ? ls.gameDate.slice(0, 10)
+      : typeof ls?.currentInningOrdinal === "string"
+        ? null
+        : null;
 
   // Step 2: boxscore for player batting stats
   const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
@@ -155,7 +211,7 @@ async function fetchBoxscore(gamePk: string): Promise<any> {
     headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
   });
   if (!bsRes.ok) throw new Error(`boxscore fetch ${bsRes.status}`);
-  return bsRes.json();
+  return { boxscore: await bsRes.json(), game_date: gameDate };
 }
 
 /**
@@ -219,7 +275,7 @@ async function evaluatePick(
     return settlePick(pick, playerRuns >= 1);
   }
 
-  if (market === "parlay") {
+  if (pick.leg_type === "parlay" || market.includes("parlay")) {
     // Parlays: load the legs from pick_legs, grade each leg individually.
     // - Any leg LOST → parlay LOST
     // - All legs WON → parlay WON, payout = stake * product(odds)
@@ -250,6 +306,7 @@ async function gradeParlayPick(
     selection: string;
     odds_decimal: number | null;
     stake_units: number | null;
+    event_id?: string | null;
   },
   boxscore: any
 ): Promise<GradeResult> {
@@ -295,7 +352,7 @@ async function gradeParlayPick(
   }
 
   // 3. Evaluate each leg
-  const legResults: Array<{ status: "won" | "lost" | "push"; odds: number }> = [];
+  const legResults: Array<{ leg_index: number; status: "won" | "lost" | "push"; odds: number; note?: string }> = [];
 
   for (const leg of legs) {
     const legBoxscore = leg.event_id ? boxscoreCache.get(leg.event_id as string) : boxscore;
@@ -331,8 +388,10 @@ async function gradeParlayPick(
     }
 
     legResults.push({
+      leg_index: Number(leg.leg_index),
       status: legResult.status as "won" | "lost" | "push",
       odds: leg.odds_decimal ?? 2.0,
+      note: legResult.learning_note ?? legResult.error,
     });
   }
 
@@ -346,6 +405,7 @@ async function gradeParlayPick(
       status: "lost",
       settled_units: -Number(stake.toFixed(2)),
       learning_note: `Parlay lost: ${legResults.filter(r => r.status === "lost").length} leg(s) lost.`,
+      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
@@ -360,6 +420,7 @@ async function gradeParlayPick(
       status: "push",
       settled_units: 0.0,
       learning_note: `Parlay pushed: all ${pushLegs.length} leg(s) pushed.`,
+      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
@@ -377,6 +438,65 @@ async function gradeParlayPick(
       pushLegs.length > 0
         ? `Parlay won with ${pushLegs.length} push(es). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
         : `Parlay won. ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`,
+    leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
+  };
+}
+
+async function applyParlayLegGrades(
+  pickId: string,
+  legResults: NonNullable<GradeResult["leg_results"]>,
+  gameDate?: string | null
+): Promise<void> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const gradedAt = new Date().toISOString();
+  for (const leg of legResults) {
+    const buildUpdate = (includeGameDate: boolean) => ({
+      status: leg.status,
+      graded_at: gradedAt,
+      ...(includeGameDate && gameDate ? { game_date: gameDate } : {}),
+    });
+    let result = await supabaseAdmin
+      .from("pick_legs")
+      .update(buildUpdate(true))
+      .eq("pick_id", pickId)
+      .eq("leg_index", leg.leg_index)
+      .eq("status", "pending");
+    if (result.error && ["42703", "PGRST204"].includes(result.error.code)) {
+      result = await supabaseAdmin
+        .from("pick_legs")
+        .update(buildUpdate(false))
+        .eq("pick_id", pickId)
+        .eq("leg_index", leg.leg_index)
+        .eq("status", "pending");
+    }
+    if (result.error) {
+      console.warn(`[grading] leg update failed pick=${pickId} leg=${leg.leg_index}`, result.error.message);
+    }
+  }
+}
+
+export function summarizeGradeRun(
+  graded: GradeResult[],
+  skipped: GradeResult[],
+  initialPending: number
+): GradeRunSummary {
+  const wins = graded.filter((r) => r.status === "won").length;
+  const losses = graded.filter((r) => r.status === "lost").length;
+  const pushes = graded.filter((r) => r.status === "push").length;
+  const voids = graded.filter((r) => r.status === "void").length;
+  const warnings = [
+    ...graded.flatMap((r) => r.warnings ?? []),
+    ...skipped.flatMap((r) => r.warnings ?? []),
+    ...(skipped.map((r) => r.error).filter(Boolean) as string[]),
+  ];
+  return {
+    total_pending: Math.max(0, initialPending - graded.length),
+    total_graded: graded.length,
+    wins,
+    losses,
+    pushes,
+    voids,
+    warnings: [...new Set(warnings)],
   };
 }
 

@@ -104,7 +104,8 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
 parlayRoutes.get("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
   try {
     const days = Math.min(Number(req.query.days ?? 2), 7);
-    const { graded, skipped } = await gradePendingPicks({ days });
+    const result = await gradePendingPicks({ days });
+    const { graded, skipped, summary } = result;
 
     const settled = graded.filter((r) => r.status !== "graded_error");
     const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
@@ -135,6 +136,8 @@ parlayRoutes.get("/parlays/grade-due", requireAuth, gradingLimiter, async (req: 
       gradedParlays: settled.length,
       gradedLegs: graded.length,
       pendingLegs: pending.length,
+      summary,
+      warnings: summary.warnings,
       errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
       checkedAt: new Date().toISOString(),
     });
