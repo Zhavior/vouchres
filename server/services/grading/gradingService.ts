@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePick } from "../persistence/pickService";
+import { createParlayGradedNotification } from "../notifications/notificationService";
 
 /**
  * Grading service — resolves pick outcomes by fetching results from the
@@ -78,7 +79,7 @@ export async function gradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, graded_at, status")
+    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, graded_at, status")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -162,6 +163,20 @@ export async function gradePendingPicks(opts: {
           }
           if (result.leg_results?.length) {
             await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+          }
+          if (pick.leg_type === "parlay" && pick.user_id) {
+            const legResults = result.leg_results ?? [];
+            const notify = await createParlayGradedNotification({
+              userId: String(pick.user_id),
+              parlayId: pick.id,
+              status: result.status,
+              legCount: legResults.length || 1,
+              wins: legResults.filter((leg) => leg.status === "won").length || (result.status === "won" ? 1 : 0),
+              losses: legResults.filter((leg) => leg.status === "lost").length || (result.status === "lost" ? 1 : 0),
+              pushes: legResults.filter((leg) => leg.status === "push").length || (result.status === "push" ? 1 : 0),
+              voids: result.status === "void" ? 1 : 0,
+            });
+            result.warnings = [...(result.warnings ?? []), ...notify.warnings];
           }
         }
 
