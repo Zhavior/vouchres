@@ -8,6 +8,7 @@ import { billingRoutes } from "./billingRoutes";
 import { adminRoutes } from "./adminRoutes";
 import { privacyRoutes } from "./privacyRoutes";
 import { postRoutes } from "./postRoutes";
+import { feedRoutes } from "./feedRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
 import { shareRoutes } from "./shareRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
@@ -33,6 +34,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", publicRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", postRoutes);
+  app.use("/api", feedRoutes);
   app.use("/api", playerRegistryRoutes);
   app.use("/api", shareRoutes);
 
