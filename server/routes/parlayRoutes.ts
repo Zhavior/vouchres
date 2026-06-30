@@ -1,11 +1,13 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { createHash } from "node:crypto";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
-import { gradingLimiter, pickLimiter } from "../middleware/rateLimit";
+import { generationLimiter, gradingLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { createPick } from "../services/persistence/pickService";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
+import { getFeedComposerOptions, type ComposerOptionsResponse, type PlayerOption } from "../services/feed/composerOptionsService";
 
 /**
  * Parlay routes — multi-leg pick creation with transactional integrity.
@@ -24,6 +26,424 @@ import { gradePendingPicks } from "../services/grading/gradingService";
  * limit is lower than the 3-pick/day limit for singles).
  */
 export const parlayRoutes = Router();
+
+const AI_PARLAY_SOURCE = "ai_parlay_engine";
+const AI_MARKET_MAP: Record<string, string> = {
+  HR: "hr",
+  HOME_RUN: "hr",
+  "HOME RUN": "hr",
+  HIT: "hits",
+  HITS: "hits",
+  RBI: "rbi",
+  RUN: "run",
+  RUNS: "run",
+  TB: "tb",
+  "TOTAL BASES": "tb",
+};
+
+type AiParlayLegInput = {
+  event_id?: string;
+  eventId?: string;
+  gamePk?: string;
+  gameId?: string;
+  market?: string;
+  marketCode?: string;
+  selection?: string;
+  playerName?: string;
+  playerId?: string | number;
+  odds_decimal?: number | null;
+  oddsDecimal?: number | null;
+  odds?: number | string | null;
+  team?: string;
+  teamAbbr?: string;
+  gameStartTime?: string;
+};
+
+type NormalizedAiLeg = {
+  event_id: string;
+  market: string;
+  selection: string;
+  odds_decimal: number | null;
+  player_id: string | null;
+};
+
+function todayYmd(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function ymdFromValue(value: unknown): string | null {
+  if (typeof value !== "string" || !value) return null;
+  const match = value.match(/\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : null;
+}
+
+function stableHash(value: unknown): string {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 24);
+}
+
+function normalizeAiMarket(value: unknown): { market: string; warning?: string } {
+  const raw = String(value ?? "").trim();
+  const key = raw.toUpperCase();
+  const mapped = AI_MARKET_MAP[key] ?? AI_MARKET_MAP[key.replace(/[^A-Z_ ]/g, "")];
+  if (mapped) return { market: mapped };
+  return { market: raw.toLowerCase() || "custom", warning: `unsupported market: ${raw || "missing"}` };
+}
+
+function decimalOddsFromAny(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "string" && /^[+-]?\d+$/.test(value.trim())) {
+    return americanToDecimal(Number(value));
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  if (Math.abs(n) >= 100) return americanToDecimal(n);
+  return n > 1.01 ? Number(n.toFixed(3)) : null;
+}
+
+function normalizeAiLegs(rawLegs: unknown[]): { legs: NormalizedAiLeg[]; warnings: string[] } {
+  const warnings: string[] = [];
+  const legs = rawLegs.map((raw, index) => {
+    const leg = (raw ?? {}) as AiParlayLegInput;
+    const eventId = String(leg.event_id ?? leg.eventId ?? leg.gamePk ?? leg.gameId ?? "").slice(0, 64);
+    if (!eventId) warnings.push(`leg ${index + 1}: missing game/event id`);
+
+    const marketResult = normalizeAiMarket(leg.marketCode ?? leg.market);
+    if (marketResult.warning) warnings.push(`leg ${index + 1}: ${marketResult.warning}`);
+
+    const playerName = String(leg.playerName ?? "").trim();
+    const selection = String(leg.selection ?? (playerName ? `${playerName} 1+ HR` : "")).trim().slice(0, 280);
+    if (!selection) warnings.push(`leg ${index + 1}: missing player/selection`);
+
+    const odds = decimalOddsFromAny(leg.odds_decimal ?? leg.oddsDecimal ?? leg.odds);
+    if (odds === null) warnings.push(`leg ${index + 1}: missing odds`);
+
+    return {
+      event_id: eventId,
+      market: marketResult.market,
+      selection: selection || `AI parlay leg ${index + 1}`,
+      odds_decimal: odds,
+      player_id: normalizeBackendPlayerId(leg.playerId),
+    };
+  });
+
+  return { legs, warnings };
+}
+
+function aiParlaySignature(userId: string, gameDate: string, legs: NormalizedAiLeg[]): string {
+  return stableHash({
+    userId,
+    gameDate,
+    legs: legs.map((leg) => ({
+      event_id: leg.event_id,
+      market: leg.market,
+      selection: leg.selection.toLowerCase(),
+      player_id: leg.player_id,
+    })),
+  });
+}
+
+function sourceFromPick(row: any): "AI" {
+  return "AI";
+}
+
+async function fetchParlayLegs(admin: any, pickId: string): Promise<any[]> {
+  const { data } = await admin
+    .from("pick_legs")
+    .select("*")
+    .eq("pick_id", pickId)
+    .order("leg_index", { ascending: true });
+  return data ?? [];
+}
+
+function formatAiSavedParlay(row: any, legs: any[], fallback: { title: string; riskTier: string; gameDate: string }) {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title ?? fallback.title,
+    legs,
+    riskTier: row.risk_tier ?? fallback.riskTier,
+    confidence: row.confidence ?? null,
+    source: sourceFromPick(row),
+    status: row.status ?? "pending",
+    created_at: row.created_at,
+    game_date: row.game_date ?? fallback.gameDate,
+  };
+}
+
+function isAiPickRow(row: any): boolean {
+  return row?.source === "ai_pick" || /source=AI|aiGenerated=true|aiSignature=/i.test(String(row?.explanation ?? ""));
+}
+
+function enrichParlayRow(row: any, legs: any[]) {
+  return {
+    ...row,
+    legs,
+    title: row.title ?? String(row.explanation ?? row.market ?? "Saved Parlay").split("\n")[0],
+    riskTier: row.risk_tier ?? "MEDIUM",
+    source: isAiPickRow(row) ? "AI" : (row.source ?? "manual"),
+    ai_generated: isAiPickRow(row),
+    game_date: row.game_date ?? ymdFromValue(row.created_at),
+  };
+}
+
+function aiLegFromPlayer(player: PlayerOption, game: ComposerOptionsResponse["games"][number], market = "HR"): AiParlayLegInput {
+  return {
+    event_id: game.gameId,
+    gamePk: game.gameId,
+    market,
+    marketCode: market,
+    selection: `${player.name} 1+ HR`,
+    playerName: player.name,
+    playerId: player.id,
+    odds_decimal: null,
+    teamAbbr: player.teamAbbr,
+    gameStartTime: game.startTime ?? undefined,
+  };
+}
+
+function buildGeneratedAiParlays(options: ComposerOptionsResponse) {
+  const warnings = [...options.warnings];
+  const starterCandidates = options.games.flatMap((game) => {
+    const players = [...game.awayTeam.players, ...game.homeTeam.players]
+      .filter((player) => player.isStarter && player.position !== "P")
+      .sort((a, b) => (a.battingOrder ?? 99) - (b.battingOrder ?? 99))
+      .slice(0, 2);
+    return players.map((player) => ({ player, game }));
+  });
+
+  if (options.games.length === 0) warnings.push("no games today");
+  if (starterCandidates.length < 2) warnings.push("not enough confirmed starters for AI parlays");
+
+  const recipes = [
+    { legCount: 2, riskTier: "LOW", confidence: 62, label: "Safer" },
+    { legCount: 3, riskTier: "MEDIUM", confidence: 48, label: "Balanced" },
+    { legCount: 4, riskTier: "HIGH", confidence: 34, label: "Longshot" },
+  ];
+
+  const parlays = recipes.flatMap((recipe, recipeIndex) => {
+    const picks = starterCandidates.slice(recipeIndex, recipeIndex + recipe.legCount);
+    if (picks.length < recipe.legCount) return [];
+    const legs = picks.map(({ player, game }) => aiLegFromPlayer(player, game));
+    return [{
+      id: `ai-${options.date}-${recipe.legCount}-${stableHash(legs)}`,
+      title: `AI ${recipe.label} ${recipe.legCount}-Leg HR Parlay`,
+      legs,
+      riskTier: recipe.riskTier,
+      confidence: recipe.confidence,
+      source: "AI",
+      status: "pending",
+      created_at: new Date().toISOString(),
+      game_date: options.date,
+      warnings: legs.some((leg) => leg.odds_decimal == null) ? ["missing odds"] : [],
+    }];
+  });
+
+  return { parlays, warnings: [...new Set(warnings)] };
+}
+
+/* ============================================================
+   POST /api/parlays/ai-generate
+   Backend AI parlay generation from MLB composer options.
+   ============================================================ */
+parlayRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, async (req: AuthedRequest, res: Response) => {
+  const start = Date.now();
+  const date = ymdFromValue(req.body?.date) ?? todayYmd();
+  try {
+    const options = await getFeedComposerOptions({ sport: "MLB", date });
+    const result = buildGeneratedAiParlays(options);
+    console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
+    return res.json({
+      parlays: result.parlays,
+      warnings: result.warnings,
+      generatedAt: new Date().toISOString(),
+      source: AI_PARLAY_SOURCE,
+    });
+  } catch (err: any) {
+    console.error("[parlays/ai-generate] failed", err?.message);
+    return res.status(503).json({
+      parlays: [],
+      warnings: [err?.message ?? "AI parlay generation unavailable"],
+      generatedAt: new Date().toISOString(),
+      source: AI_PARLAY_SOURCE,
+    });
+  }
+});
+
+/* ============================================================
+   POST /api/parlays/save
+   Authenticated AI parlay save endpoint. Uses picks + pick_legs so My
+   Parlays, Results ledger, grading, and notification hooks see one record.
+   ============================================================ */
+parlayRoutes.post("/parlays/save", requireAuth, async (req: AuthedRequest, res: Response) => {
+  const start = Date.now();
+  const body = req.body ?? {};
+  const parlayBody = body.parlay ?? body;
+  const rawLegs = Array.isArray(parlayBody.legs) ? parlayBody.legs : [];
+  const warnings: string[] = [];
+
+  if (rawLegs.length < 2 || rawLegs.length > 8) {
+    return res.status(400).json({ error: "validation_error", warnings: ["AI parlay must include 2-8 legs."] });
+  }
+
+  const normalized = normalizeAiLegs(rawLegs);
+  warnings.push(...normalized.warnings);
+
+  const validLegs = normalized.legs.filter((leg) => leg.event_id && leg.selection);
+  if (validLegs.length < 2) {
+    return res.status(400).json({ error: "validation_error", warnings: [...new Set(warnings), "not enough valid legs to save"] });
+  }
+
+  const userId = req.user!.id;
+  const gameDate =
+    ymdFromValue(parlayBody.game_date) ??
+    ymdFromValue(parlayBody.gameDate) ??
+    ymdFromValue(rawLegs[0]?.gameStartTime) ??
+    todayYmd();
+  const title = String(parlayBody.title ?? `AI ${validLegs.length}-Leg Parlay`).slice(0, 200);
+  const riskTier = String(parlayBody.riskTier ?? parlayBody.risk_tier ?? "MEDIUM").slice(0, 40);
+  const confidence = Number.isFinite(Number(parlayBody.confidence)) ? Number(parlayBody.confidence) : null;
+  const signature = aiParlaySignature(userId, gameDate, validLegs);
+  const clientRef = `AI:${gameDate}:${signature}`;
+  const combinedOdds = validLegs.every((leg) => leg.odds_decimal != null)
+    ? Number(validLegs.reduce((product, leg) => product * Number(leg.odds_decimal), 1).toFixed(3))
+    : null;
+
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  try {
+    // Dedupe path when migration 0003 is applied.
+    try {
+      const { data: existing, error: existingError } = await supabaseAdmin
+        .from("picks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("client_ref", clientRef)
+        .limit(1)
+        .maybeSingle();
+      if (existingError && !MISSING_COLUMN_CODES.has(existingError.code)) throw existingError;
+      if (existing) {
+        const legs = await fetchParlayLegs(supabaseAdmin, existing.id);
+        return res.json({
+          parlay: formatAiSavedParlay(existing, legs, { title, riskTier, gameDate }),
+          deduped: true,
+          warnings: [...new Set(warnings)],
+        });
+      }
+    } catch (err: any) {
+      if (!MISSING_COLUMN_CODES.has(err?.code)) {
+        console.warn("[parlays/save] client_ref dedupe failed; continuing", err?.message);
+      }
+    }
+
+    // Fallback dedupe that works even without client_ref/source columns.
+    const { data: maybeExisting } = await supabaseAdmin
+      .from("picks")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("leg_type", "parlay")
+      .ilike("explanation", `%aiSignature=${signature}%`)
+      .limit(1)
+      .maybeSingle();
+    if (maybeExisting) {
+      const legs = await fetchParlayLegs(supabaseAdmin, maybeExisting.id);
+      return res.json({
+        parlay: formatAiSavedParlay(maybeExisting, legs, { title, riskTier, gameDate }),
+        deduped: true,
+        warnings: [...new Set(warnings)],
+      });
+    }
+
+    const selectionSummary = validLegs.map((leg) => leg.selection).join(" | ").slice(0, 500);
+    const explanation = [
+      title,
+      "source=AI",
+      `aiSignature=${signature}`,
+      warnings.length ? `warnings=${[...new Set(warnings)].join("; ")}` : null,
+    ].filter(Boolean).join("\n");
+
+    const baseParent = {
+      user_id: userId,
+      capper_id: null,
+      leg_type: "parlay" as const,
+      sport: "mlb",
+      event_id: validLegs[0].event_id,
+      market: `${validLegs.length}-leg parlay`,
+      selection: selectionSummary || title,
+      odds_decimal: combinedOdds,
+      stake_units: Number.isFinite(Number(parlayBody.wagerAmount ?? parlayBody.stake_units)) ? Number(parlayBody.wagerAmount ?? parlayBody.stake_units) : 1,
+      confidence,
+      explanation,
+      is_demo: false,
+      status: "pending",
+    };
+
+    const withAll = {
+      ...baseParent,
+      source: "ai_pick",
+      client_ref: clientRef,
+      title,
+      risk_tier: riskTier,
+      game_date: gameDate,
+    };
+
+    let insert = await supabaseAdmin.from("picks").insert(withAll).select("*").single();
+    if (insert.error && MISSING_COLUMN_CODES.has(insert.error.code)) {
+      insert = await supabaseAdmin
+        .from("picks")
+        .insert({
+          ...baseParent,
+          source: "ai_pick",
+          client_ref: clientRef,
+          game_date: gameDate,
+        })
+        .select("*")
+        .single();
+    }
+    if (insert.error && MISSING_COLUMN_CODES.has(insert.error.code)) {
+      insert = await supabaseAdmin.from("picks").insert(baseParent).select("*").single();
+    }
+    if (insert.error || !insert.data) {
+      console.error("[parlays/save] parent insert failed", insert.error?.message);
+      return res.status(500).json({ error: "save_failed", warnings: [...new Set(warnings), insert.error?.message ?? "parent insert failed"] });
+    }
+
+    const parent = insert.data;
+    const legsToInsert = validLegs.map((leg, index) => ({
+      pick_id: parent.id,
+      leg_index: index,
+      event_id: leg.event_id,
+      market: leg.market,
+      selection: leg.selection,
+      odds_decimal: leg.odds_decimal,
+      player_id: leg.player_id,
+      status: "pending" as const,
+      game_date: gameDate,
+    }));
+
+    let legsInsert = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+    if (legsInsert.error && MISSING_COLUMN_CODES.has(legsInsert.error.code)) {
+      legsInsert = await supabaseAdmin
+        .from("pick_legs")
+        .insert(legsToInsert.map(({ player_id, game_date, ...rest }) => rest));
+    }
+    if (legsInsert.error) {
+      console.error("[parlays/save] legs insert failed, rolling back parent", legsInsert.error.message);
+      await supabaseAdmin.from("picks").delete().eq("id", parent.id);
+      return res.status(500).json({ error: "save_failed", warnings: [...new Set(warnings), legsInsert.error.message] });
+    }
+
+    const legs = await fetchParlayLegs(supabaseAdmin, parent.id);
+    console.log(`[parlays/save] saved ai parlay=${parent.id} legs=${legs.length} dedupe=${clientRef} ${Date.now() - start}ms`);
+    return res.status(201).json({
+      parlay: formatAiSavedParlay(parent, legs, { title, riskTier, gameDate }),
+      deduped: false,
+      warnings: [...new Set(warnings)],
+    });
+  } catch (err: any) {
+    console.error("[parlays/save] failed", err?.message);
+    return res.status(500).json({ error: "save_failed", warnings: [err?.message ?? "save failed"] });
+  }
+});
 
 /* ============================================================
    POST /api/parlays/grade  — stateless grading (no auth, no DB)
@@ -615,8 +1035,7 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
   }
 
   const ledger = (picks ?? []).map((pick: any) => ({
-    ...pick,
-    legs: legsByPickId[String(pick.id)] ?? [],
+    ...enrichParlayRow(pick, legsByPickId[String(pick.id)] ?? []),
     is_parlay: pick.leg_type === "parlay",
   }));
 
@@ -673,7 +1092,7 @@ parlayRoutes.get("/me/parlays", requireAuth, async (req: AuthedRequest, res: Res
     }
   }
 
-  const parlays = picks.map((p: any) => ({ ...p, legs: legsMap[String(p.id)] ?? [] }));
+  const parlays = picks.map((p: any) => enrichParlayRow(p, legsMap[String(p.id)] ?? []));
   return res.json({ parlays, total: count ?? 0, limit, offset });
 });
 
