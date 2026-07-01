@@ -314,9 +314,9 @@ export default function PlayerResearchConsole({
       return { 
         gradient: 'from-slate-700/20 via-slate-900/50 to-slate-950/20', 
         border: 'border-gray-500/20', 
-        text: 'text-slate-300', 
+        text: 'text-[hsl(var(--ve-text-soft))]', 
         glow: 'shadow-slate-500/10',
-        badge: 'bg-slate-500/10 text-slate-300 border border-slate-500/20'
+        badge: 'bg-slate-500/10 text-[hsl(var(--ve-text-soft))] border border-slate-500/20'
       };
     }
     if (teamName.includes('Padres')) {
@@ -376,7 +376,7 @@ export default function PlayerResearchConsole({
           }
           if (trimmed.startsWith('####')) {
             return (
-              <h5 key={idx} className="text-slate-300 text-[11px] font-bold font-mono mt-3 uppercase tracking-wide">
+              <h5 key={idx} className="text-[hsl(var(--ve-text-soft))] text-[11px] font-bold font-mono mt-3 uppercase tracking-wide">
                 ▸ {trimmed.replace('####', '').replace(/\*/g, '').trim()}
               </h5>
             );
@@ -386,14 +386,14 @@ export default function PlayerResearchConsole({
             return (
               <div key={idx} className="flex items-start gap-2.5 ml-2">
                 <span className="text-emerald-400 font-bold mt-1 text-[9px]">■</span>
-                <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                <p className="text-xs text-[hsl(var(--ve-text-soft))] leading-relaxed font-mono">
                   {renderInnerBold(rawBody)}
                 </p>
               </div>
             );
           }
           return (
-            <p key={idx} className="text-xs text-slate-300 leading-relaxed font-mono">
+            <p key={idx} className="text-xs text-[hsl(var(--ve-text-soft))] leading-relaxed font-mono">
               {renderInnerBold(trimmed)}
             </p>
           );
@@ -406,7 +406,7 @@ export default function PlayerResearchConsole({
     const parts = text.split(/\*\*(.*?)\*\*/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        return <strong key={i} className="text-white font-extrabold bg-slate-900/40 px-1 py-0.5 rounded">{part}</strong>;
+        return <strong key={i} className="text-[hsl(var(--ve-text))] font-extrabold bg-[hsl(var(--ve-surface-raised)/0.42)] px-1 py-0.5 rounded">{part}</strong>;
       }
       return part;
     });
@@ -416,18 +416,18 @@ export default function PlayerResearchConsole({
   const activeAiReport = aiReportCache[activePlayer.id];
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-emerald-500/20 font-sans max-w-none mx-auto" id="player-research-console-root">
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 text-[hsl(var(--ve-text-soft))] selection:bg-emerald-500/20 font-sans max-w-none mx-auto" id="player-research-console-root">
       
       {/* Toast alert feedback widget */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-950/90 border-2 border-emerald-500 text-slate-100 px-5 py-4 rounded-2xl shadow-emerald-500/10 shadow-2xl flex items-center gap-3 animate-fade-in">
+        <div className="fixed bottom-6 right-6 z-50 bg-[hsl(var(--ve-surface-raised)/0.92)] border-2 border-emerald-500 text-[hsl(var(--ve-text))] px-5 py-4 rounded-2xl shadow-emerald-500/10 shadow-2xl flex items-center gap-3 animate-fade-in">
           <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
           <span className="font-extrabold text-xs font-mono uppercase tracking-wide">{toastMessage}</span>
         </div>
       )}
 
       {/* Header Profile Dashboard */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-slate-900/20 border border-slate-800/40 p-6 rounded-3xl" id="console-welcome-header">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-[hsl(var(--ve-surface-raised)/0.30)] border border-[hsl(var(--ve-border)/0.30)] p-6 rounded-3xl" id="console-welcome-header">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full uppercase tracking-widest">
@@ -437,22 +437,22 @@ export default function PlayerResearchConsole({
               <span className="w-1.5 h-1.5 bg-[var(--ve-accent)] rounded-full animate-pulse" /> Sabermetric Grounding Engine v3.5
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mt-2 font-display">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-[hsl(var(--ve-text))] tracking-tight mt-2 font-display">
             MLB Roster Research Lab
           </h1>
-          <p className="text-slate-400 text-xs mt-1.5 max-w-2xl leading-relaxed">
+          <p className="text-[hsl(var(--ve-text-muted))] text-xs mt-1.5 max-w-2xl leading-relaxed">
             Extract live edge advantages from custom metrics. Combine authentic Baseball-Reference metadata formulas and real-time live MLB.com search queries inside an interactive, server-side simulated dashboard.
           </p>
         </div>
 
         {/* Dynamic overall dashboard stats summary */}
-        <div className="flex flex-wrap items-center gap-4 bg-slate-950/60 border border-slate-800/60 p-4 rounded-2xl">
-          <div className="px-4 border-r border-slate-800/50">
-            <span className="block text-[9px] text-slate-500 font-mono tracking-wider uppercase">MLB PLAYERS LOADED</span>
-            <span className="text-lg font-black text-slate-200 font-mono">{displayedPlayers.length} Active</span>
+        <div className="flex flex-wrap items-center gap-4 bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] p-4 rounded-2xl">
+          <div className="px-4 border-r border-[hsl(var(--ve-border)/0.28)]">
+            <span className="block text-[9px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wider uppercase">MLB PLAYERS LOADED</span>
+            <span className="text-lg font-black text-[hsl(var(--ve-text-soft))] font-mono">{displayedPlayers.length} Active</span>
           </div>
-          <div className="px-4 border-r border-slate-800/50">
-            <span className="block text-[9px] text-slate-500 font-mono tracking-wider uppercase">COMPUTATION METHOD</span>
+          <div className="px-4 border-r border-[hsl(var(--ve-border)/0.28)]">
+            <span className="block text-[9px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wider uppercase">COMPUTATION METHOD</span>
             <span className="text-xs bg-emerald-500/10 text-emerald-400 font-black font-mono px-2.5 py-1 rounded border border-emerald-500/20 block mt-0.5 uppercase tracking-wider">
               Gemini Search Grounded
             </span>
@@ -464,9 +464,9 @@ export default function PlayerResearchConsole({
                 selectActivePlayer(randomPlayer);
                 showToast(`Loaded ${randomPlayer.name} automatically.`);
               }}
-              className="text-white bg-slate-800 hover:bg-slate-700/80 p-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-1.5 border border-slate-700/50"
+              className="text-[hsl(var(--ve-text))] bg-[hsl(var(--ve-surface-raised)/0.54)] hover:bg-[hsl(var(--ve-surface-raised)/0.72)] p-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-1.5 border border-[hsl(var(--ve-border)/0.34)]"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-300" /> Randomize
+              <RefreshCw className="w-3.5 h-3.5 text-[hsl(var(--ve-text-soft))]" /> Randomize
             </button>
           </div>
         </div>
@@ -479,19 +479,19 @@ export default function PlayerResearchConsole({
         <div className="col-span-1 lg:col-span-4 space-y-6" id="console-roster-sidebar">
           
           {/* Controls Panel */}
-          <div className="bg-slate-900/30 border border-slate-800/50 p-5 rounded-3xl shadow-xl space-y-5 backdrop-blur-sm">
-            <h2 className="text-xs font-black text-slate-300 flex items-center justify-between border-b border-slate-800/60 pb-3">
+          <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] p-5 rounded-3xl shadow-xl space-y-5 backdrop-blur-sm">
+            <h2 className="text-xs font-black text-[hsl(var(--ve-text-soft))] flex items-center justify-between border-b border-[hsl(var(--ve-border)/0.28)] pb-3">
               <span className="flex items-center gap-2 tracking-wider uppercase font-mono"><Search className="w-4 h-4 text-emerald-400" /> Controller Index</span>
-              <span className="text-[9px] text-slate-500 font-mono">Live filters</span>
+              <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono">Live filters</span>
             </h2>
 
             {/* Input Search bar */}
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+              <Search className="w-4 h-4 text-[hsl(var(--ve-text-muted))] absolute left-3.5 top-3.5" />
               <input 
                 type="text" 
                 placeholder="Search MLB player or position..." 
-                className="w-full bg-slate-950 border border-slate-800/80 rounded-2xl py-3 pl-10 pr-10 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                className="w-full bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] rounded-2xl py-3 pl-10 pr-10 text-xs text-[hsl(var(--ve-text-soft))] placeholder:text-[hsl(var(--ve-text-muted))] focus:outline-none focus:border-[var(--ve-border-strong)] focus:ring-1 focus:ring-[var(--ve-border-strong)] transition-all font-mono"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -510,7 +510,7 @@ export default function PlayerResearchConsole({
             {/* Dropdown Filters Grid */}
             <div className="space-y-3.5">
               <div>
-                <label className="block text-[9px] text-slate-500 font-mono uppercase mb-1.5 tracking-wider">FILTER FRANCHISE TEAM</label>
+                <label className="block text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase mb-1.5 tracking-wider">FILTER FRANCHISE TEAM</label>
                 <div className="flex flex-wrap gap-1">
                   {['ALL', 'Dodgers', 'Yankees', 'Padres', 'Astros', 'Braves'].map(t => (
                     <button
@@ -519,7 +519,7 @@ export default function PlayerResearchConsole({
                       className={`text-[10px] font-mono px-2.5 py-1.5 rounded-lg border transition-all ${
                         selectedTeam.includes(t) || (t === 'ALL' && selectedTeam === 'ALL')
                           ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-bold'
-                          : 'bg-slate-950 border-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          : 'bg-[hsl(var(--ve-bg)/0.72)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text))] hover:border-[hsl(var(--ve-border)/0.50)]'
                       }`}
                     >
                       {t}
@@ -530,9 +530,9 @@ export default function PlayerResearchConsole({
 
               <div className="grid grid-cols-2 gap-2.5 pt-2">
                 <div>
-                  <label className="block text-[9.5px] text-slate-500 font-mono uppercase mb-1 tracking-wider">Position</label>
+                  <label className="block text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono uppercase mb-1 tracking-wider">Position</label>
                   <select 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 outline-none focus:border-emerald-500"
+                    className="w-full bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] rounded-xl p-2.5 text-xs text-[hsl(var(--ve-text-soft))] outline-none focus:border-[var(--ve-border-strong)]"
                     value={selectedPosition}
                     onChange={(e) => setSelectedPosition(e.target.value)}
                   >
@@ -543,9 +543,9 @@ export default function PlayerResearchConsole({
                 </div>
 
                 <div>
-                  <label className="block text-[9.5px] text-slate-500 font-mono uppercase mb-1 tracking-wider">Health Alert</label>
+                  <label className="block text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono uppercase mb-1 tracking-wider">Health Alert</label>
                   <select 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 outline-none focus:border-emerald-500"
+                    className="w-full bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] rounded-xl p-2.5 text-xs text-[hsl(var(--ve-text-soft))] outline-none focus:border-[var(--ve-border-strong)]"
                     value={selectedInjuryStatus}
                     onChange={(e) => setSelectedInjuryStatus(e.target.value)}
                   >
@@ -563,7 +563,7 @@ export default function PlayerResearchConsole({
               className={`w-full py-3 px-4 rounded-2xl text-xs font-black font-mono transition-all flex items-center justify-center gap-2 border ${
                 compareMode 
                   ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 shadow-lg shadow-indigo-500/5 animate-pulse'
-                  : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-slate-300'
+                  : 'bg-[hsl(var(--ve-bg)/0.72)] hover:bg-[hsl(var(--ve-surface-raised)/0.50)] border-[hsl(var(--ve-border)/0.32)] text-[hsl(var(--ve-text-soft))]'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -574,8 +574,8 @@ export default function PlayerResearchConsole({
           {/* Roster Athletes Feed List */}
           <div className="bg-slate-900/30 border border-slate-800/50 rounded-3xl overflow-hidden shadow-xl">
             <div className="bg-slate-950/60 px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-              <span className="text-xs font-black text-slate-300 font-mono tracking-wider">ATHLETE MATRIX ({filteredPlayers.length})</span>
-              <span className="text-[10px] text-slate-500 font-mono">BAT RATING</span>
+              <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono tracking-wider">ATHLETE MATRIX ({filteredPlayers.length})</span>
+              <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING</span>
             </div>
 
             <div className="divide-y divide-slate-800/40 max-h-[520px] overflow-y-auto custom-scrollbar" id="roster-athlete-list">
@@ -634,7 +634,7 @@ export default function PlayerResearchConsole({
                           <span className="text-[10px] text-slate-400 font-mono block mt-0.5 truncate uppercase">
                             {player.team.replace('Los Angeles Dodgers', 'Dodgers').replace('New York Yankees', 'Yankees').replace('Houston Astros', 'Astros').replace('San Diego Padres', 'Padres').replace('Boston Red Sox', 'Red Sox').replace('Atlanta Braves', 'Braves')}
                           </span>
-                          <span className="text-[9.5px] text-slate-500 font-mono block">{player.position}</span>
+                          <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block">{player.position}</span>
                         </div>
                       </div>
 
@@ -659,7 +659,7 @@ export default function PlayerResearchConsole({
               )}
               {filteredPlayers.length > ROSTER_RENDER_CAP && (
                 <div className="p-4 text-center bg-slate-950/40">
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[11px] text-[hsl(var(--ve-text-muted))] font-mono">
                     Showing {ROSTER_RENDER_CAP} of {filteredPlayers.length} players · search a name or pick a team to narrow
                   </p>
                 </div>
@@ -679,7 +679,7 @@ export default function PlayerResearchConsole({
               <div className="flex items-center justify-between border-b border-slate-805 pb-4">
                 <div className="flex items-center gap-2.5">
                   <BarChart3 className="w-5 h-5 text-indigo-400 animate-pulse" />
-                  <span className="text-xs font-black text-slate-300 font-mono tracking-widest uppercase">HEAD-TO-HEAD SABERMETRIC MATCHUP ATOMIZER</span>
+                  <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono tracking-widest uppercase">HEAD-TO-HEAD SABERMETRIC MATCHUP ATOMIZER</span>
                 </div>
                 <button
                   onClick={() => setCompareMode(false)}
@@ -706,7 +706,7 @@ export default function PlayerResearchConsole({
                   <span className="text-xs text-slate-400 font-mono mt-0.5">{activePlayer.team} • #{activePlayer.number}</span>
                   
                   <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
-                    <span className="text-[10px] text-slate-500 font-mono">BAT RATING:</span>
+                    <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
                     <span className="text-base font-black text-emerald-400 font-mono">{aiReportCache[activePlayer.id]?.score || activePlayer.batterScore}</span>
                   </div>
                 </div>
@@ -725,7 +725,7 @@ export default function PlayerResearchConsole({
                   <span className="text-xs text-slate-400 font-mono mt-0.5">{comparePlayer.team} • #{comparePlayer.number}</span>
                   
                   <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
-                    <span className="text-[10px] text-slate-500 font-mono">BAT RATING:</span>
+                    <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
                     <span className="text-base font-black text-indigo-400 font-mono">{aiReportCache[comparePlayer.id]?.score || comparePlayer.batterScore}</span>
                   </div>
                 </div>
@@ -734,7 +734,7 @@ export default function PlayerResearchConsole({
 
               {/* Sabermetric Metrics Head to Head */}
               <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider text-center border-b border-slate-900 pb-3">
+                <h4 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider text-center border-b border-slate-900 pb-3">
                   STATCAST METRIC RADAR COMPARISON
                 </h4>
 
@@ -849,7 +849,7 @@ export default function PlayerResearchConsole({
 
               {/* Multi-Prop builder comparison card */}
               <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5">
-                <h5 className="text-xs font-black font-mono text-slate-300 uppercase tracking-widest mb-4">HEAD-TO-HEAD EDGE PROPOSITIONS</h5>
+                <h5 className="text-xs font-black font-mono text-[hsl(var(--ve-text-soft))] uppercase tracking-widest mb-4">HEAD-TO-HEAD EDGE PROPOSITIONS</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Props A */}
@@ -867,7 +867,7 @@ export default function PlayerResearchConsole({
                         <div key={p.id} className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
                           <div className="min-w-0 pr-2">
                             <span className="text-[11px] font-bold text-white block truncate leading-tight">{p.market}</span>
-                            <span className="text-[9.5px] text-slate-500 font-mono block mt-1 truncate">{p.spec}</span>
+                            <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block mt-1 truncate">{p.spec}</span>
                           </div>
                           <button 
                             onClick={() => handleWagerProposition(activePlayer, p)}
@@ -900,7 +900,7 @@ export default function PlayerResearchConsole({
                         <div key={p.id} className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
                           <div className="min-w-0 pr-2">
                             <span className="text-[11px] font-bold text-white block truncate leading-tight">{p.market}</span>
-                            <span className="text-[9.5px] text-slate-500 font-mono block mt-1 truncate">{p.spec}</span>
+                            <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block mt-1 truncate">{p.spec}</span>
                           </div>
                           <button 
                             onClick={() => handleWagerProposition(comparePlayer, p)}
@@ -930,7 +930,7 @@ export default function PlayerResearchConsole({
               {/* MODE CONTROL TOGGLE PANEL */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-950 p-4 rounded-3xl border border-slate-850/85 shadow-md" id="retro-dex-calibrator">
                 <div className="min-w-0">
-                  <h4 className="text-xs font-black font-mono text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                  <h4 className="text-xs font-black font-mono text-[hsl(var(--ve-text-soft))] uppercase tracking-widest flex items-center gap-1.5">
                     <span className="text-yellow-400">👾</span>
                     ATHLETE RESEARCH INTERFACE DECK
                   </h4>
@@ -945,7 +945,7 @@ export default function PlayerResearchConsole({
                     className={`px-4 py-2 font-black rounded-xl transition-all uppercase flex items-center gap-1 leading-none ${
                       dossierMode === 'POKEMON'
                         ? 'bg-yellow-400 text-slate-950 font-extrabold shadow-sm'
-                        : 'text-slate-500 hover:text-slate-300'
+                        : 'text-slate-500 hover:text-[hsl(var(--ve-text-soft))]'
                     }`}
                   >
                     <span>👾 POKÉDEX VIEW</span>
@@ -990,7 +990,7 @@ export default function PlayerResearchConsole({
                         src={activePlayer.headshot} 
                         alt={activePlayer.name}
                         referrerPolicy="no-referrer"
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-slate-700/50 shadow-2xl object-cover bg-slate-950"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] shadow-2xl object-cover bg-slate-950"
                       />
                       <div className="absolute -bottom-2 -right-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] font-black text-emerald-400 font-mono shadow-md">
                         #{activePlayer.number}
@@ -999,7 +999,7 @@ export default function PlayerResearchConsole({
                     {/* Bio */}
                     <div className="space-y-2 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <span className="bg-slate-950/80 border border-slate-800 text-slate-300 px-3 py-0.5 rounded-full text-[10px] font-black font-mono uppercase tracking-widest">
+                        <span className="bg-slate-950/80 border border-slate-800 text-[hsl(var(--ve-text-soft))] px-3 py-0.5 rounded-full text-[10px] font-black font-mono uppercase tracking-widest">
                           {activePlayer.team}
                         </span>
                         <span className="bg-slate-950/80 border border-slate-800 text-slate-400 px-3 py-0.5 rounded-full text-[10px] font-medium font-mono uppercase">
@@ -1014,7 +1014,7 @@ export default function PlayerResearchConsole({
 
                   {/* Right Side: Batter Score Gauge */}
                   <div className="flex-shrink-0 bg-slate-950/80 p-4 border border-slate-800 rounded-2xl text-center flex flex-col items-center justify-center min-w-[130px]" id="primary-model-batter-gauge">
-                    <span className="text-[9px] text-slate-500 font-mono font-extrabold tracking-widest uppercase block mb-1.5">BATTER SCORE</span>
+                    <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono font-extrabold tracking-widest uppercase block mb-1.5">BATTER SCORE</span>
                     <div className="relative w-16 h-16 flex items-center justify-center">
                       {/* SVG Progress Ring */}
                       <svg className="w-full h-full transform -rotate-90">
@@ -1145,7 +1145,7 @@ export default function PlayerResearchConsole({
                       <span className="flex items-center gap-1.5 text-emerald-400">
                         <Check className="w-4 h-4" /> Sabermetric grounding successful
                       </span>
-                      <span className="bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-slate-800">
+                      <span className="bg-slate-900 text-[hsl(var(--ve-text-soft))] px-2 py-0.5 rounded border border-slate-800">
                         AI SCORE: {activeAiReport.score}
                       </span>
                     </div>
@@ -1154,7 +1154,7 @@ export default function PlayerResearchConsole({
 
                     {activeAiReport.groundingSources && activeAiReport.groundingSources.length > 0 && (
                       <div className="pt-2 border-t border-slate-900 flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Search Grounding citations:</span>
+                        <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono uppercase tracking-wider">Search Grounding citations:</span>
                         {activeAiReport.groundingSources.map((source, idx) => (
                           <a 
                             key={idx}
@@ -1185,21 +1185,21 @@ export default function PlayerResearchConsole({
                 {/* Advanced Statcast card (Col Span 2) */}
                 <div className="col-span-1 md:col-span-2 bg-[#0f172a]/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
-                    <h3 className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-2">
                        <span>📊 ATHLETE MATRIX PERFORMANCE CORES</span>
                     </h3>
                     <div className="flex bg-slate-950 p-1 border border-slate-850 rounded-xl text-[10px] font-mono">
                       <button
                         type="button"
                         onClick={() => setActiveMetricsTab('BASE')}
-                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'BASE' ? 'bg-[#121824] text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'BASE' ? 'bg-[#121824] text-emerald-400' : 'text-slate-500 hover:text-[hsl(var(--ve-text-soft))]'}`}
                       >
                         STAT TABLE
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveMetricsTab('VISUAL')}
-                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'VISUAL' ? 'bg-[#121824] text-[var(--ve-accent)]' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'VISUAL' ? 'bg-[#121824] text-[var(--ve-accent)]' : 'text-slate-500 hover:text-[hsl(var(--ve-text-soft))]'}`}
                         id="btn-switch-recharts"
                       >
                         INTERACTIVE GRAPHS
@@ -1222,7 +1222,7 @@ export default function PlayerResearchConsole({
                             style={{ width: `${(activePlayer.advanced.barrelPercent / 25) * 100}%` }}
                           />
                         </div>
-                        <span className="block text-[8.5px] text-slate-500 font-mono leading-none">Average baseline: 7.8% (Sharp advantage)</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">Average baseline: 7.8% (Sharp advantage)</span>
                       </div>
 
                       {/* Exit Velocity */}
@@ -1237,7 +1237,7 @@ export default function PlayerResearchConsole({
                             style={{ width: `${(activePlayer.advanced.exitVelocity / 110) * 100}%` }}
                           />
                         </div>
-                        <span className="block text-[8.5px] text-slate-500 font-mono leading-none">High release peak: 112+ mph speed stats</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">High release peak: 112+ mph speed stats</span>
                       </div>
 
                       {/* Hard Hit % */}
@@ -1252,7 +1252,7 @@ export default function PlayerResearchConsole({
                             style={{ width: `${(activePlayer.advanced.hardHitPercent / 70) * 100}%` }}
                           />
                         </div>
-                        <span className="block text-[8.5px] text-slate-500 font-mono leading-none">Elite baseball threshold is evaluated above 45%</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">Elite baseball threshold is evaluated above 45%</span>
                       </div>
 
                       {/* Chase % / Discipline */}
@@ -1267,7 +1267,7 @@ export default function PlayerResearchConsole({
                             style={{ width: `${((40 - activePlayer.advanced.chasePercent) / 40) * 100}%` }}
                           />
                         </div>
-                        <span className="block text-[8.5px] text-slate-500 font-mono leading-none">Lower rates represent maximum selective discipline</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">Lower rates represent maximum selective discipline</span>
                       </div>
 
                       {/* wOBA / xwOBA model discrepancy */}
@@ -1297,8 +1297,8 @@ export default function PlayerResearchConsole({
                       {/* Line Chart */}
                       <div className="bg-slate-950 p-3.5 border border-slate-850 rounded-2xl flex flex-col justify-between">
                         <div className="mb-2">
-                          <span className="text-[10px] uppercase font-bold text-slate-300 font-mono tracking-wider block">Rolling last 10 games trend</span>
-                          <span className="text-[9px] text-slate-500 font-mono leading-none block">Weighted rolling performance indicator (OPS)</span>
+                          <span className="text-[10px] uppercase font-bold text-[hsl(var(--ve-text-soft))] font-mono tracking-wider block">Rolling last 10 games trend</span>
+                          <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono leading-none block">Weighted rolling performance indicator (OPS)</span>
                         </div>
                         <div className="h-32 w-full text-[9px] font-mono">
                           <ResponsiveContainer width="100%" height="100%">
@@ -1327,8 +1327,8 @@ export default function PlayerResearchConsole({
                       {/* Circle (Pie) Graph */}
                       <div className="bg-slate-950 p-3.5 border border-slate-850 rounded-2xl flex flex-col justify-between">
                         <div className="mb-2">
-                          <span className="text-[10px] uppercase font-bold text-slate-300 font-mono tracking-wider block">Situational Splits Circle Graph</span>
-                          <span className="text-[9px] text-slate-500 font-mono leading-none block">OPS ratios compared side-by-side</span>
+                          <span className="text-[10px] uppercase font-bold text-[hsl(var(--ve-text-soft))] font-mono tracking-wider block">Situational Splits Circle Graph</span>
+                          <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono leading-none block">OPS ratios compared side-by-side</span>
                         </div>
                         <div className="h-32 w-full flex items-center justify-between">
                           <div className="h-full w-[55%] text-[9px] font-mono">
@@ -1402,7 +1402,7 @@ export default function PlayerResearchConsole({
                                 </svg>
                                 <span className="absolute text-center mt-0.5">
                                   <span className="text-xs font-black font-mono text-emerald-400 block leading-none">{teamWinPercent}%</span>
-                                  <span className="text-[7.5px] text-slate-500 font-mono tracking-tighter leading-none mt-0.5">WIN RATE</span>
+                                  <span className="text-[7.5px] text-[hsl(var(--ve-text-muted))] font-mono tracking-tighter leading-none mt-0.5">WIN RATE</span>
                                 </span>
                               </div>
 
@@ -1412,7 +1412,7 @@ export default function PlayerResearchConsole({
                                 </p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[8px] bg-[#121c22] border border-emerald-950/40 text-emerald-300 font-mono px-2 py-0.5 rounded leading-none uppercase font-bold">ALPHA VALUE</span>
-                                  <span className="text-[8.5px] text-slate-500 font-mono leading-none">Model index: 1.48x</span>
+                                  <span className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">Model index: 1.48x</span>
                                 </div>
                               </div>
                             </div>
@@ -1427,7 +1427,7 @@ export default function PlayerResearchConsole({
                 {/* Platoon situational splits tracker (Col Span 1) */}
                 <div className="bg-[#0f172a]/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
-                    <span className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider">
+                    <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                       SITUATIONAL RECON
                     </span>
                     <span className="text-[9px] text-emerald-400 font-mono animate-pulse">Live feed</span>
@@ -1542,11 +1542,11 @@ export default function PlayerResearchConsole({
                 
                 {/* AI Scouting narrative logs */}
                 <div className="col-span-1 md:col-span-7 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
-                  <h3 className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-800/60 pb-2.5">
+                  <h3 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-800/60 pb-2.5">
                     <Trophy className="w-4 h-4 text-emerald-400" /> SABERMETRIC ATHLETE ADVANTAGE METRICS
                   </h3>
 
-                  <div className="space-y-4 text-xs text-slate-300 leading-relaxed">
+                  <div className="space-y-4 text-xs text-[hsl(var(--ve-text-soft))] leading-relaxed">
                     
                     {/* Contact projection */}
                     <div>
@@ -1578,10 +1578,10 @@ export default function PlayerResearchConsole({
                 {/* Strike zone Hotness map */}
                 <div className="col-span-1 md:col-span-5 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="strike-zone-matrix">
                   <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5">
                       <Target className="w-4 h-4 text-red-400" /> PITCH SWEET SPOTS
                     </span>
-                    <span className="text-[9px] text-slate-500 font-mono">3x3 Strike Zone</span>
+                    <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono">3x3 Strike Zone</span>
                   </div>
 
                   <p className="text-[10px] text-slate-400 font-mono leading-tight my-3">
@@ -1639,10 +1639,10 @@ export default function PlayerResearchConsole({
                 {/* Wager proposition cards list */}
                 <div className="col-span-1 md:col-span-7 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
                   <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5">
                       <Flame className="w-4 h-4 text-orange-400" /> SABERMETRIC WAGER PROPS
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono font-bold">Select Line for Slip</span>
+                    <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-bold">Select Line for Slip</span>
                   </div>
 
                   <p className="text-[10.5px] text-slate-400 font-mono leading-relaxed bg-slate-950/40 p-3.5 rounded-2xl border border-slate-850">
@@ -1666,15 +1666,15 @@ export default function PlayerResearchConsole({
                               <span className="text-[10px] bg-slate-900 border border-slate-800 text-[var(--ve-accent)] px-2.5 py-1 rounded-lg font-mono font-black uppercase">
                                 {p.market}
                               </span>
-                              <span className="block text-xs text-slate-300 font-mono font-bold mt-2.5 truncate">
+                              <span className="block text-xs text-[hsl(var(--ve-text-soft))] font-mono font-bold mt-2.5 truncate">
                                 🎰 PROP SPEC: {p.spec}
                               </span>
                               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">
                                   Market Average: <strong className="text-[var(--ve-accent)] font-bold">{comparison.marketAverageDecimal} ({comparison.marketAverageAmerican})</strong>
                                 </span>
                                 <span className="text-[9px] text-slate-600 font-mono">•</span>
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">
                                   Best Line: <strong className="text-emerald-400 font-bold">{comparison.bestOddsDecimal.toFixed(2)} ({decimalToAmerican(comparison.bestOddsDecimal)}) via {comparison.bestBookieName}</strong>
                                 </span>
                               </div>
@@ -1748,35 +1748,35 @@ export default function PlayerResearchConsole({
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {/* Bet365 */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.bet365.isBest ? 'border-emerald-600/60 bg-emerald-950/10' : 'border-slate-850'}`}>
-                                  <span className="text-[9px] text-slate-500 font-mono uppercase">Bet365</span>
+                                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Bet365</span>
                                   <strong className={`text-xs ${comparison.bet365.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
                                     {comparison.bet365.oddsDecimal.toFixed(2)} ({comparison.bet365.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* FanDuel */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.fanduel.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
-                                  <span className="text-[9px] text-slate-500 font-mono uppercase">FanDuel</span>
+                                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">FanDuel</span>
                                   <strong className={`text-xs ${comparison.fanduel.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
                                     {comparison.fanduel.oddsDecimal.toFixed(2)} ({comparison.fanduel.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* DraftKings */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.draftkings.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
-                                  <span className="text-[9px] text-slate-500 font-mono uppercase">DraftKings</span>
+                                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">DraftKings</span>
                                   <strong className={`text-xs ${comparison.draftkings.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
                                     {comparison.draftkings.oddsDecimal.toFixed(2)} ({comparison.draftkings.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* Caesars */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.caesars.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
-                                  <span className="text-[9px] text-slate-500 font-mono uppercase">Caesars</span>
+                                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Caesars</span>
                                   <strong className={`text-xs ${comparison.caesars.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
                                     {comparison.caesars.oddsDecimal.toFixed(2)} ({comparison.caesars.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* BetMGM */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.betmgm.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
-                                  <span className="text-[9px] text-slate-500 font-mono uppercase">BetMGM</span>
+                                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">BetMGM</span>
                                   <strong className={`text-xs ${comparison.betmgm.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
                                     {comparison.betmgm.oddsDecimal.toFixed(2)} ({comparison.betmgm.oddsAmerican})
                                   </strong>
@@ -1799,7 +1799,7 @@ export default function PlayerResearchConsole({
 
                 {/* Injury HEALTH RISK REPORT */}
                 <div className="col-span-1 md:col-span-5 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="injury-advisory-risk-box">
-                  <div className="border-b border-slate-800/60 pb-2.5 flex items-center gap-1.5 text-xs font-black text-slate-300 font-mono uppercase tracking-wider">
+                  <div className="border-b border-slate-800/60 pb-2.5 flex items-center gap-1.5 text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                     <AlertTriangle className="w-4 h-4 text-amber-500" /> HEALTH Roster report
                   </div>
 
@@ -1814,7 +1814,7 @@ export default function PlayerResearchConsole({
                         }`} />
                       </div>
                       <div>
-                        <span className="block text-[8px] text-slate-500 font-mono tracking-widest uppercase">RISK LEVEL INDICATOR:</span>
+                        <span className="block text-[8px] text-[hsl(var(--ve-text-muted))] font-mono tracking-widest uppercase">RISK LEVEL INDICATOR:</span>
                         <strong className={`block text-xs uppercase font-black font-mono tracking-wide ${
                           activePlayer.injurySeverity === 'NONE' ? 'text-emerald-400' : 'text-amber-400'
                         }`}>
@@ -1842,11 +1842,11 @@ export default function PlayerResearchConsole({
                 <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-black text-slate-300 font-mono uppercase tracking-wider">
+                    <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                       RECENT ATHLETE CONTEST STATISTICS LOG
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-500 font-mono">{activePlayer.gameLogs.length} CONTRASTS LOGGED</span>
+                  <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">{activePlayer.gameLogs.length} CONTRASTS LOGGED</span>
                 </div>
 
                 <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-slate-950" id="game-logs-layout-container">
@@ -1864,12 +1864,12 @@ export default function PlayerResearchConsole({
                         <th className="py-3.5 px-4 text-right font-black pr-4">Batter Score</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-900 text-slate-300" id="game-logs-rows">
+                    <tbody className="divide-y divide-slate-900 text-[hsl(var(--ve-text-soft))]" id="game-logs-rows">
                       {activePlayer.gameLogs.map((log, idx) => {
                         const isWin = log.result.startsWith('W');
                         return (
                           <tr key={idx} className="hover:bg-slate-900/40 transition-colors">
-                            <td className="py-3 px-4 text-slate-500 font-mono">{log.date}</td>
+                            <td className="py-3 px-4 text-[hsl(var(--ve-text-muted))] font-mono">{log.date}</td>
                             <td className="py-3 px-4 text-slate-100 font-black font-mono">{log.opponent}</td>
                             <td className="py-3 px-4 text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-black ${isWin ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400'}`}>
@@ -1879,8 +1879,8 @@ export default function PlayerResearchConsole({
                             <td className="py-3 px-4 text-center font-bold text-slate-350">{log.ab}</td>
                             <td className="py-3 px-4 text-center font-bold text-slate-100">{log.h}</td>
                             <td className="py-3 px-4 text-center font-bold text-orange-400">{log.hr}</td>
-                            <td className="py-3 px-4 text-center font-bold text-slate-300">{log.rbi}</td>
-                            <td className="py-3 px-4 text-center font-bold text-slate-300">{log.r}</td>
+                            <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text-soft))]">{log.rbi}</td>
+                            <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text-soft))]">{log.r}</td>
                             <td className="py-3 px-4 text-right pr-4">
                               <span className={`font-black ${
                                 log.batterScore >= 90 ? 'text-emerald-400' :
