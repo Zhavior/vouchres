@@ -517,14 +517,15 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
 });
 
 /* ============================================================
-   GET /api/parlays/grade-due  — lightweight DB-backed auto-grader
+   POST /api/parlays/grade-due  — DB-backed manual/worker auto-grader
    Finds pending picks/parlays from the last 2 days, grades any whose games
    are now Final via MLB linescore, writes results to Supabase.
-   Returns a summary — no heavy report building.
+   This mutates DB state, so it must never run from a GET/read request.
    ============================================================ */
-parlayRoutes.get("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
   try {
-    const days = Math.min(Number(req.query.days ?? 2), 7);
+    const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days ?? 2;
+    const days = Math.min(Number(rawDays), 7);
     const result = await gradePendingPicks({ days });
     const { graded, skipped, summary } = result;
 
