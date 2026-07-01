@@ -10,17 +10,29 @@ export type VouchEdgeBootJob = {
   run: (signal: AbortSignal) => Promise<unknown>;
 };
 
+const bootFetchInFlight = new Map<string, Promise<unknown>>();
+
 async function fetchJson(path: string, signal: AbortSignal): Promise<unknown> {
-  const response = await fetch(path, {
+  const existing = bootFetchInFlight.get(path);
+  if (existing) return existing;
+
+  const request = fetch(path, {
     credentials: "include",
     signal,
-  });
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`${path} failed with ${response.status}`);
+      }
 
-  if (!response.ok) {
-    throw new Error(`${path} failed with ${response.status}`);
-  }
+      return response.json();
+    })
+    .finally(() => {
+      bootFetchInFlight.delete(path);
+    });
 
-  return response.json();
+  bootFetchInFlight.set(path, request);
+  return request;
 }
 
 async function runAndCache(
