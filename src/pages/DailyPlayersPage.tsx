@@ -865,24 +865,49 @@ async function fetchProjectedHitters(
     const data = await response.json();
     const roster = Array.isArray(data?.roster) ? data.roster : [];
 
-    return roster
+    const hitters = roster
       .filter((item: any) => {
         const pos = item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '';
         return pos && pos !== 'P';
       })
-      .slice(0, 9)
-      .map((item: any, index: number) => ({
-        playerId: item?.person?.id,
+      .slice(0, 9);
+
+    const ids = hitters.map((item: any) => item?.person?.id).filter(Boolean);
+    const handById = new Map<number, string>();
+
+    if (ids.length) {
+      try {
+        const peopleUrl = `https://statsapi.mlb.com/api/v1/people?personIds=${ids.join(",")}`;
+        const peopleResponse = await fetch(peopleUrl, { headers: { accept: 'application/json' } });
+        if (peopleResponse.ok) {
+          const peopleData = await peopleResponse.json();
+          for (const person of peopleData?.people || []) {
+            const code = String(person?.batSide?.code || '').trim().slice(0, 1).toUpperCase();
+            if (person?.id && ['L', 'R', 'S'].includes(code)) {
+              handById.set(Number(person.id), code);
+            }
+          }
+        }
+      } catch {
+        // Keep projected roster usable even if handedness enrichment fails.
+      }
+    }
+
+    return hitters.map((item: any, index: number) => {
+      const playerId = item?.person?.id;
+      return {
+        playerId,
         playerName: item?.person?.fullName || item?.person?.name || 'Unknown Player',
         team: teamName,
         opponent,
         position: item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '—',
-        bats: undefined,
+        bats: handById.get(Number(playerId)),
         throws: undefined,
         battingOrder: index + 1,
         source: 'PROJECTED_active_roster_until_lineup_posts',
         confidence: 0.4,
-      }));
+      };
+    });
   } catch {
     return [];
   }
