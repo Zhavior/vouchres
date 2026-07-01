@@ -307,7 +307,7 @@ export default function PlayerResearchConsole({
         border: 'border-[var(--ve-border)]', 
         text: 'text-[var(--ve-accent)]', 
         glow: 'shadow-blue-500/10',
-        badge: 'bg-blue-500/10 text-[var(--ve-accent)] border border-[var(--ve-border)]'
+        badge: 'bg-[var(--ve-card)] text-[var(--ve-accent)] border border-[var(--ve-border)]'
       };
     }
     if (teamName.includes('Yankees')) {
@@ -351,7 +351,7 @@ export default function PlayerResearchConsole({
       border: 'border-slate-800', 
       text: 'text-[var(--ve-accent)]', 
       glow: 'shadow-slate-900',
-      badge: 'bg-sky-500/10 text-[var(--ve-accent)] border border-sky-500/20'
+      badge: 'bg-[var(--ve-card)] text-[var(--ve-accent)] border border-[var(--ve-border)]'
     };
   };
 
@@ -434,7 +434,7 @@ export default function PlayerResearchConsole({
               Live Edge Pro Roster
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-[var(--ve-accent)] font-mono">
-              <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse" /> Sabermetric Grounding Engine v3.5
+              <span className="w-1.5 h-1.5 bg-[var(--ve-accent)] rounded-full animate-pulse" /> Sabermetric Grounding Engine v3.5
             </span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mt-2 font-display">
@@ -1218,7 +1218,7 @@ export default function PlayerResearchConsole({
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-sky-500" 
+                            className="h-full bg-[var(--ve-accent)]" 
                             style={{ width: `${(activePlayer.advanced.barrelPercent / 25) * 100}%` }}
                           />
                         </div>
@@ -1233,7 +1233,7 @@ export default function PlayerResearchConsole({
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-sky-500" 
+                            className="h-full bg-[var(--ve-accent)]" 
                             style={{ width: `${(activePlayer.advanced.exitVelocity / 110) * 100}%` }}
                           />
                         </div>
@@ -1688,7 +1688,7 @@ export default function PlayerResearchConsole({
                                 onClick={() => togglePropDetails(p.id)}
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-bold border transition-all ${
                                   isExpanded 
-                                    ? 'bg-sky-950 border-sky-600 text-[var(--ve-accent)]' 
+                                    ? 'bg-[var(--ve-card)] border-[var(--ve-border-strong)] text-[var(--ve-accent)]' 
                                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                                 }`}
                               >
