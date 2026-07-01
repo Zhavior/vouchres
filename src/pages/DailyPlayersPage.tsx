@@ -203,7 +203,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
         <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
       )}
 
@@ -216,7 +216,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
 
       {align === 'right' && (
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
+          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
       )}
     </div>
@@ -627,7 +627,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
           </div>
         )}
 
-        <div className="absolute bottom-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-black text-white">
+        <div className="absolute bottom-1 left-1 rounded-full bg-[hsl(var(--ve-bg-deep)/0.72)] px-1.5 py-0.5 text-[10px] font-black text-[hsl(var(--ve-text-primary))] backdrop-blur-sm">
           #{order}
         </div>
       </div>
@@ -659,7 +659,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             className={`rounded-full border px-2 py-1 font-bold ${
               isProjected
                 ? 'border-amber-400/25 bg-amber-400/10 text-amber-200'
-                : 'border-cyan-400/25 bg-cyan-400/10 text-cyan-200'
+                : 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
             }`}
           >
             {isProjected ? 'Projected' : 'Confirmed'}
@@ -1519,8 +1519,8 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
                 onClick={() => setFilter(item)}
                 className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wide ${
                   filter === item
-                    ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-100'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-100'
+                    ? 'border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
+                    : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]'
                 }`}
               >
                 {item}
