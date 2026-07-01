@@ -224,3 +224,58 @@ body {
     transition: none;
   }
 }
+
+/* Home Feed stream card bridge */
+.ve-social-stream-command {
+  background:
+    var(--ve-card-skin),
+    hsl(var(--ve-surface));
+  border: 1px solid hsl(var(--ve-border-subtle));
+  border-radius: var(--ve-radius-md);
+  padding: var(--ve-spacing-md);
+  box-shadow: var(--ve-ambient-glow), 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+.ve-social-stream-kicker {
+  color: hsl(var(--ve-accent-cyan));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ve-social-stream-command h2 {
+  color: hsl(var(--ve-text-primary));
+}
+
+.ve-social-stream-command p {
+  color: hsl(var(--ve-text-secondary));
+}
+
+.ve-social-stream-mode {
+  background: hsl(var(--ve-surface-elevated));
+  border: 1px solid hsl(var(--ve-border-strong));
+  border-radius: var(--ve-radius-sm);
+}
+
+.ve-social-stream-mode span {
+  color: hsl(var(--ve-text-muted));
+}
+
+.ve-social-stream-mode strong {
+  color: hsl(var(--ve-text-primary));
+}
+
+.ve-social-stream-metrics > div {
+  background: hsl(var(--ve-surface-elevated));
+  border: 1px solid hsl(var(--ve-border-subtle));
+  border-radius: var(--ve-radius-sm);
+}
+
+.ve-social-stream-metrics span {
+  color: hsl(var(--ve-text-muted));
+}
+
+.ve-social-stream-metrics strong {
+  color: hsl(var(--ve-accent-cyan));
+}
