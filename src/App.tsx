@@ -1508,10 +1508,21 @@ export default function App() {
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
-      {!hideBootLoader && (
-        <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
-      )}
-      <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
+      <div className="ve-motion-shell ve-theme-transition">
+        <div className="ve-motion-bg" aria-hidden="true">
+          <div className="ve-motion-grid" />
+          <div className="ve-motion-noise" />
+          <div className="ve-motion-spotlight" />
+          <div className="ve-motion-orb ve-motion-orb-a" />
+          <div className="ve-motion-orb ve-motion-orb-b" />
+          <div className="ve-motion-orb ve-motion-orb-c" />
+        </div>
+
+        <div className="ve-motion-content">
+          {!hideBootLoader && (
+            <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
+          )}
+          <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
         <AuthStatusBadge
           hideGuest={activeSection === 'welcome'}
           onLoginSuccess={handleLoginSuccess}
@@ -1562,7 +1573,9 @@ export default function App() {
           savedSlips={savedSlips}
           profile={profile}
         />
-      </AppErrorBoundary>
+          </AppErrorBoundary>
+        </div>
+      </div>
     </ThemeProvider>
   );
 }
