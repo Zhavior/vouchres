@@ -2696,7 +2696,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.daily-player-main-pro span {
+.daily-player-main-pro > span {
   display: block;
   margin-top: 4px;
   color: rgba(203, 213, 225, 0.66);
@@ -2707,6 +2707,45 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.daily-player-meta-pro {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.daily-player-meta-pro > span {
+  display: inline-flex;
+  margin-top: 0;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.handedness-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  background: rgba(14, 165, 233, 0.13);
+  color: #e0f2fe;
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.handedness-badge strong {
+  display: inline;
+  color: #ffffff;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 1000;
 }
 
 .daily-player-status-pro {
@@ -3096,7 +3135,7 @@ body {
   line-height: 1.05;
 }
 
-.daily-player-main-pro span {
+.daily-player-main-pro > span {
   margin-top: 2px;
   font-size: 8.5px;
   letter-spacing: 0.03em;
