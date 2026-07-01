@@ -1,4 +1,4 @@
-import { buildValidatedHrBoard } from "../mlb/hrPipeline";
+import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
 
 type JudgeId =
   | "data_scout"
@@ -283,7 +283,7 @@ async function getCapperStatsByNames(_names: string[]) {
 }
 
 export async function buildAiJudgeLeaderboard() {
-  const board = (await buildValidatedHrBoard()) as any;
+  const board = (await getCachedValidatedHrBoard()) as any;
   const payload = board?.payload ?? board ?? {};
 
   const candidates = [

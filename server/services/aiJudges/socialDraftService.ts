@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { buildValidatedHrBoard } from "../mlb/hrPipeline";
+import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
 
 type JudgeId =
   | "data_scout"
@@ -337,7 +337,7 @@ export async function generateHrSocialDrafts(options?: {
   candidateCount: number;
   drafts: SocialDraft[];
 }> {
-  const board = (await buildValidatedHrBoard(options?.date)) as any;
+  const board = (await getCachedValidatedHrBoard(options?.date)) as any;
   const payload = board?.payload ?? board ?? {};
   const date = payload.date ?? options?.date ?? new Date().toISOString().slice(0, 10);
 
