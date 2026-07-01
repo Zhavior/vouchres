@@ -31,7 +31,7 @@ export default function FeedMobileNav({ activeSection, onSectionChange, profile 
 
   return (
     <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0b0f19]/95 backdrop-blur-md border-t border-slate-850 py-2.5 px-4 flex items-center gap-5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory z-50 text-slate-400 select-none shadow-2xl safe-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--ve-surface)/0.88)] backdrop-blur-2xl border-t border-[hsl(var(--ve-border)/0.45)] py-2.5 px-4 flex items-center gap-5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory z-50 text-[hsl(var(--ve-text-muted))] select-none shadow-2xl shadow-[hsl(var(--ve-shadow)/0.30)] safe-bottom"
       id="mobile-bottom-navigation-bar"
     >
       {navItems.map((item) => {
