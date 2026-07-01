@@ -744,7 +744,7 @@ export default function VouchCard({
                   ].filter(l => l !== undefined).join('\n'));
                   triggerToast('📋 Copied tweet caption!');
                 }}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-slate-800"
+                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.46)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-secondary))] font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-[hsl(var(--ve-border)/0.32)]"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Copy Caption</span>
@@ -752,7 +752,7 @@ export default function VouchCard({
               
               <button
                 onClick={generateXShareIntent}
-                className="px-5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02]"
+                className="px-5 py-2 bg-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.86)] text-[hsl(var(--ve-bg-deep))] font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
               >
                 <Twitter className="w-3.5 h-3.5 fill-[hsl(var(--ve-bg-deep))]" />
                 <span>Publish to X</span>
