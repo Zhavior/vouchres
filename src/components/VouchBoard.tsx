@@ -2919,7 +2919,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 </div>
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-1">
-                    <span className="font-bold text-white">@Zhavior</span>
+                    <span className="font-bold text-[hsl(var(--ve-text-primary))]">@Zhavior</span>
                     <span className="text-[hsl(var(--ve-text-muted))]">• now</span>
                   </div>
                   
@@ -2928,20 +2928,20 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     value={tweetContent}
                     onChange={(e) => setTweetContent(e.target.value)}
                     rows={3}
-                    className="w-full text-xs bg-transparent border-none text-slate-100 placeholder-slate-600 outline-none resize-none pt-1"
+                    className="w-full text-xs bg-transparent border-none text-[hsl(var(--ve-text-primary))] placeholder:text-[hsl(var(--ve-text-muted))] outline-none resize-none pt-1"
                     placeholder="What's happening on the edge..."
                   />
 
                   {/* Attachment card thumbnail representation inside tweet body */}
-                  <div className="bg-slate-950 border border-slate-850 rounded-2xl p-3 flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-[8px] text-sky-400 relative overflow-hidden flex-shrink-0">
+                  <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl p-3 flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] border border-[hsl(var(--ve-border)/0.30)] flex items-center justify-center font-bold text-[8px] text-[hsl(var(--ve-accent-cyan))] relative overflow-hidden flex-shrink-0">
                       {/* Miniature representation */}
-                      <div className="absolute w-8 h-8 border border-dashed border-sky-500/10 rounded-full animate-spin" />
-                      <span className="text-sky-400 font-black">VE</span>
+                      <div className="absolute w-8 h-8 border border-dashed border-[hsl(var(--ve-accent-cyan)/0.16)] rounded-full animate-spin" />
+                      <span className="text-[hsl(var(--ve-accent-cyan))] font-black">VE</span>
                     </div>
 
                     <div className="min-w-0 flex-1 leading-normal">
-                      <h4 className="text-[10px] uppercase font-bold text-slate-100 truncate">
+                      <h4 className="text-[10px] uppercase font-bold text-[hsl(var(--ve-text-primary))] truncate">
                         Custom Circular Vouch ({orbitCount} Players Portfolio)
                       </h4>
                       <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] truncate mt-0.5">
@@ -2964,14 +2964,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <button
                 type="button"
                 onClick={() => setShowTweetModal(false)}
-                className="flex-1 py-2 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-850 rounded-xl text-slate-450 hover:text-slate-200"
+                className="flex-1 py-2 px-3 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] border border-[hsl(var(--ve-border)/0.28)] rounded-xl text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmXSubmit}
-                className="flex-1 py-2 px-3 bg-sky-500 hover:bg-sky-450 text-white rounded-xl text-center"
+                className="flex-1 py-2 px-3 bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] rounded-xl text-center shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.20)]"
               >
                 Publish Simulation ✓
               </button>
