@@ -831,7 +831,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
                 <div>
                   <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+                    <SlidersHorizontal className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))]" />
                     VouchEdge Monte Carlo Roster Backtester (Simulation only — not verified performance)
                   </h3>
                   <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
@@ -839,13 +839,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 p-4 bg-slate-950/60 rounded-2xl border border-slate-900">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] rounded-2xl border border-[hsl(var(--ve-border)/0.28)]">
                   
                   {/* Slider 1: Simulated Win Rate */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">Assumed Accuracy</span>
-                      <span className="font-black text-amber-400 font-mono text-xs">{simulatedWinRate}%</span>
+                      <span className="font-black text-[hsl(var(--ve-accent-gold))] font-mono text-xs">{simulatedWinRate}%</span>
                     </div>
                     <input 
                       type="range" 
@@ -853,7 +853,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       max="99" 
                       value={simulatedWinRate} 
                       onChange={(e) => setSimulatedWinRate(parseInt(e.target.value))}
-                      className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                      className="w-full h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-lg appearance-none cursor-pointer accent-[hsl(var(--ve-accent-gold))]"
                     />
                     <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-semibold leading-snug">
                       Adjust based on historical hit rate threshold.
@@ -864,7 +864,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">Stake per Unit</span>
-                      <span className="font-black text-emerald-400 font-mono text-xs">${simulationStakeUnit}</span>
+                      <span className="font-black text-emerald-300 font-mono text-xs">${simulationStakeUnit}</span>
                     </div>
                     <input 
                       type="range" 
@@ -873,7 +873,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       step="50"
                       value={simulationStakeUnit} 
                       onChange={(e) => setSimulationStakeUnit(parseInt(e.target.value))}
-                      className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      className="w-full h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-lg appearance-none cursor-pointer accent-emerald-300"
                     />
                     <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-semibold leading-snug">
                       Modulates total capital output per pick.
@@ -886,7 +886,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     <select
                       value={portfolioRiskFilter}
                       onChange={(e) => setPortfolioRiskFilter(e.target.value as any)}
-                      className="w-full text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 p-2 rounded-xl outline-none"
+                      className="w-full text-xs font-semibold bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-secondary))] p-2 rounded-xl outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.55)]"
                     >
                       <option value="all">⚡ Balanced (All Exposures)</option>
                       <option value="high">🔥 Aggressive (High Variance Only)</option>
@@ -909,7 +909,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           : 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/10 border border-emerald-400/20 active:scale-[0.98]'
                       }`}
                     >
-                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-white'}`} />
+                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-slate-950'}`} />
                       <span>{isAuditing ? '🧠 CALCULATING PROJECTIONS & SPLITS...' : '⚡ EXECUTE DEEP PORTFOLIO BACKTEST AUDIT'}</span>
                     </button>
                   </div>
