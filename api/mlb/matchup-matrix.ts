@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSchedule, normalizeGame, validDate } from "../_utils/mlb.js";
-import { getPitcherMatchup } from "../../../server/services/mlb/pitcherMatchupService";
+import { getPitcherMatchup } from "../../server/services/mlb/pitcherMatchupService";
 
 function row(game: any, side: "away" | "home") {
   const team = side === "away" ? game.awayTeam : game.homeTeam;
