@@ -138,7 +138,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
       </div>
 
       {/* Upper header segment and description */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-850 pb-5" id="leaderboard-header">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[hsl(var(--ve-border)/0.30)] pb-5" id="leaderboard-header">
         <div>
           <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
             <Trophy className="w-5 h-5 text-amber-400 animate-bounce shrink-0" />
@@ -150,7 +150,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
         </div>
 
         {/* Timeframe Toggles */}
-        <div className="flex bg-slate-900/60 p-1 rounded-xl border border-slate-850 self-start text-xs font-semibold" id="leaderboard-filters">
+        <div className="flex bg-[hsl(var(--ve-surface-raised)/0.44)] p-1 rounded-xl border border-[hsl(var(--ve-border)/0.32)] self-start text-xs font-semibold" id="leaderboard-filters">
           <button
             onClick={() => setActiveRange('month')}
             className={`px-3 py-1.5 rounded-lg font-black uppercase tracking-wide transition-all ${
@@ -194,12 +194,12 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
             placeholder="Search verified cappers, sports, or system badges..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs bg-[#121824] text-slate-100 border border-slate-850 pl-9 pr-4 py-3 rounded-xl focus:border-indigo-500 outline-none transition-all placeholder-slate-500 font-semibold"
+            className="w-full text-xs bg-[hsl(var(--ve-surface-raised)/0.46)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] pl-9 pr-4 py-3 rounded-xl focus:border-indigo-500 outline-none transition-all placeholder-slate-500 font-semibold"
           />
           <Search className="w-4 h-4 text-slate-550 absolute left-3 top-3.5" />
         </div>
 
-        <div className="md:col-span-4 bg-slate-900/40 border border-slate-850 p-2.5 rounded-xl text-[10px] text-slate-400 flex items-center gap-2">
+        <div className="md:col-span-4 bg-[hsl(var(--ve-surface-raised)/0.36)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-xl text-[10px] text-slate-400 flex items-center gap-2">
           <Info className="w-4 h-4 text-[var(--ve-accent)] shrink-0" />
           <span>Records are automatically locked once parlay game scores settle. No deleted history or manual edits.</span>
         </div>
@@ -261,13 +261,13 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               </div>
 
               {/* Core Audited Stats Block */}
-              <div className="grid grid-cols-2 gap-2 bg-[#0b0f19]/70 w-full p-3 rounded-xl border border-slate-850/80 mt-4 h-[100px] items-center">
+              <div className="grid grid-cols-2 gap-2 bg-[hsl(var(--ve-surface-raised)/0.34)] w-full p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)] mt-4 h-[100px] items-center">
                 <div className="text-left">
                   <span className="text-[8px] uppercase text-slate-500 font-mono font-bold font-semibold block">win rate %</span>
                   <p className="text-sm font-black text-teal-400 font-mono mt-0.5">{secondPlace.winRate}%</p>
                   <span className="text-[9px] text-slate-400 font-semibold font-mono">{secondPlace.winRecord}</span>
                 </div>
-                <div className="text-right border-l border-slate-850/60 pl-2">
+                <div className="text-right border-l border-[hsl(var(--ve-border)/0.26)] pl-2">
                   <span className="text-[8px] uppercase text-slate-500 font-mono font-bold block">Profit Month</span>
                   <p className="text-sm font-black text-emerald-455 font-mono mt-0.5">+{secondPlace.peakProfit} U</p>
                   <span className="text-[9px] text-slate-400 font-semibold font-mono uppercase">{secondPlace.primarySport}</span>
@@ -369,7 +369,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               </div>
 
               {/* Core Audited Stats Block */}
-              <div className="grid grid-cols-2 gap-2 bg-[#0b0f19]/70 w-full p-3 rounded-xl border border-slate-850/80 mt-4 h-[100px] items-center">
+              <div className="grid grid-cols-2 gap-2 bg-[hsl(var(--ve-surface-raised)/0.34)] w-full p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)] mt-4 h-[100px] items-center">
                 <div className="text-left">
                   <span className="text-[8px] uppercase text-slate-505 font-mono font-bold block">win rate %</span>
                   <p className="text-sm font-black text-teal-400 font-mono mt-0.5">{thirdPlace.winRate}%</p>
@@ -393,8 +393,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
       )}
 
       {/* ================= TABLE LISTING: ALL TOP CAPPERS SECTION ================= */}
-      {!loading && <div className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden shadow-2xl space-y-3" id="all-cappers-ranking-table">
-        <div className="bg-slate-900/60 p-4 border-b border-slate-850 flex items-center justify-between select-none font-semibold">
+      {!loading && <div className="bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-2xl border border-[hsl(var(--ve-border)/0.34)] overflow-hidden shadow-2xl space-y-3" id="all-cappers-ranking-table">
+        <div className="bg-[hsl(var(--ve-surface-raised)/0.44)] p-4 border-b border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between select-none font-semibold">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
             <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider font-mono">
@@ -417,7 +417,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
           <div className="overflow-x-auto text-left whitespace-nowrap">
             <table className="w-full text-xs font-medium text-slate-350 min-w-[700px]">
               
-              <thead className="bg-[#0b0f19]/80 border-b border-slate-850 text-slate-450 font-black uppercase font-mono text-[10px]">
+              <thead className="bg-[hsl(var(--ve-surface-raised)/0.38)] border-b border-[hsl(var(--ve-border)/0.30)] text-slate-450 font-black uppercase font-mono text-[10px]">
                 <tr>
                   <th className="px-5 py-3.5 text-center w-[80px]">Rank</th>
                   <th className="px-5 py-3.5 text-left">Verified Capper</th>
@@ -430,7 +430,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-850/60">
+              <tbody className="divide-y divide-[hsl(var(--ve-border)/0.24)]">
                 {top10List.map((capper) => {
                   const isFollowed = followedStates[capper.username];
                   
@@ -438,7 +438,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     <tr 
                       key={capper.username}
                       onClick={() => setSelectedCapper(capper)}
-                      className="hover:bg-slate-900/40 transition-colors cursor-pointer group"
+                      className="hover:bg-[hsl(var(--ve-surface-raised)/0.34)] transition-colors cursor-pointer group"
                     >
                       {/* Rank Column */}
                       <td className="px-5 py-4 text-center">
