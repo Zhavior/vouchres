@@ -182,7 +182,7 @@ const cardStyleConfigs = {
     ambientPingColor: 'bg-slate-900',
     labelText: 'Base Line',
     labelText2: 'Target Index',
-    footerUrlColor: 'text-slate-600Code',
+    footerUrlColor: 'text-slate-600',
     footerPingColor: 'bg-slate-950',
   },
   hologram: {
