@@ -38,9 +38,12 @@ export class TTLCache<T = unknown> {
   constructor(private defaultTtlMs: number, private name = "ttlCache") {}
 
   private log(event: string, key: string, extra = ""): void {
-    // Cache hits are normal and can spam the dev terminal during HR board refreshes.
-    // Keep important cache events visible: stale, miss, inflight reuse, stale fallback, failures.
-    if (event === "hit") return;
+    const debugCache = process.env.DEBUG_CACHE === "true";
+    const noisyEvents = new Set(["hit", "miss", "stale", "inflight-reuse"]);
+
+    // Normal cache activity is too noisy during HR/player research warmups.
+    // Keep it available with DEBUG_CACHE=true, but do not flood regular dev logs.
+    if (!debugCache && noisyEvents.has(event)) return;
 
     const suffix = extra ? ` ${extra}` : "";
     console.log(`[cache:${this.name}] ${event} ${key}${suffix}`);
