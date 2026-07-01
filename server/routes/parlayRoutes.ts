@@ -461,10 +461,16 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
   if (!Array.isArray(legs) || legs.length === 0 || legs.length > 12) {
     return res.status(400).json({ error: "legs must be a 1–12 item array" });
   }
-  const valid = legs.every(
-    (l: any) =>
-      l && typeof l.sport === "string" && typeof l.gamePk === "string" && l.gamePk &&
-      typeof l.market === "string" && typeof l.selection === "string"
+  const normalizedLegs: GradableLeg[] = legs.map((leg: any) => ({
+    ...leg,
+    sport: String(leg?.sport || "").trim().toLowerCase(),
+    gamePk: String(leg?.gamePk || "").trim(),
+    market: String(leg?.market || "").trim().toLowerCase(),
+    selection: String(leg?.selection || "").trim(),
+  }));
+
+  const valid = normalizedLegs.every(
+    (leg) => leg.sport && leg.gamePk && leg.market && leg.selection
   );
   if (!valid) {
     return res.status(400).json({ error: "each leg needs sport, gamePk, market, selection" });
@@ -473,7 +479,7 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
   try {
     // Fetch each unique (sport+game) once.
     const gameCache = new Map<string, GameData | null>();
-    for (const leg of legs as GradableLeg[]) {
+    for (const leg of normalizedLegs) {
       const key = `${leg.sport}:${leg.gamePk}`;
       if (!gameCache.has(key)) {
         gameCache.set(key, await getGrader(leg.sport).fetchGame(leg.gamePk));
@@ -481,7 +487,7 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
     }
 
     // Evaluate each leg.
-    const gradedLegs = (legs as GradableLeg[]).map((leg) => {
+    const gradedLegs = normalizedLegs.map((leg) => {
       const key = `${leg.sport}:${leg.gamePk}`;
       const game = gameCache.get(key) ?? null;
       let outcome: LegOutcome;
