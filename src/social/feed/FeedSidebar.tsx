@@ -128,8 +128,9 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   };
 
   return (
-    <aside className="ve-sidebar hidden md:flex flex-col h-screen sticky top-0 w-[76px] xl:w-[286px] border-r border-white/10 bg-[linear-gradient(180deg,#090d16_0%,#070a12_48%,#04060b_100%)] px-2.5 xl:px-4 py-5 text-slate-100 justify-between select-none backdrop-blur-2xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none shadow-2xl shadow-black/30">
-      <div className="space-y-6">
+    <aside className="ve-sidebar relative hidden md:flex flex-col h-screen sticky top-0 w-[76px] xl:w-[286px] border-r border-[hsl(var(--ve-border)/0.45)] bg-[linear-gradient(180deg,hsl(var(--ve-surface)/0.72)_0%,hsl(var(--ve-bg-panel)/0.64)_48%,hsl(var(--ve-bg-deep)/0.78)_100%)] px-2.5 xl:px-4 py-5 text-[hsl(var(--ve-text-primary))] justify-between select-none backdrop-blur-2xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none shadow-2xl shadow-[hsl(var(--ve-shadow)/0.32)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--ve-accent-cyan)/0.16),transparent_38%),radial-gradient(circle_at_80%_20%,hsl(var(--ve-accent-pink)/0.10),transparent_34%)]" />
+      <div className="relative z-10 space-y-6">
         {/* Premium VouchEdge Brand */}
         <div
           onClick={() => onSectionChange('feed')}
@@ -143,14 +144,14 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
 
           <div className="hidden xl:block min-w-0">
             <div className="flex items-center gap-2">
-              <span className="truncate text-lg font-black tracking-tight text-white">
+              <span className="truncate text-lg font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
                 VouchEdge
               </span>
               <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">
                 Live
               </span>
             </div>
-            <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">
+            <p className="mt-0.5 truncate text-[11px] font-semibold text-[hsl(var(--ve-text-muted))]">
               MLB Intelligence Command
             </p>
           </div>
@@ -162,8 +163,8 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         </div>
 
         {/* Sport Switcher */}
-        <div className="relative overflow-hidden flex flex-col xl:flex-row gap-1 rounded-2xl border border-cyan-300/15 bg-slate-950/52 p-1.5 shadow-xl shadow-black/30" id="sidebar-sport-switcher">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+        <div className="relative overflow-hidden flex flex-col xl:flex-row gap-1 rounded-2xl border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.24)]" id="sidebar-sport-switcher">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--ve-accent-cyan)/0.55)] to-transparent" />
           {SPORT_LIST.filter((sport) => sport.id === 'mlb').map((sport) => {
             const isActive = activeSport === sport.id;
             return (
@@ -202,9 +203,9 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           {grouped.map((section, idx) => (
               <div
                 key={section.group}
-                className={`space-y-0.5 ${idx === 0 && ungrouped.length === 0 ? 'pt-1' : 'mt-2 pt-3 border-t border-white/[0.05]'}`}
+                className={`space-y-0.5 ${idx === 0 && ungrouped.length === 0 ? 'pt-1' : 'mt-2 pt-3 border-t border-[hsl(var(--ve-border)/0.20)]'}`}
               >
-                <p className="hidden xl:block px-3.5 pb-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-300/55">
+                <p className="hidden xl:block px-3.5 pb-1 text-[10px] font-black uppercase tracking-[0.24em] text-[hsl(var(--ve-text-muted)/0.72)]">
                   {section.group}
                 </p>
                 {section.items.map(renderItem)}
