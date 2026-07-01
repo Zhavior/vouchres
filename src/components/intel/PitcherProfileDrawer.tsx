@@ -62,7 +62,7 @@ export default function PitcherProfileDrawer({ pitcher, isPro, onClose, onUpgrad
 
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-[rgba(var(--ve-bg-rgb),0.72)] backdrop-blur-sm" onClick={onClose} />
       <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-slate-800 bg-[#0b1120] shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-800 bg-[#0b1120]/95 px-5 py-4 backdrop-blur">
@@ -119,7 +119,7 @@ export default function PitcherProfileDrawer({ pitcher, isPro, onClose, onUpgrad
             <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-300">Recommended markets</h3>
             <div className="flex flex-wrap gap-2">
               {p.recommendedMarkets.map((m, i) => (
-                <span key={i} className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-[11px] font-bold text-sky-200">{m}</span>
+                <span key={i} className="rounded-lg border border-[var(--ve-border-strong)] bg-[var(--ve-card)] px-2.5 py-1 text-[11px] font-bold text-[var(--ve-accent)]">{m}</span>
               ))}
             </div>
           </section>
