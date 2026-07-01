@@ -474,7 +474,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
                       {/* Win-Loss Record */}
                       <td className="px-5 py-4 text-center">
-                        <span className="font-bold text-slate-300 font-mono bg-[#0b0f19] px-2.5 py-1 rounded border border-slate-850">
+                        <span className="font-bold text-slate-300 font-mono bg-[hsl(var(--ve-surface-raised)/0.42)] px-2.5 py-1 rounded border border-[hsl(var(--ve-border)/0.32)]">
                           {capper.winRecord}
                         </span>
                       </td>
@@ -488,7 +488,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
                       {/* Net profit in unit yield */}
                       <td className="px-5 py-4 text-center">
-                        <span className="text-amber-400 font-black font-mono bg-amber-955/20 px-2.5-py-1 rounded border border-amber-950/20">
+                        <span className="text-amber-400 font-black font-mono bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">
                           +{capper.peakProfit} Units
                         </span>
                       </td>
@@ -503,7 +503,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
                       {/* Primary target sport */}
                       <td className="px-5 py-4 text-center">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 font-mono px-2 py-0.5 bg-slate-950 rounded">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 font-mono px-2 py-0.5 bg-[hsl(var(--ve-surface-raised)/0.44)] rounded">
                           {capper.primarySport}
                         </span>
                       </td>
@@ -514,8 +514,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                           onClick={(e) => toggleFollow(capper.username, e)}
                           className={`w-full text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border ${
                             isFollowed 
-                              ? 'bg-slate-900 border-indigo-505/30 text-indigo-400 hover:bg-slate-850' 
-                              : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-500/20 text-white'
+                              ? 'bg-[hsl(var(--ve-surface-raised)/0.48)] border-[hsl(var(--ve-accent-violet)/0.32)] text-[hsl(var(--ve-accent-violet))] hover:bg-[hsl(var(--ve-surface-raised)/0.66)]' 
+                              : 'bg-[hsl(var(--ve-accent-violet))] hover:bg-[hsl(var(--ve-accent-violet)/0.86)] border-[hsl(var(--ve-accent-violet)/0.30)] text-white'
                           }`}
                         >
                           {isFollowed ? (
@@ -544,15 +544,15 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
       {/* ================= MODAL PROFILE DETAILS OVERVIEW POPUP ================= */}
       {selectedCapper && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in text-left">
+        <div className="fixed inset-0 bg-[hsl(var(--ve-bg)/0.82)] backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in text-left">
           
-          <div className="bg-[#121824] rounded-2xl border border-slate-800 w-full max-w-lg overflow-hidden shadow-2xl relative">
+          <div className="bg-[hsl(var(--ve-surface-raised)/0.96)] rounded-2xl border border-[hsl(var(--ve-border)/0.36)] w-full max-w-lg overflow-hidden shadow-2xl relative">
             
             {/* Upper profile header block */}
-            <div className="bg-[#1a2135] p-6 border-b border-slate-850 flex items-start justify-between">
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.74)] p-6 border-b border-[hsl(var(--ve-border)/0.32)] flex items-start justify-between">
               
               <div className="flex gap-4">
-                <div className={`w-14 h-14 rounded-full ${selectedCapper.avatarColor} border-2 border-slate-705 flex items-center justify-center font-extrabold text-slate-100 text-xl shadow-lg`}>
+                <div className={`w-14 h-14 rounded-full ${selectedCapper.avatarColor} border-2 border-[hsl(var(--ve-border)/0.42)] flex items-center justify-center font-extrabold text-slate-100 text-xl shadow-lg`}>
                   {selectedCapper.avatarInitials}
                 </div>
 
@@ -563,13 +563,13 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     </h3>
                     {selectedCapper.isVerified && <CheckCircle className="w-4 h-4 text-[var(--ve-accent)] fill-[var(--ve-accent)]" />}
                   </div>
-                  <p className="text-xs text-slate-450 mt-1">@{selectedCapper.username} | {selectedCapper.followersCount.toLocaleString()} Subscribers</p>
+                  <p className="text-xs text-[hsl(var(--ve-text-muted))] mt-1">@{selectedCapper.username} | {selectedCapper.followersCount.toLocaleString()} Subscribers</p>
                   
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] font-mono font-bold uppercase py-0.5 px-2 bg-indigo-950 text-indigo-400 rounded-md border border-indigo-900/30">
+                    <span className="text-[10px] font-mono font-bold uppercase py-0.5 px-2 bg-[hsl(var(--ve-accent-violet)/0.12)] text-[hsl(var(--ve-accent-violet))] rounded-md border border-[hsl(var(--ve-accent-violet)/0.28)]">
                       {selectedCapper.primarySport}
                     </span>
-                    <span className="text-[10px] font-mono font-bold uppercase py-0.5 px-2 bg-[#0b0f19] border border-slate-805 text-slate-450 rounded-md">
+                    <span className="text-[10px] font-mono font-bold uppercase py-0.5 px-2 bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] rounded-md">
                       {selectedCapper.badge.name}
                     </span>
                   </div>
@@ -579,7 +579,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               {/* Close button icon */}
               <button 
                 onClick={() => setSelectedCapper(null)}
-                className="text-slate-500 hover:text-slate-205 transition-colors p-1 bg-slate-900/40 hover:bg-slate-900 rounded-lg"
+                className="text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text))] transition-colors p-1 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.66)] rounded-lg"
               >
                 ✕
               </button>
@@ -594,17 +594,17 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
 
               <div className="grid grid-cols-3 gap-3 font-mono text-center">
                 
-                <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)]">
                   <span className="text-slate-500 text-[10px] uppercase font-extrabold">record</span>
-                  <p className="text-xs font-black text-slate-205 mt-1">{selectedCapper.winRecord}</p>
+                  <p className="text-xs font-black text-[hsl(var(--ve-text))] mt-1">{selectedCapper.winRecord}</p>
                 </div>
 
-                <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)]">
                   <span className="text-slate-500 text-[10px] uppercase font-extrabold">win rate</span>
                   <p className="text-xs font-black text-teal-400 mt-1">{selectedCapper.winRate}%</p>
                 </div>
 
-                <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)]">
                   <span className="text-slate-500 text-[10px] uppercase font-extrabold">yield profit</span>
                   <p className="text-xs font-black text-amber-400 mt-1">+{selectedCapper.peakProfit} U</p>
                 </div>
@@ -612,25 +612,25 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               </div>
 
               {/* Advanced consistency score metrics */}
-              <div className="p-4 bg-slate-950/45 rounded-xl border border-slate-900 text-xs text-slate-400 space-y-3">
-                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-450 font-mono">
+              <div className="p-4 bg-[hsl(var(--ve-surface-raised)/0.36)] rounded-xl border border-[hsl(var(--ve-border)/0.28)] text-xs text-slate-400 space-y-3">
+                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-[hsl(var(--ve-text-muted))] font-mono">
                   <span>Audited consistency values</span>
                   <span className="text-emerald-450 font-semibold">95.4% reliability rank</span>
                 </div>
                 
-                <div className="flex justify-between items-center bg-slate-900/40 p-1 px-2 rounded font-mono">
+                <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.42)] p-1 px-2 rounded font-mono">
                   <span>Average Odds Tailed</span>
-                  <span className="font-bold text-slate-202">-115 to +145 range</span>
+                  <span className="font-bold text-[hsl(var(--ve-text))]">-115 to +145 range</span>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-900/40 p-1 px-2 rounded font-mono">
+                <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.42)] p-1 px-2 rounded font-mono">
                   <span>Consistently Audited Wins</span>
-                  <span className="font-bold text-slate-202">45 verified matches</span>
+                  <span className="font-bold text-[hsl(var(--ve-text))]">45 verified matches</span>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-900/40 p-1 px-2 rounded font-mono">
+                <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.42)] p-1 px-2 rounded font-mono">
                   <span>Peak Streak Yield</span>
-                  <span className="font-bold text-rose-455">10 consecutive sweeps</span>
+                  <span className="font-bold text-rose-400">10 consecutive sweeps</span>
                 </div>
               </div>
 
@@ -642,8 +642,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                   }}
                   className={`flex-1 font-black uppercase text-xs tracking-wider py-3.5 rounded-xl shadow transition-all cursor-pointer border text-center ${
                     followedStates[selectedCapper.username] 
-                      ? 'bg-slate-900 border-slate-800 text-slate-400' 
-                      : 'bg-indigo-650 text-white border-indigo-505/20 hover:bg-indigo-500'
+                      ? 'bg-[hsl(var(--ve-surface-raised)/0.48)] border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-text-muted))]' 
+                      : 'bg-[hsl(var(--ve-accent-violet))] text-white border-[hsl(var(--ve-accent-violet)/0.28)] hover:bg-[hsl(var(--ve-accent-violet)/0.86)]'
                   }`}
                 >
                   {followedStates[selectedCapper.username] ? '✓ Following Account' : '✦ Follow Capper'}
@@ -654,7 +654,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     setSelectedCapper(null);
                     onSectionChange('feed');
                   }}
-                  className="bg-slate-950 hover:bg-slate-900 text-slate-100 font-bold uppercase text-xs tracking-wider py-3.5 px-4 rounded-xl border border-slate-805 text-center cursor-pointer"
+                  className="bg-[hsl(var(--ve-surface-raised)/0.44)] hover:bg-[hsl(var(--ve-surface-raised)/0.64)] text-[hsl(var(--ve-text))] font-bold uppercase text-xs tracking-wider py-3.5 px-4 rounded-xl border border-[hsl(var(--ve-border)/0.30)] text-center cursor-pointer"
                 >
                   View Feed Posts
                 </button>
