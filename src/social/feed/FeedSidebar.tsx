@@ -242,7 +242,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
 
       <div
         onClick={() => onSectionChange('profile')}
-        className="flex items-center gap-3 p-2 rounded-2xl bg-white/[0.035] cursor-pointer transition-all duration-200 border border-cyan-300/10 hover:border-cyan-300/25 hover:bg-white/[0.07] shadow-lg shadow-cyan-950/10"
+        className="flex items-center gap-3 p-2 rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.36)] cursor-pointer transition-all duration-200 border border-[hsl(var(--ve-border)/0.35)] hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]"
         id="sidebar-profile-footer"
       >
         <ProfileAvatarBorder 
@@ -255,10 +255,10 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         />
         <div className="hidden xl:block min-w-0 flex-1 ml-0.5">
           <div className="flex items-center gap-1">
-            <h4 className="font-semibold text-slate-200 text-xs truncate leading-none">{profile.displayName}</h4>
+            <h4 className="font-semibold text-[hsl(var(--ve-text-primary))] text-xs truncate leading-none">{profile.displayName}</h4>
             {profile.verified && <Shield className="w-3 h-3 text-emerald-400 fill-emerald-400" />}
           </div>
-          <p className="text-slate-400 text-[10px] truncate leading-none mt-0.5">@{profile.username}</p>
+          <p className="text-[hsl(var(--ve-text-muted))] text-[10px] truncate leading-none mt-0.5">@{profile.username}</p>
         </div>
       </div>
 
@@ -268,9 +268,9 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           onClick={toggleMode}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] transition-all border shadow-lg shadow-black/10"
           style={{
-            background: layout.mode === "pro" ? "rgba(34,211,238,0.08)" : "rgba(255,255,255,0.02)",
-            borderColor: layout.mode === "pro" ? "rgba(34,211,238,0.3)" : "rgba(255,255,255,0.06)",
-            color: layout.mode === "pro" ? "#22d3ee" : "#64748b",
+            background: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan) / 0.10)" : "hsl(var(--ve-surface-raised) / 0.28)",
+            borderColor: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan) / 0.35)" : "hsl(var(--ve-border) / 0.22)",
+            color: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan))" : "hsl(var(--ve-text-muted))",
           }}
         >
           {layout.mode === "pro" ? <Zap className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -279,8 +279,8 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         </button>
         <button
           onClick={() => onSectionChange("customize")}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 hover:text-cyan-100 hover:border-cyan-300/20 hover:bg-white/10 transition-all"
-          style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.28)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] transition-all"
+          style={{ background: "hsl(var(--ve-surface-raised) / 0.28)", border: "1px solid hsl(var(--ve-border) / 0.22)" }}
         >
           <Palette className="w-3 h-3" />
           <span className="hidden xl:inline">Customize Layout</span>
@@ -295,7 +295,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
               ? 'border border-cyan-300/30 bg-cyan-300/10 text-cyan-100'
               : 'text-slate-500 hover:text-cyan-100 hover:border-cyan-300/20 hover:bg-white/10'
           }`}
-          style={{ background: activeSection === 'settings' ? undefined : "rgba(255,255,255,0.02)", border: activeSection === 'settings' ? undefined : "1px solid rgba(255,255,255,0.04)" }}
+          style={{ background: activeSection === 'settings' ? undefined : "hsl(var(--ve-surface-raised) / 0.28)", border: activeSection === 'settings' ? undefined : "1px solid hsl(var(--ve-border) / 0.22)" }}
         >
           <Settings className="w-3 h-3" />
           <span className="hidden xl:inline">Settings</span>
