@@ -788,12 +788,12 @@ export default function FeedPostCard({
       )}
 
       {/* 4. Social interaction reaction bar */}
-      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-cyan-300/[0.045] text-slate-400 text-xs relative select-none">
+      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] text-xs relative select-none">
         {/* Comment icon button */}
         <button 
           onClick={() => setShowComments(!showComments)}
-          className={`group flex items-center gap-1.5 hover:text-sky-400 transition-colors p-1.5 rounded-lg hover:bg-sky-950/20 ${
-            showComments ? 'text-sky-450 font-bold' : ''
+          className={`group flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-cyan))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] ${
+            showComments ? 'text-[hsl(var(--ve-accent-cyan))] font-bold' : ''
           }`}
           title="Toggle comments"
           id={`comment-btn-${post.id}`}
@@ -817,15 +817,15 @@ export default function FeedPostCard({
           </button>
 
           {showRepostMenu && (
-            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-[#0b0f19] border border-cyan-300/[0.045] rounded-xl shadow-xl p-1.5 z-40 animate-slide-up">
+            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.32)] rounded-xl shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] p-1.5 z-40 animate-slide-up backdrop-blur-xl">
               <button
                 onClick={() => {
                   onRepost(post.id);
                   setShowRepostMenu(false);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-slate-900 rounded-lg text-slate-300 hover:text-slate-100 font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-lg text-[hsl(var(--ve-text-secondary))] hover:text-[hsl(var(--ve-text-primary))] font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <Repeat2 className="w-3.5 h-3.5 text-indigo-455" />
+                <Repeat2 className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-pink))]" />
                 <span>{post.isReposted ? 'Undo Repost' : 'Repost'}</span>
               </button>
               <button
@@ -833,9 +833,9 @@ export default function FeedPostCard({
                   setShowRepostMenu(false);
                   setShowQuoteModal(true);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-slate-900 rounded-lg text-slate-300 hover:text-slate-100 font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-lg text-[hsl(var(--ve-text-secondary))] hover:text-[hsl(var(--ve-text-primary))] font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <Quote className="w-3.5 h-3.5 text-sky-455" />
+                <Quote className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))]" />
                 <span>Quote Vouch</span>
               </button>
             </div>
@@ -870,7 +870,7 @@ export default function FeedPostCard({
         </button>
 
         {/* Simulated Views indicator */}
-        <div className="flex items-center gap-1 text-slate-500 font-mono text-[10px] select-none" title="Views">
+        <div className="flex items-center gap-1 text-[hsl(var(--ve-text-muted))] font-mono text-[10px] select-none" title="Views">
           <Eye className="w-3.5 h-3.5" />
           <span>{simulatedViews}</span>
         </div>
@@ -878,18 +878,18 @@ export default function FeedPostCard({
         {/* Bookmark button */}
         <button
           onClick={handleBookmarkToggle}
-          className={`p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl transition-colors ${
-            isBookmarked ? 'text-sky-400' : 'text-slate-500 hover:text-slate-350'
+          className={`p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl transition-colors ${
+            isBookmarked ? 'text-[hsl(var(--ve-accent-cyan))]' : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'
           }`}
           title="Bookmark"
         >
-          {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-sky-400 text-sky-400" /> : <Bookmark className="w-4 h-4" />}
+          {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))]" /> : <Bookmark className="w-4 h-4" />}
         </button>
 
         {/* Share Copy button */}
         <button
           onClick={handleCopyLink}
-          className="p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl text-slate-500 hover:text-slate-350 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] transition-colors"
           title="Copy Link to Clipboard"
         >
           <Share className="w-4 h-4" />
@@ -908,7 +908,7 @@ export default function FeedPostCard({
               href={xShareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-slate-950/24 backdrop-blur-xl text-slate-500 hover:text-[#38bdf8] transition-colors flex items-center justify-center"
+              className="p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] transition-colors flex items-center justify-center"
               title="Share on X (Twitter)"
               id={`share-to-x-${post.id}`}
             >
