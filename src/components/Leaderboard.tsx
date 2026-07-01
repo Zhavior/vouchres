@@ -132,8 +132,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto min-h-screen bg-transparent space-y-6 text-left" id="leaderboard-outer-wrapper">
       
       {/* Info banner */}
-      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-500/8 border border-sky-500/20 text-[11px] text-sky-300/80">
-        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-sky-500/40 bg-sky-500/15 text-sky-300">Live</span>
+      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[var(--ve-card)] border border-[var(--ve-border)] text-[11px] text-[var(--ve-accent)]/80">
+        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-[var(--ve-border-strong)] bg-[var(--ve-card)] text-[var(--ve-accent)]">Live</span>
         Rankings are drawn from verified pick records — graded nightly. Leaderboard fills as cappers post and picks settle.
       </div>
 
@@ -200,7 +200,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
         </div>
 
         <div className="md:col-span-4 bg-slate-900/40 border border-slate-850 p-2.5 rounded-xl text-[10px] text-slate-400 flex items-center gap-2">
-          <Info className="w-4 h-4 text-sky-400 shrink-0" />
+          <Info className="w-4 h-4 text-[var(--ve-accent)] shrink-0" />
           <span>Records are automatically locked once parlay game scores settle. No deleted history or manual edits.</span>
         </div>
       </div>
@@ -244,8 +244,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     {secondPlace.avatarInitials}
                   </div>
                   {secondPlace.isVerified && (
-                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-sky-400 p-0.5 rounded-full border border-sky-905">
-                      <CheckCircle className="w-3.5 h-3.5 fill-sky-955" />
+                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-[var(--ve-accent)] p-0.5 rounded-full border border-[var(--ve-border-strong)]">
+                      <CheckCircle className="w-3.5 h-3.5 fill-[var(--ve-accent)]" />
                     </span>
                   )}
                 </div>
@@ -299,8 +299,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     <Sparkles className="w-5 h-5 text-amber-300 absolute -top-1 -right-1 animate-pulse" />
                   </div>
                   {firstPlace.isVerified && (
-                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-sky-400 p-0.5 rounded-full border border-sky-905 shadow-md">
-                      <CheckCircle className="w-4 h-4 fill-sky-955" />
+                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-[var(--ve-accent)] p-0.5 rounded-full border border-[var(--ve-border-strong)] shadow-md">
+                      <CheckCircle className="w-4 h-4 fill-[var(--ve-accent)]" />
                     </span>
                   )}
                 </div>
@@ -352,8 +352,8 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     {thirdPlace.avatarInitials}
                   </div>
                   {thirdPlace.isVerified && (
-                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-sky-400 p-0.5 rounded-full border border-sky-905">
-                      <CheckCircle className="w-3.5 h-3.5 fill-sky-955" />
+                    <span className="absolute bottom-0 right-1/3 bg-slate-900 text-[var(--ve-accent)] p-0.5 rounded-full border border-[var(--ve-border-strong)]">
+                      <CheckCircle className="w-3.5 h-3.5 fill-[var(--ve-accent)]" />
                     </span>
                   )}
                 </div>
@@ -465,7 +465,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                           <div className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span className="font-extrabold text-slate-200 group-hover:text-indigo-400 transition-colors">{capper.displayName}</span>
-                              {capper.isVerified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-955" />}
+                              {capper.isVerified && <CheckCircle className="w-3.5 h-3.5 text-[var(--ve-accent)] fill-[var(--ve-accent)]" />}
                             </div>
                             <span className="text-[10px] text-slate-500 block">@{capper.username} • {capper.followersCount.toLocaleString()} followers</span>
                           </div>
@@ -561,7 +561,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
                     <h3 className="font-extrabold text-[#e2e8f0] text-base leading-none">
                       {selectedCapper.displayName}
                     </h3>
-                    {selectedCapper.isVerified && <CheckCircle className="w-4 h-4 text-sky-400 fill-sky-955" />}
+                    {selectedCapper.isVerified && <CheckCircle className="w-4 h-4 text-[var(--ve-accent)] fill-[var(--ve-accent)]" />}
                   </div>
                   <p className="text-xs text-slate-450 mt-1">@{selectedCapper.username} | {selectedCapper.followersCount.toLocaleString()} Subscribers</p>
                   
