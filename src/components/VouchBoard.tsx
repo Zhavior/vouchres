@@ -566,20 +566,20 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       
       {/* Toast HUD */}
       {visualToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0c1322] border border-sky-400 text-sky-200 px-4 py-3 rounded-2xl flex items-center gap-2.5 shadow-2xl text-xs font-mono font-bold animate-bounce">
-          <Sparkles className="w-4 h-4 text-sky-400 animate-spin" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[hsl(var(--ve-surface)/0.94)] border border-[hsl(var(--ve-accent-cyan)/0.45)] text-[hsl(var(--ve-accent-cyan))] px-4 py-3 rounded-2xl flex items-center gap-2.5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.28)] text-xs font-mono font-bold animate-bounce backdrop-blur-xl">
+          <Sparkles className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))] animate-spin" />
           <span>{visualToast}</span>
         </div>
       )}
 
       {/* Main header banner */}
-      <div className="overflow-hidden rounded-3xl border border-sky-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/30 p-5 shadow-2xl relative">
-        <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-sky-500/15 blur-3xl pointer-events-none" />
+      <div className="overflow-hidden rounded-3xl border border-[hsl(var(--ve-border)/0.36)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.82),hsl(var(--ve-bg-panel)/0.92),hsl(var(--ve-accent-cyan)/0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.22)] relative backdrop-blur-xl">
+        <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-[hsl(var(--ve-accent-cyan)/0.16)] blur-3xl pointer-events-none" />
         <div className="relative">
-          <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-sky-300">
+          <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-[hsl(var(--ve-accent-cyan))]">
             <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
           </span>
-          <h2 className="text-2xl font-black tracking-tight text-white">
+          <h2 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
             Vouch Board &amp; Graphic Studio
           </h2>
           <p className="mt-1.5 max-w-2xl text-sm text-[hsl(var(--ve-text-muted))]">
@@ -597,14 +597,15 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             const active = activeBoardTab === t.id;
             const ring = active
               ? t.accent === 'emerald'
-                ? 'border-emerald-400/50 bg-emerald-400/10 shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]'
+                ? t.accent === 'emerald'
+                ? 'border-emerald-300/45 bg-emerald-400/10 shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]'
                 : t.accent === 'sky'
-                  ? 'border-sky-400/50 bg-sky-400/10 shadow-[0_0_20px_-6px_rgba(56,189,248,0.5)]'
-                  : 'border-orange-400/50 bg-orange-400/10 shadow-[0_0_20px_-6px_rgba(251,146,60,0.5)]'
-              : 'border-slate-800 bg-slate-950/50 hover:border-slate-600 hover:bg-slate-900/60';
+                  ? 'border-[hsl(var(--ve-accent-cyan)/0.48)] bg-[hsl(var(--ve-accent-cyan)/0.10)] shadow-[0_0_20px_-6px_hsl(var(--ve-accent-cyan)/0.50)]'
+                  : 'border-[hsl(var(--ve-accent-gold)/0.45)] bg-[hsl(var(--ve-accent-gold)/0.10)] shadow-[0_0_20px_-6px_hsl(var(--ve-accent-gold)/0.45)]'
+              : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.38)] hover:border-[hsl(var(--ve-accent-cyan)/0.30)] hover:bg-[hsl(var(--ve-surface-raised)/0.55)]';
             const text = active
-              ? t.accent === 'emerald' ? 'text-emerald-300' : t.accent === 'sky' ? 'text-sky-300' : 'text-orange-300'
-              : 'text-slate-200';
+              ? t.accent === 'emerald' ? 'text-emerald-300' : t.accent === 'sky' ? 'text-[hsl(var(--ve-accent-cyan))]' : 'text-[hsl(var(--ve-accent-gold))]'
+              : 'text-[hsl(var(--ve-text-secondary))]';
             return (
               <button
                 key={t.id}
@@ -631,7 +632,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Metric 1: Cumulative Return */}
-            <div className="bg-gradient-to-br from-[#0c1322] to-[#080d1a] border border-emerald-950/70 p-4.5 rounded-2xl relative overflow-hidden shadow-lg group hover:border-emerald-500/20 transition-all duration-300">
+            <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-emerald-300/20 p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-emerald-300/35 transition-all duration-300 backdrop-blur-xl">
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -651,7 +652,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Metric 2: Assumed Accuracy (Simulation) */}
-            <div className="bg-gradient-to-br from-[#0c1322] to-[#080d1a] border border-amber-950/70 p-4.5 rounded-2xl relative overflow-hidden shadow-lg group hover:border-amber-500/20 transition-all duration-300">
+            <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-accent-gold)/0.22)] p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-[hsl(var(--ve-accent-gold)/0.38)] transition-all duration-300 backdrop-blur-xl">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -659,7 +660,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="text-2xl font-black text-amber-400 font-mono tracking-tight">
                     {simulatedWinRate}%
                   </div>
-                  <div className="w-24 bg-slate-900 h-1 rounded-full overflow-hidden mt-1.5">
+                  <div className="w-24 bg-[hsl(var(--ve-surface-raised)/0.58)] h-1 rounded-full overflow-hidden mt-1.5">
                     <div 
                       className="bg-amber-400 h-full rounded-full transition-all duration-500" 
                       style={{ width: `${simulatedWinRate}%` }} 
@@ -669,14 +670,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     Adjust accuracy with slider below
                   </span>
                 </div>
-                <div className="p-2 bg-amber-950/40 rounded-xl border border-amber-900/40">
-                  <Award className="w-4 h-4 text-amber-400" />
+                <div className="p-2 bg-[hsl(var(--ve-accent-gold)/0.12)] rounded-xl border border-[hsl(var(--ve-accent-gold)/0.28)]">
+                  <Award className="w-4 h-4 text-[hsl(var(--ve-accent-gold))]" />
                 </div>
               </div>
             </div>
 
             {/* Metric 3: Active Circle Exposure */}
-            <div className="bg-gradient-to-br from-[#0c1322] to-[#080d1a] border border-indigo-950/70 p-4.5 rounded-2xl relative overflow-hidden shadow-lg group hover:border-indigo-500/20 transition-all duration-300">
+            <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-accent-pink)/0.22)] p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-[hsl(var(--ve-accent-pink)/0.38)] transition-all duration-300 backdrop-blur-xl">
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -684,18 +685,18 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="text-2xl font-black text-indigo-400 tracking-tight">
                     {selectedPlayers.length} Active Stars
                   </div>
-                  <span className="text-[10px] font-semibold text-[#cbd5e1] truncate block max-w-[170px] mt-1.5 font-mono">
+                  <span className="text-[10px] font-semibold text-[hsl(var(--ve-text-secondary))] truncate block max-w-[170px] mt-1.5 font-mono">
                     {selectedPlayers.map(p => p.player.name.split(' ').pop()).join(' • ')}
                   </span>
                 </div>
-                <div className="p-2 bg-indigo-950/40 rounded-xl border border-indigo-900/40">
-                  <Flame className="w-4 h-4 text-indigo-400" />
+                <div className="p-2 bg-[hsl(var(--ve-accent-pink)/0.12)] rounded-xl border border-[hsl(var(--ve-accent-pink)/0.28)]">
+                  <Flame className="w-4 h-4 text-[hsl(var(--ve-accent-pink))]" />
                 </div>
               </div>
             </div>
 
             {/* Metric 4: Sharpe Ratio / ROI */}
-            <div className="bg-gradient-to-br from-[#0c1322] to-[#080d1a] border border-purple-950/70 p-4.5 rounded-2xl relative overflow-hidden shadow-lg group hover:border-purple-500/20 transition-all duration-300">
+            <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-accent-pink)/0.22)] p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-[hsl(var(--ve-accent-pink)/0.38)] transition-all duration-300 backdrop-blur-xl">
               <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -704,12 +705,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     +14.25% ROI
                   </div>
                   <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-semibold flex items-center gap-1 mt-1 font-mono">
-                    <Activity className="w-3 h-3 text-purple-400" />
+                    <Activity className="w-3 h-3 text-[hsl(var(--ve-accent-pink))]" />
                     Sharpe: 2.84 • S-Tier Grade
                   </span>
                 </div>
-                <div className="p-2 bg-purple-950/40 rounded-xl border border-purple-900/40">
-                  <Activity className="w-4 h-4 text-purple-400" />
+                <div className="p-2 bg-[hsl(var(--ve-accent-pink)/0.12)] rounded-xl border border-[hsl(var(--ve-accent-pink)/0.28)]">
+                  <Activity className="w-4 h-4 text-[hsl(var(--ve-accent-pink))]" />
                 </div>
               </div>
             </div>
@@ -736,7 +737,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   </div>
 
                   {/* Timeframe selector controls */}
-                  <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-850 text-[10px] font-bold font-mono">
+                  <div className="flex bg-[hsl(var(--ve-surface-raised)/0.42)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.28)] text-[10px] font-bold font-mono">
                     {(['7d', '14d', '30d'] as const).map((tf) => (
                       <button
                         key={tf}
