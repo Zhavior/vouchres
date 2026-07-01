@@ -8,6 +8,7 @@ import HrTierView from '../components/hr-board/HrTierView';
 import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
 import type { CreatorProofProfile, MLBPlayer } from '../types';
 import { hasTierAccess } from '../components/pro/ProAccessGate';
+import { bootDataStore } from '../lib/boot/bootDataStore';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
@@ -76,26 +77,49 @@ interface HrBoardPageProps {
 // Board is instant and never flashes blank while the slow engine re-fetches.
 const hrBoardCache: Record<string, { data: HrBoardResponse; ts: number }> = {};
 
+function getBootHrBoard(date: string): { data: HrBoardResponse; ts: number } | null {
+  if (date !== todayISO()) return null;
+
+  const bootBoard = bootDataStore.get<HrBoardResponse>("dailyHrBoard");
+  if (!bootBoard) return null;
+
+  return {
+    data: bootBoard,
+    ts: bootDataStore.getUpdatedAt("dailyHrBoard") ?? Date.now(),
+  };
+}
+
 export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardPageProps = {}) {
   const initialDate = todayISO();
   const [view, setView] = useState<'tier' | 'game'>('tier');
   const [date, setDate] = useState(initialDate);
   // Seed from the module cache so re-visiting renders instantly (sticky) instead
   // of flashing blank while the slow HR engine endpoint re-fetches.
-  const [board, setBoard] = useState<HrBoardResponse | null>(() => hrBoardCache[initialDate]?.data ?? null);
-  const [loading, setLoading] = useState(() => !hrBoardCache[initialDate]);
+  const [board, setBoard] = useState<HrBoardResponse | null>(() => {
+    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
+    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
+    return cached?.data ?? null;
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
+    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
+    return !cached;
+  });
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HrBoardFilterState>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<HrBoardRow | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(
-    () => (hrBoardCache[initialDate] ? new Date(hrBoardCache[initialDate].ts) : null)
-  );
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
+    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
+    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
+    return cached ? new Date(cached.ts) : null;
+  });
 
   const load = useCallback(async () => {
     // Keep showing cached data (no blank) and refresh quietly in the background;
     // only show the loading state when there's nothing cached for this date.
-    const cached = hrBoardCache[date];
+    const cached = hrBoardCache[date] ?? getBootHrBoard(date);
     if (cached) {
+      if (!hrBoardCache[date]) hrBoardCache[date] = cached;
       setBoard(cached.data);
       setLastUpdated(new Date(cached.ts));
       setLoading(false);
