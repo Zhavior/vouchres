@@ -2800,7 +2800,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   )}
 
                   {/* Brand Footer for companion card */}
-                  <div className={`border-t ${activeStyle.cardBorder} pt-3 mt-3 flex justify-between items-center text-[8.5px] font-mono text-slate-450 z-10 relative`}>
+                  <div className={`border-t ${activeStyle.cardBorder} pt-3 mt-3 flex justify-between items-center text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] z-10 relative`}>
                     <div>
                       <span>INSIGHT ALIAS:</span>
                       <span className={`${activeStyle.footerUrlColor} ml-1`}>analytics.vouchedge.ai/{profile?.username || "Zhavior"}</span>
@@ -2834,7 +2834,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     : 'bg-slate-950 hover:bg-slate-900 border border-indigo-900 text-slate-200'
                 }`}
               >
-                <Tv className="w-4 h-4 text-emerald-400" />
+                <Tv className="w-4 h-4 text-emerald-300" />
                 <span>{isPublishingToFeed ? 'Publishing...' : 'Save to VouchEdge Feed'}</span>
               </button>
             </div>
@@ -2849,9 +2849,9 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
         <div className="space-y-4 animate-fade-in" id="vouch-board-saved-ledger">
           
           <div className="p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl flex items-start gap-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]">
-            <Info className="w-4.5 h-4.5 text-orange-400 shrink-0 mt-0.5" />
+            <Info className="w-4.5 h-4.5 text-[hsl(var(--ve-accent-gold))] shrink-0 mt-0.5" />
             <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
-              <span className="text-orange-400 font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
+              <span className="text-[hsl(var(--ve-accent-gold))] font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
               These are specific single game proposals and handicaps you extracted while reading pages on the community feed. 
               Review the logic, clear settled items, or clone them directly in your active Parlay Lab slips.
             </div>
