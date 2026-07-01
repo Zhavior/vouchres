@@ -603,6 +603,49 @@ function TeamInitialIcon({ name }: { name: string }) {
 }
 
 
+function handednessLabel(hand?: string | null): string {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase();
+  if (normalized === "L") return "Left";
+  if (normalized === "R") return "Right";
+  if (normalized === "S") return "Switch";
+  return "Unknown";
+}
+
+function handednessClass(hand?: string | null): string {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase();
+
+  if (normalized === "L") {
+    return "border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))]";
+  }
+
+  if (normalized === "R") {
+    return "border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.12)] text-[hsl(var(--ve-accent-gold))]";
+  }
+
+  if (normalized === "S") {
+    return "border-[hsl(var(--ve-accent-purple)/0.34)] bg-[hsl(var(--ve-accent-purple)/0.12)] text-[hsl(var(--ve-accent-purple))]";
+  }
+
+  return "border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)] text-[hsl(var(--ve-text-muted))]";
+}
+
+function HandednessBadge({ hand, prefix = "Bats" }: { hand?: string | null; prefix?: string }) {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase() || "U";
+  const label = handednessLabel(normalized);
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${handednessClass(normalized)}`}
+      title={`${prefix} ${label}`}
+      aria-label={`${prefix} ${label}`}
+    >
+      <span className="text-[9px] font-bold opacity-75">{prefix}</span>
+      <span>{normalized}</span>
+    </span>
+  );
+}
+
+
 function PlayerCard({ player, index }: { player: Player; index: number }) {
   const headshot = playerHeadshot(player);
   const isProjected = String(player.source || '').toLowerCase().includes('projected');
@@ -651,11 +694,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
         </div>
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
-          {player.bats && (
-            <span className="rounded-full border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-[hsl(var(--ve-text-secondary))]">
-              Bats {player.bats}
-            </span>
-          )}
+          {player.bats && <HandednessBadge hand={player.bats} prefix="Bats" />}
 
           <span
             className={`rounded-full border px-2 py-1 font-bold ${
