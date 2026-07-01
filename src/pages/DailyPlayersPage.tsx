@@ -127,16 +127,16 @@ function dataQuality(game: Game) {
 function qualityClass(label: string) {
   if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (label === 'PROJECTED') return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
-  if (label === 'PITCHERS') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
-  return 'border-slate-500/30 bg-slate-500/10 text-slate-300';
+  if (label === 'PITCHERS') return 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
+  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.28)] text-[hsl(var(--ve-text-secondary))]';
 }
 
 function positionClass(pos?: string) {
   const p = String(pos || '').toUpperCase();
-  if (p === 'P') return 'text-cyan-300';
+  if (p === 'P') return 'text-[hsl(var(--ve-accent-cyan))]';
   if (['C', '1B', '2B', '3B', 'SS'].includes(p)) return 'text-emerald-300';
   if (['LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-amber-300';
-  return 'text-slate-400';
+  return 'text-[hsl(var(--ve-text-muted))]';
 }
 
 function playerHeadshot(player: Player): string | null {
@@ -186,8 +186,8 @@ function matchupStatus(game: Game) {
 function matchupStatusClass(status: string) {
   if (status === 'Lineups confirmed') return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200';
   if (status === 'Projected hitters') return 'border-amber-400/25 bg-amber-400/10 text-amber-200';
-  if (status === 'Pitchers posted') return 'border-cyan-400/25 bg-cyan-400/10 text-cyan-200';
-  return 'border-slate-600 bg-slate-800 text-slate-300';
+  if (status === 'Pitchers posted') return 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
+  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-secondary))]';
 }
 
 function scrollToGame(gamePk?: string | number) {
@@ -202,20 +202,20 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
   return (
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
-        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
+        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
           {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
         </div>
       )}
 
       <div className={`min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-        <div className="truncate text-sm font-black text-white">{name}</div>
-        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <div className="truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">{name}</div>
+        <div className="text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
           {align === 'right' ? 'Home' : 'Away'}
         </div>
       </div>
 
       {align === 'right' && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
           {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
         </div>
       )}
@@ -227,68 +227,68 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
 function DailyPlayersSkeleton() {
   return (
     <div className="space-y-5">
-      <section className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5 shadow-2xl shadow-cyan-950/20">
+      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.78),hsl(var(--ve-bg-panel)/0.92),hsl(var(--ve-accent-cyan)/0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.20)] backdrop-blur-xl">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="h-4 w-40 animate-pulse rounded-full bg-cyan-300/20" />
-            <div className="mt-4 h-9 w-72 animate-pulse rounded-2xl bg-slate-800" />
-            <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-slate-800" />
+            <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-accent-cyan)/0.20)]" />
+            <div className="mt-4 h-9 w-72 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+            <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
           </div>
-          <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-cyan-300/10 md:block" />
+          <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-[hsl(var(--ve-accent-cyan)/0.10)] md:block" />
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((item) => (
-            <div key={item} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-              <div className="h-3 w-24 animate-pulse rounded-full bg-slate-800" />
-              <div className="mt-3 h-7 w-16 animate-pulse rounded-xl bg-slate-700" />
+            <div key={item} className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
+              <div className="h-3 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+              <div className="mt-3 h-7 w-16 animate-pulse rounded-xl bg-[hsl(var(--ve-surface-raised)/0.70)]" />
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-cyan-400/15 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-950/20">
+      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <div className="h-4 w-44 animate-pulse rounded-full bg-cyan-300/20" />
-            <div className="mt-2 h-3 w-64 animate-pulse rounded-full bg-slate-800" />
+            <div className="h-4 w-44 animate-pulse rounded-full bg-[hsl(var(--ve-accent-cyan)/0.20)]" />
+            <div className="mt-2 h-3 w-64 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
           </div>
-          <div className="hidden h-7 w-20 animate-pulse rounded-full bg-slate-800 sm:block" />
+          <div className="hidden h-7 w-20 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] sm:block" />
         </div>
 
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
           {[0, 1, 2, 3].map((item) => (
             <div
               key={item}
-              className="min-w-[310px] rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/20 p-4"
+              className="min-w-[310px] rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4"
             >
               <div className="mb-4 flex justify-between">
-                <div className="h-6 w-28 animate-pulse rounded-full bg-slate-800" />
-                <div className="h-4 w-16 animate-pulse rounded-full bg-slate-800" />
+                <div className="h-6 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="h-4 w-16 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
               </div>
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 <div className="flex items-center gap-2">
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                   <div>
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-slate-800" />
-                    <div className="mt-2 h-3 w-12 animate-pulse rounded-full bg-slate-800" />
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className="mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                   </div>
                 </div>
-                <div className="h-7 w-7 animate-pulse rounded-full bg-slate-800" />
+                <div className="h-7 w-7 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                 <div className="flex items-center justify-end gap-2">
                   <div>
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-slate-800" />
-                    <div className="ml-auto mt-2 h-3 w-12 animate-pulse rounded-full bg-slate-800" />
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className="ml-auto mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                   </div>
                   <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
                 </div>
               </div>
 
               <div className="mt-4 rounded-2xl border border-slate-800 bg-black/20 p-3">
-                <div className="h-3 w-full animate-pulse rounded-full bg-slate-800" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-slate-800" />
-                <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-slate-800" />
+                <div className="h-3 w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
               </div>
             </div>
           ))}
@@ -301,7 +301,7 @@ function DailyPlayersSkeleton() {
           className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20"
         >
           <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
-            <div className="h-5 w-40 animate-pulse rounded-full bg-slate-800" />
+            <div className="h-5 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
               <div className="h-16 animate-pulse rounded-2xl bg-slate-900" />
               <div className="h-12 w-20 animate-pulse rounded-2xl bg-slate-900" />
@@ -316,11 +316,11 @@ function DailyPlayersSkeleton() {
                 <div className="grid gap-2">
                   {[0, 1, 2, 3].map((player) => (
                     <div key={player} className="flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
-                      <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-800" />
+                      <div className="h-16 w-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                       <div className="flex-1">
-                        <div className="h-4 w-40 animate-pulse rounded-full bg-slate-800" />
-                        <div className="mt-2 h-3 w-28 animate-pulse rounded-full bg-slate-800" />
-                        <div className="mt-3 h-5 w-32 animate-pulse rounded-full bg-slate-800" />
+                        <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                        <div className="mt-2 h-3 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                        <div className="mt-3 h-5 w-32 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                       </div>
                     </div>
                   ))}
@@ -501,7 +501,7 @@ function MatchupRail({ games }: { games: Game[] }) {
   if (!games.length) return null;
 
   return (
-    <section className="rounded-3xl border border-cyan-400/15 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-950/20">
+    <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-black uppercase tracking-[0.22em] text-cyan-200">
@@ -530,7 +530,7 @@ function MatchupRail({ games }: { games: Game[] }) {
               key={`${game.gamePk || game.id || index}-rail`}
               type="button"
               onClick={() => scrollToGame(game.gamePk || game.id)}
-              className="min-w-[310px] snap-start rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/20 p-4 text-left shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:shadow-cyan-950/30"
+              className="min-w-[310px] snap-start rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4 text-left shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:shadow-cyan-950/30"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
@@ -610,7 +610,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
 
   return (
     <div className="group flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 shadow-lg shadow-black/20 transition hover:border-cyan-400/40 hover:bg-slate-900">
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-[hsl(var(--ve-surface-raised)/0.52)]">
         {headshot ? (
           <img
             src={headshot}
@@ -643,14 +643,14 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             </div>
           </div>
 
-          <span className={`rounded-full bg-slate-800 px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
+          <span className={`rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
             {player.position || '—'}
           </span>
         </div>
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
           {player.bats && (
-            <span className="rounded-full border border-slate-700 bg-slate-800 px-2 py-1 text-slate-300">
+            <span className="rounded-full border border-slate-700 bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-slate-300">
               Bats {player.bats}
             </span>
           )}
@@ -1461,7 +1461,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                <span className="rounded-full border border-cyan-300/25 bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
                   Daily Player Board
                 </span>
                 <span className="text-xs text-slate-500">{data?.date || todayISO()}</span>
@@ -1479,22 +1479,22 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
             <button
               type="button"
               onClick={fetchBoard}
-              className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 text-sm font-black text-cyan-100 hover:bg-cyan-300/20"
+              className="rounded-2xl border border-cyan-300/30 bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-3 text-sm font-black text-cyan-100 hover:bg-[hsl(var(--ve-accent-cyan)/0.20)]"
             >
               Refresh Board
             </button>
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
               <div className="text-xs text-slate-500">Games Loaded</div>
               <div className="mt-1 text-2xl font-black text-white">{data?.totalGames ?? games.length}</div>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
               <div className="text-xs text-slate-500">Players Starting</div>
               <div className="mt-1 text-2xl font-black text-white">{totalPlayers}</div>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
               <div className="text-xs text-slate-500">Last Updated</div>
               <div className="mt-1 text-sm font-bold text-white">
                 {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
