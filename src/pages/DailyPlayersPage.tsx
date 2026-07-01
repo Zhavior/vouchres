@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { bootDataStore } from '../lib/boot/bootDataStore';
 
 type Pitcher = {
   id?: number | string;
@@ -1375,17 +1376,29 @@ function DailyMatchupTheater({
 }
 
 
+function getBootDailyPlayersBoard(): DailyBoardResponse | null {
+  const bootBoard = bootDataStore.get<DailyBoardResponse>("dailyPlayers");
+  if (bootBoard?.games?.length) return bootBoard;
+
+  const bootLineup = bootDataStore.get<DailyBoardResponse>("lineupToday");
+  if (bootLineup?.games?.length) return bootLineup;
+
+  return null;
+}
+
 export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
-  const [data, setData] = useState<DailyBoardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const bootBoard = getBootDailyPlayersBoard();
+
+  const [data, setData] = useState<DailyBoardResponse | null>(() => bootBoard);
+  const [loading, setLoading] = useState(() => !bootBoard);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'confirmed' | 'pending' | 'pitchers'>('all');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
 
-  async function fetchBoard() {
-    setLoading(true);
+  async function fetchBoard(options: { background?: boolean } = {}) {
+    if (!options.background) setLoading(true);
     setError(null);
 
     let finalData: DailyBoardResponse | null = null;
@@ -1421,7 +1434,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   }
 
   useEffect(() => {
-    fetchBoard();
+    fetchBoard({ background: Boolean(bootBoard) });
   }, []);
 
   const games = useMemo(() => {
