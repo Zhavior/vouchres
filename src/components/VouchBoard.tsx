@@ -1440,12 +1440,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Config: Card Template Selection & POTD Selector */}
-            <div className="space-y-3.5 border-t border-slate-800 pt-3.5" id="potd-layout-customizer-module">
+            <div className="space-y-3.5 border-t border-[hsl(var(--ve-border)/0.28)] pt-3.5" id="potd-layout-customizer-module">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] uppercase font-mono font-black text-slate-400 tracking-wider block">
+                <label className="text-[10px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] tracking-wider block">
                   Studio Design Layout
                 </label>
-                <span className="text-[8.5px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded font-bold uppercase border border-sky-500/20">
+                <span className="text-[8.5px] font-mono text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-2 py-0.5 rounded font-bold uppercase border border-[hsl(var(--ve-accent-cyan)/0.22)]">
                   EXCLUSIVE
                 </span>
               </div>
@@ -1472,7 +1472,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/30'
                   }`}
                 >
-                  <Award className="w-3.5 h-3.5 text-amber-400" />
+                  <Award className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-gold))]" />
                   <span>SPOTLIGHT</span>
                 </button>
                 <button
@@ -1531,7 +1531,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
             {/* Companion Card Configuration */}
             <div className="space-y-3 border-t border-slate-800 pt-3.5" id="companion-deck-customizer">
-              <label className="text-[10px] uppercase font-mono font-black text-slate-400 tracking-wider block">
+              <label className="text-[10px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 Insight Companion Card & Posting Alignment
               </label>
 
@@ -1835,7 +1835,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
             {/* Config: Card Styles Showcase */}
             <div className="space-y-2 border-t border-slate-800 pt-3">
-              <label className="text-[10px] uppercase font-mono font-black text-slate-400 tracking-wider block">
+              <label className="text-[10px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 Visual Card Style Preset
               </label>
               
