@@ -179,11 +179,11 @@ export default function VouchCard({
     if (val === null) return null;
     return (
       <div className="w-full space-y-1">
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-450 font-bold uppercase">
+        <div className="flex justify-between items-center text-[10px] font-mono text-[hsl(var(--ve-text-muted))] font-bold uppercase">
           <span>Meter Density</span>
           <span className={`${colorClass} font-black`}>{val}%</span>
         </div>
-        <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+        <div className="h-2 w-full bg-[hsl(var(--ve-surface-raised)/0.42)] rounded-full overflow-hidden border border-[hsl(var(--ve-border)/0.30)] p-0.5">
           <div
             className={`h-full rounded-full transition-all duration-500 ${colorClass} ${glowClass}`}
             style={{ width: `${val}%` }}
@@ -195,15 +195,15 @@ export default function VouchCard({
 
   const renderTrustScoreRing = (score: number) => {
     return (
-      <div className="relative flex items-center justify-center w-11 h-11 shrink-0 bg-slate-900/50 rounded-full border border-slate-800">
+      <div className="relative flex items-center justify-center w-11 h-11 shrink-0 bg-[hsl(var(--ve-surface-raised)/0.42)] rounded-full border border-[hsl(var(--ve-border)/0.30)]">
         <svg className="w-10 h-10 transform -rotate-90">
-          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-slate-850" strokeWidth="2.5" fill="transparent" />
-          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-cyan-500" strokeWidth="2.5" fill="transparent"
+          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-[hsl(var(--ve-border)/0.45)]" strokeWidth="2.5" fill="transparent" />
+          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-[hsl(var(--ve-accent-cyan))]" strokeWidth="2.5" fill="transparent"
             strokeDasharray={2 * Math.PI * 16}
             strokeDashoffset={(2 * Math.PI * 16) * (1 - score / 1000)}
           />
         </svg>
-        <span className="absolute text-[10px] font-mono font-black text-cyan-400">{score}</span>
+        <span className="absolute text-[10px] font-mono font-black text-[hsl(var(--ve-accent-cyan))]">{score}</span>
       </div>
     );
   };
@@ -279,30 +279,30 @@ export default function VouchCard({
 
       {/* TOAST PANEL */}
       {toastMsg && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#050b14] border border-cyan-500/50 px-3.5 py-1.5 rounded-full text-[10px] font-bold text-cyan-400 font-mono tracking-wider shadow-2xl animate-bounce">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[hsl(var(--ve-bg-deep)/0.94)] border border-[hsl(var(--ve-accent-cyan)/0.50)] px-3.5 py-1.5 rounded-full text-[10px] font-bold text-[hsl(var(--ve-accent-cyan))] font-mono tracking-wider shadow-2xl animate-bounce">
           {toastMsg}
         </div>
       )}
 
       {/* TOP HEADER BLOCK: Poster Bio + Verifications + Trust Score */}
-      <div className="flex items-start justify-between gap-3 border-b border-slate-800/60 pb-3">
+      <div className="flex items-start justify-between gap-3 border-b border-[hsl(var(--ve-border)/0.30)] pb-3">
         <div className="flex gap-3">
           {/* Avatar with customized premium neon glowing borders */}
           <div className="relative shrink-0">
-            <div className={`w-10 h-10 rounded-full bg-slate-800 border-2 ${avatarBorder} font-bold text-slate-300 flex items-center justify-center text-sm`}>
+            <div className={`w-10 h-10 rounded-full bg-[hsl(var(--ve-surface-raised)/0.58)] border-2 ${avatarBorder} font-bold text-[hsl(var(--ve-text-secondary))] flex items-center justify-center text-sm`}>
               {profile?.displayName?.split(' ').map((n: any) => n[0]).join('') || 'C'}
             </div>
-            <span className="absolute -bottom-1 -right-1 bg-cyan-500 text-slate-950 text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-slate-950 font-mono">
+            <span className="absolute -bottom-1 -right-1 bg-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-bg-deep))] text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[hsl(var(--ve-bg-deep))] font-mono">
               ★
             </span>
           </div>
 
           <div className="text-left">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-slate-100 hover:underline cursor-pointer text-sm leading-none">
+              <span className="font-extrabold text-[hsl(var(--ve-text-primary))] hover:underline cursor-pointer text-sm leading-none">
                 {profile?.displayName || 'Alpha Capper'}
               </span>
-              <span className="text-slate-500 text-xs">@{profile?.username || 'alphacapper'}</span>
+              <span className="text-[hsl(var(--ve-text-muted))] text-xs">@{profile?.username || 'alphacapper'}</span>
             </div>
             
             {/* Creator Badge Stack */}
@@ -310,7 +310,7 @@ export default function VouchCard({
               <span className="text-[8px] bg-cyan-950/80 font-black text-cyan-400 px-1.5 py-0.5 rounded uppercase border border-cyan-800/40 flex items-center gap-0.5">
                 <Sparkles className="w-2.5 h-2.5 fill-cyan-400" /> PRO CAPPER
               </span>
-              <span className="text-[8px] bg-slate-900 font-bold text-slate-400 px-1.5 py-0.5 rounded font-mono">
+              <span className="text-[8px] bg-[hsl(var(--ve-surface-raised)/0.46)] font-bold text-[hsl(var(--ve-text-muted))] px-1.5 py-0.5 rounded font-mono">
                 TS: {profile?.trustScore || 845}
               </span>
               {riskTier && (
@@ -325,15 +325,15 @@ export default function VouchCard({
         {/* Lock Status & Timestamp */}
         <div className="text-right flex flex-col items-end gap-1 shrink-0">
           {isLocked ? (
-            <span className="text-[9px] bg-slate-900 text-slate-400 border border-slate-800 px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1">
-              <Lock className="w-2.5 h-2.5 text-slate-500" /> Posted Pre-Lock
+            <span className="text-[9px] bg-[hsl(var(--ve-surface-raised)/0.46)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.30)] px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5 text-[hsl(var(--ve-text-muted))]" /> Posted Pre-Lock
             </span>
           ) : (
             <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-900/40 px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1 animate-pulse">
               <Unlock className="w-2.5 h-2.5" /> Locks in 1h 45m
             </span>
           )}
-          <span className="text-[8px] text-slate-550 font-mono font-bold uppercase">{lockTimeText}</span>
+          <span className="text-[8px] text-[hsl(var(--ve-text-muted))] font-mono font-bold uppercase">{lockTimeText}</span>
         </div>
       </div>
 
