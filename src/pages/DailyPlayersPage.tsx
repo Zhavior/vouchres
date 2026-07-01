@@ -504,15 +504,15 @@ function MatchupRail({ games }: { games: Game[] }) {
     <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-black uppercase tracking-[0.22em] text-cyan-200">
+          <div className="text-sm font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-accent-cyan))]">
             Today’s Matchups
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-[hsl(var(--ve-text-muted))]">
             Side-scroll board updates with the day’s MLB slate.
           </div>
         </div>
 
-        <div className="hidden rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-400 sm:block">
+        <div className="hidden rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block">
           Scroll →
         </div>
       </div>
@@ -530,37 +530,37 @@ function MatchupRail({ games }: { games: Game[] }) {
               key={`${game.gamePk || game.id || index}-rail`}
               type="button"
               onClick={() => scrollToGame(game.gamePk || game.id)}
-              className="min-w-[310px] snap-start rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4 text-left shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:shadow-cyan-950/30"
+              className="min-w-[310px] snap-start rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4 text-left shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--ve-accent-cyan)/0.40)] hover:shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
                   {status}
                 </span>
-                <span className="text-[11px] font-bold text-slate-500">
+                <span className="text-[11px] font-bold text-[hsl(var(--ve-text-muted))]">
                   {formatGameTime(game.gameTime || game.startTime)}
                 </span>
               </div>
 
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <TeamLogoBadge id={awayId} name={awayTeam} />
-                <div className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-black text-slate-500">
+                <div className="rounded-full border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]">
                   @
                 </div>
                 <TeamLogoBadge id={homeId} name={homeTeam} align="right" />
               </div>
 
-              <div className="mt-4 grid gap-2 rounded-2xl border border-slate-800 bg-black/20 p-3 text-[11px]">
+              <div className="mt-4 grid gap-2 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3 text-[11px]">
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">Away SP</span>
-                  <span className="truncate font-bold text-cyan-100">{pitcherName(game.awayPitcher)}</span>
+                  <span className="text-[hsl(var(--ve-text-muted))]">Away SP</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-accent-cyan))]">{pitcherName(game.awayPitcher)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">Home SP</span>
-                  <span className="truncate font-bold text-cyan-100">{pitcherName(game.homePitcher)}</span>
+                  <span className="text-[hsl(var(--ve-text-muted))]">Home SP</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-accent-cyan))]">{pitcherName(game.homePitcher)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">Venue</span>
-                  <span className="truncate font-bold text-slate-300">{game.venue || 'TBD'}</span>
+                  <span className="text-[hsl(var(--ve-text-muted))]">Venue</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-text-secondary))]">{game.venue || 'TBD'}</span>
                 </div>
               </div>
             </button>
@@ -609,8 +609,8 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
   const order = orderNumber(player) === 999 ? index + 1 : orderNumber(player);
 
   return (
-    <div className="group flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 shadow-lg shadow-black/20 transition hover:border-cyan-400/40 hover:bg-slate-900">
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-[hsl(var(--ve-surface-raised)/0.52)]">
+    <div className="group flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.14)] transition hover:border-[hsl(var(--ve-accent-cyan)/0.40)] hover:bg-[hsl(var(--ve-surface-raised)/0.58)]">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)]">
         {headshot ? (
           <img
             src={headshot}
