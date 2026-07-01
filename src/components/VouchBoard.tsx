@@ -597,7 +597,6 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             const active = activeBoardTab === t.id;
             const ring = active
               ? t.accent === 'emerald'
-                ? t.accent === 'emerald'
                 ? 'border-emerald-300/45 bg-emerald-400/10 shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]'
                 : t.accent === 'sky'
                   ? 'border-[hsl(var(--ve-accent-cyan)/0.48)] bg-[hsl(var(--ve-accent-cyan)/0.10)] shadow-[0_0_20px_-6px_hsl(var(--ve-accent-cyan)/0.50)]'
