@@ -285,7 +285,7 @@ function DailyPlayersSkeleton() {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-2xl border border-slate-800 bg-black/20 p-3">
+              <div className="mt-4 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3">
                 <div className="h-3 w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                 <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                 <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
@@ -298,24 +298,24 @@ function DailyPlayersSkeleton() {
       {[0, 1].map((game) => (
         <section
           key={game}
-          className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20"
+          className="overflow-hidden rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
         >
-          <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
+          <div className="border-b border-[hsl(var(--ve-border)/0.30)] bg-[linear-gradient(90deg,hsl(var(--ve-surface-raised)/0.46),hsl(var(--ve-bg-panel)/0.82))] p-4">
             <div className="h-5 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <div className="h-16 animate-pulse rounded-2xl bg-slate-900" />
-              <div className="h-12 w-20 animate-pulse rounded-2xl bg-slate-900" />
-              <div className="h-16 animate-pulse rounded-2xl bg-slate-900" />
+              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div className="h-12 w-20 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
             </div>
           </div>
 
           <div className="grid gap-4 p-4 lg:grid-cols-2">
             {[0, 1].map((side) => (
-              <div key={side} className="rounded-3xl border border-slate-800 bg-slate-950/70 p-3">
-                <div className="mb-3 h-12 animate-pulse rounded-2xl bg-slate-900" />
+              <div key={side} className="rounded-3xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface)/0.66)] p-3">
+                <div className="mb-3 h-12 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
                 <div className="grid gap-2">
                   {[0, 1, 2, 3].map((player) => (
-                    <div key={player} className="flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+                    <div key={player} className="flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3">
                       <div className="h-16 w-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
                       <div className="flex-1">
                         <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
@@ -622,7 +622,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             }}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-500">
+          <div className="flex h-full w-full items-center justify-center text-lg font-black text-[hsl(var(--ve-text-muted))]">
             {playerName(player).slice(0, 1)}
           </div>
         )}
@@ -638,7 +638,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             <div className="truncate text-sm font-black text-white">
               {playerName(player)}
             </div>
-            <div className="mt-0.5 text-[11px] font-semibold text-slate-400">
+            <div className="mt-0.5 text-[11px] font-semibold text-[hsl(var(--ve-text-muted))]">
               {teamName(player.team)} vs {teamName(player.opponent)}
             </div>
           </div>
@@ -650,7 +650,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
 
         <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
           {player.bats && (
-            <span className="rounded-full border border-slate-700 bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-slate-300">
+            <span className="rounded-full border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-[hsl(var(--ve-text-secondary))]">
               Bats {player.bats}
             </span>
           )}
@@ -1455,23 +1455,23 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   };
 
   return (
-    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-slate-100">
+    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-[hsl(var(--ve-text-primary))]">
       <div className="mx-0 max-w-none space-y-5">
-        <header className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5">
+        <header className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.78),hsl(var(--ve-bg-panel)/0.92),hsl(var(--ve-accent-cyan)/0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-cyan-300/25 bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--ve-accent-cyan))]">
                   Daily Player Board
                 </span>
-                <span className="text-xs text-slate-500">{data?.date || todayISO()}</span>
+                <span className="text-xs text-[hsl(var(--ve-text-muted))]">{data?.date || todayISO()}</span>
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-4xl">
                 Today’s MLB Starting Lineups
               </h1>
 
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[hsl(var(--ve-text-muted))]">
                 Actual posted MLB starting hitters from both teams when lineups are available.
               </p>
             </div>
@@ -1479,7 +1479,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
             <button
               type="button"
               onClick={fetchBoard}
-              className="rounded-2xl border border-cyan-300/30 bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-3 text-sm font-black text-cyan-100 hover:bg-[hsl(var(--ve-accent-cyan)/0.20)]"
+              className="rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-3 text-sm font-black text-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.20)]"
             >
               Refresh Board
             </button>
@@ -1487,28 +1487,28 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-slate-500">Games Loaded</div>
-              <div className="mt-1 text-2xl font-black text-white">{data?.totalGames ?? games.length}</div>
+              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
+              <div className="mt-1 text-2xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
             </div>
             <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-slate-500">Players Starting</div>
-              <div className="mt-1 text-2xl font-black text-white">{totalPlayers}</div>
+              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Players Starting</div>
+              <div className="mt-1 text-2xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
             </div>
             <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-slate-500">Last Updated</div>
-              <div className="mt-1 text-sm font-bold text-white">
+              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Last Updated</div>
+              <div className="mt-1 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
                 {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
               </div>
             </div>
           </div>
         </header>
 
-        <section className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-950/80 p-4 md:flex-row md:items-center md:justify-between">
+        <section className="flex flex-col gap-3 rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-4 md:flex-row md:items-center md:justify-between shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search player, team, position..."
-            className="w-full rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 md:max-w-md"
+            className="w-full rounded-2xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-4 py-3 text-sm text-[hsl(var(--ve-text-primary))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)] md:max-w-md"
           />
 
           <div className="flex flex-wrap gap-2">
@@ -1530,7 +1530,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
         </section>
 
         {loading && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-400">
+          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center text-[hsl(var(--ve-text-muted))] shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
             Loading Daily Player Board...
           </div>
         )}
@@ -1542,9 +1542,9 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
         )}
 
         {!loading && games.length === 0 && (
-          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center">
-            <div className="text-lg font-black text-white">No games found for this filter.</div>
-            <div className="mt-2 text-sm text-slate-500">
+          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
+            <div className="text-lg font-black text-[hsl(var(--ve-text-primary))]">No games found for this filter.</div>
+            <div className="mt-2 text-sm text-[hsl(var(--ve-text-muted))]">
               Try All or Refresh Board. If it still shows empty, the backend endpoint is not returning today’s MLB schedule.
             </div>
           </div>
