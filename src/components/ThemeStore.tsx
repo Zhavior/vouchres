@@ -410,49 +410,64 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     <div 
                       key={theme.id}
                       onClick={() => setPreviewThemeId(theme.id)}
-                      className={`p-4 bg-[#121824]/30 rounded-2xl border flex flex-col justify-between gap-4 cursor-pointer hover:border-slate-600 transition-all ${
-                        previewThemeId === theme.id 
-                          ? 'border-indigo-500/80 shadow-[0_0_15px_rgba(99,102,241,0.1)]' 
-                          : 'border-slate-850'
+                      className={`group relative overflow-hidden p-5 rounded-3xl border flex flex-col justify-between gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
+                        isAppTheme || isProfileTheme
+                          ? 'bg-cyan-950/20 border-cyan-400/40 shadow-[0_0_28px_rgba(34,211,238,0.12)]'
+                          : previewThemeId === theme.id 
+                            ? 'bg-indigo-950/20 border-indigo-400/60 shadow-[0_0_20px_rgba(99,102,241,0.16)]' 
+                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-slate-600'
                       }`}
                     >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[9px] font-black uppercase font-mono px-2 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-300">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {(isAppTheme || isProfileTheme) && (
+                        <div className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-cyan-300/20 blur-3xl" />
+                      )}
+
+                      <div className="relative z-10 space-y-4">
+                        <div className="flex justify-between items-center gap-3">
+                          <span className="text-[9px] font-black uppercase font-mono px-2.5 py-1 bg-black/30 rounded-full border border-white/10 text-slate-200">
                             {theme.category}
                           </span>
-                          <span className={`text-[9px] font-black font-mono px-1.5 py-0.2 rounded ${
-                            theme.rarity === 'legendary' ? 'text-yellow-400 bg-yellow-950/40 border border-yellow-900' :
-                            theme.rarity === 'epic' ? 'text-purple-400 bg-purple-950/40 border border-purple-900' :
-                            'text-slate-400 bg-slate-950'
+                          <span className={`text-[9px] font-black font-mono px-2.5 py-1 rounded-full border ${
+                            theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
+                            theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
+                            'text-slate-300 bg-slate-800/70 border-slate-600/40'
                           }`}>
                             {theme.rarity}
                           </span>
                         </div>
 
                         <div>
-                          <h4 className="font-extrabold text-slate-200 text-xs flex items-center gap-1.5">
+                          <h4 className="font-black text-slate-100 text-sm flex flex-wrap items-center gap-1.5">
                             {theme.name}
-                            {isAppTheme && <span className="text-[8px] bg-sky-950 text-sky-400 px-1 py-0.2 rounded font-black font-mono">APP ACTIVE</span>}
-                            {isProfileTheme && <span className="text-[8px] bg-purple-950 text-purple-400 px-1 py-0.2 rounded font-black font-mono">PROFILE ACTIVE</span>}
+                            {isAppTheme && <span className="text-[8px] bg-sky-400/15 border border-sky-300/25 text-sky-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT APP</span>}
+                            {isProfileTheme && <span className="text-[8px] bg-purple-400/15 border border-purple-300/25 text-purple-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT PROFILE</span>}
                           </h4>
-                          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-semibold">
+                          <p className="text-[11px] text-slate-300/85 mt-1.5 leading-relaxed font-semibold line-clamp-2">
                             {theme.description}
                           </p>
                         </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-inner">
+                          <div className="grid grid-cols-3 gap-2">
+                            <span className="h-7 rounded-xl bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-7 rounded-xl bg-cyan-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-7 rounded-xl bg-fuchsia-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative z-10 grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => {
                             setAppTheme(theme.id);
                             triggerSuccess(`✨ "${theme.name}" equipped globally as your personal App Theme!`);
                           }}
                           disabled={isAppTheme}
-                          className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg border text-center transition-all ${
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
                             isAppTheme 
-                              ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white'
+                              ? 'bg-sky-400/15 border-sky-300/25 text-sky-200 cursor-not-allowed' 
+                              : 'bg-white text-slate-950 border-white/80 hover:bg-slate-100 hover:scale-[1.02]'
                           }`}
                         >
                           {isAppTheme ? 'App Active' : 'Set as App'}
@@ -463,10 +478,10 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                             triggerSuccess(`🔮 "${theme.name}" equipped publicly as your Profile Theme!`);
                           }}
                           disabled={isProfileTheme}
-                          className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg border text-center transition-all ${
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
                             isProfileTheme 
-                              ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                              : 'bg-purple-950 border-purple-900/50 text-purple-400 hover:bg-purple-900 hover:text-white'
+                              ? 'bg-purple-400/15 border-purple-300/25 text-purple-200 cursor-not-allowed' 
+                              : 'bg-purple-500/15 border-purple-300/25 text-purple-200 hover:bg-purple-500/25 hover:text-white hover:scale-[1.02]'
                           }`}
                         >
                           {isProfileTheme ? 'Profile Active' : 'Set as Profile'}
