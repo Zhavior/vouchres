@@ -16,8 +16,7 @@
  *   GET /api/mlb/hr-board/player/:id   → Single player detail
  */
 import type { Express, Request, Response } from "express";
-import { buildValidatedHrBoard } from "../services/mlb/hrPipeline";
-import { buildHrBoard, getHrBoardPlayer } from "../services/mlb/dailyHrBoardService";
+import { getCachedValidatedHrBoard, getCachedDeepHrBoard } from "../services/hubs/hrBoardHub";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 
@@ -35,7 +34,7 @@ export function registerHrBoardRoutes(app: Express): void {
   /* ============ MAIN: Validated HR Board ============ */
   app.get("/api/mlb/hr-board/today", async (req: Request, res: Response) => {
     try {
-      const result = await buildValidatedHrBoard();
+      const result = await getCachedValidatedHrBoard();
       res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
     } catch (err: any) {
       console.error("[hr-board/today] validated pipeline failed:", err.message);
@@ -49,7 +48,7 @@ export function registerHrBoardRoutes(app: Express): void {
   /* ============ Today Player Pool ============ */
   app.get("/api/mlb/hr-board/today/pool", async (_req: Request, res: Response) => {
     try {
-      const result = await buildValidatedHrBoard();
+      const result = await getCachedValidatedHrBoard();
       res.json(result.pool);
     } catch (err: any) {
       res.status(503).json({ error: "Pool unavailable", message: err?.message });
@@ -59,7 +58,7 @@ export function registerHrBoardRoutes(app: Express): void {
   /* ============ Debug endpoint ============ */
   app.get("/api/mlb/hr-board/today/debug", async (_req: Request, res: Response) => {
     try {
-      const result = await buildValidatedHrBoard();
+      const result = await getCachedValidatedHrBoard();
       res.json(result.debug);
     } catch (err: any) {
       res.status(503).json({ error: "Debug unavailable", message: err?.message });
@@ -70,7 +69,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/today/deep", async (_req: Request, res: Response) => {
     try {
       const result = await Promise.race([
-        buildHrBoard(),
+        getCachedDeepHrBoard(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Deep board timed out after 20s")), 20000)
         ),
@@ -87,7 +86,7 @@ export function registerHrBoardRoutes(app: Express): void {
 
   app.get("/api/mlb/hr-board/date/:date", async (req: Request, res: Response) => {
     try {
-      const result = await buildValidatedHrBoard(req.params.date);
+      const result = await getCachedValidatedHrBoard(req.params.date);
       res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
     } catch (err: any) {
       res.status(503).json({ error: "HR board unavailable", message: err?.message });
@@ -97,7 +96,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/player/:playerId", async (req: Request, res: Response) => {
     try {
       const date = (req.query.date as string) || undefined;
-      const result = await buildValidatedHrBoard(date);
+      const result = await getCachedValidatedHrBoard(date);
       const candidate = result.candidates.find(
         (c) => String(c.playerId) === String(req.params.playerId)
       );
