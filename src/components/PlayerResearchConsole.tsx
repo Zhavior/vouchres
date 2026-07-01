@@ -1388,7 +1388,7 @@ export default function PlayerResearchConsole({
                         const teamWinPercent = TEAM_PARLAY_WIN_RATES[activePlayer.team] || TEAM_PARLAY_WIN_RATES['DEFAULT'];
                         
                         return (
-                          <div className="bg-slate-950 p-4 border border-slate-850 rounded-2xl col-span-1 sm:col-span-2 space-y-3">
+                          <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] p-4 border border-[hsl(var(--ve-border)/0.30)] rounded-2xl col-span-1 sm:col-span-2 space-y-3">
                             <div className="flex items-center justify-between pb-1.5 border-b border-[hsl(var(--ve-border)/0.24)]">
                               <span className="text-[hsl(var(--ve-text-muted))] font-black font-mono text-[9px] uppercase tracking-wider block">TEAM WIN IN PLAYER PARLAYS % RATE</span>
                               <span className="text-[9.5px] text-emerald-400 font-mono font-bold uppercase">{activePlayer.team}</span>
@@ -1397,7 +1397,7 @@ export default function PlayerResearchConsole({
                             <div className="flex flex-col sm:flex-row items-center gap-5">
                               <div className="relative shrink-0 flex items-center justify-center">
                                 <svg className="w-16 h-16 transform -rotate-90">
-                                  <circle cx="32" cy="32" r="26" stroke="#101827" strokeWidth="5" fill="transparent" />
+                                  <circle cx="32" cy="32" r="26" stroke="hsl(var(--ve-border) / 0.34)" strokeWidth="5" fill="transparent" />
                                   <circle cx="32" cy="32" r="26" stroke="#10b981" strokeWidth="5" strokeDasharray={`${2 * Math.PI * 26}`} strokeDashoffset={`${2 * Math.PI * 26 * (1 - teamWinPercent / 100)}`} fill="transparent" strokeLinecap="round" />
                                 </svg>
                                 <span className="absolute text-center mt-0.5">
@@ -1407,11 +1407,11 @@ export default function PlayerResearchConsole({
                               </div>
 
                               <div className="space-y-1.5 min-w-0 flex-1">
-                                <p className="text-[10px] text-slate-350 font-mono leading-relaxed">
+                                <p className="text-[10px] text-[hsl(var(--ve-text-soft))] font-mono leading-relaxed">
                                   Saber-grounded metric evaluations state that multi-leg player parlays containing <b>{activePlayer.name}</b> legs yield a high <strong className="text-emerald-400 font-black">{teamWinPercent}% team historic win rate</strong> across baseball.
                                 </p>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[8px] bg-[#121c22] border border-emerald-950/40 text-emerald-300 font-mono px-2 py-0.5 rounded leading-none uppercase font-bold">ALPHA VALUE</span>
+                                  <span className="text-[8px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono px-2 py-0.5 rounded leading-none uppercase font-bold">ALPHA VALUE</span>
                                   <span className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-none">Model index: 1.48x</span>
                                 </div>
                               </div>
@@ -1425,7 +1425,7 @@ export default function PlayerResearchConsole({
                 </div>
 
                 {/* Platoon situational splits tracker (Col Span 1) */}
-                <div className="bg-[#0f172a]/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.32)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg space-y-4">
                   <div className="flex items-center justify-between border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5">
                     <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                       SITUATIONAL RECON
@@ -1434,7 +1434,7 @@ export default function PlayerResearchConsole({
                   </div>
 
                   {/* Switch Tab controls */}
-                  <div className="grid grid-cols-3 gap-1 bg-slate-950 border border-slate-900 p-1 rounded-xl text-[9px] font-mono">
+                  <div className="grid grid-cols-3 gap-1 bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.28)] p-1 rounded-xl text-[9px] font-mono">
                     <button 
                       onClick={() => setActiveSplitTab('PLATOON')}
                       className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'PLATOON' ? 'bg-[hsl(var(--ve-border)/0.34)] text-emerald-400' : 'text-[hsl(var(--ve-text-muted))]'}`}
@@ -1470,7 +1470,7 @@ export default function PlayerResearchConsole({
                             <span>SLG: {activePlayer.splits.vLHP.slg}</span>
                           </div>
                         </div>
-                        <div className="border-t border-slate-850/60 pt-2.5 space-y-1">
+                        <div className="border-t border-[hsl(var(--ve-border)/0.26)] pt-2.5 space-y-1">
                           <div className="flex justify-between">
                             <span className="text-[hsl(var(--ve-text-muted))]">vs Right Pitcher (RHP)</span>
                             <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.vRHP.ops} OPS</strong>
@@ -1497,7 +1497,7 @@ export default function PlayerResearchConsole({
                             <span>SLG: {activePlayer.splits.home.slg}</span>
                           </div>
                         </div>
-                        <div className="border-t border-slate-850/60 pt-2.5 space-y-1">
+                        <div className="border-t border-[hsl(var(--ve-border)/0.26)] pt-2.5 space-y-1">
                           <div className="flex justify-between">
                             <span className="text-[hsl(var(--ve-text-muted))]">Away stadiums split</span>
                             <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.away.ops} OPS</strong>
