@@ -2005,7 +2005,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         e.stopPropagation();
                         setActivePreviewCardIndex(1);
                       }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-sky-450 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-[hsl(var(--ve-surface)/0.90)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-accent-cyan))] rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.22)] cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                       title="Slide to Analytics Card"
                       id="studio-slide-next-btn"
                     >
@@ -2015,8 +2015,8 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                   {/* Dot/Page indicator */}
                   {showSecondCard && !postSideways && (
-                    <div className="absolute top-20 right-4 bg-slate-950/80 rounded-full py-1 px-3 border border-slate-800/60 text-[9px] font-mono text-[hsl(var(--ve-text-muted))] font-bold z-40 shadow flex gap-1.5 items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                    <div className="absolute top-20 right-4 bg-[hsl(var(--ve-surface)/0.82)] rounded-full py-1 px-3 border border-[hsl(var(--ve-border)/0.32)] text-[9px] font-mono text-[hsl(var(--ve-text-muted))] font-bold z-40 shadow flex gap-1.5 items-center backdrop-blur-xl">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ve-accent-cyan))] animate-pulse" />
                       CARD 1 / 2
                     </div>
                   )}
@@ -2032,7 +2032,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     VE
                   </div>
                   <div className="leading-none text-left">
-                    <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-450'}>Edge</span></span>
+                    <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-[hsl(var(--ve-accent-cyan))]'}>Edge</span></span>
                     <span className={`text-[8px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>Analytic Core Certified</span>
                   </div>
                 </div>
@@ -2042,14 +2042,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
                       {profile?.displayName || "Zhavior"}
                     </span>
-                    <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
+                    <span className="text-[8.5px] text-[hsl(var(--ve-accent-cyan))] font-mono tracking-tight block mt-0.5">
                       @{profile?.username || "Zhavior"} • {formattedToday}
                     </span>
                   </div>
                   <img 
                     src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                     alt={profile?.displayName || "Zhavior"} 
-                    className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-slate-950 shadow-inner"
+                    className="w-7 h-7 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.30)] object-cover bg-[hsl(var(--ve-surface-raised)/0.48)] shadow-inner"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -2119,26 +2119,26 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       {/* Ticket header badge */}
                       <div className={`p-4 rounded-2xl ${activeStyle.nodeTagBg} border ${activeStyle.cardBorder} flex justify-between items-center bg-black/30 backdrop-blur-sm`}>
                         <div className="text-left leading-tight">
-                          <span className="text-[8px] uppercase font-mono text-indigo-400 font-bold block tracking-widest">PROP SPEC SLIP</span>
+                          <span className="text-[8px] uppercase font-mono text-[hsl(var(--ve-accent-pink))] font-bold block tracking-widest">PROP SPEC SLIP</span>
                           <h3 className={`text-xs font-black uppercase tracking-tight truncate max-w-[180px] ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-100'}`}>
                             🎫 {currentParlay.title}
                           </h3>
                         </div>
                         <div className="text-right leading-tight min-w-[70px]">
                           <span className="text-[8px] uppercase font-mono text-[hsl(var(--ve-text-muted))] block">MULTI ODDS</span>
-                          <span className="text-indigo-400 font-mono font-black text-sm">{currentParlay.totalOdds}</span>
+                          <span className="text-[hsl(var(--ve-accent-pink))] font-mono font-black text-sm">{currentParlay.totalOdds}</span>
                         </div>
                       </div>
 
                       {/* Display legs */}
                       <div className="space-y-2">
                         {currentParlay.legs.map((leg: any, idx: number) => (
-                          <div key={idx} className={`p-3 rounded-2xl bg-[#070b14]/75 backdrop-blur-sm border ${activeStyle.cardBorder} flex justify-between items-center`}>
+                          <div key={idx} className={`p-3 rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-sm border ${activeStyle.cardBorder} flex justify-between items-center`}>
                             <div className="text-left space-y-1 min-w-0 flex-1 pr-2">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className={`text-[8.5px] font-mono px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ${
                                   idx % 2 === 0 
-                                    ? 'bg-sky-500/15 border border-sky-500/30 text-sky-400' 
+                                    ? 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border border-[hsl(var(--ve-accent-cyan)/0.30)] text-[hsl(var(--ve-accent-cyan))]' 
                                     : 'bg-purple-500/15 border border-purple-500/30 text-purple-400'
                                 }`}>
                                   Leg {idx + 1}
@@ -2163,12 +2163,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                       {/* Financial review */}
                       <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                        <div className={`p-3 rounded-xl bg-black/40 border border-slate-900 flex justify-between items-center`}>
+                        <div className={`p-3 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] flex justify-between items-center`}>
                           <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase">RISK WAGER</span>
-                          <strong className="text-slate-300 font-bold">${currentParlay.wagerAmount || 100}</strong>
+                          <strong className="text-[hsl(var(--ve-text-secondary))] font-bold">${currentParlay.wagerAmount || 100}</strong>
                         </div>
-                        <div className={`p-3 rounded-xl bg-black/40 border border-slate-900 flex justify-between items-center`}>
-                          <span className="text-slate-550 text-[10px] uppercase">POTENTIAL RET</span>
+                        <div className={`p-3 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] flex justify-between items-center`}>
+                          <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase">POTENTIAL RET</span>
                           <strong className="text-emerald-400 font-extrabold">${currentParlay.payoutAmount || 310}</strong>
                         </div>
                       </div>
@@ -2187,7 +2187,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       )}
 
                       {/* Proof Verification Stamp */}
-                      <div className="border-t border-slate-950 pt-2 flex items-center justify-between font-mono text-[9px] text-[#38bdf8] uppercase">
+                      <div className="border-t border-[hsl(var(--ve-border)/0.28)] pt-2 flex items-center justify-between font-mono text-[9px] text-[hsl(var(--ve-accent-cyan))] uppercase">
                         <span>★ SECURED PROOF SLIP</span>
                         <span>BOOKMAKER: {currentParlay.bookie || "Market Average"}</span>
                       </div>
@@ -2513,14 +2513,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
                           {profile?.displayName || "Zhavior"}
                         </span>
-                        <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
+                        <span className="text-[8.5px] text-[hsl(var(--ve-accent-cyan))] font-mono tracking-tight block mt-0.5">
                           @{profile?.username || "Zhavior"} • {formattedToday}
                         </span>
                       </div>
                       <img 
                         src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                         alt={profile?.displayName || "Zhavior"} 
-                        className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-slate-950 shadow-inner"
+                        className="w-7 h-7 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.30)] object-cover bg-[hsl(var(--ve-surface-raised)/0.48)] shadow-inner"
                         referrerPolicy="no-referrer"
                       />
                     </div>
