@@ -8,6 +8,10 @@ import { TTL, TTLCache } from "../lib/cache";
 const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const lineupCache = new TTLCache<any[]>(TTL.liveFeed, "mlb:lineups");
 
+function safeDateParam(value: unknown): string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : todayISO();
+}
+
 async function fetchMlb<T>(path: string): Promise<T> {
   const start = Date.now();
   console.log(`[mlbRoutes] MLB request ${path}`);
@@ -83,7 +87,7 @@ export function registerMlbRoutes(app: Express): void {
   /** All lineups for today — powers the Daily Players board */
   app.get("/api/mlb/lineup/today", async (req: Request, res: Response) => {
     const start = Date.now();
-    const date = (req.query.date as string) || todayISO();
+    const date = safeDateParam(req.query.date);
     try {
       const lineups = await getTodayLineups(date);
       const totalPlayers = lineups.reduce((sum, g) => sum + g.totalPlayers, 0);
