@@ -420,26 +420,27 @@ export default function TheEdgeShell({
 
   return (
     <motion.main
-      className={`ve-theme-root ${shellClass}`}
+      className={`ve-theme-root relative isolate overflow-hidden bg-[hsl(var(--ve-bg-deep))] text-[hsl(var(--ve-text-primary))] ${shellClass}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
       <div className="edge-space-backdrop" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,hsl(var(--ve-accent-cyan)/0.18),transparent_34%),radial-gradient(circle_at_80%_20%,hsl(var(--ve-accent-pink)/0.14),transparent_30%),linear-gradient(135deg,hsl(var(--ve-bg-deep)),hsl(var(--ve-bg-panel)))]" />
       <Starfield />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className="edge-space-header border-b border-white/10 bg-black/45 px-4 py-4 backdrop-blur-2xl sm:px-6">
+        <header className="edge-space-header border-b border-[hsl(var(--ve-border)/0.45)] bg-[hsl(var(--ve-surface)/0.58)] px-4 py-4 shadow-[0_18px_60px_hsl(var(--ve-shadow)/0.32)] backdrop-blur-2xl sm:px-6">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-slate-100">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[hsl(var(--ve-border)/0.45)] bg-[hsl(var(--ve-surface-raised)/0.55)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_22px_hsl(var(--ve-accent-cyan)/0.16)]">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="text-sm font-black tracking-tight text-white">
-              Vouch<span className="text-slate-300">Edge</span>
+            <span className="text-sm font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
+              Vouch<span className="text-[hsl(var(--ve-accent-cyan))]">Edge</span>
             </span>
-            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:inline">
+            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))] sm:inline">
               Trust-first MLB research
             </span>
           </div>
@@ -474,7 +475,7 @@ export default function TheEdgeShell({
           </div>
         </header>
 
-        <div className={presentation === 'page' ? 'flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8' : 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
+        <div className={presentation === 'page' ? 'relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8' : 'relative min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
           <AnimatePresence mode="wait">
 
             {/* ── INTRO: one sports-native sell screen (video + welcome merged) ── */}
