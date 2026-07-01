@@ -134,10 +134,10 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         {/* Premium VouchEdge Brand */}
         <div
           onClick={() => onSectionChange('feed')}
-          className="group relative flex items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-2.5 shadow-xl shadow-black/20 cursor-pointer transition hover:border-cyan-300/25 hover:bg-cyan-300/[0.04]"
+          className="group relative flex items-center gap-3 rounded-3xl border border-[hsl(var(--ve-border)/0.42)] bg-[hsl(var(--ve-surface-raised)/0.38)] p-2.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] cursor-pointer transition hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:bg-[hsl(var(--ve-accent-cyan)/0.06)]"
           id="brand-logo-id"
         >
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-300/30 bg-gradient-to-br from-cyan-300/20 via-sky-500/10 to-indigo-500/20 text-cyan-100 shadow-[0_0_26px_-10px_rgba(34,211,238,0.9)]">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.38)] bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.22),hsl(var(--ve-accent-pink)/0.12))] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_26px_-10px_hsl(var(--ve-accent-cyan)/0.9)]">
             <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.28),transparent_32%)]" />
             <span className="relative text-sm font-black tracking-tight">VE</span>
           </div>
@@ -217,7 +217,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         <div className="px-1 pt-1">
           <button
             onClick={() => onSectionChange('build')}
-            className="group/cta relative w-full overflow-hidden border border-cyan-200/25 bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 hover:from-sky-400 hover:via-cyan-400 hover:to-slate-400 text-white font-black py-3 px-4 rounded-2xl shadow-[0_18px_45px_-18px_rgba(34,211,238,0.9)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-cyan-400/30"
+            className="group/cta relative w-full overflow-hidden border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[linear-gradient(90deg,hsl(var(--ve-accent-cyan)/0.92),hsl(var(--ve-accent-pink)/0.78),hsl(var(--ve-accent-gold)/0.70))] hover:brightness-110 text-white font-black py-3 px-4 rounded-2xl shadow-[0_18px_45px_-18px_hsl(var(--ve-accent-cyan)/0.9)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.30)]"
             id="sidebar-cta-build-parlay"
           >
             <Sliders className="w-4 h-4 transition-transform duration-300 group-hover/cta:rotate-90" />
@@ -227,15 +227,15 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
       </div>
 
       {/* Mini Profile Footer */}
-      <div className="hidden xl:block rounded-3xl border border-cyan-300/15 bg-slate-950/52 p-3 shadow-xl shadow-cyan-950/15">
+      <div className="hidden xl:block rounded-3xl border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)]">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">VAI Sync</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-secondary))]">VAI Sync</span>
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
             Online
           </span>
         </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+        <p className="mt-2 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">
           Ledger, results, and AI parlay tracking are connected.
         </p>
       </div>
