@@ -714,7 +714,7 @@ export default function LiveStreams({
                             <span className="font-extrabold text-xs text-[hsl(var(--ve-text))] truncate">{chan.streamerName}</span>
                             {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))] fill-[hsl(var(--ve-accent-cyan))]" />}
                           </div>
-                          <span className="text-[10px] text-slate-500">@{chan.streamerUsername}</span>
+                          <span className="text-[10px] text-[hsl(var(--ve-text-muted))]">@{chan.streamerUsername}</span>
                         </div>
                       </div>
 
@@ -736,7 +736,7 @@ export default function LiveStreams({
                       
                       <div className="text-right shrink-0">
                         <span className="text-xs font-mono font-bold text-amber-400">{chan.liveSlipOdds}</span>
-                        <p className="text-[8px] text-slate-500 uppercase mt-0.5">odds</p>
+                        <p className="text-[8px] text-[hsl(var(--ve-text-muted))] uppercase mt-0.5">odds</p>
                       </div>
                     </div>
                   </div>
@@ -950,7 +950,7 @@ export default function LiveStreams({
                       <span className="flex items-center gap-1 text-emerald-400 font-bold bg-emerald-950/50 px-1.5 py-0.2 border border-emerald-900/25 rounded">
                         ● 1080P PRO
                       </span>
-                      <button className="text-slate-500 hover:text-white transition-colors">
+                      <button className="text-[hsl(var(--ve-text-muted))] hover:text-white transition-colors">
                         <Settings className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1114,7 +1114,7 @@ export default function LiveStreams({
                           
                           <div className="flex justify-between items-center relative z-10 text-xs font-mono font-bold">
                             <span className="text-slate-300">{opt.label}</span>
-                            <span className="text-sky-400 font-semibold">{percent}% <span className="text-slate-500 text-[10px]">({pollVotes[i]} votes)</span></span>
+                            <span className="text-sky-400 font-semibold">{percent}% <span className="text-[hsl(var(--ve-text-muted))] text-[10px]">({pollVotes[i]} votes)</span></span>
                           </div>
                         </button>
                       );
@@ -1323,7 +1323,7 @@ export default function LiveStreams({
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" /> Broadcast Live
                   </span>
                 ) : (
-                  <span className="bg-slate-900 text-slate-500 border border-slate-800 text-[9px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="bg-slate-900 text-[hsl(var(--ve-text-muted))] border border-slate-800 text-[9px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                     ● Offline sandbox
                   </span>
                 )}
@@ -1366,7 +1366,7 @@ export default function LiveStreams({
 
                     <div className="flex flex-col items-center justify-center space-y-4 py-8">
                       <div className="w-16 h-16 bg-slate-900/60 rounded-full flex items-center justify-center border border-slate-800 shadow">
-                        <Video className="w-6 h-6 text-slate-500 animate-pulse" />
+                        <Video className="w-6 h-6 text-[hsl(var(--ve-text-muted))] animate-pulse" />
                       </div>
                       <div className="text-center space-y-1">
                         <p className="text-xs font-bold font-mono text-slate-300 uppercase tracking-widest">Awaiting Live Device Stream</p>
@@ -1414,26 +1414,26 @@ export default function LiveStreams({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Live Broadcast Title</label>
+                  <label className="text-[10px] text-[hsl(var(--ve-text-muted))] uppercase font-bold tracking-wider font-mono">Live Broadcast Title</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Sweating MLB Late night sweep parlay!" 
                     value={streamTitle}
                     onChange={(e) => setStreamTitle(e.target.value)}
                     disabled={isUserLive}
-                    className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-sky-500 font-semibold placeholder-slate-600 disabled:opacity-50"
+                    className="w-full text-xs bg-[hsl(var(--ve-bg)/0.72)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] rounded-xl px-3 py-2.5 outline-none focus:border-[var(--ve-border-strong)] font-semibold placeholder:text-[hsl(var(--ve-text-muted))] disabled:opacity-50"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Active Game Context</label>
+                  <label className="text-[10px] text-[hsl(var(--ve-text-muted))] uppercase font-bold tracking-wider font-mono">Active Game Context</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Los Angeles Dodgers @ San Francisco Giants" 
                     value={activeGameCover}
                     onChange={(e) => setActiveGameCover(e.target.value)}
                     disabled={isUserLive}
-                    className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-[var(--ve-border-strong)] font-semibold placeholder-slate-600 disabled:opacity-50"
+                    className="w-full text-xs bg-[hsl(var(--ve-bg)/0.72)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] rounded-xl px-3 py-2.5 outline-none focus:border-[var(--ve-border-strong)] font-semibold placeholder:text-[hsl(var(--ve-text-muted))] disabled:opacity-50"
                   />
                 </div>
 
@@ -1444,7 +1444,7 @@ export default function LiveStreams({
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 cursor-pointer border ${
                       webcamEnabled 
                         ? 'bg-rose-950/30 border-rose-500/40 text-rose-400' 
-                        : 'bg-[#0b0f19] border-slate-800 text-slate-400 hover:border-slate-705'
+                        : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.50)]'
                     }`}
                   >
                     {webcamEnabled ? (
@@ -1464,8 +1464,8 @@ export default function LiveStreams({
                     onClick={() => setMicState(!micState)}
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 cursor-pointer border ${
                       micState 
-                        ? 'bg-[#0b0f19] border-slate-850 text-slate-350 hover:border-slate-705' 
-                        : 'bg-rose-955/30 border-rose-500/40 text-rose-450'
+                        ? 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-soft))] hover:border-[hsl(var(--ve-border)/0.50)]' 
+                        : 'bg-rose-500/10 border-rose-500/40 text-rose-400'
                     }`}
                   >
                     <Mic className="w-4 h-4" />
@@ -1477,7 +1477,7 @@ export default function LiveStreams({
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 cursor-pointer border ${
                       screenShareSimulated 
                         ? 'bg-emerald-950/25 border-emerald-500/35 text-emerald-400' 
-                        : 'bg-[#0b0f19] border-slate-800 text-slate-400 hover:border-slate-705'
+                        : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.50)]'
                     }`}
                   >
                     <Monitor className="w-4 h-4" />
@@ -1488,12 +1488,12 @@ export default function LiveStreams({
               </div>
 
               {/* Streaming state action banner */}
-              <div className="p-4 bg-slate-950/40 rounded-2xl border border-slate-855 flex items-center justify-between flex-wrap gap-4">
+              <div className="p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] rounded-2xl border border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between flex-wrap gap-4">
                 <div className="text-left">
-                  <span className="text-[9px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded font-mono uppercase tracking-wider text-slate-400 font-bold">
+                  <span className="text-[9px] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] px-2 py-0.5 rounded font-mono uppercase tracking-wider text-[hsl(var(--ve-text-muted))] font-bold">
                     ready state status
                   </span>
-                  <p className="text-xs font-bold text-slate-300 mt-1">
+                  <p className="text-xs font-bold text-[hsl(var(--ve-text-soft))] mt-1">
                     Your audio, camera feeds, and analytics profiles are fully aligned.
                   </p>
                 </div>
@@ -1508,7 +1508,7 @@ export default function LiveStreams({
                 ) : (
                   <button
                     onClick={handleStartUserStream}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase text-xs tracking-wider px-6 py-3.5 rounded-xl shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
+                    className="bg-[hsl(var(--ve-accent-violet))] hover:bg-[hsl(var(--ve-accent-violet)/0.86)] text-white font-black uppercase text-xs tracking-wider px-6 py-3.5 rounded-xl shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
                   >
                     ⚡ Start Broadcasting Now
                   </button>
@@ -1520,36 +1520,36 @@ export default function LiveStreams({
             {/* Go-Live Desk Live chat monitor and telemetry statistics */}
             <div className="lg:col-span-4 p-6 space-y-5">
               
-              <div className="bg-[#182030] rounded-2xl border border-slate-850 p-4 space-y-4">
-                <h4 className="font-extrabold text-xs text-slate-150 uppercase tracking-widest font-mono flex items-center gap-1.5">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.46)] rounded-2xl border border-[hsl(var(--ve-border)/0.32)] p-4 space-y-4">
+                <h4 className="font-extrabold text-xs text-[hsl(var(--ve-text))] uppercase tracking-widest font-mono flex items-center gap-1.5">
                   <Activity className="w-4 h-4 text-[#ff9f43]" />
                   Live Broadcast Telemetry
                 </h4>
                 
                 <div className="grid grid-cols-2 gap-3.5 font-mono text-center">
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850/60">
-                    <span className="text-slate-500 text-[10px] uppercase font-bold">Duration</span>
+                  <div className="bg-[hsl(var(--ve-bg)/0.62)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.28)]">
+                    <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase font-bold">Duration</span>
                     <p className="text-sm font-black text-[hsl(var(--ve-text))] mt-1">{isUserLive ? formatSecs(streamDuration) : "00:00:00"}</p>
                   </div>
 
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-[#1e293b]/60">
-                    <span className="text-slate-500 text-[10px] uppercase font-bold">Watching</span>
+                  <div className="bg-[hsl(var(--ve-bg)/0.62)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.28)]">
+                    <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase font-bold">Watching</span>
                     <p className="text-sm font-black text-rose-400 mt-1">{isUserLive ? userStreamViewers : 0}</p>
                   </div>
 
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850/60 col-span-2">
-                    <span className="text-slate-500 text-[10px] uppercase font-bold">Peak Bitrate</span>
+                  <div className="bg-[hsl(var(--ve-bg)/0.62)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.28)] col-span-2">
+                    <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase font-bold">Peak Bitrate</span>
                     <p className="text-xs font-black text-emerald-400 mt-1">{isUserLive ? "4500 Kbps (Stable)" : "0 Kbps"}</p>
                   </div>
                 </div>
               </div>
 
               {/* Streaming Chat Monitor */}
-              <div className="bg-[#121824] rounded-2xl border border-slate-850 h-[380px] flex flex-col justify-between overflow-hidden shadow">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.46)] rounded-2xl border border-[hsl(var(--ve-border)/0.32)] h-[380px] flex flex-col justify-between overflow-hidden shadow">
                 
-                <div className="bg-slate-900/80 border-b border-slate-850 px-4 py-3 flex items-center justify-between">
-                  <span className="font-extrabold text-[10px] text-slate-300 uppercase tracking-widest font-mono">Stream Chat Feed</span>
-                  <span className="text-[8px] bg-red-950/60 text-red-400 border border-red-900 /40 px-1.5 py-0.2 rounded font-mono uppercase tracking-widest">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex items-center justify-between">
+                  <span className="font-extrabold text-[10px] text-[hsl(var(--ve-text-soft))] uppercase tracking-widest font-mono">Stream Chat Feed</span>
+                  <span className="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.2 rounded font-mono uppercase tracking-widest">
                     monitor
                   </span>
                 </div>
@@ -1563,20 +1563,20 @@ export default function LiveStreams({
                         }`}>
                           @{c.user}
                         </span>
-                        <span className="text-slate-500">:</span> <span className="text-slate-300 font-medium">{c.text}</span>
+                        <span className="text-[hsl(var(--ve-text-muted))]">:</span> <span className="text-[hsl(var(--ve-text-soft))] font-medium">{c.text}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center text-slate-600 space-y-1 p-4">
-                      <MessageSquare className="w-8 h-8 text-slate-700 animate-pulse" />
+                    <div className="h-full flex flex-col items-center justify-center text-center text-[hsl(var(--ve-text-muted))] space-y-1 p-4">
+                      <MessageSquare className="w-8 h-8 text-[hsl(var(--ve-text-muted))] animate-pulse" />
                       <p className="text-[10px] uppercase font-bold font-mono">Chat Room Offline</p>
-                      <p className="text-[9px] text-slate-650 font-mono">Your stream chat will activate once you go live.</p>
+                      <p className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono">Your stream chat will activate once you go live.</p>
                     </div>
                   )}
                   <div ref={chatBottomRef} />
                 </div>
 
-                <div className="p-2.5 bg-[#0e1320] border-t border-slate-850">
+                <div className="p-2.5 bg-[hsl(var(--ve-surface-raised)/0.40)] border-t border-[hsl(var(--ve-border)/0.30)]">
                   <form onSubmit={sendUserChatMessage} className="flex gap-1.5 items-center">
                     <input
                       type="text"
@@ -1584,12 +1584,12 @@ export default function LiveStreams({
                       value={userChatMsg}
                       onChange={(e) => setUserChatMsg(e.target.value)}
                       disabled={!isUserLive}
-                      className="flex-1 text-xs bg-[#070a11] text-white border border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-[var(--ve-border-strong)] font-medium placeholder-slate-600 disabled:opacity-50"
+                      className="flex-1 text-xs bg-[hsl(var(--ve-bg)/0.72)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] rounded-lg px-3 py-2 outline-none focus:border-[var(--ve-border-strong)] font-medium placeholder:text-[hsl(var(--ve-text-muted))] disabled:opacity-50"
                     />
                     <button
                       type="submit"
                       disabled={!isUserLive}
-                      className="p-2 bg-indigo-600 hover:bg-indigo-505 text-white rounded-lg transition-all font-bold uppercase cursor-pointer disabled:opacity-50"
+                      className="p-2 bg-[hsl(var(--ve-accent-violet))] hover:bg-[hsl(var(--ve-accent-violet)/0.86)] text-white rounded-lg transition-all font-bold uppercase cursor-pointer disabled:opacity-50"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>
