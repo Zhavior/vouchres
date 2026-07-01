@@ -1841,10 +1841,10 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {[
-                  { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', activeStyle: 'border-cyan-550/40 text-cyan-400 bg-cyan-950/20' },
-                  { id: 'luxury', name: '👑 Gold Prestige', activeStyle: 'border-amber-500/40 text-amber-400 bg-amber-950/20' },
+                  { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', activeStyle: 'border-[hsl(var(--ve-accent-cyan)/0.42)] text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.12)]' },
+                  { id: 'luxury', name: '👑 Gold Prestige', activeStyle: 'border-[hsl(var(--ve-accent-gold)/0.42)] text-[hsl(var(--ve-accent-gold))] bg-[hsl(var(--ve-accent-gold)/0.12)]' },
                   { id: 'crimson', name: '🔥 Crimson Fury', activeStyle: 'border-red-500/40 text-red-500 bg-red-950/20' },
-                  { id: 'minimal', name: '🏛️ Swiss Minimal', activeStyle: 'border-slate-400 text-slate-300 bg-slate-100/10' },
+                  { id: 'minimal', name: '🏛️ Swiss Minimal', activeStyle: 'border-[hsl(var(--ve-border)/0.42)] text-[hsl(var(--ve-text-secondary))] bg-[hsl(var(--ve-surface-raised)/0.32)]' },
                   { id: 'hologram', name: '✨ Midnight Holo', activeStyle: 'border-fuchsia-500/40 text-fuchsia-400 bg-fuchsia-950/20' }
                 ].map(styleOpt => (
                   <button
@@ -1867,7 +1867,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Toggles bar */}
-            <div className="grid grid-cols-3 gap-2 text-[9px] border-t border-slate-800 pt-3">
+            <div className="grid grid-cols-3 gap-2 text-[9px] border-t border-[hsl(var(--ve-border)/0.28)] pt-3">
               <button
                 onClick={() => setShowCharts(!showCharts)}
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
@@ -1921,12 +1921,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Visual Workspace Premium Scale Station */}
-            <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-855 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+            <div className="bg-[hsl(var(--ve-surface)/0.76)] backdrop-blur-xl border border-[hsl(var(--ve-border)/0.34)] rounded-2xl p-3 flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)]">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">
                   🔎 Scale Controller:
                 </span>
-                <span className="text-xs font-mono font-black text-sky-400 bg-sky-950/40 px-2 py-0.5 rounded border border-sky-900/30">
+                <span className="text-xs font-mono font-black text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.12)] px-2 py-0.5 rounded border border-[hsl(var(--ve-accent-cyan)/0.30)]">
                   {Math.round(previewScale * 100)}% Size
                 </span>
               </div>
@@ -1939,7 +1939,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   step="0.05" 
                   value={previewScale}
                   onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500" 
+                  className="w-full h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-lg appearance-none cursor-pointer accent-[hsl(var(--ve-accent-cyan))]" 
                 />
                 <span className="text-[9px] font-mono text-[hsl(var(--ve-text-muted))]">1:1</span>
               </div>
@@ -1975,7 +1975,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Viewport Frame mask */}
-            <div className="w-full rounded-3xl border border-slate-850/40 bg-[#080c14]/40 p-4 sm:p-6 overflow-hidden max-h-[820px] scrollbar-none flex justify-center items-start">
+            <div className="w-full rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.26)] p-4 sm:p-6 overflow-hidden max-h-[820px] scrollbar-none flex justify-center items-start shadow-inner">
               {/* Main Interactive Poster Canvas Container Layout */}
               <div 
                 className={`flex ${postSideways && showSecondCard ? 'flex-col xl:flex-row' : 'flex-col'} gap-5 w-full relative group transition-all duration-300`}
