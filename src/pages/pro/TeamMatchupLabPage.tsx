@@ -311,11 +311,26 @@ async function fetchJsonResponse<T>(url: string, signal: AbortSignal): Promise<T
     signal,
     headers: { accept: 'application/json' },
   });
+
   const contentType = response.headers.get('content-type') ?? '';
-  if (!response.ok || !contentType.includes('application/json')) {
-    throw new Error(`Request failed (${response.status})`);
+  const rawText = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}): ${rawText.slice(0, 180) || response.statusText}`);
   }
-  return response.json() as Promise<T>;
+
+  try {
+    return JSON.parse(rawText) as T;
+  } catch {
+    const preview = rawText
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 220);
+
+    throw new Error(
+      `Expected JSON but received ${contentType || 'unknown content-type'} from ${url}. Preview: ${preview || 'empty response'}`
+    );
+  }
 }
 
 export default function TeamMatchupLabPage() {
