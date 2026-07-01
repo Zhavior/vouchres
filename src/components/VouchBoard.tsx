@@ -2830,8 +2830,8 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 disabled={isPublishingToFeed}
                 className={`py-3 px-4 font-mono font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase ${
                   isPublishingToFeed 
-                    ? 'bg-slate-900 border border-slate-800 text-[hsl(var(--ve-text-muted))] cursor-not-allowed'
-                    : 'bg-slate-950 hover:bg-slate-900 border border-indigo-900 text-slate-200'
+                    ? 'bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] cursor-not-allowed'
+                    : 'bg-[hsl(var(--ve-surface-raised)/0.44)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] border border-[hsl(var(--ve-accent-pink)/0.32)] text-[hsl(var(--ve-text-primary))]'
                 }`}
               >
                 <Tv className="w-4 h-4 text-emerald-300" />
