@@ -1,13 +1,16 @@
 import type { Request, Response } from "express";
-import { createApp } from "../serverApp";
+import { createRequire } from "module";
 
-let appPromise: ReturnType<typeof createApp> | null = null;
+const require = createRequire(import.meta.url);
+
+let appPromise: Promise<any> | null = null;
 
 export default async function handler(req: Request, res: Response) {
   try {
     if (!appPromise) {
-      console.log("[VERCEL_API] booting Express app");
-      appPromise = createApp();
+      console.log("[VERCEL_API] loading built Express server");
+      const server = require("../dist/server.cjs");
+      appPromise = Promise.resolve(server.createApp());
     }
 
     const app = await appPromise;
