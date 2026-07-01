@@ -1456,7 +1456,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   onClick={() => setActiveCardLayout('orbit')}
                   className={`py-2 px-1 rounded-xl border text-center transition-all text-[10px] sm:text-xs font-mono font-bold flex flex-col items-center justify-center gap-1.5 ${
                     activeCardLayout === 'orbit'
-                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-sm'
+                      ? 'bg-[hsl(var(--ve-accent-cyan)/0.12)] border-[hsl(var(--ve-accent-cyan)/0.36)] text-[hsl(var(--ve-accent-cyan))] shadow-sm'
                       : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/30'
                   }`}
                 >
@@ -1853,7 +1853,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     onClick={() => setCardStyle(styleOpt.id as any)}
                     className={`py-2 px-2.5 rounded-xl border text-left transition-all text-[11px] font-mono flex flex-col justify-between h-[52px] ${
                       cardStyle === styleOpt.id 
-                        ? `${styleOpt.activeStyle} border-2 ring-1 ring-sky-500/10 font-black` 
+                        ? `${styleOpt.activeStyle} border-2 ring-1 ring-[hsl(var(--ve-accent-cyan)/0.14)] font-black` 
                         : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] hover:border-slate-800'
                     }`}
                   >
@@ -1872,7 +1872,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 onClick={() => setShowCharts(!showCharts)}
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showCharts 
-                    ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
+                    ? 'bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-accent-cyan)/0.34)] text-[hsl(var(--ve-accent-cyan))]' 
                     : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
@@ -1884,7 +1884,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 onClick={() => setShowLogo(!showLogo)}
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showLogo 
-                    ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
+                    ? 'bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-accent-cyan)/0.34)] text-[hsl(var(--ve-accent-cyan))]' 
                     : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
@@ -1896,7 +1896,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 onClick={() => setShowReasons(!showReasons)}
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showReasons 
-                    ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
+                    ? 'bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-accent-cyan)/0.34)] text-[hsl(var(--ve-accent-cyan))]' 
                     : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
@@ -1948,7 +1948,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   type="button"
                   onClick={() => setPreviewScale(0.70)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 0.70 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
+                    previewScale === 0.70 ? 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border-[hsl(var(--ve-accent-cyan)/0.42)] text-[hsl(var(--ve-accent-cyan))] font-extrabold shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.22)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Fits Sideways
@@ -1957,7 +1957,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   type="button"
                   onClick={() => setPreviewScale(0.85)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 0.85 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
+                    previewScale === 0.85 ? 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border-[hsl(var(--ve-accent-cyan)/0.42)] text-[hsl(var(--ve-accent-cyan))] font-extrabold shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.22)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Optimal
@@ -1966,7 +1966,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   type="button"
                   onClick={() => setPreviewScale(1.0)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 1.0 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
+                    previewScale === 1.0 ? 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border-[hsl(var(--ve-accent-cyan)/0.42)] text-[hsl(var(--ve-accent-cyan))] font-extrabold shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.22)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Actual
