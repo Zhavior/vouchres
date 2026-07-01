@@ -1541,8 +1541,8 @@ export default function PlayerResearchConsole({
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6" id="bento-scouting-reports">
                 
                 {/* AI Scouting narrative logs */}
-                <div className="col-span-1 md:col-span-7 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
-                  <h3 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-800/60 pb-2.5">
+                <div className="col-span-1 md:col-span-7 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg space-y-4">
+                  <h3 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5 border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5">
                     <Trophy className="w-4 h-4 text-emerald-400" /> SABERMETRIC ATHLETE ADVANTAGE METRICS
                   </h3>
 
@@ -1551,7 +1551,7 @@ export default function PlayerResearchConsole({
                     {/* Contact projection */}
                     <div>
                       <span className="font-extrabold text-[hsl(var(--ve-text-muted))] font-mono text-[9px] uppercase block mb-1">■ ZONE BARREL CORRELATION INDEX:</span>
-                      <p className="bg-slate-950 p-3 rounded-2xl border border-slate-850/60 font-mono text-[11px] text-slate-350">
+                      <p className="bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-2xl border border-[hsl(var(--ve-border)/0.30)] font-mono text-[11px] text-[hsl(var(--ve-text-soft))]">
                         {activePlayer.scoutingReport.contactText}
                       </p>
                     </div>
@@ -1559,7 +1559,7 @@ export default function PlayerResearchConsole({
                     {/* Power Projection */}
                     <div>
                       <span className="font-extrabold text-[hsl(var(--ve-text-muted))] font-mono text-[9px] uppercase block mb-1">■ RAW BALLISTIC RETENTION PROFILE:</span>
-                      <p className="bg-slate-950 p-3 rounded-2xl border border-slate-850/60 font-mono text-[11px] text-slate-350">
+                      <p className="bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-2xl border border-[hsl(var(--ve-border)/0.30)] font-mono text-[11px] text-[hsl(var(--ve-text-soft))]">
                         {activePlayer.scoutingReport.powerText}
                       </p>
                     </div>
@@ -1567,7 +1567,7 @@ export default function PlayerResearchConsole({
                     {/* Overall Summary block */}
                     <div className="pt-2">
                       <span className="font-extrabold text-emerald-400 font-mono text-[9.5px] uppercase block mb-1">■ BASELINE MODEL RECOMMENDATION:</span>
-                      <p className="text-slate-350 text-[11.5px] italic font-semibold">
+                      <p className="text-[hsl(var(--ve-text-soft))] text-[11.5px] italic font-semibold">
                         "{activePlayer.scoutingReport.overallScouting}"
                       </p>
                     </div>
@@ -1576,8 +1576,8 @@ export default function PlayerResearchConsole({
                 </div>
 
                 {/* Strike zone Hotness map */}
-                <div className="col-span-1 md:col-span-5 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="strike-zone-matrix">
-                  <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between">
+                <div className="col-span-1 md:col-span-5 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="strike-zone-matrix">
+                  <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5 flex items-center justify-between">
                     <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5">
                       <Target className="w-4 h-4 text-red-400" /> PITCH SWEET SPOTS
                     </span>
@@ -1589,19 +1589,19 @@ export default function PlayerResearchConsole({
                   </p>
 
                   {/* 3x3 Grid Strike Map visualization */}
-                  <div className="grid grid-cols-3 gap-2 p-3 bg-slate-950 rounded-2xl border border-slate-900 justify-center">
+                  <div className="grid grid-cols-3 gap-2 p-3 bg-[hsl(var(--ve-bg)/0.72)] rounded-2xl border border-[hsl(var(--ve-border)/0.28)] justify-center">
                     
                     {/* Zone boxes */}
                     {[
                       { l: "Up & In", color: "bg-red-950/20 text-red-400 border-red-500/10" },
                       { l: "Up-Middle", color: "bg-amber-950/20 text-amber-500 border-amber-500/10" },
-                      { l: "Up & Away", color: "bg-slate-900 text-[hsl(var(--ve-text-muted))] border-slate-800/60" },
+                      { l: "Up & Away", color: "bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.28)]" },
                       { l: "Middle-In", color: "bg-red-500/5 text-red-350 border-red-500/10" },
                       { l: "Middle-Middle", color: "bg-red-500/20 text-red-200 border-red-500/30 font-extrabold" },
-                      { l: "Middle-Away", color: "bg-slate-900 text-[hsl(var(--ve-text-muted))] border-slate-800/60" },
+                      { l: "Middle-Away", color: "bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.28)]" },
                       { l: "Down & In", color: "bg-red-500/10 text-red-300 border-red-500/20 font-bold" },
                       { l: "Low-Middle", color: "bg-amber-950/20 text-amber-500 border-amber-500/10" },
-                      { l: "Low-Away", color: "bg-slate-900 text-[hsl(var(--ve-text-muted))] border-slate-800/60" }
+                      { l: "Low-Away", color: "bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.28)]" }
                     ].map((box, bidx) => {
                       const isHot = activePlayer.scoutingReport.hotZones.includes(box.l);
                       const finalColor = isHot
@@ -1637,8 +1637,8 @@ export default function PlayerResearchConsole({
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6" id="bento-row-propositions">
                 
                 {/* Wager proposition cards list */}
-                <div className="col-span-1 md:col-span-7 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg space-y-4">
-                  <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between">
+                <div className="col-span-1 md:col-span-7 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg space-y-4">
+                  <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5 flex items-center justify-between">
                     <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider flex items-center gap-1.5">
                       <Flame className="w-4 h-4 text-orange-400" /> SABERMETRIC WAGER PROPS
                     </span>
@@ -1798,7 +1798,7 @@ export default function PlayerResearchConsole({
                 </div>
 
                 {/* Injury HEALTH RISK REPORT */}
-                <div className="col-span-1 md:col-span-5 bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="injury-advisory-risk-box">
+                <div className="col-span-1 md:col-span-5 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="injury-advisory-risk-box">
                   <div className="border-b border-slate-800/60 pb-2.5 flex items-center gap-1.5 text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                     <AlertTriangle className="w-4 h-4 text-amber-500" /> HEALTH Roster report
                   </div>
@@ -1839,7 +1839,7 @@ export default function PlayerResearchConsole({
 
               {/* Bento Row 4: Comprehensive Game Logs Table */}
               <div className="bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-xl space-y-4" id="game-logs-block">
-                <div className="border-b border-slate-800/60 pb-2.5 flex items-center justify-between flex-wrap gap-2">
+                <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-emerald-400" />
                     <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
