@@ -2606,25 +2606,25 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                             {/* Pitcher Matchup Stats Grid */}
                             <div className="grid grid-cols-3 gap-2">
-                              <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
+                              <div className="bg-[hsl(var(--ve-surface-raised)/0.36)] p-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.28)] text-center font-mono">
                                 <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">VS PITCHER ERA</span>
                                 <span className="text-rose-400 font-black block text-sm leading-none">{metrics.pitcherEra}</span>
-                                <span className="text-[6.5px] text-slate-650 block mt-1 uppercase truncate font-bold">{metrics.pitcherName} ({metrics.pitcherHand})</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] block mt-1 uppercase truncate font-bold">{metrics.pitcherName} ({metrics.pitcherHand})</span>
                               </div>
-                              <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
+                              <div className="bg-[hsl(var(--ve-surface-raised)/0.36)] p-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.28)] text-center font-mono">
                                 <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">10G HIT RATE</span>
                                 <span className="text-emerald-400 font-black block text-sm leading-none">{metrics.hitRateLast10}%</span>
-                                <span className="text-[6.5px] text-slate-650 block mt-1 uppercase font-bold">LAST 10 GAMES</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] block mt-1 uppercase font-bold">LAST 10 GAMES</span>
                               </div>
-                              <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
+                              <div className="bg-[hsl(var(--ve-surface-raised)/0.36)] p-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.28)] text-center font-mono">
                                 <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
-                                <span className="text-sky-400 font-black block text-sm leading-none">{metrics.playRatePercent}%</span>
-                                <span className="text-[6.5px] text-slate-650 block mt-1 uppercase font-bold">PLATE SECURITY</span>
+                                <span className="text-[hsl(var(--ve-accent-cyan))] font-black block text-sm leading-none">{metrics.playRatePercent}%</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] block mt-1 uppercase font-bold">PLATE SECURITY</span>
                               </div>
                             </div>
 
                             {/* Deep Splits Comparison */}
-                            <div className="grid grid-cols-2 gap-3 text-[10px] font-mono bg-black/15 p-3 rounded-xl border border-slate-900/40">
+                            <div className="grid grid-cols-2 gap-3 text-[10px] font-mono bg-[hsl(var(--ve-surface-raised)/0.24)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.24)]">
                               <div className="space-y-1.5 text-left">
                                 <span className="text-[7.5px] font-black text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider border-b border-slate-900 pb-1">PLAYER STAT PLURALS</span>
                                 <div className="space-y-1 text-slate-300">
