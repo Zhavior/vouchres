@@ -504,11 +504,11 @@ export default function FeedPostCard({
                 {post.displayName}
               </span>
               {post.subscriptionTier === 'SELLER_PRO' ? (
-                <span className="text-[9px] bg-indigo-950 font-extrabold text-indigo-455 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-indigo-900/40 text-indigo-400">
+                <span className="text-[9px] bg-[hsl(var(--ve-accent-pink)/0.13)] font-extrabold text-[hsl(var(--ve-accent-pink))] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[hsl(var(--ve-accent-pink)/0.30)]">
                   💎 SELLER PRO
                 </span>
               ) : post.subscriptionTier === 'GOLD' ? (
-                <span className="text-[9px] bg-sky-950 font-extrabold text-sky-455 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-sky-900/40 text-sky-400">
+                <span className="text-[9px] bg-[hsl(var(--ve-accent-cyan)/0.13)] font-extrabold text-[hsl(var(--ve-accent-cyan))] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[hsl(var(--ve-accent-cyan)/0.30)]">
                   ✨ GOLD VERIFIED
                 </span>
               ) : post.isVerified ? (
