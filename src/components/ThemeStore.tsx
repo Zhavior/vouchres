@@ -673,41 +673,60 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={theme.id}
-                    className="bg-[#121824]/20 backdrop-blur-md rounded-2xl border border-slate-850 flex flex-col justify-between overflow-hidden shadow-2xl transition-all hover:border-slate-700"
+                    className="group relative bg-[#121824]/30 backdrop-blur-xl rounded-3xl border border-slate-800/80 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
                   >
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-cyan-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
+
                     {/* Theme header with tags */}
-                    <div className="p-4 bg-slate-950/60 border-b border-slate-900 flex justify-between items-center text-[10px] uppercase font-bold text-slate-400 font-mono select-none">
-                      <span>{theme.category}</span>
-                      <span className={`font-black px-1.5 py-0.2 rounded ${
-                        theme.rarity === 'legendary' ? 'text-yellow-400 bg-yellow-950/40' :
-                        theme.rarity === 'epic' ? 'text-purple-400 bg-purple-950/40' :
-                        'text-slate-400 bg-slate-900'
+                    <div className="relative z-10 p-4 bg-slate-950/55 border-b border-white/10 flex justify-between items-center text-[10px] uppercase font-bold text-slate-300 font-mono select-none">
+                      <span className="rounded-full bg-black/30 border border-white/10 px-2.5 py-1">{theme.category}</span>
+                      <span className={`font-black px-2.5 py-1 rounded-full border ${
+                        theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
+                        theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
+                        'text-slate-300 bg-slate-800/70 border-slate-600/40'
                       }`}>
                         {theme.rarity}
                       </span>
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col justify-between gap-4 text-left">
-                      <div className="space-y-1">
-                        <h4 className="font-extrabold text-slate-200 text-sm flex justify-between items-center">
-                          <span>{theme.name}</span>
-                          <span className="text-[10px] text-indigo-400 font-black">{theme.badge}</span>
+                    <div className="relative z-10 p-5 flex-1 flex flex-col justify-between gap-5 text-left">
+                      <div className="space-y-3">
+                        <h4 className="font-black text-slate-100 text-base flex justify-between items-start gap-3">
+                          <span className="leading-tight">{theme.name}</span>
+                          <span className="shrink-0 text-[10px] text-cyan-300 font-black rounded-full bg-cyan-950/45 border border-cyan-400/20 px-2 py-1">
+                            {theme.badge}
+                          </span>
                         </h4>
-                        <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
+
+                        <p className="text-[11px] text-slate-300/85 leading-relaxed font-semibold line-clamp-2">
                           {theme.description}
                         </p>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-inner">
+                          <div className="grid grid-cols-3 gap-2">
+                            <span className="h-8 rounded-xl bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-8 rounded-xl bg-cyan-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-8 rounded-xl bg-fuchsia-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                          </div>
+                          <div className="mt-3 grid grid-cols-3 gap-2">
+                            <span className="h-1.5 rounded-full bg-white/35" />
+                            <span className="h-1.5 rounded-full bg-white/20" />
+                            <span className="h-1.5 rounded-full bg-white/10" />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Buy Slot */}
-                      <div className="pt-2 border-t border-slate-850/40 flex items-center justify-between">
-                        <div className="flex items-center text-amber-400 font-mono font-black text-xs gap-1">
-                          <DollarSign className="w-4 h-4 text-amber-500" />
+                      <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+                        <div className="flex items-center text-amber-300 font-mono font-black text-xs gap-1.5 rounded-full bg-black/30 border border-white/10 px-3 py-2">
+                          <DollarSign className="w-4 h-4 text-amber-400" />
                           <span>{theme.cost} pts</span>
                         </div>
 
                         <button
                           onClick={() => handleBuyTheme(theme)}
-                          className="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-[10px] font-black rounded-lg uppercase shadow-md transition-all hover:scale-105"
+                          className="px-4 py-2.5 bg-white text-slate-950 hover:bg-slate-100 text-[10px] font-black rounded-xl uppercase shadow-xl transition-all hover:scale-105 active:scale-95"
                         >
                           Unlock theme
                         </button>
