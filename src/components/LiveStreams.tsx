@@ -594,7 +594,7 @@ export default function LiveStreams({
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Video className="w-3.5 h-3.5 animate-pulse text-rose-455" />
+            <Video className="w-3.5 h-3.5 animate-pulse text-rose-400" />
             Go Live (Streamer Desk)
           </button>
         </div>
@@ -781,10 +781,10 @@ export default function LiveStreams({
                 <span>Back to Streams Directory</span>
               </button>
 
-              <div className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden shadow-2xl relative" id="theater-frame-inner">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-2xl border border-[hsl(var(--ve-border)/0.34)] overflow-hidden shadow-2xl relative" id="theater-frame-inner">
                 
                 {/* 1. Live Screen Video Canvas Mockup */}
-                <div className="aspect-video w-full bg-slate-950 relative flex items-center justify-center overflow-hidden border-b border-slate-850" id="live-player-video-canvas">
+                <div className="aspect-video w-full bg-[hsl(var(--ve-bg)/0.74)] relative flex items-center justify-center overflow-hidden border-b border-[hsl(var(--ve-border)/0.30)]" id="live-player-video-canvas">
                   
                   {/* Dynamic Stream Graphic Placeholders mapping wind, analytics stats, or game telemetry */}
                   {activeChannel.videoPlaceholderTheme === 'neon-pitch' && (
@@ -793,8 +793,8 @@ export default function LiveStreams({
                         <span className="text-[10px] font-bold font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded border border-emerald-900/40 flex items-center gap-1 uppercase tracking-widest animate-pulse">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Broadcast
                         </span>
-                        <div className="flex gap-2 text-slate-400 font-mono text-[10px] bg-slate-900/90 border border-slate-800 px-2.5 py-1 rounded">
-                          <Clock className="w-3 h-3 text-sky-400 shrink-0" />
+                        <div className="flex gap-2 text-[hsl(var(--ve-text-muted))] font-mono text-[10px] bg-[hsl(var(--ve-surface-raised)/0.84)] border border-[hsl(var(--ve-border)/0.30)] px-2.5 py-1 rounded">
+                          <Clock className="w-3 h-3 text-[hsl(var(--ve-accent-cyan))] shrink-0" />
                           <span>STRETCH ANALYSIS: TOP 7TH</span>
                         </div>
                       </div>
@@ -802,14 +802,14 @@ export default function LiveStreams({
                       {/* Interactive Animated Baseball Pitch Simulator Canvas */}
                       <div className="flex flex-col items-center justify-center space-y-3 shrink-0 py-8 relative">
                         {/* Radar grid lines */}
-                        <div className="absolute w-52 h-52 bg-slate-950/45 rounded-full border border-sky-500/20 animate-pulse flex items-center justify-center">
-                          <div className="w-36 h-36 rounded-full border border-sky-500/10 flex items-center justify-center">
-                            <div className="w-20 h-20 rounded-full border border-sky-500/5" />
+                        <div className="absolute w-52 h-52 bg-[hsl(var(--ve-bg)/0.40)] rounded-full border border-[hsl(var(--ve-accent-cyan)/0.22)] animate-pulse flex items-center justify-center">
+                          <div className="w-36 h-36 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.12)] flex items-center justify-center">
+                            <div className="w-20 h-20 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.08)]" />
                           </div>
                         </div>
 
                         {/* Simulated Pitch Radar Box */}
-                        <div className="w-40 h-40 bg-[#090d16]/75 border-2 border-dashed border-sky-500/45 rounded-xl flex items-center justify-center relative p-2 shadow-inner">
+                        <div className="w-40 h-40 bg-[hsl(var(--ve-surface-raised)/0.42)] border-2 border-dashed border-[hsl(var(--ve-accent-cyan)/0.42)] rounded-xl flex items-center justify-center relative p-2 shadow-inner">
                           {/* Strikezone */}
                           <div className="w-24 h-28 border border-emerald-500/45 rounded flex items-center justify-center relative bg-emerald-500/[0.02]">
                             {/* Interactive Target cursor */}
@@ -817,21 +817,21 @@ export default function LiveStreams({
                             <span className="absolute w-2.5 h-2.5 bg-rose-500 rounded-full top-10 left-12 border border-white"></span>
                             
                             {/* Pitch telemetry */}
-                            <p className="text-[9px] font-mono text-emerald-400 absolute bottom-1 text-center bg-slate-950/95 px-1.5 rounded">SWEPT: 93.4 MPH</p>
+                            <p className="text-[9px] font-mono text-emerald-400 absolute bottom-1 text-center bg-[hsl(var(--ve-bg)/0.92)] px-1.5 rounded">SWEPT: 93.4 MPH</p>
                           </div>
                         </div>
                         <div className="text-center z-10">
                           <p className="text-xs font-bold text-slate-200 uppercase tracking-widest font-mono">Dodgers Strikezone Radar</p>
-                          <p className="text-[10px] text-slate-450 mt-0.5 font-mono">Live correlation factor: 98.4% Pitch Efficiency</p>
+                          <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5 font-mono">Live correlation factor: 98.4% Pitch Efficiency</p>
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center bg-slate-950/70 p-3 rounded-lg border border-slate-850">
+                      <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-lg border border-[hsl(var(--ve-border)/0.30)]">
                         <div className="flex items-center gap-2">
                           <Flame className="w-4 h-4 text-orange-400 shrink-0 animate-bounce" />
                           <span className="text-[10px] font-bold text-slate-300 uppercase leading-none font-mono">Strike Rate Sweep Coefficient</span>
                         </div>
-                        <span className="text-xs font-bold font-mono text-[var(--ve-accent)] bg-sky-950/60 border border-sky-900/40 px-2 py-0.5 rounded leading-none">+32.4% vs LHB</span>
+                        <span className="text-xs font-bold font-mono text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.12)] border border-[hsl(var(--ve-accent-cyan)/0.28)] px-2 py-0.5 rounded leading-none">+32.4% vs LHB</span>
                       </div>
                     </div>
                   )}
@@ -842,8 +842,8 @@ export default function LiveStreams({
                         <span className="text-[10px] font-bold font-mono text-teal-400 bg-teal-950/80 px-2.5 py-0.5 rounded border border-teal-900/40 flex items-center gap-1 uppercase tracking-widest animate-pulse">
                           <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-ping"></span> Saber-Stream Live
                         </span>
-                        <div className="flex gap-2 text-slate-400 font-mono text-[10px] bg-slate-900/90 border border-slate-800 px-2.5 py-1 rounded">
-                          <BarChart2 className="w-3.5 h-3.5 text-teal-450 shrink-0" />
+                        <div className="flex gap-2 text-[hsl(var(--ve-text-muted))] font-mono text-[10px] bg-[hsl(var(--ve-surface-raised)/0.84)] border border-[hsl(var(--ve-border)/0.30)] px-2.5 py-1 rounded">
+                          <BarChart2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                           <span>PROJECTION MODEL GRID</span>
                         </div>
                       </div>
@@ -852,15 +852,15 @@ export default function LiveStreams({
                       <div className="flex flex-col items-center justify-center space-y-4 py-8">
                         <div className="w-64 h-24 flex items-end justify-between gap-2.5 px-4 relative">
                           {/* Grid horizontal markers */}
-                          <div className="absolute left-0 right-0 h-0.5 border-b border-slate-800/80 top-1/4"></div>
-                          <div className="absolute left-0 right-0 h-0.5 border-b border-slate-800/80 top-2/4"></div>
-                          <div className="absolute left-0 right-0 h-0.5 border-b border-slate-800/80 top-3/4"></div>
+                          <div className="absolute left-0 right-0 h-0.5 border-b border-[hsl(var(--ve-border)/0.28)] top-1/4"></div>
+                          <div className="absolute left-0 right-0 h-0.5 border-b border-[hsl(var(--ve-border)/0.28)] top-2/4"></div>
+                          <div className="absolute left-0 right-0 h-0.5 border-b border-[hsl(var(--ve-border)/0.28)] top-3/4"></div>
 
                           {/* Dynamic Bars */}
-                          <div className="w-8 bg-sky-500/20 border border-sky-500/40 rounded-t h-16 animate-pulse flex items-center justify-center font-mono text-[8px] text-sky-400 font-bold pb-1">5.2K</div>
+                          <div className="w-8 bg-[hsl(var(--ve-accent-cyan)/0.18)] border border-[hsl(var(--ve-accent-cyan)/0.34)] rounded-t h-16 animate-pulse flex items-center justify-center font-mono text-[8px] text-[hsl(var(--ve-accent-cyan))] font-bold pb-1">5.2K</div>
                           <div className="w-8 bg-teal-500/25 border border-teal-500/45 rounded-t h-20 animate-pulse flex items-center justify-center font-mono text-[8px] text-teal-400 font-bold pb-1">6.8K</div>
                           <div className="w-8 bg-indigo-500/30 border border-indigo-500/40 rounded-t h-12 flex items-center justify-center font-mono text-[8px] text-indigo-400 font-bold pb-1">4.1K</div>
-                          <div className="w-8 bg-rose-500/20 border border-rose-500/35 rounded-t h-24 animate-pulse flex items-center justify-center font-mono text-[8px] text-rose-455 font-bold pb-1">7.9K</div>
+                          <div className="w-8 bg-rose-500/20 border border-rose-500/35 rounded-t h-24 animate-pulse flex items-center justify-center font-mono text-[8px] text-rose-400 font-bold pb-1">7.9K</div>
                           <div className="w-8 bg-emerald-500/25 border border-emerald-500/40 rounded-t h-14 flex items-center justify-center font-mono text-[8px] text-emerald-400 font-bold pb-1">4.8K</div>
                         </div>
 
@@ -870,9 +870,9 @@ export default function LiveStreams({
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center bg-slate-950/70 p-3 rounded-lg border border-teal-950/40 text-xs font-mono">
+                      <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-lg border border-teal-500/20 text-xs font-mono">
                         <span className="text-slate-400">Total Simulation Passes</span>
-                        <span className="font-bold text-teal-450">100,000 runs</span>
+                        <span className="font-bold text-teal-400">100,000 runs</span>
                       </div>
                     </div>
                   )}
@@ -883,7 +883,7 @@ export default function LiveStreams({
                         <span className="text-[10px] font-bold text-orange-400 bg-orange-950/80 px-2.5 py-0.5 rounded border border-orange-900/40 flex items-center gap-1 uppercase tracking-widest animate-pulse">
                           <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-ping"></span> Live wind tracking
                         </span>
-                        <div className="text-[10px] text-slate-500 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">
+                        <div className="text-[10px] text-[hsl(var(--ve-text-muted))] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] px-2.5 py-1 rounded">
                           <span>WRIGLEY FIELD WEATHER BOARD</span>
                         </div>
                       </div>
@@ -902,8 +902,8 @@ export default function LiveStreams({
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center bg-slate-950/75 p-3 rounded-lg border border-slate-850">
-                        <span className="text-[10px] text-slate-450 uppercase">Atmospheric air pressure level</span>
+                      <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.40)] p-3 rounded-lg border border-[hsl(var(--ve-border)/0.30)]">
+                        <span className="text-[10px] text-[hsl(var(--ve-text-muted))] uppercase">Atmospheric air pressure level</span>
                         <span className="text-xs font-bold text-[#ff9f43]">1014.5 hPa (Optimal Under)</span>
                       </div>
                     </div>
@@ -912,16 +912,16 @@ export default function LiveStreams({
                   {activeChannel.videoPlaceholderTheme === 'gold-parlay' && (
                     <div className="absolute inset-0 bg-gradient-to-tr from-[#0b0c10] via-[#211a05] to-[#040409] flex flex-col justify-between p-6 select-none animate-fade-in font-mono">
                       <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-amber-400 bg-amber-955 px-2.5 py-0.5 rounded border border-amber-900/40 flex items-center gap-1 uppercase tracking-widest animate-pulse">
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/24 flex items-center gap-1 uppercase tracking-widest animate-pulse">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Gold Sweep Live
                         </span>
-                        <div className="text-[10px] text-slate-500 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">
+                        <div className="text-[10px] text-[hsl(var(--ve-text-muted))] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] px-2.5 py-1 rounded">
                           <span>PARLAY PROBABILITY DECKS</span>
                         </div>
                       </div>
 
                       <div className="flex flex-col items-center justify-center space-y-3 py-6 relative">
-                        <TrophyIcon className="w-14 h-14 text-amber-450 animate-bounce" />
+                        <TrophyIcon className="w-14 h-14 text-amber-400 animate-bounce" />
                         <div className="text-center space-y-1">
                           <p className="text-xs font-bold text-slate-100 uppercase tracking-widest text-amber-500">HOMER SWEETS CORRELATION</p>
                           <p className="text-[10px] text-slate-400 leading-relaxed">
@@ -930,7 +930,7 @@ export default function LiveStreams({
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center bg-slate-950/75 p-3 rounded-lg border border-slate-850">
+                      <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.40)] p-3 rounded-lg border border-[hsl(var(--ve-border)/0.30)]">
                         <span className="text-[10px] text-slate-400">Launch Angle Probability Code</span>
                         <span className="text-xs font-bold text-amber-500">82.4% Optimal Barrel Chance</span>
                       </div>
@@ -938,9 +938,9 @@ export default function LiveStreams({
                   )}
 
                   {/* Volume Control Overlay & Settings segment */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-slate-100 bg-slate-950/70 py-1.5 px-3 rounded-lg border border-slate-805 z-10 select-none">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[hsl(var(--ve-text))] bg-[hsl(var(--ve-surface-raised)/0.52)] py-1.5 px-3 rounded-lg border border-[hsl(var(--ve-border)/0.30)] z-10 select-none">
                     <div className="flex items-center gap-2">
-                      <button className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-850">
+                      <button className="text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text))] transition-colors p-1 rounded hover:bg-[hsl(var(--ve-surface-raised)/0.66)]">
                         <Volume2 className="w-4 h-4" />
                       </button>
                       <span className="text-[10px] text-slate-400 font-mono">Stream sound: Live</span>
@@ -1138,7 +1138,7 @@ export default function LiveStreams({
 
                   <div className="flex items-center gap-1 bg-red-950/40 px-2 py-0.5 rounded-full border border-red-900/30 animate-pulse">
                     <span className="w-1 h-1 rounded-full bg-red-500" />
-                    <span className="font-mono text-[9px] font-bold text-rose-455 uppercase leading-none">synchronized</span>
+                    <span className="font-mono text-[9px] font-bold text-rose-400 uppercase leading-none">synchronized</span>
                   </div>
                 </div>
 
