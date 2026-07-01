@@ -508,25 +508,39 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     <div 
                       key={border.id}
                       onClick={() => setPreviewBorderId(border.id)}
-                      className={`p-4 bg-[#121824]/30 rounded-2xl border flex items-center justify-between gap-4 cursor-pointer hover:border-slate-600 transition-all ${
-                        previewBorderId === border.id 
-                          ? 'border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
-                          : 'border-slate-850'
+                      className={`group relative overflow-hidden p-4 rounded-3xl border flex items-center justify-between gap-4 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 ${
+                        isActive
+                          ? 'bg-emerald-950/20 border-emerald-400/45 shadow-[0_0_24px_rgba(16,185,129,0.13)]'
+                          : previewBorderId === border.id 
+                            ? 'bg-emerald-950/10 border-emerald-400/55 shadow-[0_0_18px_rgba(16,185,129,0.11)]' 
+                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-emerald-400/30'
                       }`}
                     >
-                      <div className="flex gap-3 items-center min-w-0">
-                        <ProfileAvatarBorder 
-                          borderId={border.id} 
-                          displayName="Initials" 
-                          initials="PRO" 
-                          size="md" 
-                        />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-emerald-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {isActive && (
+                        <div className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
+                      )}
+
+                      <div className="relative z-10 flex gap-3.5 items-center min-w-0">
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-1.5 shadow-inner">
+                          <ProfileAvatarBorder 
+                            borderId={border.id} 
+                            displayName="Initials" 
+                            initials="PRO" 
+                            size="md" 
+                          />
+                        </div>
+
                         <div className="min-w-0">
-                          <h4 className="font-extrabold text-slate-200 text-xs truncate flex items-center gap-1">
+                          <h4 className="font-black text-slate-100 text-xs truncate flex items-center gap-1.5">
                             {border.name}
-                            {isActive && <span className="text-[8px] bg-emerald-950 text-emerald-400 px-1 py-0.2 rounded font-black font-mono">EQUIPPED</span>}
+                            {isActive && (
+                              <span className="text-[8px] bg-emerald-400/15 border border-emerald-300/25 text-emerald-200 px-2 py-0.5 rounded-full font-black font-mono">
+                                EQUIPPED
+                              </span>
+                            )}
                           </h4>
-                          <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                          <p className="text-[10px] text-slate-300/80 mt-1 leading-snug line-clamp-2">
                             {border.description}
                           </p>
                         </div>
@@ -539,10 +553,10 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           triggerSuccess(`🛡️ Profile picture frame changed successfully to "${border.name}"!`);
                         }}
                         disabled={isActive}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg border text-center shrink-0 transition-all ${
+                        className={`relative z-10 px-4 py-2 text-[9px] font-black uppercase tracking-wider rounded-xl border text-center shrink-0 transition-all ${
                           isActive 
-                            ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                            : 'bg-slate-900 border-slate-800 text-emerald-400 hover:bg-slate-850'
+                            ? 'bg-emerald-400/15 border-emerald-300/25 text-emerald-200 cursor-not-allowed' 
+                            : 'bg-white text-slate-950 border-white/80 hover:bg-slate-100 hover:scale-105 active:scale-95'
                         }`}
                       >
                         {isActive ? 'Active' : 'Equip'}
