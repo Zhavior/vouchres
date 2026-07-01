@@ -84,10 +84,10 @@ const cardStyleConfigs = {
     orbitRing: 'border-slate-850/65',
     hubBg: 'bg-[#0c1424] border-2 border-sky-500/30',
     hubGlow: 'bg-[#0ea5e9]/10 group-hover:bg-[#0ea5e9]/25',
-    hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
+    hubVeBg: 'from-[var(--ve-accent)] to-[var(--ve-accent-2)] border-[var(--ve-border-strong)]',
     hubText: 'text-sky-400',
-    nodeBorder: 'border-slate-800 group-hover:border-sky-450',
-    nodeValueBg: 'bg-[#060b15] border border-sky-450 text-sky-400',
+    nodeBorder: 'border-[var(--ve-border)] group-hover:border-[var(--ve-border-strong)]',
+    nodeValueBg: 'bg-[var(--ve-card)] border border-[var(--ve-border-strong)] text-[var(--ve-accent)]',
     nodeTagBg: 'bg-slate-900 border-slate-850',
     reasonsBg: 'bg-slate-900/60 border border-slate-900/80',
     headerTitleColor: 'text-[#cbd5e1]',
@@ -1295,7 +1295,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         {isActive ? (
                           <span className="text-[8px] text-slate-550 lowercase">{activeCardLayout === 'potd' ? "spotlighted" : "active"}</span>
                         ) : (
-                          <Plus className="w-3 h-3 text-sky-450" />
+                          <Plus className="w-3 h-3 text-[var(--ve-accent)]" />
                         )}
                       </div>
                     );
@@ -1360,7 +1360,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         <div className="space-y-1">
                           <div className="flex justify-between items-center text-[8.5px] font-mono text-slate-450">
                             <span>V.A.I. CONFIDENCE</span>
-                            <span className="text-sky-405 font-extrabold font-mono">{ps.aiConfidence ?? 85}%</span>
+                            <span className="text-[var(--ve-accent)] font-extrabold font-mono">{ps.aiConfidence ?? 85}%</span>
                           </div>
                           <input
                             type="range"
@@ -2460,7 +2460,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <span className={`text-[10px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-250'}`}>{couponText}</span>
                     </div>
                   </div>
-                  <div className="bg-sky-500 text-white text-[9.5px] font-mono font-extrabold px-2.5 py-1 rounded-lg tracking-wider border border-sky-450 leading-none">
+                  <div className="bg-sky-500 text-white text-[9.5px] font-mono font-extrabold px-2.5 py-1 rounded-lg tracking-wider border border-[var(--ve-border-strong)] leading-none">
                     CODE: {couponCode}
                   </div>
                 </div>
@@ -2726,7 +2726,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                             <div className="grid grid-cols-2 gap-3 text-[10px] font-mono bg-black/15 p-1.5 rounded-lg border border-slate-900/60">
                               <div className="flex items-center justify-between px-1 border-r border-slate-900/50">
                                 <span className="text-[hsl(var(--ve-text-muted))] text-[8px] uppercase">V.A.I CONFID.</span>
-                                <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-sky-600' : 'text-sky-450'}`}>{aiConf}%</span>
+                                <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-sky-600' : 'text-[var(--ve-accent)]'}`}>{aiConf}%</span>
                               </div>
                               <div className="flex items-center justify-between px-1">
                                 <span className="text-[hsl(var(--ve-text-muted))] text-[8px] uppercase">PLAYER COEF.</span>
@@ -2769,7 +2769,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           <span className={`text-[10px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-250'}`}>{couponText}</span>
                         </div>
                       </div>
-                      <div className="bg-sky-500 text-white text-[9.5px] font-mono font-extrabold px-2.5 py-1 rounded-lg tracking-wider border border-sky-450 leading-none">
+                      <div className="bg-sky-500 text-white text-[9.5px] font-mono font-extrabold px-2.5 py-1 rounded-lg tracking-wider border border-[var(--ve-border-strong)] leading-none">
                         CODE: {couponCode}
                       </div>
                     </div>
