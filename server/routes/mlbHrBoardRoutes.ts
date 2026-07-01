@@ -20,26 +20,15 @@ import { buildValidatedHrBoard } from "../services/mlb/hrPipeline";
 import { buildHrBoard, getHrBoardPlayer } from "../services/mlb/dailyHrBoardService";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
-import { processHomeRunEvents } from "../services/notifications/notificationService";
 
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
   app.get("/api/mlb/hr-feed/today", async (_req: Request, res: Response) => {
     const events = await getTodayHomeRuns();
-    if (Array.isArray(events) && events.length > 0) {
-      processHomeRunEvents(events).catch((err) => {
-        console.error('[notifications] Error processing HR events:', err);
-      });
-    }
     res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
   });
   app.get("/api/mlb/hr-feed/date/:date", async (req: Request, res: Response) => {
     const events = await getTodayHomeRuns(req.params.date);
-    if (Array.isArray(events) && events.length > 0) {
-      processHomeRunEvents(events).catch((err) => {
-        console.error('[notifications] Error processing HR events:', err);
-      });
-    }
     res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
   });
 

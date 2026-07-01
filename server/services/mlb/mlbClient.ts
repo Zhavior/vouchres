@@ -5,6 +5,14 @@
 import { scheduleCache, gameFeedCache } from "./mlbCache";
 import { normalizeGame } from "./mlbNormalizer";
 import { NormalizedGame, NormalizedPitcher, headshotUrl } from "./mlbTypes";
+import {
+  isUpstashEnabled,
+  redisDel,
+  redisGetJson,
+  redisSet,
+  redisSetJson,
+  sleep,
+} from "../../lib/upstashRedis";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
@@ -70,8 +78,56 @@ export async function getProbablePitchers(date: string): Promise<NormalizedPitch
 
 /** Live feed for a game. Returns raw feed (large); cached briefly. */
 export async function getGameFeed(gamePk: number): Promise<any | null> {
-  return gameFeedCache.getOrSet(`feed:${gamePk}`, async () => {
+  const localKey = `feed:${gamePk}`;
+  const redisKey = `mlb:game:live:${gamePk}`;
+  const lockKey = `lock:mlb:game:live:${gamePk}`;
+  const feedTtlSeconds = Number(process.env.MLB_LIVE_FEED_REDIS_TTL_SECONDS ?? 45);
+  const lockTtlSeconds = Number(process.env.MLB_LIVE_FEED_LOCK_TTL_SECONDS ?? 10);
+
+  return gameFeedCache.getOrSet(localKey, async () => {
     const url = `${BASE}/v1.1/game/${gamePk}/feed/live`;
+
+    if (isUpstashEnabled()) {
+      try {
+        const cached = await redisGetJson<any>(redisKey);
+        if (cached) {
+          console.log(`[MLB_CACHE] redis hit gamePk=${gamePk}`);
+          return cached;
+        }
+
+        const lockValue = `${process.pid}:${Date.now()}`;
+        const gotLock = await redisSet(lockKey, lockValue, {
+          nx: true,
+          exSeconds: lockTtlSeconds,
+        });
+
+        if (gotLock) {
+          try {
+            console.log(`[MLB_CACHE] redis miss lock-acquired gamePk=${gamePk}`);
+            const fresh = await fetchJson<any>(url);
+            await redisSetJson(redisKey, fresh, feedTtlSeconds);
+            return fresh;
+          } finally {
+            await redisDel(lockKey).catch(() => {});
+          }
+        }
+
+        console.log(`[MLB_CACHE] redis wait-for-lock gamePk=${gamePk}`);
+        for (let i = 0; i < 3; i += 1) {
+          await sleep(250);
+          const polled = await redisGetJson<any>(redisKey);
+          if (polled) {
+            console.log(`[MLB_CACHE] redis hit-after-wait gamePk=${gamePk}`);
+            return polled;
+          }
+        }
+
+        console.log(`[MLB_CACHE] redis lock-timeout fallback gamePk=${gamePk}`);
+      } catch (err) {
+        console.warn("[MLB_CACHE] redis fallback:", (err as Error).message);
+      }
+    }
+
     try {
       return await fetchJson<any>(url);
     } catch (err) {

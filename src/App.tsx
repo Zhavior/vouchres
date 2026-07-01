@@ -1359,11 +1359,7 @@ export default function App() {
           </ProAccessGate>
         );
       case 'team_matchup_lab':
-        return (
-          <ProAccessGate profile={profile} featureName="Team Matchup Lab" onNavigatePremium={() => navigateSection('premium')}>
-            <TeamMatchupLabPage />
-          </ProAccessGate>
-        );
+        return <TeamMatchupLabPage />;
       case 'pro_graphs_lab':
         return (
           <ProAccessGate profile={profile} featureName="Pro Graphs Lab" onNavigatePremium={() => navigateSection('premium')}>

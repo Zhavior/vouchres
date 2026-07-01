@@ -1,9 +1,11 @@
 /** Premium Live Games matchup routes. */
 import type { Express, Request, Response } from "express";
 import { getGameMatchups, getGameMatchup, getLiveMatchupMatrix, getMatchupMatrix } from "../services/mlb/gameMatchupService";
+import { buildSportsTruthSnapshot } from "../services/hubs/sportsTruthHub";
 import { getPitcherMatchup } from "../services/mlb/pitcherMatchupService";
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { TTLCache } from "../lib/cache";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 
 const scoresCache = new TTLCache<unknown>(45_000);
 
@@ -28,6 +30,18 @@ export function registerMatchupRoutes(app: Express): void {
     } catch (err: any) {
       console.error("[scores/today] failed:", err?.message);
       res.status(500).json({ error: "scores_fetch_failed" });
+    }
+  });
+
+  app.get("/api/internal/sports-truth/mlb/today", async (req: Request, res: Response) => {
+    try {
+      const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
+      res.json(snapshot);
+    } catch (err: any) {
+      console.error("[sports-truth/mlb/today] failed:", err?.message);
+      res.status(500).json({ error: "sports_truth_snapshot_failed" });
     }
   });
 
@@ -57,8 +71,11 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
       const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
-      const matrix = await getLiveMatchupMatrix(date);
-      res.json(matrix);
+
+      const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
+      console.log(`[MATCHUP_MATRIX_LIVE] served from SportsTruthHub date=${date}`);
+
+      res.json(snapshot.matchupMatrix);
     } catch (err: any) {
       console.error("[matchup-matrix/live] failed:", err?.message);
       res.status(500).json({ error: "matchup_matrix_live_fetch_failed" });

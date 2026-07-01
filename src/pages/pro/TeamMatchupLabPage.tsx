@@ -523,7 +523,7 @@ export default function TeamMatchupLabPage() {
               <div className="mt-3 text-xs font-bold text-[hsl(var(--ve-text-muted))]">
                 {rows.length > 0
                   ? enriching || loading
-                    ? `${rows.length} live rows locked · refreshing`
+                    ? `${rows.length} live rows · refreshing`
                     : `${rows.length} pitcher rows loaded`
                   : 'Preparing live MLB slate'}
               </div>
@@ -550,8 +550,6 @@ export default function TeamMatchupLabPage() {
             ))}
           </div>
         </section>
-
-        <VerifiedDataNotice variant="feed-required" />
 
         <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-3 sm:p-4">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.45),transparent)]" />
@@ -719,10 +717,9 @@ export default function TeamMatchupLabPage() {
                           <td className="sticky left-0 z-10 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.98)] px-3 py-3 align-top shadow-[10px_0_20px_hsl(var(--ve-shadow)/0.24)]">
                             <button
                               type="button"
-                              onClick={(event) => event.preventDefault()}
-                              disabled
-                              className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-transparent hover:bg-transparent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-transparent disabled:hover:bg-transparent"
-                              title="Pitcher matchup drawer is temporarily disabled"
+                              onClick={() => setSelectedPitcher(row)}
+                              className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-emerald-300/30 hover:bg-emerald-300/5"
+                              title="Open pitcher matchup details"
                             >
                               <div className="relative shrink-0 rounded-full bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.36),hsl(var(--ve-accent-gold)/0.18))] p-0.5 shadow-[0_0_22px_hsl(var(--ve-accent-cyan)/0.10)]">
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
@@ -782,7 +779,7 @@ export default function TeamMatchupLabPage() {
 
                 {(loading || enriching) && (
                   <div className="border-t border-[hsl(var(--ve-border)/0.28)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))]">
-                    Matrix locked while fresh MLB data syncs
+                    Matrix live from current matchup slate
                   </div>
                 )}
               </div>
