@@ -572,16 +572,16 @@ export default function PlayerResearchConsole({
           </div>
 
           {/* Roster Athletes Feed List */}
-          <div className="bg-slate-900/30 border border-slate-800/50 rounded-3xl overflow-hidden shadow-xl">
-            <div className="bg-slate-950/60 px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+          <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl overflow-hidden shadow-xl">
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] px-5 py-4 border-b border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between">
               <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono tracking-wider">ATHLETE MATRIX ({filteredPlayers.length})</span>
               <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING</span>
             </div>
 
-            <div className="divide-y divide-slate-800/40 max-h-[520px] overflow-y-auto custom-scrollbar" id="roster-athlete-list">
+            <div className="divide-y divide-[hsl(var(--ve-border)/0.24)] max-h-[520px] overflow-y-auto custom-scrollbar" id="roster-athlete-list">
               {filteredPlayers.length === 0 ? (
                 <div className="p-10 text-center" id="no-matching-athletes">
-                  <p className="text-slate-500 text-xs font-mono">No matching athletes find list filters.</p>
+                  <p className="text-[hsl(var(--ve-text-muted))] text-xs font-mono">No matching athletes find list filters.</p>
                   <button 
                     onClick={() => { setSearchTerm(''); setSelectedTeam('ALL'); setSelectedPosition('ALL'); setSelectedInjuryStatus('ALL'); }}
                     className="text-xs text-emerald-400 font-mono underline mt-2 inline-block hover:text-emerald-300"
@@ -611,7 +611,7 @@ export default function PlayerResearchConsole({
                           ? 'bg-emerald-950/20 border-l-4 border-emerald-500'
                           : isSelectedSecondary
                           ? 'bg-indigo-950/20 border-l-4 border-indigo-500'
-                          : 'hover:bg-slate-900/40 border-l-4 border-transparent'
+                          : 'hover:bg-[hsl(var(--ve-surface-raised)/0.36)] border-l-4 border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
@@ -623,15 +623,15 @@ export default function PlayerResearchConsole({
                             referrerPolicy="no-referrer"
                             loading="lazy"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/generic/headshot/67/current'; }}
-                            className="w-11 h-11 rounded-2xl object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0"
+                            className="w-11 h-11 rounded-2xl object-cover bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] flex-shrink-0"
                           />
-                          <span className="absolute -bottom-1 -right-1 text-[8.5px] font-black bg-slate-900 text-slate-350 border border-slate-700 px-1 rounded-md font-mono">
+                          <span className="absolute -bottom-1 -right-1 text-[8.5px] font-black bg-[hsl(var(--ve-surface-raised)/0.74)] text-[hsl(var(--ve-text-soft))] border border-[hsl(var(--ve-border)/0.36)] px-1 rounded-md font-mono">
                             #{player.number}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-xs font-black text-slate-100 truncate leading-tight tracking-tight">{player.name}</h4>
-                          <span className="text-[10px] text-slate-400 font-mono block mt-0.5 truncate uppercase">
+                          <h4 className="text-xs font-black text-[hsl(var(--ve-text))] truncate leading-tight tracking-tight">{player.name}</h4>
+                          <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono block mt-0.5 truncate uppercase">
                             {player.team.replace('Los Angeles Dodgers', 'Dodgers').replace('New York Yankees', 'Yankees').replace('Houston Astros', 'Astros').replace('San Diego Padres', 'Padres').replace('Boston Red Sox', 'Red Sox').replace('Atlanta Braves', 'Braves')}
                           </span>
                           <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block">{player.position}</span>
@@ -658,7 +658,7 @@ export default function PlayerResearchConsole({
                 })
               )}
               {filteredPlayers.length > ROSTER_RENDER_CAP && (
-                <div className="p-4 text-center bg-slate-950/40">
+                <div className="p-4 text-center bg-[hsl(var(--ve-surface-raised)/0.30)]">
                   <p className="text-[11px] text-[hsl(var(--ve-text-muted))] font-mono">
                     Showing {ROSTER_RENDER_CAP} of {filteredPlayers.length} players · search a name or pick a team to narrow
                   </p>
