@@ -63,18 +63,18 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         onClick={() => onSectionChange(f.id)}
         className={`group relative w-full flex items-center justify-center xl:justify-start gap-3 pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl border text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-cyan-400/30 ${
           isActive
-            ? 'border-cyan-300/30 bg-white/[0.08] text-white font-black shadow-lg shadow-black/30'
-            : 'border-transparent text-slate-400 hover:-translate-y-0.5 hover:border-cyan-300/20 hover:bg-white/[0.06] hover:text-slate-100'
+            ? 'border-[hsl(var(--ve-accent-cyan)/0.35)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-text-primary))] font-black shadow-lg shadow-[hsl(var(--ve-shadow)/0.24)]'
+            : 'border-transparent text-[hsl(var(--ve-text-muted))] hover:-translate-y-0.5 hover:border-[hsl(var(--ve-accent-cyan)/0.24)] hover:bg-[hsl(var(--ve-accent-cyan)/0.06)] hover:text-[hsl(var(--ve-text-primary))]'
         }`}
         id={`sidebar-link-${f.id}`}
       >
         {/* Active gradient fill + glow */}
         {isActive && (
-          <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-slate-200/22 via-sky-500/[0.10] to-transparent border border-cyan-300/30 shadow-[0_0_24px_-7px_rgba(34,211,238,0.70)]" />
+          <span className="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(90deg,hsl(var(--ve-text-primary)/0.16),hsl(var(--ve-accent-cyan)/0.12),transparent)] border border-[hsl(var(--ve-accent-cyan)/0.32)] shadow-[0_0_24px_-7px_hsl(var(--ve-accent-cyan)/0.70)]" />
         )}
         {/* Hover fill (inactive only) */}
         {!isActive && (
-          <span className="pointer-events-none absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/[0.07] transition-colors duration-200" />
+          <span className="pointer-events-none absolute inset-0 rounded-2xl bg-transparent group-hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] transition-colors duration-200" />
         )}
         {/* Left accent indicator */}
         <span
@@ -87,7 +87,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           className={`relative z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-200 ${
             isActive
               ? 'bg-sky-500/15 text-sky-300'
-              : 'text-slate-400 group-hover:text-slate-100 group-hover:bg-white/[0.04]'
+              : 'text-[hsl(var(--ve-text-muted))] group-hover:text-[hsl(var(--ve-text-primary))] group-hover:bg-[hsl(var(--ve-accent-cyan)/0.06)]'
           }`}
         >
           <IconComponent className="w-[18px] h-[18px]" />
@@ -111,8 +111,8 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         onClick={() => onSectionChange(section)}
         className={`grid h-11 w-11 place-items-center rounded-2xl border transition ${
           isActive
-            ? 'border-cyan-300/50 bg-cyan-300/15 text-cyan-100 shadow-[0_0_18px_-8px_rgba(34,211,238,0.9)]'
-            : 'border-cyan-300/10 bg-white/5 text-slate-200 hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100'
+            ? 'border-[hsl(var(--ve-accent-cyan)/0.50)] bg-[hsl(var(--ve-accent-cyan)/0.15)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_18px_-8px_hsl(var(--ve-accent-cyan)/0.9)]'
+            : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.30)] text-[hsl(var(--ve-text-secondary))] hover:border-[hsl(var(--ve-accent-cyan)/0.42)] hover:bg-[hsl(var(--ve-accent-cyan)/0.10)] hover:text-[hsl(var(--ve-accent-cyan))]'
         }`}
       >
         <Icon className="h-5 w-5" />
@@ -175,10 +175,10 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
                 title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-black transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-br from-slate-200/25 via-sky-500/20 to-indigo-500/15 text-cyan-100 border border-cyan-300/45 shadow-[0_0_22px_-5px_rgba(34,211,238,0.65)]'
+                    ? 'bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.45)] shadow-[0_0_22px_-5px_hsl(var(--ve-accent-cyan)/0.65)]'
                     : sport.enabled
-                      ? 'text-slate-400 hover:-translate-y-0.5 hover:text-slate-100 hover:bg-white/10 hover:border-cyan-300/20 border border-transparent'
-                      : 'text-slate-500 cursor-not-allowed border border-amber-300/10 bg-amber-400/5 opacity-90'
+                      ? 'text-[hsl(var(--ve-text-muted))] hover:-translate-y-0.5 hover:text-[hsl(var(--ve-text-primary))] hover:bg-[hsl(var(--ve-surface-raised)/0.38)] hover:border-[hsl(var(--ve-accent-cyan)/0.24)] border border-transparent'
+                      : 'text-[hsl(var(--ve-text-muted)/0.75)] cursor-not-allowed border border-amber-300/10 bg-amber-400/5 opacity-90'
                 }`}
                 id={`sidebar-sport-${sport.id}`}
               >
@@ -292,8 +292,8 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
           title="Settings"
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
             activeSection === 'settings'
-              ? 'border border-cyan-300/30 bg-cyan-300/10 text-cyan-100'
-              : 'text-slate-500 hover:text-cyan-100 hover:border-cyan-300/20 hover:bg-white/10'
+              ? 'border border-[hsl(var(--ve-accent-cyan)/0.35)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
+              : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.28)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)]'
           }`}
           style={{ background: activeSection === 'settings' ? undefined : "hsl(var(--ve-surface-raised) / 0.28)", border: activeSection === 'settings' ? undefined : "1px solid hsl(var(--ve-border) / 0.22)" }}
         >
