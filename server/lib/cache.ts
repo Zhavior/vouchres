@@ -38,6 +38,10 @@ export class TTLCache<T = unknown> {
   constructor(private defaultTtlMs: number, private name = "ttlCache") {}
 
   private log(event: string, key: string, extra = ""): void {
+    // Cache hits are normal and can spam the dev terminal during HR board refreshes.
+    // Keep important cache events visible: stale, miss, inflight reuse, stale fallback, failures.
+    if (event === "hit") return;
+
     const suffix = extra ? ` ${extra}` : "";
     console.log(`[cache:${this.name}] ${event} ${key}${suffix}`);
   }
