@@ -370,18 +370,18 @@ export default function FeedPostCard({
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
       <div 
-        className="bg-[#121824] rounded-3xl border border-cyan-300/[0.045] p-3 hover:border-cyan-300/[0.045] transition-all duration-200 animate-slide-up flex flex-col gap-1.5" 
+        className="bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.38)] p-3 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up flex flex-col gap-1.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl" 
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
         
         {/* Reaction Bar */}
-        <div className="flex items-center justify-between pt-1 pb-1 text-slate-450 text-xs font-mono">
+        <div className="flex items-center justify-between pt-1 pb-1 text-[hsl(var(--ve-text-muted))] text-xs font-mono">
           {/* Comment icon button */}
           <button 
             onClick={() => setShowComments(!showComments)}
-            className={`group flex items-center gap-1.5 hover:text-sky-400 transition-colors p-1.5 rounded-lg hover:bg-sky-950/20 ${
-              showComments ? 'text-sky-450' : ''
+            className={`group flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-cyan))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] ${
+              showComments ? 'text-[hsl(var(--ve-accent-cyan))]' : ''
             }`}
             title="Toggle comments"
             id={`comment-btn-${post.id}`}
@@ -393,8 +393,8 @@ export default function FeedPostCard({
           {/* Repost button */}
           <button 
             onClick={() => onRepost(post.id)}
-            className={`flex items-center gap-1.5 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-950/20 ${
-              post.isReposted ? 'text-indigo-400 font-bold' : ''
+            className={`flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-pink))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-pink)/0.08)] ${
+              post.isReposted ? 'text-[hsl(var(--ve-accent-pink))] font-bold' : ''
             }`}
             title="Repost"
             id={`repost-btn-${post.id}`}
@@ -427,7 +427,7 @@ export default function FeedPostCard({
           >
             <Zap className={`w-4 h-4 ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
             <span className="font-mono font-bold">Vouch</span>
-            <span className="font-mono text-[10px] text-slate-500">({post.vouchesCount})</span>
+            <span className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">({post.vouchesCount})</span>
           </button>
         </div>
 
@@ -806,8 +806,8 @@ export default function FeedPostCard({
         <div className="relative">
           <button 
             onClick={() => setShowRepostMenu(!showRepostMenu)}
-            className={`flex items-center gap-1.5 hover:text-indigo-400 transition-colors p-1.5 rounded-lg hover:bg-indigo-950/20 ${
-              post.isReposted ? 'text-indigo-400 font-bold' : ''
+            className={`flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-pink))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-pink)/0.08)] ${
+              post.isReposted ? 'text-[hsl(var(--ve-accent-pink))] font-bold' : ''
             }`}
             title="Repost options"
             id={`repost-btn-${post.id}`}
@@ -866,7 +866,7 @@ export default function FeedPostCard({
         >
           <Zap className={`w-4 h-4 ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
           <span className="font-mono font-bold">Vouch</span>
-          <span className="font-mono text-[10px] text-slate-500">({post.vouchesCount})</span>
+          <span className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">({post.vouchesCount})</span>
         </button>
 
         {/* Simulated Views indicator */}
