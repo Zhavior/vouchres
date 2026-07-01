@@ -23,7 +23,8 @@ export interface HrEvent {
   timestamp: string;
 }
 
-const hrCache = new TTLCache<HrEvent[]>(45_000);
+const HR_CACHE_TTL = process.env.NODE_ENV === 'development' ? 120_000 : 60_000;
+const hrCache = new TTLCache<HrEvent[]>(HR_CACHE_TTL);
 const MAX_GAMES = 15;
 
 export async function getTodayHomeRuns(date = todayISO()): Promise<HrEvent[]> {

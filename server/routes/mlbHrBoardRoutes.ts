@@ -26,16 +26,20 @@ export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
   app.get("/api/mlb/hr-feed/today", async (_req: Request, res: Response) => {
     const events = await getTodayHomeRuns();
-    processHomeRunEvents(events).catch((err) => {
-      console.warn("[hr-feed/today] notification processing failed", err?.message);
-    });
+    if (Array.isArray(events) && events.length > 0) {
+      processHomeRunEvents(events).catch((err) => {
+        console.error('[notifications] Error processing HR events:', err);
+      });
+    }
     res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
   });
   app.get("/api/mlb/hr-feed/date/:date", async (req: Request, res: Response) => {
     const events = await getTodayHomeRuns(req.params.date);
-    processHomeRunEvents(events).catch((err) => {
-      console.warn("[hr-feed/date] notification processing failed", err?.message);
-    });
+    if (Array.isArray(events) && events.length > 0) {
+      processHomeRunEvents(events).catch((err) => {
+        console.error('[notifications] Error processing HR events:', err);
+      });
+    }
     res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
   });
 

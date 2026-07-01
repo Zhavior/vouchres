@@ -10,7 +10,7 @@ import type { CreatorProofProfile, MLBPlayer } from '../types';
 import { hasTierAccess } from '../components/pro/ProAccessGate';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
-const REFRESH_MS = 5 * 60_000;
+const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
 const PREVIEW_LIMIT = 999;
 
 function todayISO() {
