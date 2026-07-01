@@ -48,7 +48,7 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40 
         <img
           src={resolvedUrl!}
           alt={name || 'Player headshot'}
-          loading="lazy"
+          loading="eager" decoding="async" fetchPriority="high"
           referrerPolicy="no-referrer"
           className="absolute inset-0 h-full w-full object-cover"
           onError={() => setFailed(true)}

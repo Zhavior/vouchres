@@ -621,7 +621,7 @@ export default function PlayerResearchConsole({
                             src={player.headshot}
                             alt={player.name}
                             referrerPolicy="no-referrer"
-                            loading="lazy"
+                            loading="eager" decoding="async" fetchPriority="high"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/generic/headshot/67/current'; }}
                             className="w-11 h-11 rounded-2xl object-cover bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] flex-shrink-0"
                           />

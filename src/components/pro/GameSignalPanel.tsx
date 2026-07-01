@@ -131,7 +131,7 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
                 <img
                   src={player.headshot}
                   alt={player.playerName ?? 'Player'}
-                  loading="lazy"
+                  loading="eager" decoding="async" fetchPriority="high"
                   referrerPolicy="no-referrer"
                   className="h-8 w-8 flex-shrink-0 rounded-lg border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-bg-panel))] object-cover"
                 />

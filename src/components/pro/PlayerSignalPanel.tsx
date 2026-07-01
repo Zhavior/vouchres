@@ -52,7 +52,7 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
             <img
               src={player.headshot}
               alt={player.playerName ?? 'Player'}
-              loading="lazy"
+              loading="eager" decoding="async" fetchPriority="high"
               referrerPolicy="no-referrer"
               className="h-12 w-12 rounded-xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel))] object-cover"
             />
