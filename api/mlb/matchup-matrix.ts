@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getSchedule, normalizeGame, validDate } from "../_utils/mlb.js";
+import { getPitcherMatchup } from "../../../server/services/mlb/pitcherMatchupService";
 
 function row(game: any, side: "away" | "home") {
   const team = side === "away" ? game.awayTeam : game.homeTeam;
@@ -49,6 +50,55 @@ function row(game: any, side: "away" | "home") {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const drawer = String(req.query.drawer ?? "") === "1";
+  const drawerGamePk = Number.parseInt(String(req.query.gamePk ?? ""), 10);
+  const drawerPitcherId = Number.parseInt(String(req.query.pitcherId ?? ""), 10);
+
+  if (drawer) {
+    const drawerDate = validDate(req.query.date);
+
+    if (!Number.isFinite(drawerGamePk) || !Number.isFinite(drawerPitcherId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing or invalid gamePk/pitcherId",
+        warnings: ["Expected gamePk and pitcherId from matchup drawer route."],
+      });
+    }
+
+    try {
+      const payload = await getPitcherMatchup(drawerGamePk, drawerPitcherId, drawerDate);
+
+      return res.status(200).json({
+        ...(payload ?? {
+          gamePk: drawerGamePk,
+          pitcher: null,
+          opponent: {
+            team: "",
+            projectedLineup: [],
+          },
+        }),
+        warnings: Array.isArray((payload as any)?.warnings)
+          ? (payload as any).warnings
+          : payload
+            ? []
+            : ["Pitcher matchup was not available for this game/date."],
+      });
+    } catch (error) {
+      console.error("[api/mlb/matchup-matrix drawer]", error);
+
+      return res.status(200).json({
+        gamePk: drawerGamePk,
+        pitcher: null,
+        opponent: {
+          team: "",
+          projectedLineup: [],
+        },
+        warnings: [
+          error instanceof Error ? error.message : "Pitcher matchup request failed.",
+        ],
+      });
+    }
+  }
   const date = validDate(req.query.date);
   try {
     const games = (await getSchedule(date)).map((game: any) => normalizeGame(game, date));
