@@ -76,6 +76,8 @@ export async function getProbablePitchers(date: string): Promise<NormalizedPitch
   return out;
 }
 
+const gameFeedInflight = new Map<number, Promise<any | null>>();
+
 /** Live feed for a game. Returns raw feed (large); cached briefly. */
 export async function getGameFeed(gamePk: number): Promise<any | null> {
   const localKey = `feed:${gamePk}`;
@@ -84,7 +86,13 @@ export async function getGameFeed(gamePk: number): Promise<any | null> {
   const feedTtlSeconds = Number(process.env.MLB_LIVE_FEED_REDIS_TTL_SECONDS ?? 45);
   const lockTtlSeconds = Number(process.env.MLB_LIVE_FEED_LOCK_TTL_SECONDS ?? 10);
 
-  return gameFeedCache.getOrSet(localKey, async () => {
+  const existingInflight = gameFeedInflight.get(gamePk);
+  if (existingInflight) {
+    console.log(`[MLB_CACHE] local inflight hit gamePk=${gamePk}`);
+    return existingInflight;
+  }
+
+  const promise = gameFeedCache.getOrSet(localKey, async () => {
     const url = `${BASE}/v1.1/game/${gamePk}/feed/live`;
 
     if (isUpstashEnabled()) {
@@ -135,6 +143,13 @@ export async function getGameFeed(gamePk: number): Promise<any | null> {
       return null;
     }
   }) as Promise<any | null>;
+
+  gameFeedInflight.set(gamePk, promise);
+  try {
+    return await promise;
+  } finally {
+    gameFeedInflight.delete(gamePk);
+  }
 }
 
 export async function getLinescore(gamePk: number): Promise<any | null> {
