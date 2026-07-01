@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId",
-      "destination": "/api/mlb/matchup-matrix?drawer=1&gamePk=:gamePk&pitcherId=:pitcherId"
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

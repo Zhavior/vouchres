@@ -13,7 +13,7 @@ import { requireAuth } from "./server/middleware/auth";
 dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
 
-async function startServer() {
+export async function createApp() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
@@ -1499,9 +1499,18 @@ app.get('/api/mlb/lineup/today', dailyPlayerBoardHandler);
 app.get('/api/daily-players', dailyPlayerBoardHandler);
 
 
-app.listen(PORT, "0.0.0.0", () => {
+return app;
+}
+
+async function startServer() {
+  const app = await createApp();
+  const PORT = Number(process.env.PORT) || 3000;
+
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Express custom server running on http://0.0.0.0:${PORT}`);
   });
 }
 
-startServer();
+if (process.env.VERCEL !== "1") {
+  startServer();
+}
