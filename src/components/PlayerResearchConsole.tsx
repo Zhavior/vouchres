@@ -980,7 +980,7 @@ export default function PlayerResearchConsole({
                 <div className="absolute right-0 top-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
 
                 {/* Top Section: Identity & Gauge */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-5 border-b border-slate-800/40 w-full" id="hero-top-info">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-5 border-b border-[hsl(var(--ve-border)/0.28)] w-full" id="hero-top-info">
                   
                   {/* Left Side: Avatar + Name / Team Info */}
                   <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left min-w-0 flex-1">
@@ -990,35 +990,35 @@ export default function PlayerResearchConsole({
                         src={activePlayer.headshot} 
                         alt={activePlayer.name}
                         referrerPolicy="no-referrer"
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] shadow-2xl object-cover bg-slate-950"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] shadow-2xl object-cover bg-[hsl(var(--ve-bg)/0.72)]"
                       />
-                      <div className="absolute -bottom-2 -right-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] font-black text-emerald-400 font-mono shadow-md">
+                      <div className="absolute -bottom-2 -right-2 bg-[hsl(var(--ve-surface-raised)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-lg px-2.5 py-1 text-[10px] font-black text-emerald-400 font-mono shadow-md">
                         #{activePlayer.number}
                       </div>
                     </div>
                     {/* Bio */}
                     <div className="space-y-2 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <span className="bg-slate-950/80 border border-slate-800 text-[hsl(var(--ve-text-soft))] px-3 py-0.5 rounded-full text-[10px] font-black font-mono uppercase tracking-widest">
+                        <span className="bg-[hsl(var(--ve-surface-raised)/0.52)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-soft))] px-3 py-0.5 rounded-full text-[10px] font-black font-mono uppercase tracking-widest">
                           {activePlayer.team}
                         </span>
-                        <span className="bg-slate-950/80 border border-slate-800 text-[hsl(var(--ve-text-muted))] px-3 py-0.5 rounded-full text-[10px] font-medium font-mono uppercase">
+                        <span className="bg-[hsl(var(--ve-surface-raised)/0.52)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] px-3 py-0.5 rounded-full text-[10px] font-medium font-mono uppercase">
                           {activePlayer.position}
                         </span>
                       </div>
-                      <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display select-text leading-tight tracking-tight">
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-[hsl(var(--ve-text))] font-display select-text leading-tight tracking-tight">
                         {activePlayer.name}
                       </h2>
                     </div>
                   </div>
 
                   {/* Right Side: Batter Score Gauge */}
-                  <div className="flex-shrink-0 bg-slate-950/80 p-4 border border-slate-800 rounded-2xl text-center flex flex-col items-center justify-center min-w-[130px]" id="primary-model-batter-gauge">
+                  <div className="flex-shrink-0 bg-[hsl(var(--ve-surface-raised)/0.52)] p-4 border border-[hsl(var(--ve-border)/0.30)] rounded-2xl text-center flex flex-col items-center justify-center min-w-[130px]" id="primary-model-batter-gauge">
                     <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono font-extrabold tracking-widest uppercase block mb-1.5">BATTER SCORE</span>
                     <div className="relative w-16 h-16 flex items-center justify-center">
                       {/* SVG Progress Ring */}
                       <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="32" cy="32" r="28" stroke="#1e293b" strokeWidth="3" fill="transparent" />
+                        <circle cx="32" cy="32" r="28" stroke="hsl(var(--ve-border) / 0.36)" strokeWidth="3" fill="transparent" />
                         <circle 
                           cx="32" 
                           cy="32" 
@@ -1032,7 +1032,7 @@ export default function PlayerResearchConsole({
                           className="transition-all duration-1000"
                         />
                       </svg>
-                      <span className="absolute text-xl font-mono font-black text-white animate-pulse">
+                      <span className="absolute text-xl font-mono font-black text-[hsl(var(--ve-text))] animate-pulse">
                         {activeAiReport?.score || activePlayer.batterScore}
                       </span>
                     </div>
@@ -1048,24 +1048,24 @@ export default function PlayerResearchConsole({
                   
                   {/* Demographics */}
                   <div className="space-y-2">
-                    <h4 className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-black font-mono tracking-wider uppercase border-l-2 border-slate-755 pl-2">
+                    <h4 className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-black font-mono tracking-wider uppercase border-l-2 border-[hsl(var(--ve-border-strong))] pl-2">
                       ATHLETE PROFILE INFO
                     </h4>
-                    <div className="grid grid-cols-2 gap-3 bg-slate-950/40 border border-slate-800/40 p-4 rounded-2xl text-xs font-mono">
+                    <div className="grid grid-cols-2 gap-3 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] p-4 rounded-2xl text-xs font-mono">
                       <div>
-                        <span className="block text-[8.5px] text-slate-500 uppercase tracking-wider">Bats / Throws</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">Bats / Throws</span>
                         <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold">{activePlayer.bats} / {activePlayer.throws}</span>
                       </div>
                       <div>
-                        <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Height / Weight</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">Height / Weight</span>
                         <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold">{activePlayer.height} / {activePlayer.weight}</span>
                       </div>
                       <div>
-                        <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Birthdate & Age</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">Birthdate & Age</span>
                         <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold truncate block" title={activePlayer.birthdate}>{activePlayer.birthdate}</span>
                       </div>
                       <div>
-                        <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Injury Status</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">Injury Status</span>
                         <span className={`inline-flex items-center gap-1 mt-0.5 font-extrabold uppercase text-[9.5px] ${
                           activePlayer.injurySeverity === 'NONE' ? 'text-emerald-400' : 'text-amber-400 animate-pulse'
                         }`}>
@@ -1081,15 +1081,15 @@ export default function PlayerResearchConsole({
                       SEASON STAT BASELINE
                     </h4>
                     <div className="grid grid-cols-4 gap-2 text-center h-[calc(100%-20px)] min-h-[74px]">
-                      <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
+                      <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">BAT AVG</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.avg}</span>
                       </div>
-                      <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
+                      <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">HRs</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.hr}</span>
                       </div>
-                      <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
+                      <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">RBIs</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.rbi}</span>
                       </div>
@@ -1314,7 +1314,7 @@ export default function PlayerResearchConsole({
                               { game: 'G9', OPS: parseFloat((Number(activePlayer.splits.last10.ops) * 1.08).toFixed(3)) },
                               { game: 'G10', OPS: Number(activePlayer.splits.last10.ops) },
                             ]}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--ve-border) / 0.36)" />
                               <XAxis dataKey="game" stroke="#64748b" tickLine={false} />
                               <YAxis stroke="#64748b" tickLine={false} domain={['auto', 'auto']} />
                               <Tooltip contentStyle={{ backgroundColor: '#090d16', borderColor: '#1e293b', borderRadius: '8px', color: '#fff' }} />
@@ -1849,7 +1849,7 @@ export default function PlayerResearchConsole({
                   <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">{activePlayer.gameLogs.length} CONTRASTS LOGGED</span>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-slate-950" id="game-logs-layout-container">
+                <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-[hsl(var(--ve-bg)/0.72)]" id="game-logs-layout-container">
                   <table className="w-full text-left text-xs font-mono border-collapse min-w-[650px]">
                     <thead>
                       <tr className="border-b border-slate-900 text-slate-500 text-[9.5px] uppercase tracking-wider">
