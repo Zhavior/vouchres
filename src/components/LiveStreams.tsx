@@ -570,7 +570,7 @@ export default function LiveStreams({
         </div>
 
         {/* Tab Swapping Mode Controls */}
-        <div className="flex bg-slate-900/60 p-1 rounded-xl border border-slate-850 self-start" id="tab-controls-livestreams">
+        <div className="flex bg-[hsl(var(--ve-surface-raised)/0.44)] p-1 rounded-xl border border-[hsl(var(--ve-border)/0.32)] self-start" id="tab-controls-livestreams">
           <button
             onClick={() => {
               setActiveTab('watch');
@@ -578,7 +578,7 @@ export default function LiveStreams({
             }}
             className={`px-4.5 py-1.5 rounded-lg text-xs font-black tracking-wide uppercase transition-all flex items-center gap-2 ${
               activeTab === 'watch'
-                ? 'bg-gradient-to-tr from-sky-600 to-indigo-600 text-white shadow'
+                ? 'bg-gradient-to-tr from-[hsl(var(--ve-accent-cyan))] to-[hsl(var(--ve-accent-violet))] text-white shadow'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -601,9 +601,9 @@ export default function LiveStreams({
       </div>
 
       {!isPro ? (
-        <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-slate-800/80 p-8 md:p-14 text-center max-w-2xl mx-auto space-y-6 relative overflow-hidden shadow-2xl my-8 text-left" id="streams-premium-blocked-card">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-550/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-indigo-400 shadow-lg animate-pulse">
+        <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] backdrop-blur-md rounded-2xl border border-[hsl(var(--ve-border)/0.34)] p-8 md:p-14 text-center max-w-2xl mx-auto space-y-6 relative overflow-hidden shadow-2xl my-8 text-left" id="streams-premium-blocked-card">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[hsl(var(--ve-accent-violet)/0.12)] rounded-full blur-3xl pointer-events-none" />
+          <div className="w-16 h-16 rounded-full bg-[hsl(var(--ve-surface-raised)/0.50)] border border-[hsl(var(--ve-border)/0.36)] flex items-center justify-center mx-auto text-[hsl(var(--ve-accent-violet))] shadow-lg animate-pulse">
             <Lock className="w-7 h-7" />
           </div>
           <div className="space-y-3 text-center">
@@ -613,7 +613,7 @@ export default function LiveStreams({
             <p className="text-xs text-slate-400 leading-relaxed max-w-lg mx-auto font-medium">
               Watch professional sports cappers lock dynamic live slips onto the Vouch-ledger in real-time, ask detailed model questions on Twitch-style audio desks, and trigger dynamic emoji interactions.
             </p>
-            <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-900 font-mono text-[10.5px] text-slate-400 max-w-lg mx-auto text-center space-y-1">
+            <div className="p-3.5 bg-[hsl(var(--ve-surface-raised)/0.38)] rounded-xl border border-[hsl(var(--ve-border)/0.30)] font-mono text-[10.5px] text-slate-400 max-w-lg mx-auto text-center space-y-1">
               <span className="text-amber-400 font-bold uppercase tracking-wide block">💡 Dynamic Creator Economy Support:</span>
               <span>Our platform takes a flat 15% service fee on donations; the other 85% goes directly to support transparent capping creators!</span>
             </div>
