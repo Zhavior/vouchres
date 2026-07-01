@@ -24,6 +24,7 @@ type LocalTruthCacheEntry = {
 };
 
 const localTruthCache = new Map<string, LocalTruthCacheEntry>();
+const localTruthBuilds = new Map<string, Promise<MlbTruthSnapshot>>();
 
 function getLocalTruthSnapshot(key: string): MlbTruthSnapshot | null {
   const entry = localTruthCache.get(key);
@@ -88,33 +89,49 @@ export async function buildSportsTruthSnapshot(
     }
   }
 
-  console.log(`[SPORTS_TRUTH_HUB] building snapshot sport=${sport} date=${options.date}`);
-
-  const [matchups, matchupMatrix] = await Promise.all([
-    getGameMatchups(options.date),
-    getLiveMatchupMatrix(options.date),
-  ]);
-
-  const snapshot: MlbTruthSnapshot = {
-    sport: "mlb",
-    date: options.date,
-    generatedAt: new Date().toISOString(),
-    source: "sports-truth-hub",
-    matchups,
-    matchupMatrix,
-  };
-
-  if (isUpstashEnabled()) {
-    try {
-      await redisSetJson(redisKey, snapshot, ttlSeconds);
-      console.log(`[SPORTS_TRUTH_HUB] redis set sport=${sport} date=${options.date} ttl=${ttlSeconds}s`);
-    } catch (err: any) {
-      console.warn("[SPORTS_TRUTH_HUB] redis write fallback:", err?.message);
-    }
+  const activeBuild = localTruthBuilds.get(redisKey);
+  if (activeBuild) {
+    console.log(`[SPORTS_TRUTH_HUB] awaiting local build sport=${sport} date=${options.date}`);
+    return activeBuild;
   }
 
-  setLocalTruthSnapshot(redisKey, snapshot, ttlSeconds);
-  console.log(`[SPORTS_TRUTH_HUB] local set sport=${sport} date=${options.date} ttl=${ttlSeconds}s`);
+  const buildPromise = (async () => {
+    console.log(`[SPORTS_TRUTH_HUB] building snapshot sport=${sport} date=${options.date}`);
 
-  return snapshot;
+    const [matchups, matchupMatrix] = await Promise.all([
+      getGameMatchups(options.date),
+      getLiveMatchupMatrix(options.date),
+    ]);
+
+    const snapshot: MlbTruthSnapshot = {
+      sport: "mlb",
+      date: options.date,
+      generatedAt: new Date().toISOString(),
+      source: "sports-truth-hub",
+      matchups,
+      matchupMatrix,
+    };
+
+    if (isUpstashEnabled()) {
+      try {
+        await redisSetJson(redisKey, snapshot, ttlSeconds);
+        console.log(`[SPORTS_TRUTH_HUB] redis set sport=${sport} date=${options.date} ttl=${ttlSeconds}s`);
+      } catch (err: any) {
+        console.warn("[SPORTS_TRUTH_HUB] redis write fallback:", err?.message);
+      }
+    }
+
+    setLocalTruthSnapshot(redisKey, snapshot, ttlSeconds);
+    console.log(`[SPORTS_TRUTH_HUB] local set sport=${sport} date=${options.date} ttl=${ttlSeconds}s`);
+
+    return snapshot;
+  })();
+
+  localTruthBuilds.set(redisKey, buildPromise);
+
+  try {
+    return await buildPromise;
+  } finally {
+    localTruthBuilds.delete(redisKey);
+  }
 }
