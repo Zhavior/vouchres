@@ -48,7 +48,7 @@ function ProUpsell({ onUpgrade }: { onUpgrade: () => void }) {
 /** A "verified feed required" placeholder — honest, no fabricated analytics. */
 function LockedFeed({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800/70 bg-slate-950/50 px-3 py-5 text-center">
+    <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.36)] px-3 py-5 text-center">
       <Lock className="h-4 w-4 text-slate-700" />
       <p className="text-[11px] font-bold text-slate-400">{title}</p>
       <p className="max-w-[220px] text-[10px] leading-relaxed text-slate-600">{detail}</p>
@@ -84,7 +84,7 @@ export default function PitcherProfileDrawer({ pitcher, isPro, onClose, onUpgrad
 
         <div className="space-y-5 p-5">
           {/* Vulnerability score */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+          <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.38)] p-4">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Vulnerability</span>
               <span
