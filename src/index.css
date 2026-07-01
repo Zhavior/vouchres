@@ -6035,6 +6035,63 @@ body,
   max-width: 100%;
 }
 
+#inner-view-slot .ve-vouch-composer__textarea {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface-raised) / 0.36);
+  color: hsl(var(--ve-text-primary));
+}
+
+#inner-view-slot .ve-vouch-composer__textarea::placeholder {
+  color: hsl(var(--ve-text-muted));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button,
+#inner-view-slot .ve-vouch-composer__details :is(input, select),
+#inner-view-slot .ve-vouch-composer__ghost {
+  border: 1px solid hsl(var(--ve-border) / 0.28);
+  background: hsl(var(--ve-surface-raised) / 0.34);
+  color: hsl(var(--ve-text-secondary));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button:hover,
+#inner-view-slot .ve-vouch-composer__ghost:hover {
+  border-color: hsl(var(--ve-accent-cyan) / 0.40);
+  background: hsl(var(--ve-accent-cyan) / 0.09);
+  color: hsl(var(--ve-accent-cyan));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button[data-active='true'],
+#inner-view-slot .ve-vouch-composer__mode-row button[aria-pressed='true'] {
+  border-color: hsl(var(--ve-accent-cyan) / 0.45);
+  background: hsl(var(--ve-accent-cyan) / 0.13);
+  color: hsl(var(--ve-accent-cyan));
+}
+
+#inner-view-slot .ve-vouch-composer__details :is(input, select):focus,
+#inner-view-slot .ve-vouch-composer__textarea:focus {
+  outline: none;
+  border-color: hsl(var(--ve-accent-cyan) / 0.62);
+  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
+}
+
+#inner-view-slot .ve-vouch-composer__actions span {
+  color: hsl(var(--ve-text-muted));
+}
+
+#inner-view-slot .ve-vouch-composer__actions button {
+  border: 1px solid hsl(var(--ve-accent-cyan) / 0.35);
+  background: linear-gradient(135deg, hsl(var(--ve-accent-cyan)), hsl(var(--ve-accent-pink)));
+  color: hsl(var(--ve-bg-deep));
+  box-shadow: 0 14px 30px hsl(var(--ve-accent-cyan) / 0.22);
+}
+
+#inner-view-slot .ve-vouch-composer__actions button:disabled {
+  border-color: hsl(var(--ve-border) / 0.26);
+  background: hsl(var(--ve-surface-raised) / 0.48);
+  color: hsl(var(--ve-text-muted));
+  box-shadow: none;
+}
+
 /* Mobile: single-column controls, no border overflow */
 @media (max-width: 700px) {
   .ve-vouch-composer {
@@ -6271,6 +6328,63 @@ body,
 /* Stop old broad feed CSS from making composer controls ugly */
 #inner-view-slot .ve-vouch-composer :is(button, input, select, textarea) {
   max-width: 100%;
+}
+
+#inner-view-slot .ve-vouch-composer__textarea {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface-raised) / 0.36);
+  color: hsl(var(--ve-text-primary));
+}
+
+#inner-view-slot .ve-vouch-composer__textarea::placeholder {
+  color: hsl(var(--ve-text-muted));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button,
+#inner-view-slot .ve-vouch-composer__details :is(input, select),
+#inner-view-slot .ve-vouch-composer__ghost {
+  border: 1px solid hsl(var(--ve-border) / 0.28);
+  background: hsl(var(--ve-surface-raised) / 0.34);
+  color: hsl(var(--ve-text-secondary));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button:hover,
+#inner-view-slot .ve-vouch-composer__ghost:hover {
+  border-color: hsl(var(--ve-accent-cyan) / 0.40);
+  background: hsl(var(--ve-accent-cyan) / 0.09);
+  color: hsl(var(--ve-accent-cyan));
+}
+
+#inner-view-slot .ve-vouch-composer__mode-row button[data-active='true'],
+#inner-view-slot .ve-vouch-composer__mode-row button[aria-pressed='true'] {
+  border-color: hsl(var(--ve-accent-cyan) / 0.45);
+  background: hsl(var(--ve-accent-cyan) / 0.13);
+  color: hsl(var(--ve-accent-cyan));
+}
+
+#inner-view-slot .ve-vouch-composer__details :is(input, select):focus,
+#inner-view-slot .ve-vouch-composer__textarea:focus {
+  outline: none;
+  border-color: hsl(var(--ve-accent-cyan) / 0.62);
+  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
+}
+
+#inner-view-slot .ve-vouch-composer__actions span {
+  color: hsl(var(--ve-text-muted));
+}
+
+#inner-view-slot .ve-vouch-composer__actions button {
+  border: 1px solid hsl(var(--ve-accent-cyan) / 0.35);
+  background: linear-gradient(135deg, hsl(var(--ve-accent-cyan)), hsl(var(--ve-accent-pink)));
+  color: hsl(var(--ve-bg-deep));
+  box-shadow: 0 14px 30px hsl(var(--ve-accent-cyan) / 0.22);
+}
+
+#inner-view-slot .ve-vouch-composer__actions button:disabled {
+  border-color: hsl(var(--ve-border) / 0.26);
+  background: hsl(var(--ve-surface-raised) / 0.48);
+  color: hsl(var(--ve-text-muted));
+  box-shadow: none;
 }
 
 /* Mobile: single-column controls, no border overflow */
