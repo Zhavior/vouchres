@@ -6,7 +6,7 @@ import { webhookLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import { z } from "zod";
 import {
-  stripe,
+  getStripe,
   createCheckoutSession,
   createPortalSession,
   beginStripeWebhookEvent,
@@ -155,7 +155,7 @@ billingRoutes.post("/portal", requireAuth, async (req: AuthedRequest, res: Respo
         error: "portal_not_configured",
         message:
           "The Stripe Billing Portal is not configured. " +
-          "Go to dashboard.stripe.com → Settings → Billing → Customer portal and activate it.",
+          "Go to dashboard.getStripe().com → Settings → Billing → Customer portal and activate it.",
       });
     }
     return res.status(400).json({ error: "billing_portal_failed", message: billingErrorMessage(err) });
@@ -240,7 +240,7 @@ billingRoutes.post(
     try {
       // req.body must be the raw Buffer (or raw string) here
       // See implementation note in server/middleware/webhookRaw.ts
-      event = stripe.webhooks.constructEvent(
+      event = getStripe().webhooks.constructEvent(
         req.body as unknown as string | Buffer,
         signature,
         WEBHOOK_SECRET
@@ -268,7 +268,7 @@ billingRoutes.post(
               ? session.subscription
               : session.subscription?.id;
           if (subscriptionId) {
-            const sub = await stripe.subscriptions.retrieve(subscriptionId);
+            const sub = await getStripe().subscriptions.retrieve(subscriptionId);
             await syncSubscription(sub);
           }
           break;
@@ -299,7 +299,7 @@ billingRoutes.post(
           const subId = (invoice as any).subscription as string;
           if (subId) {
             // Fetch and re-sync — this will downgrade to free if status is unpaid
-            const sub = await stripe.subscriptions.retrieve(subId);
+            const sub = await getStripe().subscriptions.retrieve(subId);
             await syncSubscription(sub);
           }
           break;

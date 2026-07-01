@@ -17,10 +17,20 @@ import {
  * without calling Stripe on every request.
  */
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2024-12-18.acacia" as any,
-  typescript: true,
-});
+let stripeClient: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  assertStripeConfigured();
+
+  if (!stripeClient) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!.trim(), {
+      apiVersion: "2024-12-18.acacia" as any,
+      typescript: true,
+    });
+  }
+
+  return stripeClient;
+}
 
 export function isStripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
@@ -90,14 +100,14 @@ export async function ensureStripeCustomer(profileId: string, email: string) {
 
   if (profile?.stripe_customer_id) {
     try {
-      const existing = await stripe.customers.retrieve(profile.stripe_customer_id);
+      const existing = await getStripe().customers.retrieve(profile.stripe_customer_id);
       if (!existing.deleted) return existing;
     } catch (err) {
       // Customer was deleted in Stripe dashboard — fall through to create
     }
   }
 
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email,
     metadata: { profile_id: profileId },
   });
@@ -124,7 +134,7 @@ export async function createCheckoutSession(opts: {
   assertStripeConfigured();
   const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
 
-  return stripe.checkout.sessions.create({
+  return getStripe().checkout.sessions.create({
     mode: "subscription",
     customer: customer.id,
     line_items: [{ price: opts.priceId, quantity: 1 }],
@@ -171,7 +181,7 @@ export async function createPortalSession(opts: {
     : ((await ensureStripeCustomer(opts.profileId, opts.email ?? "")) as Stripe.Customer).id;
 
   try {
-    return await stripe.billingPortal.sessions.create({
+    return await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: opts.returnUrl,
     });
