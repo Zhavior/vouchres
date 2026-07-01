@@ -673,10 +673,10 @@ export default function PlayerResearchConsole({
           
           {/* COMPARISON PAGE */}
           {compareMode ? (
-            <div className="bg-slate-900/30 border border-slate-800/50 rounded-3xl p-6 shadow-2xl space-y-6" id="comparison-metric-dossier">
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-6 shadow-2xl space-y-6" id="comparison-metric-dossier">
               
               {/* Header Comp */}
-              <div className="flex items-center justify-between border-b border-slate-805 pb-4">
+              <div className="flex items-center justify-between border-b border-[hsl(var(--ve-border)/0.28)] pb-4">
                 <div className="flex items-center gap-2.5">
                   <BarChart3 className="w-5 h-5 text-indigo-400 animate-pulse" />
                   <span className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono tracking-widest uppercase">HEAD-TO-HEAD SABERMETRIC MATCHUP ATOMIZER</span>
@@ -705,7 +705,7 @@ export default function PlayerResearchConsole({
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{activePlayer.name}</h3>
                   <span className="text-xs text-[hsl(var(--ve-text-muted))] font-mono mt-0.5">{activePlayer.team} • #{activePlayer.number}</span>
                   
-                  <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
+                  <div className="mt-4 flex items-center gap-2.5 bg-[hsl(var(--ve-surface-raised)/0.42)] px-4 py-1.5 rounded-full border border-[hsl(var(--ve-border)/0.30)]">
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
                     <span className="text-base font-black text-emerald-400 font-mono">{aiReportCache[activePlayer.id]?.score || activePlayer.batterScore}</span>
                   </div>
@@ -724,7 +724,7 @@ export default function PlayerResearchConsole({
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{comparePlayer.name}</h3>
                   <span className="text-xs text-[hsl(var(--ve-text-muted))] font-mono mt-0.5">{comparePlayer.team} • #{comparePlayer.number}</span>
                   
-                  <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
+                  <div className="mt-4 flex items-center gap-2.5 bg-[hsl(var(--ve-surface-raised)/0.42)] px-4 py-1.5 rounded-full border border-[hsl(var(--ve-border)/0.30)]">
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
                     <span className="text-base font-black text-indigo-400 font-mono">{aiReportCache[comparePlayer.id]?.score || comparePlayer.batterScore}</span>
                   </div>
@@ -734,7 +734,7 @@ export default function PlayerResearchConsole({
 
               {/* Sabermetric Metrics Head to Head */}
               <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider text-center border-b border-slate-900 pb-3">
+                <h4 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider text-center border-b border-[hsl(var(--ve-border)/0.24)] pb-3">
                   STATCAST METRIC RADAR COMPARISON
                 </h4>
 
@@ -1082,15 +1082,15 @@ export default function PlayerResearchConsole({
                     </h4>
                     <div className="grid grid-cols-4 gap-2 text-center h-[calc(100%-20px)] min-h-[74px]">
                       <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
-                        <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">BAT AVG</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wider">BAT AVG</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.avg}</span>
                       </div>
                       <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
-                        <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">HRs</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wider">HRs</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.hr}</span>
                       </div>
                       <div className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-2.5 rounded-2xl flex flex-col justify-center">
-                        <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">RBIs</span>
+                        <span className="block text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wider">RBIs</span>
                         <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.rbi}</span>
                       </div>
                       <div className="bg-emerald-950/30 border-2 border-emerald-500/20 p-2.5 rounded-2xl flex flex-col justify-center">
