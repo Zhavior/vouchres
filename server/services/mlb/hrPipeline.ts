@@ -754,8 +754,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
     const pitcherStatsMap = new Map<number, PitcherSeasonStats | null>();
     const pitcherResults = await Promise.allSettled(
       [...pitcherIds].map(async (id) => {
-        const fullStats = pitcherStatsCache.get(`pitcher:${id}`) ?? await getPitcherStats(id);
-        pitcherStatsCache.set(`pitcher:${id}`, fullStats);
+        const fullStats = await pitcherStatsCache.getOrSet(`pitcher:${id}`, () => getPitcherStats(id));
         return { id, season: fullStats.season };
       })
     );
@@ -772,8 +771,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
       const batch = poolPlayerIds.slice(i, i + CONCURRENCY);
       const results = await Promise.allSettled(
         batch.map(async (id) => {
-          const stats = hitterStatsCache.get(`hitter:${id}`) ?? await getHitterStats(id);
-          hitterStatsCache.set(`hitter:${id}`, stats);
+          const stats = await hitterStatsCache.getOrSet(`hitter:${id}`, () => getHitterStats(id));
           return { id, stats };
         })
       );
