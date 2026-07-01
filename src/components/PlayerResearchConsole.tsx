@@ -1645,7 +1645,7 @@ export default function PlayerResearchConsole({
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-bold">Select Line for Slip</span>
                   </div>
 
-                  <p className="text-[10.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-relaxed bg-slate-950/40 p-3.5 rounded-2xl border border-slate-850">
+                  <p className="text-[10.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-relaxed bg-[hsl(var(--ve-surface-raised)/0.34)] p-3.5 rounded-2xl border border-[hsl(var(--ve-border)/0.30)]">
                     Calculated via dynamic matchup coefficients. Stage straight onto your live active Parlay slip, or vouch to lock it on your public feed vouchboard.
                   </p>
 
@@ -1659,11 +1659,11 @@ export default function PlayerResearchConsole({
                       return (
                         <div 
                           key={p.id} 
-                          className="bg-slate-950 border border-slate-800/80 p-4 rounded-2xl flex flex-col gap-4 shadow hover:border-slate-700/50 transition-colors"
+                          className="bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] p-4 rounded-2xl flex flex-col gap-4 shadow hover:border-[hsl(var(--ve-border)/0.50)] transition-colors"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] bg-slate-900 border border-slate-800 text-[var(--ve-accent)] px-2.5 py-1 rounded-lg font-mono font-black uppercase">
+                              <span className="text-[10px] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] text-[var(--ve-accent)] px-2.5 py-1 rounded-lg font-mono font-black uppercase">
                                 {p.market}
                               </span>
                               <span className="block text-xs text-[hsl(var(--ve-text-soft))] font-mono font-bold mt-2.5 truncate">
