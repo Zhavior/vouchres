@@ -579,7 +579,7 @@ export default function LiveStreams({
             className={`px-4.5 py-1.5 rounded-lg text-xs font-black tracking-wide uppercase transition-all flex items-center gap-2 ${
               activeTab === 'watch'
                 ? 'bg-gradient-to-tr from-[hsl(var(--ve-accent-cyan))] to-[hsl(var(--ve-accent-violet))] text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-400 hover:text-[hsl(var(--ve-text))]'
             }`}
           >
             <Tv className="w-3.5 h-3.5" />
@@ -591,7 +591,7 @@ export default function LiveStreams({
             className={`px-4.5 py-1.5 rounded-lg text-xs font-black tracking-wide uppercase transition-all flex items-center gap-2 ${
               activeTab === 'go-live'
                 ? 'bg-gradient-to-tr from-rose-600 to-pink-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-400 hover:text-[hsl(var(--ve-text))]'
             }`}
           >
             <Video className="w-3.5 h-3.5 animate-pulse text-rose-400" />
@@ -634,7 +634,7 @@ export default function LiveStreams({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                <h3 className="text-sm font-black text-slate-200 uppercase tracking-wider">
+                <h3 className="text-sm font-black text-[hsl(var(--ve-text))] uppercase tracking-wider">
                   Live Streamers Online Now
                 </h3>
               </div>
@@ -706,19 +706,19 @@ export default function LiveStreams({
                   <div className="p-4 flex-1 flex flex-col justify-between space-y-3.5">
                     <div>
                       <div className="flex gap-2 items-center">
-                        <div className={`w-7 h-7 rounded-full ${chan.avatarColor} font-bold text-slate-200 text-xs flex items-center justify-center shrink-0`}>
+                        <div className={`w-7 h-7 rounded-full ${chan.avatarColor} font-bold text-[hsl(var(--ve-text))] text-xs flex items-center justify-center shrink-0`}>
                           {chan.avatarInitials}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
-                            <span className="font-extrabold text-xs text-slate-200 truncate">{chan.streamerName}</span>
+                            <span className="font-extrabold text-xs text-[hsl(var(--ve-text))] truncate">{chan.streamerName}</span>
                             {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))] fill-[hsl(var(--ve-accent-cyan))]" />}
                           </div>
                           <span className="text-[10px] text-slate-500">@{chan.streamerUsername}</span>
                         </div>
                       </div>
 
-                      <h4 className="font-black text-slate-200 text-xs mt-2.5 text-left leading-snug line-clamp-2 uppercase tracking-wide group-hover:text-[hsl(var(--ve-accent-cyan))] transition-colors">
+                      <h4 className="font-black text-[hsl(var(--ve-text))] text-xs mt-2.5 text-left leading-snug line-clamp-2 uppercase tracking-wide group-hover:text-[hsl(var(--ve-accent-cyan))] transition-colors">
                         {chan.title}
                       </h4>
 
@@ -821,7 +821,7 @@ export default function LiveStreams({
                           </div>
                         </div>
                         <div className="text-center z-10">
-                          <p className="text-xs font-bold text-slate-200 uppercase tracking-widest font-mono">Dodgers Strikezone Radar</p>
+                          <p className="text-xs font-bold text-[hsl(var(--ve-text))] uppercase tracking-widest font-mono">Dodgers Strikezone Radar</p>
                           <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5 font-mono">Live correlation factor: 98.4% Pitch Efficiency</p>
                         </div>
                       </div>
@@ -866,7 +866,7 @@ export default function LiveStreams({
 
                         <div className="text-center space-y-1">
                           <p className="text-xs font-bold text-slate-100 uppercase tracking-widest font-mono">strikeout decay model distribution</p>
-                          <p className="text-[10px] text-slate-500 font-mono">Alpha Beta Regression Vector: 0.884 Coefficient Ratio</p>
+                          <p className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">Alpha Beta Regression Vector: 0.884 Coefficient Ratio</p>
                         </div>
                       </div>
 
@@ -895,7 +895,7 @@ export default function LiveStreams({
                           24 MPH
                         </div>
                         <div className="text-center space-y-1">
-                          <p className="text-xs font-bold text-slate-200 uppercase tracking-widest text-[#ff9f43]">Live Chicago Wind Gust Angle</p>
+                          <p className="text-xs font-bold text-[hsl(var(--ve-text))] uppercase tracking-widest text-[#ff9f43]">Live Chicago Wind Gust Angle</p>
                           <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
                             Wind blowing directly south-west at 14.5 degrees. Alternative Under betting margin is optimal.
                           </p>
@@ -1127,13 +1127,13 @@ export default function LiveStreams({
 
             {/* Right Column: Live Chat Room of Twitch stream */}
             <div className="lg:col-span-4" id="twitch-chatroom-feed-column">
-              <div className="bg-[#121824] rounded-2xl border border-slate-850 h-[640px] flex flex-col justify-between overflow-hidden shadow-2xl relative" id="chat-theater-container">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-2xl border border-[hsl(var(--ve-border)/0.34)] h-[640px] flex flex-col justify-between overflow-hidden shadow-2xl relative" id="chat-theater-container">
                 
                 {/* Chat Title header */}
-                <div className="bg-[#182030] border-b border-slate-850 px-4 py-3.5 flex items-center justify-between select-none shadow animate-fade-in">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.46)] border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3.5 flex items-center justify-between select-none shadow animate-fade-in">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span className="font-extrabold text-xs text-slate-100 uppercase tracking-widest font-mono">Live Stream Chat</span>
+                    <MessageSquare className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))] shrink-0" />
+                    <span className="font-extrabold text-xs text-[hsl(var(--ve-text))] uppercase tracking-widest font-mono">Live Stream Chat</span>
                   </div>
 
                   <div className="flex items-center gap-1 bg-red-950/40 px-2 py-0.5 rounded-full border border-red-900/30 animate-pulse">
@@ -1163,13 +1163,13 @@ export default function LiveStreams({
                             ? 'text-red-400' 
                             : c.role === 'self' 
                             ? 'text-emerald-400' 
-                            : 'text-slate-350'
+                            : 'text-[hsl(var(--ve-text-muted))]'
                         }`}>
                           {c.user}
                         </span>
-                        <span className="text-slate-500 font-mono">:</span>
+                        <span className="text-[hsl(var(--ve-text-muted))] font-mono">:</span>
                         
-                        <span className={`text-[#e2e8f0] font-medium select-text break-words ${c.role === 'mod' ? 'italic text-indigo-300' : ''}`}>
+                        <span className={`text-[hsl(var(--ve-text-soft))] font-medium select-text break-words ${c.role === 'mod' ? 'italic text-indigo-300' : ''}`}>
                           {c.text}
                         </span>
 
@@ -1180,15 +1180,15 @@ export default function LiveStreams({
                 </div>
 
                 {/* Viewer Interaction Deck (Emoji reaction bar + Tip trigger button) */}
-                <div className="px-3.5 py-2 bg-[#090d16] border-t border-slate-850/70 flex items-center justify-between gap-1.5 select-none relative z-10 flex-wrap">
+                <div className="px-3.5 py-2 bg-[hsl(var(--ve-surface-raised)/0.38)] border-t border-[hsl(var(--ve-border)/0.28)] flex items-center justify-between gap-1.5 select-none relative z-10 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-black text-slate-500 mr-1.5 font-mono uppercase tracking-wider">REACTION:</span>
+                    <span className="text-[10px] font-black text-[hsl(var(--ve-text-muted))] mr-1.5 font-mono uppercase tracking-wider">REACTION:</span>
                     {['🔥', '🚀', '👑', '🧠', '😭', '👏'].map((emoji) => (
                       <button
                         key={emoji}
                         type="button"
                         onClick={() => handleTriggerReaction(emoji)}
-                        className="text-sm p-1 hover:bg-slate-800/80 rounded transition-transform hover:scale-135 cursor-pointer transform duration-150"
+                        className="text-sm p-1 hover:bg-[hsl(var(--ve-surface-raised)/0.64)] rounded transition-transform hover:scale-135 cursor-pointer transform duration-150"
                       >
                         {emoji}
                       </button>
@@ -1206,27 +1206,27 @@ export default function LiveStreams({
 
                 {/* Beautiful 15% Platform Split Tipping Dialog */}
                 {showTipModal && (
-                  <div className="absolute inset-0 bg-[#070a12]/95 backdrop-blur-sm z-30 p-5 flex flex-col justify-center text-left" id="tipping-calculation-deck">
+                  <div className="absolute inset-0 bg-[hsl(var(--ve-bg)/0.94)] backdrop-blur-sm z-30 p-5 flex flex-col justify-center text-left" id="tipping-calculation-deck">
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                        <span className="text-xs font-black text-yellow-505 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                      <div className="flex justify-between items-center pb-2 border-b border-[hsl(var(--ve-border)/0.30)]">
+                        <span className="text-xs font-black text-yellow-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
                           ⚡ Transparent Tip Calculator
                         </span>
                         <button
                           type="button"
                           onClick={() => setShowTipModal(false)}
-                          className="text-[10px] font-mono text-slate-500 hover:text-slate-350 cursor-pointer border border-slate-800 px-2 py-0.5 rounded"
+                          className="text-[10px] font-mono text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text))] cursor-pointer border border-[hsl(var(--ve-border)/0.30)] px-2 py-0.5 rounded"
                         >
                           CLOSE [X]
                         </button>
                       </div>
 
-                      <p className="text-[11px] font-semibold text-slate-300 leading-relaxed">
-                        Tip your favorite streamer directly! Our platform retains a flat <span className="text-emerald-400 font-bold">15% commission</span> to cover transaction gas fees, and the remaining <span className="text-sky-400 font-bold">85% goes instantly to the capper</span>.
+                      <p className="text-[11px] font-semibold text-[hsl(var(--ve-text-soft))] leading-relaxed">
+                        Tip your favorite streamer directly! Our platform retains a flat <span className="text-emerald-400 font-bold">15% commission</span> to cover transaction gas fees, and the remaining <span className="text-[hsl(var(--ve-accent-cyan))] font-bold">85% goes instantly to the capper</span>.
                       </p>
 
                       <div className="space-y-2">
-                        <label className="text-[9.5px] font-bold text-slate-500 uppercase font-mono block">SELECT AMOUNT (USD)</label>
+                        <label className="text-[9.5px] font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono block">SELECT AMOUNT (USD)</label>
                         <div className="grid grid-cols-4 gap-1.5 text-center font-mono">
                           {[5, 10, 20, 50].map((val) => (
                             <button
@@ -1236,7 +1236,7 @@ export default function LiveStreams({
                               className={`py-1.5 rounded-lg text-xs font-black border transition-all ${
                                 tipAmount === val
                                   ? 'bg-yellow-500/15 border-yellow-500 text-yellow-405'
-                                  : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-205'
+                                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text))]'
                               }`}
                             >
                               ${val}
@@ -1245,16 +1245,16 @@ export default function LiveStreams({
                         </div>
 
                         {/* Interactive Fee Breakdown Display */}
-                        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-900 font-mono text-[11px] space-y-1.5">
-                          <div className="flex justify-between text-slate-400 font-semibold">
+                        <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.28)] font-mono text-[11px] space-y-1.5">
+                          <div className="flex justify-between text-[hsl(var(--ve-text-muted))] font-semibold">
                             <span>Tip Amount:</span>
-                            <span className="text-slate-200">${tipAmount.toFixed(2)}</span>
+                            <span className="text-[hsl(var(--ve-text))]">${tipAmount.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-rose-500/90 font-semibold text-[10px]">
                             <span>Website Cut (15%):</span>
                             <span>-${(tipAmount * 0.15).toFixed(2)}</span>
                           </div>
-                          <div className="flex justify-between text-emerald-450 font-black border-t border-slate-900 pt-1 text-xs">
+                          <div className="flex justify-between text-emerald-400 font-black border-t border-[hsl(var(--ve-border)/0.28)] pt-1 text-xs">
                             <span>To Stream Creator (85%):</span>
                             <span>+${(tipAmount * 0.85).toFixed(2)}</span>
                           </div>
@@ -1264,7 +1264,7 @@ export default function LiveStreams({
                       <button
                         type="button"
                         onClick={() => handleDonate(tipAmount)}
-                        className="w-full py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-450 hover:to-amber-500 text-slate-950 font-black text-xs tracking-wider uppercase rounded-xl shadow-lg transition-transform active:scale-[0.98]"
+                        className="w-full py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-450 hover:to-amber-500 text-[hsl(var(--ve-bg))] font-black text-xs tracking-wider uppercase rounded-xl shadow-lg transition-transform active:scale-[0.98]"
                       >
                         Confirm and Send ${tipAmount} Tip ⚡
                       </button>
@@ -1273,7 +1273,7 @@ export default function LiveStreams({
                 )}
 
                 {/* Chat Send Input Box area */}
-                <div className="p-3 bg-[#0e1320] border-t border-slate-850">
+                <div className="p-3 bg-[hsl(var(--ve-surface-raised)/0.42)] border-t border-[hsl(var(--ve-border)/0.30)]">
                   <form onSubmit={sendUserChatMessage} className="flex gap-2 items-center">
                     <div className="relative flex-1">
                       <input
@@ -1281,16 +1281,16 @@ export default function LiveStreams({
                         placeholder="Send a chat message..."
                         value={userChatMsg}
                         onChange={(e) => setUserChatMsg(e.target.value)}
-                        className="w-full text-xs bg-[#070a11] text-white border border-slate-800 rounded-xl px-3.5 pr-8 py-2.5 outline-none focus:border-[var(--ve-border-strong)] transition-all font-medium placeholder-slate-550 shadow-inner"
+                        className="w-full text-xs bg-[hsl(var(--ve-bg)/0.72)] text-[hsl(var(--ve-text))] border border-[hsl(var(--ve-border)/0.32)] rounded-xl px-3.5 pr-8 py-2.5 outline-none focus:border-[var(--ve-border-strong)] transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))] shadow-inner"
                         id="twitch-chat-input-val"
                         maxLength={150}
                       />
-                      <Smile className="w-4 h-4 text-slate-500 absolute right-3 top-3 hover:text-slate-300 cursor-pointer" />
+                      <Smile className="w-4 h-4 text-[hsl(var(--ve-text-muted))] absolute right-3 top-3 hover:text-[hsl(var(--ve-text))] cursor-pointer" />
                     </div>
                     
                     <button
                       type="submit"
-                      className="p-2.5 bg-indigo-600 hover:bg-indigo-505 text-white rounded-xl transition-all font-extrabold uppercase flex items-center justify-center cursor-pointer shadow-md border border-indigo-500/10 hover:scale-105"
+                      className="p-2.5 bg-[hsl(var(--ve-accent-violet))] hover:bg-[hsl(var(--ve-accent-violet)/0.86)] text-white rounded-xl transition-all font-extrabold uppercase flex items-center justify-center cursor-pointer shadow-md border border-[hsl(var(--ve-accent-violet)/0.18)] hover:scale-105"
                       id="chat-send-submit-btn"
                     >
                       <Send className="w-4 h-4" />
@@ -1312,10 +1312,10 @@ export default function LiveStreams({
             {/* Stream monitor view and webcam output */}
             <div className="lg:col-span-8 p-6 space-y-5 border-r border-slate-850">
               
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-[hsl(var(--ve-border)/0.30)] pb-3">
                 <div className="flex items-center gap-2">
                   <Video className="w-5 h-5 text-rose-500 shrink-0" />
-                  <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-widest font-mono">Stream Broadcast Monitor</h3>
+                  <h3 className="font-extrabold text-sm text-[hsl(var(--ve-text))] uppercase tracking-widest font-mono">Stream Broadcast Monitor</h3>
                 </div>
 
                 {isUserLive ? (
@@ -1370,7 +1370,7 @@ export default function LiveStreams({
                       </div>
                       <div className="text-center space-y-1">
                         <p className="text-xs font-bold font-mono text-slate-300 uppercase tracking-widest">Awaiting Live Device Stream</p>
-                        <p className="text-[10px] text-slate-500 font-mono max-w-sm mx-auto">
+                        <p className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono max-w-sm mx-auto">
                           Activate your webcam to overlay your direct speaker face, or stick with our local pitch radar feeds.
                         </p>
                       </div>
@@ -1386,7 +1386,7 @@ export default function LiveStreams({
                     <span className="text-[8px] bg-rose-955 text-rose-400 border border-rose-900/50 px-2 py-0.5 rounded font-mono uppercase tracking-widest font-black">
                       active layout
                     </span>
-                    <h4 className="text-xs font-bold text-slate-200 truncate leading-none mt-1">
+                    <h4 className="text-xs font-bold text-[hsl(var(--ve-text))] truncate leading-none mt-1">
                       {streamTitle || "Sports Analytics Stream"}
                     </h4>
                     <p className="text-[10px] text-slate-450 font-mono font-semibold">
@@ -1529,7 +1529,7 @@ export default function LiveStreams({
                 <div className="grid grid-cols-2 gap-3.5 font-mono text-center">
                   <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-850/60">
                     <span className="text-slate-500 text-[10px] uppercase font-bold">Duration</span>
-                    <p className="text-sm font-black text-slate-200 mt-1">{isUserLive ? formatSecs(streamDuration) : "00:00:00"}</p>
+                    <p className="text-sm font-black text-[hsl(var(--ve-text))] mt-1">{isUserLive ? formatSecs(streamDuration) : "00:00:00"}</p>
                   </div>
 
                   <div className="bg-[#0b0f19] p-3 rounded-xl border border-[#1e293b]/60">
@@ -1559,7 +1559,7 @@ export default function LiveStreams({
                     chats.map((c) => (
                       <div key={c.id} className="text-[11px] select-text animate-slide-up text-left" id={`moni-chat-${c.id}`}>
                         <span className={`font-bold hover:underline cursor-pointer ${
-                          c.role === 'self' ? 'text-emerald-400' : 'text-slate-350'
+                          c.role === 'self' ? 'text-emerald-400' : 'text-[hsl(var(--ve-text-muted))]'
                         }`}>
                           @{c.user}
                         </span>
