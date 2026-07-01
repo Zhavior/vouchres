@@ -91,7 +91,7 @@ const cardStyleConfigs = {
     nodeTagBg: 'bg-slate-900 border-slate-850',
     reasonsBg: 'bg-slate-900/60 border border-slate-900/80',
     headerTitleColor: 'text-[#cbd5e1]',
-    headerSubTitleColor: 'text-slate-500',
+    headerSubTitleColor: 'text-[hsl(var(--ve-text-muted))]',
     brandBadge: 'bg-sky-950/60 border border-sky-900/40 text-sky-400',
     activeLineColor1: '#0ea5e9',
     activeLineColor2: '#f97316',
@@ -175,7 +175,7 @@ const cardStyleConfigs = {
     nodeTagBg: 'bg-slate-50 border-slate-250',
     reasonsBg: 'bg-slate-50/90 border border-slate-200',
     headerTitleColor: 'text-slate-800',
-    headerSubTitleColor: 'text-slate-400',
+    headerSubTitleColor: 'text-[hsl(var(--ve-text-muted))]',
     brandBadge: 'bg-slate-100 border border-slate-200 text-slate-800',
     activeLineColor1: '#1e293b',
     activeLineColor2: '#64748b',
@@ -582,7 +582,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           <h2 className="text-2xl font-black tracking-tight text-white">
             Vouch Board &amp; Graphic Studio
           </h2>
-          <p className="mt-1.5 max-w-2xl text-sm text-slate-400">
+          <p className="mt-1.5 max-w-2xl text-sm text-[hsl(var(--ve-text-muted))]">
             Build bespoke circular player portfolios, customize metrics, toggle sabermeter charts, and generate high-contrast cards for Twitter/X.
           </p>
         </div>
@@ -614,7 +614,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 <span className="text-xl leading-none">{t.emoji}</span>
                 <span className="min-w-0">
                   <span className={`block text-sm font-black ${text}`}>{t.label}</span>
-                  <span className="block text-[11px] text-slate-500">{t.sub}</span>
+                  <span className="block text-[11px] text-[hsl(var(--ve-text-muted))]">{t.sub}</span>
                 </span>
                 {active && <span className="ml-auto h-2 w-2 flex-shrink-0 rounded-full bg-current opacity-80" />}
               </button>
@@ -635,7 +635,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Simulated Return (Demo)</span>
+                  <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Simulated Return (Demo)</span>
                   <div className="text-2xl font-black text-emerald-400 font-mono tracking-tight">
                     +${Math.round((selectedPlayers.length * 4.2 * simulationStakeUnit) * (simulatedWinRate / 75)).toLocaleString()}
                   </div>
@@ -655,7 +655,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Assumed Accuracy (Demo)</span>
+                  <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Assumed Accuracy (Demo)</span>
                   <div className="text-2xl font-black text-amber-400 font-mono tracking-tight">
                     {simulatedWinRate}%
                   </div>
@@ -665,7 +665,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       style={{ width: `${simulatedWinRate}%` }} 
                     />
                   </div>
-                  <span className="text-[9px] text-slate-500 font-semibold block mt-1">
+                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-semibold block mt-1">
                     Adjust accuracy with slider below
                   </span>
                 </div>
@@ -680,7 +680,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Portfolio Roster</span>
+                  <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Portfolio Roster</span>
                   <div className="text-2xl font-black text-indigo-400 tracking-tight">
                     {selectedPlayers.length} Active Stars
                   </div>
@@ -699,11 +699,11 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Efficiency Index</span>
+                  <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Efficiency Index</span>
                   <div className="text-2xl font-black text-purple-400 font-mono tracking-tight">
                     +14.25% ROI
                   </div>
-                  <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 mt-1 font-mono">
+                  <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-semibold flex items-center gap-1 mt-1 font-mono">
                     <Activity className="w-3 h-3 text-purple-400" />
                     Sharpe: 2.84 • S-Tier Grade
                   </span>
@@ -744,7 +744,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         className={`px-2.5 py-1 rounded transition-all ${
                           historicalTimeframe === tf
                             ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60'
-                            : 'text-slate-500 hover:text-slate-300'
+                            : 'text-[hsl(var(--ve-text-muted))] hover:text-slate-300'
                         }`}
                       >
                         {tf.toUpperCase()} Window
@@ -844,7 +844,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   {/* Slider 1: Simulated Win Rate */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10px]">
-                      <span className="font-bold text-slate-400 uppercase font-mono">Assumed Accuracy</span>
+                      <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">Assumed Accuracy</span>
                       <span className="font-black text-amber-400 font-mono text-xs">{simulatedWinRate}%</span>
                     </div>
                     <input 
@@ -855,7 +855,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       onChange={(e) => setSimulatedWinRate(parseInt(e.target.value))}
                       className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-400"
                     />
-                    <p className="text-[8.5px] text-slate-500 font-semibold leading-snug">
+                    <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-semibold leading-snug">
                       Adjust based on historical hit rate threshold.
                     </p>
                   </div>
@@ -863,7 +863,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   {/* Slider 2: Sizing per Unit */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10px]">
-                      <span className="font-bold text-slate-400 uppercase font-mono">Stake per Unit</span>
+                      <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">Stake per Unit</span>
                       <span className="font-black text-emerald-400 font-mono text-xs">${simulationStakeUnit}</span>
                     </div>
                     <input 
@@ -875,14 +875,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       onChange={(e) => setSimulationStakeUnit(parseInt(e.target.value))}
                       className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-400"
                     />
-                    <p className="text-[8.5px] text-slate-500 font-semibold leading-snug">
+                    <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-semibold leading-snug">
                       Modulates total capital output per pick.
                     </p>
                   </div>
 
                   {/* Risk Profile Selector */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase font-mono block">Risk Profile Bias</label>
+                    <label className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono block">Risk Profile Bias</label>
                     <select
                       value={portfolioRiskFilter}
                       onChange={(e) => setPortfolioRiskFilter(e.target.value as any)}
@@ -905,11 +905,11 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={isAuditing}
                       className={`flex-1 py-3 px-4 rounded-xl font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all ${
                         isAuditing 
-                          ? 'bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed'
+                          ? 'bg-slate-900 text-[hsl(var(--ve-text-muted))] border border-slate-800 cursor-not-allowed'
                           : 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/10 border border-emerald-400/20 active:scale-[0.98]'
                       }`}
                     >
-                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-slate-500' : 'text-white'}`} />
+                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-white'}`} />
                       <span>{isAuditing ? '🧠 CALCULATING PROJECTIONS & SPLITS...' : '⚡ EXECUTE DEEP PORTFOLIO BACKTEST AUDIT'}</span>
                     </button>
                   </div>
@@ -918,7 +918,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="relative">
                     <div className="absolute top-2 right-3 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest font-mono">Terminal Console</span>
+                      <span className="text-[8px] text-[hsl(var(--ve-text-muted))] font-bold uppercase tracking-widest font-mono">Terminal Console</span>
                     </div>
                     <div className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))] p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl min-h-[140px] max-h-[220px] overflow-y-auto space-y-1.5 leading-relaxed shadow-inner">
                       {auditLog.length === 0 ? (
@@ -930,7 +930,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           <div 
                             key={idx} 
                             className={`animate-fade-in ${
-                              log.includes('✓') || log.includes('🏆') ? 'text-emerald-400 font-bold' : log.includes('⚡') ? 'text-cyan-400' : 'text-slate-400'
+                              log.includes('✓') || log.includes('🏆') ? 'text-emerald-400 font-bold' : log.includes('⚡') ? 'text-cyan-400' : 'text-[hsl(var(--ve-text-muted))]'
                             }`}
                           >
                             {log}
@@ -1197,14 +1197,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
                 Vouch Card Configuration
               </h3>
-              <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+              <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5 leading-snug">
                 Configure represented stars, specify individual lines, and enter analytical rationale.
               </p>
             </div>
 
             {/* Config: Players checkboxes list */}
             <div className="space-y-2">
-              <label className="text-[9.5px] uppercase font-bold text-slate-400 tracking-wider block">
+              <label className="text-[9.5px] uppercase font-bold text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 {activeCardLayout === 'potd' ? "Featured Spotlight Player" : "Manage Represented Players (Max 5)"}
               </label>
 
@@ -1219,7 +1219,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     />
                     <div>
                       <span className="text-xs font-black text-amber-300 block">{(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}</span>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase block mt-0.5 leading-none">
+                      <span className="text-[8px] font-mono text-[hsl(var(--ve-text-muted))] uppercase block mt-0.5 leading-none">
                         {(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.team.split(' ').pop()} · NO. {(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.number}
                       </span>
                     </div>
@@ -1234,7 +1234,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <span>{ps.player.name.split(' ').pop()}</span>
                       <button 
                         onClick={() => handleRemovePlayerFromCircle(ps.player.id)}
-                        className="text-slate-500 hover:text-rose-400 font-bold transition-all"
+                        className="text-[hsl(var(--ve-text-muted))] hover:text-rose-400 font-bold transition-all"
                         title="Remove"
                       >
                         <X className="w-3" />
@@ -1246,7 +1246,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
               {/* Quick Select Quickroll dropdown */}
               <div className="space-y-1.5">
-                <span className="text-[8.5px] text-slate-500 uppercase block font-mono">
+                <span className="text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase block font-mono">
                   {activeCardLayout === 'potd' ? "Change Featured Player of the Day:" : "Quick add from active rosters:"}
                 </span>
                 <div className="max-h-[140px] overflow-y-auto bg-slate-950 rounded-xl border border-slate-900 p-1.5 space-y-1 scrollbar-thin">
@@ -1427,7 +1427,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
             {/* Config: Reasons justification text */}
             <div className="space-y-1">
-              <label className="text-[9.5px] uppercase font-bold text-slate-400 tracking-wider block">
+              <label className="text-[9.5px] uppercase font-bold text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 My Analytical Reasons & Insights
               </label>
               <textarea
@@ -1457,7 +1457,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   className={`py-2 px-1 rounded-xl border text-center transition-all text-[10px] sm:text-xs font-mono font-bold flex flex-col items-center justify-center gap-1.5 ${
                     activeCardLayout === 'orbit'
                       ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/30'
+                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/30'
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
@@ -1469,7 +1469,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   className={`py-2 px-1 rounded-xl border text-center transition-all text-[10px] sm:text-xs font-mono font-bold flex flex-col items-center justify-center gap-1.5 ${
                     activeCardLayout === 'potd'
                       ? 'bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/30'
+                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/30'
                   }`}
                 >
                   <Award className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-gold))]" />
@@ -1481,7 +1481,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   className={`py-2 px-1 rounded-xl border text-center transition-all text-[10px] sm:text-xs font-mono font-bold flex flex-col items-center justify-center gap-1.5 ${
                     activeCardLayout === 'parlay'
                       ? 'bg-purple-500/10 border-purple-500/40 text-purple-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/30'
+                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/30'
                   }`}
                 >
                   <Share2 className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
@@ -1492,7 +1492,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               {/* Conditionally reveal player selection for Player of the Day design */}
               {activeCardLayout === 'potd' && (
                 <div className="p-3 bg-slate-950/45 rounded-xl border border-slate-900 space-y-2 animate-fade-in">
-                  <span className="text-[9px] uppercase font-mono font-black text-slate-400 block tracking-wider">
+                  <span className="text-[9px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] block tracking-wider">
                     Select Featured Spotlight Player:
                   </span>
                   <div className="grid grid-cols-1 gap-1.5 max-h-[140px] overflow-y-auto pr-1">
@@ -1515,7 +1515,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         />
                         <div className="min-w-0 flex-1 leading-none">
                           <span className="text-[11px] font-black truncate block">{ps.player.name}</span>
-                          <span className="text-[8px] text-slate-500 uppercase tracking-tight block mt-0.5">
+                          <span className="text-[8px] text-[hsl(var(--ve-text-muted))] uppercase tracking-tight block mt-0.5">
                             {ps.player.team.split(' ').pop()} · {ps.statType}: {ps.customVal}
                           </span>
                         </div>
@@ -1542,7 +1542,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   className={`py-2 px-3 rounded-xl border text-center transition-all text-xs font-mono font-bold flex items-center justify-center gap-1.5 ${
                     showSecondCard
                       ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/10'
+                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/10'
                   }`}
                 >
                   <Award className="w-3.5 h-3.5" />
@@ -1558,7 +1558,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       ? 'opacity-40 cursor-not-allowed bg-slate-950/20 border-slate-950 text-slate-600'
                       : postSideways
                       ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/10'
+                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/10'
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1580,7 +1580,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
               {/* + BUTTON TO UPLOAD OWN CUSTOM PHOTO */}
               <div className="space-y-2">
-                <span className="text-[8.5px] font-mono text-slate-400 uppercase font-black block text-left">
+                <span className="text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] uppercase font-black block text-left">
                   Card Custom Background / Plate Image:
                 </span>
                 <div className="flex flex-wrap gap-2 items-center">
@@ -1603,13 +1603,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         }
                       }}
                     />
-                    <Plus className="w-5 h-5 text-slate-500 group-hover:text-sky-400 transition-colors" />
-                    <span className="text-[8px] font-mono font-extrabold text-slate-400 uppercase tracking-tight">ADD PHOTO</span>
+                    <Plus className="w-5 h-5 text-[hsl(var(--ve-text-muted))] group-hover:text-sky-400 transition-colors" />
+                    <span className="text-[8px] font-mono font-extrabold text-[hsl(var(--ve-text-muted))] uppercase tracking-tight">ADD PHOTO</span>
                   </label>
 
                   {/* Preset Background Options */}
                   <div className="flex-1 space-y-1.5">
-                    <span className="text-[7.5px] font-mono text-slate-500 uppercase block text-left">Or Pick High-Contrast Neon Presets:</span>
+                    <span className="text-[7.5px] font-mono text-[hsl(var(--ve-text-muted))] uppercase block text-left">Or Pick High-Contrast Neon Presets:</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       <button 
                         type="button" 
@@ -1651,17 +1651,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               </div>
 
               {/* Win Rate, Daily, Monthly Toggles & Fields */}
-              <div className="bg-slate-950 p-3 rounded-2xl border border-slate-900 space-y-3">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] p-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] space-y-3">
                 
                 {/* 1. Winrate inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-left">
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showWinRate} 
                         onChange={(e) => setShowWinRate(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       SHOW WIN RATE
                     </label>
@@ -1670,17 +1670,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showWinRate}
                       value={customWinRate}
                       onChange={(e) => setCustomWinRate(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-sky-400 outline-none placeholder-slate-700" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-accent-cyan))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)]" 
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showDailyWinRate} 
                         onChange={(e) => setShowDailyWinRate(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       DAILY WIN RATE
                     </label>
@@ -1689,7 +1689,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showDailyWinRate}
                       value={customDailyWinRate}
                       onChange={(e) => setCustomDailyWinRate(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-amber-400 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-accent-gold))] outline-none focus:border-[hsl(var(--ve-accent-gold)/0.55)]" 
                     />
                   </div>
                 </div>
@@ -1697,12 +1697,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 {/* 2. Monthly dynamic & Picks input */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-left">
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showMonthlyWinRate} 
                         onChange={(e) => setShowMonthlyWinRate(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       MONTHLY WIN RATE
                     </label>
@@ -1711,17 +1711,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showMonthlyWinRate}
                       value={customMonthlyWinRate}
                       onChange={(e) => setCustomMonthlyWinRate(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-[#f43f5e] outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-accent-pink))] outline-none focus:border-[hsl(var(--ve-accent-pink)/0.55)]" 
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showMlbPicks} 
                         onChange={(e) => setShowMlbPicks(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       MLB RUN INDEX (PICKS)
                     </label>
@@ -1730,7 +1730,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showMlbPicks}
                       value={customMlbPicks}
                       onChange={(e) => setCustomMlbPicks(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-teal-400 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-accent-cyan))] outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.55)]" 
                     />
                   </div>
                 </div>
@@ -1738,12 +1738,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 {/* 3. PRO badge and Units Net Profit */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-left">
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showProBadge} 
                         onChange={(e) => setShowProBadge(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       PRO STAMP LEVEL
                     </label>
@@ -1752,17 +1752,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showProBadge}
                       value={customProTag}
                       onChange={(e) => setCustomProTag(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-fuchsia-400 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-accent-pink))] outline-none focus:border-[hsl(var(--ve-accent-pink)/0.55)]" 
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                    <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                       <input 
                         type="checkbox" 
                         checked={showUnitsProfit} 
                         onChange={(e) => setShowUnitsProfit(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       UNITS NET PROFIT
                     </label>
@@ -1771,19 +1771,19 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       disabled={!showUnitsProfit}
                       value={unitsProfitValue}
                       onChange={(e) => setUnitsProfitValue(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-emerald-400 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-emerald-300 outline-none focus:border-emerald-300/55" 
                     />
                   </div>
                 </div>
 
                 {/* 4. Best Parlay Pick Block */}
                 <div className="space-y-1 text-left">
-                  <label className="flex items-center gap-1 text-[8.5px] font-mono text-slate-400 font-black">
+                  <label className="flex items-center gap-1 text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] font-black">
                     <input 
                       type="checkbox" 
                       checked={showBestParlay} 
                       onChange={(e) => setShowBestParlay(e.target.checked)}
-                      className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                      className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                     />
                     BEST PARLAY PICK HERO LABEL
                   </label>
@@ -1792,19 +1792,19 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     disabled={!showBestParlay}
                     value={bestParlayDesc}
                     onChange={(e) => setBestParlayDesc(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 text-[11px] rounded p-1 px-2 font-black tracking-tight" 
+                    className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-primary))] text-[11px] rounded p-1 px-2 font-black tracking-tight focus:border-[hsl(var(--ve-accent-cyan)/0.55)]" 
                   />
                 </div>
 
                 {/* 5. Subscription Coupon discount */}
-                <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-slate-900">
+                <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-[hsl(var(--ve-border)/0.26)]">
                   <div className="space-y-1">
-                    <label className="flex items-center gap-1 text-[8px] font-mono text-slate-500 font-bold">
+                    <label className="flex items-center gap-1 text-[8px] font-mono text-[hsl(var(--ve-text-muted))] font-bold">
                       <input 
                         type="checkbox" 
                         checked={showCoupon} 
                         onChange={(e) => setShowCoupon(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0" 
+                        className="rounded bg-[hsl(var(--ve-surface-raised)/0.52)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-accent-cyan))] focus:ring-0" 
                       />
                       COUPON CODE
                     </label>
@@ -1814,18 +1814,18 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="e.g. SAVE20"
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold uppercase text-amber-400 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold uppercase text-[hsl(var(--ve-accent-gold))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-gold)/0.55)]" 
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[8px] font-mono text-slate-500 block">COUPON RECRUIT promo text</span>
+                    <span className="text-[8px] font-mono text-[hsl(var(--ve-text-muted))] block">COUPON RECRUIT promo text</span>
                     <input 
                       type="text" 
                       disabled={!showCoupon}
                       value={couponText}
                       onChange={(e) => setCouponText(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-1 text-[11px] font-bold text-slate-300 outline-none" 
+                      className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded p-1 text-[11px] font-bold text-[hsl(var(--ve-text-secondary))] outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.55)]" 
                     />
                   </div>
                 </div>
@@ -1834,7 +1834,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Config: Card Styles Showcase */}
-            <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="space-y-2 border-t border-[hsl(var(--ve-border)/0.28)] pt-3">
               <label className="text-[10px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 Visual Card Style Preset
               </label>
@@ -1854,7 +1854,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     className={`py-2 px-2.5 rounded-xl border text-left transition-all text-[11px] font-mono flex flex-col justify-between h-[52px] ${
                       cardStyle === styleOpt.id 
                         ? `${styleOpt.activeStyle} border-2 ring-1 ring-sky-500/10 font-black` 
-                        : 'bg-slate-950 border-slate-900 text-slate-500 hover:text-slate-300 hover:border-slate-800'
+                        : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-300 hover:border-slate-800'
                     }`}
                   >
                     <span>{styleOpt.name}</span>
@@ -1873,7 +1873,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showCharts 
                     ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
-                    : 'bg-slate-950/20 border-[#1e293b] text-slate-500'
+                    : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
                 <span className="font-mono text-[9px] font-bold">GAME CHARTS</span>
@@ -1885,7 +1885,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showLogo 
                     ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
-                    : 'bg-slate-950/20 border-[#1e293b] text-slate-500'
+                    : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
                 <span className="font-mono text-[9px] font-bold">WATERMARK</span>
@@ -1897,7 +1897,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl outline-none border transition-all ${
                   showReasons 
                     ? 'bg-slate-950 border-sky-900/60 text-sky-400' 
-                    : 'bg-slate-950/20 border-[#1e293b] text-slate-500'
+                    : 'bg-slate-950/20 border-[#1e293b] text-[hsl(var(--ve-text-muted))]'
                 }`}
               >
                 <span className="font-mono text-[9px] font-bold">RATIONALE TXT</span>
@@ -1911,7 +1911,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           <div className="lg:col-span-7 space-y-5 flex flex-col">
             
             <div className="flex justify-between items-center px-1">
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-xs font-mono font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-widest">
                 Twitter/X Board Share Card Preview
               </span>
               <span className="text-[9.5px] font-mono text-emerald-400 flex items-center gap-1 font-bold bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-900/25">
@@ -1923,7 +1923,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             {/* Visual Workspace Premium Scale Station */}
             <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-855 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-4 shadow-xl">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] font-mono font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider">
                   🔎 Scale Controller:
                 </span>
                 <span className="text-xs font-mono font-black text-sky-400 bg-sky-950/40 px-2 py-0.5 rounded border border-sky-900/30">
@@ -1931,7 +1931,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 </span>
               </div>
               <div className="flex items-center gap-3 flex-1 max-w-[180px] sm:max-w-xs">
-                <span className="text-[9px] font-mono text-slate-500">Fit</span>
+                <span className="text-[9px] font-mono text-[hsl(var(--ve-text-muted))]">Fit</span>
                 <input 
                   type="range" 
                   min="0.5" 
@@ -1941,14 +1941,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
                   className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500" 
                 />
-                <span className="text-[9px] font-mono text-slate-500">1:1</span>
+                <span className="text-[9px] font-mono text-[hsl(var(--ve-text-muted))]">1:1</span>
               </div>
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setPreviewScale(0.70)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 0.70 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    previewScale === 0.70 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Fits Sideways
@@ -1957,7 +1957,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   type="button"
                   onClick={() => setPreviewScale(0.85)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 0.85 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    previewScale === 0.85 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Optimal
@@ -1966,7 +1966,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   type="button"
                   onClick={() => setPreviewScale(1.0)}
                   className={`px-2 py-1 text-[9px] font-mono font-bold rounded border transition-all ${
-                    previewScale === 1.0 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    previewScale === 1.0 ? 'bg-sky-950/80 border-sky-500 text-sky-400 font-extrabold shadow-[0_0_10px_rgba(14,165,233,0.25)]' : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-slate-200'
                   }`}
                 >
                   Actual
@@ -2015,7 +2015,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                   {/* Dot/Page indicator */}
                   {showSecondCard && !postSideways && (
-                    <div className="absolute top-20 right-4 bg-slate-950/80 rounded-full py-1 px-3 border border-slate-800/60 text-[9px] font-mono text-slate-400 font-bold z-40 shadow flex gap-1.5 items-center">
+                    <div className="absolute top-20 right-4 bg-slate-950/80 rounded-full py-1 px-3 border border-slate-800/60 text-[9px] font-mono text-[hsl(var(--ve-text-muted))] font-bold z-40 shadow flex gap-1.5 items-center">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
                       CARD 1 / 2
                     </div>
@@ -2125,7 +2125,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           </h3>
                         </div>
                         <div className="text-right leading-tight min-w-[70px]">
-                          <span className="text-[8px] uppercase font-mono text-slate-500 block">MULTI ODDS</span>
+                          <span className="text-[8px] uppercase font-mono text-[hsl(var(--ve-text-muted))] block">MULTI ODDS</span>
                           <span className="text-indigo-400 font-mono font-black text-sm">{currentParlay.totalOdds}</span>
                         </div>
                       </div>
@@ -2143,12 +2143,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                                 }`}>
                                   Leg {idx + 1}
                                 </span>
-                                <span className="text-[9.5px] text-slate-500 font-mono">{leg.market}</span>
+                                <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono">{leg.market}</span>
                               </div>
                               <p className={`text-[12px] font-black tracking-tight leading-snug truncate ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-200'}`}>
                                 {leg.selection}
                               </p>
-                              <p className="text-[10px] text-slate-500 leading-none truncate">
+                              <p className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-none truncate">
                                 ⚾ {leg.game}
                               </p>
                             </div>
@@ -2164,7 +2164,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       {/* Financial review */}
                       <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                         <div className={`p-3 rounded-xl bg-black/40 border border-slate-900 flex justify-between items-center`}>
-                          <span className="text-slate-500 text-[10px] uppercase">RISK WAGER</span>
+                          <span className="text-[hsl(var(--ve-text-muted))] text-[10px] uppercase">RISK WAGER</span>
                           <strong className="text-slate-300 font-bold">${currentParlay.wagerAmount || 100}</strong>
                         </div>
                         <div className={`p-3 rounded-xl bg-black/40 border border-slate-900 flex justify-between items-center`}>
@@ -2255,7 +2255,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                         {/* Small player detail tag */}
                         <span className={`text-[9px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'} mt-1 font-mono uppercase ${activeStyle.nodeTagBg} border ${activeStyle.cardBorder} rounded px-1.5 py-0.2 leading-none whitespace-nowrap`}>
-                          {ps.player.name.split(' ').pop()} <span className="text-slate-500 text-[7.5px]">#{ps.player.number}</span>
+                          {ps.player.name.split(' ').pop()} <span className="text-[hsl(var(--ve-text-muted))] text-[7.5px]">#{ps.player.number}</span>
                         </span>
                       </div>
                     );
@@ -2308,7 +2308,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         <div>
                           <div className="flex items-center justify-center md:justify-start gap-1 pb-1">
                             <Crown className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-[8.5px] font-mono font-black text-slate-500 uppercase tracking-widest leading-none">
+                            <span className="text-[8.5px] font-mono font-black text-[hsl(var(--ve-text-muted))] uppercase tracking-widest leading-none">
                               Featured Model Apex Spot
                             </span>
                           </div>
@@ -2320,7 +2320,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                         {/* High-visibility prop glass highlight card */}
                         <div className={`p-2.5 rounded-xl border relative overflow-hidden ${activeStyle.nodeTagBg} backdrop-blur-xl`}>
-                          <span className="text-[7.5px] font-mono uppercase font-black text-slate-500 block mb-0.5 tracking-wider">
+                          <span className="text-[7.5px] font-mono uppercase font-black text-[hsl(var(--ve-text-muted))] block mb-0.5 tracking-wider">
                             VERIFIED PROPOSITION SPEC:
                           </span>
                           <span className={`text-base md:text-lg font-mono font-black block leading-none ${cardStyle === 'minimal' ? 'text-slate-905' : 'text-slate-200'}`}>
@@ -2331,15 +2331,15 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         {/* Mini statistics row */}
                         <div className="grid grid-cols-3 gap-1.5">
                           <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
-                            <span className="text-[6px] text-slate-500 uppercase block leading-none">Model Edge</span>
+                            <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Model Edge</span>
                             <span className="text-[11px] font-black text-amber-400 mt-0.5 block leading-none">94.8%</span>
                           </div>
                           <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
-                            <span className="text-[6px] text-slate-500 uppercase block leading-none">Season OPS</span>
+                            <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Season OPS</span>
                             <span className="text-[11px] font-black text-sky-400 mt-0.5 block leading-none">{featured.player.seasonStats.ops}</span>
                           </div>
                           <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
-                            <span className="text-[6px] text-slate-500 uppercase block leading-none">Total HRs</span>
+                            <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Total HRs</span>
                             <span className="text-[11px] font-black text-rose-500 mt-0.5 block leading-none">{featured.player.seasonStats.hr}</span>
                           </div>
                         </div>
@@ -2353,7 +2353,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               {/* CARD REASONS AND ANALYTICAL EXPLANATIONS SECTION */}
               {showReasons && activeCardLayout !== 'parlay' && (
                 <div className={`${activeStyle.reasonsBg} rounded-xl p-3 z-10 relative space-y-1 my-2`}>
-                  <span className={`text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-slate-500' : 'text-slate-400'} uppercase font-black block tracking-wider`}>
+                  <span className={`text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-[hsl(var(--ve-text-muted))]' : 'text-[hsl(var(--ve-text-muted))]'} uppercase font-black block tracking-wider`}>
                     Verified Creator Analytical Rationale:
                   </span>
                   <p className={`text-[10px] ${cardStyle === 'minimal' ? 'text-slate-700' : 'text-slate-300'} font-medium italic leading-relaxed`}>
@@ -2365,7 +2365,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               {/* OPTIONAL PREVIOUS GAMES HISTORIC PERFORMANCE GRAPH */}
               {showCharts && activeCardLayout !== 'parlay' && (
                 <div className={`${cardStyle === 'minimal' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950'} rounded-xl border ${activeStyle.cardBorder} p-3 mt-1.5 z-10 relative space-y-2`}>
-                  <div className={`flex justify-between items-center text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-slate-500' : 'text-slate-500'} uppercase tracking-widest`}>
+                  <div className={`flex justify-between items-center text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-[hsl(var(--ve-text-muted))]' : 'text-[hsl(var(--ve-text-muted))]'} uppercase tracking-widest`}>
                     <span>
                       {activeCardLayout === 'potd' 
                         ? `${(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}'s Recent Performance Index` 
@@ -2441,7 +2441,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="absolute top-0 right-0 py-0.5 px-2 bg-amber-500 text-slate-950 text-[7px] font-mono font-black uppercase tracking-widest rounded-bl-lg">
                     HOT PARLAY
                   </div>
-                  <span className="text-[7.5px] font-mono uppercase font-black text-slate-500 block mb-0.5 tracking-wider">
+                  <span className="text-[7.5px] font-mono uppercase font-black text-[hsl(var(--ve-text-muted))] block mb-0.5 tracking-wider">
                     ⭐ RECOMMENDED CORRELATED PARLAY PICK:
                   </span>
                   <span className={`text-[11px] font-bold block leading-snug ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-300'}`}>
@@ -2456,7 +2456,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] leading-none">🎟️</span>
                     <div className="text-left leading-none">
-                      <span className="text-[7.5px] font-mono text-slate-500 block uppercase">Promote Coupon Premium Offer:</span>
+                      <span className="text-[7.5px] font-mono text-[hsl(var(--ve-text-muted))] block uppercase">Promote Coupon Premium Offer:</span>
                       <span className={`text-[10px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-250'}`}>{couponText}</span>
                     </div>
                   </div>
@@ -2467,7 +2467,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               )}
 
               {/* BRAND CARD FOOTER WITH TIMESTAMP */}
-              <div className={`border-t ${activeStyle.cardBorder} pt-3 mt-3 flex justify-between items-center text-[8.5px] font-mono text-slate-500 z-10 relative`}>
+              <div className={`border-t ${activeStyle.cardBorder} pt-3 mt-3 flex justify-between items-center text-[8.5px] font-mono text-[hsl(var(--ve-text-muted))] z-10 relative`}>
                 <div>
                   <span>WATERMARK ARCHIVE:</span>
                   <span className={`${activeStyle.footerUrlColor} ml-1`}>vouchedge.ai/{profile?.username || "Zhavior"}</span>
@@ -2591,13 +2591,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                                     </span>
                                     <span className="text-[9px] font-mono bg-amber-500/10 border border-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded font-extrabold uppercase">SPOTLIGHT MATCHUP</span>
                                   </div>
-                                  <span className="text-xs font-mono text-slate-500 uppercase block mt-0.5">
+                                  <span className="text-xs font-mono text-[hsl(var(--ve-text-muted))] uppercase block mt-0.5">
                                     {player.team} · #{player.number} · {player.position}
                                   </span>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <span className="text-[7.5px] font-mono text-slate-500 uppercase block">VAI SABERMETRIC EDGE</span>
+                                <span className="text-[7.5px] font-mono text-[hsl(var(--ve-text-muted))] uppercase block">VAI SABERMETRIC EDGE</span>
                                 <span className={`text-sm font-black font-mono tracking-tight uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-400'}`}>
                                   {metrics.edgeFactorVal} Index
                                 </span>
@@ -2607,17 +2607,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                             {/* Pitcher Matchup Stats Grid */}
                             <div className="grid grid-cols-3 gap-2">
                               <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
-                                <span className="text-[6.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">VS PITCHER ERA</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">VS PITCHER ERA</span>
                                 <span className="text-rose-400 font-black block text-sm leading-none">{metrics.pitcherEra}</span>
                                 <span className="text-[6.5px] text-slate-650 block mt-1 uppercase truncate font-bold">{metrics.pitcherName} ({metrics.pitcherHand})</span>
                               </div>
                               <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
-                                <span className="text-[6.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">10G HIT RATE</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">10G HIT RATE</span>
                                 <span className="text-emerald-400 font-black block text-sm leading-none">{metrics.hitRateLast10}%</span>
                                 <span className="text-[6.5px] text-slate-650 block mt-1 uppercase font-bold">LAST 10 GAMES</span>
                               </div>
                               <div className="bg-black/25 p-2.5 rounded-xl border border-slate-900/60 text-center font-mono">
-                                <span className="text-[6.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
+                                <span className="text-[6.5px] text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
                                 <span className="text-sky-400 font-black block text-sm leading-none">{metrics.playRatePercent}%</span>
                                 <span className="text-[6.5px] text-slate-650 block mt-1 uppercase font-bold">PLATE SECURITY</span>
                               </div>
@@ -2626,7 +2626,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                             {/* Deep Splits Comparison */}
                             <div className="grid grid-cols-2 gap-3 text-[10px] font-mono bg-black/15 p-3 rounded-xl border border-slate-900/40">
                               <div className="space-y-1.5 text-left">
-                                <span className="text-[7.5px] font-black text-slate-500 uppercase block tracking-wider border-b border-slate-900 pb-1">PLAYER STAT PLURALS</span>
+                                <span className="text-[7.5px] font-black text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider border-b border-slate-900 pb-1">PLAYER STAT PLURALS</span>
                                 <div className="space-y-1 text-slate-300">
                                   <div className="flex justify-between"><span>vs {metrics.pitcherHand}:</span><strong className="text-white">{metrics.pitcherHand === 'RHP' ? player.splits?.vRHP?.ops || "1.067" : player.splits?.vLHP?.ops || "0.958"} OPS</strong></div>
                                   <div className="flex justify-between"><span>Last 10 OPS:</span><strong className="text-emerald-400">{player.splits?.last10?.ops || "1.150"}</strong></div>
@@ -2634,7 +2634,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                                 </div>
                               </div>
                               <div className="space-y-1.5 border-l border-slate-900/60 pl-3 text-left">
-                                <span className="text-[7.5px] font-black text-slate-500 uppercase block tracking-wider border-b border-slate-900 pb-1">PITCHER ARSENAL BREAKS</span>
+                                <span className="text-[7.5px] font-black text-[hsl(var(--ve-text-muted))] uppercase block tracking-wider border-b border-slate-900 pb-1">PITCHER ARSENAL BREAKS</span>
                                 <div className="space-y-1 text-slate-300">
                                   <div className="flex justify-between"><span>ERA Baseline:</span><strong className="text-rose-400">{metrics.pitcherEra}</strong></div>
                                   <div className="flex justify-between"><span>Favored Mix:</span><strong className="text-amber-400 truncate max-w-[85px]" title={metrics.pitchTypeFavored}>{metrics.pitchTypeFavored.split('(')[0].replace('vs ', '')}</strong></div>
@@ -2652,14 +2652,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               <p className="text-slate-300 font-mono text-[9px] bg-black/35 px-2.5 py-1 rounded border border-slate-900/50">
                                 {metrics.mathFormula}
                               </p>
-                              <p className="text-slate-400 leading-normal text-[8px] italic">
+                              <p className="text-[hsl(var(--ve-text-muted))] leading-normal text-[8px] italic">
                                 {metrics.edgeMathProof}
                               </p>
                             </div>
 
                             {/* Scouting narrative text */}
                             <div className={`p-3 rounded-xl border ${activeStyle.reasonsBg} space-y-1 text-left`}>
-                              <span className="text-[7.5px] font-mono uppercase font-black text-slate-400 block tracking-widest leading-none">Scouting Narrative & Playbook Strategy:</span>
+                              <span className="text-[7.5px] font-mono uppercase font-black text-[hsl(var(--ve-text-muted))] block tracking-widest leading-none">Scouting Narrative & Playbook Strategy:</span>
                               <p className={`text-[10px] italic leading-relaxed ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
                                 "{explanation}"
                               </p>
@@ -2702,7 +2702,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                                   <span className={`text-xs font-black block uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-100'}`}>
                                     {ps.player.name}
                                   </span>
-                                  <span className="text-[7.5px] font-mono text-slate-500 uppercase">
+                                  <span className="text-[7.5px] font-mono text-[hsl(var(--ve-text-muted))] uppercase">
                                     {ps.player.team.split(' ').pop()} · NO. {ps.player.number}
                                   </span>
                                 </div>
@@ -2725,11 +2725,11 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                             {/* Confidence levels row */}
                             <div className="grid grid-cols-2 gap-3 text-[10px] font-mono bg-black/15 p-1.5 rounded-lg border border-slate-900/60">
                               <div className="flex items-center justify-between px-1 border-r border-slate-900/50">
-                                <span className="text-slate-500 text-[8px] uppercase">V.A.I CONFID.</span>
+                                <span className="text-[hsl(var(--ve-text-muted))] text-[8px] uppercase">V.A.I CONFID.</span>
                                 <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-sky-600' : 'text-sky-450'}`}>{aiConf}%</span>
                               </div>
                               <div className="flex items-center justify-between px-1">
-                                <span className="text-slate-500 text-[8px] uppercase">PLAYER COEF.</span>
+                                <span className="text-[hsl(var(--ve-text-muted))] text-[8px] uppercase">PLAYER COEF.</span>
                                 <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-amber-600' : 'text-amber-500'}`}>{pConf}%</span>
                               </div>
                             </div>
@@ -2750,7 +2750,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <div className="absolute top-0 right-0 py-0.5 px-2 bg-amber-500 text-slate-950 text-[7px] font-mono font-black uppercase tracking-widest rounded-bl-lg">
                         HOT PARLAY
                       </div>
-                      <span className="text-[7.5px] font-mono uppercase font-black text-slate-500 block mb-0.5 tracking-wider">
+                      <span className="text-[7.5px] font-mono uppercase font-black text-[hsl(var(--ve-text-muted))] block mb-0.5 tracking-wider">
                         ⭐ RECOMMENDED CORRELATED PARLAY PICK:
                       </span>
                       <span className={`text-[11px] font-bold block leading-snug ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-300'}`}>
@@ -2765,7 +2765,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <div className="flex items-center gap-2">
                         <span className="text-[14px] leading-none">🎟️</span>
                         <div className="text-left leading-none">
-                          <span className="text-[7.5px] font-mono text-slate-500 block uppercase">Promote Coupon Premium Offer:</span>
+                          <span className="text-[7.5px] font-mono text-[hsl(var(--ve-text-muted))] block uppercase">Promote Coupon Premium Offer:</span>
                           <span className={`text-[10px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-250'}`}>{couponText}</span>
                         </div>
                       </div>
@@ -2830,7 +2830,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 disabled={isPublishingToFeed}
                 className={`py-3 px-4 font-mono font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase ${
                   isPublishingToFeed 
-                    ? 'bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-900 border border-slate-800 text-[hsl(var(--ve-text-muted))] cursor-not-allowed'
                     : 'bg-slate-950 hover:bg-slate-900 border border-indigo-900 text-slate-200'
                 }`}
               >
@@ -2850,7 +2850,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           
           <div className="p-4 bg-slate-950 border border-slate-900 rounded-2xl flex items-start gap-3">
             <Info className="w-4.5 h-4.5 text-orange-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-slate-400 leading-relaxed font-semibold">
+            <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
               <span className="text-orange-400 font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
               These are specific single game proposals and handicaps you extracted while reading pages on the community feed. 
               Review the logic, clear settled items, or clone them directly in your active Parlay Lab slips.
@@ -2865,7 +2865,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <ClipboardCheck className="w-12 h-12 text-slate-600 animate-pulse" />
               <div className="text-center space-y-1">
                 <h3 className="font-bold text-xs text-slate-200 uppercase font-mono">Your Saved Feed ledger is empty</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-sm mx-auto leading-relaxed">
                   Head over to the <strong className="text-sky-400">Home Feed</strong> or browse <strong className="text-sky-400">V.A.I Smart Picks</strong>. 
                   Clicking "Save to Board" will harvest those game props, placing them in this secured ledger block!
                 </p>
@@ -2900,7 +2900,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
           <div className="bg-[#121824] border border-slate-850 rounded-3xl max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative">
             <button 
               onClick={() => setShowTweetModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-900 border border-slate-800"
+              className="absolute top-4 right-4 text-[hsl(var(--ve-text-muted))] hover:text-white p-1 rounded-full bg-slate-900 border border-slate-800"
             >
               <X className="w-4 h-4" />
             </button>
@@ -2913,14 +2913,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             <div className="space-y-3 bg-[#0b0f19] p-4 rounded-xl border border-slate-900">
-              <div className="flex items-start gap-2.5 text-xs text-slate-400 leading-normal">
+              <div className="flex items-start gap-2.5 text-xs text-[hsl(var(--ve-text-muted))] leading-normal">
                 <div className="w-8 h-8 rounded-full bg-slate-800 font-bold text-sky-400 flex items-center justify-center text-xs border border-sky-450/30 shrink-0">
                   ZH
                 </div>
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-1">
                     <span className="font-bold text-white">@Zhavior</span>
-                    <span className="text-slate-500">• now</span>
+                    <span className="text-[hsl(var(--ve-text-muted))]">• now</span>
                   </div>
                   
                   {/* Tweet message body edit field */}
@@ -2944,7 +2944,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <h4 className="text-[10px] uppercase font-bold text-slate-100 truncate">
                         Custom Circular Vouch ({orbitCount} Players Portfolio)
                       </h4>
-                      <p className="text-[8.5px] text-slate-400 truncate mt-0.5">
+                      <p className="text-[8.5px] text-[hsl(var(--ve-text-muted))] truncate mt-0.5">
                         {reasonsText}
                       </p>
                       <span className="text-[8px] text-emerald-400 font-mono font-bold block mt-1 uppercase">
@@ -2956,7 +2956,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-500 leading-snug">
+            <p className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
               Note: This is a simulated preview utilizing the preview container coordinate matrix. Authentic links will copy code tags securely back.
             </p>
 
