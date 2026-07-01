@@ -2059,17 +2059,17 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               {(showWinRate || showDailyWinRate || showMonthlyWinRate || showMlbPicks || showProBadge || showUnitsProfit) && (
                 <div className="flex flex-wrap gap-1.5 mt-3 justify-start items-center z-10 relative">
                   {showProBadge && (
-                    <span className="text-[7.5px] font-mono tracking-wider font-slate-900 font-extrabold uppercase px-1.5 py-0.5 rounded bg-fuchsia-500 text-white shadow-sm border border-fuchsia-400">
+                    <span className="text-[7.5px] font-mono tracking-wider text-[hsl(var(--ve-bg-deep))] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[hsl(var(--ve-accent-pink))] shadow-sm border border-[hsl(var(--ve-accent-pink)/0.45)]">
                       ★ {customProTag}
                     </span>
                   )}
                   {showWinRate && (
-                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-400'}`}>
+                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border border-[hsl(var(--ve-accent-cyan)/0.35)] text-[hsl(var(--ve-accent-cyan))]'}`}>
                       🎯 WR: {customWinRate}
                     </span>
                   )}
                   {showDailyWinRate && (
-                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-amber-100 text-amber-850 border border-amber-250' : 'bg-amber-500/15 border border-amber-500/35 text-amber-400'}`}>
+                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-amber-100 text-amber-850 border border-amber-250' : 'bg-[hsl(var(--ve-accent-gold)/0.14)] border border-[hsl(var(--ve-accent-gold)/0.35)] text-[hsl(var(--ve-accent-gold))]'}`}>
                       ⚡ DAILY: {customDailyWinRate}
                     </span>
                   )}
@@ -2079,12 +2079,12 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     </span>
                   )}
                   {showMlbPicks && (
-                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-teal-100 text-teal-850 border border-teal-200' : 'bg-teal-500/15 border border-teal-500/35 text-teal-400'}`}>
+                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-teal-100 text-teal-850 border border-teal-200' : 'bg-[hsl(var(--ve-accent-cyan)/0.12)] border border-[hsl(var(--ve-accent-cyan)/0.32)] text-[hsl(var(--ve-accent-cyan))]'}`}>
                       ⚾ PICKS: {customMlbPicks}
                     </span>
                   )}
                   {showUnitsProfit && (
-                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-450'}`}>
+                    <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-400/14 border border-emerald-300/35 text-emerald-300'}`}>
                       📈 {unitsProfitValue}
                     </span>
                   )}
@@ -2503,7 +2503,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         VE
                       </div>
                       <div className="leading-none text-left">
-                        <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-sky-450'}>Insight</span></span>
+                        <span className={`text-[11px] font-black tracking-widest ${activeStyle.headerTitleColor} uppercase`}>Vouch<span className={cardStyle === 'minimal' ? 'text-slate-900' : 'text-[hsl(var(--ve-accent-cyan))]'}>Insight</span></span>
                         <span className={`text-[8px] font-mono font-bold ${activeStyle.headerSubTitleColor} block uppercase mt-0.5`}>COMPANION METRICS INDEX</span>
                       </div>
                     </div>
@@ -2530,32 +2530,32 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   {(showWinRate || showDailyWinRate || showMonthlyWinRate || showMlbPicks || showProBadge || showUnitsProfit) && (
                     <div className="flex flex-wrap gap-1.5 mt-3 justify-start items-center z-10 relative">
                       {showProBadge && (
-                        <span className="text-[7.5px] font-mono tracking-wider font-slate-900 font-extrabold uppercase px-1.5 py-0.5 rounded bg-fuchsia-500 text-white shadow-sm border border-fuchsia-400">
+                        <span className="text-[7.5px] font-mono tracking-wider text-[hsl(var(--ve-bg-deep))] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[hsl(var(--ve-accent-pink))] shadow-sm border border-[hsl(var(--ve-accent-pink)/0.45)]">
                           ★ {customProTag}
                         </span>
                       )}
                       {showWinRate && (
-                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-sky-500/15 border border-sky-500/35 text-sky-400'}`}>
+                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-sky-100 text-sky-850 border border-sky-200' : 'bg-[hsl(var(--ve-accent-cyan)/0.14)] border border-[hsl(var(--ve-accent-cyan)/0.35)] text-[hsl(var(--ve-accent-cyan))]'}`}>
                           🎯 WR: {customWinRate}
                         </span>
                       )}
                       {showDailyWinRate && (
-                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-amber-100 text-amber-850 border border-amber-250' : 'bg-amber-500/15 border border-amber-500/35 text-amber-400'}`}>
+                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-amber-100 text-amber-850 border border-amber-250' : 'bg-[hsl(var(--ve-accent-gold)/0.14)] border border-[hsl(var(--ve-accent-gold)/0.35)] text-[hsl(var(--ve-accent-gold))]'}`}>
                           ⚡ DAILY: {customDailyWinRate}
                         </span>
                       )}
                       {showMonthlyWinRate && (
-                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-rose-100 text-rose-850 border border-rose-200' : 'bg-rose-500/15 border border-rose-500/35 text-rose-450'}`}>
+                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-rose-100 text-rose-850 border border-rose-200' : 'bg-[hsl(var(--ve-accent-pink)/0.14)] border border-[hsl(var(--ve-accent-pink)/0.35)] text-[hsl(var(--ve-accent-pink))]'}`}>
                           📆 MONTH: {customMonthlyWinRate}
                         </span>
                       )}
                       {showMlbPicks && (
-                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-teal-100 text-teal-850 border border-teal-200' : 'bg-teal-500/15 border border-teal-500/35 text-teal-400'}`}>
+                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-teal-100 text-teal-850 border border-teal-200' : 'bg-[hsl(var(--ve-accent-cyan)/0.12)] border border-[hsl(var(--ve-accent-cyan)/0.32)] text-[hsl(var(--ve-accent-cyan))]'}`}>
                           ⚾ PICKS: {customMlbPicks}
                         </span>
                       )}
                       {showUnitsProfit && (
-                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-450'}`}>
+                        <span className={`text-[7.5px] font-mono tracking-wider font-extrabold uppercase px-1.5 py-0.5 rounded ${cardStyle === 'minimal' ? 'bg-emerald-100 text-emerald-850 border border-emerald-200' : 'bg-emerald-400/14 border border-emerald-300/35 text-emerald-300'}`}>
                           📈 {unitsProfitValue}
                         </span>
                       )}
