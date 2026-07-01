@@ -683,7 +683,7 @@ export default function PlayerResearchConsole({
                 </div>
                 <button
                   onClick={() => setCompareMode(false)}
-                  className="text-slate-400 hover:text-emerald-400 text-xs font-mono underline transition-colors"
+                  className="text-[hsl(var(--ve-text-muted))] hover:text-emerald-400 text-xs font-mono underline transition-colors"
                 >
                   Exit Comparison
                 </button>
@@ -703,7 +703,7 @@ export default function PlayerResearchConsole({
                     className="w-20 h-20 rounded-2xl border border-emerald-500/30 shadow-xl object-cover"
                   />
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{activePlayer.name}</h3>
-                  <span className="text-xs text-slate-400 font-mono mt-0.5">{activePlayer.team} • #{activePlayer.number}</span>
+                  <span className="text-xs text-[hsl(var(--ve-text-muted))] font-mono mt-0.5">{activePlayer.team} • #{activePlayer.number}</span>
                   
                   <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
@@ -722,7 +722,7 @@ export default function PlayerResearchConsole({
                     className="w-20 h-20 rounded-2xl border border-indigo-500/30 shadow-xl object-cover"
                   />
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{comparePlayer.name}</h3>
-                  <span className="text-xs text-slate-400 font-mono mt-0.5">{comparePlayer.team} • #{comparePlayer.number}</span>
+                  <span className="text-xs text-[hsl(var(--ve-text-muted))] font-mono mt-0.5">{comparePlayer.team} • #{comparePlayer.number}</span>
                   
                   <div className="mt-4 flex items-center gap-2.5 bg-slate-950/60 px-4 py-1.5 rounded-full border border-slate-800">
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">BAT RATING:</span>
@@ -733,7 +733,7 @@ export default function PlayerResearchConsole({
               </div>
 
               {/* Sabermetric Metrics Head to Head */}
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 space-y-4">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 space-y-4">
                 <h4 className="text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider text-center border-b border-slate-900 pb-3">
                   STATCAST METRIC RADAR COMPARISON
                 </h4>
@@ -755,17 +755,17 @@ export default function PlayerResearchConsole({
                   return (
                     <div key={idx} className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className={`font-mono font-extrabold ${betterA ? 'text-emerald-400' : 'text-slate-400'}`}>
+                        <span className={`font-mono font-extrabold ${betterA ? 'text-emerald-400' : 'text-[hsl(var(--ve-text-muted))]'}`}>
                           {m.precision ? m.valA.toFixed(m.precision) : m.valA}{m.suffix}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono tracking-wide uppercase">{m.label}</span>
-                        <span className={`font-mono font-extrabold ${!betterA ? 'text-indigo-400' : 'text-slate-400'}`}>
+                        <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono tracking-wide uppercase">{m.label}</span>
+                        <span className={`font-mono font-extrabold ${!betterA ? 'text-indigo-400' : 'text-[hsl(var(--ve-text-muted))]'}`}>
                           {m.precision ? m.valB.toFixed(m.precision) : m.valB}{m.suffix}
                         </span>
                       </div>
 
                       {/* Head-to-Head Double Bar Slider */}
-                      <div className="h-2 w-full flex bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                      <div className="h-2 w-full flex bg-[hsl(var(--ve-bg)/0.72)] rounded-full overflow-hidden border border-[hsl(var(--ve-border)/0.30)]">
                         {/* Athlete A */}
                         <div className="w-1/2 flex justify-end">
                           <div 
@@ -774,7 +774,7 @@ export default function PlayerResearchConsole({
                           />
                         </div>
                         {/* Center gap segment */}
-                        <div className="w-[1px] bg-slate-800"></div>
+                        <div className="w-[1px] bg-[hsl(var(--ve-border)/0.34)]"></div>
                         {/* Athlete B */}
                         <div className="w-1/2 flex justify-start">
                           <div 
@@ -790,57 +790,57 @@ export default function PlayerResearchConsole({
 
               {/* Splits comparison summary */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] p-4 rounded-2xl space-y-3">
                   <h5 className="text-[10px] font-black text-emerald-400 font-mono uppercase tracking-wider text-center">
                     {activePlayer.name.toUpperCase()} PLATOON SPLITS
                   </h5>
                   <div className="space-y-1.5 text-xs font-mono">
-                    <div className="flex justify-between pb-1 border-b border-slate-900 text-[9px] text-slate-500">
+                    <div className="flex justify-between pb-1 border-b border-[hsl(var(--ve-border)/0.24)] text-[9px] text-[hsl(var(--ve-text-muted))]">
                       <span>SITUATION</span>
                       <span>STATS (OPS)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">vs Left Pitcher:</span>
-                      <strong className="text-slate-200">{activePlayer.splits.vLHP.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">vs Left Pitcher:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.vLHP.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">vs Right Pitcher:</span>
-                      <strong className="text-slate-200">{activePlayer.splits.vRHP.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">vs Right Pitcher:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.vRHP.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">At Home Arena:</span>
-                      <strong className="text-slate-200">{activePlayer.splits.home.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">At Home Arena:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.home.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Last 10 Starts:</span>
+                      <span className="text-[hsl(var(--ve-text-muted))]">Last 10 Starts:</span>
                       <strong className="text-emerald-400 font-black">{activePlayer.splits.last10.ops} OPS</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] p-4 rounded-2xl space-y-3">
                   <h5 className="text-[10px] font-black text-indigo-400 font-mono uppercase tracking-wider text-center">
                     {comparePlayer.name.toUpperCase()} PLATOON SPLITS
                   </h5>
                   <div className="space-y-1.5 text-xs font-mono">
-                    <div className="flex justify-between pb-1 border-b border-slate-900 text-[9px] text-slate-500">
+                    <div className="flex justify-between pb-1 border-b border-[hsl(var(--ve-border)/0.24)] text-[9px] text-[hsl(var(--ve-text-muted))]">
                       <span>SITUATION</span>
                       <span>STATS (OPS)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">vs Left Pitcher:</span>
-                      <strong className="text-slate-200">{comparePlayer.splits.vLHP.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">vs Left Pitcher:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{comparePlayer.splits.vLHP.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">vs Right Pitcher:</span>
-                      <strong className="text-slate-200">{comparePlayer.splits.vRHP.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">vs Right Pitcher:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{comparePlayer.splits.vRHP.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">At Home Arena:</span>
-                      <strong className="text-slate-200">{comparePlayer.splits.home.ops} OPS</strong>
+                      <span className="text-[hsl(var(--ve-text-muted))]">At Home Arena:</span>
+                      <strong className="text-[hsl(var(--ve-text-soft))]">{comparePlayer.splits.home.ops} OPS</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Last 10 Starts:</span>
+                      <span className="text-[hsl(var(--ve-text-muted))]">Last 10 Starts:</span>
                       <strong className="text-indigo-400 font-black">{comparePlayer.splits.last10.ops} OPS</strong>
                     </div>
                   </div>
@@ -848,13 +848,13 @@ export default function PlayerResearchConsole({
               </div>
 
               {/* Multi-Prop builder comparison card */}
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.40)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5">
                 <h5 className="text-xs font-black font-mono text-[hsl(var(--ve-text-soft))] uppercase tracking-widest mb-4">HEAD-TO-HEAD EDGE PROPOSITIONS</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Props A */}
                   <div className="space-y-2">
-                    <span className="text-[9.5px] text-slate-400 font-mono font-extrabold tracking-wider">{activePlayer.name.toUpperCase()} WAGERS</span>
+                    <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono font-extrabold tracking-wider">{activePlayer.name.toUpperCase()} WAGERS</span>
                     {activePlayer.propositions.map((p) => {
                       const playerTeam = activePlayer.team ? activePlayer.team.toLowerCase() : '';
                       const matchedGame = liveGames.find((g: any) => 
@@ -864,9 +864,9 @@ export default function PlayerResearchConsole({
                       const isFinal = matchedGame && matchedGame.status.toLowerCase() === 'final';
 
                       return (
-                        <div key={p.id} className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div key={p.id} className="bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between">
                           <div className="min-w-0 pr-2">
-                            <span className="text-[11px] font-bold text-white block truncate leading-tight">{p.market}</span>
+                            <span className="text-[11px] font-bold text-[hsl(var(--ve-text))] block truncate leading-tight">{p.market}</span>
                             <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block mt-1 truncate">{p.spec}</span>
                           </div>
                           <button 
@@ -887,7 +887,7 @@ export default function PlayerResearchConsole({
 
                   {/* Props B */}
                   <div className="space-y-2">
-                    <span className="text-[9.5px] text-slate-400 font-mono font-extrabold tracking-wider">{comparePlayer.name.toUpperCase()} WAGERS</span>
+                    <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono font-extrabold tracking-wider">{comparePlayer.name.toUpperCase()} WAGERS</span>
                     {comparePlayer.propositions.map((p) => {
                       const playerTeam = comparePlayer.team ? comparePlayer.team.toLowerCase() : '';
                       const matchedGame = liveGames.find((g: any) => 
@@ -897,9 +897,9 @@ export default function PlayerResearchConsole({
                       const isFinal = matchedGame && matchedGame.status.toLowerCase() === 'final';
 
                       return (
-                        <div key={p.id} className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div key={p.id} className="bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between">
                           <div className="min-w-0 pr-2">
-                            <span className="text-[11px] font-bold text-white block truncate leading-tight">{p.market}</span>
+                            <span className="text-[11px] font-bold text-[hsl(var(--ve-text))] block truncate leading-tight">{p.market}</span>
                             <span className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-mono block mt-1 truncate">{p.spec}</span>
                           </div>
                           <button 
@@ -928,13 +928,13 @@ export default function PlayerResearchConsole({
             <div className="space-y-8" id="individual-roster-dossier">
 
               {/* MODE CONTROL TOGGLE PANEL */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-950 p-4 rounded-3xl border border-slate-850/85 shadow-md" id="retro-dex-calibrator">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[hsl(var(--ve-surface-raised)/0.42)] p-4 rounded-3xl border border-[hsl(var(--ve-border)/0.32)] shadow-md" id="retro-dex-calibrator">
                 <div className="min-w-0">
                   <h4 className="text-xs font-black font-mono text-[hsl(var(--ve-text-soft))] uppercase tracking-widest flex items-center gap-1.5">
                     <span className="text-yellow-400">👾</span>
                     ATHLETE RESEARCH INTERFACE DECK
                   </h4>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-snug font-mono">
+                  <p className="text-[11px] text-[hsl(var(--ve-text-muted))] mt-1 leading-snug font-mono">
                     Toggle interactive retro <b className="text-yellow-400">Pokémon Saber-Card Mode</b> or advanced <b className="text-[#10b981]">Pro Sabermetric Dossier</b> view.
                   </p>
                 </div>
@@ -956,7 +956,7 @@ export default function PlayerResearchConsole({
                     className={`px-4 py-2 font-black rounded-xl transition-all uppercase flex items-center gap-1 leading-none ${
                       dossierMode === 'SABER'
                         ? 'bg-[#10b981] text-slate-950 font-extrabold shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
+                        : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
                     }`}
                   >
                     <span>📊 PRO METRICS</span>
@@ -1002,7 +1002,7 @@ export default function PlayerResearchConsole({
                         <span className="bg-slate-950/80 border border-slate-800 text-[hsl(var(--ve-text-soft))] px-3 py-0.5 rounded-full text-[10px] font-black font-mono uppercase tracking-widest">
                           {activePlayer.team}
                         </span>
-                        <span className="bg-slate-950/80 border border-slate-800 text-slate-400 px-3 py-0.5 rounded-full text-[10px] font-medium font-mono uppercase">
+                        <span className="bg-slate-950/80 border border-slate-800 text-[hsl(var(--ve-text-muted))] px-3 py-0.5 rounded-full text-[10px] font-medium font-mono uppercase">
                           {activePlayer.position}
                         </span>
                       </div>
@@ -1036,7 +1036,7 @@ export default function PlayerResearchConsole({
                         {activeAiReport?.score || activePlayer.batterScore}
                       </span>
                     </div>
-                    <span className="text-[8.5px] text-slate-400 font-mono block mt-2.5 uppercase tracking-wider leading-tight">
+                    <span className="text-[8.5px] text-[hsl(var(--ve-text-muted))] font-mono block mt-2.5 uppercase tracking-wider leading-tight">
                       {activeAiReport ? 'Live Grounded' : 'Metadata Baseline'}
                     </span>
                   </div>
@@ -1048,21 +1048,21 @@ export default function PlayerResearchConsole({
                   
                   {/* Demographics */}
                   <div className="space-y-2">
-                    <h4 className="text-[9.5px] text-slate-400 font-black font-mono tracking-wider uppercase border-l-2 border-slate-755 pl-2">
+                    <h4 className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-black font-mono tracking-wider uppercase border-l-2 border-slate-755 pl-2">
                       ATHLETE PROFILE INFO
                     </h4>
                     <div className="grid grid-cols-2 gap-3 bg-slate-950/40 border border-slate-800/40 p-4 rounded-2xl text-xs font-mono">
                       <div>
                         <span className="block text-[8.5px] text-slate-500 uppercase tracking-wider">Bats / Throws</span>
-                        <span className="text-slate-200 mt-0.5 font-bold">{activePlayer.bats} / {activePlayer.throws}</span>
+                        <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold">{activePlayer.bats} / {activePlayer.throws}</span>
                       </div>
                       <div>
                         <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Height / Weight</span>
-                        <span className="text-slate-200 mt-0.5 font-bold">{activePlayer.height} / {activePlayer.weight}</span>
+                        <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold">{activePlayer.height} / {activePlayer.weight}</span>
                       </div>
                       <div>
                         <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Birthdate & Age</span>
-                        <span className="text-slate-200 mt-0.5 font-bold truncate block" title={activePlayer.birthdate}>{activePlayer.birthdate}</span>
+                        <span className="text-[hsl(var(--ve-text-soft))] mt-0.5 font-bold truncate block" title={activePlayer.birthdate}>{activePlayer.birthdate}</span>
                       </div>
                       <div>
                         <span className="block text-[8.5px] text-slate-550 uppercase tracking-wider">Injury Status</span>
@@ -1077,21 +1077,21 @@ export default function PlayerResearchConsole({
 
                   {/* Seasonal Stats Triple Crown */}
                   <div className="space-y-2">
-                    <h4 className="text-[9.5px] text-slate-400 font-black font-mono tracking-wider uppercase border-l-2 border-emerald-500 pl-2">
+                    <h4 className="text-[9.5px] text-[hsl(var(--ve-text-muted))] font-black font-mono tracking-wider uppercase border-l-2 border-emerald-500 pl-2">
                       SEASON STAT BASELINE
                     </h4>
                     <div className="grid grid-cols-4 gap-2 text-center h-[calc(100%-20px)] min-h-[74px]">
                       <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">BAT AVG</span>
-                        <span className="text-sm font-bold text-slate-200 font-mono mt-0.5">{activePlayer.seasonStats.avg}</span>
+                        <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.avg}</span>
                       </div>
                       <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">HRs</span>
-                        <span className="text-sm font-bold text-slate-200 font-mono mt-0.5">{activePlayer.seasonStats.hr}</span>
+                        <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.hr}</span>
                       </div>
                       <div className="bg-slate-950/60 border border-slate-850 p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-slate-550 font-mono tracking-wider">RBIs</span>
-                        <span className="text-sm font-bold text-slate-200 font-mono mt-0.5">{activePlayer.seasonStats.rbi}</span>
+                        <span className="text-sm font-bold text-[hsl(var(--ve-text-soft))] font-mono mt-0.5">{activePlayer.seasonStats.rbi}</span>
                       </div>
                       <div className="bg-emerald-950/30 border-2 border-emerald-500/20 p-2.5 rounded-2xl flex flex-col justify-center">
                         <span className="block text-[8.5px] text-emerald-400/80 font-mono tracking-wider">SEAS OPS</span>
@@ -1112,7 +1112,7 @@ export default function PlayerResearchConsole({
                       <Sparkles className="w-4 h-4 text-emerald-400" />
                       Live Grounded AI Matchup Optimizer
                     </h3>
-                    <p className="text-slate-400 text-xs mt-0.5">
+                    <p className="text-[hsl(var(--ve-text-muted))] text-xs mt-0.5">
                       Connect metadata and real-time live MLB.com rosters, hot streaks, and pitching lineups.
                     </p>
                   </div>
@@ -1141,7 +1141,7 @@ export default function PlayerResearchConsole({
 
                 {activeAiReport ? (
                   <div className="bg-slate-950 border-2 border-emerald-500/10 p-5 rounded-2xl space-y-4 shadow-inner">
-                    <div className="flex items-center justify-between border-b border-slate-900 pb-2.5 text-xs text-slate-400 font-mono">
+                    <div className="flex items-center justify-between border-b border-slate-900 pb-2.5 text-xs text-[hsl(var(--ve-text-muted))] font-mono">
                       <span className="flex items-center gap-1.5 text-emerald-400">
                         <Check className="w-4 h-4" /> Sabermetric grounding successful
                       </span>
@@ -1172,7 +1172,7 @@ export default function PlayerResearchConsole({
                 ) : (
                   <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60 text-center space-y-2">
                     <Activity className="w-6 h-6 text-slate-600 mx-auto" />
-                    <p className="text-slate-400 text-xs font-mono">
+                    <p className="text-[hsl(var(--ve-text-muted))] text-xs font-mono">
                       Query is currently un-analyzed on live search. Click the green button above to fuse MLB.com logs with the active model.
                     </p>
                   </div>
@@ -1213,7 +1213,7 @@ export default function PlayerResearchConsole({
                       {/* Barrel % */}
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Barrel Accuracy Ratio</span>
+                          <span className="text-[hsl(var(--ve-text-muted))]">Barrel Accuracy Ratio</span>
                           <strong className="text-[var(--ve-accent)] font-mono">{activePlayer.advanced.barrelPercent}%</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
@@ -1228,7 +1228,7 @@ export default function PlayerResearchConsole({
                       {/* Exit Velocity */}
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Average Exit Velocity</span>
+                          <span className="text-[hsl(var(--ve-text-muted))]">Average Exit Velocity</span>
                           <strong className="text-[var(--ve-accent)] font-mono">{activePlayer.advanced.exitVelocity} mph</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
@@ -1243,7 +1243,7 @@ export default function PlayerResearchConsole({
                       {/* Hard Hit % */}
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Hard Hit Percentage</span>
+                          <span className="text-[hsl(var(--ve-text-muted))]">Hard Hit Percentage</span>
                           <strong className="text-emerald-400 font-mono">{activePlayer.advanced.hardHitPercent}%</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
@@ -1258,7 +1258,7 @@ export default function PlayerResearchConsole({
                       {/* Chase % / Discipline */}
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">O-Swing Zone Chase</span>
+                          <span className="text-[hsl(var(--ve-text-muted))]">O-Swing Zone Chase</span>
                           <strong className="text-emerald-400 font-mono">{activePlayer.advanced.chasePercent}%</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
@@ -1273,14 +1273,14 @@ export default function PlayerResearchConsole({
                       {/* wOBA / xwOBA model discrepancy */}
                       <div className="bg-slate-950 border border-slate-850 p-4 rounded-2xl col-span-1 sm:col-span-2 space-y-2">
                         <div className="flex justify-between items-center text-xs pb-1.5 border-b border-slate-900">
-                          <span className="text-slate-400 font-black font-mono text-[9px] uppercase tracking-wider">PREDICTIVE CORRELATIONS (wOBA vs xwOBA)</span>
+                          <span className="text-[hsl(var(--ve-text-muted))] font-black font-mono text-[9px] uppercase tracking-wider">PREDICTIVE CORRELATIONS (wOBA vs xwOBA)</span>
                           <div className="flex items-center gap-2 text-xs font-mono">
                             <span className="text-amber-400">wOBA: {activePlayer.advanced.woba.toFixed(3)}</span>
                             <span className="text-slate-500">•</span>
                             <span className="text-[var(--ve-accent)] font-bold">xwOBA: {activePlayer.advanced.xwoba.toFixed(3)}</span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
+                        <p className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono leading-relaxed">
                           Expected weighted On-Base Average (xwOBA) matches actual batted trajectory, demonstrating{' '}
                           {activePlayer.advanced.xwoba > activePlayer.advanced.woba ? (
                             <span className="text-emerald-300 font-bold">strong upward regression potential (Highly Undervalued prop opportunity)</span>
@@ -1358,7 +1358,7 @@ export default function PlayerResearchConsole({
                             </ResponsiveContainer>
                           </div>
                           
-                          <div className="text-[8.5px] font-mono leading-normal text-slate-400 space-y-1.5 pr-1 shrink-0">
+                          <div className="text-[8.5px] font-mono leading-normal text-[hsl(var(--ve-text-muted))] space-y-1.5 pr-1 shrink-0">
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#10b981] inline-block" /> LHP: {activePlayer.splits.vLHP.ops}</div>
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#3b82f6] inline-block" /> RHP: {activePlayer.splits.vRHP.ops}</div>
                             <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#f59e0b] inline-block" /> Home: {activePlayer.splits.home.ops}</div>
@@ -1390,7 +1390,7 @@ export default function PlayerResearchConsole({
                         return (
                           <div className="bg-slate-950 p-4 border border-slate-850 rounded-2xl col-span-1 sm:col-span-2 space-y-3">
                             <div className="flex items-center justify-between pb-1.5 border-b border-slate-900">
-                              <span className="text-slate-400 font-black font-mono text-[9px] uppercase tracking-wider block">TEAM WIN IN PLAYER PARLAYS % RATE</span>
+                              <span className="text-[hsl(var(--ve-text-muted))] font-black font-mono text-[9px] uppercase tracking-wider block">TEAM WIN IN PLAYER PARLAYS % RATE</span>
                               <span className="text-[9.5px] text-emerald-400 font-mono font-bold uppercase">{activePlayer.team}</span>
                             </div>
                             
@@ -1437,19 +1437,19 @@ export default function PlayerResearchConsole({
                   <div className="grid grid-cols-3 gap-1 bg-slate-950 border border-slate-900 p-1 rounded-xl text-[9px] font-mono">
                     <button 
                       onClick={() => setActiveSplitTab('PLATOON')}
-                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'PLATOON' ? 'bg-slate-800 text-emerald-400' : 'text-slate-500'}`}
+                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'PLATOON' ? 'bg-[hsl(var(--ve-border)/0.34)] text-emerald-400' : 'text-slate-500'}`}
                     >
                       PLATOON
                     </button>
                     <button 
                       onClick={() => setActiveSplitTab('VENUE')}
-                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'VENUE' ? 'bg-slate-800 text-emerald-400' : 'text-slate-500'}`}
+                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'VENUE' ? 'bg-[hsl(var(--ve-border)/0.34)] text-emerald-400' : 'text-slate-500'}`}
                     >
                       VENUE
                     </button>
                     <button 
                       onClick={() => setActiveSplitTab('RECENCY')}
-                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'RECENCY' ? 'bg-slate-800 text-emerald-400' : 'text-slate-500'}`}
+                      className={`py-1.5 font-bold rounded-lg transition-all ${activeSplitTab === 'RECENCY' ? 'bg-[hsl(var(--ve-border)/0.34)] text-emerald-400' : 'text-slate-500'}`}
                     >
                       TREND
                     </button>
@@ -1461,8 +1461,8 @@ export default function PlayerResearchConsole({
                       <div className="space-y-3 text-xs">
                         <div className="space-y-1">
                           <div className="flex justify-between">
-                            <span className="text-slate-400">vs Left Pitcher (LHP)</span>
-                            <strong className="text-slate-200">{activePlayer.splits.vLHP.ops} OPS</strong>
+                            <span className="text-[hsl(var(--ve-text-muted))]">vs Left Pitcher (LHP)</span>
+                            <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.vLHP.ops} OPS</strong>
                           </div>
                           <div className="flex justify-between text-[9px] text-slate-500">
                             <span>AVG: {activePlayer.splits.vLHP.avg}</span>
@@ -1472,8 +1472,8 @@ export default function PlayerResearchConsole({
                         </div>
                         <div className="border-t border-slate-850/60 pt-2.5 space-y-1">
                           <div className="flex justify-between">
-                            <span className="text-slate-400">vs Right Pitcher (RHP)</span>
-                            <strong className="text-slate-200">{activePlayer.splits.vRHP.ops} OPS</strong>
+                            <span className="text-[hsl(var(--ve-text-muted))]">vs Right Pitcher (RHP)</span>
+                            <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.vRHP.ops} OPS</strong>
                           </div>
                           <div className="flex justify-between text-[9px] text-slate-500">
                             <span>AVG: {activePlayer.splits.vRHP.avg}</span>
@@ -1488,8 +1488,8 @@ export default function PlayerResearchConsole({
                       <div className="space-y-3 text-xs">
                         <div className="space-y-1">
                           <div className="flex justify-between">
-                            <span className="text-slate-400">Home franchise field</span>
-                            <strong className="text-slate-200">{activePlayer.splits.home.ops} OPS</strong>
+                            <span className="text-[hsl(var(--ve-text-muted))]">Home franchise field</span>
+                            <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.home.ops} OPS</strong>
                           </div>
                           <div className="flex justify-between text-[9px] text-slate-500">
                             <span>AVG: {activePlayer.splits.home.avg}</span>
@@ -1499,8 +1499,8 @@ export default function PlayerResearchConsole({
                         </div>
                         <div className="border-t border-slate-850/60 pt-2.5 space-y-1">
                           <div className="flex justify-between">
-                            <span className="text-slate-400">Away stadiums split</span>
-                            <strong className="text-slate-200">{activePlayer.splits.away.ops} OPS</strong>
+                            <span className="text-[hsl(var(--ve-text-muted))]">Away stadiums split</span>
+                            <strong className="text-[hsl(var(--ve-text-soft))]">{activePlayer.splits.away.ops} OPS</strong>
                           </div>
                           <div className="flex justify-between text-[9px] text-slate-500">
                             <span>AVG: {activePlayer.splits.away.avg}</span>
@@ -1518,7 +1518,7 @@ export default function PlayerResearchConsole({
                           <span>Last 10 rolling games</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Weighted OPS split:</span>
+                          <span className="text-[hsl(var(--ve-text-muted))]">Weighted OPS split:</span>
                           <strong className="text-emerald-400 font-extrabold">{activePlayer.splits.last10.ops} OPS</strong>
                         </div>
                         <div className="flex justify-between text-[9px] text-slate-500">
@@ -1550,7 +1550,7 @@ export default function PlayerResearchConsole({
                     
                     {/* Contact projection */}
                     <div>
-                      <span className="font-extrabold text-slate-400 font-mono text-[9px] uppercase block mb-1">■ ZONE BARREL CORRELATION INDEX:</span>
+                      <span className="font-extrabold text-[hsl(var(--ve-text-muted))] font-mono text-[9px] uppercase block mb-1">■ ZONE BARREL CORRELATION INDEX:</span>
                       <p className="bg-slate-950 p-3 rounded-2xl border border-slate-850/60 font-mono text-[11px] text-slate-350">
                         {activePlayer.scoutingReport.contactText}
                       </p>
@@ -1558,7 +1558,7 @@ export default function PlayerResearchConsole({
 
                     {/* Power Projection */}
                     <div>
-                      <span className="font-extrabold text-slate-400 font-mono text-[9px] uppercase block mb-1">■ RAW BALLISTIC RETENTION PROFILE:</span>
+                      <span className="font-extrabold text-[hsl(var(--ve-text-muted))] font-mono text-[9px] uppercase block mb-1">■ RAW BALLISTIC RETENTION PROFILE:</span>
                       <p className="bg-slate-950 p-3 rounded-2xl border border-slate-850/60 font-mono text-[11px] text-slate-350">
                         {activePlayer.scoutingReport.powerText}
                       </p>
@@ -1584,7 +1584,7 @@ export default function PlayerResearchConsole({
                     <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono">3x3 Strike Zone</span>
                   </div>
 
-                  <p className="text-[10px] text-slate-400 font-mono leading-tight my-3">
+                  <p className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono leading-tight my-3">
                     Red-highlighted cells indicate high contact frequency for {activePlayer.name}.
                   </p>
 
@@ -1601,7 +1601,7 @@ export default function PlayerResearchConsole({
                       { l: "Middle-Away", color: "bg-slate-900 text-slate-500 border-slate-800/60" },
                       { l: "Down & In", color: "bg-red-500/10 text-red-300 border-red-500/20 font-bold" },
                       { l: "Low-Middle", color: "bg-amber-950/20 text-amber-500 border-amber-500/10" },
-                      { l: "Low-Away", color: "bg-slate-900 text-slate-400 border-slate-800/60" }
+                      { l: "Low-Away", color: "bg-slate-900 text-[hsl(var(--ve-text-muted))] border-slate-800/60" }
                     ].map((box, bidx) => {
                       const isHot = activePlayer.scoutingReport.hotZones.includes(box.l);
                       const finalColor = isHot
@@ -1645,7 +1645,7 @@ export default function PlayerResearchConsole({
                     <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-bold">Select Line for Slip</span>
                   </div>
 
-                  <p className="text-[10.5px] text-slate-400 font-mono leading-relaxed bg-slate-950/40 p-3.5 rounded-2xl border border-slate-850">
+                  <p className="text-[10.5px] text-[hsl(var(--ve-text-muted))] font-mono leading-relaxed bg-slate-950/40 p-3.5 rounded-2xl border border-slate-850">
                     Calculated via dynamic matchup coefficients. Stage straight onto your live active Parlay slip, or vouch to lock it on your public feed vouchboard.
                   </p>
 
@@ -1689,7 +1689,7 @@ export default function PlayerResearchConsole({
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-bold border transition-all ${
                                   isExpanded 
                                     ? 'bg-[var(--ve-card)] border-[var(--ve-border-strong)] text-[var(--ve-accent)]' 
-                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                                    : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
                                 }`}
                               >
                                 {isExpanded ? 'Hide Bookies ⚖️' : 'Compare Bookies ⚖️'}
@@ -1701,7 +1701,7 @@ export default function PlayerResearchConsole({
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-black transition-all border ${
                                   isVouched 
                                     ? 'bg-indigo-950/60 border-indigo-500 text-indigo-400'
-                                    : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-200'
+                                    : 'bg-slate-900 border-slate-850 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
                                 }`}
                                 title={isVouched ? "Remove from Board" : "Collect & Vouch on Board"}
                               >
@@ -1741,7 +1741,7 @@ export default function PlayerResearchConsole({
                           {/* Expanded comparison detail component */}
                           {isExpanded && (
                             <div className="bg-slate-900/50 border border-slate-900 rounded-xl p-3 space-y-2">
-                              <div className="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-wider flex justify-between">
+                              <div className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-bold uppercase tracking-wider flex justify-between">
                                 <span>Real-Time Sportsbook Lines Comparison</span>
                                 <span className="text-emerald-400 font-extrabold">Best payout highlighted</span>
                               </div>
@@ -1749,35 +1749,35 @@ export default function PlayerResearchConsole({
                                 {/* Bet365 */}
                                 <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.bet365.isBest ? 'border-emerald-600/60 bg-emerald-950/10' : 'border-slate-850'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Bet365</span>
-                                  <strong className={`text-xs ${comparison.bet365.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
+                                  <strong className={`text-xs ${comparison.bet365.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.bet365.oddsDecimal.toFixed(2)} ({comparison.bet365.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* FanDuel */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.fanduel.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.fanduel.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">FanDuel</span>
-                                  <strong className={`text-xs ${comparison.fanduel.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
+                                  <strong className={`text-xs ${comparison.fanduel.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.fanduel.oddsDecimal.toFixed(2)} ({comparison.fanduel.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* DraftKings */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.draftkings.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.draftkings.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">DraftKings</span>
-                                  <strong className={`text-xs ${comparison.draftkings.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
+                                  <strong className={`text-xs ${comparison.draftkings.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.draftkings.oddsDecimal.toFixed(2)} ({comparison.draftkings.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* Caesars */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.caesars.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.caesars.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Caesars</span>
-                                  <strong className={`text-xs ${comparison.caesars.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
+                                  <strong className={`text-xs ${comparison.caesars.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.caesars.oddsDecimal.toFixed(2)} ({comparison.caesars.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* BetMGM */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.betmgm.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-slate-200' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.betmgm.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">BetMGM</span>
-                                  <strong className={`text-xs ${comparison.betmgm.isBest ? 'text-emerald-400 font-extrabold' : 'text-slate-200'}`}>
+                                  <strong className={`text-xs ${comparison.betmgm.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.betmgm.oddsDecimal.toFixed(2)} ({comparison.betmgm.oddsAmerican})
                                   </strong>
                                 </div>
