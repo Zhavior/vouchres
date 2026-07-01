@@ -723,14 +723,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             <div className="lg:col-span-8 space-y-6">
               
               {/* Performance Return Curve Card */}
-              <div className="bg-[#0b101c] border border-slate-900 rounded-3xl p-5 space-y-4 shadow-xl">
+              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
                       <TrendingUp className="w-4 h-4 text-emerald-400" />
                       Backtested Cumulative Performance Curve
                     </h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
                       Cumulative ROI return modeled over designated Sabermetric historic logs ($ {simulationStakeUnit} Unit standard).
                     </p>
                   </div>
@@ -828,13 +828,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               </div>
 
               {/* Backtester Controls & Console HUD */}
-              <div className="bg-[#0b101c] border border-slate-900 rounded-3xl p-5 space-y-4 shadow-xl">
+              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
                     <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
                     VouchEdge Monte Carlo Roster Backtester (Simulation only — not verified performance)
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
                     Tweak your model accuracy, update bankroll unit sizing, and trigger simulated deep audits.
                   </p>
                 </div>
@@ -920,9 +920,9 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                       <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest font-mono">Terminal Console</span>
                     </div>
-                    <div className="font-mono text-[10px] text-slate-400 p-4 bg-slate-950 border border-slate-900 rounded-2xl min-h-[140px] max-h-[220px] overflow-y-auto space-y-1.5 leading-relaxed shadow-inner">
+                    <div className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))] p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl min-h-[140px] max-h-[220px] overflow-y-auto space-y-1.5 leading-relaxed shadow-inner">
                       {auditLog.length === 0 ? (
-                        <div className="text-slate-600 italic py-6 text-center select-none">
+                        <div className="text-[hsl(var(--ve-text-muted)/0.72)] italic py-6 text-center select-none">
                           // Terminal offline. Click "EXECUTE DEEP PORTFOLIO BACKTEST AUDIT" to populate live simulation audits...
                         </div>
                       ) : (
@@ -949,13 +949,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             <div className="lg:col-span-4 space-y-6">
               
               {/* Active Portfolio Roster List */}
-              <div className="bg-[#0b101c] border border-slate-900 rounded-3xl p-5 space-y-4 shadow-xl">
+              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Crown className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-[hsl(var(--ve-accent-gold))]" />
                     Active Circle Roster ({selectedPlayers.length})
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
                     Represented stars currently in the custom circular Orbit layout. Modify sliders to re-calculate risk weightings.
                   </p>
                 </div>
@@ -964,11 +964,11 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   {selectedPlayers.map((ps, idx) => (
                     <div 
                       key={ps.player.id} 
-                      className="p-3 bg-slate-950 border border-slate-900 hover:border-slate-800 transition-all rounded-2xl space-y-3 relative group"
+                      className="p-3 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] hover:border-[hsl(var(--ve-accent-cyan)/0.34)] transition-all rounded-2xl space-y-3 relative group shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]"
                     >
                       <button 
                         onClick={() => handleRemovePlayerFromCircle(ps.player.id)}
-                        className="absolute top-3 right-3 text-slate-500 hover:text-red-400 p-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg transition-colors"
+                        className="absolute top-3 right-3 text-[hsl(var(--ve-text-muted))] hover:text-red-300 p-1 bg-[hsl(var(--ve-surface-raised)/0.44)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] border border-[hsl(var(--ve-border)/0.28)] rounded-lg transition-colors"
                         title="Remove player"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -979,28 +979,28 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         <img 
                           src={ps.player.headshot || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120"} 
                           alt={ps.player.name}
-                          className="w-10 h-10 rounded-full object-cover border border-slate-800 shrink-0"
+                          className="w-10 h-10 rounded-full object-cover border border-[hsl(var(--ve-border)/0.34)] shrink-0"
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1 leading-tight">
-                          <h4 className="font-bold text-slate-200 text-xs truncate">{ps.player.name}</h4>
-                          <p className="text-[9px] text-slate-500 uppercase font-bold font-mono">
+                          <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-xs truncate">{ps.player.name}</h4>
+                          <p className="text-[9px] text-[hsl(var(--ve-text-muted))] uppercase font-bold font-mono">
                             {ps.player.team} • {ps.player.position}
                           </p>
-                          <span className="inline-block mt-1 px-2 py-0.5 bg-sky-950/60 border border-sky-900/60 text-sky-400 text-[8px] font-black rounded-md font-mono uppercase">
+                          <span className="inline-block mt-1 px-2 py-0.5 bg-[hsl(var(--ve-accent-cyan)/0.12)] border border-[hsl(var(--ve-accent-cyan)/0.30)] text-[hsl(var(--ve-accent-cyan))] text-[8px] font-black rounded-md font-mono uppercase">
                             {ps.customVal}
                           </span>
                         </div>
                       </div>
 
                       {/* Configurable Sliders for real-time model adjusting */}
-                      <div className="grid grid-cols-2 gap-3 pt-2.5 border-t border-slate-900 text-[9px]">
+                      <div className="grid grid-cols-2 gap-3 pt-2.5 border-t border-[hsl(var(--ve-border)/0.26)] text-[9px]">
                         
                         {/* Slider A: AI confidence */}
                         <div className="space-y-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-bold text-slate-500 uppercase font-mono">AI Model Conf</span>
-                            <span className="font-black text-purple-400 font-mono">{ps.aiConfidence || 85}%</span>
+                            <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">AI Model Conf</span>
+                            <span className="font-black text-[hsl(var(--ve-accent-pink))] font-mono">{ps.aiConfidence || 85}%</span>
                           </div>
                           <input 
                             type="range"
@@ -1012,15 +1012,15 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               updated[idx].aiConfidence = parseInt(e.target.value);
                               setSelectedPlayers(updated);
                             }}
-                            className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-purple-400"
+                            className="w-full h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded appearance-none cursor-pointer accent-[hsl(var(--ve-accent-pink))]"
                           />
                         </div>
 
                         {/* Slider B: Personal confidence */}
                         <div className="space-y-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-bold text-slate-500 uppercase font-mono">Your Conf</span>
-                            <span className="font-black text-cyan-400 font-mono">{ps.playerConfidence || 80}%</span>
+                            <span className="font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono">Your Conf</span>
+                            <span className="font-black text-[hsl(var(--ve-accent-cyan))] font-mono">{ps.playerConfidence || 80}%</span>
                           </div>
                           <input 
                             type="range"
@@ -1032,7 +1032,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               updated[idx].playerConfidence = parseInt(e.target.value);
                               setSelectedPlayers(updated);
                             }}
-                            className="w-full h-1 bg-slate-900 rounded appearance-none cursor-pointer accent-cyan-400"
+                            className="w-full h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded appearance-none cursor-pointer accent-[hsl(var(--ve-accent-cyan))]"
                           />
                         </div>
 
@@ -1041,19 +1041,19 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   ))}
                 </div>
 
-                <div className="text-[10px] text-slate-500 text-center font-semibold pt-1">
+                <div className="text-[10px] text-[hsl(var(--ve-text-muted))] text-center font-semibold pt-1">
                   💡 Tips: Drag sliders to modulate the Simulated performance graph & backtest in real time!
                 </div>
               </div>
 
               {/* Prospect Roster candidate list */}
-              <div className="bg-[#0b101c] border border-slate-900 rounded-3xl p-5 space-y-4 shadow-xl">
+              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Plus className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus className="w-4 h-4 text-emerald-300" />
                     Sabermetric Star Candidates
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
                     Add rest-advantaged players to your active portfolio layout with high historical variance coefficients.
                   </p>
                 </div>
@@ -1062,18 +1062,18 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   {MLB_PLAYER_RECORDS.filter(p => !selectedPlayers.some(sp => sp.player.id === p.id)).map(p => (
                     <div 
                       key={p.id}
-                      className="p-2.5 bg-slate-950 border border-slate-900 hover:border-slate-800 transition-all rounded-2xl flex items-center justify-between gap-3 group"
+                      className="p-2.5 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] hover:border-[hsl(var(--ve-accent-cyan)/0.34)] transition-all rounded-2xl flex items-center justify-between gap-3 group shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img 
                           src={p.headshot || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120"} 
                           alt={p.name}
-                          className="w-8.5 h-8.5 rounded-full object-cover border border-slate-800 shrink-0"
+                          className="w-8.5 h-8.5 rounded-full object-cover border border-[hsl(var(--ve-border)/0.34)] shrink-0"
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 leading-tight">
-                          <h4 className="font-bold text-slate-200 text-xs truncate">{p.name}</h4>
-                          <p className="text-[8px] text-slate-500 uppercase font-bold font-mono">
+                          <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-xs truncate">{p.name}</h4>
+                          <p className="text-[8px] text-[hsl(var(--ve-text-muted))] uppercase font-bold font-mono">
                             {p.team} • {p.position} • HR: {p.seasonStats.hr}
                           </p>
                         </div>
@@ -1081,7 +1081,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                       <button
                         onClick={() => handleAddPlayerToCircle(p)}
-                        className="py-1 px-2.5 bg-emerald-950 hover:bg-emerald-900 border border-emerald-900/40 text-emerald-400 hover:text-emerald-300 font-mono text-[9px] font-black rounded-xl transition-all flex items-center gap-1"
+                        className="py-1 px-2.5 bg-emerald-400/10 hover:bg-emerald-400/16 border border-emerald-300/25 text-emerald-300 hover:text-emerald-200 font-mono text-[9px] font-black rounded-xl transition-all flex items-center gap-1"
                       >
                         <Plus className="w-3 h-3" />
                         <span>Vouch</span>
