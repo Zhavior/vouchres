@@ -7,6 +7,7 @@ import Starfield from '../welcomePortal/Starfield';
 import { safeJsonFetch } from '../../api/safeApiClient';
 import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
+import { bootDataStore } from "../../lib/boot/bootDataStore";
 
 type TheEdgeMode = 'public' | 'dashboard';
 type TheEdgePresentation = 'page' | 'overlay';
@@ -228,16 +229,27 @@ export default function TheEdgeShell({
   // Real today's slate for the scoreboard ticker (no fake games).
   useEffect(() => {
     let alive = true;
-    safeJsonFetch<any>('/api/mlb/lineup/today', { fallbackData: { games: [] }, timeoutMs: 12000 }).then((r) => {
-      if (!alive) return;
-      const games: SlateGame[] = (r.data?.games ?? []).slice(0, 12).map((g: any) => ({
+
+    const mapSlateGames = (payload: any): SlateGame[] => {
+      return (payload?.games ?? []).slice(0, 12).map((g: any) => ({
         away: g.awayTeam?.abbrev ?? g.awayTeam?.name ?? 'AWY',
         home: g.homeTeam?.abbrev ?? g.homeTeam?.name ?? 'HOM',
         time: g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '',
         live: /progress|live|in play/i.test(String(g.status ?? '')),
       }));
-      setSlate(games);
+    };
+
+    const bootLineup = bootDataStore.get<any>("lineupToday");
+    if (bootLineup) {
+      const bootGames = mapSlateGames(bootLineup);
+      if (bootGames.length > 0) setSlate(bootGames);
+    }
+
+    safeJsonFetch<any>('/api/mlb/lineup/today', { fallbackData: { games: [] }, timeoutMs: 12000 }).then((r) => {
+      if (!alive) return;
+      setSlate(mapSlateGames(r.data));
     });
+
     return () => { alive = false; };
   }, []);
 
