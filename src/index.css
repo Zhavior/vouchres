@@ -31,7 +31,7 @@
 
 body {
   background-color: #0b0f19;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   overflow-y: scroll;
 }
@@ -804,7 +804,7 @@ button.bg-slate-950:hover,
   font-weight: 900;
   letter-spacing: -0.02em;
   margin: 0;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   text-shadow: 0 2px 30px rgba(34, 211, 238, 0.25);
 }
 .vel-title-accent {
@@ -2675,7 +2675,7 @@ body {
 .dp-team-name {
   font-size: 18px;
   font-weight: 950;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2690,7 +2690,7 @@ body {
   border-radius: 999px;
   border: 1px solid rgba(45, 212, 191, 0.3);
   background: rgba(45, 212, 191, 0.12);
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 0.16em;
@@ -2703,7 +2703,7 @@ body {
   border-radius: 16px;
   display: grid;
   place-items: center;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-weight: 950;
   font-size: 12px;
   letter-spacing: -0.02em;
@@ -2748,7 +2748,7 @@ body {
 .dp-roster-team {
   font-size: 14px;
   font-weight: 950;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2756,7 +2756,7 @@ body {
 
 .dp-roster-sub {
   font-size: 11px;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-weight: 700;
 }
 
@@ -2800,7 +2800,7 @@ body {
   border-radius: 10px;
   display: grid;
   place-items: center;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   background: rgba(45, 212, 191, 0.1);
   border: 1px solid rgba(45, 212, 191, 0.18);
   font-size: 12px;
@@ -2813,7 +2813,7 @@ body {
 
 .dp-player-name {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 13px;
   line-height: 1.1;
   font-weight: 900;
@@ -2942,7 +2942,7 @@ body {
 .daily-matchup-count-pro strong {
   font-size: 14px;
   font-weight: 1000;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
 }
 
 .daily-shortcut-rail-pro {
@@ -3011,14 +3011,14 @@ body {
 .daily-chip-copy-pro strong {
   font-size: 12px;
   font-weight: 1000;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
 }
 
 .daily-chip-copy-pro em {
   font-size: 9px;
   font-style: normal;
   font-weight: 950;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   text-transform: uppercase;
 }
 
@@ -3106,7 +3106,7 @@ body {
 .daily-faceoff-team-pro strong {
   display: block;
   margin-top: 2px;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 20px;
   font-weight: 1000;
   white-space: nowrap;
@@ -3145,7 +3145,7 @@ body {
   margin-top: 2px;
   font-size: 12px;
   font-weight: 1000;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   letter-spacing: 0.06em;
 }
 
@@ -3183,7 +3183,7 @@ body {
 
 .daily-roster-title-pro strong {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
   white-space: nowrap;
@@ -3242,7 +3242,7 @@ body {
   border-radius: 11px;
   border: 1px solid rgba(45, 212, 191, 0.2);
   background: rgba(45, 212, 191, 0.1);
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 12px;
   font-weight: 1000;
 }
@@ -3276,7 +3276,7 @@ body {
 
 .daily-player-main-pro strong {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 13px;
   line-height: 1.1;
   font-weight: 950;
@@ -3317,7 +3317,7 @@ body {
 
 .daily-lineup-pending-pro strong {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
 }
@@ -4725,7 +4725,7 @@ body,
 
 .ve-social-stream-kicker {
   display: block;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 10px;
   font-weight: 950;
   text-transform: uppercase;
@@ -4734,7 +4734,7 @@ body,
 
 .ve-social-stream-command h2 {
   margin: 4px 0 0;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 18px;
   font-weight: 1000;
   letter-spacing: -0.03em;
@@ -4742,7 +4742,7 @@ body,
 
 .ve-social-stream-command p {
   margin: 5px 0 0;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
@@ -4802,7 +4802,7 @@ body,
 .ve-social-stream-metrics strong {
   display: block;
   margin-top: 4px;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 16px;
   font-weight: 1000;
 }
@@ -4850,7 +4850,7 @@ body,
 
 .ve-social-stream-kicker {
   display: block;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 10px;
   font-weight: 950;
   text-transform: uppercase;
@@ -4859,7 +4859,7 @@ body,
 
 .ve-social-stream-command h2 {
   margin: 4px 0 0;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 18px;
   font-weight: 1000;
   letter-spacing: -0.03em;
@@ -4867,7 +4867,7 @@ body,
 
 .ve-social-stream-command p {
   margin: 5px 0 0;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
@@ -4927,7 +4927,7 @@ body,
 .ve-social-stream-metrics strong {
   display: block;
   margin-top: 4px;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 16px;
   font-weight: 1000;
 }
@@ -4994,7 +4994,7 @@ body,
   background:
     radial-gradient(circle at 30% 10%, rgba(255, 255, 255, 0.22), transparent 38%),
     linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(59, 130, 246, 0.16));
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 13px;
   font-weight: 1000;
 }
@@ -5005,7 +5005,7 @@ body,
 }
 
 .ve-real-composer__identity strong {
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
 }
@@ -5043,7 +5043,7 @@ body,
 .ve-real-composer__types button.is-active {
   border-color: rgba(45, 212, 191, 0.42);
   background: rgba(45, 212, 191, 0.1);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
 }
 
 .ve-real-composer__types button span {
@@ -5076,7 +5076,7 @@ body,
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: rgba(2, 6, 23, 0.56);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 650;
   line-height: 1.45;
@@ -5115,7 +5115,7 @@ body,
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.15);
   background: rgba(2, 6, 23, 0.58);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 12px;
   font-weight: 800;
 }
@@ -5151,7 +5151,7 @@ body,
   border-radius: 999px;
   border: 1px solid rgba(248, 250, 252, 0.18);
   background: rgba(2, 6, 23, 0.82);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
 }
 
 .ve-real-composer__footer {
@@ -5180,7 +5180,7 @@ body,
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 11px;
   font-weight: 950;
 }
@@ -5281,7 +5281,7 @@ body,
 }
 
 .ve-bottom-empty-state strong {
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
   letter-spacing: -0.02em;
@@ -5289,7 +5289,7 @@ body,
 
 .ve-bottom-empty-state span {
   max-width: 420px;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 12px;
   font-weight: 750;
   line-height: 1.45;
@@ -5406,14 +5406,14 @@ body,
   border-radius: 999px;
   border: 1px solid rgba(45, 212, 191, 0.24);
   background: rgba(45, 212, 191, 0.08);
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 18px;
   font-weight: 1000;
 }
 
 .ve-bottom-empty-state strong {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
 }
@@ -5562,14 +5562,14 @@ body,
   border-radius: 999px;
   border: 1px solid rgba(45, 212, 191, 0.24);
   background: rgba(45, 212, 191, 0.08);
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 18px;
   font-weight: 1000;
 }
 
 .ve-bottom-empty-state strong {
   display: block;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 1000;
 }
@@ -5639,7 +5639,7 @@ body,
 }
 
 .ve-vouch-composer__header span {
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 10px;
   font-weight: 950;
   letter-spacing: 0.16em;
@@ -5648,7 +5648,7 @@ body,
 
 .ve-vouch-composer__header h2 {
   margin: 3px 0 0;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 18px;
   line-height: 1.1;
   font-weight: 1000;
@@ -5657,7 +5657,7 @@ body,
 
 .ve-vouch-composer__header p {
   margin: 4px 0 0;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 12px;
   font-weight: 750;
 }
@@ -5676,7 +5676,7 @@ body,
 }
 
 .ve-vouch-composer__profile strong {
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 12px;
   font-weight: 1000;
 }
@@ -5690,7 +5690,7 @@ body,
   border-radius: 18px;
   border: 1px solid rgba(148, 163, 184, 0.15);
   background: rgba(2, 6, 23, 0.54);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 14px;
   font-weight: 650;
   line-height: 1.45;
@@ -5731,7 +5731,7 @@ body,
 .ve-vouch-composer__mode-row button.is-active {
   border-color: rgba(45, 212, 191, 0.42);
   background: rgba(45, 212, 191, 0.11);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
 }
 
 .ve-vouch-composer__details {
@@ -5749,7 +5749,7 @@ body,
   border-radius: 13px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   background: rgba(2, 6, 23, 0.56);
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 12px;
   font-weight: 800;
 }
@@ -5883,7 +5883,7 @@ body,
 .ve-vouch-composer__header span {
   display: block;
   max-width: 100%;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.13em;
@@ -5894,7 +5894,7 @@ body,
 .ve-vouch-composer__header h2 {
   margin: 2px 0 0;
   max-width: 100%;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 17px;
   line-height: 1.05;
   font-weight: 950;
@@ -5905,7 +5905,7 @@ body,
 .ve-vouch-composer__header p {
   margin: 4px 0 0;
   max-width: 100%;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 11.5px;
   line-height: 1.35;
   font-weight: 650;
@@ -6120,7 +6120,7 @@ body,
 .ve-vouch-composer__header span {
   display: block;
   max-width: 100%;
-  color: #67e8f9;
+  color: hsl(var(--ve-accent-cyan));
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.13em;
@@ -6131,7 +6131,7 @@ body,
 .ve-vouch-composer__header h2 {
   margin: 2px 0 0;
   max-width: 100%;
-  color: #f8fafc;
+  color: hsl(var(--ve-text-primary));
   font-size: 17px;
   line-height: 1.05;
   font-weight: 950;
@@ -6142,7 +6142,7 @@ body,
 .ve-vouch-composer__header p {
   margin: 4px 0 0;
   max-width: 100%;
-  color: rgba(203, 213, 225, 0.68);
+  color: hsl(var(--ve-text-muted));
   font-size: 11.5px;
   line-height: 1.35;
   font-weight: 650;
