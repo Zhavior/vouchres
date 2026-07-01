@@ -273,14 +273,14 @@ export default function HomeFeedPage({
       
       {/* Toast Notification System */}
       {toastMsg && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0b1329] border-2 border-amber-500/80 text-amber-300 px-4 py-2.5 rounded-full text-xs font-bold font-mono shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-2 animate-bounce">
-          <Zap className="w-4 h-4 text-amber-500 animate-pulse" />
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[hsl(var(--ve-surface)/0.94)] border-2 border-[hsl(var(--ve-accent-gold)/0.75)] text-[hsl(var(--ve-accent-gold))] px-4 py-2.5 rounded-full text-xs font-bold font-mono shadow-[0_0_15px_hsl(var(--ve-accent-gold)/0.25)] flex items-center gap-2 animate-bounce backdrop-blur-xl">
+          <Zap className="w-4 h-4 text-[hsl(var(--ve-accent-gold))] animate-pulse" />
           <span>{toastMsg}</span>
         </div>
       )}
 
       {/* Search Input and Feed Title bar */}
-      <div className="p-4 border-b border-slate-900/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#0b0f19]/80 backdrop-blur-md sticky top-0 md:top-0 z-20">
+      <div className="p-4 border-b border-[hsl(var(--ve-border)/0.38)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[hsl(var(--ve-surface)/0.78)] backdrop-blur-xl sticky top-0 md:top-0 z-20 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)]">
         <div className="flex flex-col">
           <h1 className="text-lg md:text-xl font-black text-[hsl(var(--ve-text-primary))] flex items-center gap-1.5 uppercase tracking-wide">
             Vouch<span className="text-[hsl(var(--ve-accent-cyan))]">Edge</span> Home Feed
