@@ -5,6 +5,9 @@ import { headshotUrl } from "./mlbTypes";
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const REGISTRY_TTL_MS = 20 * 60_000;
 const registryCache = new TTLCache<PlayerRegistryEntry[]>(REGISTRY_TTL_MS);
+let registryWarmupInFlight = false;
+let lastKnownRegistryCount = 0;
+let lastRegistryUpdatedAt = new Date(0).toISOString();
 
 export interface PlayerRegistryEntry {
   playerId: number;
@@ -106,20 +109,46 @@ async function buildRegistry(): Promise<PlayerRegistryEntry[]> {
     }
   });
 
-  return [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName));
+  const players = [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName));
+  lastKnownRegistryCount = players.length;
+  lastRegistryUpdatedAt = new Date().toISOString();
+  return players;
 }
 
 export async function getPlayerRegistry(forceRefresh = false): Promise<PlayerRegistryEntry[]> {
   if (forceRefresh) registryCache.delete("registry");
-  return registryCache.getOrSet("registry", buildRegistry);
+  const players = await registryCache.getOrSet("registry", buildRegistry);
+  lastKnownRegistryCount = players.length;
+  lastRegistryUpdatedAt = new Date().toISOString();
+  return players;
 }
 
-export async function getPlayerCount(): Promise<{ count: number; updatedAt: string; source: string }> {
-  const players = await getPlayerRegistry();
+export function warmPlayerRegistryInBackground(): void {
+  if (registryWarmupInFlight) return;
+
+  registryWarmupInFlight = true;
+  setImmediate(() => {
+    getPlayerRegistry()
+      .catch((error) => {
+        console.warn(
+          "[playerRegistry] background warmup failed:",
+          error instanceof Error ? error.message : error
+        );
+      })
+      .finally(() => {
+        registryWarmupInFlight = false;
+      });
+  });
+}
+
+export async function getPlayerCount(): Promise<{ count: number; updatedAt: string; source: string; warming: boolean }> {
+  warmPlayerRegistryInBackground();
+
   return {
-    count: players.length,
-    updatedAt: new Date().toISOString(),
+    count: lastKnownRegistryCount,
+    updatedAt: lastRegistryUpdatedAt,
     source: "official_mlb",
+    warming: registryWarmupInFlight,
   };
 }
 
