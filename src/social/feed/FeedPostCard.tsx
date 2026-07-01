@@ -433,7 +433,7 @@ export default function FeedPostCard({
 
         {/* Comments drawer */}
         {showComments && (
-          <div className="pt-2 border-t border-cyan-300/[0.045] space-y-3.5" id={`comments-expanded-${post.id}`}>
+          <div className="pt-2 border-t border-[hsl(var(--ve-border)/0.28)] space-y-3.5" id={`comments-expanded-${post.id}`}>
             {/* Create comment form */}
             <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
               <input 
@@ -441,13 +441,13 @@ export default function FeedPostCard({
                 placeholder="Post your reply..." 
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 text-xs bg-[#0b0f19] text-white border border-cyan-300/[0.045] rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
+                className="flex-1 text-xs bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.30)] rounded-xl px-3 py-2 outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
                 required
                 id={`comment-input-${post.id}`}
               />
               <button 
                 type="submit"
-                className="p-2 bg-sky-500/20 hover:bg-sky-500 text-sky-450 hover:text-slate-950 rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
+                className="p-2 bg-[hsl(var(--ve-accent-cyan)/0.14)] hover:bg-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-bg-deep))] rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
                 id={`comment-submit-${post.id}`}
               >
                 <Send className="w-4.5 h-4.5" />
@@ -458,16 +458,16 @@ export default function FeedPostCard({
             {post.comments && post.comments.length > 0 && (
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1.5 scrollbar-thin mt-2" id={`comments-feed-${post.id}`}>
                 {post.comments.map((comment) => (
-                  <div key={comment.id} className="bg-slate-950/24 backdrop-blur-xl p-2.5 rounded-xl border border-slate-900 flex flex-col gap-1 text-left animate-slide-up">
-                    <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
-                      <span className="font-bold text-slate-300">
-                        {comment.displayName} <span className="text-slate-500">@{comment.username}</span>
+                  <div key={comment.id} className="bg-[hsl(var(--ve-surface-raised)/0.30)] backdrop-blur-xl p-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.24)] flex flex-col gap-1 text-left animate-slide-up">
+                    <div className="flex justify-between items-center text-[10px] text-[hsl(var(--ve-text-muted))] font-medium">
+                      <span className="font-bold text-[hsl(var(--ve-text-secondary))]">
+                        {comment.displayName} <span className="text-[hsl(var(--ve-text-muted))]">@{comment.username}</span>
                       </span>
-                      <span className="font-mono text-slate-550">
+                      <span className="font-mono text-[hsl(var(--ve-text-muted)/0.75)]">
                         {comment.timestamp && new Date(comment.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 leading-normal pl-0.5">
+                    <p className="text-xs text-[hsl(var(--ve-text-secondary))] leading-normal pl-0.5">
                       {comment.content}
                     </p>
                   </div>
@@ -482,7 +482,7 @@ export default function FeedPostCard({
 
   return (
     <article 
-      className="bg-[#121824] rounded-2xl border border-cyan-300/[0.045] p-4 hover:border-cyan-300/[0.045] transition-all duration-200 animate-slide-up relative overflow-hidden"
+      className="bg-[hsl(var(--ve-surface)/0.76)] rounded-3xl border border-[hsl(var(--ve-border)/0.38)] p-4 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
@@ -500,7 +500,7 @@ export default function FeedPostCard({
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-slate-100 hover:underline cursor-pointer text-sm leading-tight truncate">
+              <span className="font-bold text-[hsl(var(--ve-text-primary))] hover:underline cursor-pointer text-sm leading-tight truncate">
                 {post.displayName}
               </span>
               {post.subscriptionTier === 'SELLER_PRO' ? (
@@ -519,30 +519,30 @@ export default function FeedPostCard({
               ) : null}
               <PostTypeBadge post={post} />
               <ResultStatusBadge post={post} />
-              <span className="text-slate-400 text-xs">@{post.username}</span>
-              <span className="text-slate-500 text-xs">•</span>
-              <span className="text-slate-400 text-xs font-mono">{formatTime(post.timestamp)}</span>
+              <span className="text-[hsl(var(--ve-text-muted))] text-xs">@{post.username}</span>
+              <span className="text-[hsl(var(--ve-text-muted)/0.70)] text-xs">•</span>
+              <span className="text-[hsl(var(--ve-text-muted))] text-xs font-mono">{formatTime(post.timestamp)}</span>
             </div>
 
             {/* Badges bar */}
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {post.sportBadge && (
-                <span className="text-[9px] bg-slate-900 border border-cyan-300/[0.045] text-slate-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
+                <span className="text-[9px] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] font-bold px-1.5 py-0.2 rounded font-mono uppercase">
                   {post.sportBadge}
                 </span>
               )}
               {post.sourceBadge && (
                 <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono uppercase ${
                   post.sourceBadge.includes('AI') 
-                    ? 'bg-purple-950/70 text-purple-400 border border-purple-900/50' 
+                    ? 'bg-[hsl(var(--ve-accent-pink)/0.12)] text-[hsl(var(--ve-accent-pink))] border border-[hsl(var(--ve-accent-pink)/0.28)]' 
                     : post.sourceBadge.includes('Vouch') 
-                    ? 'bg-emerald-955/70 text-emerald-400 border border-emerald-900/50' 
+                    ? 'bg-emerald-400/10 text-emerald-300 border border-emerald-300/25' 
                     : 'bg-slate-900 text-slate-400 border border-slate-805'
                 }`}>
                   {post.sourceBadge}
                 </span>
               )}
-              <span className="text-[10px] text-slate-500 bg-slate-900/60 font-semibold border border-cyan-300/[0.045] px-1.5 py-0.2 rounded font-mono">
+              <span className="text-[10px] text-[hsl(var(--ve-text-muted))] bg-[hsl(var(--ve-surface-raised)/0.34)] font-semibold border border-[hsl(var(--ve-border)/0.25)] px-1.5 py-0.2 rounded font-mono">
                 {post.postType.replace('_', ' ')}
               </span>
             </div>
@@ -954,7 +954,7 @@ export default function FeedPostCard({
             {/* Quoted play embedded preview */}
             <div className="border border-cyan-300/[0.045] rounded-xl p-3 bg-slate-950/50">
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
-                <span className="font-bold text-slate-300">{post.displayName}</span>
+                <span className="font-bold text-[hsl(var(--ve-text-secondary))]">{post.displayName}</span>
                 <span>@{post.username}</span>
               </div>
               <p className="text-slate-400 text-xs leading-normal line-clamp-2">{post.content}</p>
@@ -990,7 +990,7 @@ export default function FeedPostCard({
               placeholder="Post your reply..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 text-xs bg-[#0b0f19] text-white border border-cyan-300/[0.045] rounded-xl px-3 py-2 outline-none focus:border-sky-500/80 transition-all font-medium placeholder-slate-500"
+              className="flex-1 text-xs bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.30)] rounded-xl px-3 py-2 outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
               required
               id={`comment-input-${post.id}`}
             />
