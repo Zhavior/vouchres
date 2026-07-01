@@ -303,11 +303,11 @@ export default function PlayerResearchConsole({
   const getTeamColors = (teamName: string) => {
     if (teamName.includes('Dodgers')) {
       return { 
-        gradient: 'from-blue-600/30 via-slate-900/40 to-blue-950/20', 
-        border: 'border-blue-500/20', 
-        text: 'text-blue-400', 
+        gradient: 'from-[var(--ve-accent-glow)] via-[rgba(var(--ve-bg-rgb),0.42)] to-[rgba(var(--ve-bg-rgb),0.72)]', 
+        border: 'border-[var(--ve-border)]', 
+        text: 'text-[var(--ve-accent)]', 
         glow: 'shadow-blue-500/10',
-        badge: 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+        badge: 'bg-blue-500/10 text-[var(--ve-accent)] border border-[var(--ve-border)]'
       };
     }
     if (teamName.includes('Yankees')) {
@@ -339,7 +339,7 @@ export default function PlayerResearchConsole({
     }
     if (teamName.includes('Braves')) {
       return { 
-        gradient: 'from-red-600/20 via-slate-900/40 to-blue-950/20', 
+        gradient: 'from-red-600/16 via-[rgba(var(--ve-bg-rgb),0.42)] to-[rgba(var(--ve-bg-rgb),0.72)]', 
         border: 'border-red-500/20', 
         text: 'text-red-400', 
         glow: 'shadow-red-500/10',
@@ -347,11 +347,11 @@ export default function PlayerResearchConsole({
       };
     }
     return { 
-      gradient: 'from-sky-900/20 via-slate-900/40 to-slate-950/20', 
+      gradient: 'from-[var(--ve-accent-glow)] via-[rgba(var(--ve-bg-rgb),0.42)] to-[rgba(var(--ve-bg-rgb),0.72)]', 
       border: 'border-slate-800', 
-      text: 'text-sky-400', 
+      text: 'text-[var(--ve-accent)]', 
       glow: 'shadow-slate-900',
-      badge: 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+      badge: 'bg-sky-500/10 text-[var(--ve-accent)] border border-sky-500/20'
     };
   };
 
@@ -433,7 +433,7 @@ export default function PlayerResearchConsole({
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full uppercase tracking-widest">
               Live Edge Pro Roster
             </span>
-            <span className="flex items-center gap-1.5 text-[10px] text-sky-400 font-mono">
+            <span className="flex items-center gap-1.5 text-[10px] text-[var(--ve-accent)] font-mono">
               <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse" /> Sabermetric Grounding Engine v3.5
             </span>
           </div>
@@ -1199,7 +1199,7 @@ export default function PlayerResearchConsole({
                       <button
                         type="button"
                         onClick={() => setActiveMetricsTab('VISUAL')}
-                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'VISUAL' ? 'bg-[#121824] text-sky-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`px-3 py-1 font-bold rounded-lg transition-all ${activeMetricsTab === 'VISUAL' ? 'bg-[#121824] text-[var(--ve-accent)]' : 'text-slate-500 hover:text-slate-300'}`}
                         id="btn-switch-recharts"
                       >
                         INTERACTIVE GRAPHS
@@ -1214,7 +1214,7 @@ export default function PlayerResearchConsole({
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-slate-400">Barrel Accuracy Ratio</span>
-                          <strong className="text-sky-400 font-mono">{activePlayer.advanced.barrelPercent}%</strong>
+                          <strong className="text-[var(--ve-accent)] font-mono">{activePlayer.advanced.barrelPercent}%</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                           <div 
@@ -1229,7 +1229,7 @@ export default function PlayerResearchConsole({
                       <div className="bg-slate-950 border border-slate-850 p-3.5 rounded-2xl space-y-2">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-slate-400">Average Exit Velocity</span>
-                          <strong className="text-sky-400 font-mono">{activePlayer.advanced.exitVelocity} mph</strong>
+                          <strong className="text-[var(--ve-accent)] font-mono">{activePlayer.advanced.exitVelocity} mph</strong>
                         </div>
                         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                           <div 
@@ -1277,7 +1277,7 @@ export default function PlayerResearchConsole({
                           <div className="flex items-center gap-2 text-xs font-mono">
                             <span className="text-amber-400">wOBA: {activePlayer.advanced.woba.toFixed(3)}</span>
                             <span className="text-slate-500">•</span>
-                            <span className="text-sky-400 font-bold">xwOBA: {activePlayer.advanced.xwoba.toFixed(3)}</span>
+                            <span className="text-[var(--ve-accent)] font-bold">xwOBA: {activePlayer.advanced.xwoba.toFixed(3)}</span>
                           </div>
                         </div>
                         <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
@@ -1513,8 +1513,8 @@ export default function PlayerResearchConsole({
 
                     {activeSplitTab === 'RECENCY' && (
                       <div className="space-y-2.5 text-xs">
-                        <div className="flex items-center gap-1.5 text-[9.5px] text-sky-400 uppercase font-black tracking-wider mb-1.5">
-                          <TrendingUp className="w-3.5 h-3.5 text-sky-400" />
+                        <div className="flex items-center gap-1.5 text-[9.5px] text-[var(--ve-accent)] uppercase font-black tracking-wider mb-1.5">
+                          <TrendingUp className="w-3.5 h-3.5 text-[var(--ve-accent)]" />
                           <span>Last 10 rolling games</span>
                         </div>
                         <div className="flex justify-between">
@@ -1663,7 +1663,7 @@ export default function PlayerResearchConsole({
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] bg-slate-900 border border-slate-800 text-sky-400 px-2.5 py-1 rounded-lg font-mono font-black uppercase">
+                              <span className="text-[10px] bg-slate-900 border border-slate-800 text-[var(--ve-accent)] px-2.5 py-1 rounded-lg font-mono font-black uppercase">
                                 {p.market}
                               </span>
                               <span className="block text-xs text-slate-300 font-mono font-bold mt-2.5 truncate">
@@ -1671,7 +1671,7 @@ export default function PlayerResearchConsole({
                               </span>
                               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 <span className="text-[10px] text-slate-500 font-mono">
-                                  Market Average: <strong className="text-sky-400 font-bold">{comparison.marketAverageDecimal} ({comparison.marketAverageAmerican})</strong>
+                                  Market Average: <strong className="text-[var(--ve-accent)] font-bold">{comparison.marketAverageDecimal} ({comparison.marketAverageAmerican})</strong>
                                 </span>
                                 <span className="text-[9px] text-slate-600 font-mono">•</span>
                                 <span className="text-[10px] text-slate-500 font-mono">
@@ -1688,7 +1688,7 @@ export default function PlayerResearchConsole({
                                 onClick={() => togglePropDetails(p.id)}
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-bold border transition-all ${
                                   isExpanded 
-                                    ? 'bg-sky-950 border-sky-600 text-sky-400' 
+                                    ? 'bg-sky-950 border-sky-600 text-[var(--ve-accent)]' 
                                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                                 }`}
                               >
