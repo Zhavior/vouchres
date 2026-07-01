@@ -1191,10 +1191,10 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="orbit-studio-grid">
           
           {/* Workspace configuration panel - LEFT */}
-          <div className="lg:col-span-5 space-y-5 bg-[#121824] p-4 rounded-2xl border border-slate-850 self-start">
-            <div className="border-b border-slate-800 pb-3">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
+          <div className="lg:col-span-5 space-y-5 bg-[hsl(var(--ve-surface-raised)/0.46)] p-4 rounded-2xl border border-[hsl(var(--ve-border)/0.32)] self-start">
+            <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-3">
+              <h3 className="text-xs font-bold text-[hsl(var(--ve-text-soft))] uppercase tracking-widest flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))]" />
                 Vouch Card Configuration
               </h3>
               <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5 leading-snug">
@@ -1215,7 +1215,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       src={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.headshot} 
                       alt={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name} 
                       referrerPolicy="no-referrer"
-                      className="w-7 h-7 rounded-full border border-slate-800 object-cover bg-slate-950" 
+                      className="w-7 h-7 rounded-full border border-[hsl(var(--ve-border)/0.30)] object-cover bg-[hsl(var(--ve-bg)/0.72)]" 
                     />
                     <div>
                       <span className="text-xs font-black text-amber-300 block">{(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}</span>
@@ -1230,7 +1230,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 /* Active list inline */
                 <div className="flex flex-wrap gap-1.5 py-1">
                   {selectedPlayers.map((ps, idx) => (
-                    <div key={ps.player.id} className="bg-slate-900 border border-slate-800 rounded-lg py-1 px-2 flex items-center gap-1.5 text-[10.5px] text-slate-200 font-mono font-bold">
+                    <div key={ps.player.id} className="bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] rounded-lg py-1 px-2 flex items-center gap-1.5 text-[10.5px] text-[hsl(var(--ve-text-soft))] font-mono font-bold">
                       <span>{ps.player.name.split(' ').pop()}</span>
                       <button 
                         onClick={() => handleRemovePlayerFromCircle(ps.player.id)}
@@ -1249,7 +1249,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 <span className="text-[8.5px] text-[hsl(var(--ve-text-muted))] uppercase block font-mono">
                   {activeCardLayout === 'potd' ? "Change Featured Player of the Day:" : "Quick add from active rosters:"}
                 </span>
-                <div className="max-h-[140px] overflow-y-auto bg-slate-950 rounded-xl border border-slate-900 p-1.5 space-y-1 scrollbar-thin">
+                <div className="max-h-[140px] overflow-y-auto bg-[hsl(var(--ve-bg)/0.72)] rounded-xl border border-[hsl(var(--ve-border)/0.28)] p-1.5 space-y-1 scrollbar-thin">
                   {MLB_PLAYER_RECORDS.map((player) => {
                     const isActive = activeCardLayout === 'potd'
                       ? (selectedPlayers[potdIndex] || selectedPlayers[0])?.player.id === player.id
@@ -1258,7 +1258,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                       <div 
                         key={player.id} 
                         className={`flex items-center justify-between p-1 px-2 rounded-lg text-[10px] uppercase font-bold transition-all ${
-                          isActive ? 'bg-slate-900/60 text-slate-550' : 'hover:bg-slate-900 cursor-pointer text-slate-350'
+                          isActive ? 'bg-[hsl(var(--ve-surface-raised)/0.52)] text-[hsl(var(--ve-text-muted))]' : 'hover:bg-[hsl(var(--ve-surface-raised)/0.44)] cursor-pointer text-[hsl(var(--ve-text-soft))]'
                         }`}
                         onClick={() => {
                           if (activeCardLayout === 'potd') {
@@ -1491,7 +1491,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
               {/* Conditionally reveal player selection for Player of the Day design */}
               {activeCardLayout === 'potd' && (
-                <div className="p-3 bg-slate-950/45 rounded-xl border border-slate-900 space-y-2 animate-fade-in">
+                <div className="p-3 bg-[hsl(var(--ve-surface-raised)/0.34)] rounded-xl border border-[hsl(var(--ve-border)/0.28)] space-y-2 animate-fade-in">
                   <span className="text-[9px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] block tracking-wider">
                     Select Featured Spotlight Player:
                   </span>
@@ -1504,13 +1504,13 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         className={`flex items-center gap-2.5 p-2 rounded-lg border text-left transition-all ${
                           potdIndex === idx
                             ? 'bg-[#1e1a14] border-amber-600/40 text-amber-300'
-                            : 'bg-slate-900/25 border-slate-900/80 text-slate-450 hover:text-slate-200 hover:bg-slate-900/50'
+                            : 'bg-[hsl(var(--ve-surface-raised)/0.30)] border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))] hover:bg-[hsl(var(--ve-surface-raised)/0.48)]'
                         }`}
                       >
                         <img
                           src={ps.player.headshot}
                           alt={ps.player.name}
-                          className="w-6 h-6 rounded-full border border-slate-800 object-cover bg-slate-950"
+                          className="w-6 h-6 rounded-full border border-[hsl(var(--ve-border)/0.30)] object-cover bg-[hsl(var(--ve-bg)/0.72)]"
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1 leading-none">
@@ -1530,7 +1530,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             </div>
 
             {/* Companion Card Configuration */}
-            <div className="space-y-3 border-t border-slate-800 pt-3.5" id="companion-deck-customizer">
+            <div className="space-y-3 border-t border-[hsl(var(--ve-border)/0.28)] pt-3.5" id="companion-deck-customizer">
               <label className="text-[10px] uppercase font-mono font-black text-[hsl(var(--ve-text-muted))] tracking-wider block">
                 Insight Companion Card & Posting Alignment
               </label>
@@ -1542,7 +1542,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   className={`py-2 px-3 rounded-xl border text-center transition-all text-xs font-mono font-bold flex items-center justify-center gap-1.5 ${
                     showSecondCard
                       ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/10'
+                      : 'bg-[hsl(var(--ve-surface-raised)/0.34)] border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))] hover:bg-[hsl(var(--ve-surface-raised)/0.48)]'
                   }`}
                 >
                   <Award className="w-3.5 h-3.5" />
@@ -1555,10 +1555,10 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   onClick={() => setPostSideways(!postSideways)}
                   className={`py-2 px-3 rounded-xl border text-center transition-all text-xs font-mono font-bold flex items-center justify-center gap-1.5 ${
                     !showSecondCard
-                      ? 'opacity-40 cursor-not-allowed bg-slate-950/20 border-slate-950 text-slate-600'
+                      ? 'opacity-40 cursor-not-allowed bg-[hsl(var(--ve-surface-raised)/0.20)] border-[hsl(var(--ve-border)/0.22)] text-[hsl(var(--ve-text-muted))]'
                       : postSideways
                       ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-300 shadow-sm'
-                      : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-350 hover:bg-slate-900/10'
+                      : 'bg-[hsl(var(--ve-surface-raised)/0.34)] border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))] hover:bg-[hsl(var(--ve-surface-raised)/0.48)]'
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
