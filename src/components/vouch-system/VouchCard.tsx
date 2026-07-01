@@ -443,10 +443,10 @@ export default function VouchCard({
 
         {/* COMPREHENSIVE SIDE-BY-SIDE CONFIDENCE MEASUREMENT */}
         {!isXPreview && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-slate-950/40 rounded-xl border border-slate-850/60 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-[hsl(var(--ve-surface-raised)/0.28)] rounded-xl border border-[hsl(var(--ve-border)/0.26)] text-xs">
             {/* AI Model Score */}
             <div className="space-y-1 text-left">
-              <span className="text-[10px] text-purple-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] text-[hsl(var(--ve-accent-pink))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" /> AI Engine Confidence
               </span>
               {renderConfidenceMeter(aiConfidence, 'bg-purple-500', 'shadow-[0_0_8px_rgba(168,85,247,0.5)]')}
@@ -454,14 +454,14 @@ export default function VouchCard({
 
             {/* Capper Personal Score */}
             <div className="space-y-1 text-left">
-              <span className="text-[10px] text-cyan-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] text-[hsl(var(--ve-accent-cyan))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" /> My Handled Confidence
               </span>
               {renderConfidenceMeter(capperConfidence, 'bg-cyan-500', 'shadow-[0_0_8px_rgba(6,182,212,0.5)]')}
             </div>
 
             {/* Side-by-side gap alerts or alignment indicators */}
-            <div className="col-span-1 md:col-span-2 pt-2 border-t border-slate-900 flex items-center justify-between flex-wrap gap-2 text-[10px]">
+            <div className="col-span-1 md:col-span-2 pt-2 border-t border-[hsl(var(--ve-border)/0.24)] flex items-center justify-between flex-wrap gap-2 text-[10px]">
               <div className="flex items-center gap-1.5">
                 {hasGap ? (
                   <span className="bg-rose-950 text-rose-400 font-extrabold px-2 py-0.5 rounded border border-rose-900 flex items-center gap-1 uppercase tracking-wide">
@@ -476,7 +476,7 @@ export default function VouchCard({
                     <Sparkles className="w-3 h-3" /> AI MODEL SUPPORTED
                   </span>
                 )}
-                <span className="text-slate-500 font-mono font-medium">
+                <span className="text-[hsl(var(--ve-text-muted))] font-mono font-medium">
                   {hasGap 
                     ? "Capper is far more aggressive than model parameters suggest." 
                     : "Excellent agreement between computer projection & capper analysis."}
@@ -488,8 +488,8 @@ export default function VouchCard({
 
         {/* WRITTEN TRUST ANALYSIS / NOTE */}
         {vouch.userNote && !isXPreview && (
-          <div className="p-3 bg-slate-900/35 rounded-xl border border-slate-800/40 text-xs text-slate-350 leading-relaxed flex gap-2">
-            <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+          <div className="p-3 bg-[hsl(var(--ve-surface-raised)/0.30)] rounded-xl border border-[hsl(var(--ve-border)/0.24)] text-xs text-[hsl(var(--ve-text-secondary))] leading-relaxed flex gap-2">
+            <Info className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))] flex-shrink-0 mt-0.5" />
             <p className="italic font-medium">
               "{vouch.userNote}"
             </p>
@@ -519,7 +519,7 @@ export default function VouchCard({
       </div>
 
       {/* FOOTER METADATA: PLATFORM VOUCHES / TAILS / SCREENSHOT WATERMARK */}
-      <div className="flex items-center justify-between border-t border-slate-800/60 pt-3 mt-1.5 text-xs">
+      <div className="flex items-center justify-between border-t border-[hsl(var(--ve-border)/0.30)] pt-3 mt-1.5 text-xs">
         <div className="flex items-center gap-4 text-[10px] font-mono text-[hsl(var(--ve-text-muted))] font-bold">
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 bg-[hsl(var(--ve-accent-cyan))] rounded-full animate-ping" />
@@ -545,12 +545,12 @@ export default function VouchCard({
               onClick={handleVouchClick}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
                 localVouched
-                  ? 'bg-amber-950/40 border-amber-800/80 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-gold)/0.16)] border-[hsl(var(--ve-accent-gold)/0.46)] text-[hsl(var(--ve-accent-gold))] shadow-[0_0_12px_hsl(var(--ve-accent-gold)/0.22)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`vouch-action-btn-${vouch.id}`}
             >
-              <Zap className={`w-3.5 h-3.5 ${localVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 ${localVouched ? 'fill-[hsl(var(--ve-accent-gold))] text-[hsl(var(--ve-accent-gold))]' : ''}`} />
               <span>Vouch</span>
             </button>
 
@@ -559,8 +559,8 @@ export default function VouchCard({
               onClick={handleTailClick}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
                 localTailed
-                  ? 'bg-cyan-950/40 border-cyan-800 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-cyan)/0.16)] border-[hsl(var(--ve-accent-cyan)/0.44)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_12px_hsl(var(--ve-accent-cyan)/0.22)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`tail-action-btn-${vouch.id}`}
             >
@@ -573,8 +573,8 @@ export default function VouchCard({
               onClick={handleSaveClick}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
                 isSaved
-                  ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-emerald-400/14 border-emerald-400/42 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.20)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`save-board-btn-${vouch.id}`}
             >
@@ -589,8 +589,8 @@ export default function VouchCard({
               onClick={() => setShowExplanation(!showExplanation)}
               className={`p-2 rounded-lg font-bold transition-all text-xs border ${
                 showExplanation 
-                  ? 'bg-indigo-950/30 border-indigo-800 text-indigo-400' 
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-pink)/0.14)] border-[hsl(var(--ve-accent-pink)/0.38)] text-[hsl(var(--ve-accent-pink))]' 
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               title="Explain Probability Parameters"
               id={`explain-btn-${vouch.id}`}
