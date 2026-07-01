@@ -722,7 +722,7 @@ export default function LiveStreams({
                         {chan.title}
                       </h4>
 
-                      <p className="text-[11px] text-slate-400 text-left mt-1">
+                      <p className="text-[11px] text-[hsl(var(--ve-text-muted))] text-left mt-1">
                         🏈 Covering: <span className="text-[hsl(var(--ve-text))] font-mono">{chan.gameName}</span>
                       </p>
                     </div>
@@ -998,30 +998,30 @@ export default function LiveStreams({
                 <div className="p-4 bg-[#121824] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex gap-3">
                     {/* Streamer Avatar */}
-                    <div className={`w-12 h-12 rounded-full ${activeChannel.avatarColor} border-2 border-slate-800 flex items-center justify-center font-extrabold text-slate-100 text-base shadow-lg shrink-0`}>
+                    <div className={`w-12 h-12 rounded-full ${activeChannel.avatarColor} border-2 border-[hsl(var(--ve-border)/0.34)] flex items-center justify-center font-extrabold text-[hsl(var(--ve-text))] text-base shadow-lg shrink-0`}>
                       {activeChannel.avatarInitials}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-extrabold text-slate-150 text-sm leading-tight hover:underline cursor-pointer">
+                        <h3 className="font-extrabold text-[hsl(var(--ve-text))] text-sm leading-tight hover:underline cursor-pointer">
                           {activeChannel.streamerName}
                         </h3>
                         {activeChannel.isVerified && (
-                          <span className="text-[9px] bg-sky-950 font-bold text-[var(--ve-accent)] px-1.5 py-0.5 rounded-full border border-sky-900/40 flex items-center gap-0.5">
+                          <span className="text-[9px] bg-[hsl(var(--ve-accent-cyan)/0.12)] font-bold text-[hsl(var(--ve-accent-cyan))] px-1.5 py-0.5 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] flex items-center gap-0.5">
                             ⚡ STREAM PARTNER
                           </span>
                         )}
-                        <span className="text-slate-480 text-xs">@{activeChannel.streamerUsername}</span>
+                        <span className="text-[hsl(var(--ve-text-muted))] text-xs">@{activeChannel.streamerUsername}</span>
                       </div>
                       
-                      <p className="text-xs font-semibold text-slate-200 leading-relaxed mt-1 line-clamp-2">
+                      <p className="text-xs font-semibold text-[hsl(var(--ve-text-soft))] leading-relaxed mt-1 line-clamp-2">
                         {activeChannel.title}
                       </p>
                       
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-450 font-mono font-semibold flex-wrap">
-                        <span className="text-slate-300 bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded uppercase">{activeChannel.sport}</span>
-                        <span className="text-slate-400 text-left">Targeting: {activeChannel.gameName}</span>
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-semibold flex-wrap">
+                        <span className="text-[hsl(var(--ve-text-soft))] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] px-1.5 py-0.5 rounded uppercase">{activeChannel.sport}</span>
+                        <span className="text-[hsl(var(--ve-text-muted))] text-left">Targeting: {activeChannel.gameName}</span>
                         <span className="flex items-center gap-1 font-bold text-emerald-400">
                           ⭐ verified {activeChannel.winRate}% stats
                         </span>
@@ -1036,13 +1036,13 @@ export default function LiveStreams({
                         <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping shrink-0" />
                         <span>{activeChannel.viewers.toLocaleString()}</span>
                       </div>
-                      <p className="text-[9px] text-slate-550 font-bold uppercase tracking-wider font-mono">active viewers</p>
+                      <p className="text-[9px] text-[hsl(var(--ve-text-muted))] font-bold uppercase tracking-wider font-mono">active viewers</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 3. Interactive live vouch widget tray */}
-                <div className="p-4.5 bg-[#0e131f] border-t border-slate-850 m-3.5 rounded-2xl border border-slate-850 space-y-3.5 relative overflow-hidden shadow-inner">
+                <div className="p-4.5 bg-[hsl(var(--ve-surface-raised)/0.42)] border-t border-[hsl(var(--ve-border)/0.30)] m-3.5 rounded-2xl border border-[hsl(var(--ve-border)/0.30)] space-y-3.5 relative overflow-hidden shadow-inner">
                   <div className="absolute top-0 right-0 p-3 select-none pointer-events-none opacity-5">
                     <Zap className="w-32 h-32 text-amber-500 animate-pulse" />
                   </div>
@@ -1052,25 +1052,25 @@ export default function LiveStreams({
                       <span className="text-[9px] bg-amber-950/60 font-black text-amber-400 border border-amber-900/55 px-2 py-0.5 rounded-lg font-mono uppercase tracking-wider flex items-center gap-1 max-w-max">
                         <Zap className="w-3 h-3 fill-amber-400" /> streamer live vouch selection
                       </span>
-                      <h4 className="text-sm font-extrabold text-slate-150 mt-1">
+                      <h4 className="text-sm font-extrabold text-[hsl(var(--ve-text))] mt-1">
                         {activeChannel.liveSlipSelection} — <span className="text-amber-400 font-mono">{activeChannel.liveSlipOdds} odds</span>
                       </h4>
-                      <p className="text-[11px] text-slate-450">
+                      <p className="text-[11px] text-[hsl(var(--ve-text-muted))]">
                         {activeChannel.liveSlipMarket} | game: {activeChannel.liveSlipGame}
                       </p>
                     </div>
 
                     <button
                       onClick={() => handleQuickVouchOverlay(activeChannel)}
-                      className="bg-gradient-to-r from-amber-550 to-orange-550 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black tracking-wide uppercase text-xs px-5 py-3 rounded-xl shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-2 cursor-pointer border border-amber-300/20 shadow-md"
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-[hsl(var(--ve-bg))] font-black tracking-wide uppercase text-xs px-5 py-3 rounded-xl shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-2 cursor-pointer border border-amber-300/20 shadow-md"
                       id="save-live-streamer-slip-btn"
                     >
-                      <Zap className="w-4 h-4 fill-slate-950 text-slate-950 animate-bounce" />
+                      <Zap className="w-4 h-4 fill-[hsl(var(--ve-bg))] text-[hsl(var(--ve-bg))] animate-bounce" />
                       vouch & tail live
                     </button>
                   </div>
 
-                  <div className="p-2.5 bg-slate-950/40 rounded-xl border border-slate-900 text-[10px] text-slate-500 flex items-center gap-2 text-left">
+                  <div className="p-2.5 bg-[hsl(var(--ve-surface-raised)/0.32)] rounded-xl border border-[hsl(var(--ve-border)/0.26)] text-[10px] text-[hsl(var(--ve-text-muted))] flex items-center gap-2 text-left">
                     <span className="text-emerald-500 font-bold">✓ VouchEdge Certified</span>
                     <span>•</span>
                     <span>Tailing this stream auto-archives the ledger record in your local profile dashboard for 100% transparent history audits.</span>
@@ -1078,16 +1078,16 @@ export default function LiveStreams({
                 </div>
 
                 {/* 4. Live Stream Interactive Channel Poll Widget */}
-                <div className="mx-3.5 mb-3.5 p-4 bg-[#141b2b] rounded-2xl border border-slate-850 space-y-3">
-                  <div className="flex justify-between items-center bg-slate-950/40 p-2 rounded-xl">
+                <div className="mx-3.5 mb-3.5 p-4 bg-[hsl(var(--ve-surface-raised)/0.46)] rounded-2xl border border-[hsl(var(--ve-border)/0.32)] space-y-3">
+                  <div className="flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.34)] p-2 rounded-xl">
                     <div className="flex items-center gap-1.5 font-semibold">
                       <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                      <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-widest font-mono select-none">Live Viewer Opinion Poll</h4>
+                      <h4 className="text-xs font-extrabold text-[hsl(var(--ve-text-soft))] uppercase tracking-widest font-mono select-none">Live Viewer Opinion Poll</h4>
                     </div>
                     {hasVoted ? (
-                      <span className="text-[10px] text-emerald-450 font-bold uppercase font-mono bg-emerald-950/50 px-2.5 py-0.5 rounded border border-emerald-900/30">✓ Vote Recorded</span>
+                      <span className="text-[10px] text-emerald-400 font-bold uppercase font-mono bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">✓ Vote Recorded</span>
                     ) : (
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Status: Active</span>
+                      <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-bold uppercase tracking-wider font-mono">Status: Active</span>
                     )}
                   </div>
 
