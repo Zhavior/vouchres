@@ -28,6 +28,7 @@ import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
 import { VouchEdgeLoadingScreen } from "./components/loading";
 import { EdgePortalTransition } from "./components/transitions";
+import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
 const TheEdgeShell = lazy(() => import('./components/theEdge/TheEdgeShell'));
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
@@ -1508,7 +1509,8 @@ export default function App() {
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
-      <div className="ve-motion-shell ve-theme-transition">
+      <VouchEdgeBootGate enabled={activeSection !== 'welcome' && hasRealAuthToken()}>
+        <div className="ve-motion-shell ve-theme-transition">
         <div className="ve-motion-bg" aria-hidden="true">
           <div className="ve-motion-grid" />
           <div className="ve-motion-noise" />
@@ -1575,7 +1577,8 @@ export default function App() {
         />
           </AppErrorBoundary>
         </div>
-      </div>
+        </div>
+      </VouchEdgeBootGate>
     </ThemeProvider>
   );
 }
