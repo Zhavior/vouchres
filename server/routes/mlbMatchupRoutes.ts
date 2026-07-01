@@ -46,13 +46,28 @@ export function registerMatchupRoutes(app: Express): void {
   });
 
   app.get("/api/mlb/matchups/today", async (_req: Request, res: Response) => {
-    const matchups = await getGameMatchups();
-    res.json({ count: matchups.length, matchups, generatedAt: new Date().toISOString() });
+    try {
+      const date = todayISO();
+      const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
+      console.log(`[MATCHUPS_TODAY] served from SportsTruthHub date=${date}`);
+      res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
+    } catch (err: any) {
+      console.error("[matchups/today] failed:", err?.message);
+      res.status(500).json({ error: "matchups_today_fetch_failed" });
+    }
   });
 
   app.get("/api/mlb/matchups/date/:date", async (req: Request, res: Response) => {
-    const matchups = await getGameMatchups(req.params.date);
-    res.json({ count: matchups.length, matchups, generatedAt: new Date().toISOString() });
+    try {
+      const requestedDate = req.params.date;
+      const date = /^\\d{4}-\\d{2}-\\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
+      console.log(`[MATCHUPS_DATE] served from SportsTruthHub date=${date}`);
+      res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
+    } catch (err: any) {
+      console.error("[matchups/date] failed:", err?.message);
+      res.status(500).json({ error: "matchups_date_fetch_failed" });
+    }
   });
 
   app.get("/api/mlb/matchup-matrix", async (req: Request, res: Response) => {
