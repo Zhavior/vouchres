@@ -706,10 +706,10 @@ export default function TeamMatchupLabPage() {
                           <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950/98 px-3 py-3 align-top shadow-[10px_0_20px_rgba(2,6,23,0.28)]">
                             <button
                               type="button"
-                              onClick={() => row.pitcherId && setSelectedPitcher(row)}
-                              disabled={!row.pitcherId}
-                              className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-emerald-300/20 hover:bg-emerald-300/[0.055] disabled:cursor-default disabled:hover:border-transparent disabled:hover:bg-transparent"
-                              title={row.pitcherId ? `Open ${row.pitcherName} matchup drawer` : row.pitcherName}
+                              onClick={(event) => event.preventDefault()}
+                              disabled
+                              className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-transparent hover:bg-transparent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-transparent disabled:hover:bg-transparent"
+                              title="Pitcher matchup drawer is temporarily disabled"
                             >
                               <div className="relative shrink-0 rounded-full bg-gradient-to-br from-emerald-300/45 via-sky-300/20 to-violet-300/20 p-0.5 shadow-[0_0_28px_rgba(52,211,153,0.12)]">
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
