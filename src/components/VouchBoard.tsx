@@ -1584,7 +1584,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   Card Custom Background / Plate Image:
                 </span>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <label className="cursor-pointer bg-slate-950 border-2 border-dashed border-slate-800 hover:border-sky-500/40 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all w-24 h-24 text-center group">
+                  <label className="cursor-pointer bg-[hsl(var(--ve-surface-raised)/0.40)] border-2 border-dashed border-[hsl(var(--ve-border)/0.34)] hover:border-[hsl(var(--ve-accent-cyan)/0.48)] p-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all w-24 h-24 text-center group">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -1603,7 +1603,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         }
                       }}
                     />
-                    <Plus className="w-5 h-5 text-[hsl(var(--ve-text-muted))] group-hover:text-sky-400 transition-colors" />
+                    <Plus className="w-5 h-5 text-[hsl(var(--ve-text-muted))] group-hover:text-[hsl(var(--ve-accent-cyan))] transition-colors" />
                     <span className="text-[8px] font-mono font-extrabold text-[hsl(var(--ve-text-muted))] uppercase tracking-tight">ADD PHOTO</span>
                   </label>
 
@@ -1617,7 +1617,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           setCustomCardPhoto("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80");
                           setCustomCardPhotoLabel("Green Turf Field");
                         }} 
-                        className="text-[8.5px] font-mono text-slate-300 bg-slate-900 hover:bg-slate-800 p-1 rounded-lg border border-slate-800 leading-tight text-left"
+                        className="text-[8.5px] font-mono text-[hsl(var(--ve-text-soft))] bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.30)] leading-tight text-left"
                       >
                         🌱 Green Turf Field
                       </button>
@@ -1627,14 +1627,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           setCustomCardPhoto("https://images.unsplash.com/photo-1540747737956-378724044432?w=600&auto=format&fit=crop&q=80");
                           setCustomCardPhotoLabel("Stadium Light Beam");
                         }} 
-                        className="text-[8.5px] font-mono text-slate-300 bg-slate-900 hover:bg-slate-800 p-1 rounded-lg border border-slate-800 leading-tight text-left"
+                        className="text-[8.5px] font-mono text-[hsl(var(--ve-text-soft))] bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.30)] leading-tight text-left"
                       >
                         🏟️ Stadium Lights
                       </button>
                     </div>
                     {customCardPhoto && (
-                      <div className="flex items-center justify-between bg-sky-950/20 border border-sky-900/40 rounded-lg p-1 px-2 text-[9px]">
-                        <span className="text-sky-300 truncate font-mono max-w-[120px]">{customCardPhotoLabel || "Custom Loaded"}</span>
+                      <div className="flex items-center justify-between bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.32)] rounded-lg p-1 px-2 text-[9px]">
+                        <span className="text-[hsl(var(--ve-accent-cyan))] truncate font-mono max-w-[120px]">{customCardPhotoLabel || "Custom Loaded"}</span>
                         <button 
                           onClick={() => {
                             setCustomCardPhoto("");
