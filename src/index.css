@@ -5850,3 +5850,23 @@ body,
     opacity: calc(var(--ve-motion-orb-opacity) * 0.55);
   }
 }
+
+@keyframes veBootFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.015);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
