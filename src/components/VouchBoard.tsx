@@ -2117,7 +2117,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   return (
                     <div className="my-5 relative z-10 select-none animate-fade-in space-y-4">
                       {/* Ticket header badge */}
-                      <div className={`p-4 rounded-2xl ${activeStyle.nodeTagBg} border ${activeStyle.cardBorder} flex justify-between items-center bg-black/30 backdrop-blur-sm`}>
+                      <div className={`p-4 rounded-2xl ${activeStyle.nodeTagBg} border ${activeStyle.cardBorder} flex justify-between items-center bg-[hsl(var(--ve-surface-raised)/0.34)] backdrop-blur-sm`}>
                         <div className="text-left leading-tight">
                           <span className="text-[8px] uppercase font-mono text-[hsl(var(--ve-accent-pink))] font-bold block tracking-widest">PROP SPEC SLIP</span>
                           <h3 className={`text-xs font-black uppercase tracking-tight truncate max-w-[180px] ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-100'}`}>
@@ -2270,7 +2270,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     customVal: 'Over 0.5 HRs'
                   };
                   return (
-                    <div className="h-56 my-4 relative flex flex-col md:flex-row items-center gap-6 z-10 select-none p-5 rounded-2xl bg-black/40 border border-slate-900/60 backdrop-blur-md animate-fade-in">
+                    <div className="h-56 my-4 relative flex flex-col md:flex-row items-center gap-6 z-10 select-none p-5 rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.38)] border border-[hsl(var(--ve-border)/0.30)] backdrop-blur-md animate-fade-in">
                       
                       {/* Left side: Beautiful glowing physical profile representation */}
                       <div className="relative flex-shrink-0 group">
@@ -2330,15 +2330,15 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                         {/* Mini statistics row */}
                         <div className="grid grid-cols-3 gap-1.5">
-                          <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
+                          <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.26)] text-center font-mono">
                             <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Model Edge</span>
                             <span className="text-[11px] font-black text-amber-400 mt-0.5 block leading-none">94.8%</span>
                           </div>
-                          <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
+                          <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.26)] text-center font-mono">
                             <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Season OPS</span>
                             <span className="text-[11px] font-black text-sky-400 mt-0.5 block leading-none">{featured.player.seasonStats.ops}</span>
                           </div>
-                          <div className="bg-black/20 p-1 rounded-lg border border-slate-900/40 text-center font-mono">
+                          <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] p-1 rounded-lg border border-[hsl(var(--ve-border)/0.26)] text-center font-mono">
                             <span className="text-[6px] text-[hsl(var(--ve-text-muted))] uppercase block leading-none">Total HRs</span>
                             <span className="text-[11px] font-black text-rose-500 mt-0.5 block leading-none">{featured.player.seasonStats.hr}</span>
                           </div>
