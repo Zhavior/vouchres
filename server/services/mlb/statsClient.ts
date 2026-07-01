@@ -120,10 +120,19 @@ export async function getBatterVsPitcher(
 async function fetchJson<T>(url: string): Promise<T> {
   const requestNumber = ++statsRequestCount;
   const start = Date.now();
-  console.log(`[statsClient] request #${requestNumber} ${url}`);
+  const shouldLogStatsRequests = process.env.DEBUG_MLB_STATS === "true";
+
+  if (shouldLogStatsRequests) {
+    console.log(`[statsClient] request #${requestNumber} ${url}`);
+  }
+
   const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
-  console.log(`[statsClient] request #${requestNumber} complete ${Date.now() - start}ms`);
+
+  if (shouldLogStatsRequests) {
+    console.log(`[statsClient] request #${requestNumber} complete ${Date.now() - start}ms`);
+  }
+
   return res.json();
 }
 
