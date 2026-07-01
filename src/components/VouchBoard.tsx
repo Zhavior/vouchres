@@ -652,7 +652,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
             {/* Metric 2: Assumed Accuracy (Simulation) */}
             <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-accent-gold)/0.22)] p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-[hsl(var(--ve-accent-gold)/0.38)] transition-all duration-300 backdrop-blur-xl">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(var(--ve-accent-gold)/0.08)] rounded-full blur-2xl group-hover:bg-[hsl(var(--ve-accent-gold)/0.14)] transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Assumed Accuracy (Demo)</span>
@@ -681,7 +681,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Portfolio Roster</span>
-                  <div className="text-2xl font-black text-indigo-400 tracking-tight">
+                  <div className="text-2xl font-black text-[hsl(var(--ve-accent-pink))] tracking-tight">
                     {selectedPlayers.length} Active Stars
                   </div>
                   <span className="text-[10px] font-semibold text-[hsl(var(--ve-text-secondary))] truncate block max-w-[170px] mt-1.5 font-mono">
@@ -696,7 +696,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
             {/* Metric 4: Sharpe Ratio / ROI */}
             <div className="bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-accent-pink)/0.22)] p-4.5 rounded-2xl relative overflow-hidden shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] group hover:border-[hsl(var(--ve-accent-pink)/0.38)] transition-all duration-300 backdrop-blur-xl">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(var(--ve-accent-pink)/0.08)] rounded-full blur-2xl group-hover:bg-[hsl(var(--ve-accent-pink)/0.14)] transition-colors" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase tracking-wider block font-mono">Efficiency Index</span>
@@ -744,7 +744,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         className={`px-2.5 py-1 rounded transition-all ${
                           historicalTimeframe === tf
                             ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60'
-                            : 'text-[hsl(var(--ve-text-muted))] hover:text-slate-300'
+                            : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'
                         }`}
                       >
                         {tf.toUpperCase()} Window
@@ -909,7 +909,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           : 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/10 border border-emerald-400/20 active:scale-[0.98]'
                       }`}
                     >
-                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-slate-950'}`} />
+                      <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-[hsl(var(--ve-bg-deep))]'}`} />
                       <span>{isAuditing ? '🧠 CALCULATING PROJECTIONS & SPLITS...' : '⚡ EXECUTE DEEP PORTFOLIO BACKTEST AUDIT'}</span>
                     </button>
                   </div>
@@ -1854,7 +1854,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     className={`py-2 px-2.5 rounded-xl border text-left transition-all text-[11px] font-mono flex flex-col justify-between h-[52px] ${
                       cardStyle === styleOpt.id 
                         ? `${styleOpt.activeStyle} border-2 ring-1 ring-sky-500/10 font-black` 
-                        : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-slate-300 hover:border-slate-800'
+                        : 'bg-slate-950 border-slate-900 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] hover:border-slate-800'
                     }`}
                   >
                     <span>{styleOpt.name}</span>
