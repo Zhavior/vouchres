@@ -282,15 +282,15 @@ export default function HomeFeedPage({
       {/* Search Input and Feed Title bar */}
       <div className="p-4 border-b border-slate-900/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#0b0f19]/80 backdrop-blur-md sticky top-0 md:top-0 z-20">
         <div className="flex flex-col">
-          <h1 className="text-lg md:text-xl font-black text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
-            Vouch<span className="text-sky-400">Edge</span> Home Feed
+          <h1 className="text-lg md:text-xl font-black text-[hsl(var(--ve-text-primary))] flex items-center gap-1.5 uppercase tracking-wide">
+            Vouch<span className="text-[hsl(var(--ve-accent-cyan))]">Edge</span> Home Feed
             {proOnlyMode && (
-              <span className="text-[9px] bg-amber-950 text-amber-400 border border-amber-700/60 font-black px-2 py-0.5 rounded-full tracking-wider animate-pulse ml-1.5 flex items-center gap-1">
+              <span className="text-[9px] bg-[hsl(var(--ve-accent-gold)/0.14)] text-[hsl(var(--ve-accent-gold))] border border-[hsl(var(--ve-accent-gold)/0.35)] font-black px-2 py-0.5 rounded-full tracking-wider animate-pulse ml-1.5 flex items-center gap-1">
                 <Crown className="w-2.5 h-2.5" /> PRO STREAM
               </span>
             )}
           </h1>
-          <p className="text-[10px] text-slate-400 mt-0.5">
+          <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
             Follow live parlay proof, verified slips, and community sentiment metrics.
           </p>
         </div>
@@ -303,10 +303,10 @@ export default function HomeFeedPage({
               placeholder="Search picks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs bg-[#121824]/60 backdrop-blur-sm text-slate-100 border border-slate-850/50 pl-8 pr-3 py-1.5 rounded-xl focus:border-sky-500/80 outline-none transition-all font-medium placeholder-slate-500"
+              className="w-full text-xs bg-[hsl(var(--ve-surface-raised)/0.44)] backdrop-blur-xl text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.32)] pl-8 pr-3 py-1.5 rounded-xl focus:border-[hsl(var(--ve-accent-cyan)/0.75)] outline-none transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
               id="search-input-field-id"
             />
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-[hsl(var(--ve-text-muted))] absolute left-2.5 top-2.5" />
           </div>
 
           {/* Premium Sharp PRO Switcher Button */}
@@ -395,15 +395,15 @@ export default function HomeFeedPage({
         {/* Dynamic empty state */}
         {activeTab === 'following' && followingList.length === 0 ? (
           <div
-            className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3.5"
+            className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-3.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
             id="empty-following-placeholder-slate"
           >
-            <div className="w-12 h-12 bg-indigo-950/40 rounded-full flex items-center justify-center border border-indigo-900/30 text-xl">
+            <div className="w-12 h-12 bg-[hsl(var(--ve-accent-pink)/0.13)] rounded-full flex items-center justify-center border border-[hsl(var(--ve-accent-pink)/0.30)] text-xl">
               🔑
             </div>
             <div className="text-center">
-              <h3 className="font-bold text-xs text-slate-300 uppercase tracking-widest">Not tailing anyone yet!</h3>
-              <p className="text-[11px] text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+              <h3 className="font-bold text-xs text-[hsl(var(--ve-text-secondary))] uppercase tracking-widest">Not tailing anyone yet!</h3>
+              <p className="text-[11px] text-[hsl(var(--ve-text-muted))] mt-1.5 max-w-sm mx-auto leading-relaxed">
                 Go to the <strong>"For You"</strong> feed tab, find verified sports partners, and click <strong>"Follow"</strong> or <strong>"Tail"</strong> to populate your private subscribed ledger deck right here.
               </p>
             </div>
@@ -411,13 +411,13 @@ export default function HomeFeedPage({
         ) : algorithmPosts.length === 0 && posts.length === 0 ? (
           /* Genuinely no posts anywhere yet (no filter/search at play) */
           <div
-            className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3.5"
+            className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-3.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
             id="empty-feed-placeholder-slate"
           >
-            <AlertTriangle className="w-8 h-8 text-slate-500" />
+            <AlertTriangle className="w-8 h-8 text-[hsl(var(--ve-text-muted))]" />
             <div className="text-center">
-              <h3 className="font-bold text-sm text-slate-300 uppercase">No posts yet</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <h3 className="font-bold text-sm text-[hsl(var(--ve-text-secondary))] uppercase">No posts yet</h3>
+              <p className="text-xs text-[hsl(var(--ve-text-muted))] mt-1 max-w-sm mx-auto">
                 Be the first to post a pick, vouch, parlay, result, or research note.
               </p>
             </div>
@@ -425,13 +425,13 @@ export default function HomeFeedPage({
         ) : algorithmPosts.length === 0 ? (
           /* Posts exist, but the current filter/search/tab matches none of them */
           <div
-            className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3.5"
+            className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-3.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
             id="empty-feed-placeholder-slate"
           >
-            <AlertTriangle className="w-8 h-8 text-slate-500 animate-pulse" />
+            <AlertTriangle className="w-8 h-8 text-[hsl(var(--ve-text-muted))] animate-pulse" />
             <div className="text-center">
-              <h3 className="font-bold text-sm text-slate-300 uppercase">No Matches Found</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <h3 className="font-bold text-sm text-[hsl(var(--ve-text-secondary))] uppercase">No Matches Found</h3>
+              <p className="text-xs text-[hsl(var(--ve-text-muted))] mt-1 max-w-sm mx-auto">
                 No active VouchEdge plays match your "{activeTab}" filter or search query. Create a post above to populate the feed!
               </p>
             </div>
