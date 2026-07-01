@@ -1,11 +1,18 @@
 :root {
   /* Dynamic cosmetic tokens */
   --ve-bg: 222 47% 7%;
+  --ve-bg-deep: 224 56% 4%;
+  --ve-bg-panel: 222 42% 8%;
   --ve-surface: 220 40% 11%;
+  --ve-surface-raised: 218 35% 15%;
   --ve-surface-elevated: 218 35% 15%;
+  --ve-border: 217 30% 20%;
   --ve-border-subtle: 217 30% 18%;
   --ve-border-strong: 216 30% 26%;
   --ve-accent-cyan: 191 97% 60%;
+  --ve-accent-pink: 246 64% 68%;
+  --ve-accent-gold: 43 92% 62%;
+  --ve-shadow: 224 70% 2%;
   --ve-profile-frame: transparent;
   --ve-card-skin: none;
   --ve-ambient-glow: none;
@@ -26,6 +33,9 @@
   --ve-text-success: 142 71% 45%;
   --ve-text-warning: 38 92% 50%;
   --ve-text-danger: 348 83% 47%;
+  --ve-success: var(--ve-text-success);
+  --ve-warning: var(--ve-text-warning);
+  --ve-danger: var(--ve-text-danger);
 }
 
 html[data-ve-theme],
@@ -35,16 +45,43 @@ body {
 }
 
 .ve-panel {
-  background: hsl(var(--ve-surface));
-  border: 1px solid hsl(var(--ve-border-subtle));
+  background: hsl(var(--ve-surface) / 0.84);
+  border: 1px solid hsl(var(--ve-border) / 0.34);
   border-radius: var(--ve-radius-md);
   padding: var(--ve-spacing-md);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  box-shadow: 0 18px 50px hsl(var(--ve-shadow) / 0.18);
+  backdrop-filter: blur(18px);
+}
+
+.ve-card {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  border-radius: 1rem;
+  background: hsl(var(--ve-surface-raised) / 0.34);
+  box-shadow: 0 14px 36px hsl(var(--ve-shadow) / 0.10);
+}
+
+.ve-card-compact {
+  border: 1px solid hsl(var(--ve-border) / 0.28);
+  border-radius: 0.875rem;
+  background: hsl(var(--ve-surface-raised) / 0.30);
+  padding: 0.75rem;
+  box-shadow: 0 10px 28px hsl(var(--ve-shadow) / 0.08);
+}
+
+.ve-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .ve-btn-primary,
 .ve-btn-secondary,
-.ve-btn-ghost {
+.ve-btn-ghost,
+.ve-button-primary,
+.ve-button-secondary,
+.ve-button-premium {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -58,13 +95,15 @@ body {
   transition: opacity 140ms ease, border-color 140ms ease, background-color 140ms ease;
 }
 
-.ve-btn-primary {
+.ve-btn-primary,
+.ve-button-primary {
   background: hsl(var(--ve-accent-cyan));
   color: hsl(var(--ve-button-text));
   border: 1px solid hsl(var(--ve-accent-cyan));
 }
 
-.ve-btn-primary:hover {
+.ve-btn-primary:hover,
+.ve-button-primary:hover {
   opacity: 0.9;
 }
 
@@ -75,13 +114,15 @@ body {
   opacity: 0.55;
 }
 
-.ve-btn-secondary {
-  background: hsl(var(--ve-surface-elevated));
+.ve-btn-secondary,
+.ve-button-secondary {
+  background: hsl(var(--ve-surface-raised) / 0.48);
   color: hsl(var(--ve-text-primary));
-  border: 1px solid hsl(var(--ve-border-strong));
+  border: 1px solid hsl(var(--ve-border) / 0.36);
 }
 
-.ve-btn-secondary:hover {
+.ve-btn-secondary:hover,
+.ve-button-secondary:hover {
   border-color: hsl(var(--ve-text-secondary));
 }
 
@@ -96,22 +137,25 @@ body {
   color: hsl(var(--ve-text-primary));
 }
 
-.ve-input-field {
+.ve-input-field,
+.ve-input {
   width: 100%;
-  background: hsl(var(--ve-surface-elevated));
+  background: hsl(var(--ve-surface-raised) / 0.44);
   color: hsl(var(--ve-text-primary));
-  border: 1px solid hsl(var(--ve-border-subtle));
+  border: 1px solid hsl(var(--ve-border) / 0.32);
   border-radius: var(--ve-radius-sm);
   padding: 6px 10px;
   font-size: 0.875rem;
   outline: none;
 }
 
-.ve-input-field::placeholder {
+.ve-input-field::placeholder,
+.ve-input::placeholder {
   color: hsl(var(--ve-text-muted));
 }
 
-.ve-input-field:focus {
+.ve-input-field:focus,
+.ve-input:focus {
   border-color: hsl(var(--ve-focus-ring));
   box-shadow: 0 0 0 2px hsl(var(--ve-focus-ring) / 0.18);
 }
@@ -130,9 +174,9 @@ body {
 }
 
 .ve-chip-trigger {
-  background: hsl(var(--ve-surface-elevated));
+  background: hsl(var(--ve-surface-raised) / 0.42);
   color: hsl(var(--ve-text-secondary));
-  border: 1px solid hsl(var(--ve-border-subtle));
+  border: 1px solid hsl(var(--ve-border) / 0.32);
 }
 
 .ve-chip-active {
@@ -183,6 +227,93 @@ body {
   padding: 32px;
   text-align: center;
   font-size: 13px;
+}
+
+/* Canonical VouchEdge SaaS patterns. Use these for active product surfaces. */
+.ve-page-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 0%, hsl(var(--ve-accent-cyan) / 0.10), transparent 30%),
+    linear-gradient(180deg, hsl(var(--ve-bg-deep)), hsl(var(--ve-bg)));
+  color: hsl(var(--ve-text-primary));
+}
+
+.ve-premium-panel {
+  border: 1px solid hsl(var(--ve-border) / 0.36);
+  background:
+    linear-gradient(180deg, hsl(var(--ve-surface) / 0.86), hsl(var(--ve-bg-panel) / 0.88));
+  box-shadow: 0 22px 70px hsl(var(--ve-shadow) / 0.20);
+  backdrop-filter: blur(18px);
+}
+
+.ve-surface-card {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface-raised) / 0.34);
+  box-shadow: 0 14px 36px hsl(var(--ve-shadow) / 0.10);
+}
+
+.ve-tool-card {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface-raised) / 0.34);
+  box-shadow: 0 14px 36px hsl(var(--ve-shadow) / 0.10);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.ve-tool-card:hover {
+  transform: translateY(-1px);
+  border-color: hsl(var(--ve-accent-cyan) / 0.42);
+  background: hsl(var(--ve-surface-raised) / 0.44);
+}
+
+.ve-section-kicker {
+  color: hsl(var(--ve-accent-cyan));
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ve-stat-card {
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface) / 0.74);
+  box-shadow: 0 12px 30px hsl(var(--ve-shadow) / 0.10);
+}
+
+.ve-btn-premium,
+.ve-button-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--ve-accent-gold) / 0.42);
+  background: hsl(var(--ve-accent-gold) / 0.14);
+  color: hsl(var(--ve-accent-gold));
+  font-weight: 900;
+}
+
+.ve-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--ve-border) / 0.30);
+  background: hsl(var(--ve-surface-raised) / 0.40);
+  color: hsl(var(--ve-text-secondary));
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.ve-chip-primary {
+  border-color: hsl(var(--ve-accent-cyan) / 0.34);
+  background: hsl(var(--ve-accent-cyan) / 0.10);
+  color: hsl(var(--ve-accent-cyan));
+}
+
+.ve-chip-premium {
+  border-color: hsl(var(--ve-accent-gold) / 0.34);
+  background: hsl(var(--ve-accent-gold) / 0.10);
+  color: hsl(var(--ve-accent-gold));
 }
 
 .ve-card-title {

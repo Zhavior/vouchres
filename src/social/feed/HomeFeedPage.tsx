@@ -318,12 +318,12 @@ export default function HomeFeedPage({
             }}
             className={`py-1.5 px-3.5 rounded-xl text-xs font-black tracking-wide flex items-center gap-1.5 shadow-md border transition-all shrink-0 active:scale-95 ${
               proOnlyMode
-                ? 'bg-[linear-gradient(90deg,hsl(var(--ve-accent-gold)/0.86),hsl(var(--ve-accent-cyan)/0.58))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] border-[hsl(var(--ve-accent-gold)/0.45)] shadow-[0_0_12px_hsl(var(--ve-accent-gold)/0.25)]'
+                ? 'bg-[hsl(var(--ve-accent-gold))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] border-[hsl(var(--ve-accent-gold)/0.45)] shadow-[0_0_12px_hsl(var(--ve-accent-gold)/0.25)]'
                 : 'bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.30)] hover:text-[hsl(var(--ve-text-primary))]'
             }`}
             title="Toggle to view only verified sharp professionals with over 3+ vouches"
           >
-            <Crown className={`w-3.5 h-3.5 ${proOnlyMode ? 'animate-bounce text-yellow-200' : ''}`} />
+            <Crown className={`w-3.5 h-3.5 ${proOnlyMode ? 'animate-bounce text-[hsl(var(--ve-bg-deep))]' : ''}`} />
             <span className="font-mono text-[10px]">PRO MODE</span>
           </button>
         </div>
@@ -398,7 +398,7 @@ export default function HomeFeedPage({
             className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-3.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
             id="empty-following-placeholder-slate"
           >
-            <div className="w-12 h-12 bg-[hsl(var(--ve-accent-pink)/0.13)] rounded-full flex items-center justify-center border border-[hsl(var(--ve-accent-pink)/0.30)] text-xl">
+            <div className="w-12 h-12 bg-[hsl(var(--ve-accent-cyan)/0.11)] rounded-full flex items-center justify-center border border-[hsl(var(--ve-accent-cyan)/0.28)] text-xl">
               🔑
             </div>
             <div className="text-center">

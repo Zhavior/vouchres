@@ -175,17 +175,17 @@ export default function VouchCard({
   };
 
   // Helper for rendering a confidence gauge or sparkline
-  const renderConfidenceMeter = (val: number | null, colorClass: string, glowClass: string) => {
+  const renderConfidenceMeter = (val: number | null, textClass: string, barClass: string, glowClass: string) => {
     if (val === null) return null;
     return (
       <div className="w-full space-y-1">
         <div className="flex justify-between items-center text-[10px] font-mono text-[hsl(var(--ve-text-muted))] font-bold uppercase">
           <span>Meter Density</span>
-          <span className={`${colorClass} font-black`}>{val}%</span>
+          <span className={`${textClass} font-black`}>{val}%</span>
         </div>
         <div className="h-2 w-full bg-[hsl(var(--ve-surface-raised)/0.42)] rounded-full overflow-hidden border border-[hsl(var(--ve-border)/0.30)] p-0.5">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${colorClass} ${glowClass}`}
+            className={`h-full rounded-full transition-all duration-500 ${barClass} ${glowClass}`}
             style={{ width: `${val}%` }}
           />
         </div>
@@ -307,14 +307,14 @@ export default function VouchCard({
             
             {/* Creator Badge Stack */}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="flex items-center gap-0.5 rounded-md border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-1.5 py-0.5 text-[8px] font-black uppercase text-[hsl(var(--ve-accent-cyan))]">
-                <Sparkles className="w-2.5 h-2.5 fill-cyan-400" /> PRO CAPPER
+              <span className="flex items-center gap-0.5 rounded-md border border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] px-1.5 py-0.5 text-[8px] font-black uppercase text-[hsl(var(--ve-accent-gold))]">
+                <Sparkles className="w-2.5 h-2.5 fill-[hsl(var(--ve-accent-gold))]" /> PRO CAPPER
               </span>
               <span className="rounded-md bg-[hsl(var(--ve-surface-raised)/0.46)] px-1.5 py-0.5 font-mono text-[8px] font-bold text-[hsl(var(--ve-text-muted))]">
                 TS: {profile?.trustScore || 845}
               </span>
               {riskTier && (
-                <span className="text-[8px] bg-[#1a0f05] text-amber-500 border border-amber-900/30 px-1.5 py-0.5 rounded font-extrabold">
+                <span className="rounded border border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] px-1.5 py-0.5 text-[8px] font-extrabold text-[hsl(var(--ve-accent-gold))]">
                   {riskTier} RISK
                 </span>
               )}
@@ -370,18 +370,18 @@ export default function VouchCard({
         {vouch.parlay && (
           <div className="my-2.5 p-3.5 bg-slate-950/60 rounded-xl border border-slate-850/80 relative space-y-2.5 overflow-hidden">
             {/* Visual connector line background */}
-            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-cyan-500/60 via-indigo-500/50 to-purple-500/20" />
+            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-[hsl(var(--ve-accent-cyan)/0.42)]" />
             
             <div className="flex justify-between items-center pb-1.5 border-b border-slate-900">
               <span className="text-[9px] font-mono text-slate-450 uppercase tracking-widest font-extrabold">Parlay Slip Legs</span>
-              <span className="text-[9px] font-mono text-purple-450 bg-purple-950/40 px-1.5 py-0.2 rounded border border-purple-900/30 font-bold uppercase">Weaker leg: Underdogs</span>
+              <span className="rounded border border-[hsl(var(--ve-accent-pink)/0.28)] bg-[hsl(var(--ve-accent-pink)/0.10)] px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase text-[hsl(var(--ve-accent-pink))]">Weaker leg: Underdogs</span>
             </div>
 
             <div className="space-y-3 relative z-10 pl-6">
               {vouch.parlay.legs.map((leg, legIdx) => (
                 <div key={leg.id} className="relative flex items-start justify-between gap-3 text-xs">
                   {/* Glowing Node Indicator */}
-                  <span className="absolute -left-[23px] top-1.5 w-2 h-2 rounded-full bg-cyan-400 border border-slate-950 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                  <span className="absolute -left-[23px] top-1.5 w-2 h-2 rounded-full border border-[hsl(var(--ve-bg-deep))] bg-[hsl(var(--ve-accent-cyan))] shadow-[0_0_8px_hsl(var(--ve-accent-cyan)/0.40)]" />
 
                   <div className="text-left space-y-0.5">
                     <div className="flex items-center gap-1.5">
@@ -393,7 +393,7 @@ export default function VouchCard({
                   </div>
 
                   <div className="text-right flex flex-col items-end">
-                    <span className="font-mono text-cyan-450 font-bold bg-cyan-950/30 px-1.5 rounded">x{leg.odds}</span>
+                    <span className="rounded bg-[hsl(var(--ve-accent-cyan)/0.10)] px-1.5 font-mono font-bold text-[hsl(var(--ve-accent-cyan))]">x{leg.odds}</span>
                     <span className={`text-[8px] font-bold uppercase ${leg.status === 'WON' ? 'text-emerald-400' : 'text-slate-500'}`}>
                       ● {leg.status}
                     </span>
@@ -449,7 +449,7 @@ export default function VouchCard({
               <span className="text-[10px] text-[hsl(var(--ve-accent-pink))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" /> AI Engine Confidence
               </span>
-              {renderConfidenceMeter(aiConfidence, 'bg-purple-500', 'shadow-[0_0_8px_rgba(168,85,247,0.5)]')}
+              {renderConfidenceMeter(aiConfidence, 'text-[hsl(var(--ve-accent-pink))]', 'bg-[hsl(var(--ve-accent-pink))]', 'shadow-[0_0_8px_hsl(var(--ve-accent-pink)/0.28)]')}
             </div>
 
             {/* Capper Personal Score */}
@@ -457,7 +457,7 @@ export default function VouchCard({
               <span className="text-[10px] text-[hsl(var(--ve-accent-cyan))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" /> My Handled Confidence
               </span>
-              {renderConfidenceMeter(capperConfidence, 'bg-cyan-500', 'shadow-[0_0_8px_rgba(6,182,212,0.5)]')}
+              {renderConfidenceMeter(capperConfidence, 'text-[hsl(var(--ve-accent-cyan))]', 'bg-[hsl(var(--ve-accent-cyan))]', 'shadow-[0_0_8px_hsl(var(--ve-accent-cyan)/0.28)]')}
             </div>
 
             {/* Side-by-side gap alerts or alignment indicators */}
@@ -472,7 +472,7 @@ export default function VouchCard({
                     <Check className="w-3 h-3" /> MODEL ALIGNED
                   </span>
                 ) : (
-                  <span className="bg-purple-950 text-purple-400 font-extrabold px-2 py-0.5 rounded border border-purple-900/40 flex items-center gap-1 uppercase tracking-wide">
+                  <span className="flex items-center gap-1 rounded border border-[hsl(var(--ve-accent-pink)/0.32)] bg-[hsl(var(--ve-accent-pink)/0.10)] px-2 py-0.5 font-extrabold uppercase tracking-wide text-[hsl(var(--ve-accent-pink))]">
                     <Sparkles className="w-3 h-3" /> AI MODEL SUPPORTED
                   </span>
                 )}
@@ -589,7 +589,7 @@ export default function VouchCard({
               onClick={() => setShowExplanation(!showExplanation)}
               className={`p-2 rounded-lg font-bold transition-all text-xs border ${
                 showExplanation 
-                  ? 'bg-[hsl(var(--ve-accent-pink)/0.14)] border-[hsl(var(--ve-accent-pink)/0.38)] text-[hsl(var(--ve-accent-pink))]' 
+                  ? 'bg-[hsl(var(--ve-accent-pink)/0.12)] border-[hsl(var(--ve-accent-pink)/0.34)] text-[hsl(var(--ve-accent-pink))]' 
                   : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               title="Explain Probability Parameters"

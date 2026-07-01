@@ -11,7 +11,7 @@
 import React from 'react';
 import { MapPin, CloudSun, Users } from 'lucide-react';
 import type { NormalizedGamePayload, NormalizedPlayer } from '../../adapters/normalized';
-import { ACCENT } from '../../theme/colors';
+import { ACCENT, withAlpha } from '../../theme/colors';
 import { VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
 import { isFiniteNumber } from '../ui/primitives';
 
@@ -28,8 +28,8 @@ export interface GameSignalPanelProps {
 const ENV_COLOR: Record<string, string> = {
   'Hitter-Friendly': ACCENT.emerald,
   'Pitcher-Friendly': ACCENT.risk,
-  Neutral: '#94a3b8',
-  Unknown: '#64748b',
+  Neutral: 'hsl(var(--ve-text-muted))',
+  Unknown: ACCENT.slate,
 };
 
 export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(function GameSignalPanel({
@@ -62,26 +62,26 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
     );
   }
 
-  const envColor = ENV_COLOR[game.environmentTag ?? 'Unknown'] ?? '#64748b';
+  const envColor = ENV_COLOR[game.environmentTag ?? 'Unknown'] ?? ACCENT.slate;
   const visiblePlayers = players.slice(0, maxPlayers);
 
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Game header */}
       <div
-        className="relative overflow-hidden rounded-2xl border bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-950 p-3 sm:p-4"
-        style={{ borderColor: envColor + '33' }}
+        className="ve-card relative overflow-hidden rounded-2xl p-3 sm:p-4"
+        style={{ borderColor: withAlpha(envColor, 0.22) }}
       >
         <span
           className="absolute inset-x-0 top-0 h-px"
-          style={{ background: `linear-gradient(90deg, transparent, ${envColor}66, transparent)` }}
+          style={{ background: `linear-gradient(90deg, transparent, ${withAlpha(envColor, 0.38)}, transparent)` }}
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-black text-slate-100 sm:text-base">
+            <h3 className="truncate text-sm font-black text-[hsl(var(--ve-text-primary))] sm:text-base">
               {game.matchup ?? 'Unknown matchup'}
             </h3>
-            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10px] text-slate-500">
+            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">
               {game.venue && (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="h-3 w-3" /> {game.venue}
@@ -100,7 +100,7 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
           {game.environmentTag && (
             <span
               className="flex-shrink-0 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide"
-              style={{ color: envColor, borderColor: envColor + '55', background: envColor + '15' }}
+              style={{ color: envColor, borderColor: withAlpha(envColor, 0.34), background: withAlpha(envColor, 0.08) }}
             >
               {game.environmentTag}
             </span>
@@ -113,16 +113,16 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
         {visiblePlayers.map((player, idx) => {
           const edge = player.hrEdge ?? 0;
           const edgeColor =
-            edge >= 75 ? '#818cf8' : edge >= 60 ? ACCENT.matchup : edge >= 45 ? ACCENT.lineup : '#64748b';
+            edge >= 75 ? ACCENT.form : edge >= 60 ? ACCENT.matchup : edge >= 45 ? ACCENT.lineup : 'hsl(var(--ve-text-muted))';
 
           return (
             <button
               key={`${player.playerId}-${idx}`}
               onClick={() => onPlayerClick?.(player)}
-              className="group flex w-full items-center gap-3 rounded-xl border border-slate-800/70 bg-slate-950/40 p-2.5 text-left transition-colors hover:border-slate-700/80 hover:bg-slate-900/40"
+              className="group flex w-full items-center gap-3 rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-2.5 text-left transition-colors hover:border-[hsl(var(--ve-accent-cyan)/0.28)] hover:bg-[hsl(var(--ve-surface-raised)/0.40)]"
             >
               {/* Rank */}
-              <span className="flex-shrink-0 font-mono text-[10px] font-black text-slate-600">
+              <span className="flex-shrink-0 font-mono text-[10px] font-black text-[hsl(var(--ve-text-muted))]">
                 #{idx + 1}
               </span>
 
@@ -133,16 +133,16 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
                   alt={player.playerName ?? 'Player'}
                   loading="lazy"
                   referrerPolicy="no-referrer"
-                  className="h-8 w-8 flex-shrink-0 rounded-lg border border-slate-700/60 bg-slate-900 object-cover"
+                  className="h-8 w-8 flex-shrink-0 rounded-lg border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-bg-panel))] object-cover"
                 />
               )}
 
               {/* Name + team */}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold text-slate-200">
+                <p className="truncate text-xs font-bold text-[hsl(var(--ve-text-secondary))]">
                   {player.playerName ?? 'Unknown Player'}
                 </p>
-                <p className="truncate font-mono text-[10px] text-slate-500">
+                <p className="truncate font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">
                   {player.team ?? 'UNK'} vs {player.opponent ?? 'UNK'}
                 </p>
               </div>
@@ -161,7 +161,7 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
               {player.grade && (
                 <span
                   className="flex-shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-black"
-                  style={{ color: edgeColor, borderColor: edgeColor + '55', background: edgeColor + '18' }}
+                  style={{ color: edgeColor, borderColor: withAlpha(edgeColor, 0.34), background: withAlpha(edgeColor, 0.09) }}
                 >
                   {player.grade}
                 </span>
@@ -172,7 +172,7 @@ export const GameSignalPanel: React.FC<GameSignalPanelProps> = React.memo(functi
       </div>
 
       {players.length > maxPlayers && (
-        <p className="text-center font-mono text-[10px] text-slate-600">
+        <p className="text-center font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">
           Showing top {maxPlayers} of {players.length} ranked hitters
         </p>
       )}

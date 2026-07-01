@@ -29,10 +29,10 @@ export const VerifiedGraphEmptyState: React.FC<VerifiedGraphEmptyStateProps> = R
   }) {
     return (
       <section
-        className={`rounded-2xl border border-slate-800/70 bg-slate-950/35 p-3 ${className}`}
+        className={`ve-card rounded-2xl p-3 ${className}`}
       >
         {sectionTitle && (
-          <h4 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-400">
+          <h4 className="mb-3 text-xs font-black uppercase tracking-wider text-[hsl(var(--ve-text-secondary))]">
             {sectionTitle}
           </h4>
         )}

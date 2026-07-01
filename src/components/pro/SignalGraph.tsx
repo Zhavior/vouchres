@@ -17,6 +17,7 @@ import { ProGraphShell } from './ProGraphShell';
 import { ProSignalBar } from './ProSignalBar';
 import { VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
 import { Lock } from 'lucide-react';
+import { ACCENT } from '../../theme/colors';
 
 export interface SignalGraphProps {
   /** Section title (e.g. "Edge Score Breakdown") */
@@ -43,7 +44,7 @@ export interface SignalGraphProps {
 export const SignalGraph: React.FC<SignalGraphProps> = React.memo(function SignalGraph({
   title,
   subtitle,
-  accent = '#38bdf8',
+  accent = ACCENT.matchup,
   signals,
   right,
   footer,

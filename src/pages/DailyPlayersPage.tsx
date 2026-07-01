@@ -126,7 +126,7 @@ function dataQuality(game: Game) {
 
 function qualityClass(label: string) {
   if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
-  if (label === 'PROJECTED') return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
+  if (label === 'PROJECTED') return 'border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
   if (label === 'PITCHERS') return 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
   return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.28)] text-[hsl(var(--ve-text-secondary))]';
 }
@@ -134,8 +134,7 @@ function qualityClass(label: string) {
 function positionClass(pos?: string) {
   const p = String(pos || '').toUpperCase();
   if (p === 'P') return 'text-[hsl(var(--ve-accent-cyan))]';
-  if (['C', '1B', '2B', '3B', 'SS'].includes(p)) return 'text-emerald-300';
-  if (['LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-amber-300';
+  if (['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-[hsl(var(--ve-text-secondary))]';
   return 'text-[hsl(var(--ve-text-muted))]';
 }
 
@@ -185,7 +184,7 @@ function matchupStatus(game: Game) {
 
 function matchupStatusClass(status: string) {
   if (status === 'Lineups confirmed') return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200';
-  if (status === 'Projected hitters') return 'border-amber-400/25 bg-amber-400/10 text-amber-200';
+  if (status === 'Projected hitters') return 'border-[hsl(var(--ve-accent-gold)/0.25)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
   if (status === 'Pitchers posted') return 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
   return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-secondary))]';
 }
@@ -658,7 +657,7 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
           <span
             className={`rounded-full border px-2 py-1 font-bold ${
               isProjected
-                ? 'border-amber-400/25 bg-amber-400/10 text-amber-200'
+                ? 'border-[hsl(var(--ve-accent-gold)/0.25)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]'
                 : 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
             }`}
           >
@@ -1455,16 +1454,16 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   };
 
   return (
-    <main className="ve-page ve-grid-bg min-h-screen px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
+    <main className="ve-page-shell min-h-screen px-3 py-4 sm:px-4 lg:py-5">
       <div className="mx-0 max-w-none space-y-4">
-        <header className="overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.38)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.86),hsl(var(--ve-surface-raised)/0.58),hsl(var(--ve-accent-cyan)/0.08))] p-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl sm:p-5">
+        <header className="ve-premium-panel overflow-hidden rounded-2xl p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-accent-cyan))]">
+                <span className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
                   Daily Player Board
                 </span>
-                <span className="rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.36)] px-2.5 py-1 text-[10px] font-bold text-[hsl(var(--ve-text-muted))]">{data?.date || todayISO()}</span>
+                <span className="ve-chip px-2.5 py-1">{data?.date || todayISO()}</span>
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">
@@ -1479,22 +1478,22 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
             <button
               type="button"
               onClick={fetchBoard}
-              className="w-full rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))] transition hover:bg-[hsl(var(--ve-accent-cyan)/0.18)] sm:w-auto"
+              className="ve-btn-primary w-full px-4 py-2.5 text-xs uppercase tracking-wide sm:w-auto"
             >
               Refresh Board
             </button>
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
               <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
               <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
             </div>
-            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
               <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Players Starting</div>
               <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
             </div>
-            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
               <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Last Updated</div>
               <div className="mt-0.5 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
                 {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
@@ -1503,7 +1502,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
           </div>
         </header>
 
-        <section className="flex flex-col gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.76)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+        <section className="ve-premium-panel flex flex-col gap-3 rounded-2xl p-3 md:flex-row md:items-center md:justify-between">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}

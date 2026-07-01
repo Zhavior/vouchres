@@ -25,11 +25,10 @@ interface Props {
 
 const sel = 'rounded-xl border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-2.5 py-2 text-xs text-[hsl(var(--ve-text-secondary))] outline-none transition focus:border-[hsl(var(--ve-accent-cyan)/0.56)]';
 
-function Toggle({ active, onClick, icon: Icon, label, color }: { active: boolean; onClick: () => void; icon: React.ComponentType<{ className?: string }>; label: string; color: string }) {
+function Toggle({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
     <button onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-all ${active ? 'text-[hsl(var(--ve-bg))] shadow-md shadow-[hsl(var(--ve-shadow)/0.14)]' : 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'}`}
-      style={active ? { background: color, borderColor: color } : undefined}>
+      className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-all ${active ? 'border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))] shadow-md shadow-[hsl(var(--ve-shadow)/0.14)]' : 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'}`}>
       <Icon className="w-3.5 h-3.5" /> {label}
     </button>
   );
@@ -37,7 +36,7 @@ function Toggle({ active, onClick, icon: Icon, label, color }: { active: boolean
 
 export default function HrBoardFilters({ date, onDateChange, teams, filters, onChange }: Props) {
   return (
-    <div className="mb-3 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)] backdrop-blur-xl">
+    <div className="ve-premium-panel mb-3 rounded-2xl p-3">
       <div className="flex flex-wrap items-center gap-2">
       <input type="date" value={date} onChange={(e) => onDateChange(e.target.value)} className={sel} />
 
@@ -59,9 +58,9 @@ export default function HrBoardFilters({ date, onDateChange, teams, filters, onC
         {RISKS.map((r) => <option key={r} value={r}>{r === 'ALL' ? 'All risk' : r}</option>)}
       </select>
 
-      <Toggle active={filters.hotOnly} onClick={() => onChange({ hotOnly: !filters.hotOnly })} icon={Flame} label="Hot only" color="#fb7185" />
-      <Toggle active={filters.sneakyOnly} onClick={() => onChange({ sneakyOnly: !filters.sneakyOnly })} icon={Sparkles} label="Sneaky" color="#a78bfa" />
-      <Toggle active={filters.confirmedOnly} onClick={() => onChange({ confirmedOnly: !filters.confirmedOnly })} icon={CheckCircle2} label="Confirmed" color="#34d399" />
+      <Toggle active={filters.hotOnly} onClick={() => onChange({ hotOnly: !filters.hotOnly })} icon={Flame} label="Hot only" />
+      <Toggle active={filters.sneakyOnly} onClick={() => onChange({ sneakyOnly: !filters.sneakyOnly })} icon={Sparkles} label="Sneaky" />
+      <Toggle active={filters.confirmedOnly} onClick={() => onChange({ confirmedOnly: !filters.confirmedOnly })} icon={CheckCircle2} label="Confirmed" />
 
       <label className="flex items-center gap-2 px-2 text-[11px] font-mono text-[hsl(var(--ve-text-muted))]">
         P.Vuln ≥ {filters.minPitcherVuln}

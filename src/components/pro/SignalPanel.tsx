@@ -9,6 +9,7 @@
 
 import React from 'react';
 import type { NormalizedSignal } from '../../adapters/normalized';
+import { ACCENT, withAlpha } from '../../theme/colors';
 import { SignalGraph, type SignalGraphProps } from './SignalGraph';
 import { VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
 
@@ -34,7 +35,7 @@ export interface SignalPanelProps {
 export const SignalPanel: React.FC<SignalPanelProps> = React.memo(function SignalPanel({
   title,
   subtitle,
-  accent = '#38bdf8',
+  accent = ACCENT.matchup,
   header,
   graph,
   warnings = [],
@@ -58,8 +59,8 @@ export const SignalPanel: React.FC<SignalPanelProps> = React.memo(function Signa
       {/* Header */}
       {header && (
         <div
-          className="rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3"
-          style={{ borderColor: accent + '22' }}
+          className="ve-card rounded-2xl p-3"
+          style={{ borderColor: withAlpha(accent, 0.16) }}
         >
           {header}
         </div>
@@ -67,10 +68,10 @@ export const SignalPanel: React.FC<SignalPanelProps> = React.memo(function Signa
 
       {/* Warnings */}
       {warnings.length > 0 && (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-2.5">
+        <div className="flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-accent-gold)/0.26)] bg-[hsl(var(--ve-accent-gold)/0.06)] p-2.5">
           <div className="space-y-1">
             {warnings.slice(0, 3).map((w, i) => (
-              <p key={i} className="text-[11px] leading-snug text-amber-100">
+              <p key={i} className="text-[11px] leading-snug text-[hsl(var(--ve-text-secondary))]">
                 {w}
               </p>
             ))}

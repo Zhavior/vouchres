@@ -126,21 +126,21 @@ function displayValue(value: number | string | null | undefined, suffix = ''): s
 }
 
 function labelClass(label: MatrixLabel): string {
-  if (label === 'STRONG PLAY') return 'border-emerald-300/35 bg-emerald-400/15 text-emerald-100';
-  if (label === 'LEAN OVER') return 'border-yellow-300/35 bg-yellow-400/15 text-yellow-100';
-  if (label === 'AVOID') return 'border-rose-300/35 bg-rose-400/15 text-rose-100';
-  return 'border-slate-400/25 bg-slate-500/10 text-slate-200';
+  if (label === 'STRONG PLAY') return 'border-[hsl(var(--ve-success)/0.34)] bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))]';
+  if (label === 'LEAN OVER') return 'border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
+  if (label === 'AVOID') return 'border-[hsl(var(--ve-danger)/0.34)] bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))]';
+  return 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.34)] text-[hsl(var(--ve-text-secondary))]';
 }
 
 function confidenceClass(confidence: MatchupMatrixRow['confidence']): string {
-  if (confidence === 'High') return 'text-emerald-200';
-  if (confidence === 'Medium') return 'text-yellow-200';
-  return 'text-slate-400';
+  if (confidence === 'High') return 'text-[hsl(var(--ve-success))]';
+  if (confidence === 'Medium') return 'text-[hsl(var(--ve-accent-gold))]';
+  return 'text-[hsl(var(--ve-text-muted))]';
 }
 
 function heatStyle(value: number | null, direction: 'higher' | 'lower' = 'higher'): CSSProperties {
   if (value === null || value === undefined || !Number.isFinite(value)) {
-    return { background: 'rgba(15, 23, 42, 0.36)' };
+    return { background: 'hsl(var(--ve-bg-panel) / 0.36)' };
   }
 
   let normalized = value;
@@ -148,10 +148,10 @@ function heatStyle(value: number | null, direction: 'higher' | 'lower' = 'higher
     normalized = 100 - value;
   }
 
-  if (normalized >= 75) return { background: 'rgba(16, 185, 129, 0.18)', color: '#bbf7d0' };
-  if (normalized >= 55) return { background: 'rgba(234, 179, 8, 0.16)', color: '#fef3c7' };
-  if (normalized >= 35) return { background: 'rgba(249, 115, 22, 0.16)', color: '#fed7aa' };
-  return { background: 'rgba(244, 63, 94, 0.16)', color: '#fecdd3' };
+  if (normalized >= 75) return { background: 'hsl(var(--ve-success) / 0.14)', color: 'hsl(var(--ve-success))' };
+  if (normalized >= 55) return { background: 'hsl(var(--ve-accent-gold) / 0.14)', color: 'hsl(var(--ve-accent-gold))' };
+  if (normalized >= 35) return { background: 'hsl(var(--ve-accent-pink) / 0.12)', color: 'hsl(var(--ve-accent-pink))' };
+  return { background: 'hsl(var(--ve-danger) / 0.12)', color: 'hsl(var(--ve-danger))' };
 }
 
 function metricQuality(metric: keyof MatchupMatrixRow['metrics'], value: number | null): CSSProperties {
@@ -476,32 +476,30 @@ export default function TeamMatchupLabPage() {
   };
 
   return (
-    <main className="ve-page ve-grid-bg relative min-h-screen overflow-hidden px-3 py-5 text-slate-100 sm:px-4 sm:py-6">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_8%,rgba(52,211,153,0.15),transparent_30%),radial-gradient(circle_at_82%_2%,rgba(56,189,248,0.13),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(5,7,17,1)_44%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(148,163,184,0.13)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.13)_1px,transparent_1px)] [background-size:42px_42px]" />
+    <main className="ve-page-shell relative min-h-screen overflow-hidden px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
       <div className="relative mx-auto max-w-7xl space-y-4">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-5">
-          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
-          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
+        <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-4">
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.55),transparent)]" />
+          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[hsl(var(--ve-accent-cyan)/0.08)] blur-3xl" />
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-200">
+              <div className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
                 <Target className="h-3.5 w-3.5" />
                 Matchup Matrix
               </div>
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">Team Matchup Lab</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">Team Matchup Lab</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
                 Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">Official probables only</span>
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">No fake Statcast</span>
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-slate-300">Drawer-ready rows</span>
+                <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">Official probables only</span>
+                <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">No fake Statcast</span>
+                <span className="ve-chip px-2.5 py-1 uppercase tracking-wide">Drawer-ready rows</span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-950/55 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] lg:min-w-64">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-500" htmlFor="matchup-date">
+            <div className="ve-card-compact rounded-xl p-3 lg:min-w-64">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]" htmlFor="matchup-date">
                 Slate Date
               </label>
               <div className="mt-2 flex gap-2">
@@ -510,19 +508,19 @@ export default function TeamMatchupLabPage() {
                   type="date"
                   value={date}
                   onChange={(event) => setDate(event.target.value || todayISO())}
-                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-100 outline-none transition focus:border-emerald-300/50"
+                  className="ve-input min-h-10 min-w-0 flex-1 rounded-xl px-3 text-sm font-black"
                 />
                 <button
                   type="button"
                   onClick={() => setDate(todayISO())}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-300/25 bg-emerald-300/12 px-3 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.08)] hover:border-emerald-300/50"
+                  className="ve-button-secondary min-h-10 rounded-xl px-3"
                   aria-label="Refresh today"
                   title="Refresh today"
                 >
                   <RefreshCcw className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mt-3 text-xs font-bold text-slate-500">
+              <div className="mt-3 text-xs font-bold text-[hsl(var(--ve-text-muted))]">
                 {rows.length > 0
                   ? enriching || loading
                     ? `${rows.length} live rows locked · refreshing`
@@ -534,20 +532,20 @@ export default function TeamMatchupLabPage() {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { icon: Flame, label: 'Strong Plays', value: summary.strong, tone: 'emerald' },
-              { icon: Activity, label: 'Lean Overs', value: summary.lean, tone: 'yellow' },
-              { icon: ShieldAlert, label: 'Avoid', value: summary.avoid, tone: 'rose' },
-              { icon: BarChart3, label: 'Highest Opp K%', value: summary.highestOppKPct, tone: 'sky' },
+              { icon: Flame, label: 'Strong Plays', value: summary.strong, tone: 'success' },
+              { icon: Activity, label: 'Lean Overs', value: summary.lean, tone: 'gold' },
+              { icon: ShieldAlert, label: 'Avoid', value: summary.avoid, tone: 'danger' },
+              { icon: BarChart3, label: 'Highest Opp K%', value: summary.highestOppKPct, tone: 'cyan' },
             ].map(({ icon: Icon, label, value, tone }) => (
-              <div key={label} className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <span className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${tone === 'emerald' ? 'via-emerald-300/70' : tone === 'yellow' ? 'via-yellow-300/70' : tone === 'rose' ? 'via-rose-300/70' : 'via-sky-300/70'} to-transparent`} />
+              <div key={label} className="ve-stat-card relative overflow-hidden rounded-xl p-3">
+                <span className={`absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--tone),transparent)] ${tone === 'success' ? '[--tone:hsl(var(--ve-success)/0.58)]' : tone === 'gold' ? '[--tone:hsl(var(--ve-accent-gold)/0.58)]' : tone === 'danger' ? '[--tone:hsl(var(--ve-danger)/0.52)]' : '[--tone:hsl(var(--ve-accent-cyan)/0.58)]'}`} />
                 <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
-                    <Icon className={`h-4 w-4 ${tone === 'emerald' ? 'text-emerald-300' : tone === 'yellow' ? 'text-yellow-300' : tone === 'rose' ? 'text-rose-300' : 'text-sky-300'}`} />
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.38)]">
+                    <Icon className={`h-4 w-4 ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-[hsl(var(--ve-accent-gold))]' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-[hsl(var(--ve-accent-cyan))]'}`} />
                   </span>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">{label}</span>
                 </div>
-                <div className={`mt-3 font-mono text-2xl font-black ${tone === 'emerald' ? 'text-emerald-200' : tone === 'yellow' ? 'text-yellow-200' : tone === 'rose' ? 'text-rose-200' : 'text-sky-200'}`}>{value}</div>
+                <div className={`mt-3 font-mono text-xl font-black ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-[hsl(var(--ve-accent-gold))]' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-[hsl(var(--ve-accent-cyan))]'}`}>{value}</div>
               </div>
             ))}
           </div>
@@ -555,15 +553,15 @@ export default function TeamMatchupLabPage() {
 
         <VerifiedDataNotice variant="feed-required" />
 
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
-          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/45 to-transparent" />
+        <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-3 sm:p-4">
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.45),transparent)]" />
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-sky-100">
+              <div className="ve-chip ve-chip-primary px-2.5 py-1 text-[10px] uppercase tracking-wide">
                 <Filter className="h-4 w-4" />
                 Pitcher K Matchups
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--ve-text-muted))]">
                 Missing Statcast, opponent split, or weather fields stay blank and lower confidence.
               </p>
             </div>
@@ -572,7 +570,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={teamFilter}
                 onChange={(event) => setTeamFilter(event.target.value)}
-                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
+                className="ve-input min-h-10 rounded-xl px-3 text-sm font-black"
               >
                 <option value="ALL">Team</option>
                 {teams.map((team) => <option key={team} value={team}>{team}</option>)}
@@ -580,7 +578,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={opponentFilter}
                 onChange={(event) => setOpponentFilter(event.target.value)}
-                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
+                className="ve-input min-h-10 rounded-xl px-3 text-sm font-black"
               >
                 <option value="ALL">Opponent</option>
                 {opponents.map((opponent) => <option key={opponent} value={opponent}>{opponent}</option>)}
@@ -588,7 +586,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={handFilter}
                 onChange={(event) => setHandFilter(event.target.value as 'ALL' | 'L' | 'R' | 'U')}
-                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
+                className="ve-input min-h-10 rounded-xl px-3 text-sm font-black"
               >
                 <option value="ALL">Pitcher hand</option>
                 <option value="R">Right</option>
@@ -598,7 +596,7 @@ export default function TeamMatchupLabPage() {
               <select
                 value={sortKey}
                 onChange={(event) => setSortKey(event.target.value as SortKey)}
-                className="min-h-11 rounded-xl border border-white/10 bg-slate-950/90 px-3 text-sm font-black text-slate-200 outline-none transition hover:border-white/20 focus:border-emerald-300/45"
+                className="ve-input min-h-10 rounded-xl px-3 text-sm font-black"
               >
                 {sortOptions.map((option) => <option key={option.key} value={option.key}>Sort: {option.label}</option>)}
               </select>
@@ -614,9 +612,9 @@ export default function TeamMatchupLabPage() {
                 className={`shrink-0 rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-wide transition ${
                   labelFilter === label
                     ? label === 'ALL'
-                      ? 'border-sky-300/50 bg-sky-300/15 text-sky-100'
+                    ? 'border-[hsl(var(--ve-accent-cyan)/0.46)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))]'
                       : labelClass(label)
-                    : 'border-white/10 bg-slate-950/75 text-slate-400 hover:border-white/25 hover:bg-white/[0.04] hover:text-slate-100'
+                    : 'border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-accent-cyan)/0.26)] hover:bg-[hsl(var(--ve-surface-raised)/0.44)] hover:text-[hsl(var(--ve-text-primary))]'
                 }`}
               >
                 {label === 'ALL' ? 'All' : label.replace('LEAN OVER', 'Lean Over').replace('STRONG PLAY', 'Strong Play')}
@@ -624,13 +622,13 @@ export default function TeamMatchupLabPage() {
             ))}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-white/[0.025] px-4 py-3">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel)/0.74)] shadow-[inset_0_1px_0_hsl(var(--ve-text-primary)/0.05)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.24)] px-4 py-3">
               <div className="min-w-0">
-                <span className="text-xs font-black uppercase tracking-wide text-slate-400">
+                <span className="text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-text-secondary))]">
                   {rows.length > 0 ? `${filteredRows.length} of ${rows.length} rows` : 'Preparing live MLB slate'}
                 </span>
-                <p className="mt-0.5 hidden text-[11px] font-bold text-slate-500 sm:block">
+                <p className="mt-0.5 hidden text-[11px] font-bold text-[hsl(var(--ve-text-muted))] sm:block">
                   {enriching || (loading && rows.length > 0)
                     ? 'The current matrix stays visible while fresh MLB data hydrates.'
                     : 'Select a pitcher profile to open the premium matchup drawer.'}
@@ -639,8 +637,8 @@ export default function TeamMatchupLabPage() {
               {data?.mode && (
                 <span className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide sm:inline-flex ${
                   data.mode === 'enriched'
-                    ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100'
-                    : 'border-sky-300/30 bg-sky-300/10 text-sky-100'
+                    ? 'border-[hsl(var(--ve-success)/0.30)] bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))]'
+                    : 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
                 }`}>
                   {data.mode === 'enriched' ? 'Enriched' : 'Live MLB'}
                 </span>
@@ -648,7 +646,7 @@ export default function TeamMatchupLabPage() {
               <button
                 type="button"
                 onClick={() => setSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-black text-slate-300 hover:border-white/25 hover:text-white"
+                className="ve-button-secondary inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black"
               >
                 <ArrowDownAZ className="h-3.5 w-3.5" />
                 {sortDirection === 'desc' ? 'High to low' : 'Low to high'}
@@ -656,13 +654,13 @@ export default function TeamMatchupLabPage() {
             </div>
 
             {error && (
-              <div className="m-3 rounded-xl border border-rose-300/20 bg-rose-500/10 p-4 text-sm font-bold text-rose-100">
+              <div className="m-3 rounded-xl border border-[hsl(var(--ve-danger)/0.24)] bg-[hsl(var(--ve-danger)/0.08)] p-4 text-sm font-bold text-[hsl(var(--ve-danger))]">
                 {error}
               </div>
             )}
 
             {!loading && !error && rows.length === 0 && (
-              <div className="m-3 rounded-xl border border-sky-300/15 bg-sky-500/10 p-5 text-sm text-sky-100">
+              <div className="m-3 rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.22)] bg-[hsl(var(--ve-accent-cyan)/0.08)] p-5 text-sm text-[hsl(var(--ve-text-secondary))]">
                 No matchup rows are available for this date. Probable pitchers may not be posted yet, or the MLB schedule feed returned no games.
               </div>
             )}
@@ -670,19 +668,19 @@ export default function TeamMatchupLabPage() {
             {loading && rows.length === 0 && (
               <div className="grid gap-2 p-3">
                 {Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className="grid grid-cols-[260px_80px_90px_90px_90px_1fr] gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                  <div key={index} className="grid grid-cols-[260px_80px_90px_90px_90px_1fr] gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.22)] p-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 animate-pulse rounded-full bg-white/10" />
+                      <div className="h-11 w-11 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.42)]" />
                       <div className="space-y-2">
-                        <div className="h-3 w-32 animate-pulse rounded bg-white/10" />
-                        <div className="h-2.5 w-20 animate-pulse rounded bg-white/10" />
+                        <div className="h-3 w-32 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
+                        <div className="h-2.5 w-20 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
                       </div>
                     </div>
-                    <div className="h-8 animate-pulse rounded bg-white/10" />
-                    <div className="h-8 animate-pulse rounded bg-white/10" />
-                    <div className="h-8 animate-pulse rounded bg-white/10" />
-                    <div className="h-8 animate-pulse rounded bg-white/10" />
-                    <div className="h-8 animate-pulse rounded bg-white/10" />
+                    <div className="h-8 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
+                    <div className="h-8 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
+                    <div className="h-8 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
+                    <div className="h-8 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
+                    <div className="h-8 animate-pulse rounded bg-[hsl(var(--ve-surface-raised)/0.42)]" />
                   </div>
                 ))}
               </div>
@@ -692,11 +690,11 @@ export default function TeamMatchupLabPage() {
               <div className="overflow-x-auto">
                 <table className="min-w-[1540px] border-separate border-spacing-0 text-left text-sm">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-slate-500">
+                    <tr className="text-[10px] uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">
                       {['Pitcher', 'Team', 'Opponent', 'Game Time', 'Score', 'Label', 'K/9', 'K/Game', 'ERA', 'WHIP', 'IP', 'GS', 'Whiff%', 'K%', 'xERA', 'Opp K%', 'Opponent vs Hand', 'Park Factor', 'Weather', 'Confidence', 'Research'].map((heading) => (
                         <th
                           key={heading}
-                          className={`border-b border-white/10 bg-slate-950/95 px-3 py-3 font-black ${
+                          className={`border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.96)] px-3 py-3 font-black ${
                             heading === 'Pitcher' ? 'sticky left-0 z-20 min-w-64' : 'min-w-24'
                           }`}
                         >
@@ -704,7 +702,7 @@ export default function TeamMatchupLabPage() {
                             <button
                               type="button"
                               onClick={() => handleSort(heading === 'K/Game' ? 'kPerGame' : heading === 'K%' ? 'kPct' : heading === 'Whiff%' ? 'whiffPct' : heading === 'Opp K%' ? 'oppKPct' : heading === 'xERA' ? 'xera' : 'score')}
-                              className="text-left font-black text-slate-300 hover:text-white"
+                              className="text-left font-black text-[hsl(var(--ve-text-secondary))] hover:text-[hsl(var(--ve-text-primary))]"
                             >
                               {heading}
                             </button>
@@ -717,8 +715,8 @@ export default function TeamMatchupLabPage() {
                     {filteredRows.map((row) => {
                       const rowKey = `${row.gameId}-${row.pitcherId ?? row.team}`;
                       return (
-                        <tr key={rowKey} className="group transition hover:bg-white/[0.035]">
-                          <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950/98 px-3 py-3 align-top shadow-[10px_0_20px_rgba(2,6,23,0.28)]">
+                        <tr key={rowKey} className="group transition hover:bg-[hsl(var(--ve-surface-raised)/0.22)]">
+                          <td className="sticky left-0 z-10 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.98)] px-3 py-3 align-top shadow-[10px_0_20px_hsl(var(--ve-shadow)/0.24)]">
                             <button
                               type="button"
                               onClick={(event) => event.preventDefault()}
@@ -726,51 +724,51 @@ export default function TeamMatchupLabPage() {
                               className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-transparent hover:bg-transparent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-transparent disabled:hover:bg-transparent"
                               title="Pitcher matchup drawer is temporarily disabled"
                             >
-                              <div className="relative shrink-0 rounded-full bg-gradient-to-br from-emerald-300/45 via-sky-300/20 to-violet-300/20 p-0.5 shadow-[0_0_28px_rgba(52,211,153,0.12)]">
+                              <div className="relative shrink-0 rounded-full bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.36),hsl(var(--ve-accent-gold)/0.18))] p-0.5 shadow-[0_0_22px_hsl(var(--ve-accent-cyan)/0.10)]">
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
                               </div>
                               <div className="min-w-0">
-                                <div className="truncate font-black text-white group-hover:text-emerald-100">{row.pitcherName}</div>
+                                <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-[hsl(var(--ve-accent-cyan))]">{row.pitcherName}</div>
                                 <div className="mt-1 flex flex-wrap gap-1">
-                                  <span className="rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-black uppercase text-slate-400">
+                                  <span className="rounded-md border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-1.5 py-0.5 text-[10px] font-black uppercase text-[hsl(var(--ve-text-muted))]">
                                     {row.pitcherHand === 'U' ? 'Hand TBD' : `${row.pitcherHand}HP`}
                                   </span>
-                                  <span className="rounded-md border border-emerald-300/20 bg-emerald-300/10 px-1.5 py-0.5 text-[10px] font-black uppercase text-emerald-200">
+                                  <span className="rounded-md border border-[hsl(var(--ve-success)/0.24)] bg-[hsl(var(--ve-success)/0.08)] px-1.5 py-0.5 text-[10px] font-black uppercase text-[hsl(var(--ve-success))]">
                                     {row.dataQuality.probablePitcher === 'official' ? 'Official' : 'Unknown'}
                                   </span>
                                 </div>
                               </div>
                             </button>
                           </td>
-                          <td className="border-b border-white/10 px-3 py-3 font-black text-slate-200">{row.team}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-black text-slate-200">{row.opponent}</td>
-                          <td className="border-b border-white/10 px-3 py-3 text-slate-300">{formatGameTime(row.gameTime)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono font-black" style={heatStyle(row.score)}>{displayValue(row.score)}</td>
-                          <td className="border-b border-white/10 px-3 py-3">
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-black text-[hsl(var(--ve-text-secondary))]">{row.team}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-black text-[hsl(var(--ve-text-secondary))]">{row.opponent}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 text-[hsl(var(--ve-text-secondary))]">{formatGameTime(row.gameTime)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono font-black" style={heatStyle(row.score)}>{displayValue(row.score)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3">
                             <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${labelClass(row.label)}`}>{row.label}</span>
                           </td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('k9', row.metrics.k9)}>{displayValue(row.metrics.k9)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('kPerGame', row.metrics.kPerGame)}>{displayValue(row.metrics.kPerGame)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('era', row.metrics.era)}>{displayValue(row.metrics.era)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('whip', row.metrics.whip)}>{displayValue(row.metrics.whip)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('ip', row.metrics.ip)}>{displayValue(row.metrics.ip)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('gs', row.metrics.gs)}>{displayValue(row.metrics.gs)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('whiffPct', row.metrics.whiffPct)}>{displayValue(row.metrics.whiffPct, '%')}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('kPct', row.metrics.kPct)}>{displayValue(row.metrics.kPct, '%')}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('xera', row.metrics.xera)}>{displayValue(row.metrics.xera)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('oppKPct', row.metrics.oppKPct)}>{displayValue(row.metrics.oppKPct, '%')}</td>
-                          <td className="border-b border-white/10 px-3 py-3 text-slate-300">{displayValue(row.metrics.opponentVsHand)}</td>
-                          <td className="border-b border-white/10 px-3 py-3 font-mono" style={metricQuality('parkFactor', row.metrics.parkFactor)}>{displayValue(row.metrics.parkFactor)}</td>
-                          <td className="max-w-48 border-b border-white/10 px-3 py-3 text-xs text-slate-300">{displayValue(row.metrics.weather)}</td>
-                          <td className={`border-b border-white/10 px-3 py-3 font-black ${confidenceClass(row.confidence)}`}>{row.confidence}</td>
-                          <td className="border-b border-white/10 px-3 py-3">
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('k9', row.metrics.k9)}>{displayValue(row.metrics.k9)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('kPerGame', row.metrics.kPerGame)}>{displayValue(row.metrics.kPerGame)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('era', row.metrics.era)}>{displayValue(row.metrics.era)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('whip', row.metrics.whip)}>{displayValue(row.metrics.whip)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('ip', row.metrics.ip)}>{displayValue(row.metrics.ip)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('gs', row.metrics.gs)}>{displayValue(row.metrics.gs)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('whiffPct', row.metrics.whiffPct)}>{displayValue(row.metrics.whiffPct, '%')}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('kPct', row.metrics.kPct)}>{displayValue(row.metrics.kPct, '%')}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('xera', row.metrics.xera)}>{displayValue(row.metrics.xera)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('oppKPct', row.metrics.oppKPct)}>{displayValue(row.metrics.oppKPct, '%')}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 text-[hsl(var(--ve-text-secondary))]">{displayValue(row.metrics.opponentVsHand)}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-mono" style={metricQuality('parkFactor', row.metrics.parkFactor)}>{displayValue(row.metrics.parkFactor)}</td>
+                          <td className="max-w-48 border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 text-xs text-[hsl(var(--ve-text-secondary))]">{displayValue(row.metrics.weather)}</td>
+                          <td className={`border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3 font-black ${confidenceClass(row.confidence)}`}>{row.confidence}</td>
+                          <td className="border-b border-[hsl(var(--ve-border)/0.24)] px-3 py-3">
                             <button
                               type="button"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 handleCopy(row);
                               }}
-                              className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-black text-emerald-100 shadow-[0_0_20px_rgba(52,211,153,0.06)] hover:border-emerald-300/45"
+                              className="inline-flex items-center gap-2 rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.26)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-3 py-2 text-xs font-black text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.44)]"
                             >
                               <ClipboardCopy className="h-3.5 w-3.5" />
                               {copiedKey === rowKey ? 'Copied' : 'Copy Research'}
@@ -783,7 +781,7 @@ export default function TeamMatchupLabPage() {
                 </table>
 
                 {(loading || enriching) && (
-                  <div className="border-t border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-emerald-200">
+                  <div className="border-t border-[hsl(var(--ve-border)/0.28)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))]">
                     Matrix locked while fresh MLB data syncs
                   </div>
                 )}
@@ -807,20 +805,20 @@ export default function TeamMatchupLabPage() {
         />
 
         <section className="grid gap-3 lg:grid-cols-2">
-          <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
-            <div className="text-sm font-black uppercase tracking-wide text-white">Scoring Model</div>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <div className="ve-card relative overflow-hidden rounded-2xl p-4">
+            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.42),transparent)]" />
+            <div className="text-sm font-black uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">Scoring Model</div>
+            <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
               Score weights: 30% pitcher strikeout skill, 25% opponent strikeout weakness, 15% workload and innings safety,
               15% run prevention and control, 10% recent form, and 5% context. Missing components are excluded from the
               weighted average and reflected in confidence.
             </p>
           </div>
-          <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent" />
-            <div className="text-sm font-black uppercase tracking-wide text-white">Best K Environment</div>
-            <p className="mt-3 font-mono text-2xl font-black text-emerald-200">{summary.bestKEnvironment}</p>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <div className="ve-card relative overflow-hidden rounded-2xl p-4">
+            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-gold)/0.38),transparent)]" />
+            <div className="text-sm font-black uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">Best K Environment</div>
+            <p className="mt-3 font-mono text-xl font-black text-[hsl(var(--ve-accent-gold))]">{summary.bestKEnvironment}</p>
+            <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
               Current version favors sourced pitcher skill, workload, control, recent logs, and lower run-environment context.
             </p>
           </div>

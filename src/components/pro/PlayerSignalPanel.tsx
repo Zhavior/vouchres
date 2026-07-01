@@ -12,7 +12,7 @@
 import React from 'react';
 import { Flame, AlertTriangle, MapPin } from 'lucide-react';
 import type { NormalizedPlayerPayload } from '../../adapters/normalized';
-import { ACCENT } from '../../theme/colors';
+import { ACCENT, withAlpha } from '../../theme/colors';
 import { HrSignalGraphs } from './HrSignalGraphs';
 import { VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
 
@@ -46,7 +46,7 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Player header */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/40 p-3 sm:flex-row sm:items-start">
+      <div className="ve-card flex flex-col gap-3 rounded-2xl p-3 sm:flex-row sm:items-start">
         {player.headshot && (
           <div className="relative flex-shrink-0 self-start">
             <img
@@ -54,21 +54,21 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
               alt={player.playerName ?? 'Player'}
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="h-12 w-12 rounded-xl border border-slate-700/60 bg-slate-900 object-cover"
+              className="h-12 w-12 rounded-xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel))] object-cover"
             />
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="flex items-center gap-1.5 text-base font-black text-slate-100">
+          <h3 className="flex items-center gap-1.5 text-base font-black text-[hsl(var(--ve-text-primary))]">
             <span className="truncate">{player.playerName ?? 'Unknown Player'}</span>
-            {strongEdge && <Flame className="h-4 w-4 flex-shrink-0 text-orange-400" />}
+            {strongEdge && <Flame className="h-4 w-4 flex-shrink-0 text-[hsl(var(--ve-accent-gold))]" />}
           </h3>
-          <p className="truncate font-mono text-[11px] text-slate-500">
+          <p className="truncate font-mono text-[11px] text-[hsl(var(--ve-text-muted))]">
             {player.team ?? 'UNK'} vs {player.opponent ?? 'UNK'}
             {player.opponentPitcherName && ` · ${player.opponentPitcherName}`}
           </p>
           {player.venue && (
-            <p className="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-slate-600">
+            <p className="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">
               <MapPin className="h-3 w-3" />
               {player.venue}
             </p>
@@ -90,8 +90,8 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
               className="rounded-full border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider"
               style={{
                 color: ACCENT.emerald,
-                borderColor: ACCENT.emerald + '44',
-                background: ACCENT.emerald + '14',
+                borderColor: withAlpha(ACCENT.emerald, 0.28),
+                background: withAlpha(ACCENT.emerald, 0.08),
               }}
             >
               {player.riskLabel}
@@ -102,11 +102,11 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
 
       {/* Warnings (if any) */}
       {player.warnings && player.warnings.length > 0 && (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-2.5">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
+        <div className="flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-accent-gold)/0.28)] bg-[hsl(var(--ve-accent-gold)/0.06)] p-2.5">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[hsl(var(--ve-accent-gold))]" />
           <div className="space-y-1">
             {player.warnings.slice(0, 3).map((w, i) => (
-              <p key={i} className="text-[11px] leading-snug text-amber-100">
+              <p key={i} className="text-[11px] leading-snug text-[hsl(var(--ve-text-secondary))]">
                 {w}
               </p>
             ))}
@@ -121,7 +121,7 @@ export const PlayerSignalPanel: React.FC<PlayerSignalPanelProps> = React.memo(fu
       {onAddLeg && (
         <button
           onClick={onAddLeg}
-          className="w-full rounded-xl border border-sky-500/30 bg-sky-500/10 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-sky-300 transition-colors hover:bg-sky-500/15"
+          className="ve-button-primary w-full rounded-xl py-2 font-mono text-[11px] font-bold uppercase tracking-wider"
         >
           + Add to Parlay
         </button>

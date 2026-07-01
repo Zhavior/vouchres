@@ -61,7 +61,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
       <button
         key={f.id}
         onClick={() => onSectionChange(f.id)}
-        className={`group relative w-full flex items-center justify-center xl:justify-start gap-3 pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl border text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-cyan-400/30 ${
+        className={`group relative w-full flex items-center justify-center xl:justify-start gap-3 pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl border text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.28)] ${
           isActive
             ? 'border-[hsl(var(--ve-accent-cyan)/0.35)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-text-primary))] font-black shadow-lg shadow-[hsl(var(--ve-shadow)/0.24)]'
             : 'border-transparent text-[hsl(var(--ve-text-muted))] hover:-translate-y-0.5 hover:border-[hsl(var(--ve-accent-cyan)/0.24)] hover:bg-[hsl(var(--ve-accent-cyan)/0.06)] hover:text-[hsl(var(--ve-text-primary))]'
@@ -79,14 +79,14 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         {/* Left accent indicator */}
         <span
           className={`pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-200 ${
-            isActive ? 'h-5 bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]' : 'h-0 bg-transparent group-hover:h-3 group-hover:bg-slate-600'
+            isActive ? 'h-5 bg-[hsl(var(--ve-accent-cyan))] shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.65)]' : 'h-0 bg-transparent group-hover:h-3 group-hover:bg-[hsl(var(--ve-text-muted)/0.45)]'
           }`}
         />
         {/* Icon chip */}
         <span
           className={`relative z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-200 ${
             isActive
-              ? 'bg-sky-500/15 text-sky-300'
+              ? 'bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
               : 'text-[hsl(var(--ve-text-muted))] group-hover:text-[hsl(var(--ve-text-primary))] group-hover:bg-[hsl(var(--ve-accent-cyan)/0.06)]'
           }`}
         >
@@ -128,16 +128,16 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   };
 
   return (
-    <aside className="ve-sidebar relative hidden md:flex flex-col h-screen sticky top-0 w-[76px] xl:w-[286px] border-r border-[hsl(var(--ve-border)/0.45)] bg-[linear-gradient(180deg,hsl(var(--ve-surface)/0.72)_0%,hsl(var(--ve-bg-panel)/0.64)_48%,hsl(var(--ve-bg-deep)/0.78)_100%)] px-2.5 xl:px-4 py-5 text-[hsl(var(--ve-text-primary))] justify-between select-none backdrop-blur-2xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none shadow-2xl shadow-[hsl(var(--ve-shadow)/0.32)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--ve-accent-cyan)/0.16),transparent_38%),radial-gradient(circle_at_80%_20%,hsl(var(--ve-accent-pink)/0.10),transparent_34%)]" />
+    <aside className="ve-sidebar relative hidden md:flex flex-col h-screen sticky top-0 w-[76px] xl:w-[286px] border-r border-[hsl(var(--ve-border)/0.28)] bg-transparent px-2.5 xl:px-4 py-5 text-[hsl(var(--ve-text-primary))] justify-between select-none backdrop-blur-sm z-40 flex-shrink-0 overflow-y-auto scrollbar-none shadow-none">
+      <div className="pointer-events-none absolute inset-y-4 right-0 w-px bg-[linear-gradient(180deg,transparent,hsl(var(--ve-accent-cyan)/0.24),hsl(var(--ve-border)/0.26),transparent)]" />
       <div className="relative z-10 space-y-6">
         {/* Premium VouchEdge Brand */}
         <div
           onClick={() => onSectionChange('feed')}
-          className="group relative flex items-center gap-3 rounded-3xl border border-[hsl(var(--ve-border)/0.42)] bg-[hsl(var(--ve-surface-raised)/0.38)] p-2.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] cursor-pointer transition hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:bg-[hsl(var(--ve-accent-cyan)/0.06)]"
+          className="group relative flex items-center gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-panel)/0.34)] p-2.5 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] cursor-pointer transition hover:border-[hsl(var(--ve-accent-cyan)/0.38)] hover:bg-[hsl(var(--ve-accent-cyan)/0.06)]"
           id="brand-logo-id"
         >
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.38)] bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.22),hsl(var(--ve-accent-pink)/0.12))] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_26px_-10px_hsl(var(--ve-accent-cyan)/0.9)]">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.38)] bg-[hsl(var(--ve-accent-cyan)/0.13)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_26px_-10px_hsl(var(--ve-accent-cyan)/0.9)]">
             <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.28),transparent_32%)]" />
             <span className="relative text-sm font-black tracking-tight">VE</span>
           </div>
@@ -147,7 +147,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
               <span className="truncate text-lg font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
                 VouchEdge
               </span>
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-200">
+              <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.24)] bg-[hsl(var(--ve-accent-cyan)/0.09)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[hsl(var(--ve-accent-cyan))]">
                 Live
               </span>
             </div>
@@ -163,7 +163,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         </div>
 
         {/* Sport Switcher */}
-        <div className="relative overflow-hidden flex flex-col xl:flex-row gap-1 rounded-2xl border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.24)]" id="sidebar-sport-switcher">
+        <div className="relative overflow-hidden flex flex-col xl:flex-row gap-1 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.26)] p-1.5 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]" id="sidebar-sport-switcher">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--ve-accent-cyan)/0.55)] to-transparent" />
           {SPORT_LIST.filter((sport) => sport.id === 'mlb').map((sport) => {
             const isActive = activeSport === sport.id;
@@ -178,14 +178,14 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
                     ? 'bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.45)] shadow-[0_0_22px_-5px_hsl(var(--ve-accent-cyan)/0.65)]'
                     : sport.enabled
                       ? 'text-[hsl(var(--ve-text-muted))] hover:-translate-y-0.5 hover:text-[hsl(var(--ve-text-primary))] hover:bg-[hsl(var(--ve-surface-raised)/0.38)] hover:border-[hsl(var(--ve-accent-cyan)/0.24)] border border-transparent'
-                      : 'text-[hsl(var(--ve-text-muted)/0.75)] cursor-not-allowed border border-amber-300/10 bg-amber-400/5 opacity-90'
+                      : 'text-[hsl(var(--ve-text-muted)/0.75)] cursor-not-allowed border border-[hsl(var(--ve-accent-gold)/0.18)] bg-[hsl(var(--ve-accent-gold)/0.06)] opacity-90'
                 }`}
                 id={`sidebar-sport-${sport.id}`}
               >
                 <span className="text-sm leading-none">{sport.emoji}</span>
                 <span className="hidden xl:inline">{sport.label}</span>
                 {!sport.enabled && (
-                  <span className="hidden xl:inline-flex items-center rounded-full border border-amber-300/45 bg-gradient-to-r from-amber-300/25 via-yellow-400/20 to-orange-400/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-amber-100 shadow-lg shadow-amber-950/30">
+                  <span className="hidden xl:inline-flex items-center rounded-full border border-[hsl(var(--ve-accent-gold)/0.36)] bg-[hsl(var(--ve-accent-gold)/0.12)] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[hsl(var(--ve-accent-gold))] shadow-lg shadow-[hsl(var(--ve-shadow)/0.22)]">
                     Soon
                   </span>
                 )}
@@ -217,7 +217,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         <div className="px-1 pt-1">
           <button
             onClick={() => onSectionChange('build')}
-            className="group/cta relative w-full overflow-hidden border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[linear-gradient(90deg,hsl(var(--ve-accent-cyan)/0.92),hsl(var(--ve-accent-pink)/0.78),hsl(var(--ve-accent-gold)/0.70))] hover:brightness-110 text-white font-black py-3 px-4 rounded-2xl shadow-[0_18px_45px_-18px_hsl(var(--ve-accent-cyan)/0.9)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.30)]"
+            className="group/cta relative w-full overflow-hidden border border-[hsl(var(--ve-accent-cyan)/0.38)] bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] font-black py-3 px-4 rounded-2xl shadow-[0_18px_45px_-18px_hsl(var(--ve-accent-cyan)/0.9)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.30)]"
             id="sidebar-cta-build-parlay"
           >
             <Sliders className="w-4 h-4 transition-transform duration-300 group-hover/cta:rotate-90" />
@@ -227,7 +227,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
       </div>
 
       {/* Mini Profile Footer */}
-      <div className="hidden xl:block rounded-3xl border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface-raised)/0.38)] p-3 shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)]">
+      <div className="hidden xl:block rounded-2xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.26)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-secondary))]">VAI Sync</span>
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
@@ -242,7 +242,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
 
       <div
         onClick={() => onSectionChange('profile')}
-        className="flex items-center gap-3 p-2 rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.36)] cursor-pointer transition-all duration-200 border border-[hsl(var(--ve-border)/0.35)] hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]"
+        className="flex items-center gap-3 p-2 rounded-2xl bg-[hsl(var(--ve-bg-panel)/0.26)] cursor-pointer transition-all duration-200 border border-[hsl(var(--ve-border)/0.26)] hover:border-[hsl(var(--ve-accent-cyan)/0.38)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]"
         id="sidebar-profile-footer"
       >
         <ProfileAvatarBorder 

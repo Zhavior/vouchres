@@ -12,20 +12,24 @@ interface Props {
 }
 
 const TIERS: { key: string; title: string; sub: string; color: string; match: (r: HrBoardRow) => boolean }[] = [
-  { key: 't1', title: 'Tier 1 — Best HR Targets', sub: 'Elite/strong modeled spots', color: '#34d399', match: (r) => r.grade === 'A+' || r.grade === 'A' },
-  { key: 't2', title: 'Tier 2 — Strong But Riskier', sub: 'Playable with more variance', color: '#22d3ee', match: (r) => r.grade === 'B' },
-  { key: 'sneaky', title: 'Sneaky HRs', sub: 'Lower-obvious, higher risk', color: '#a78bfa', match: (r) => r.grade === 'C' },
+  { key: 't1', title: 'Tier 1 — Best HR Targets', sub: 'Elite/strong modeled spots', color: 'hsl(var(--ve-accent-gold))', match: (r) => r.grade === 'A+' || r.grade === 'A' },
+  { key: 't2', title: 'Tier 2 — Strong But Riskier', sub: 'Playable with more variance', color: 'hsl(var(--ve-accent-cyan))', match: (r) => r.grade === 'B' },
+  { key: 'sneaky', title: 'Sneaky HRs', sub: 'Lower-obvious, higher risk', color: 'hsl(var(--ve-accent-pink))', match: (r) => r.grade === 'C' },
   { key: 'avoid', title: 'Avoid / Trap Picks', sub: 'Weak modeled HR equity', color: '#f87171', match: (r) => r.grade === 'D' || r.grade === 'F' },
 ];
 
 
-const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
+const FORM_COLOR: Record<string, string> = { Hot: 'hsl(var(--ve-accent-gold))', Average: 'hsl(var(--ve-text-muted))', Cold: 'hsl(var(--ve-accent-cyan))', Slump: 'hsl(var(--ve-text-muted))' };
 
 function LineupBadge({ lineupStatus }: { lineupStatus?: string }) {
   const projected = lineupStatus === 'projected_unconfirmed';
   const confirmed = lineupStatus === 'confirmed';
   const label = confirmed ? 'Confirmed' : projected ? 'Preview' : 'Projected';
-  const color = confirmed ? '#34d399' : projected ? '#fbbf24' : '#94a3b8';
+  const color = confirmed
+    ? 'hsl(var(--ve-text-success))'
+    : projected
+      ? 'hsl(var(--ve-accent-gold))'
+      : 'hsl(var(--ve-text-muted))';
 
   return (
     <span
@@ -67,7 +71,7 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
 
   return (
     <Card onClick={onSelect} className="group relative overflow-hidden border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface)/0.78)] p-0 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--ve-accent-cyan)/0.34)]">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[hsl(var(--ve-accent-gold)/0.85)] via-[hsl(var(--ve-accent-cyan)/0.55)] to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-[hsl(var(--ve-accent-cyan)/0.58)]" />
       <div className="p-3.5">
         <div className="mb-2.5 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -76,7 +80,7 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
               <p className="flex items-center gap-1 truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">
                 <span className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">#{row.rank ?? '-'}</span>
                 <span className="truncate">{row.playerName}</span>
-                {row.hrEdge >= 75 && <Flame className="w-3 h-3 text-orange-400" />}
+                {row.hrEdge >= 75 && <Flame className="w-3 h-3 text-[hsl(var(--ve-accent-gold))]" />}
               </p>
               <p className="truncate text-[11px] text-[hsl(var(--ve-text-muted))]">{row.team} vs {row.opponent}</p>
               <p className="truncate text-[10px] text-[hsl(var(--ve-text-secondary))]">{row.opponentPitcherName ?? row.opposingPitcher}</p>
@@ -89,9 +93,9 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
         </div>
 
         <div className="mb-2.5 grid grid-cols-3 gap-1.5">
-          <ScorePill label="HR Score" value={row.hrEdge} color="#fb923c" />
-          <ScorePill label="P.Vuln" value={row.pitcherVulnerability} color="#22d3ee" />
-          <ScorePill label="Vouch" value={row.vouchScore} color="#34d399" />
+          <ScorePill label="HR Score" value={row.hrEdge} color="hsl(var(--ve-accent-gold))" />
+          <ScorePill label="P.Vuln" value={row.pitcherVulnerability} color="hsl(var(--ve-accent-cyan))" />
+          <ScorePill label="Vouch" value={row.vouchScore} color="hsl(var(--ve-accent-pink))" />
         </div>
 
         <div className="mb-2.5 flex flex-wrap items-center gap-2 text-[10px] text-[hsl(var(--ve-text-muted))]">
@@ -102,7 +106,7 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
         </div>
 
         {projectedWarning && (
-          <div className="mb-2 rounded-lg border border-amber-400/20 bg-amber-400/8 px-2.5 py-2 text-[11px] text-amber-100">
+          <div className="mb-2 rounded-lg border border-[hsl(var(--ve-accent-gold)/0.22)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-2.5 py-2 text-[11px] text-[hsl(var(--ve-accent-gold))]">
             Official lineup not posted yet.
           </div>
         )}
@@ -130,10 +134,10 @@ const HrCard: React.FC<{ row: HrBoardRow; onSelect: () => void; onAddLeg?: Props
         )}
 
         <div className="mb-2 flex flex-wrap gap-1.5">
-          <BreakdownChip label="Hitter" value={breakdown?.hitterPower} color="#fb923c" />
-          <BreakdownChip label="Pitcher" value={breakdown?.pitcherVulnerability} color="#22d3ee" />
-          <BreakdownChip label="Park" value={breakdown?.parkFactor} color="#34d399" />
-          <BreakdownChip label="Recent" value={breakdown?.recentForm} color="#c084fc" />
+          <BreakdownChip label="Hitter" value={breakdown?.hitterPower} color="hsl(var(--ve-accent-gold))" />
+          <BreakdownChip label="Pitcher" value={breakdown?.pitcherVulnerability} color="hsl(var(--ve-accent-cyan))" />
+          <BreakdownChip label="Park" value={breakdown?.parkFactor} color="hsl(var(--ve-text-secondary))" />
+          <BreakdownChip label="Recent" value={breakdown?.recentForm} color="hsl(var(--ve-accent-pink))" />
         </div>
 
         <div className="flex items-center gap-2">
