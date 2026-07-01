@@ -1689,7 +1689,7 @@ export default function PlayerResearchConsole({
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-bold border transition-all ${
                                   isExpanded 
                                     ? 'bg-[var(--ve-card)] border-[var(--ve-border-strong)] text-[var(--ve-accent)]' 
-                                    : 'bg-slate-900 border-slate-800 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
+                                    : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
                                 }`}
                               >
                                 {isExpanded ? 'Hide Bookies ⚖️' : 'Compare Bookies ⚖️'}
@@ -1700,8 +1700,8 @@ export default function PlayerResearchConsole({
                                 onClick={() => handleVouchProposition(activePlayer, p)}
                                 className={`px-3 py-2 rounded-xl text-[10px] font-mono font-black transition-all border ${
                                   isVouched 
-                                    ? 'bg-indigo-950/60 border-indigo-500 text-indigo-400'
-                                    : 'bg-slate-900 border-slate-850 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
+                                    ? 'bg-[hsl(var(--ve-accent-violet)/0.16)] border-[hsl(var(--ve-accent-violet)/0.42)] text-[hsl(var(--ve-accent-violet))]'
+                                    : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-soft))]'
                                 }`}
                                 title={isVouched ? "Remove from Board" : "Collect & Vouch on Board"}
                               >
@@ -1723,7 +1723,7 @@ export default function PlayerResearchConsole({
                                     disabled={isAddedToParlay || isFinal}
                                     className={`py-2 px-3.5 rounded-xl text-[10px] font-extrabold font-mono transition-all flex items-center gap-1.5 ${
                                       isAddedToParlay
-                                        ? 'bg-slate-900 border border-slate-800 text-[hsl(var(--ve-text-muted))] cursor-not-allowed'
+                                        ? 'bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] cursor-not-allowed'
                                         : isFinal
                                         ? 'bg-red-950/45 border border-red-900/30 text-red-400 cursor-not-allowed font-bold'
                                         : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-md'
@@ -1740,51 +1740,51 @@ export default function PlayerResearchConsole({
 
                           {/* Expanded comparison detail component */}
                           {isExpanded && (
-                            <div className="bg-slate-900/50 border border-slate-900 rounded-xl p-3 space-y-2">
+                            <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-xl p-3 space-y-2">
                               <div className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono font-bold uppercase tracking-wider flex justify-between">
                                 <span>Real-Time Sportsbook Lines Comparison</span>
                                 <span className="text-emerald-400 font-extrabold">Best payout highlighted</span>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {/* Bet365 */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.bet365.isBest ? 'border-emerald-600/60 bg-emerald-950/10' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-surface-raised)/0.38)] border ${comparison.bet365.isBest ? 'border-emerald-600/60 bg-emerald-950/10' : 'border-[hsl(var(--ve-border)/0.30)]'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Bet365</span>
                                   <strong className={`text-xs ${comparison.bet365.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.bet365.oddsDecimal.toFixed(2)} ({comparison.bet365.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* FanDuel */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.fanduel.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-surface-raised)/0.38)] border ${comparison.fanduel.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-[hsl(var(--ve-border)/0.30)]'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">FanDuel</span>
                                   <strong className={`text-xs ${comparison.fanduel.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.fanduel.oddsDecimal.toFixed(2)} ({comparison.fanduel.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* DraftKings */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.draftkings.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-surface-raised)/0.38)] border ${comparison.draftkings.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-[hsl(var(--ve-border)/0.30)]'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">DraftKings</span>
                                   <strong className={`text-xs ${comparison.draftkings.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.draftkings.oddsDecimal.toFixed(2)} ({comparison.draftkings.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* Caesars */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.caesars.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-surface-raised)/0.38)] border ${comparison.caesars.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-[hsl(var(--ve-border)/0.30)]'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">Caesars</span>
                                   <strong className={`text-xs ${comparison.caesars.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.caesars.oddsDecimal.toFixed(2)} ({comparison.caesars.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* BetMGM */}
-                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-slate-950 border ${comparison.betmgm.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-slate-850'}`}>
+                                <div className={`p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-surface-raised)/0.38)] border ${comparison.betmgm.isBest ? 'border-emerald-600/60 bg-emerald-950/10 text-[hsl(var(--ve-text-soft))]' : 'border-[hsl(var(--ve-border)/0.30)]'}`}>
                                   <span className="text-[9px] text-[hsl(var(--ve-text-muted))] font-mono uppercase">BetMGM</span>
                                   <strong className={`text-xs ${comparison.betmgm.isBest ? 'text-emerald-400 font-extrabold' : 'text-[hsl(var(--ve-text-soft))]'}`}>
                                     {comparison.betmgm.oddsDecimal.toFixed(2)} ({comparison.betmgm.oddsAmerican})
                                   </strong>
                                 </div>
                                 {/* Market Average */}
-                                <div className="p-2 rounded-xl flex flex-col justify-center bg-indigo-950/10 border border-indigo-900/40">
-                                  <span className="text-[9px] text-indigo-400 font-mono uppercase">Market Avg</span>
-                                  <strong className="text-xs text-indigo-300 font-black">
+                                <div className="p-2 rounded-xl flex flex-col justify-center bg-[hsl(var(--ve-accent-violet)/0.10)] border border-[hsl(var(--ve-accent-violet)/0.28)]">
+                                  <span className="text-[9px] text-[hsl(var(--ve-accent-violet))] font-mono uppercase">Market Avg</span>
+                                  <strong className="text-xs text-[hsl(var(--ve-accent-violet))] font-black">
                                     {comparison.marketAverageDecimal.toFixed(2)} ({comparison.marketAverageAmerican})
                                   </strong>
                                 </div>
@@ -1799,11 +1799,11 @@ export default function PlayerResearchConsole({
 
                 {/* Injury HEALTH RISK REPORT */}
                 <div className="col-span-1 md:col-span-5 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-lg flex flex-col justify-between" id="injury-advisory-risk-box">
-                  <div className="border-b border-slate-800/60 pb-2.5 flex items-center gap-1.5 text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
+                  <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5 flex items-center gap-1.5 text-xs font-black text-[hsl(var(--ve-text-soft))] font-mono uppercase tracking-wider">
                     <AlertTriangle className="w-4 h-4 text-amber-500" /> HEALTH Roster report
                   </div>
 
-                  <div className="my-4 bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-4 flex-1 flex flex-col justify-center">
+                  <div className="my-4 bg-[hsl(var(--ve-surface-raised)/0.38)] p-4 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] space-y-4 flex-1 flex flex-col justify-center">
                     
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-xl flex items-center justify-center ${
@@ -1823,8 +1823,8 @@ export default function PlayerResearchConsole({
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-350 font-mono leading-relaxed bg-slate-900/40 p-3 rounded-xl border border-slate-850">
-                      <span className="text-slate-100 font-extrabold capitalize">{activePlayer.injuryStatus}: </span>
+                    <p className="text-xs text-[hsl(var(--ve-text-soft))] font-mono leading-relaxed bg-[hsl(var(--ve-surface-raised)/0.34)] p-3 rounded-xl border border-[hsl(var(--ve-border)/0.30)]">
+                      <span className="text-[hsl(var(--ve-text))] font-extrabold capitalize">{activePlayer.injuryStatus}: </span>
                       {activePlayer.injuryNotes}
                     </p>
 
@@ -1838,7 +1838,7 @@ export default function PlayerResearchConsole({
               </div>
 
               {/* Bento Row 4: Comprehensive Game Logs Table */}
-              <div className="bg-slate-900/30 border border-slate-800/50 rounded-3xl p-5 shadow-xl space-y-4" id="game-logs-block">
+              <div className="bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] rounded-3xl p-5 shadow-xl space-y-4" id="game-logs-block">
                 <div className="border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-emerald-400" />
@@ -1849,7 +1849,7 @@ export default function PlayerResearchConsole({
                   <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">{activePlayer.gameLogs.length} CONTRASTS LOGGED</span>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-800/60 bg-[hsl(var(--ve-bg)/0.72)]" id="game-logs-layout-container">
+                <div className="overflow-x-auto rounded-2xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg)/0.72)]" id="game-logs-layout-container">
                   <table className="w-full text-left text-xs font-mono border-collapse min-w-[650px]">
                     <thead>
                       <tr className="border-b border-[hsl(var(--ve-border)/0.24)] text-[hsl(var(--ve-text-muted))] text-[9.5px] uppercase tracking-wider">
@@ -1864,20 +1864,20 @@ export default function PlayerResearchConsole({
                         <th className="py-3.5 px-4 text-right font-black pr-4">Batter Score</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-900 text-[hsl(var(--ve-text-soft))]" id="game-logs-rows">
+                    <tbody className="divide-y divide-[hsl(var(--ve-border)/0.24)] text-[hsl(var(--ve-text-soft))]" id="game-logs-rows">
                       {activePlayer.gameLogs.map((log, idx) => {
                         const isWin = log.result.startsWith('W');
                         return (
-                          <tr key={idx} className="hover:bg-slate-900/40 transition-colors">
+                          <tr key={idx} className="hover:bg-[hsl(var(--ve-surface-raised)/0.34)] transition-colors">
                             <td className="py-3 px-4 text-[hsl(var(--ve-text-muted))] font-mono">{log.date}</td>
-                            <td className="py-3 px-4 text-slate-100 font-black font-mono">{log.opponent}</td>
+                            <td className="py-3 px-4 text-[hsl(var(--ve-text))] font-black font-mono">{log.opponent}</td>
                             <td className="py-3 px-4 text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-black ${isWin ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400'}`}>
                                 {log.result}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-center font-bold text-slate-350">{log.ab}</td>
-                            <td className="py-3 px-4 text-center font-bold text-slate-100">{log.h}</td>
+                            <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text-soft))]">{log.ab}</td>
+                            <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text))]">{log.h}</td>
                             <td className="py-3 px-4 text-center font-bold text-orange-400">{log.hr}</td>
                             <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text-soft))]">{log.rbi}</td>
                             <td className="py-3 px-4 text-center font-bold text-[hsl(var(--ve-text-soft))]">{log.r}</td>
