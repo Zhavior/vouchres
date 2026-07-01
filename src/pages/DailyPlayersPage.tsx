@@ -1151,14 +1151,17 @@ function getDailyPlayerPosition(player: any): string {
 }
 
 function getDailyPlayerHand(player: any): string {
-  return String(
+  const raw =
+    player?.bats ||
     player?.batSide?.code ||
-      player?.batSide ||
-      player?.bats ||
-      player?.batHand ||
-      player?.hand ||
-      "—"
-  ).slice(0, 1).toUpperCase();
+    player?.batSide?.description ||
+    player?.batSide?.name ||
+    player?.batHand ||
+    player?.hand ||
+    "";
+
+  const value = String(raw).trim().slice(0, 1).toUpperCase();
+  return ["L", "R", "S"].includes(value) ? value : "—";
 }
 
 function getDailyPlayerOrder(player: any, index: number): string {
