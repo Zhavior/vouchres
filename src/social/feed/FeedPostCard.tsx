@@ -537,7 +537,7 @@ export default function FeedPostCard({
                     ? 'bg-[hsl(var(--ve-accent-pink)/0.12)] text-[hsl(var(--ve-accent-pink))] border border-[hsl(var(--ve-accent-pink)/0.28)]' 
                     : post.sourceBadge.includes('Vouch') 
                     ? 'bg-emerald-400/10 text-emerald-300 border border-emerald-300/25' 
-                    : 'bg-slate-900 text-slate-400 border border-slate-805'
+                    : 'bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.25)]'
                 }`}>
                   {post.sourceBadge}
                 </span>
@@ -559,7 +559,7 @@ export default function FeedPostCard({
                   ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-900/40'
                   : isProTarget
                   ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest hover:scale-[1.03] active:scale-95'
-                  : 'bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 hover:text-sky-300 border border-sky-900/45 hover:border-sky-800 hover:scale-[1.03]'
+                  : 'bg-[hsl(var(--ve-accent-cyan)/0.13)] hover:bg-[hsl(var(--ve-accent-cyan)/0.22)] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.30)] hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:scale-[1.03]'
               }`}
               id={`follow-tail-btn-${post.id}`}
             >
