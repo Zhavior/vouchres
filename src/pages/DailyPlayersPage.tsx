@@ -615,7 +615,9 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
             src={headshot}
             alt={playerName(player)}
             className="h-full w-full object-cover object-top"
-            loading="lazy"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}
@@ -715,7 +717,17 @@ function CompactRosterColumn({
               <span className="dp-slot">{index + 1}</span>
 
               <span className="dp-avatar">
-                {img ? <img src={img} alt="" /> : name.slice(0, 2).toUpperCase()}
+                {img ? (
+                  <img
+                    src={img}
+                    alt=""
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                ) : (
+                  name.slice(0, 2).toUpperCase()
+                )}
               </span>
 
               <span className="dp-player-main">
