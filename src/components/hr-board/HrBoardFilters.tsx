@@ -23,12 +23,12 @@ interface Props {
   onChange: (next: Partial<HrBoardFilterState>) => void;
 }
 
-const sel = 'bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:border-emerald-500/60 outline-none';
+const sel = 'rounded-xl border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-2.5 py-2 text-xs text-[hsl(var(--ve-text-secondary))] outline-none transition focus:border-[hsl(var(--ve-accent-cyan)/0.56)]';
 
 function Toggle({ active, onClick, icon: Icon, label, color }: { active: boolean; onClick: () => void; icon: React.ComponentType<{ className?: string }>; label: string; color: string }) {
   return (
     <button onClick={onClick}
-      className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-2 rounded-lg border transition-all ${active ? 'text-slate-950' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+      className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-all ${active ? 'text-[hsl(var(--ve-bg))] shadow-md shadow-[hsl(var(--ve-shadow)/0.14)]' : 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'}`}
       style={active ? { background: color, borderColor: color } : undefined}>
       <Icon className="w-3.5 h-3.5" /> {label}
     </button>
@@ -37,11 +37,12 @@ function Toggle({ active, onClick, icon: Icon, label, color }: { active: boolean
 
 export default function HrBoardFilters({ date, onDateChange, teams, filters, onChange }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
+    <div className="mb-3 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)] backdrop-blur-xl">
+      <div className="flex flex-wrap items-center gap-2">
       <input type="date" value={date} onChange={(e) => onDateChange(e.target.value)} className={sel} />
 
       <div className="relative">
-        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[hsl(var(--ve-text-muted))]" />
         <input value={filters.search} onChange={(e) => onChange({ search: e.target.value })} placeholder="Search player…"
           className={`${sel} pl-8 w-44`} />
       </div>
@@ -62,17 +63,18 @@ export default function HrBoardFilters({ date, onDateChange, teams, filters, onC
       <Toggle active={filters.sneakyOnly} onClick={() => onChange({ sneakyOnly: !filters.sneakyOnly })} icon={Sparkles} label="Sneaky" color="#a78bfa" />
       <Toggle active={filters.confirmedOnly} onClick={() => onChange({ confirmedOnly: !filters.confirmedOnly })} icon={CheckCircle2} label="Confirmed" color="#34d399" />
 
-      <label className="flex items-center gap-2 text-[11px] text-slate-400 font-mono px-2">
+      <label className="flex items-center gap-2 px-2 text-[11px] font-mono text-[hsl(var(--ve-text-muted))]">
         P.Vuln ≥ {filters.minPitcherVuln}
         <input type="range" min={0} max={100} value={filters.minPitcherVuln}
-          onChange={(e) => onChange({ minPitcherVuln: Number(e.target.value) })} className="w-24 accent-emerald-500" />
+          onChange={(e) => onChange({ minPitcherVuln: Number(e.target.value) })} className="w-24 accent-[hsl(var(--ve-accent-cyan))]" />
       </label>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        <span className="text-[10px] text-slate-500 font-mono uppercase">Sort</span>
+        <span className="text-[10px] font-mono uppercase text-[hsl(var(--ve-text-muted))]">Sort</span>
         <select value={filters.sortKey} onChange={(e) => onChange({ sortKey: e.target.value as SortKey })} className={sel}>
           {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
+      </div>
       </div>
     </div>
   );

@@ -1455,23 +1455,23 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   };
 
   return (
-    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-[hsl(var(--ve-text-primary))]">
-      <div className="mx-0 max-w-none space-y-5">
-        <header className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.78),hsl(var(--ve-bg-panel)/0.92),hsl(var(--ve-accent-cyan)/0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <main className="ve-page ve-grid-bg min-h-screen px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
+      <div className="mx-0 max-w-none space-y-4">
+        <header className="overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.38)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.86),hsl(var(--ve-surface-raised)/0.58),hsl(var(--ve-accent-cyan)/0.08))] p-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--ve-accent-cyan))]">
+                <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-accent-cyan))]">
                   Daily Player Board
                 </span>
-                <span className="text-xs text-[hsl(var(--ve-text-muted))]">{data?.date || todayISO()}</span>
+                <span className="rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.36)] px-2.5 py-1 text-[10px] font-bold text-[hsl(var(--ve-text-muted))]">{data?.date || todayISO()}</span>
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-4xl">
+              <h1 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">
                 Today’s MLB Starting Lineups
               </h1>
 
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[hsl(var(--ve-text-muted))]">
+              <p className="mt-1.5 max-w-3xl text-xs leading-5 text-[hsl(var(--ve-text-muted))] sm:text-sm">
                 Actual posted MLB starting hitters from both teams when lineups are available.
               </p>
             </div>
@@ -1479,36 +1479,36 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
             <button
               type="button"
               onClick={fetchBoard}
-              className="rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.32)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-3 text-sm font-black text-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.20)]"
+              className="w-full rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))] transition hover:bg-[hsl(var(--ve-accent-cyan)/0.18)] sm:w-auto"
             >
               Refresh Board
             </button>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
-              <div className="mt-1 text-2xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
+              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
             </div>
-            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Players Starting</div>
-              <div className="mt-1 text-2xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
+            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Players Starting</div>
+              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
             </div>
-            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
-              <div className="text-xs text-[hsl(var(--ve-text-muted))]">Last Updated</div>
-              <div className="mt-1 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
+            <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Last Updated</div>
+              <div className="mt-0.5 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
                 {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
               </div>
             </div>
           </div>
         </header>
 
-        <section className="flex flex-col gap-3 rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-4 md:flex-row md:items-center md:justify-between shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
+        <section className="flex flex-col gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.76)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search player, team, position..."
-            className="w-full rounded-2xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-4 py-3 text-sm text-[hsl(var(--ve-text-primary))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)] md:max-w-md"
+            className="w-full rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-3.5 py-2.5 text-sm text-[hsl(var(--ve-text-primary))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)] md:max-w-md"
           />
 
           <div className="flex flex-wrap gap-2">
@@ -1517,7 +1517,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
                 key={item}
                 type="button"
                 onClick={() => setFilter(item)}
-                className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wide ${
+                className={`rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
                   filter === item
                     ? 'border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
                     : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]'

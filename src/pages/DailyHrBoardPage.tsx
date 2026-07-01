@@ -401,25 +401,33 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-5 text-[hsl(var(--ve-text-primary))]">
+    <div className="daily-hr-board mx-auto max-w-[1320px] px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div>
-          <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
-            <Flame className="w-5 h-5 text-orange-400" /> Daily HR Edge Board
-          </h1>
-          <p className="text-xs text-[hsl(var(--ve-text-muted))] font-mono mt-0.5">
-            {boardSummary}
-            {lastUpdated && <span className="text-[hsl(var(--ve-text-muted)/0.70)]"> · updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
-          </p>
+      <div className="mb-3 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.38)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.88),hsl(var(--ve-surface-raised)/0.60),hsl(var(--ve-accent-gold)/0.08))] p-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.10)] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-accent-gold))]">
+                <Flame className="h-3.5 w-3.5" /> HR Research
+              </span>
+              <span className="rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.38)] px-2.5 py-1 text-[10px] font-bold text-[hsl(var(--ve-text-muted))]">
+                {boardMode === 'preview' ? 'Preview Mode' : boardMode === 'confirmed' ? 'Confirmed Slate' : 'Slate Loading'}
+              </span>
+            </div>
+            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Daily HR Edge Board</h1>
+            <p className="mt-1.5 max-w-5xl text-xs leading-5 text-[hsl(var(--ve-text-muted))]">
+              {boardSummary}
+              {lastUpdated && <span className="text-[hsl(var(--ve-text-muted)/0.76)]"> · updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
+            </p>
+          </div>
+          <button onClick={load} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.46)] px-3.5 py-2.5 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-text-secondary))] transition hover:border-[hsl(var(--ve-accent-gold)/0.44)] hover:text-[hsl(var(--ve-accent-gold))]">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
         </div>
-        <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.32)] hover:border-emerald-400/50 transition-colors">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </button>
       </div>
 
       {/* Disclaimer */}
-      <div className="mb-4 p-2.5 rounded-xl bg-[hsl(var(--ve-accent-gold)/0.06)] border border-[hsl(var(--ve-accent-gold)/0.18)] flex items-start gap-2">
+      <div className="mb-3 flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-accent-gold)/0.18)] bg-[hsl(var(--ve-accent-gold)/0.06)] p-2.5">
         <AlertTriangle className="w-3.5 h-3.5 text-orange-400 mt-0.5 flex-shrink-0" />
         <p className="text-[11px] text-[hsl(var(--ve-text-muted))] leading-relaxed">
           {board?.disclaimer ?? 'HR edge estimates are probability-based research for entertainment — not betting advice. Lineups, park, and weather are projected placeholders.'}
@@ -427,7 +435,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       </div>
 
       {boardMode === 'preview' && (
-        <div className="mb-4 p-3 rounded-xl bg-[hsl(var(--ve-accent-gold)/0.08)] border border-[hsl(var(--ve-accent-gold)/0.26)] flex items-start gap-2">
+        <div className="mb-3 flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-accent-gold)/0.26)] bg-[hsl(var(--ve-accent-gold)/0.08)] p-3">
           <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
           <div className="text-[11px] leading-relaxed text-amber-100">
             <div className="font-bold">Projected HR Board · official lineups not confirmed yet.</div>
@@ -442,17 +450,22 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       )}
 
       {missingStarChecks.length > 0 && (
-        <section className="mb-4 rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.24)] bg-[hsl(var(--ve-surface)/0.70)] p-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
-          <div className="mb-3">
-            <h2 className="text-sm font-black text-white">Star Watch</h2>
+        <section className="mb-3 rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.24)] bg-[hsl(var(--ve-surface)/0.74)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.12)] backdrop-blur-xl sm:p-4">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+            <h2 className="text-sm font-black text-[hsl(var(--ve-text-primary))]">Star Watch</h2>
             <p className="text-xs text-[hsl(var(--ve-text-muted))]">
               Why major HR names are confirmed, in preview, waiting, blocked, or excluded today.
             </p>
+            </div>
+            <span className="rounded-full border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-surface-raised)/0.36)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">
+              {missingStarChecks.length} tracked
+            </span>
           </div>
 
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
             {missingStarChecks.map((star: any) => (
-              <div key={star.playerName} className="rounded-xl border border-[hsl(var(--ve-border)/0.24)] bg-[hsl(var(--ve-surface-raised)/0.24)] p-3">
+              <div key={star.playerName} className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="text-sm font-bold text-white">{star.playerName}</div>
@@ -471,9 +484,9 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
         </section>
       )}
 
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] w-fit mb-3 text-[11px] font-bold">
+      <div className="mb-3 flex w-fit items-center gap-1 rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] p-1 text-[11px] font-bold">
         {(['tier', 'game'] as const).map((v) => (
-          <button key={v} onClick={() => setView(v)} className={`px-3 py-1 rounded-lg transition-all ${view === v ? 'bg-[hsl(var(--ve-accent-gold)/0.18)] text-[hsl(var(--ve-accent-gold))]' : 'text-[hsl(var(--ve-text-muted))]'}`}>
+          <button key={v} onClick={() => setView(v)} className={`rounded-lg px-3 py-1 transition-all ${view === v ? 'bg-[hsl(var(--ve-accent-gold)/0.18)] text-[hsl(var(--ve-accent-gold))]' : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'}`}>
             {v === 'tier' ? 'By Tier' : 'By Game'}
           </button>
         ))}
