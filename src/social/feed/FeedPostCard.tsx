@@ -62,15 +62,15 @@ import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
   return (
-    <div className="mt-2 text-left p-3 rounded-xl border border-cyan-300/[0.045] bg-[#070b13]/60 hover:border-cyan-300/[0.08] transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm select-none">
+    <div className="mt-2 text-left p-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] hover:border-[hsl(var(--ve-accent-cyan)/0.34)] transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm shadow-[hsl(var(--ve-shadow)/0.12)] select-none backdrop-blur-xl">
       <div className="flex items-center gap-1.5 text-[11px]">
-        <div className="w-5 h-5 rounded-full bg-slate-800 border border-cyan-300/[0.08] font-bold text-[9px] text-slate-300 flex items-center justify-center shrink-0">
+        <div className="w-5 h-5 rounded-full bg-[hsl(var(--ve-surface-raised)/0.55)] border border-[hsl(var(--ve-border)/0.30)] font-bold text-[9px] text-[hsl(var(--ve-text-secondary))] flex items-center justify-center shrink-0">
           {quotedPost.displayName.split(' ').map(n => n[0]).join('')}
         </div>
-        <span className="font-bold text-slate-200 truncate">{quotedPost.displayName}</span>
-        <span className="text-slate-500 text-[10px]">@{quotedPost.username}</span>
+        <span className="font-bold text-[hsl(var(--ve-text-primary))] truncate">{quotedPost.displayName}</span>
+        <span className="text-[hsl(var(--ve-text-muted))] text-[10px]">@{quotedPost.username}</span>
       </div>
-      <p className="text-xs text-slate-300 leading-normal line-clamp-3">
+      <p className="text-xs text-[hsl(var(--ve-text-secondary))] leading-normal line-clamp-3">
         {quotedPost.content}
       </p>
     </div>
