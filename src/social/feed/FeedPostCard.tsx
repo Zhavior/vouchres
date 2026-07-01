@@ -567,20 +567,20 @@ export default function FeedPostCard({
             </button>
           )}
 
-          <button className="text-slate-500 hover:text-slate-350 p-1 rounded-full hover:bg-slate-850 transition-colors">
+          <button className="text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] p-1 rounded-full hover:bg-[hsl(var(--ve-surface-raised)/0.45)] transition-colors">
             <MoreHorizontal className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Main post text content */}
-      <p className="text-slate-200 text-sm leading-relaxed mb-3 whitespace-pre-wrap">
+      <p className="text-[hsl(var(--ve-text-primary))] text-sm leading-relaxed mb-3 whitespace-pre-wrap">
         {post.content}
       </p>
 
       {/* Attached Media Render container with Hover Navigation Slides */}
       {post.mediaUrl && !post.boardConfig && (
-        <div className="mb-3.5 bg-slate-950/24 backdrop-blur-xl rounded-xl overflow-hidden border border-cyan-300/[0.045] p-1 flex justify-center max-w-full relative group shadow-lg">
+        <div className="mb-3.5 bg-[hsl(var(--ve-surface-raised)/0.28)] backdrop-blur-xl rounded-2xl overflow-hidden border border-[hsl(var(--ve-border)/0.28)] p-1 flex justify-center max-w-full relative group shadow-lg shadow-[hsl(var(--ve-shadow)/0.16)]">
           {post.mediaType === 'video' ? (
             <video 
               src={post.mediaUrl} 
@@ -609,11 +609,11 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(0);
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-cyan-300/[0.045] text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-[hsl(var(--ve-surface)/0.88)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-text-primary))] rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-[hsl(var(--ve-shadow)/0.20)] cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Previous Image"
                       id={`slide-left-btn-${post.id}`}
                     >
-                      <ChevronLeft className="w-5.5 h-5.5 text-sky-400" />
+                      <ChevronLeft className="w-5.5 h-5.5 text-[hsl(var(--ve-accent-cyan))]" />
                     </button>
                   )}
 
@@ -624,28 +624,28 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(1);
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-cyan-300/[0.045] text-slate-200 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[hsl(var(--ve-surface)/0.88)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-text-primary))] rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-[hsl(var(--ve-shadow)/0.20)] cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Next Image"
                       id={`slide-right-btn-${post.id}`}
                     >
-                      <ChevronRight className="w-5.5 h-5.5 text-sky-450" />
+                      <ChevronRight className="w-5.5 h-5.5 text-[hsl(var(--ve-accent-cyan))]" />
                     </button>
                   )}
 
                   {/* Dot Indicators */}
-                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-slate-950/30 backdrop-blur-xl px-2.5 py-1 rounded-full border border-cyan-300/[0.045]/40">
+                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-[hsl(var(--ve-surface)/0.58)] backdrop-blur-xl px-2.5 py-1 rounded-full border border-[hsl(var(--ve-border)/0.28)]">
                     <span 
                       onClick={() => setActiveSlide(0)}
-                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-150 ${activeSlide === 0 ? 'bg-sky-400 scale-125 shadow-glow' : 'bg-slate-500 hover:bg-slate-350'}`}
+                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-150 ${activeSlide === 0 ? 'bg-[hsl(var(--ve-accent-cyan))] scale-125 shadow-glow' : 'bg-[hsl(var(--ve-text-muted)/0.65)] hover:bg-[hsl(var(--ve-text-secondary))]'}`}
                     />
                     <span 
                       onClick={() => setActiveSlide(1)}
-                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-155 ${activeSlide === 1 ? 'bg-sky-450 scale-125 shadow-glow' : 'bg-slate-500 hover:bg-slate-350'}`}
+                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-155 ${activeSlide === 1 ? 'bg-[hsl(var(--ve-accent-cyan))] scale-125 shadow-glow' : 'bg-[hsl(var(--ve-text-muted)/0.65)] hover:bg-[hsl(var(--ve-text-secondary))]'}`}
                     />
                   </div>
 
                   {/* Page indicator tag (e.g. 1/2, 2/2) */}
-                  <div className="absolute top-3 right-3 bg-slate-900/90 text-slate-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-cyan-300/[0.045]/60 z-10">
+                  <div className="absolute top-3 right-3 bg-[hsl(var(--ve-surface)/0.88)] text-[hsl(var(--ve-text-secondary))] text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-[hsl(var(--ve-border)/0.35)] z-10">
                     {activeSlide + 1} / 2
                   </div>
                 </>
@@ -657,15 +657,15 @@ export default function FeedPostCard({
 
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[#0b0f19] border border-sky-500/30 text-sky-400 rounded-full text-[10px] font-black tracking-wide shadow-xl z-50 animate-bounce flex items-center gap-1.5">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-accent-cyan)/0.34)] text-[hsl(var(--ve-accent-cyan))] rounded-full text-[10px] font-black tracking-wide shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] z-50 animate-bounce flex items-center gap-1.5">
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Interactive Twitter Poll Render */}
       {localPoll && (
-        <div className="mb-3.5 bg-[#080c14]/80 border border-cyan-300/[0.045]/80 rounded-xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up">
-          <p className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+        <div className="mb-3.5 bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-border)/0.34)] rounded-2xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up shadow-lg shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
+          <p className="font-bold text-[hsl(var(--ve-text-primary))] text-xs flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
             {localPoll.question || "Interactive Poll"}
           </p>
@@ -682,28 +682,28 @@ export default function FeedPostCard({
                 <div key={idx} className="relative overflow-hidden rounded-lg">
                   {isVoted ? (
                     // Voted / Show Results Mode
-                    <div className="w-full flex items-center justify-between p-2.5 bg-slate-950/32 backdrop-blur-xl border border-cyan-300/[0.045]/40 rounded-lg relative overflow-hidden">
+                    <div className="w-full flex items-center justify-between p-2.5 bg-[hsl(var(--ve-surface-raised)/0.30)] backdrop-blur-xl border border-[hsl(var(--ve-border)/0.25)] rounded-lg relative overflow-hidden">
                       {/* Animated Percentage background fill */}
                       <div 
-                        className={`absolute left-0 top-0 bottom-0 ${hasVotedThis ? 'bg-sky-500/10' : 'bg-slate-800/15'} transition-all duration-500`}
+                        className={`absolute left-0 top-0 bottom-0 ${hasVotedThis ? 'bg-[hsl(var(--ve-accent-cyan)/0.10)]' : 'bg-[hsl(var(--ve-surface-raised)/0.20)]'} transition-all duration-500`}
                         style={{ width: `${percentage}%` }}
                       />
-                      <span className="font-semibold text-slate-300 z-10 flex items-center gap-1.5">
+                      <span className="font-semibold text-[hsl(var(--ve-text-secondary))] z-10 flex items-center gap-1.5">
                         {opt.text}
                         {hasVotedThis && (
-                          <span className="text-[9px] bg-sky-950 font-extrabold text-sky-455 px-1.5 py-0.2 rounded-full border border-sky-900/60 flex items-center gap-0.5">
+                          <span className="text-[9px] bg-[hsl(var(--ve-accent-cyan)/0.12)] font-extrabold text-[hsl(var(--ve-accent-cyan))] px-1.5 py-0.2 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] flex items-center gap-0.5">
                             ✓ Your Vote
                           </span>
                         )}
                       </span>
-                      <span className="font-mono font-black text-slate-200 z-10">{percentage}%</span>
+                      <span className="font-mono font-black text-[hsl(var(--ve-text-primary))] z-10">{percentage}%</span>
                     </div>
                   ) : (
                     // Active voting mode button
                     <button
                       type="button"
                       onClick={() => handleVote(idx)}
-                      className="w-full text-left p-2.5 bg-slate-900 hover:bg-slate-850 border border-cyan-300/[0.045] text-sky-400 hover:text-sky-300 font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
+                      className="w-full text-left p-2.5 bg-[hsl(var(--ve-surface-raised)/0.36)] hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] border border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-accent-cyan))] font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
                     >
                       {opt.text}
                     </button>
@@ -713,7 +713,7 @@ export default function FeedPostCard({
             })}
           </div>
 
-          <div className="flex justify-between items-center text-[9px] text-slate-500 font-mono pt-1">
+          <div className="flex justify-between items-center text-[9px] text-[hsl(var(--ve-text-muted))] font-mono pt-1">
             <span>Total: {localPoll.totalVotes} votes</span>
             <span>Local Live Audit</span>
           </div>
