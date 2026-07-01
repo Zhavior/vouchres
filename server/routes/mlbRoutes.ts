@@ -27,6 +27,34 @@ async function fetchMlb<T>(path: string): Promise<T> {
   }
 }
 
+function normalizeBat(value: unknown): "L" | "R" | "S" | "U" {
+  return value === "L" || value === "R" || value === "S" ? value : "U";
+}
+
+function normalizeThrow(value: unknown): "L" | "R" | "U" {
+  return value === "L" || value === "R" ? value : "U";
+}
+
+async function fetchPlayerHandedness(playerIds: number[]) {
+  const uniqueIds = [...new Set(playerIds.filter((id) => Number.isFinite(id)))];
+  const hands = new Map<number, { bats: "L" | "R" | "S" | "U"; throws: "L" | "R" | "U" }>();
+
+  for (let i = 0; i < uniqueIds.length; i += 75) {
+    const batch = uniqueIds.slice(i, i + 75);
+    if (!batch.length) continue;
+
+    const data = await fetchMlb<any>(`/v1/people?personIds=${batch.join(",")}`);
+    for (const person of data?.people ?? []) {
+      hands.set(Number(person.id), {
+        bats: normalizeBat(person?.batSide?.code),
+        throws: normalizeThrow(person?.pitchHand?.code),
+      });
+    }
+  }
+
+  return hands;
+}
+
 /** Fetch all lineups for today's games from the MLB Stats API */
 async function getTodayLineups(date: string) {
   return lineupCache.getOrSet(`lineups:${date}`, async () => {
@@ -35,6 +63,13 @@ async function getTodayLineups(date: string) {
     );
 
     const games: any[] = data?.dates?.[0]?.games ?? [];
+    const playerIds = games.flatMap((game: any) => [
+      ...(game.lineups?.awayPlayers ?? []).map((p: any) => Number(p.id)),
+      ...(game.lineups?.homePlayers ?? []).map((p: any) => Number(p.id)),
+      Number(game.teams?.away?.probablePitcher?.id),
+      Number(game.teams?.home?.probablePitcher?.id),
+    ]);
+    const handedness = await fetchPlayerHandedness(playerIds);
 
     return games.map((game: any) => {
       const awayTeam = { id: game.teams?.away?.team?.id, name: game.teams?.away?.team?.name, abbrev: game.teams?.away?.team?.abbreviation };
@@ -46,7 +81,7 @@ async function getTodayLineups(date: string) {
           playerName: p.fullName ?? "Unknown",
           position: p.primaryPosition?.abbreviation ?? "—",
           battingOrder: idx + 1,
-          bats: p.batSide?.code ?? "U",
+          bats: handedness.get(Number(p.id))?.bats ?? normalizeBat(p.batSide?.code),
           team: team.name,
           teamId: team.id,
           teamAbbrev: team.abbrev,
@@ -66,8 +101,8 @@ async function getTodayLineups(date: string) {
         venue: game.venue?.name ?? "TBD",
         awayTeam,
         homeTeam,
-        awayPitcher: awayPitcher ? { id: awayPitcher.id, name: awayPitcher.fullName, throws: awayPitcher.pitchHand?.code ?? "U", headshot: headshotUrl(awayPitcher.id) } : null,
-        homePitcher: homePitcher ? { id: homePitcher.id, name: homePitcher.fullName, throws: homePitcher.pitchHand?.code ?? "U", headshot: headshotUrl(homePitcher.id) } : null,
+        awayPitcher: awayPitcher ? { id: awayPitcher.id, name: awayPitcher.fullName, throws: handedness.get(Number(awayPitcher.id))?.throws ?? normalizeThrow(awayPitcher.pitchHand?.code), headshot: headshotUrl(awayPitcher.id) } : null,
+        homePitcher: homePitcher ? { id: homePitcher.id, name: homePitcher.fullName, throws: handedness.get(Number(homePitcher.id))?.throws ?? normalizeThrow(homePitcher.pitchHand?.code), headshot: headshotUrl(homePitcher.id) } : null,
         awayLineup,
         homeLineup,
         lineupConfirmed: awayLineup.length > 0 || homeLineup.length > 0,
