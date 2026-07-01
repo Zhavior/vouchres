@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo } from "react";
+import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { useVouchEdgeBoot } from "../../hooks/useVouchEdgeBoot";
 import VouchEdgeBootScreen from "./VouchEdgeBootScreen";
 
@@ -16,10 +17,16 @@ export default function VouchEdgeBootGate({
   const shouldRunBoot = useMemo(() => {
     if (!enabled) return false;
 
+    const hasWarmBootData =
+      bootDataStore.has("lineupToday") ||
+      bootDataStore.has("dailyPlayers") ||
+      bootDataStore.has("dailyHrBoard");
+
     try {
-      return sessionStorage.getItem(storageKey) !== "true";
+      const bootWasCompleted = sessionStorage.getItem(storageKey) === "true";
+      return !bootWasCompleted || !hasWarmBootData;
     } catch {
-      return true;
+      return !hasWarmBootData;
     }
   }, [enabled, storageKey]);
 
