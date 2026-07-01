@@ -2783,7 +2783,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         e.stopPropagation();
                         setActivePreviewCardIndex(0);
                       }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-sky-450 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-[hsl(var(--ve-surface)/0.90)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-accent-cyan))] rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.22)] cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                       title="Slide to Primary Card"
                       id="studio-slide-prev-btn"
                     >
@@ -2793,8 +2793,8 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
                   {/* Indicator info for sliding */}
                   {showSecondCard && !postSideways && (
-                    <div className="absolute top-20 right-4 bg-slate-950/80 rounded-full py-1 px-3 border border-slate-800/60 text-[9px] font-mono text-slate-450 font-bold z-40 shadow flex gap-1.5 items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    <div className="absolute top-20 right-4 bg-[hsl(var(--ve-surface)/0.82)] rounded-full py-1 px-3 border border-[hsl(var(--ve-border)/0.32)] text-[9px] font-mono text-[hsl(var(--ve-text-muted))] font-bold z-40 shadow flex gap-1.5 items-center backdrop-blur-xl">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ve-accent-pink))] animate-pulse" />
                       CARD 2 / 2
                     </div>
                   )}
@@ -2819,9 +2819,9 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             <div className="grid grid-cols-2 gap-3" id="vouch-studio-share-bar">
               <button
                 onClick={handleSimulateXPost}
-                className="py-3 px-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.01] flex items-center justify-center gap-2 font-mono uppercase"
+                className="py-3 px-4 bg-[linear-gradient(90deg,hsl(var(--ve-accent-cyan)),hsl(var(--ve-accent-pink)))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] font-bold text-xs rounded-xl shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.22)] transition-transform hover:scale-[1.01] flex items-center justify-center gap-2 font-mono uppercase"
               >
-                <Share2 className="w-4 h-4 text-white" />
+                <Share2 className="w-4 h-4 text-[hsl(var(--ve-bg-deep))]" />
                 <span>Publish to Twitter / X 🐦</span>
               </button>
 
@@ -2848,7 +2848,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       {activeBoardTab === 'saved' && (
         <div className="space-y-4 animate-fade-in" id="vouch-board-saved-ledger">
           
-          <div className="p-4 bg-slate-950 border border-slate-900 rounded-2xl flex items-start gap-3">
+          <div className="p-4 bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.28)] rounded-2xl flex items-start gap-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]">
             <Info className="w-4.5 h-4.5 text-orange-400 shrink-0 mt-0.5" />
             <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
               <span className="text-orange-400 font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
@@ -2859,14 +2859,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
           {savedVouches.length === 0 ? (
             <div 
-              className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-4 py-20"
+              className="p-10 text-center bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.34)] flex flex-col items-center justify-center gap-4 py-20 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl"
               id="empty-vouch-board"
             >
-              <ClipboardCheck className="w-12 h-12 text-slate-600 animate-pulse" />
+              <ClipboardCheck className="w-12 h-12 text-[hsl(var(--ve-text-muted))] animate-pulse" />
               <div className="text-center space-y-1">
-                <h3 className="font-bold text-xs text-slate-200 uppercase font-mono">Your Saved Feed ledger is empty</h3>
+                <h3 className="font-bold text-xs text-[hsl(var(--ve-text-primary))] uppercase font-mono">Your Saved Feed ledger is empty</h3>
                 <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-sm mx-auto leading-relaxed">
-                  Head over to the <strong className="text-sky-400">Home Feed</strong> or browse <strong className="text-sky-400">V.A.I Smart Picks</strong>. 
+                  Head over to the <strong className="text-[hsl(var(--ve-accent-cyan))]">Home Feed</strong> or browse <strong className="text-[hsl(var(--ve-accent-cyan))]">V.A.I Smart Picks</strong>. 
                   Clicking "Save to Board" will harvest those game props, placing them in this secured ledger block!
                 </p>
               </div>
@@ -2896,25 +2896,25 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
 
       {/* SIMULATED TWITTER / X POSTING MODAL HUD OVERLAY */}
       {showTweetModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#121824] border border-slate-850 rounded-3xl max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative">
+        <div className="fixed inset-0 bg-[hsl(var(--ve-bg-deep)/0.86)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.36)] rounded-3xl max-w-[500px] w-full p-5 space-y-4.5 animate-zoom-in relative shadow-2xl shadow-[hsl(var(--ve-shadow)/0.28)] backdrop-blur-xl">
             <button 
               onClick={() => setShowTweetModal(false)}
-              className="absolute top-4 right-4 text-[hsl(var(--ve-text-muted))] hover:text-white p-1 rounded-full bg-slate-900 border border-slate-800"
+              className="absolute top-4 right-4 text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] p-1 rounded-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.28)]"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-2">
               <span className="text-xl">🐦</span>
-              <h3 className="font-bold text-slate-100 uppercase tracking-widest text-sm font-mono">
+              <h3 className="font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-widest text-sm font-mono">
                 Simulated Twitter / X Publisher HUD
               </h3>
             </div>
 
-            <div className="space-y-3 bg-[#0b0f19] p-4 rounded-xl border border-slate-900">
+            <div className="space-y-3 bg-[hsl(var(--ve-surface-raised)/0.34)] p-4 rounded-xl border border-[hsl(var(--ve-border)/0.28)]">
               <div className="flex items-start gap-2.5 text-xs text-[hsl(var(--ve-text-muted))] leading-normal">
-                <div className="w-8 h-8 rounded-full bg-slate-800 font-bold text-sky-400 flex items-center justify-center text-xs border border-sky-450/30 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[hsl(var(--ve-surface-raised)/0.56)] font-bold text-[hsl(var(--ve-accent-cyan))] flex items-center justify-center text-xs border border-[hsl(var(--ve-accent-cyan)/0.30)] shrink-0">
                   ZH
                 </div>
                 <div className="space-y-2 flex-1">
