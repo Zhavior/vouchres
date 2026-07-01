@@ -1252,8 +1252,12 @@ function DailyStarterRow({ player, index, teamAbbr, search }: { player: any; ind
 
       <div className="daily-player-main-pro">
         <strong>{name}</strong>
-        <span>
-          {teamAbbr} · {position || "UTIL"} · Bats {hand || "—"}
+        <span className="daily-player-meta-pro">
+          <span>{teamAbbr}</span>
+          <span>·</span>
+          <span>{position || "UTIL"}</span>
+          <span>·</span>
+          <HandednessBadge hand={hand} prefix="Bats" />
         </span>
       </div>
 
