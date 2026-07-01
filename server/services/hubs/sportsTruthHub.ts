@@ -18,6 +18,35 @@ export type MlbTruthSnapshot = {
   matchupMatrix: Awaited<ReturnType<typeof getLiveMatchupMatrix>>;
 };
 
+type LocalTruthCacheEntry = {
+  expiresAt: number;
+  snapshot: MlbTruthSnapshot;
+};
+
+const localTruthCache = new Map<string, LocalTruthCacheEntry>();
+
+function getLocalTruthSnapshot(key: string): MlbTruthSnapshot | null {
+  const entry = localTruthCache.get(key);
+
+  if (!entry) {
+    return null;
+  }
+
+  if (entry.expiresAt <= Date.now()) {
+    localTruthCache.delete(key);
+    return null;
+  }
+
+  return entry.snapshot;
+}
+
+function setLocalTruthSnapshot(key: string, snapshot: MlbTruthSnapshot, ttlSeconds: number): void {
+  localTruthCache.set(key, {
+    expiresAt: Date.now() + ttlSeconds * 1000,
+    snapshot,
+  });
+}
+
 /**
  * SportsTruthHub is the single builder for verified sports snapshots.
  *
@@ -40,6 +69,12 @@ export async function buildSportsTruthSnapshot(
 
   const ttlSeconds = Number(process.env.SPORTS_TRUTH_HUB_REDIS_TTL_SECONDS ?? 60);
   const redisKey = `sports-truth:${sport}:today:${options.date}`;
+
+  const localCached = getLocalTruthSnapshot(redisKey);
+  if (localCached) {
+    console.log(`[SPORTS_TRUTH_HUB] local hit sport=${sport} date=${options.date}`);
+    return localCached;
+  }
 
   if (isUpstashEnabled()) {
     try {
@@ -77,6 +112,9 @@ export async function buildSportsTruthSnapshot(
       console.warn("[SPORTS_TRUTH_HUB] redis write fallback:", err?.message);
     }
   }
+
+  setLocalTruthSnapshot(redisKey, snapshot, ttlSeconds);
+  console.log(`[SPORTS_TRUTH_HUB] local set sport=${sport} date=${options.date} ttl=${ttlSeconds}s`);
 
   return snapshot;
 }
