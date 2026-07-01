@@ -318,8 +318,8 @@ export default function HomeFeedPage({
             }}
             className={`py-1.5 px-3.5 rounded-xl text-xs font-black tracking-wide flex items-center gap-1.5 shadow-md border transition-all shrink-0 active:scale-95 ${
               proOnlyMode
-                ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                ? 'bg-[linear-gradient(90deg,hsl(var(--ve-accent-gold)/0.86),hsl(var(--ve-accent-cyan)/0.58))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] border-[hsl(var(--ve-accent-gold)/0.45)] shadow-[0_0_12px_hsl(var(--ve-accent-gold)/0.25)]'
+                : 'bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.30)] hover:text-[hsl(var(--ve-text-primary))]'
             }`}
             title="Toggle to view only verified sharp professionals with over 3+ vouches"
           >
