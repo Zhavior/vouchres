@@ -473,7 +473,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
 
       <div className="flex items-center gap-1 p-1 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] w-fit mb-3 text-[11px] font-bold">
         {(['tier', 'game'] as const).map((v) => (
-          <button key={v} onClick={() => setView(v)} className={`px-3 py-1 rounded-lg transition-all ${view === v ? 'bg-orange-500/20 text-orange-300' : 'text-slate-400'}`}>
+          <button key={v} onClick={() => setView(v)} className={`px-3 py-1 rounded-lg transition-all ${view === v ? 'bg-[hsl(var(--ve-accent-gold)/0.18)] text-[hsl(var(--ve-accent-gold))]' : 'text-[hsl(var(--ve-text-muted))]'}`}>
             {v === 'tier' ? 'By Tier' : 'By Game'}
           </button>
         ))}
