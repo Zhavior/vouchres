@@ -638,7 +638,7 @@ export default function LiveStreams({
                   Live Streamers Online Now
                 </h3>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-[hsl(var(--ve-text-muted))] font-mono bg-[hsl(var(--ve-surface-raised)/0.42)] px-3 py-1 rounded-lg border border-[hsl(var(--ve-border)/0.30)]">
                 ⭐ {CHANNELS.length} Active Feeds
               </span>
             </div>
@@ -649,10 +649,10 @@ export default function LiveStreams({
                 <div
                   key={chan.id}
                   onClick={() => handleJoinChannelClick(chan)}
-                  className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:scale-[1.02] transition-all cursor-pointer flex flex-col justify-between group h-full"
+                  className="bg-[hsl(var(--ve-surface-raised)/0.48)] rounded-2xl border border-[hsl(var(--ve-border)/0.34)] overflow-hidden hover:border-[hsl(var(--ve-border)/0.54)] hover:shadow-2xl hover:scale-[1.02] transition-all cursor-pointer flex flex-col justify-between group h-full"
                 >
                   {/* Miniature Image / Graphics Video-Placeholder overlay */}
-                  <div className="aspect-[16/9] w-full bg-slate-950 relative overflow-hidden flex items-center justify-center p-4">
+                  <div className="aspect-[16/9] w-full bg-[hsl(var(--ve-bg)/0.72)] relative overflow-hidden flex items-center justify-center p-4">
                     {/* Live indicator badge */}
                     <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-red-950/80 px-2.5 py-1 rounded-md border border-red-900/40 text-[9px] font-mono text-red-400 font-bold uppercase tracking-widest leading-none">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
@@ -660,7 +660,7 @@ export default function LiveStreams({
                     </div>
 
                     {/* Viewer badge */}
-                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-slate-900/90 px-2 py-1 rounded text-[10px] font-mono text-slate-200 leading-none">
+                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[hsl(var(--ve-surface-raised)/0.84)] px-2 py-1 rounded text-[10px] font-mono text-[hsl(var(--ve-text))] leading-none">
                       <Users className="w-3 h-3 text-[var(--ve-accent)]" />
                       <span>{chan.viewers.toLocaleString()}</span>
                     </div>
@@ -668,7 +668,7 @@ export default function LiveStreams({
                     {/* Miniature Theme View previews */}
                     {chan.videoPlaceholderTheme === 'neon-pitch' && (
                       <div className="absolute inset-0 bg-gradient-to-tr from-[#05070f] to-[#101930] flex items-center justify-center pb-3">
-                        <div className="w-16 h-16 border-2 border-dashed border-sky-500/20 rounded-full flex items-center justify-center relative">
+                        <div className="w-16 h-16 border-2 border-dashed border-[hsl(var(--ve-accent-cyan)/0.24)] rounded-full flex items-center justify-center relative">
                           <span className="absolute w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
                           <span className="w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
                         </div>
@@ -676,7 +676,7 @@ export default function LiveStreams({
                     )}
                     {chan.videoPlaceholderTheme === 'sabermetrics-chart' && (
                       <div className="absolute inset-0 bg-gradient-to-br from-[#02050b] to-[#091122] flex items-end justify-center gap-1.5 p-6 pb-2">
-                        <div className="w-5 bg-sky-500/20 border border-sky-500/40 rounded-t h-8" />
+                        <div className="w-5 bg-[hsl(var(--ve-accent-cyan)/0.18)] border border-[hsl(var(--ve-accent-cyan)/0.34)] rounded-t h-8" />
                         <div className="w-5 bg-teal-500/35 border border-teal-500/50 rounded-t h-12" />
                         <div className="w-5 bg-indigo-500/25 border border-indigo-500/40 rounded-t h-6" />
                         <div className="w-5 bg-rose-500/20 border border-rose-500/35 rounded-t h-16" />
@@ -694,8 +694,8 @@ export default function LiveStreams({
                     )}
 
                     {/* Click CTA info */}
-                    <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-10 backdrop-blur-sm">
-                      <div className="bg-sky-500 text-slate-950 font-black tracking-wide uppercase text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5">
+                    <div className="absolute inset-0 bg-[hsl(var(--ve-bg)/0.74)] opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-10 backdrop-blur-sm">
+                      <div className="bg-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-bg))] font-black tracking-wide uppercase text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5">
                         <Tv className="w-4 h-4" />
                         Join Live Stream
                       </div>
@@ -712,23 +712,23 @@ export default function LiveStreams({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
                             <span className="font-extrabold text-xs text-slate-200 truncate">{chan.streamerName}</span>
-                            {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-[var(--ve-accent)]" />}
+                            {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))] fill-[hsl(var(--ve-accent-cyan))]" />}
                           </div>
                           <span className="text-[10px] text-slate-500">@{chan.streamerUsername}</span>
                         </div>
                       </div>
 
-                      <h4 className="font-black text-slate-200 text-xs mt-2.5 text-left leading-snug line-clamp-2 uppercase tracking-wide group-hover:text-sky-400 transition-colors">
+                      <h4 className="font-black text-slate-200 text-xs mt-2.5 text-left leading-snug line-clamp-2 uppercase tracking-wide group-hover:text-[hsl(var(--ve-accent-cyan))] transition-colors">
                         {chan.title}
                       </h4>
 
                       <p className="text-[11px] text-slate-400 text-left mt-1">
-                        🏈 Covering: <span className="text-slate-202 font-mono">{chan.gameName}</span>
+                        🏈 Covering: <span className="text-[hsl(var(--ve-text))] font-mono">{chan.gameName}</span>
                       </p>
                     </div>
 
                     {/* Vouch preview overlay box */}
-                    <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-850 flex items-center justify-between text-left">
+                    <div className="p-3 bg-[hsl(var(--ve-surface-raised)/0.38)] rounded-xl border border-[hsl(var(--ve-border)/0.30)] flex items-center justify-between text-left">
                       <div className="min-w-0">
                         <span className="text-[8px] bg-amber-950/40 text-amber-400 border border-amber-900/30 px-1.5 py-0.2 rounded font-mono uppercase tracking-wider font-semibold">Live Slip</span>
                         <p className="text-[11px] font-bold text-slate-300 truncate mt-0.5">{chan.liveSlipSelection}</p>
@@ -742,14 +742,14 @@ export default function LiveStreams({
                   </div>
 
                   {/* Stat bar */}
-                  <div className="px-4 py-3 bg-slate-950/40 border-t border-slate-900 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                  <div className="px-4 py-3 bg-[hsl(var(--ve-surface-raised)/0.30)] border-t border-[hsl(var(--ve-border)/0.26)] flex justify-between items-center text-[10px] text-[hsl(var(--ve-text-muted))] font-mono">
                     <span className="text-emerald-400 font-bold">★ {chan.winRate}% stats</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation(); // prevent opening channel
                         handleQuickVouchOverlay(chan);
                       }}
-                      className="bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-850 text-slate-300 px-3 py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 transition-colors"
+                      className="bg-[hsl(var(--ve-surface-raised)/0.46)] border border-[hsl(var(--ve-border)/0.32)] hover:border-amber-500/50 hover:bg-[hsl(var(--ve-surface-raised)/0.66)] text-[hsl(var(--ve-text-soft))] px-3 py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 transition-colors"
                     >
                       <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> Vouch Pin
                     </button>
