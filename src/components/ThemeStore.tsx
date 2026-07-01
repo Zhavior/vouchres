@@ -572,18 +572,26 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           {/* RIGHT COLUMN: PREVIEW OF CURRENT SELECTIONS */}
           <div className="lg:col-span-4 space-y-6">
             
-            <div className="bg-[#121824]/40 rounded-2xl border border-slate-850 p-5 space-y-5 shadow-xl sticky top-4">
+            <div className="group relative overflow-hidden bg-[#121824]/45 backdrop-blur-xl rounded-3xl border border-slate-800/80 p-5 space-y-5 shadow-2xl sticky top-4">
               
-              <div className="border-b border-slate-850 pb-3">
-                <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-cyan-400" />
-                  Visual Identity Preview
-                </h3>
-                <p className="text-[10px] text-slate-500 font-semibold mt-0.5">See how your cards, borders, and typography appear.</p>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-80" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
+
+              <div className="relative z-10 border-b border-white/10 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-black text-slate-100 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                    <Eye className="w-4 h-4 text-cyan-300" />
+                    Visual Identity Preview
+                  </h3>
+                  <span className="text-[8px] font-black font-mono uppercase rounded-full border border-cyan-300/25 bg-cyan-400/10 text-cyan-200 px-2 py-1">
+                    Live Look
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-semibold mt-1">See how your cards, borders, and typography appear.</p>
               </div>
 
               {/* LIVE DEMO BLOCK COMPILING SELECTS */}
-              <div className={`p-4 rounded-2xl border ${selectedPreviewTheme.cardStyle} space-y-4`} id="preview-sandbox-card">
+              <div className={`relative z-10 p-4 rounded-3xl border ${selectedPreviewTheme.cardStyle} space-y-4 shadow-xl`} id="preview-sandbox-card">
                 
                 {/* Header Row */}
                 <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400 font-mono">
@@ -639,7 +647,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
               </div>
 
               {/* Status details of the preview theme */}
-              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-900 text-xs text-slate-400 space-y-2.5">
+              <div className="relative z-10 bg-black/30 p-3.5 rounded-2xl border border-white/10 text-xs text-slate-400 space-y-2.5 shadow-inner">
                 <span className="text-[9.5px] font-mono font-black text-indigo-400 uppercase tracking-wider block">PREVIEW DETAILS:</span>
                 <div className="space-y-1 text-[11px]">
                   <div className="flex justify-between text-slate-500">
