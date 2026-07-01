@@ -42,7 +42,7 @@ export default function FeedMobileNav({ activeSection, onSectionChange, profile 
             key={item.id}
             onClick={() => onSectionChange(item.id)}
             className={`flex flex-col items-center justify-center gap-1 flex-shrink-0 min-w-[58px] snap-center transition-all ${
-              isActive ? 'text-sky-400 scale-105 font-black' : 'text-slate-400 active:text-slate-200'
+              isActive ? 'text-[hsl(var(--ve-accent-cyan))] scale-105 font-black' : 'text-[hsl(var(--ve-text-muted))] active:text-[hsl(var(--ve-text-primary))]'
             }`}
             id={`mobile-nav-link-${item.id}`}
           >
