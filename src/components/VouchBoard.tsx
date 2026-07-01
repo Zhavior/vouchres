@@ -1331,7 +1331,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                         <select
                           value={ps.statType}
                           onChange={(e) => handleStatTypeChange(originalIndex, e.target.value as CustomPlayerSelection['statType'])}
-                          className="w-full bg-slate-900 border border-slate-800 text-slate-200 p-1 rounded outline-none font-medium cursor-pointer"
+                          className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-primary))] p-1 rounded outline-none font-medium cursor-pointer focus:border-[hsl(var(--ve-accent-cyan)/0.55)]"
                         >
                           <option value="Homeruns">Homeruns (HR)</option>
                           <option value="Runs">Runs Scored</option>
@@ -1348,14 +1348,14 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                           type="text"
                           value={ps.customVal}
                           onChange={(e) => handleCustomValChange(originalIndex, e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 text-slate-200 p-1 rounded outline-none font-bold placeholder-slate-650"
+                          className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-primary))] p-1 rounded outline-none font-bold placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)]"
                           placeholder="e.g. Over 0.5 HRs"
                         />
                       </div>
                     </div>
 
                     {/* Companion Card customized parameters */}
-                    <div className="mt-2.5 border-t border-slate-900/60 pt-2.5 space-y-2.5">
+                    <div className="mt-2.5 border-t border-[hsl(var(--ve-border)/0.26)] pt-2.5 space-y-2.5">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <div className="flex justify-between items-center text-[8.5px] font-mono text-slate-450">
@@ -1372,7 +1372,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               updated[originalIndex].aiConfidence = parseInt(e.target.value);
                               setSelectedPlayers(updated);
                             }}
-                            className="w-full accent-sky-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                            className="w-full accent-[hsl(var(--ve-accent-cyan))] h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-lg cursor-pointer"
                           />
                         </div>
 
@@ -1391,7 +1391,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               updated[originalIndex].playerConfidence = parseInt(e.target.value);
                               setSelectedPlayers(updated);
                             }}
-                            className="w-full accent-amber-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                            className="w-full accent-[hsl(var(--ve-accent-gold))] h-1 bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-lg cursor-pointer"
                           />
                         </div>
                       </div>
@@ -1416,7 +1416,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                               ? "Judge’s high target index velocity coefficients suggest reliable contact rates."
                               : "Betts serves as elite lead-off on base catalyst."
                           }
-                          className="w-full bg-slate-900 border border-slate-800 text-slate-205 text-[10.5px] p-2 rounded-lg outline-none focus:border-sky-500/40 resize-none font-medium leading-tight text-left"
+                          className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-primary))] text-[10.5px] p-2 rounded-lg outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.55)] resize-none font-medium leading-tight text-left placeholder:text-[hsl(var(--ve-text-muted))]"
                         />
                       </div>
                     </div>
@@ -1435,7 +1435,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                 onChange={(e) => setReasonsText(e.target.value)}
                 rows={3}
                 placeholder="Give your primary sabermetric reasoning..."
-                className="w-full bg-slate-950 border border-slate-900 text-slate-200 text-xs p-2.5 rounded-xl outline-none focus:border-sky-500/50 resize-none leading-normal font-medium"
+                className="w-full bg-[hsl(var(--ve-surface-raised)/0.34)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-primary))] text-xs p-2.5 rounded-xl outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.55)] resize-none leading-normal font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
               />
             </div>
 
