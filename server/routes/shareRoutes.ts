@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { buildHrBoardResponse } from "../services/mlb/hr-engine/buildHrBoardResponse";
+import { getCachedHrBoardResponse } from "../services/hubs/hrBoardHub";
 import {
   findHrShareCardCandidate,
   HR_SHARE_CARD_HEADERS,
@@ -13,7 +13,7 @@ export const shareRoutes = Router();
 shareRoutes.get("/share/hr-card", async (req, res) => {
   try {
     const params = parseHrShareCardParams(req.query as Record<string, unknown>);
-    const board = await buildHrBoardResponse({ date: params.date, previewLimit: 350 });
+    const board = await getCachedHrBoardResponse({ date: params.date, previewLimit: 350 });
     const candidates = [...(board.candidates ?? []), ...(board.projectedCandidates ?? [])];
     const candidate = findHrShareCardCandidate(candidates, params);
 
