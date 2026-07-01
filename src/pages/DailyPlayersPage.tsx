@@ -96,8 +96,14 @@ function teamName(value?: any) {
 function getGamePlayers(game: Game): Player[] {
   const away = Array.isArray(game.awayLineup) ? game.awayLineup : [];
   const home = Array.isArray(game.homeLineup) ? game.homeLineup : [];
-  const players = Array.isArray(game.players) ? game.players : [];
-  return [...away, ...home, ...players];
+
+  // Backend sends clean split lineups. Some fallback paths also include
+  // `players` as a combined copy, so only use it when split lineups are empty.
+  if (away.length || home.length) {
+    return [...away, ...home];
+  }
+
+  return Array.isArray(game.players) ? game.players : [];
 }
 
 function normalizeResponse(raw: any): DailyBoardResponse {
