@@ -357,11 +357,11 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       case 'included':
         return 'bg-emerald-500/15 text-emerald-300';
       case 'preview':
-        return 'bg-cyan-500/15 text-cyan-300';
+        return 'bg-[hsl(var(--ve-accent-cyan)/0.15)] text-[hsl(var(--ve-accent-cyan))]';
       case 'waiting':
         return 'bg-yellow-500/15 text-yellow-300';
       case 'blocked':
-        return 'bg-orange-500/15 text-orange-300';
+        return 'bg-[hsl(var(--ve-accent-gold)/0.15)] text-[hsl(var(--ve-accent-gold))]';
       default:
         return 'bg-red-500/15 text-red-300';
     }
@@ -419,7 +419,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       </div>
 
       {/* Disclaimer */}
-      <div className="mb-4 p-2.5 rounded-xl bg-orange-500/5 border border-orange-500/15 flex items-start gap-2">
+      <div className="mb-4 p-2.5 rounded-xl bg-[hsl(var(--ve-accent-gold)/0.06)] border border-[hsl(var(--ve-accent-gold)/0.18)] flex items-start gap-2">
         <AlertTriangle className="w-3.5 h-3.5 text-orange-400 mt-0.5 flex-shrink-0" />
         <p className="text-[11px] text-[hsl(var(--ve-text-muted))] leading-relaxed">
           {board?.disclaimer ?? 'HR edge estimates are probability-based research for entertainment — not betting advice. Lineups, park, and weather are projected placeholders.'}
@@ -427,7 +427,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       </div>
 
       {boardMode === 'preview' && (
-        <div className="mb-4 p-3 rounded-xl bg-amber-500/8 border border-amber-400/25 flex items-start gap-2">
+        <div className="mb-4 p-3 rounded-xl bg-[hsl(var(--ve-accent-gold)/0.08)] border border-[hsl(var(--ve-accent-gold)/0.26)] flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
           <div className="text-[11px] leading-relaxed text-amber-100">
             <div className="font-bold">Projected HR Board · official lineups not confirmed yet.</div>
@@ -452,7 +452,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
 
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
             {missingStarChecks.map((star: any) => (
-              <div key={star.playerName} className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div key={star.playerName} className="rounded-xl border border-[hsl(var(--ve-border)/0.24)] bg-[hsl(var(--ve-surface-raised)/0.24)] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="text-sm font-bold text-white">{star.playerName}</div>
