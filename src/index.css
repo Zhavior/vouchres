@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
-@import "./styles/cyber-theme.css";
 @import "tailwindcss";
-@import "./styles/feed-layout.css";
 
 /* Baseball Team brand fonts */
 .baseball-script {
@@ -125,32 +123,32 @@ button.bg-slate-950:hover,
 .stream-cyan {
   height: 2px;
   width: 300px;
-  background: linear-gradient(90deg, transparent, #06b6d4 50%, transparent);
-  color: #06b6d4;
+  background: linear-gradient(90deg, transparent, hsl(var(--ve-accent-cyan)) 50%, transparent);
+  color: hsl(var(--ve-accent-cyan));
   animation: neonMoveHorizontal 14s linear infinite, pulseNeonGlow 4s ease-in-out infinite;
 }
 
 .stream-pink {
   height: 2px;
   width: 420px;
-  background: linear-gradient(90deg, transparent, #ec4899 50%, transparent);
-  color: #ec4899;
+  background: linear-gradient(90deg, transparent, hsl(var(--ve-accent-cyan) / 0.62) 50%, transparent);
+  color: hsl(var(--ve-accent-cyan));
   animation: neonMoveHorizontal 20s linear infinite reverse, pulseNeonGlow 5s ease-in-out infinite;
 }
 
 .stream-purple {
   height: 2px;
   width: 380px;
-  background: linear-gradient(90deg, transparent, #a855f7 50%, transparent);
-  color: #a855f7;
+  background: linear-gradient(90deg, transparent, hsl(var(--ve-accent-pink) / 0.54) 50%, transparent);
+  color: hsl(var(--ve-accent-pink));
   animation: neonMoveHorizontal 17s linear infinite, pulseNeonGlow 3s ease-in-out infinite;
 }
 
 .stream-emerald {
   height: 2px;
   width: 250px;
-  background: linear-gradient(90deg, transparent, #10b981 50%, transparent);
-  color: #10b981;
+  background: linear-gradient(90deg, transparent, hsl(var(--ve-success)) 50%, transparent);
+  color: hsl(var(--ve-success));
   animation: neonMoveHorizontal 12s linear infinite, pulseNeonGlow 4.5s ease-in-out infinite;
 }
 
@@ -158,16 +156,16 @@ button.bg-slate-950:hover,
 .stream-diagonal-gold {
   width: 6px;
   height: 350px;
-  background: linear-gradient(180deg, transparent, #fbbf24 50%, transparent);
-  color: #fbbf24;
+  background: linear-gradient(180deg, transparent, hsl(var(--ve-accent-gold)) 50%, transparent);
+  color: hsl(var(--ve-accent-gold));
   animation: neonMoveDiagonalUp 25s cubic-bezier(0.25, 1, 0.5, 1) infinite, pulseNeonGlow 6s ease-in-out infinite;
 }
 
 .stream-diagonal-violet {
   width: 5px;
   height: 420px;
-  background: linear-gradient(180deg, transparent, #8b5cf6 50%, transparent);
-  color: #8b5cf6;
+  background: linear-gradient(180deg, transparent, hsl(var(--ve-accent-pink) / 0.58) 50%, transparent);
+  color: hsl(var(--ve-accent-pink));
   animation: neonMoveDiagonalDown 30s cubic-bezier(0.25, 1, 0.5, 1) infinite, pulseNeonGlow 7s ease-in-out infinite;
 }
 
@@ -911,63 +909,21 @@ button.bg-slate-950:hover,
 }
 
 /* ==========================================================
-   VOUCH EDGE GLOBAL BORDER KILL SWITCH
-   Removes hard white/cyan outlines across the whole app.
-   Keep borders structurally, but make them transparent glass.
+   VOUCHEDGE LEGACY UTILITY RESET
+   Keeps old utility-heavy screens from flashing pure black or
+   white outlines without globally recoloring every card/button.
    ========================================================== */
 
-#root [class*="border-white"],
-#root [class*="border-cyan"],
-#root [class*="border-slate"],
-#root [class*="border-zinc"],
-#root [class*="border-neutral"],
-#root [class*="border-gray"] {
-  border-color: rgba(34, 211, 238, 0.045) !important;
-}
-
-#root [class*="ring-white"],
-#root [class*="ring-cyan"],
-#root [class*="ring-slate"],
-#root [class*="ring-zinc"],
-#root [class*="ring-neutral"],
-#root [class*="ring-gray"] {
-  --tw-ring-color: rgba(34, 211, 238, 0.055) !important;
-}
-
-#root [class*="divide-white"] > :not([hidden]) ~ :not([hidden]),
-#root [class*="divide-cyan"] > :not([hidden]) ~ :not([hidden]),
-#root [class*="divide-slate"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgba(34, 211, 238, 0.04) !important;
-}
-
-/* Softer glass panels globally */
-#root [class*="bg-slate-950"],
 #root [class*="bg-[#020617]"],
 #root [class*="bg-black"] {
-  background-color: rgba(2, 6, 23, 0.54) !important;
-}
-
-/* Feed/right rail cards should look see-through, not boxed */
-#root main [class*="rounded-3xl"][class*="border"],
-#root main [class*="rounded-2xl"][class*="border"] {
-  border-color: rgba(34, 211, 238, 0.04) !important;
-  box-shadow: 0 18px 60px rgba(8, 47, 73, 0.10) !important;
-}
-
-/* Inputs/buttons: keep usable outline, not white boxes */
-#root input,
-#root select,
-#root textarea,
-#root button {
-  border-color: rgba(34, 211, 238, 0.075) !important;
+  background-color: hsl(var(--ve-bg-deep) / 0.86);
 }
 
 #root input:focus,
 #root select:focus,
-#root textarea:focus,
-#root button:focus {
-  border-color: rgba(34, 211, 238, 0.18) !important;
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.055) !important;
+#root textarea:focus {
+  border-color: hsl(var(--ve-accent-cyan) / 0.55);
+  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
 }
 
 /* ==========================================================
@@ -1144,262 +1100,37 @@ html:not([data-ve-theme]) {
 }
 
 /* ==========================================================
-   FINAL PRODUCT-WIDE THEME CONSISTENCY PASS
-   Every page, island, sidebar, button, input, border follows skin.
+   VOUCHEDGE BASE THEME RESET
+   Token-based foundation. Avoid broad wildcard color rewrites.
    ========================================================== */
 
-html {
-  --skin-1: 34, 211, 238;
-  --skin-2: 16, 185, 129;
-  --skin-3: 59, 130, 246;
-  --skin-bg: 2, 6, 23;
-  --skin-card: rgba(3, 12, 26, 0.56);
-  --skin-border: rgba(34, 211, 238, 0.10);
+:root {
+  --ve-bg: 222 47% 7%;
+  --ve-bg-deep: 224 56% 4%;
+  --ve-bg-panel: 222 42% 8%;
+  --ve-surface: 220 40% 11%;
+  --ve-surface-raised: 218 35% 15%;
+  --ve-surface-elevated: 218 35% 15%;
+  --ve-border: 217 30% 20%;
+  --ve-border-subtle: 217 30% 18%;
+  --ve-border-strong: 216 30% 26%;
+  --ve-accent-cyan: 191 97% 60%;
+  --ve-accent-pink: 246 64% 68%;
+  --ve-accent-gold: 43 92% 62%;
+  --ve-shadow: 224 70% 2%;
+  --ve-text: hsl(var(--ve-text-primary));
+  --ve-muted: hsl(var(--ve-text-muted));
 }
 
-/* Backward compatibility for old theme IDs */
-html[data-ve-theme="cyber"] {
-  --skin-1: 34, 211, 238;
-  --skin-2: 16, 185, 129;
-  --skin-3: 59, 130, 246;
-  --skin-bg: 2, 6, 23;
-  --skin-card: rgba(3, 12, 26, 0.56);
-  --skin-border: rgba(34, 211, 238, 0.10);
-}
-
-html[data-ve-theme="gold"] {
-  --skin-1: 251, 191, 36;
-  --skin-2: 249, 115, 22;
-  --skin-3: 168, 85, 247;
-  --skin-bg: 13, 8, 2;
-  --skin-card: rgba(24, 14, 4, 0.58);
-  --skin-border: rgba(251, 191, 36, 0.13);
-}
-
-html[data-ve-theme="royal"] {
-  --skin-1: 167, 139, 250;
-  --skin-2: 236, 72, 153;
-  --skin-3: 59, 130, 246;
-  --skin-bg: 8, 5, 24;
-  --skin-card: rgba(15, 9, 38, 0.60);
-  --skin-border: rgba(167, 139, 250, 0.13);
-}
-
-html[data-ve-theme="fire"] {
-  --skin-1: 251, 113, 133;
-  --skin-2: 249, 115, 22;
-  --skin-3: 239, 68, 68;
-  --skin-bg: 16, 3, 3;
-  --skin-card: rgba(31, 8, 8, 0.58);
-  --skin-border: rgba(251, 113, 133, 0.14);
-}
-
-html[data-ve-theme="ocean"] {
-  --skin-1: 45, 212, 191;
-  --skin-2: 14, 165, 233;
-  --skin-3: 16, 185, 129;
-  --skin-bg: 2, 16, 19;
-  --skin-card: rgba(4, 24, 28, 0.58);
-  --skin-border: rgba(45, 212, 191, 0.13);
-}
-
-/* Product background */
-body,
-#root,
-.ve-page,
-.ve-app-bg,
-.ve-themed-bg,
-.ve-grid-bg {
-  background:
-    radial-gradient(circle at 12% 8%, rgba(var(--skin-1), 0.22), transparent 28%),
-    radial-gradient(circle at 88% 12%, rgba(var(--skin-2), 0.16), transparent 34%),
-    radial-gradient(circle at 50% 100%, rgba(var(--skin-3), 0.12), transparent 40%),
-    linear-gradient(135deg, rgb(var(--skin-bg)), #020617 52%, rgb(var(--skin-bg))) !important;
-}
-
-/* Every visible border becomes theme glass */
-#root [class*="border-white"],
-#root [class*="border-slate"],
-#root [class*="border-gray"],
-#root [class*="border-zinc"],
-#root [class*="border-neutral"],
-#root [class*="border-cyan"],
-#root [class*="border-sky"],
-#root [class*="border-emerald"],
-#root [class*="border-purple"],
-#root [class*="border-amber"],
-#root [class*="border-rose"],
-#root [class*="border-red"] {
-  border-color: var(--skin-border) !important;
-}
-
-/* Ring/focus follows theme */
-#root [class*="ring-white"],
-#root [class*="ring-slate"],
-#root [class*="ring-cyan"],
-#root [class*="ring-sky"],
-#root [class*="ring-purple"],
-#root [class*="ring-amber"] {
-  --tw-ring-color: rgba(var(--skin-1), 0.14) !important;
-}
-
-/* Dividers follow theme */
-#root [class*="divide-white"] > :not([hidden]) ~ :not([hidden]),
-#root [class*="divide-slate"] > :not([hidden]) ~ :not([hidden]),
-#root [class*="divide-cyan"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgba(var(--skin-1), 0.075) !important;
-}
-
-/* Product islands/cards */
-#root main [class*="rounded-3xl"],
-#root main [class*="rounded-2xl"],
-#root section[class*="rounded-"],
-.ve-island,
-.ve-panel,
-.ve-card,
-.ve-theme-panel {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.10), transparent 38%),
-    linear-gradient(135deg, rgba(var(--skin-1), 0.052), var(--skin-card)) !important;
-  border-color: var(--skin-border) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.035),
-    0 22px 70px rgba(var(--skin-1), 0.075) !important;
-  backdrop-filter: blur(22px) saturate(1.2);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2);
-}
-
-/* Sidebar full gecko behavior */
-#root .ve-sidebar {
-  background:
-    radial-gradient(circle at 22% 0%, rgba(var(--skin-1), 0.34), transparent 35%),
-    radial-gradient(circle at 90% 20%, rgba(var(--skin-2), 0.18), transparent 38%),
-    linear-gradient(180deg, rgba(var(--skin-bg), 0.70), rgba(var(--skin-bg), 0.34)) !important;
-  border-right: 1px solid rgba(var(--skin-1), 0.18) !important;
-  box-shadow:
-    inset -1px 0 0 rgba(var(--skin-1), 0.12),
-    24px 0 95px rgba(var(--skin-1), 0.13) !important;
-  backdrop-filter: blur(30px) saturate(1.35) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(1.35) !important;
-}
-
-#root .ve-sidebar * {
-  border-color: rgba(var(--skin-1), 0.12) !important;
-}
-
-#root .ve-sidebar [class*="bg-slate"],
-#root .ve-sidebar [class*="bg-black"],
-#root .ve-sidebar [class*="bg-white"],
-#root .ve-sidebar [class*="bg-[#020617]"] {
-  background:
-    linear-gradient(135deg, rgba(var(--skin-1), 0.085), rgba(var(--skin-bg), 0.26)) !important;
-  backdrop-filter: blur(18px) saturate(1.22);
-  -webkit-backdrop-filter: blur(18px) saturate(1.22);
-}
-
-#root .ve-sidebar svg {
-  color: rgb(var(--skin-1)) !important;
-  filter: drop-shadow(0 0 12px rgba(var(--skin-1), 0.42));
-}
-
-#root .ve-sidebar button:hover,
-#root .ve-sidebar a:hover,
-#root .ve-sidebar .ve-nav-item-active,
-#root .ve-sidebar [aria-current="page"] {
-  background:
-    linear-gradient(135deg, rgba(var(--skin-1), 0.22), rgba(var(--skin-2), 0.10)) !important;
-  border-color: rgba(var(--skin-1), 0.26) !important;
-  box-shadow: 0 14px 44px rgba(var(--skin-1), 0.15) !important;
-}
-
-/* Buttons */
-#root button[class*="bg-cyan"],
-#root button[class*="bg-sky"],
-#root button[class*="from-cyan"],
-#root button[class*="from-sky"],
-#root button[class*="from-emerald"],
-#root .ve-button-primary,
-#root .ve-theme-button {
-  background:
-    linear-gradient(135deg, rgba(var(--skin-1), 0.96), rgba(var(--skin-2), 0.82)) !important;
-  color: #020617 !important;
-  border-color: rgba(var(--skin-1), 0.22) !important;
-  box-shadow: 0 16px 45px rgba(var(--skin-1), 0.23) !important;
-}
-
-/* Text accents */
-#root [class*="text-cyan"],
-#root [class*="text-sky"],
-#root [class*="text-emerald"],
-#root [class*="text-amber"],
-#root [class*="text-purple"],
-#root [class*="text-fuchsia"],
-#root [class*="text-rose"] {
-  color: rgb(var(--skin-1)) !important;
-}
-
-/* Inputs */
-#root input,
-#root select,
-#root textarea {
-  border-color: rgba(var(--skin-1), 0.13) !important;
-  background: rgba(var(--skin-bg), 0.44) !important;
-  color: rgb(226, 232, 240) !important;
-}
-
-#root input:focus,
-#root select:focus,
-#root textarea:focus {
-  border-color: rgba(var(--skin-1), 0.30) !important;
-  box-shadow: 0 0 0 3px rgba(var(--skin-1), 0.075) !important;
-}
-
-/* Premium VouchEdge color correction */
-#root {
-  color-scheme: dark;
-}
-
-#root .ve-sidebar {
-  background:
-    linear-gradient(180deg, rgba(10, 14, 24, 0.98) 0%, rgba(7, 10, 18, 0.98) 55%, rgba(4, 6, 11, 0.98) 100%) !important;
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 24px 0 70px rgba(0, 0, 0, 0.28) !important;
-}
-
-/* Kill loud neon cyan/green surfaces */
-#root .ve-sidebar [class*="cyan"],
-#root .ve-sidebar [class*="emerald"],
-#root .ve-sidebar [class*="teal"] {
-  filter: saturate(0.45) brightness(0.92);
-}
-
-/* Premium hover: quiet glass, not arcade glow */
-#root .ve-sidebar button:hover,
-#root .ve-sidebar a:hover,
-#root .ve-sidebar .ve-nav-item-active,
-#root .ve-sidebar [aria-current="page"] {
-  background: rgba(255, 255, 255, 0.055) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
-}
-
-/* Keep accent small and expensive-looking */
-#root .ve-sidebar svg {
-  color: rgba(203, 213, 225, 0.86) !important;
-  filter: none !important;
-}
-
-#root .ve-sidebar .bg-gradient-to-r {
-  background-image: linear-gradient(90deg, #e5e7eb, #94a3b8) !important;
-}
-
-/* ===== VouchEdge layout lock / centering fix ===== */
 html,
 body,
 #root {
   width: 100%;
   max-width: 100%;
+  min-height: 100%;
   overflow-x: hidden;
+  color-scheme: dark;
+  background: hsl(var(--ve-bg));
 }
 
 body {
@@ -1410,21 +1141,10 @@ body {
   min-height: 100vh;
 }
 
-/* Keep the app inside the screen */
 #root > * {
   max-width: 100vw;
 }
 
-/* Main page content should center inside available area */
-#root main,
-#root [role="main"] {
-  width: 100%;
-  max-width: 1240px;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Prevent sections/cards from creating right-side overflow */
 #root section,
 #root article,
 #root header,
@@ -1432,215 +1152,76 @@ body {
   max-width: 100%;
 }
 
-/* Kill accidental viewport-width overflow */
 #root .w-screen,
 #root [class*="w-screen"] {
   width: 100% !important;
   max-width: 100% !important;
 }
 
-/* Big dashboard/page containers */
-#root [class*="max-w-7xl"],
-#root [class*="max-w-6xl"],
-#root [class*="max-w-screen"] {
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-
-/* ===== VouchEdge Premium Apple-Style No-Neon Theme ===== */
-
-:root {
-  --ve-bg: #050505;
-  --ve-surface: #0b0b0d;
-  --ve-surface-2: #111114;
-  --ve-surface-3: #17171a;
-  --ve-border: rgba(255, 255, 255, 0.10);
-  --ve-border-soft: rgba(255, 255, 255, 0.065);
-  --ve-text: #f5f5f7;
-  --ve-muted: #a1a1aa;
-  --ve-muted-2: #71717a;
-}
-
-/* kill childish blue/cyan/green gradients */
-#root [class*="from-cyan"],
-#root [class*="to-cyan"],
-#root [class*="via-cyan"],
-#root [class*="from-blue"],
-#root [class*="to-blue"],
-#root [class*="via-blue"],
-#root [class*="from-emerald"],
-#root [class*="to-emerald"],
-#root [class*="via-emerald"],
-#root [class*="from-teal"],
-#root [class*="to-teal"],
-#root [class*="via-teal"] {
-  --tw-gradient-from: rgba(255,255,255,0.12) !important;
-  --tw-gradient-to: rgba(255,255,255,0.035) !important;
-  --tw-gradient-stops: rgba(255,255,255,0.12), rgba(255,255,255,0.035) !important;
-}
-
-/* premium dark background */
-html,
-body,
-#root {
-  background: #050505 !important;
-  color: var(--ve-text);
-}
-
-/* no arcade glow */
-#root [class*="shadow-cyan"],
-#root [class*="shadow-blue"],
-#root [class*="shadow-emerald"],
-#root [class*="shadow-teal"] {
-  box-shadow: 0 24px 70px rgba(0,0,0,0.35) !important;
-}
-
-/* soften loud text colors */
-#root [class*="text-cyan"],
-#root [class*="text-blue"],
-#root [class*="text-emerald"],
-#root [class*="text-teal"] {
-  color: rgba(245,245,247,0.88) !important;
-}
-
-/* premium cards */
-#root [class*="border-cyan"],
-#root [class*="border-blue"],
-#root [class*="border-emerald"],
-#root [class*="border-teal"] {
-  border-color: rgba(255,255,255,0.10) !important;
-}
-
-/* buttons should feel expensive, not casino */
 #root button,
 #root a {
-  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, opacity 180ms ease;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, opacity 180ms ease, color 180ms ease;
 }
 
-/* sidebar: Apple graphite */
-#root .ve-sidebar {
-  background:
-    linear-gradient(180deg, #0b0b0d 0%, #08080a 52%, #050505 100%) !important;
-  border-color: rgba(255,255,255,0.085) !important;
-  box-shadow: 24px 0 80px rgba(0,0,0,0.42) !important;
+#root input,
+#root select,
+#root textarea {
+  color: hsl(var(--ve-text-primary));
 }
 
-/* active sidebar item */
-#root .ve-sidebar button:hover,
-#root .ve-sidebar a:hover,
-#root .ve-sidebar .ve-nav-item-active,
-#root .ve-sidebar [aria-current="page"] {
-  background: rgba(255,255,255,0.075) !important;
-  border-color: rgba(255,255,255,0.13) !important;
-  color: #f5f5f7 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.055) !important;
+#root input::placeholder,
+#root textarea::placeholder {
+  color: hsl(var(--ve-text-muted));
 }
 
-/* badges/pills */
-#root .ve-sidebar [class*="rounded-full"] {
-  background: rgba(255,255,255,0.075) !important;
-  border-color: rgba(255,255,255,0.11) !important;
-  color: rgba(245,245,247,0.92) !important;
+#root input:focus,
+#root select:focus,
+#root textarea:focus {
+  outline: none;
+  border-color: hsl(var(--ve-accent-cyan) / 0.56);
+  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
 }
 
-
-/* ===== Remove heavy background layers behind card groups ===== */
-
-/* Kill oversized decorative panels/washes behind cards */
-#root [class*="bg-[radial-gradient"],
-#root [class*="bg-[linear-gradient"],
-#root [class*="backdrop-blur"] {
-  backdrop-filter: none !important;
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-/* Make card-section wrappers invisible unless they are actual cards */
-#root section > div[class*="rounded-"],
-#root main > div[class*="rounded-"] {
-  background: transparent !important;
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
 }
 
-/* Keep actual cards visible, but remove the big parent layer feel */
-#root article,
-#root [class*="card"],
-#root [class*="Card"],
-#root [class*="feed-card"],
-#root [class*="post-card"] {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025)) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-  box-shadow: 0 18px 55px rgba(0,0,0,0.28) !important;
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
 }
 
-/* Remove cheap glowing blobs under grids/cards */
-#root [class*="blur-2xl"],
-#root [class*="blur-3xl"],
-#root [class*="opacity-20"],
-#root [class*="opacity-30"],
-#root [class*="opacity-40"] {
-  opacity: 0 !important;
-  pointer-events: none !important;
+.ve-sidebar {
+  background: linear-gradient(180deg, hsl(var(--ve-bg-panel) / 0.96), hsl(var(--ve-bg-deep) / 0.98));
+  border-color: hsl(var(--ve-border) / 0.36);
+  box-shadow: 20px 0 70px hsl(var(--ve-shadow) / 0.22);
 }
 
-/* Page background should be flat premium black/graphite */
-#root main,
-#root [role="main"] {
-  background: transparent !important;
+.ve-sidebar button:hover,
+.ve-sidebar a:hover,
+.ve-sidebar .ve-nav-item-active,
+.ve-sidebar [aria-current="page"] {
+  background: hsl(var(--ve-surface-raised) / 0.44);
+  border-color: hsl(var(--ve-accent-cyan) / 0.28);
 }
 
-
-/* ===== Kill blue glow around landing cards ===== */
-
-/* Remove cyan/blue outer glow from landing cards/panels */
-#root [class*="shadow-cyan"],
-#root [class*="shadow-blue"],
-#root [class*="shadow-sky"],
-#root [class*="shadow-teal"],
-#root [class*="shadow-emerald"] {
-  box-shadow: 0 22px 60px rgba(0,0,0,0.34) !important;
-}
-
-/* Remove blue/cyan borders */
-#root [class*="border-cyan"],
-#root [class*="border-blue"],
-#root [class*="border-sky"],
-#root [class*="border-teal"],
-#root [class*="border-emerald"] {
-  border-color: rgba(255,255,255,0.095) !important;
-}
-
-/* Make large landing panels graphite, not blue glass */
-#root main [class*="rounded-3xl"],
-#root main [class*="rounded-[2"],
-#root main [class*="rounded-[3"] {
-  background:
-    linear-gradient(180deg, rgba(18,18,20,0.92), rgba(8,8,10,0.92)) !important;
-  border-color: rgba(255,255,255,0.09) !important;
-  box-shadow: 0 28px 80px rgba(0,0,0,0.38) !important;
-}
-
-/* Kill blue radial wash inside panels */
-#root [class*="bg-[radial-gradient"],
-#root [class*="bg-[linear-gradient"] {
-  background-image:
-    linear-gradient(180deg, rgba(18,18,20,0.92), rgba(7,7,9,0.94)) !important;
-}
-
-/* Remove blue glow pseudo/decorative absolute layers */
-#root main [class*="absolute"][class*="blur"],
-#root main [class*="absolute"][class*="cyan"],
-#root main [class*="absolute"][class*="blue"],
-#root main [class*="absolute"][class*="teal"],
-#root main [class*="absolute"][class*="emerald"] {
-  display: none !important;
-}
-
-/* Keep only tiny accent pills, but neutral */
-#root main [class*="bg-cyan"],
-#root main [class*="bg-blue"],
-#root main [class*="bg-teal"],
-#root main [class*="bg-emerald"] {
-  background-color: rgba(255,255,255,0.10) !important;
+@media (max-width: 900px) {
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
 }
 
 /* ===== Welcome front page: simple space theme + layout stickiness ===== */
@@ -1754,7 +1335,7 @@ body,
   }
 }
 
-/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
+/* ===== VouchEdge layout safety reset ===== */
 
 html,
 body,
@@ -1763,7 +1344,6 @@ body,
   max-width: 100%;
   min-height: 100%;
   overflow-x: hidden;
-  background: #050506;
 }
 
 * {
@@ -1774,20 +1354,7 @@ body {
   margin: 0;
 }
 
-/* Public landing should fill the browser without creating the right dotted strip */
-.ve-public-shell {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  background: #050506;
-}
-
-.ve-public-container {
-  width: min(100% - 48px, 1440px);
-  margin-inline: auto;
-}
-
-/* App pages: sidebar + content should fit viewport */
+.ve-public-shell,
 .ve-app-shell,
 .ve-shell,
 .ve-home-feed-layout {
@@ -1796,197 +1363,41 @@ body {
   overflow-x: hidden;
 }
 
-/* Main app area should never use viewport width past the sidebar */
-.ve-app-main,
-.ve-feed-main,
-.ve-page-main {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Right rail must fit, not push page sideways */
-.ve-right-rail,
-.ve-feed-right-rail {
-  min-width: 0;
-  max-width: 360px;
-}
-
-/* Remove harsh debug-looking outlines */
-.ve-surface,
-.ve-card,
-.ve-panel,
-.ve-feed-card,
-.ve-rail-card,
-.ve-composer,
-.ve-auth-card,
-.ve-command-island {
-  border-color: rgba(255,255,255,0.085) !important;
-  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
-}
-
-/* Quiet graphite surface system */
-.ve-surface,
-.ve-card,
-.ve-panel,
-.ve-feed-card,
-.ve-rail-card {
-  background:
-    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
-}
-
-/* Kill the remaining purple/blue glow only inside VouchEdge shells */
-.ve-public-shell [class*="shadow-cyan"],
-.ve-public-shell [class*="shadow-blue"],
-.ve-public-shell [class*="shadow-purple"],
-.ve-app-shell [class*="shadow-cyan"],
-.ve-app-shell [class*="shadow-blue"],
-.ve-app-shell [class*="shadow-purple"],
-.ve-shell [class*="shadow-cyan"],
-.ve-shell [class*="shadow-blue"],
-.ve-shell [class*="shadow-purple"] {
-  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
-}
-
-/* Make oversized white borders subtle */
-.ve-public-shell [class*="border-white"],
-.ve-app-shell [class*="border-white"],
-.ve-shell [class*="border-white"] {
-  border-color: rgba(255,255,255,0.085) !important;
-}
-
-@media (max-width: 900px) {
-  .ve-public-container {
-    width: min(100% - 28px, 100%);
-  }
-
-  .ve-right-rail,
-  .ve-feed-right-rail {
-    max-width: 100%;
-  }
-}
-
-
-/* ===== MANUAL BETA STABILITY PASS — scoped shell/layout fixes ===== */
-
-html,
-body,
-#root {
-  width: 100%;
-  max-width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
-  background: #050506;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-.ve-public-shell {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  background: #050506;
-}
-
 .ve-public-container {
   width: min(100% - 48px, 1440px);
   margin-inline: auto;
 }
 
-.ve-app-shell,
-.ve-shell,
-.ve-home-feed-layout {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.ve-app-main,
-.ve-feed-main,
-.ve-page-main {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.ve-right-rail,
-.ve-feed-right-rail {
-  min-width: 0;
-  max-width: 360px;
-}
-
-.ve-surface,
-.ve-card,
-.ve-panel,
-.ve-feed-card,
-.ve-rail-card,
-.ve-composer,
-.ve-auth-card,
-.ve-command-island {
-  border-color: rgba(255,255,255,0.085) !important;
-  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
-}
-
-.ve-surface,
-.ve-card,
-.ve-panel,
-.ve-feed-card,
-.ve-rail-card {
-  background:
-    linear-gradient(180deg, rgba(18,18,20,0.94), rgba(8,8,10,0.96)) !important;
-}
-
-.ve-public-shell [class*="shadow-cyan"],
-.ve-public-shell [class*="shadow-blue"],
-.ve-public-shell [class*="shadow-purple"],
-.ve-app-shell [class*="shadow-cyan"],
-.ve-app-shell [class*="shadow-blue"],
-.ve-app-shell [class*="shadow-purple"],
-.ve-shell [class*="shadow-cyan"],
-.ve-shell [class*="shadow-blue"],
-.ve-shell [class*="shadow-purple"] {
-  box-shadow: 0 22px 70px rgba(0,0,0,0.34) !important;
-}
-
-.ve-public-shell [class*="border-white"],
-.ve-app-shell [class*="border-white"],
-.ve-shell [class*="border-white"] {
-  border-color: rgba(255,255,255,0.085) !important;
-}
-
-@media (max-width: 900px) {
-  .ve-public-container {
-    width: min(100% - 28px, 100%);
-  }
-
-  .ve-right-rail,
-  .ve-feed-right-rail {
-    max-width: 100%;
-  }
-}
-
-
-/* The app content after the fixed sidebar should start once, not twice */
 .ve-app-shell,
 .ve-shell {
   display: flex;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
 }
 
-/* Main app region must own the available width */
 .ve-app-main,
-.ve-page-main {
+.ve-page-main,
+.ve-feed-main {
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   max-width: 100%;
   margin-left: 0 !important;
+}
+
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
 }
 
 /* Keep matchup carousel scroll inside its own box only */
@@ -4288,13 +3699,6 @@ body,
   transform: none !important;
 }
 
-/* Disable rail transition until layout is stable */
-#layout-inner-frame.ve-layout-feed .ve-edge-rail-switching {
-  transform: none !important;
-  opacity: 1 !important;
-  filter: none !important;
-}
-
 /* Non-feed pages: sidebar + full center only */
 #layout-inner-frame.ve-layout-wide {
   display: grid !important;
@@ -5697,548 +5101,27 @@ body,
 
 
 /* =========================================================
-   HOME FEED — SHARE A VOUCH COMPOSER
-   Product-specific social composer, not generic AI form UI.
+   HOME FEED — COMPOSER QUALITY RESET
+   Fixes AI-looking oversized layout + text popping out borders.
    ========================================================= */
 
+.ve-vouch-composer,
+.ve-vouch-composer *,
+.ve-vouch-composer *::before,
+.ve-vouch-composer *::after {
+  box-sizing: border-box;
+}
+
 .ve-vouch-composer {
-  margin: 18px 24px 16px;
-  padding: 14px;
+  width: calc(100% - 48px);
+  max-width: 632px;
+  margin: 14px auto 14px;
+  padding: 16px;
+  overflow: hidden;
   border-radius: 22px;
-  border: 1px solid rgba(45, 212, 191, 0.18);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.10), transparent 38%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.96));
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.24);
-}
-
-.ve-vouch-composer__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.ve-vouch-composer__header span {
-  color: hsl(var(--ve-accent-cyan));
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.ve-vouch-composer__header h2 {
-  margin: 3px 0 0;
-  color: hsl(var(--ve-text-primary));
-  font-size: 18px;
-  line-height: 1.1;
-  font-weight: 1000;
-  letter-spacing: -0.04em;
-}
-
-.ve-vouch-composer__header p {
-  margin: 4px 0 0;
-  color: hsl(var(--ve-text-muted));
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.ve-vouch-composer__profile {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  border: 1px solid rgba(45, 212, 191, 0.22);
-  background:
-    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.24), transparent 38%),
-    linear-gradient(135deg, rgba(45, 212, 191, 0.22), rgba(59, 130, 246, 0.14));
-}
-
-.ve-vouch-composer__profile strong {
-  color: hsl(var(--ve-text-primary));
-  font-size: 12px;
-  font-weight: 1000;
-}
-
-.ve-vouch-composer__textarea {
-  width: 100%;
-  min-height: 96px;
-  margin-top: 12px;
-  padding: 13px 14px;
-  resize: vertical;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  background: rgba(2, 6, 23, 0.54);
-  color: hsl(var(--ve-text-primary));
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.45;
-}
-
-.ve-vouch-composer__textarea::placeholder {
-  color: rgba(148, 163, 184, 0.62);
-}
-
-.ve-vouch-composer__textarea:focus {
-  outline: none;
-  border-color: rgba(45, 212, 191, 0.44);
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.09);
-}
-
-.ve-vouch-composer__mode-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 10px;
-}
-
-.ve-vouch-composer__mode-row button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(2, 6, 23, 0.38);
-  color: rgba(226, 232, 240, 0.76);
-  font-size: 11px;
-  font-weight: 950;
-  cursor: pointer;
-}
-
-.ve-vouch-composer__mode-row button.is-active {
-  border-color: rgba(45, 212, 191, 0.42);
-  background: rgba(45, 212, 191, 0.11);
-  color: hsl(var(--ve-text-primary));
-}
-
-.ve-vouch-composer__details {
-  display: grid;
-  grid-template-columns: 0.7fr 1.35fr 0.9fr 0.85fr;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.ve-vouch-composer__details :is(input, select) {
-  min-width: 0;
-  width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 13px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(2, 6, 23, 0.56);
-  color: hsl(var(--ve-text-primary));
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.ve-vouch-composer__details :is(input, select):focus {
-  outline: none;
-  border-color: rgba(45, 212, 191, 0.4);
-}
-
-.ve-vouch-composer__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.ve-vouch-composer__ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.13);
-  background: rgba(2, 6, 23, 0.34);
-  color: rgba(103, 232, 249, 0.9);
-  font-size: 11px;
-  font-weight: 950;
-}
-
-.ve-vouch-composer__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ve-vouch-composer__actions span {
-  color: rgba(203, 213, 225, 0.66);
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.ve-vouch-composer__actions span.is-low {
-  color: #fbbf24;
-}
-
-.ve-vouch-composer__actions button {
-  min-width: 116px;
-  height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border-radius: 999px;
-  border: 1px solid rgba(45, 212, 191, 0.34);
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.92), rgba(14, 165, 233, 0.84));
-  color: #02111f;
-  font-size: 12px;
-  font-weight: 1000;
-  cursor: pointer;
-}
-
-.ve-vouch-composer__actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.46;
-}
-
-@media (max-width: 700px) {
-  .ve-vouch-composer {
-    margin-left: 12px;
-    margin-right: 12px;
-  }
-
-  .ve-vouch-composer__details {
-    grid-template-columns: 1fr;
-  }
-
-  .ve-vouch-composer__footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .ve-vouch-composer__actions {
-    justify-content: space-between;
-  }
-
-  .ve-vouch-composer__actions button {
-    min-width: 140px;
-  }
-}
-
-
-/* =========================================================
-   HOME FEED — COMPOSER QUALITY RESET
-   Fixes AI-looking oversized layout + text popping out borders.
-   ========================================================= */
-
-.ve-vouch-composer,
-.ve-vouch-composer *,
-.ve-vouch-composer *::before,
-.ve-vouch-composer *::after {
-  box-sizing: border-box;
-}
-
-.ve-vouch-composer {
-  width: calc(100% - 48px);
-  max-width: 632px;
-  margin: 14px auto 14px;
-  padding: 14px;
-  overflow: hidden;
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(2, 6, 23, 0.96));
-  box-shadow: none;
-}
-
-.ve-vouch-composer__header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px;
-  align-items: start;
-  gap: 10px;
-  min-width: 0;
-}
-
-.ve-vouch-composer__header > div:first-child {
-  min-width: 0;
-}
-
-.ve-vouch-composer__header span {
-  display: block;
-  max-width: 100%;
-  color: hsl(var(--ve-accent-cyan));
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-.ve-vouch-composer__header h2 {
-  margin: 2px 0 0;
-  max-width: 100%;
-  color: hsl(var(--ve-text-primary));
-  font-size: 17px;
-  line-height: 1.05;
-  font-weight: 950;
-  letter-spacing: -0.035em;
-  overflow-wrap: anywhere;
-}
-
-.ve-vouch-composer__header p {
-  margin: 4px 0 0;
-  max-width: 100%;
-  color: hsl(var(--ve-text-muted));
-  font-size: 11.5px;
-  line-height: 1.35;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-
-.ve-vouch-composer__profile {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border-radius: 999px;
-}
-
-.ve-vouch-composer__textarea {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-height: 88px;
-  max-height: 180px;
-  margin-top: 11px;
-  padding: 12px;
-  overflow: auto;
-  resize: vertical;
-  border-radius: 16px;
-  font-size: 13px;
-  line-height: 1.42;
-  overflow-wrap: anywhere;
-}
-
-.ve-vouch-composer__mode-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-width: 100%;
-  margin-top: 9px;
-  overflow: hidden;
-}
-
-.ve-vouch-composer__mode-row button {
-  flex: 0 1 auto;
-  max-width: 128px;
-  min-width: 0;
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 10.5px;
-}
-
-.ve-vouch-composer__mode-row button svg {
-  flex: 0 0 auto;
-}
-
-.ve-vouch-composer__details {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 92px 86px;
-  gap: 6px;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin-top: 9px;
-  overflow: hidden;
-}
-
-.ve-vouch-composer__details :is(input, select) {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  height: 34px;
-  padding: 0 9px;
-  border-radius: 12px;
-  font-size: 11.5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ve-vouch-composer__footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  margin-top: 10px;
-}
-
-.ve-vouch-composer__ghost {
-  max-width: 128px;
-  min-width: 0;
-  height: 34px;
-  padding: 0 10px;
-  overflow: hidden;
-  border-radius: 999px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.ve-vouch-composer__actions {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-}
-
-.ve-vouch-composer__actions span {
-  min-width: 28px;
-  text-align: right;
-  font-size: 10.5px;
-}
-
-.ve-vouch-composer__actions button {
-  width: auto;
-  min-width: 104px;
-  max-width: 132px;
-  height: 36px;
-  padding: 0 12px;
-  overflow: hidden;
-  border-radius: 999px;
-  white-space: nowrap;
-  font-size: 11.5px;
-}
-
-/* Stop old broad feed CSS from making composer controls ugly */
-#inner-view-slot .ve-vouch-composer :is(button, input, select, textarea) {
-  max-width: 100%;
-}
-
-#inner-view-slot .ve-vouch-composer__textarea {
-  border: 1px solid hsl(var(--ve-border) / 0.30);
-  background: hsl(var(--ve-surface-raised) / 0.36);
-  color: hsl(var(--ve-text-primary));
-}
-
-#inner-view-slot .ve-vouch-composer__textarea::placeholder {
-  color: hsl(var(--ve-text-muted));
-}
-
-#inner-view-slot .ve-vouch-composer__mode-row button,
-#inner-view-slot .ve-vouch-composer__details :is(input, select),
-#inner-view-slot .ve-vouch-composer__ghost {
-  border: 1px solid hsl(var(--ve-border) / 0.28);
-  background: hsl(var(--ve-surface-raised) / 0.34);
-  color: hsl(var(--ve-text-secondary));
-}
-
-#inner-view-slot .ve-vouch-composer__mode-row button:hover,
-#inner-view-slot .ve-vouch-composer__ghost:hover {
-  border-color: hsl(var(--ve-accent-cyan) / 0.40);
-  background: hsl(var(--ve-accent-cyan) / 0.09);
-  color: hsl(var(--ve-accent-cyan));
-}
-
-#inner-view-slot .ve-vouch-composer__mode-row button[data-active='true'],
-#inner-view-slot .ve-vouch-composer__mode-row button[aria-pressed='true'] {
-  border-color: hsl(var(--ve-accent-cyan) / 0.45);
-  background: hsl(var(--ve-accent-cyan) / 0.13);
-  color: hsl(var(--ve-accent-cyan));
-}
-
-#inner-view-slot .ve-vouch-composer__details :is(input, select):focus,
-#inner-view-slot .ve-vouch-composer__textarea:focus {
-  outline: none;
-  border-color: hsl(var(--ve-accent-cyan) / 0.62);
-  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
-}
-
-#inner-view-slot .ve-vouch-composer__actions span {
-  color: hsl(var(--ve-text-muted));
-}
-
-#inner-view-slot .ve-vouch-composer__actions button {
-  border: 1px solid hsl(var(--ve-accent-cyan) / 0.35);
-  background: linear-gradient(135deg, hsl(var(--ve-accent-cyan)), hsl(var(--ve-accent-pink)));
-  color: hsl(var(--ve-bg-deep));
-  box-shadow: 0 14px 30px hsl(var(--ve-accent-cyan) / 0.22);
-}
-
-#inner-view-slot .ve-vouch-composer__actions button:disabled {
-  border-color: hsl(var(--ve-border) / 0.26);
-  background: hsl(var(--ve-surface-raised) / 0.48);
-  color: hsl(var(--ve-text-muted));
-  box-shadow: none;
-}
-
-/* Mobile: single-column controls, no border overflow */
-@media (max-width: 700px) {
-  .ve-vouch-composer {
-    width: calc(100% - 24px);
-    margin-left: auto;
-    margin-right: auto;
-    padding: 12px;
-  }
-
-  .ve-vouch-composer__details {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .ve-vouch-composer__footer {
-    grid-template-columns: 1fr;
-  }
-
-  .ve-vouch-composer__ghost {
-    max-width: 100%;
-    justify-content: center;
-  }
-
-  .ve-vouch-composer__actions {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .ve-vouch-composer__actions button {
-    min-width: 132px;
-  }
-}
-
-@media (max-width: 430px) {
-  .ve-vouch-composer__details {
-    grid-template-columns: 1fr;
-  }
-
-  .ve-vouch-composer__mode-row button {
-    flex: 1 1 calc(50% - 6px);
-    max-width: none;
-    justify-content: center;
-  }
-}
-
-
-/* =========================================================
-   HOME FEED — COMPOSER QUALITY RESET
-   Fixes AI-looking oversized layout + text popping out borders.
-   ========================================================= */
-
-.ve-vouch-composer,
-.ve-vouch-composer *,
-.ve-vouch-composer *::before,
-.ve-vouch-composer *::after {
-  box-sizing: border-box;
-}
-
-.ve-vouch-composer {
-  width: calc(100% - 48px);
-  max-width: 632px;
-  margin: 14px auto 14px;
-  padding: 14px;
-  overflow: hidden;
-  border-radius: 20px;
   border: 1px solid hsl(var(--ve-border) / 0.34);
   background:
+    radial-gradient(circle at 12% 0%, hsl(var(--ve-accent-cyan) / 0.10), transparent 34%),
     linear-gradient(180deg, hsl(var(--ve-surface) / 0.78), hsl(var(--ve-bg-panel) / 0.92));
   box-shadow: 0 18px 50px hsl(var(--ve-shadow) / 0.18);
   backdrop-filter: blur(18px);
@@ -6246,13 +5129,20 @@ body,
 
 .ve-vouch-composer__header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px;
-  align-items: start;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
-.ve-vouch-composer__header > div:first-child {
+.ve-vouch-composer__identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__identity > div:last-child {
   min-width: 0;
 }
 
@@ -6279,6 +5169,9 @@ body,
 }
 
 .ve-vouch-composer__header p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 4px 0 0;
   max-width: 100%;
   color: hsl(var(--ve-text-muted));
@@ -6288,48 +5181,98 @@ body,
   overflow-wrap: anywhere;
 }
 
+.ve-vouch-composer__header p strong {
+  min-width: 0;
+  overflow: hidden;
+  color: hsl(var(--ve-text-secondary));
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-vouch-composer__header p em {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  color: hsl(var(--ve-text-muted));
+  font-style: normal;
+}
+
 .ve-vouch-composer__profile {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 16px;
+  border: 1px solid hsl(var(--ve-accent-cyan) / 0.28);
+  background:
+    radial-gradient(circle at 32% 18%, hsl(var(--ve-text-primary) / 0.22), transparent 34%),
+    linear-gradient(135deg, hsl(var(--ve-accent-cyan) / 0.18), hsl(var(--ve-accent-pink) / 0.10));
+  box-shadow: 0 14px 28px hsl(var(--ve-shadow) / 0.14);
+  color: hsl(var(--ve-text-primary));
+}
+
+.ve-vouch-composer__profile strong {
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.ve-vouch-composer__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  border: 1px solid hsl(var(--ve-success) / 0.26);
   border-radius: 999px;
+  background: hsl(var(--ve-success) / 0.08);
+  padding: 5px 8px;
+  color: hsl(var(--ve-success));
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .ve-vouch-composer__textarea {
   display: block;
   width: 100%;
   max-width: 100%;
-  min-height: 88px;
+  min-height: 104px;
   max-height: 180px;
-  margin-top: 11px;
-  padding: 12px;
+  margin-top: 13px;
+  padding: 13px 14px;
   overflow: auto;
   resize: vertical;
-  border-radius: 16px;
-  font-size: 13px;
-  line-height: 1.42;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
 .ve-vouch-composer__mode-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
   max-width: 100%;
-  margin-top: 9px;
+  margin-top: 10px;
   overflow: hidden;
 }
 
 .ve-vouch-composer__mode-row button {
-  flex: 0 1 auto;
-  max-width: 128px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  white-space: nowrap;
+  max-width: none;
+  height: auto;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 14px;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: left;
   font-size: 10.5px;
 }
 
@@ -6337,15 +5280,57 @@ body,
   flex: 0 0 auto;
 }
 
+.ve-vouch-composer__mode-row button > span {
+  display: grid;
+  min-width: 0;
+}
+
+.ve-vouch-composer__mode-row button strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 1000;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-vouch-composer__mode-row button em {
+  overflow: hidden;
+  color: hsl(var(--ve-text-muted));
+  font-size: 8.5px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ve-vouch-composer__details {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 92px 86px;
-  gap: 6px;
+  grid-template-columns: 74px minmax(0, 1.35fr) 98px 88px;
+  gap: 7px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  margin-top: 9px;
+  margin-top: 10px;
   overflow: hidden;
+}
+
+.ve-vouch-composer__details label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ve-vouch-composer__details label > span {
+  overflow: hidden;
+  color: hsl(var(--ve-text-muted));
+  font-size: 8.5px;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .ve-vouch-composer__details :is(input, select) {
@@ -6389,7 +5374,7 @@ body,
 }
 
 .ve-vouch-composer__actions span {
-  min-width: 28px;
+  min-width: 56px;
   text-align: right;
   font-size: 10.5px;
 }
@@ -6404,6 +5389,24 @@ body,
   border-radius: 999px;
   white-space: nowrap;
   font-size: 11.5px;
+}
+
+.ve-vouch-composer__trust {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid hsl(var(--ve-border) / 0.22);
+  color: hsl(var(--ve-text-muted));
+  font-size: 10.5px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ve-vouch-composer__trust svg {
+  flex: 0 0 auto;
+  color: hsl(var(--ve-success));
 }
 
 /* Stop old broad feed CSS from making composer controls ugly */
@@ -6456,7 +5459,7 @@ body,
 
 #inner-view-slot .ve-vouch-composer__actions button {
   border: 1px solid hsl(var(--ve-accent-cyan) / 0.35);
-  background: linear-gradient(135deg, hsl(var(--ve-accent-cyan)), hsl(var(--ve-accent-pink)));
+  background: hsl(var(--ve-accent-cyan));
   color: hsl(var(--ve-bg-deep));
   box-shadow: 0 14px 30px hsl(var(--ve-accent-cyan) / 0.22);
 }
@@ -6478,6 +5481,10 @@ body,
   }
 
   .ve-vouch-composer__details {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ve-vouch-composer__mode-row {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -6505,9 +5512,136 @@ body,
     grid-template-columns: 1fr;
   }
 
-  .ve-vouch-composer__mode-row button {
-    flex: 1 1 calc(50% - 6px);
-    max-width: none;
-    justify-content: center;
+  .ve-vouch-composer__header {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-vouch-composer__status {
+    width: fit-content;
+  }
+}
+
+/* ==========================================================
+   VOUCHEDGE APP ALIGNMENT RULE
+   Sidebar and active pages share one hard edge. Wide pages no
+   longer center themselves away from the rail.
+   ========================================================== */
+
+#layout-inner-frame.ve-layout-wide {
+  display: grid !important;
+  grid-template-columns: 286px minmax(0, 1fr) !important;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  justify-content: stretch !important;
+}
+
+#layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
+  width: 286px !important;
+  min-width: 286px !important;
+  max-width: 286px !important;
+}
+
+#layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
+  width: 286px !important;
+  min-width: 286px !important;
+  max-width: 286px !important;
+}
+
+#layout-inner-frame.ve-layout-wide #center-main-content-column {
+  grid-column: 2 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-right: 0 !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .mx-auto {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: min(100%, 1320px) !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .max-w-7xl,
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .max-w-\[1320px\] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#layout-inner-frame.ve-layout-feed {
+  display: grid !important;
+  grid-template-columns: 260px 680px 320px !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 1308px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  justify-content: center !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left > * {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-switching {
+  opacity: 0.72 !important;
+  filter: blur(0.4px) !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left.ve-edge-rail-switching {
+  transform: translateX(10px) scale(0.992) !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-right.ve-edge-rail-switching {
+  transform: translateX(-10px) scale(0.992) !important;
+}
+
+.ve-sidebar,
+#layout-inner-frame .ve-sidebar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout-inner-frame .ve-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, hsl(var(--ve-bg-panel) / 0.18) 52%, transparent),
+    radial-gradient(circle at 90% 8%, hsl(var(--ve-accent-cyan) / 0.08), transparent 34%);
+  opacity: 0.72;
+}
+
+@media (max-width: 1180px) {
+  #layout-inner-frame.ve-layout-wide,
+  #layout-inner-frame.ve-layout-feed {
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  #layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
