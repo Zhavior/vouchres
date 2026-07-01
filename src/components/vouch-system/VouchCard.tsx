@@ -520,9 +520,9 @@ export default function VouchCard({
 
       {/* FOOTER METADATA: PLATFORM VOUCHES / TAILS / SCREENSHOT WATERMARK */}
       <div className="flex items-center justify-between border-t border-slate-800/60 pt-3 mt-1.5 text-xs">
-        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500 font-bold">
+        <div className="flex items-center gap-4 text-[10px] font-mono text-[hsl(var(--ve-text-muted))] font-bold">
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping" />
+            <span className="w-1.5 h-1.5 bg-[hsl(var(--ve-accent-cyan))] rounded-full animate-ping" />
             {vouchCount} PLATFORM VOUCHES
           </span>
           <span className="flex items-center gap-1 uppercase">
@@ -531,14 +531,14 @@ export default function VouchCard({
         </div>
 
         {/* Watermark badge designed for screenshotting to X */}
-        <div className="hidden sm:flex items-center gap-1 opacity-45 bg-[#050b14] px-2 py-0.5 border border-slate-850 rounded text-[8px] font-mono font-extrabold text-cyan-400 tracking-wider">
+        <div className="hidden sm:flex items-center gap-1 opacity-45 bg-[hsl(var(--ve-bg-deep)/0.86)] px-2 py-0.5 border border-[hsl(var(--ve-border)/0.32)] rounded text-[8px] font-mono font-extrabold text-[hsl(var(--ve-accent-cyan))] tracking-wider">
           <span>VEdge Certified Proof</span>
         </div>
       </div>
 
       {/* INTERACTIVE ACTIONS BAR */}
       {!isXPreview && (
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-800/40">
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-[hsl(var(--ve-border)/0.24)]">
           <div className="flex items-center gap-1.5">
             {/* Vouch Button */}
             <button
@@ -601,10 +601,10 @@ export default function VouchCard({
             {/* Share to X Button */}
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-lg font-bold transition-all text-xs hover:scale-103 active:scale-97 cursor-pointer shadow-md shadow-sky-550/10"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.86)] text-[hsl(var(--ve-bg-deep))] rounded-lg font-bold transition-all text-xs hover:scale-103 active:scale-97 cursor-pointer shadow-md shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
               id={`share-x-btn-${vouch.id}`}
             >
-              <Twitter className="w-3.5 h-3.5 fill-slate-950" />
+              <Twitter className="w-3.5 h-3.5 fill-[hsl(var(--ve-bg-deep))]" />
               <span>Share</span>
             </button>
           </div>
@@ -613,25 +613,25 @@ export default function VouchCard({
 
       {/* EXPANDABLE MODEL-EXPLANATION DRAWER */}
       {showExplanation && (
-        <div className="mt-3.5 p-3.5 bg-slate-950/80 rounded-xl border border-slate-850 text-xs text-left space-y-2 animate-slide-up">
-          <h5 className="font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+        <div className="mt-3.5 p-3.5 bg-[hsl(var(--ve-surface)/0.76)] rounded-xl border border-[hsl(var(--ve-border)/0.30)] text-xs text-left space-y-2 animate-slide-up backdrop-blur-xl">
+          <h5 className="font-extrabold text-[hsl(var(--ve-accent-pink))] uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" /> AI Model-Supported Backtesting Metrics
           </h5>
-          <p className="text-slate-350 leading-relaxed font-semibold">
-            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market{aiConfidence !== null ? <> at a <strong className="text-cyan-400">{aiConfidence}% frequency</strong></> : ''} over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
+          <p className="text-[hsl(var(--ve-text-secondary))] leading-relaxed font-semibold">
+            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market{aiConfidence !== null ? <> at a <strong className="text-[hsl(var(--ve-accent-cyan))]">{aiConfidence}% frequency</strong></> : ''} over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
           </p>
           <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono pt-1">
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Kelly Criterion</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Kelly Criterion</span>
               <span className="text-emerald-400 font-extrabold">2.4% yield</span>
             </div>
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Simulated EV</span>
-              <span className="text-cyan-400 font-extrabold">+6.8% EV</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Simulated EV</span>
+              <span className="text-[hsl(var(--ve-accent-cyan))] font-extrabold">+6.8% EV</span>
             </div>
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Sample size</span>
-              <span className="text-slate-300 font-extrabold">12.8k sims</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Sample size</span>
+              <span className="text-[hsl(var(--ve-text-secondary))] font-extrabold">12.8k sims</span>
             </div>
           </div>
         </div>
@@ -754,7 +754,7 @@ export default function VouchCard({
                 onClick={generateXShareIntent}
                 className="px-5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02]"
               >
-                <Twitter className="w-3.5 h-3.5 fill-slate-950" />
+                <Twitter className="w-3.5 h-3.5 fill-[hsl(var(--ve-bg-deep))]" />
                 <span>Publish to X</span>
               </button>
             </div>
