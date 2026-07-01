@@ -661,7 +661,7 @@ export default function LiveStreams({
 
                     {/* Viewer badge */}
                     <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-slate-900/90 px-2 py-1 rounded text-[10px] font-mono text-slate-200 leading-none">
-                      <Users className="w-3 h-3 text-sky-455" />
+                      <Users className="w-3 h-3 text-[var(--ve-accent)]" />
                       <span>{chan.viewers.toLocaleString()}</span>
                     </div>
 
@@ -712,7 +712,7 @@ export default function LiveStreams({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
                             <span className="font-extrabold text-xs text-slate-200 truncate">{chan.streamerName}</span>
-                            {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-955" />}
+                            {chan.isVerified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-[var(--ve-accent)]" />}
                           </div>
                           <span className="text-[10px] text-slate-500">@{chan.streamerUsername}</span>
                         </div>
@@ -831,7 +831,7 @@ export default function LiveStreams({
                           <Flame className="w-4 h-4 text-orange-400 shrink-0 animate-bounce" />
                           <span className="text-[10px] font-bold text-slate-300 uppercase leading-none font-mono">Strike Rate Sweep Coefficient</span>
                         </div>
-                        <span className="text-xs font-bold font-mono text-sky-450 bg-sky-950/60 border border-sky-900 /40 px-2 py-0.5 rounded leading-none">+32.4% vs LHB</span>
+                        <span className="text-xs font-bold font-mono text-[var(--ve-accent)] bg-sky-950/60 border border-sky-900/40 px-2 py-0.5 rounded leading-none">+32.4% vs LHB</span>
                       </div>
                     </div>
                   )}
@@ -1008,7 +1008,7 @@ export default function LiveStreams({
                           {activeChannel.streamerName}
                         </h3>
                         {activeChannel.isVerified && (
-                          <span className="text-[9px] bg-sky-950 font-bold text-sky-455 px-1.5 py-0.5 rounded-full border border-sky-900/40 flex items-center gap-0.5">
+                          <span className="text-[9px] bg-sky-950 font-bold text-[var(--ve-accent)] px-1.5 py-0.5 rounded-full border border-sky-900/40 flex items-center gap-0.5">
                             ⚡ STREAM PARTNER
                           </span>
                         )}
@@ -1281,7 +1281,7 @@ export default function LiveStreams({
                         placeholder="Send a chat message..."
                         value={userChatMsg}
                         onChange={(e) => setUserChatMsg(e.target.value)}
-                        className="w-full text-xs bg-[#070a11] text-white border border-slate-800 rounded-xl px-3.5 pr-8 py-2.5 outline-none focus:border-sky-505 transition-all font-medium placeholder-slate-550 shadow-inner"
+                        className="w-full text-xs bg-[#070a11] text-white border border-slate-800 rounded-xl px-3.5 pr-8 py-2.5 outline-none focus:border-[var(--ve-border-strong)] transition-all font-medium placeholder-slate-550 shadow-inner"
                         id="twitch-chat-input-val"
                         maxLength={150}
                       />
@@ -1433,7 +1433,7 @@ export default function LiveStreams({
                     value={activeGameCover}
                     onChange={(e) => setActiveGameCover(e.target.value)}
                     disabled={isUserLive}
-                    className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-sky-505 font-semibold placeholder-slate-600 disabled:opacity-50"
+                    className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-[var(--ve-border-strong)] font-semibold placeholder-slate-600 disabled:opacity-50"
                   />
                 </div>
 
@@ -1584,7 +1584,7 @@ export default function LiveStreams({
                       value={userChatMsg}
                       onChange={(e) => setUserChatMsg(e.target.value)}
                       disabled={!isUserLive}
-                      className="flex-1 text-xs bg-[#070a11] text-white border border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-sky-505 font-medium placeholder-slate-600 disabled:opacity-50"
+                      className="flex-1 text-xs bg-[#070a11] text-white border border-slate-800 rounded-lg px-3 py-2 outline-none focus:border-[var(--ve-border-strong)] font-medium placeholder-slate-600 disabled:opacity-50"
                     />
                     <button
                       type="submit"
