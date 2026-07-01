@@ -920,57 +920,57 @@ export default function FeedPostCard({
 
       {/* Quote Vouch Modal overlay */}
       {showQuoteModal && (
-        <div className="fixed inset-0 bg-slate-950/32 backdrop-blur-xl backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[hsl(var(--ve-bg-deep)/0.55)] backdrop-blur-xl z-50 flex items-center justify-center p-4">
           <form 
             onSubmit={handleQuoteSubmit} 
-            className="w-full max-w-lg bg-[#0e131f] border border-cyan-300/[0.045] rounded-2xl p-5 shadow-xl space-y-4 animate-slide-up text-left"
+            className="w-full max-w-lg bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.36)] rounded-3xl p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.28)] space-y-4 animate-slide-up text-left backdrop-blur-xl"
           >
-            <div className="flex justify-between items-center border-b border-cyan-300/[0.045] pb-2.5">
-              <span className="font-bold text-slate-200 text-sm uppercase tracking-wide flex items-center gap-1.5">
-                <Quote className="w-4 h-4 text-sky-400" />
+            <div className="flex justify-between items-center border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5">
+              <span className="font-bold text-[hsl(var(--ve-text-primary))] text-sm uppercase tracking-wide flex items-center gap-1.5">
+                <Quote className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))]" />
                 Quote Vouch Play
               </span>
               <button
                 type="button"
                 onClick={() => setShowQuoteModal(false)}
-                className="text-slate-500 hover:text-rose-450 font-mono text-xs font-black"
+                className="text-[hsl(var(--ve-text-muted))] hover:text-rose-300 font-mono text-xs font-black"
               >
                 [CLOSE]
               </button>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-400 font-mono">Your commentary / feedback analysis</label>
+              <label className="text-[10px] uppercase font-bold text-[hsl(var(--ve-text-muted))] font-mono">Your commentary / feedback analysis</label>
               <textarea
                 placeholder="Why are you tailing/quoting this? Share your custom verified analysis..."
                 value={quoteText}
                 onChange={(e) => setQuoteText(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-950 border border-cyan-300/[0.045] rounded-xl p-3 text-slate-200 text-xs focus:outline-none focus:border-sky-500 transition-colors resize-none placeholder-slate-600 font-medium"
+                className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded-xl p-3 text-[hsl(var(--ve-text-primary))] text-xs focus:outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-colors resize-none placeholder:text-[hsl(var(--ve-text-muted))] font-medium"
                 required
               />
             </div>
 
             {/* Quoted play embedded preview */}
-            <div className="border border-cyan-300/[0.045] rounded-xl p-3 bg-slate-950/50">
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
+            <div className="border border-[hsl(var(--ve-border)/0.28)] rounded-2xl p-3 bg-[hsl(var(--ve-surface-raised)/0.34)]">
+              <div className="flex items-center gap-1.5 text-[10px] text-[hsl(var(--ve-text-muted))] mb-1">
                 <span className="font-bold text-[hsl(var(--ve-text-secondary))]">{post.displayName}</span>
                 <span>@{post.username}</span>
               </div>
-              <p className="text-slate-400 text-xs leading-normal line-clamp-2">{post.content}</p>
+              <p className="text-[hsl(var(--ve-text-muted))] text-xs leading-normal line-clamp-2">{post.content}</p>
             </div>
 
             <div className="flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowQuoteModal(false)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 rounded-xl text-xs font-bold text-slate-400 transition-colors"
+                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-xl text-xs font-bold text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-sky-500 hover:bg-sky-450 rounded-xl text-xs font-bold text-white transition-all shadow-lg active:scale-95 flex items-center gap-1.5"
+                className="px-5 py-2 bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 rounded-xl text-xs font-bold text-[hsl(var(--ve-bg-deep))] transition-all shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.22)] active:scale-95 flex items-center gap-1.5"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Publish Quote</span>
@@ -982,7 +982,7 @@ export default function FeedPostCard({
 
       {/* Extensible Comments area */}
       {showComments && (
-        <div className="mt-4 pt-3.5 border-t border-cyan-300/[0.045] space-y-3.5" id={`comments-expanded-${post.id}`}>
+        <div className="mt-4 pt-3.5 border-t border-[hsl(var(--ve-border)/0.28)] space-y-3.5" id={`comments-expanded-${post.id}`}>
           {/* Create comment form */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
             <input 
@@ -996,7 +996,7 @@ export default function FeedPostCard({
             />
             <button 
               type="submit" 
-              className="p-2 bg-sky-500 hover:bg-sky-450 text-white rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md active:scale-95"
+              className="p-2 bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md shadow-[hsl(var(--ve-accent-cyan)/0.22)] active:scale-95"
               id={`comment-submit-${post.id}`}
             >
               <Send className="w-3.5 h-3.5" />
@@ -1007,51 +1007,51 @@ export default function FeedPostCard({
           {post.comments && post.comments.length > 0 ? (
             <div className="space-y-2.5">
               {post.comments.map((comm) => (
-                <div key={comm.id} className="p-3 bg-slate-900/40 rounded-xl border border-cyan-300/[0.045]/50 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
-                  <div className="w-7 h-7 bg-slate-800 rounded-full font-bold text-[11px] text-slate-400 flex items-center justify-center shrink-0">
+                <div key={comm.id} className="p-3 bg-[hsl(var(--ve-surface-raised)/0.32)] rounded-xl border border-[hsl(var(--ve-border)/0.25)] text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
+                  <div className="w-7 h-7 bg-[hsl(var(--ve-surface-raised)/0.56)] rounded-full font-bold text-[11px] text-[hsl(var(--ve-text-secondary))] flex items-center justify-center shrink-0 border border-[hsl(var(--ve-border)/0.24)]">
                     {comm.displayName.split(' ').map(n=>n[0]).join('')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                      <span className="font-bold text-slate-200">{comm.displayName}</span>
-                      <span className="text-slate-500 text-[10px]">@{comm.username}</span>
-                      <span className="text-slate-500 text-[9px]">• {formatTime(comm.timestamp)}</span>
+                      <span className="font-bold text-[hsl(var(--ve-text-primary))]">{comm.displayName}</span>
+                      <span className="text-[hsl(var(--ve-text-muted))] text-[10px]">@{comm.username}</span>
+                      <span className="text-[hsl(var(--ve-text-muted))] text-[9px]">• {formatTime(comm.timestamp)}</span>
                     </div>
-                    <p className="text-slate-300 font-medium">{comm.content}</p>
+                    <p className="text-[hsl(var(--ve-text-secondary))] font-medium">{comm.content}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[11px] text-slate-500 py-1 font-mono text-center">No comments yet. Start the conversation!</p>
+            <p className="text-[11px] text-[hsl(var(--ve-text-muted))] py-1 font-mono text-center">No comments yet. Start the conversation!</p>
           )}
         </div>
       )}
 
       {/* 5. Custom premium tail-lock subscription upgrade modal */}
       {showUpgradeModal && (
-        <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-md rounded-2xl z-30 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-          <div className="w-12 h-12 bg-indigo-950 rounded-full flex items-center justify-center border border-indigo-900/60 mb-3 animate-pulse">
+        <div className="absolute inset-0 bg-[hsl(var(--ve-bg-deep)/0.94)] backdrop-blur-md rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+          <div className="w-12 h-12 bg-[hsl(var(--ve-accent-pink)/0.13)] rounded-full flex items-center justify-center border border-[hsl(var(--ve-accent-pink)/0.30)] mb-3 animate-pulse">
             <span className="text-xl">🛡️</span>
           </div>
           
-          <h4 className="font-bold text-slate-100 text-sm uppercase tracking-wide">
+          <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-sm uppercase tracking-wide">
             Lock: Subscribe & Tail Tier Required
           </h4>
-          <p className="text-[11px] text-slate-400 max-w-xs mt-1.5 leading-relaxed font-semibold">
+          <p className="text-[11px] text-[hsl(var(--ve-text-muted))] max-w-xs mt-1.5 leading-relaxed font-semibold">
             To subscribe and tail @{post.username}'s transparent sports plays, you must upgrade your tracking account to a Premium Partner tier first!
           </p>
 
           <div className="flex items-center gap-2 mt-4 flex-wrap justify-center font-bold">
             <button
               onClick={handleInstantUpgrade}
-              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-505 text-white font-black rounded-lg text-[10.5px] uppercase tracking-wider flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+              className="px-4 py-1.5 bg-[hsl(var(--ve-accent-pink))] hover:brightness-110 border border-[hsl(var(--ve-accent-pink)/0.45)] text-[hsl(var(--ve-bg-deep))] font-black rounded-lg text-[10.5px] uppercase tracking-wider flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
             >
               💎 Instant Upgrade (Seller Pro)
             </button>
             <button
               onClick={() => setShowUpgradeModal(false)}
-              className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-205 border border-slate-852 rounded-lg text-[10px] font-bold"
+              className="px-3.5 py-1.5 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.28)] rounded-lg text-[10px] font-bold"
             >
               Cancel
             </button>
