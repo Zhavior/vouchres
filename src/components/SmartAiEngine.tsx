@@ -251,17 +251,31 @@ export default function SmartAiEngine({
     if (!dynamicParlay || !onSaveParlay) return;
     const legs: Leg[] = dynamicParlay.legs.map((leg, i) => {
       const { marketCode, threshold } = resolveMarket('mlb', leg.marketName, leg.customSpec);
+      const gameId = String(leg.gamePk || '');
+      const playerId = String(leg.playerId || '');
+      const statTarget = Number(threshold || 1);
+      const comparator = '>=';
+      const eventKey = ['MLB', gameId, playerId, marketCode, statTarget, 'GTE'].join('_');
+      const popularityKey = ['MLB', playerId, marketCode, statTarget, 'GTE'].join('_');
+
       return {
-        id: `ai-leg-${Date.now()}-${i}`,
+        id: `ai-leg-${gameId}-${playerId}-${marketCode}-${statTarget}`,
         sport: 'MLB',
         game: `${leg.team} vs opp`,
         market: leg.marketName,
         selection: leg.customSpec,
         odds: leg.odds,
         status: 'PENDING',
-        gamePk: leg.gamePk,
+        gamePk: gameId,
+        gameId,
+        playerId,
         marketCode,
-        threshold,
+        statTarget,
+        threshold: statTarget,
+        comparator,
+        eventKey,
+        popularityKey,
+        externalProvider: 'mlb_statsapi',
       };
     });
     const parlay: Parlay = {
