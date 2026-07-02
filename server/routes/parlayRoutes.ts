@@ -1485,6 +1485,12 @@ interface MeParlayValidation {
   detail?: string;
 }
 
+const isFakeLegacyGeneratedId = (value: unknown): boolean => {
+  if (value == null) return false;
+  const text = String(value).trim().toLowerCase();
+  return text.startsWith("leg-") || text.startsWith("ai-leg-");
+};
+
 const MeParlayLegSchema = z
   .object({
     id: z.string().optional(),
@@ -1516,6 +1522,24 @@ const MeParlayLegSchema = z
     const odds = leg.odds ?? leg.odds_decimal ?? leg.oddsDecimal;
     if (odds !== undefined && odds !== null && (!Number.isFinite(Number(odds)))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leg odds must be numeric." });
+    }
+
+    const identityCandidates = [
+      leg.event_id,
+      leg.eventId,
+      leg.game_id,
+      leg.gameId,
+      leg.gamePk,
+      leg.game_pk,
+      leg.game,
+    ];
+
+    if (identityCandidates.some(isFakeLegacyGeneratedId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["event_id"],
+        message: "Fake generated leg IDs cannot be saved. Rebuild this parlay with canonical MLB game/player identity.",
+      });
     }
   });
 
