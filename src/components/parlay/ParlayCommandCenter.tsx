@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Bot, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
 import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
 import {
@@ -180,6 +180,7 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => P
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
           Save/post actions will reuse buildSaveParlayPayload and POST /api/me/parlays. No second parlay system.
         </p>
+
         <button
           type="button"
           onClick={handleSaveDraft}
@@ -383,17 +384,18 @@ function PremiumPostedPanel() {
   );
 }
 
-function CommandPanel() {
+function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => Promise<void> | void }) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
 
   if (activePanel === "ai") return <AiSmartPicksPanel />;
   if (activePanel === "live") return <LiveSavedParlaysPanel />;
   if (activePanel === "premium") return <PremiumPostedPanel />;
-  return <BuildSlipPanel />;
+  return <BuildSlipPanel onSaveParlay={onSaveParlay} />;
 }
 
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
+  onSaveParlay?: (parlay: Parlay) => Promise<void> | void;
 };
 
 export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: ParlayCommandCenterProps) {
@@ -487,7 +489,7 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: P
         </div>
 
         <PanelErrorBoundary title="Parlay Command Center Panel">
-          <CommandPanel />
+          <CommandPanel onSaveParlay={onSaveParlay} />
         </PanelErrorBoundary>
       </div>
     </section>
