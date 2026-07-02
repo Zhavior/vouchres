@@ -791,7 +791,6 @@ export default function ParlayLab({
             })}
           </div>
           </>
-          )}
 
         </div>
 
