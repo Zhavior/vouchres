@@ -355,7 +355,7 @@ async function gradeParlayPick(
   // 1. Load legs
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")
-    .select("leg_index, market, selection, event_id, odds_decimal")
+    .select("leg_index, market, selection, event_id, game_id, market_code, player_id, event_key, odds_decimal")
     .eq("pick_id", pick.id)
     .order("leg_index", { ascending: true });
 
@@ -373,6 +373,16 @@ async function gradeParlayPick(
   const boxscoreCache = new Map<string, any>();
 
   for (const eventId of eventIds) {
+    if (!isLikelyMlbGamePk(eventId)) {
+      return {
+        pick_id: pick.id,
+        status: "graded_error",
+        settled_units: null,
+        error: `legacy_manual_leg_event_skipped:${eventId}`,
+        warnings: [`legacy/manual leg event id skipped (${eventId})`],
+      };
+    }
+
     try {
       // If this leg's event matches the parlay's parent event, reuse the boxscore
       if (eventId === (pick as any).event_id?.toString()) {
