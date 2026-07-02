@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "../supabaseBackend";
+import { getSupabaseAdmin } from "../../middleware/auth";
 import { getTodayHomeRuns, type HrEvent } from "../mlb/hrFeedService";
 
 export interface LiveHrLegMatch {
