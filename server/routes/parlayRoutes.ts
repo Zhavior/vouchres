@@ -1441,17 +1441,25 @@ function legOddsToDecimalOrNull(leg: any): number | null {
   return null;
 }
 
-/** Normalize an id-ish value to a bare numeric MLB id string, or null.
- *  Accepts aliases: playerId, mlbPlayerId, player_id, mlb_player_id, personId, id. */
-function normalizeBackendPlayerId(value: unknown): string | null {
+/** Normalize an id-ish value to a positive numeric MLB id, or null.
+ *  Accepts aliases: playerId, mlbPlayerId, player_id, mlb_player_id, personId, id.
+ *  Keep this numeric because pick_legs.player_id is bigint in Supabase. */
+function normalizeBackendPlayerId(value: unknown): number | null {
   if (value === null || value === undefined) return null;
-  if (typeof value === "number") return Number.isFinite(value) && value > 0 ? String(Math.trunc(value)) : null;
-  const m = String(value).match(/\d{3,}/);
-  return m ? m[0] : null;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
+  }
+
+  const match = String(value).match(/\d{3,}/);
+  if (!match) return null;
+
+  const parsed = Number(match[0]);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 /** Pull a player id from a leg object regardless of which alias the source used. */
-function legPlayerId(leg: any): string | null {
+function legPlayerId(leg: any): number | null {
   return normalizeBackendPlayerId(
     leg?.playerId ?? leg?.mlbPlayerId ?? leg?.player_id ?? leg?.mlb_player_id ?? leg?.personId
   );
