@@ -337,9 +337,8 @@ const INITIAL_AI_PARLAYS: AIParlayPick[] = [
   }
 ];
 
-export default function ResultsPage({
+export default function ResultsPage({ posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
   const guestPreviewMode = isGuestMode();
- posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
   // Navigation tabs: 'ai_model' (VAI AI Picks) vs 'community' (verified ledger) vs 'personal' (My Outcomes)
   const [activeSubTab, setActiveSubTab] = useState<'ai_model' | 'community' | 'personal'>('ai_model');
 
@@ -381,37 +380,27 @@ export default function ResultsPage({
     let cancelled = false;
 
     async function loadBackendLedger() {
-      const token =
-        localStorage.getItem('vouchedge_auth_token') ||
-        localStorage.getItem('mlb_ai_auth_token');
-
-      if (!token) {
-        setBackendLedgerError('Login required to load backend ledger.');
-        return;
-      }
-
       try {
         setBackendLedgerLoading(true);
         setBackendLedgerError(null);
 
-        const response = await fetch('/api/me/ledger?limit=100', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Ledger request failed: ${response.status}`);
-        }
-
-        const payload = (await response.json()) as BackendLedgerResponse;
+        const payload = await apiClient.get("/api/me/parlays");
 
         if (!cancelled) {
-          setBackendLedger(payload);
+          const picks = Array.isArray(payload)
+            ? payload
+            : Array.isArray((payload as any)?.picks)
+              ? (payload as any).picks
+              : Array.isArray((payload as any)?.data)
+                ? (payload as any).data
+                : [];
+
+          setBackendLedger({ picks } as any);
         }
       } catch (error) {
         if (!cancelled) {
-          setBackendLedgerError(error instanceof Error ? error.message : 'Ledger request failed');
+          setBackendLedgerError(error instanceof Error ? error.message : "Parlay request failed");
+          setBackendLedger({ picks: [] } as any);
         }
       } finally {
         if (!cancelled) {
@@ -422,191 +411,19 @@ export default function ResultsPage({
 
     loadBackendLedger();
 
-    return (
-      {guestPreviewMode ? (
-        <div className="mx-auto mb-4 max-w-7xl rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-100">
-          <strong>Guest results preview:</strong> no private account ledger is shown. Create an account or log in to save picks, track your own win rate, and see your personal results.
-        </div>
-      ) : null}
-) => {
+    return () => {
       cancelled = true;
     };
   }, []);
 
-  // Sync with localStorage
+
+  // Customer-safe Results: localStorage is draft/import cache only, never account truth.
+  // Account results must come from the backend/Supabase loader.
   useEffect(() => {
-    const cachedPicks = localStorage.getItem('vai_ai_parlay_picks_history');
-    const cachedWinRate = localStorage.getItem('vai_ai_win_rate_level');
-    const cachedTotalCount = localStorage.getItem('vai_ai_total_picks_count');
-
-    if (cachedPicks) {
-      const parsed = JSON.parse(cachedPicks);
-      if (parsed.length < INITIAL_AI_PARLAYS.length) {
-        setAiParlays(INITIAL_AI_PARLAYS);
-        localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(INITIAL_AI_PARLAYS));
-      } else {
-        setAiParlays(parsed);
-      }
-    } else {
-      setAiParlays(INITIAL_AI_PARLAYS);
-      localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(INITIAL_AI_PARLAYS));
-    }
-
-    if (cachedWinRate) {
-      setAiWinRate(parseFloat(cachedWinRate));
-    } else {
-      localStorage.setItem('vai_ai_win_rate_level', '61.4');
-    }
-
-    if (cachedTotalCount) {
-      setAiTotalPicksCount(parseInt(cachedTotalCount, 10));
-    } else {
-      localStorage.setItem('vai_ai_total_picks_count', '142');
-    }
+    setAiParlays([]);
+    setAiWinRate(0);
+    setAiTotalPicksCount(0);
   }, []);
-
-  const triggerNotification = (msg: string) => {
-    setVisualToast(msg);
-    setTimeout(() => {
-      setVisualToast(null);
-    }, 3500);
-  };
-
-  const decimalToAmericanNotation = (decimal: number) => {
-    if (decimal <= 1.01) return "+100";
-    if (decimal >= 2.0) {
-      return `+${Math.round((decimal - 1) * 100)}`;
-    } else {
-      return `${Math.round(-100 / (decimal - 1))}`;
-    }
-  };
-
-  // Merge backend/local saved AI slips into V.A.I Results.
-  // This is the missing pipe:
-  // savedParlays/backend ledger -> aiParlays -> AI deck -> calendar AI win %
-  useEffect(() => {
-    if (!Array.isArray(savedParlays) || savedParlays.length === 0) return;
-
-    const backendAiParlays = savedParlays
-      .filter((parlay: any) => {
-        const source = String(parlay.source || parlay.pickSource || parlay.origin || "").toLowerCase();
-        const explanation = String(parlay.explanation || parlay.notes || "").toLowerCase();
-
-        return (
-          parlay.aiGenerated === true ||
-          parlay.ai_generated === true ||
-          source.includes("ai") ||
-          source.includes("vai") ||
-          explanation.includes("aigenerated=true")
-        );
-      })
-      .map((parlay: any): AIParlayPick => {
-        const rawStatus = String(parlay.status || parlay.result || parlay.resultStatus || "UPCOMING").toUpperCase();
-
-        const normalizedStatus =
-          rawStatus === "WON" || rawStatus === "WIN"
-            ? "WON"
-            : rawStatus === "LOST" || rawStatus === "LOSS"
-              ? "LOST"
-              : "UPCOMING";
-
-        const rawLegs = Array.isArray(parlay.legs) ? parlay.legs : [];
-
-        const oddsValue = Number(
-          parlay.oddsValue ||
-          parlay.odds_decimal ||
-          parlay.combined_odds ||
-          parlay.combinedOdds ||
-          parlay.odds ||
-          2
-        );
-
-        const wager = Number(parlay.wager || parlay.stake || parlay.stake_units || 1);
-        const payout =
-          normalizedStatus === "WON"
-            ? Number(parlay.payout || Math.max(wager * oddsValue, wager))
-            : 0;
-
-        return {
-          id: String(parlay.backendPickId || parlay.pick_id || parlay.id || parlay.clientRef || `backend-ai-${Date.now()}`),
-          title: getFriendlyParlayTitle(parlay),
-          createdAt: new Date(parlay.createdAt || parlay.created_at || parlay.timestamp || Date.now()),
-          status: normalizedStatus as any,
-          oddsDisplay: getFriendlyOddsDisplay(parlay, oddsValue),
-          oddsValue: Number.isFinite(oddsValue) && oddsValue > 0 ? oddsValue : 2,
-          wager: Number.isFinite(wager) && wager > 0 ? wager : 1,
-          payout,
-          confidence: Number(parlay.confidence || 72),
-          riskLevel: parlay.riskLevel || parlay.risk || "Medium",
-          rationale: parlay.rationale || parlay.explanation || "Registered from V.A.I Smart Picks backend ledger.",
-          legs: rawLegs.map((leg: any, index: number) => {
-            const rawSelection = String(leg.selection || leg.label || leg.playerName || leg.player || `Leg ${index + 1}`);
-            const metaMatch = rawSelection.match(/\s\|\|meta:(\{.*\})$/);
-            let parsedMeta: any = {};
-
-            if (metaMatch) {
-              try {
-                parsedMeta = JSON.parse(metaMatch[1]);
-              } catch {
-                parsedMeta = {};
-              }
-            }
-
-            const cleanSelection = rawSelection.replace(/\s\|\|meta:\{.*\}$/, "");
-            const playerName = String(leg.playerName || leg.player || cleanSelection || `Leg ${index + 1}`);
-            const playerId =
-              leg.playerId ||
-              leg.player_id ||
-              leg.mlbPlayerId ||
-              leg.mlb_player_id ||
-              leg.personId ||
-              leg.person_id ||
-              parsedMeta.playerId ||
-              parsedMeta.p;
-
-            const fallbackHeadshot = playerId
-              ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${playerId}/headshot/67/current`
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=0f172a&color=e2e8f0&size=96`;
-
-            const rawLegStatus = String(leg.status || leg.result || "PENDING").toUpperCase();
-            const normalizedLegStatus =
-              rawLegStatus === "WON" || rawLegStatus === "WIN"
-                ? "WON"
-                : rawLegStatus === "LOST" || rawLegStatus === "LOSS"
-                  ? "LOST"
-                  : "PENDING";
-
-            return {
-              id: String(leg.id || leg.leg_id || `${parlay.id || "backend"}-leg-${index}`),
-              playerName,
-              playerId: playerId ? String(playerId) : undefined,
-              headshot: String(leg.headshot || leg.headshotUrl || leg.imageUrl || leg.photoUrl || parsedMeta.headshot || fallbackHeadshot),
-              team: String(leg.team || leg.game || leg.event_id || "MLB"),
-              marketName: String(leg.marketName || leg.market || "MLB Prop"),
-              spec: String(leg.spec || leg.selection || leg.label || "AI selection"),
-              odds: Number(leg.odds || leg.odds_decimal || leg.decimalOdds || 2),
-              status: normalizedLegStatus as any,
-            };
-          }),
-        };
-      });
-
-    if (backendAiParlays.length === 0) return;
-
-    setAiParlays((current) => {
-      const seen = new Set<string>();
-      const merged = [...backendAiParlays, ...current].filter((pick) => {
-        const key = String(pick.id);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      localStorage.setItem("vai_ai_parlay_picks_history", JSON.stringify(merged));
-      return merged;
-    });
-  }, [savedParlays]);
-
 
   // Settle lists
   const results = posts
@@ -798,107 +615,19 @@ export default function ResultsPage({
     }
   };
 
-  const handleGradeParlay = (id: string, status: 'WON' | 'LOST') => {
-    setAiParlays(currentPicks => {
-      const updated = currentPicks.map(p => {
-        if (p.id === id) {
-          const updatedLegs = p.legs.map(leg => ({
-            ...leg,
-            status: status,
-            resultDetail: status === 'WON' ? 'Concluded (WIN)' : 'Missed Line (LOSS)'
-          }));
-          return { ...p, status, legs: updatedLegs };
-        }
-        return p;
-      });
-      localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(updated));
-
-      const gradedCount = updated.filter(p => p.status === 'WON' || p.status === 'LOST').length;
-      const wonCount = updated.filter(p => p.status === 'WON').length;
-      const computedWinRate = gradedCount > 0 ? parseFloat(((wonCount / gradedCount) * 100).toFixed(1)) : 61.4;
-      setAiWinRate(computedWinRate);
-      setAiTotalPicksCount(142 + updated.length - INITIAL_AI_PARLAYS.length);
-      localStorage.setItem('vai_ai_win_rate_level', computedWinRate.toString());
-      localStorage.setItem('vai_ai_total_picks_count', (142 + updated.length - INITIAL_AI_PARLAYS.length).toString());
-
-      return updated;
-    });
-    triggerNotification(`🏆 Graded parlay ${id} as ${status}! All system accuracy states synced.`);
+  const handleGradeParlay = (_id: string, _status: 'WON' | 'LOST') => {
+    triggerNotification("⚠️ Manual grading is disabled. Results now grade from verified backend data.");
   };
 
-  // Synchronous elegant analytics reload (replaces mock larping terminal)
   const handleReloadSabermetricFeeds = () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-
-    setTimeout(() => {
-      // Regenerate fresh projections based on real player list
-      setAiParlays(currentPicks => {
-        const playersPool = MLB_PLAYER_RECORDS;
-        const nextSeed = currentPicks.length + 1;
-
-        const p1 = playersPool[nextSeed % playersPool.length];
-        const p2 = playersPool[(nextSeed + 3) % playersPool.length];
-
-        const prop1 = p1.propositions[0] || { market: 'To Record 1+ Hits', odds: 1.45, spec: `${p1.name} Over 0.5 Hits` };
-        const prop2 = p2.propositions[p2.propositions.length - 1] || { market: 'To Record 1+ Runs', odds: 1.85, spec: `${p2.name} Over 0.5 Runs` };
-
-        const combinedOdds = parseFloat((prop1.odds * prop2.odds).toFixed(2));
-        const team1Short = p1.team.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
-        const team2Short = p2.team.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
-
-        const premiumPick: AIParlayPick = {
-          id: `VAI-PARLAY-${5300 + nextSeed}`,
-          title: `Sabermetric Contact Matrix Stack #${5300 + nextSeed}`,
-          createdAt: new Date().toISOString(),
-          gameStartTime: 'Upcoming, 7:10 PM (LOCKED · Verified Pre-Game)',
-          status: 'UPCOMING',
-          bookie: 'DraftKings',
-          wager: 100,
-          payout: Math.round(100 * combinedOdds),
-          oddsValue: combinedOdds,
-          oddsDisplay: decimalToAmericanNotation(combinedOdds),
-          confidence: Math.round(88 + (nextSeed % 10)),
-          legs: [
-            {
-              playerName: p1.name,
-              team: team1Short,
-              headshot: p1.headshot,
-              marketName: prop1.market,
-              spec: prop1.spec,
-              odds: prop1.odds,
-              status: 'PENDING'
-            },
-            {
-              playerName: p2.name,
-              team: team2Short,
-              headshot: p2.headshot,
-              marketName: prop2.market,
-              spec: prop2.spec,
-              odds: prop2.odds,
-              status: 'PENDING'
-            }
-          ]
-        };
-
-        const updatedArray = [premiumPick, ...currentPicks];
-        localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(updatedArray));
-        return updatedArray;
-      });
-
-      setIsRefreshing(false);
-      triggerNotification("⚡ Sabermetric calculations complete. Fresh high-confidence parlay ticket generated.");
-    }, 950);
+    triggerNotification("⚠️ Demo parlay generation is disabled. Build or import a real account parlay instead.");
   };
 
   const handleResetAISystem = () => {
-    localStorage.removeItem('vai_ai_parlay_picks_history');
-    localStorage.removeItem('vai_ai_win_rate_level');
-    localStorage.removeItem('vai_ai_total_picks_count');
-    setAiParlays(INITIAL_AI_PARLAYS);
-    setAiWinRate(61.4);
-    setAiTotalPicksCount(142);
-    triggerNotification("♻️ System default baseline performance datasets restored successfully.");
+    setAiParlays([]);
+    setAiWinRate(0);
+    setAiTotalPicksCount(0);
+    triggerNotification("✅ Local demo results cleared. Account results remain database-backed.");
   };
 
 
