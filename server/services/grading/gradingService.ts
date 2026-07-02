@@ -136,7 +136,7 @@ export async function gradePendingPicks(opts: {
 
     let gameData: FinalGameData;
     try {
-      gameData = await fetchBoxscore(eventId);
+      gameData = await fetchBoxscore(eventId, String(picks[0]?.game_date ?? picks[0]?.created_at ?? '').slice(0, 10) || null);
     } catch (err: any) {
       // Game not final yet, or fetch failed — skip all picks for this event
       console.log(`[grading] skipping event ${eventId}: ${err.message}`);
@@ -250,54 +250,104 @@ export async function gradePendingPicks(opts: {
   return { graded, skipped, summary: summarizeGradeRun(graded, skipped, pending.length) };
 }
 
-/**
- * Fetch the boxscore for a game. Throws if the game is not yet final.
- * Uses linescore endpoint to verify finality before fetching player stats.
- */
-async function fetchBoxscore(gamePk: string): Promise<FinalGameData> {
-  // Step 1: live feed status is more reliable than linescore.isComplete.
-  // Some MLB linescore responses do not expose a top-level isComplete flag,
-  // which caused final games to stay stuck as "isComplete=undefined".
-  const feedRes = await fetch(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
-    signal: AbortSignal.timeout(10_000),
-    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
-  });
-
-  if (!feedRes.ok) throw new Error(`feed fetch ${feedRes.status}`);
-
-  const feed = await feedRes.json();
-  const status = feed?.gameData?.status || {};
+const isMlbFinalStatus = (status: any): boolean => {
   const abstractState = String(status?.abstractGameState || "").toLowerCase();
   const detailedState = String(status?.detailedState || "").toLowerCase();
   const codedState = String(status?.codedGameState || "").toUpperCase();
+  const statusCode = String(status?.statusCode || "").toUpperCase();
 
-  const isFinal =
+  return (
     abstractState === "final" ||
     detailedState.includes("final") ||
     detailedState.includes("completed") ||
     detailedState.includes("official") ||
-    codedState === "F";
+    codedState === "F" ||
+    statusCode === "F"
+  );
+};
 
-  if (!isFinal) {
-    throw new Error(
-      `game not final (abstract=${status?.abstractGameState ?? "unknown"}, detailed=${status?.detailedState ?? "unknown"}, coded=${status?.codedGameState ?? "unknown"})`
-    );
+const formatMlbStatus = (status: any): string =>
+  `abstract=${status?.abstractGameState ?? "unknown"}, detailed=${status?.detailedState ?? "unknown"}, coded=${status?.codedGameState ?? "unknown"}`;
+
+async function resolveMlbGameFromSchedule(
+  gamePk: string,
+  expectedGameDate?: string | null
+): Promise<{ status: any; game_date: string | null } | null> {
+  if (!expectedGameDate) return null;
+
+  const scheduleRes = await fetch(`${MLB_API}/v1/schedule?sportId=1&date=${expectedGameDate}`, {
+    signal: AbortSignal.timeout(10_000),
+    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+  });
+
+  if (!scheduleRes.ok) {
+    throw new Error(`schedule fetch ${scheduleRes.status}`);
   }
 
-  const gameDate =
-    typeof feed?.gameData?.datetime?.officialDate === "string"
-      ? feed.gameData.datetime.officialDate
-      : typeof feed?.gameData?.datetime?.originalDate === "string"
-        ? feed.gameData.datetime.originalDate
-        : null;
+  const schedule = await scheduleRes.json();
+  const games = (schedule?.dates ?? []).flatMap((date: any) => date?.games ?? []);
+  const game = games.find((g: any) => String(g?.gamePk ?? g?.game_id ?? "") === String(gamePk));
 
-  // Step 2: boxscore for player batting stats
+  if (!game) {
+    throw new Error(`game ${gamePk} not found on schedule date ${expectedGameDate}`);
+  }
+
+  return {
+    status: game?.status || {},
+    game_date:
+      typeof game?.officialDate === "string"
+        ? game.officialDate
+        : typeof game?.gameDate === "string"
+          ? String(game.gameDate).slice(0, 10)
+          : expectedGameDate,
+  };
+}
+
+/**
+ * Fetch the boxscore for a game. Throws if the game is not yet final.
+ * Uses schedule-by-date first when available so repaired legacy parlays grade against
+ * the historical game date instead of only the live feed status.
+ */
+async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): Promise<FinalGameData> {
+  let gameDate: string | null = null;
+
+  const scheduledGame = await resolveMlbGameFromSchedule(gamePk, expectedGameDate);
+
+  if (scheduledGame) {
+    gameDate = scheduledGame.game_date;
+    if (!isMlbFinalStatus(scheduledGame.status)) {
+      throw new Error(`game not final from schedule date ${expectedGameDate} (${formatMlbStatus(scheduledGame.status)})`);
+    }
+  } else {
+    // Live feed fallback for rows without historical game_date.
+    const feedRes = await fetch(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
+      signal: AbortSignal.timeout(10_000),
+      headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+    });
+
+    if (!feedRes.ok) throw new Error(`feed fetch ${feedRes.status}`);
+
+    const feed = await feedRes.json();
+    const status = feed?.gameData?.status || {};
+
+    if (!isMlbFinalStatus(status)) {
+      throw new Error(`game not final (${formatMlbStatus(status)})`);
+    }
+
+    gameDate =
+      typeof feed?.gameData?.datetime?.officialDate === "string"
+        ? feed.gameData.datetime.officialDate
+        : typeof feed?.gameData?.datetime?.originalDate === "string"
+          ? feed.gameData.datetime.originalDate
+          : null;
+  }
+
   const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
     signal: AbortSignal.timeout(10_000),
     headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
   });
   if (!bsRes.ok) throw new Error(`boxscore fetch ${bsRes.status}`);
-  return { boxscore: await bsRes.json(), game_date: gameDate };
+  return { boxscore: await bsRes.json(), game_date: gameDate ?? expectedGameDate ?? null };
 }
 
 /**
@@ -443,7 +493,7 @@ async function gradeParlayPick(
         if (rawGamePk === String((pick as any).event_id || "")) {
           legBoxscore = boxscore;
         } else {
-          legBoxscore = await fetchBoxscore(rawGamePk);
+          legBoxscore = await fetchBoxscore(rawGamePk, String(leg.game_date ?? (pick as any).game_date ?? '').slice(0, 10) || null);
         }
         boxscoreCache.set(rawGamePk, legBoxscore);
       } catch (err: any) {
