@@ -195,7 +195,3 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
 export const selectActiveParlayPanel = (state: ParlayCommandState) => state.activePanel;
 export const selectDraftLegs = (state: ParlayCommandState) => state.draftLegs;
 export const selectSavedSlips = (state: ParlayCommandState) => state.savedSlips;
-export const selectLiveSavedSlips = (state: ParlayCommandState) =>
-  state.savedSlips.filter((slip) => isLiveLikeStatus(slip.status));
-export const selectSettledSavedSlips = (state: ParlayCommandState) =>
-  state.savedSlips.filter((slip) => !isLiveLikeStatus(slip.status));

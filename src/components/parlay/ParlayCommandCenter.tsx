@@ -3,7 +3,6 @@ import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
-  selectLiveSavedSlips,
   selectSavedSlips,
   useParlayCommandStore,
   type ParlayCommandPanel,
@@ -131,8 +130,8 @@ function AiSmartPicksPanel() {
 }
 
 function LiveSavedParlaysPanel() {
-  const liveSlips = useParlayCommandStore(selectLiveSavedSlips);
   const allSlips = useParlayCommandStore(selectSavedSlips);
+  const liveSlips = allSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
 
   return (
     <div className="rounded-3xl border border-slate-800/80 bg-[#07101d]/90 p-5 shadow-2xl shadow-black/20">
@@ -199,7 +198,8 @@ export default function ParlayCommandCenter() {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel = useParlayCommandStore((state) => state.setActivePanel);
   const draftLegs = useParlayCommandStore(selectDraftLegs);
-  const liveSlips = useParlayCommandStore(selectLiveSavedSlips);
+  const savedSlips = useParlayCommandStore(selectSavedSlips);
+  const liveSlips = savedSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
 
   return (
     <section className="min-h-screen bg-[#020817] px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
