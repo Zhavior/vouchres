@@ -1498,6 +1498,25 @@ app.get('/api/mlb/daily-player-board', dailyPlayerBoardHandler);
 app.get('/api/mlb/lineup/today', dailyPlayerBoardHandler);
 app.get('/api/daily-players', dailyPlayerBoardHandler);
 
+// Final API error boundary.
+// Keep API failures JSON instead of Express default HTML error pages.
+app.use('/api', (err: any, req: any, res: any, next: any) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status = Number(err?.status || err?.statusCode || 500);
+  const safeStatus = status >= 400 && status < 600 ? status : 500;
+  const message = err?.message || 'Internal Server Error';
+
+  console.error('[api:error]', req.method, req.originalUrl, message, err?.stack);
+
+  return res.status(safeStatus).json({
+    ok: false,
+    error: safeStatus === 500 ? 'internal_server_error' : 'request_failed',
+    message,
+  });
+});
 
 return app;
 }
