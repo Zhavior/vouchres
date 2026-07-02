@@ -7,24 +7,38 @@ export interface Leg {
   odds: number | null; // AMERICAN odds (e.g. -110, +450). null = price unknown ("Odds TBD"). Never a placeholder like 1/1.01.
   status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
 
-  // ── Grading fields (MLB→results pipeline; future-proof for NBA/NFL) ──
-  /** MLB Stats API gamePk (or sport event id). Required for live grading. */
+  // ── Canonical grading identity (MLB now; future-proof for NBA/NFL/NHL) ──
+  /** MLB Stats API gamePk or future sport event id. */
   gamePk?: string;
-  /** Normalized market code the grader understands: 'hr' | 'rbi' | 'run' | ... */
+  /** Canonical alias used by parlayBridge/backend save routes. */
+  gameId?: string;
+  /** Team id when known; useful for popularity, matchup intelligence, and future team props. */
+  teamId?: number | string | null;
+  /** MLB person id or future sport athlete id. Required for player-prop exact grading when known. */
+  playerId?: number | string | null;
+  /** Alias accepted from some MLB data sources. */
+  mlbPlayerId?: number | string | null;
+  /** Canonical market code: ANYTIME_HR, HIT, HITS_2_PLUS, RBI, RUN, WALK, TOTAL_BASES, etc. */
   marketCode?: string;
-  /** Stat threshold to clear (e.g. 1 for "1+ HR", 1.5 for "over 1.5"). */
+  /** Stat target to clear, e.g. 1 for 1+ HR or 2 for 2+ hits. */
+  statTarget?: number;
+  /** Legacy alias accepted by older UI paths. Prefer statTarget for new code. */
   threshold?: number;
-  /** Observed stat value after grading (for display). */
+  /** Comparator for grading, usually >=. */
+  comparator?: '>=' | '>' | '<=' | '<' | '=' | string;
+  /** Stable exact grading key: SPORT_GAMEID_PLAYERID_MARKETCODE_TARGET_COMPARATOR. */
+  eventKey?: string;
+  /** Stable popularity/intelligence key without game id. */
+  popularityKey?: string;
+  /** External data provider that produced the identity. */
+  externalProvider?: string;
+  /** Observed stat value after grading, for display. */
   actual?: number | null;
-  /** ISO start time of this leg's game (drives the 30-min lock). */
+  /** ISO start time of this leg's game; drives the 30-min lock. */
   gameStartTime?: string;
 
   // ── Player enrichment (optional; for headshots on parlay cards) ──
-  /** MLB person id for this leg's player, when known. */
-  playerId?: number | string | null;
-  /** Alias accepted from some data sources. */
-  mlbPlayerId?: number | string | null;
-  /** Pre-resolved headshot URL (rarely needed; id is preferred). */
+  /** Pre-resolved headshot URL. ID-based headshots are preferred. */
   headshotUrl?: string | null;
 }
 
