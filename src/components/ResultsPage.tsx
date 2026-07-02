@@ -26,6 +26,7 @@ import { FeedPost, Leg, MLBPlayer, CreatorProofProfile, Parlay } from '../types'
 import ResultsLedgerSummary from './results/ResultsLedgerSummary';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { isGuestMode } from '../lib/authDisplay';
+import { apiClient } from "../lib/apiClient";
 
 interface ResultsPageProps {
   posts: FeedPost[];
@@ -861,6 +862,29 @@ export default function ResultsPage({
     triggerNotification("♻️ System default baseline performance datasets restored successfully.");
   };
 
+
+  const handleSyncLiveHrResults = async () => {
+    try {
+      const result = await apiClient.post("/api/parlays/live-hr-sync", {});
+      console.log("[live-hr-sync]", result);
+
+      const updatedLegs = Number((result as any)?.updatedLegs ?? 0);
+      const checked = Number((result as any)?.checked ?? 0);
+
+      triggerNotification(
+        updatedLegs > 0
+          ? `✅ Live HR sync updated ${updatedLegs} leg(s).`
+          : `✅ Live HR sync checked ${checked} match(es). No live updates yet.`
+      );
+
+      await loadBackendLedger();
+    } catch (err: any) {
+      console.error("[live-hr-sync] failed", err);
+      triggerNotification(`⚠️ Live HR sync failed: ${err?.message || "unknown error"}`);
+    }
+  };
+
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen bg-transparent" id="results-analytics-view">
 
@@ -928,6 +952,13 @@ export default function ResultsPage({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleSyncLiveHrResults}
+            className="px-3 py-1.5 bg-cyan-950/70 border border-cyan-400/30 text-cyan-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-cyan-900/80"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
+            <span>SYNC LIVE HR RESULTS</span>
+          </button>
           {activeSubTab === 'ai_model' && (
             <button
               onClick={handleReloadSabermetricFeeds}
