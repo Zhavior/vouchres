@@ -885,6 +885,82 @@ export default function ResultsPage({
   };
 
 
+
+  const handleImportLocalParlays = async () => {
+    try {
+      const raw = localStorage.getItem("vouchedge_slips");
+      const slips = raw ? JSON.parse(raw) : [];
+
+      if (!Array.isArray(slips) || slips.length === 0) {
+        triggerNotification("No local parlays found to import.");
+        return;
+      }
+
+      let imported = 0;
+      let skipped = 0;
+      const updatedSlips = [...slips];
+
+      for (let i = 0; i < updatedSlips.length; i += 1) {
+        const slip = updatedSlips[i];
+
+        if (!slip || slip.backendPickId) {
+          skipped += 1;
+          continue;
+        }
+
+        const legs = Array.isArray(slip.legs) ? slip.legs : [];
+        const importableLegs = legs.filter((leg: any) => leg?.gamePk && leg?.playerId);
+
+        if (importableLegs.length === 0) {
+          skipped += 1;
+          continue;
+        }
+
+        const saved = await apiClient.post("/api/me/parlays", {
+          id: slip.id,
+          clientRef: slip.id,
+          title: slip.title || "Imported Local Parlay",
+          mode: slip.mode === "REAL" ? "REAL" : "PRACTICE",
+          status: slip.status || "pending",
+          wagerAmount: Number(slip.wagerAmount || 1),
+          aiGenerated: slip.aiGenerated === true,
+          source: "manual",
+          sport: "mlb",
+          legs: importableLegs.map((leg: any) => ({
+            id: leg.id,
+            sport: leg.sport || "mlb",
+            game: leg.game,
+            market: leg.market || leg.marketCode || "Anytime HR",
+            marketCode: leg.marketCode,
+            selection: leg.selection || "",
+            odds: leg.odds,
+            status: leg.status || "pending",
+            gamePk: leg.gamePk,
+            playerId: leg.playerId,
+            actual: leg.actual ?? null,
+          })),
+        });
+
+        updatedSlips[i] = {
+          ...slip,
+          backendPickId: (saved as any)?.id || slip.backendPickId,
+          backendSyncState: "synced",
+          backendSyncedAt: new Date().toISOString(),
+        };
+
+        imported += 1;
+      }
+
+      localStorage.setItem("vouchedge_slips", JSON.stringify(updatedSlips));
+      triggerNotification(`✅ Imported ${imported} local parlay(s). Skipped ${skipped}.`);
+      await loadBackendLedger();
+    } catch (err: any) {
+      console.error("[import-local-parlays] failed", err);
+      triggerNotification(`⚠️ Import failed: ${err?.message || "unknown error"}`);
+    }
+  };
+
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen bg-transparent" id="results-analytics-view">
 
@@ -952,6 +1028,13 @@ export default function ResultsPage({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleImportLocalParlays}
+            className="px-3 py-1.5 bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-emerald-900/80"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-emerald-300" />
+            <span>IMPORT LOCAL PARLAYS</span>
+          </button>
           <button
             onClick={handleSyncLiveHrResults}
             className="px-3 py-1.5 bg-cyan-950/70 border border-cyan-400/30 text-cyan-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-cyan-900/80"
