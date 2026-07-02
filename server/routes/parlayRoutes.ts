@@ -851,6 +851,160 @@ parlayRoutes.post("/parlays", requireAuth, async (_req: AuthedRequest, res: Resp
 });
 
 
+
+function repairComparatorKey(comparator: string | null): "GTE" | "LTE" | "EQ" | null {
+  if (comparator === ">=") return "GTE";
+  if (comparator === "<=") return "LTE";
+  if (comparator === "=" || comparator === "==") return "EQ";
+  return null;
+}
+
+function repairCleanKey(value: unknown, fallback = ""): string {
+  return String(value ?? fallback).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+}
+
+function repairMarketCode(row: any): string | null {
+  const raw = String(row.market_code || row.market || row.selection || "").trim().toUpperCase();
+
+  if (!raw) return null;
+
+  if (
+    raw.includes("HOME RUN") ||
+    raw.includes("HOMER") ||
+    raw === "HR" ||
+    raw.includes("ANYTIME_HR")
+  ) {
+    return "ANYTIME_HR";
+  }
+
+  return String(row.market_code || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "") || null;
+}
+
+function repairStatTarget(row: any, marketCode: string | null): number | null {
+  const raw = row.stat_target ?? row.threshold ?? row.target ?? row.line ?? null;
+  const parsed = Number(raw);
+
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  if (marketCode === "ANYTIME_HR") return 1;
+
+  return null;
+}
+
+/**
+ * POST /api/cron/parlays/repair-identity?dryRun=true&limit=50
+ *
+ * Legacy Parlay Repair Pipeline:
+ * - scans old pick_legs with missing canonical grading identity
+ * - repairs only rows with enough safe identity
+ * - skips unsafe rows with reasons
+ * - keeps the job capped so serverless functions do not run forever
+ */
+parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Response) => {
+  if (!isAuthorizedCronRequest(req)) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  const dryRun = String(req.query.dryRun ?? "true") !== "false";
+  const limit = Math.min(Math.max(Number(req.query.limit ?? 50), 1), 250);
+
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("pick_legs")
+      .select("id,pick_id,leg_index,sport,game_id,game_pk,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status")
+      .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null")
+      .limit(limit);
+
+    if (error) {
+      console.error("[parlays/repair-identity] fetch failed", error);
+      return res.status(500).json({ error: "repair_fetch_failed" });
+    }
+
+    const repaired: any[] = [];
+    const skipped: any[] = [];
+
+    for (const row of rows ?? []) {
+      const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
+      const gameId = repairCleanKey(row.game_id || row.game_pk || row.event_id);
+      const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
+      const playerId = repairCleanKey(row.player_id);
+      const marketCode = repairMarketCode(row);
+      const statTarget = repairStatTarget(row, marketCode);
+      const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
+      const comparatorKey = repairComparatorKey(comparator);
+
+      if (!gameId || !playerId || !marketCode || statTarget == null || !comparatorKey) {
+        skipped.push({
+          id: row.id,
+          pick_id: row.pick_id,
+          reason: "missing_required_identity",
+          hasGameId: Boolean(gameId),
+          hasPlayerId: Boolean(playerId),
+          marketCode,
+          statTarget,
+          comparator,
+        });
+        continue;
+      }
+
+      const eventKey = [sport, gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join("_");
+      const popularityKey = [sport, playerId, marketCode, statTarget, comparatorKey].join("_");
+
+      const patch = {
+        sport,
+        game_id: gameId,
+        team_id: teamId,
+        player_id: playerId,
+        market_code: marketCode,
+        stat_target: statTarget,
+        comparator,
+        event_key: eventKey,
+        popularity_key: popularityKey,
+        external_provider: row.external_provider || "repair_identity",
+      };
+
+      if (!dryRun) {
+        const { error: updateError } = await supabaseAdmin
+          .from("pick_legs")
+          .update(patch)
+          .eq("id", row.id);
+
+        if (updateError) {
+          skipped.push({
+            id: row.id,
+            pick_id: row.pick_id,
+            reason: "update_failed",
+            message: updateError.message,
+          });
+          continue;
+        }
+      }
+
+      repaired.push({
+        id: row.id,
+        pick_id: row.pick_id,
+        leg_index: row.leg_index,
+        patch,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      dryRun,
+      scanned: rows?.length ?? 0,
+      repairedCount: repaired.length,
+      skippedCount: skipped.length,
+      repaired: repaired.slice(0, 20),
+      skipped: skipped.slice(0, 20),
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[parlays/repair-identity] failed", err);
+    return res.status(500).json({ error: "repair_identity_failed" });
+  }
+});
+
 /**
  * GET /api/parlays/:id
  * Returns a parlay pick with all its legs.
