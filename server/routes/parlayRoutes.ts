@@ -1305,20 +1305,45 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
     const teamIdRaw = leg.teamId || leg.team_id || leg.team?.id || leg.teamCode || leg.teamAbbr || null;
     const teamId = teamIdRaw == null ? null : String(teamIdRaw).trim().slice(0, 64) || null;
     const playerId = legPlayerId(leg);
-    const marketCode = String(leg.marketCode || leg.market_code || leg.market || "prop").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "PROP";
+
+    const rawMarketCode = String(leg.marketCode || leg.market_code || leg.market || "prop").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "PROP";
+    const marketCode =
+      rawMarketCode === "HR" || rawMarketCode === "HOMERUN" || rawMarketCode === "HOME_RUN"
+        ? "ANYTIME_HR"
+        : rawMarketCode;
+
+    const rawStatTarget = leg.statTarget ?? leg.stat_target ?? leg.target ?? leg.line ?? null;
+    const statTarget = Number.isFinite(Number(rawStatTarget))
+      ? Number(rawStatTarget)
+      : marketCode === "ANYTIME_HR"
+        ? 1
+        : null;
+
+    const comparator = String(
+      leg.comparator || leg.operator || leg.direction || (statTarget != null ? ">=" : "")
+    ).trim() || null;
+
+    const comparatorKey =
+      comparator === ">=" ? "GTE" :
+      comparator === "<=" ? "LTE" :
+      comparator === "=" ? "EQ" :
+      null;
+
     const keySport = sportKey.toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "MLB";
     const keyGame = gameId.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
     const keyTeam = String(teamId || "TEAM").toUpperCase().replace(/[^A-Z0-9_-]/g, "");
     const keyPlayer = playerId ? String(playerId).toUpperCase().replace(/[^A-Z0-9_-]/g, "") : "";
+
     const eventKey =
       String(leg.eventKey || leg.event_key || "").trim() ||
-      (keyGame && keyPlayer && marketCode !== "UNKNOWN"
-        ? [keySport, keyGame, keyTeam, keyPlayer, marketCode].join("_")
+      (keyGame && keyPlayer && marketCode !== "UNKNOWN" && statTarget != null && comparatorKey
+        ? [keySport, keyGame, keyTeam, keyPlayer, marketCode, statTarget, comparatorKey].join("_")
         : null);
+
     const popularityKey =
       String(leg.popularityKey || leg.popularity_key || "").trim() ||
-      (keyPlayer && marketCode !== "UNKNOWN"
-        ? [keySport, keyPlayer, marketCode].join("_")
+      (keyPlayer && marketCode !== "UNKNOWN" && statTarget != null && comparatorKey
+        ? [keySport, keyPlayer, marketCode, statTarget, comparatorKey].join("_")
         : null);
 
     return {
@@ -1334,8 +1359,8 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
       player_id: playerId, // alias-safe; null if unknown
       event_key: eventKey,
       popularity_key: popularityKey,
-      stat_target: leg.statTarget ?? leg.stat_target ?? leg.target ?? leg.line ?? null,
-      comparator: leg.comparator || leg.operator || leg.direction || null,
+      stat_target: statTarget,
+      comparator,
       external_provider: leg.externalProvider || leg.external_provider || leg.provider || null,
     };
   });
