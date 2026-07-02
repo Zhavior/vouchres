@@ -27,6 +27,7 @@ import ResultsLedgerSummary from './results/ResultsLedgerSummary';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { isGuestMode } from '../lib/authDisplay';
 import { apiClient } from "../lib/apiClient";
+import { buildSaveParlayPayload, isImportableLiveLeg, normalizeLocalSlip } from "../lib/parlays/parlayBridge";
 
 interface ResultsPageProps {
   posts: FeedPost[];
@@ -889,69 +890,64 @@ export default function ResultsPage({
   const handleImportLocalParlays = async () => {
     try {
       const raw = localStorage.getItem("vouchedge_slips");
-      const slips = raw ? JSON.parse(raw) : [];
+      const localSlips = raw ? JSON.parse(raw) : [];
 
-      if (!Array.isArray(slips) || slips.length === 0) {
+      if (!Array.isArray(localSlips) || localSlips.length === 0) {
         triggerNotification("No local parlays found to import.");
         return;
       }
 
       let imported = 0;
       let skipped = 0;
-      const updatedSlips = [...slips];
+      const updatedLocalSlips = [...localSlips];
 
-      for (let i = 0; i < updatedSlips.length; i += 1) {
-        const slip = updatedSlips[i];
+      for (let index = 0; index < localSlips.length; index += 1) {
+        const localSlip = localSlips[index];
 
-        if (!slip || slip.backendPickId) {
+        if (!localSlip || localSlip.backendPickId) {
           skipped += 1;
           continue;
         }
 
-        const legs = Array.isArray(slip.legs) ? slip.legs : [];
-        const importableLegs = legs.filter((leg: any) => leg?.gamePk && leg?.playerId);
+        const canonicalSlip = normalizeLocalSlip(localSlip);
+        const importableLegs = canonicalSlip.legs.filter(isImportableLiveLeg);
 
         if (importableLegs.length === 0) {
           skipped += 1;
           continue;
         }
 
-        const saved = await apiClient.post("/api/me/parlays", {
-          id: slip.id,
-          clientRef: slip.id,
-          title: slip.title || "Imported Local Parlay",
-          mode: slip.mode === "REAL" ? "REAL" : "PRACTICE",
-          status: slip.status || "pending",
-          wagerAmount: Number(slip.wagerAmount || 1),
-          aiGenerated: slip.aiGenerated === true,
-          source: "manual",
-          sport: "mlb",
-          legs: importableLegs.map((leg: any) => ({
-            id: leg.id,
-            sport: leg.sport || "mlb",
-            game: leg.game,
-            market: leg.market || leg.marketCode || "Anytime HR",
-            marketCode: leg.marketCode,
-            selection: leg.selection || "",
-            odds: leg.odds,
-            status: leg.status || "pending",
-            gamePk: leg.gamePk,
-            playerId: leg.playerId,
-            actual: leg.actual ?? null,
-          })),
+        const payload = buildSaveParlayPayload({
+          ...canonicalSlip,
+          legs: importableLegs,
+          source: "local_import",
+          metadata: {
+            ...(canonicalSlip.metadata || {}),
+            importedFrom: "vouchedge_slips",
+          },
         });
 
-        updatedSlips[i] = {
-          ...slip,
-          backendPickId: (saved as any)?.id || slip.backendPickId,
-          backendSyncState: "synced",
+        const saved = await apiClient.post("/api/me/parlays", payload);
+
+        const backendPickId =
+          (saved as any)?.pick?.id ||
+          (saved as any)?.pickId ||
+          (saved as any)?.id ||
+          (saved as any)?.data?.id ||
+          localSlip.backendPickId ||
+          null;
+
+        updatedLocalSlips[index] = {
+          ...localSlip,
+          backendPickId,
+          backendSyncState: backendPickId ? "synced" : "unknown",
           backendSyncedAt: new Date().toISOString(),
         };
 
         imported += 1;
       }
 
-      localStorage.setItem("vouchedge_slips", JSON.stringify(updatedSlips));
+      localStorage.setItem("vouchedge_slips", JSON.stringify(updatedLocalSlips));
       triggerNotification(`✅ Imported ${imported} local parlay(s). Skipped ${skipped}.`);
       await loadBackendLedger();
     } catch (err: any) {
