@@ -53,6 +53,17 @@ interface FinalGameData {
   game_date: string | null;
 }
 
+
+function isLikelyMlbGamePk(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  const text = String(value).trim();
+
+  // MLB gamePk values are numeric. Legacy/local placeholders like
+  // "leg-...", "ai-leg-...", "manual", or empty strings should never hit
+  // the MLB linescore/boxscore endpoints.
+  return /^\d{5,10}$/.test(text);
+}
+
 /**
  * Grade all pending picks whose event has concluded.
  *
@@ -108,6 +119,21 @@ export async function gradePendingPicks(opts: {
 
   // 3. Process each event
   for (const [eventId, picks] of byEvent) {
+    if (!isLikelyMlbGamePk(eventId)) {
+      const message = `legacy/manual event id skipped (${eventId})`;
+      console.log(`[grading] skipping event ${eventId}: ${message}`);
+      for (const pick of picks) {
+        skipped.push({
+          pick_id: pick.id,
+          status: "graded_error",
+          settled_units: null,
+          error: message,
+          warnings: [message],
+        });
+      }
+      continue;
+    }
+
     let gameData: FinalGameData;
     try {
       gameData = await fetchBoxscore(eventId);
