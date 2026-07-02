@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import type { Request, Response } from "express";
 import { createHash } from "node:crypto";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
@@ -1152,44 +1153,99 @@ interface MeParlayValidation {
   detail?: string;
 }
 
-/** Validate + normalize the POST /api/me/parlays body. Returns clean errors. */
-function validateMeParlayBody(body: any): MeParlayValidation {
-  if (!body || typeof body !== "object") return { ok: false, error: "invalid_body" };
+const MeParlayLegSchema = z
+  .object({
+    id: z.string().optional(),
+    event_id: z.union([z.string(), z.number()]).optional(),
+    eventId: z.union([z.string(), z.number()]).optional(),
+    game_id: z.union([z.string(), z.number()]).optional(),
+    gameId: z.union([z.string(), z.number()]).optional(),
+    gamePk: z.union([z.string(), z.number()]).optional(),
+    team_id: z.union([z.string(), z.number()]).optional(),
+    teamId: z.union([z.string(), z.number()]).optional(),
+    player_id: z.union([z.string(), z.number()]).nullable().optional(),
+    playerId: z.union([z.string(), z.number()]).nullable().optional(),
+    market: z.string().optional(),
+    market_code: z.string().optional(),
+    marketCode: z.string().optional(),
+    selection: z.string().optional(),
+    playerName: z.string().optional(),
+    odds: z.number().finite().optional(),
+    odds_decimal: z.number().finite().nullable().optional(),
+    oddsDecimal: z.number().finite().nullable().optional(),
+    stat_target: z.number().finite().nullable().optional(),
+    statTarget: z.number().finite().nullable().optional(),
+    comparator: z.string().optional(),
+    external_provider: z.string().optional(),
+    externalProvider: z.string().optional(),
+  })
+  .passthrough()
+  .superRefine((leg, ctx) => {
+    const odds = leg.odds ?? leg.odds_decimal ?? leg.oddsDecimal;
+    if (odds !== undefined && odds !== null && (!Number.isFinite(Number(odds)))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leg odds must be numeric." });
+    }
+  });
 
-  const legs = body.legs;
-  if (!Array.isArray(legs) || legs.length < 1) {
+const MeParlayBodySchema = z
+  .object({
+    title: z.string().max(200).optional(),
+    mode: z.enum(["REAL", "PRACTICE"]).optional(),
+    source: z.enum(["manual", "scanner", "ai_pick", "edge_island"]).optional(),
+    status: z.enum(["pending", "live", "won", "lost", "void", "partially_void"]).optional(),
+    wagerAmount: z.number().finite().min(0).max(100000).optional(),
+    clientRef: z.string().max(200).optional(),
+    client_ref: z.string().max(200).optional(),
+    legs: z.array(MeParlayLegSchema).min(1, "At least 1 leg is required.").max(MAX_LEGS, `Max ${MAX_LEGS} legs.`),
+  })
+  .passthrough();
+
+/** Validate the POST /api/me/parlays body. Returns clean errors. */
+function validateMeParlayBody(body: any): MeParlayValidation {
+  const parsed = MeParlayBodySchema.safeParse(body);
+
+  if (parsed.success) {
+    return { ok: true };
+  }
+
+  const issue = parsed.error.issues[0];
+  const path = issue?.path?.length ? issue.path.join(".") : "body";
+
+  if (path === "legs" && issue?.code === "too_small") {
     return { ok: false, error: "legs_required", detail: "At least 1 leg is required." };
   }
-  if (legs.length > MAX_LEGS) {
+
+  if (path === "legs" && issue?.code === "too_big") {
     return { ok: false, error: "too_many_legs", detail: `Max ${MAX_LEGS} legs.` };
   }
-  for (let i = 0; i < legs.length; i++) {
-    const leg = legs[i];
-    if (!leg || typeof leg !== "object") {
-      return { ok: false, error: "invalid_leg", detail: `Leg ${i} is not an object.` };
-    }
-    const odds = typeof leg.odds === "number" ? leg.odds : leg.odds_decimal;
-    if (odds !== undefined && (typeof odds !== "number" || !Number.isFinite(odds))) {
-      return { ok: false, error: "invalid_odds", detail: `Leg ${i} odds must be numeric.` };
-    }
-  }
-  if (body.title !== undefined && (typeof body.title !== "string" || body.title.length > 200)) {
-    return { ok: false, error: "invalid_title", detail: "Title must be a string ≤ 200 chars." };
-  }
-  if (body.wagerAmount !== undefined) {
-    const stake = body.wagerAmount;
-    if (typeof stake !== "number" || !Number.isFinite(stake) || stake < 0 || stake > 100000) {
-      return { ok: false, error: "invalid_stake", detail: "Stake must be a non-negative number." };
-    }
-  }
-  if (body.source !== undefined && !VALID_SOURCES.has(String(body.source))) {
+
+  if (path === "source") {
     return { ok: false, error: "invalid_source", detail: `source must be one of ${[...VALID_SOURCES].join(", ")}.` };
   }
-  if (body.status !== undefined && !NORMALIZED_STATUSES.has(String(body.status).toLowerCase())) {
+
+  if (path === "status") {
     return { ok: false, error: "invalid_status", detail: `status must be one of ${[...NORMALIZED_STATUSES].join(", ")}.` };
   }
-  return { ok: true };
+
+  if (path === "title") {
+    return { ok: false, error: "invalid_title", detail: "Title must be a string ≤ 200 chars." };
+  }
+
+  if (path === "wagerAmount") {
+    return { ok: false, error: "invalid_stake", detail: "Stake must be a non-negative number." };
+  }
+
+  if (path.includes("odds")) {
+    return { ok: false, error: "invalid_odds", detail: `${path} must be numeric.` };
+  }
+
+  return {
+    ok: false,
+    error: "invalid_body",
+    detail: issue?.message || "Invalid parlay payload.",
+  };
 }
+
 
 /**
  * POST /api/me/parlays
@@ -1201,8 +1257,7 @@ function validateMeParlayBody(body: any): MeParlayValidation {
  *     local parlay id). Re-saving the same parlay returns the existing row.
  *   - Atomic parent+legs insert via create_parlay_with_legs RPC when present;
  *     otherwise a parent-insert + leg-insert with rollback (no orphan parents).
- *   - Graceful degradation if migration 0003 (client_ref/source/RPC) is not
- *     applied yet.
+ *   - Canonical save path requires the migrated grading identity contract.
  */
 parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
   const body = req.body ?? {};
