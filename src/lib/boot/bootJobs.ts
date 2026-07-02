@@ -1,3 +1,4 @@
+import { apiClient } from "../apiClient";
 import { bootDataStore, type VouchEdgeBootKey } from "./bootDataStore";
 
 export type VouchEdgeBootJob = {
@@ -16,17 +17,8 @@ async function fetchJson(path: string, signal: AbortSignal): Promise<unknown> {
   const existing = bootFetchInFlight.get(path);
   if (existing) return existing;
 
-  const request = fetch(path, {
-    credentials: "include",
-    signal,
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`${path} failed with ${response.status}`);
-      }
-
-      return response.json();
-    })
+  const request = apiClient
+    .get(path, undefined, signal)
     .finally(() => {
       bootFetchInFlight.delete(path);
     });
