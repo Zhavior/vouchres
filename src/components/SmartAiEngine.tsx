@@ -629,15 +629,40 @@ export default function SmartAiEngine({
     const feedParlay = {
       id: `ai-parlay-${pick.id}-${Date.now()}`,
       title: pick.title,
-      legs: pick.legs.map((l, index) => ({
-        id: `leg-${l.playerId}-${index}-${Date.now()}`,
-        sport: "MLB",
-        game: `${pick.players.find(p=>p.id===l.playerId)?.team || 'MLB Team'} Matchup`,
-        market: l.marketName,
-        selection: l.customSpec,
-        odds: l.odds,
-        status: 'PENDING' as const
-      })),
+      legs: pick.legs.map((l, index) => {
+        const playerRecord = pick.players.find(p => p.id === l.playerId);
+        const gameId = String(playerRecord?.gamePk || playerRecord?.gameId || '');
+        const playerId = String(l.playerId || playerRecord?.id || '');
+        const teamId = String(playerRecord?.teamId || playerRecord?.team_id || '');
+        const { marketCode, threshold } = resolveMarket('mlb', l.marketName, l.customSpec);
+        const statTarget = threshold || 1;
+        const comparator = '>=';
+        const comparatorKey = 'GTE';
+        const eventKey = ['MLB', gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join('_');
+        const popularityKey = ['MLB', playerId, marketCode, statTarget, comparatorKey].join('_');
+
+        return {
+          id: `leg-${gameId}-${playerId || index}-${marketCode}-${statTarget}`,
+          sport: "MLB",
+          game: `${playerRecord?.team || 'MLB Team'} Matchup`,
+          market: l.marketName,
+          selection: l.customSpec,
+          odds: l.odds,
+          status: 'PENDING' as const,
+          gamePk: gameId,
+          gameId,
+          playerId,
+          teamId,
+          marketCode,
+          statTarget,
+          threshold: statTarget,
+          comparator,
+          eventKey,
+          popularityKey,
+          externalProvider: 'mlb_statsapi',
+          gameStartTime: playerRecord?.gameStartTime
+        };
+      }),
       totalOdds: pick.totalOdds,
       oddsValue: pick.oddsValue,
       riskTier: pick.riskTier,
