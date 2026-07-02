@@ -1202,7 +1202,8 @@ export default function App() {
     const tick = () => {
       runScheduledAiGeneration();
       checkParlayLocks();
-      handleGradeResults();
+      // Do not auto-POST grade requests from the global heartbeat.
+      // Grading is rate-limited and should run from server cron or explicit user refresh.
     };
     const warmup = window.setTimeout(tick, 1500); // let initial state hydrate
     const id = window.setInterval(tick, 60_000);
