@@ -1113,8 +1113,6 @@ parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: R
 
       const legPatch = {
         status: "void",
-        result: "VOID",
-        outcome: "void",
         graded_at: new Date().toISOString(),
       };
 
@@ -1134,11 +1132,12 @@ parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: R
           continue;
         }
 
-        const { error: legUpdateError } = await supabaseAdmin
+        const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
           .from("pick_legs")
           .update(legPatch)
           .eq("pick_id", pick.id)
-          .eq("status", "pending");
+          .eq("status", "pending")
+          .select("id,pick_id,status,graded_at,event_id,game_id");
 
         if (legUpdateError) {
           skipped.push({
@@ -1146,6 +1145,15 @@ parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: R
             event_id: pick.event_id,
             reason: "leg_update_failed",
             message: legUpdateError.message,
+          });
+          continue;
+        }
+
+        if (!updatedLegs || updatedLegs.length === 0) {
+          skipped.push({
+            pick_id: pick.id,
+            event_id: pick.event_id,
+            reason: "no_pending_child_legs_updated",
           });
           continue;
         }
