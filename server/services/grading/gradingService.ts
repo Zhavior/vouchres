@@ -231,19 +231,40 @@ export async function gradePendingPicks(opts: {
  * Uses linescore endpoint to verify finality before fetching player stats.
  */
 async function fetchBoxscore(gamePk: string): Promise<FinalGameData> {
-  // Step 1: linescore to verify the game is complete
-  const lsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/linescore`, {
-    signal: AbortSignal.timeout(8_000),
+  // Step 1: live feed status is more reliable than linescore.isComplete.
+  // Some MLB linescore responses do not expose a top-level isComplete flag,
+  // which caused final games to stay stuck as "isComplete=undefined".
+  const feedRes = await fetch(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
+    signal: AbortSignal.timeout(10_000),
     headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
   });
-  if (!lsRes.ok) throw new Error(`linescore fetch ${lsRes.status}`);
-  const ls = await lsRes.json();
-  if (ls?.isComplete !== true) throw new Error(`game not final (isComplete=${ls?.isComplete})`);
+
+  if (!feedRes.ok) throw new Error(`feed fetch ${feedRes.status}`);
+
+  const feed = await feedRes.json();
+  const status = feed?.gameData?.status || {};
+  const abstractState = String(status?.abstractGameState || "").toLowerCase();
+  const detailedState = String(status?.detailedState || "").toLowerCase();
+  const codedState = String(status?.codedGameState || "").toUpperCase();
+
+  const isFinal =
+    abstractState === "final" ||
+    detailedState.includes("final") ||
+    detailedState.includes("completed") ||
+    detailedState.includes("official") ||
+    codedState === "F";
+
+  if (!isFinal) {
+    throw new Error(
+      `game not final (abstract=${status?.abstractGameState ?? "unknown"}, detailed=${status?.detailedState ?? "unknown"}, coded=${status?.codedGameState ?? "unknown"})`
+    );
+  }
+
   const gameDate =
-    typeof ls?.gameDate === "string"
-      ? ls.gameDate.slice(0, 10)
-      : typeof ls?.currentInningOrdinal === "string"
-        ? null
+    typeof feed?.gameData?.datetime?.officialDate === "string"
+      ? feed.gameData.datetime.officialDate
+      : typeof feed?.gameData?.datetime?.originalDate === "string"
+        ? feed.gameData.datetime.originalDate
         : null;
 
   // Step 2: boxscore for player batting stats
