@@ -1525,8 +1525,7 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
 
     if (!rpcError && rpcPick) {
       const pick = Array.isArray(rpcPick) ? rpcPick[0] : rpcPick;
-      // Ensure player_id persists even if the live RPC predates 0006.
-      await backfillLegPlayerIds(supabaseAdmin, pick.id, legsJson);
+      // RPC is the canonical save path: it must persist the full grading identity.
       const { data: legs } = await supabaseAdmin
         .from("pick_legs").select("*").eq("pick_id", pick.id).order("leg_index", { ascending: true });
       return respond(pick, legs ?? []);
@@ -1577,12 +1576,8 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
     parlay = insertRes.data;
 
     const legsToInsert = legsJson.map((l) => ({ ...l, pick_id: parlay.id, status: "pending" as const }));
-    let { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
-    if (legsError && MISSING_COLUMN_CODES.has(legsError.code)) {
-      // Migration 0006 (pick_legs.player_id) not applied — retry without player_id.
-      const legsNoPlayer = legsToInsert.map(({ player_id, ...rest }) => rest);
-      ({ error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsNoPlayer));
-    }
+    const { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+
     if (legsError) {
       // ROLLBACK: do not leave an orphan parent pick without legs.
       console.error("[me/parlays] legs insert failed — rolling back parent", legsError.code, legsError.message);
