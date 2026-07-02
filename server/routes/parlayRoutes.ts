@@ -423,12 +423,7 @@ parlayRoutes.post("/parlays/save", requireAuth, async (req: AuthedRequest, res: 
       game_date: gameDate,
     }));
 
-    let legsInsert = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
-    if (legsInsert.error && MISSING_COLUMN_CODES.has(legsInsert.error.code)) {
-      legsInsert = await supabaseAdmin
-        .from("pick_legs")
-        .insert(legsToInsert.map(({ player_id, game_date, ...rest }) => rest));
-    }
+    const legsInsert = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
     if (legsInsert.error) {
       console.error("[parlays/save] legs insert failed, rolling back parent", legsInsert.error.message);
       await supabaseAdmin.from("picks").delete().eq("id", parent.id);
@@ -1278,38 +1273,7 @@ function legPlayerId(leg: any): string | null {
   );
 }
 
-/**
- * Backfill pick_legs.player_id after create. This makes player_id persist even
- * when the live create_parlay_with_legs RPC predates migration 0006 (i.e. it
- * doesn't insert player_id). Idempotent: only fills rows that are still null.
- * Best-effort — never fails the request.
- */
-async function backfillLegPlayerIds(
-  admin: any,
-  pickId: string,
-  legsJson: Array<{ leg_index: number; player_id: string | null }>
-): Promise<void> {
-  const withPid = legsJson.filter((l) => l.player_id != null);
-  if (withPid.length === 0) return;
-  for (const l of withPid) {
-    const { error } = await admin
-      .from("pick_legs")
-      .update({ player_id: l.player_id })
-      .eq("pick_id", pickId)
-      .eq("leg_index", l.leg_index)
-      .is("player_id", null);
-    if (error) {
-      // Column missing (0006 not applied) or transient — stop, do not throw.
-      if (!MISSING_COLUMN_CODES.has(error.code)) {
-        console.warn("[me/parlays] player_id backfill error", error.code, error.message);
-      }
-      return;
-    }
-  }
-}
-
-/** Postgres "column does not exist" / schema-cache-miss codes — used to detect
- *  whether migration 0003 (client_ref/source) has been applied yet. */
+/** Postgres "column does not exist" / schema-cache-miss codes for legacy parent-column fallback only. */
 const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
 /** Postgres "function does not exist" / PostgREST RPC-not-found codes. */
 const MISSING_FUNCTION_CODES = new Set(["42883", "PGRST202"]);
