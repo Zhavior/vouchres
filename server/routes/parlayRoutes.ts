@@ -863,16 +863,53 @@ function repairCleanKey(value: unknown, fallback = ""): string {
   return String(value ?? fallback).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
 }
 
+function repairPlayerIdFromSelection(selection: unknown): string {
+  const text = String(selection ?? "");
+  const metaMatch = text.match(/\|\|meta:\s*(\{.*\})\s*$/);
+  if (!metaMatch) return "";
+
+  try {
+    const meta = JSON.parse(metaMatch[1]);
+    return String(meta.p || meta.playerId || meta.player_id || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function repairGameIdFromRow(row: any): string {
+  const candidates = [
+    row.game_id,
+    row.event_id,
+    row.picks?.event_id,
+    row.picks?.metadata?.game_id,
+    row.picks?.metadata?.gameId,
+    row.picks?.metadata?.gamePk,
+  ];
+
+  for (const candidate of candidates) {
+    const raw = String(candidate ?? "").trim();
+    if (/^\d{5,}$/.test(raw)) return raw;
+  }
+
+  return "";
+}
+
 function repairMarketCode(row: any): string | null {
   const raw = String(row.market_code || row.market || row.selection || "").trim().toUpperCase();
+  const compact = raw.replace(/[^A-Z0-9]/g, "");
 
   if (!raw) return null;
 
   if (
     raw.includes("HOME RUN") ||
     raw.includes("HOMER") ||
+    raw.includes("ANYTIME HR") ||
+    raw.includes("1+ HR") ||
+    raw.includes("TO HIT 1+ HOME RUN") ||
     raw === "HR" ||
-    raw.includes("ANYTIME_HR")
+    compact.includes("ANYTIMEHR") ||
+    compact.includes("HOME RUN".replace(/[^A-Z0-9]/g, "")) ||
+    compact.includes("HOMERUN")
   ) {
     return "ANYTIME_HR";
   }
@@ -912,13 +949,19 @@ parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Res
 
     const { data: rows, error } = await supabaseAdmin
       .from("pick_legs")
-      .select("id,pick_id,leg_index,sport,game_id,game_pk,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status")
+      .select("id,pick_id,leg_index,sport,game_id,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status,picks(event_id,metadata)")
       .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null")
       .limit(limit);
 
     if (error) {
       console.error("[parlays/repair-identity] fetch failed", error);
-      return res.status(500).json({ error: "repair_fetch_failed" });
+      return res.status(500).json({
+        error: "repair_fetch_failed",
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
     }
 
     const repaired: any[] = [];
@@ -926,9 +969,9 @@ parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Res
 
     for (const row of rows ?? []) {
       const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
-      const gameId = repairCleanKey(row.game_id || row.game_pk || row.event_id);
+      const gameId = repairGameIdFromRow(row);
       const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
-      const playerId = repairCleanKey(row.player_id);
+      const playerId = repairCleanKey(row.player_id || repairPlayerIdFromSelection(row.selection));
       const marketCode = repairMarketCode(row);
       const statTarget = repairStatTarget(row, marketCode);
       const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
@@ -1002,6 +1045,133 @@ parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Res
   } catch (err) {
     console.error("[parlays/repair-identity] failed", err);
     return res.status(500).json({ error: "repair_identity_failed" });
+  }
+});
+
+
+function isLegacyManualEventId(value: unknown): boolean {
+  const raw = String(value ?? "").trim();
+  return raw.startsWith("leg-") || raw.startsWith("ai-leg-") || raw.startsWith("manual-");
+}
+
+/**
+ * POST /api/cron/parlays/quarantine-legacy?dryRun=true&limit=25
+ *
+ * Quarantines legacy/manual picks that cannot be honestly graded because they were saved
+ * before canonical grading identity existed and only carry fake event IDs.
+ *
+ * Real MLB numeric game IDs are left alone so they can grade when final.
+ */
+parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: Response) => {
+  if (!isAuthorizedCronRequest(req)) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  const dryRun = String(req.query.dryRun ?? "true") !== "false";
+  const limit = Math.min(Math.max(Number(req.query.limit ?? 25), 1), 100);
+  const legacyReason = "Legacy pick saved before canonical grading identity existed; cannot be honestly graded.";
+
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+
+    const { data: picks, error } = await supabaseAdmin
+      .from("picks")
+      .select("id,event_id,status,explanation")
+      .eq("status", "pending")
+      .limit(limit);
+
+    if (error) {
+      console.error("[parlays/quarantine-legacy] fetch failed", error);
+      return res.status(500).json({
+        error: "quarantine_fetch_failed",
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+    }
+
+    const quarantined: any[] = [];
+    const skipped: any[] = [];
+
+    for (const pick of picks ?? []) {
+      if (!isLegacyManualEventId(pick.event_id)) {
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "not_legacy_manual_event_id",
+        });
+        continue;
+      }
+
+      const pickPatch = {
+        status: "void",
+        explanation: [String(pick.explanation || "").trim(), legacyReason].filter(Boolean).join("\\n\\n"),
+        graded_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const legPatch = {
+        status: "void",
+        result: "VOID",
+        outcome: "void",
+        graded_at: new Date().toISOString(),
+      };
+
+      if (!dryRun) {
+        const { error: pickUpdateError } = await supabaseAdmin
+          .from("picks")
+          .update(pickPatch)
+          .eq("id", pick.id);
+
+        if (pickUpdateError) {
+          skipped.push({
+            pick_id: pick.id,
+            event_id: pick.event_id,
+            reason: "pick_update_failed",
+            message: pickUpdateError.message,
+          });
+          continue;
+        }
+
+        const { error: legUpdateError } = await supabaseAdmin
+          .from("pick_legs")
+          .update(legPatch)
+          .eq("pick_id", pick.id)
+          .eq("status", "pending");
+
+        if (legUpdateError) {
+          skipped.push({
+            pick_id: pick.id,
+            event_id: pick.event_id,
+            reason: "leg_update_failed",
+            message: legUpdateError.message,
+          });
+          continue;
+        }
+      }
+
+      quarantined.push({
+        pick_id: pick.id,
+        event_id: pick.event_id,
+        pickPatch,
+        legPatch,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      dryRun,
+      scanned: picks?.length ?? 0,
+      quarantinedCount: quarantined.length,
+      skippedCount: skipped.length,
+      quarantined: quarantined.slice(0, 20),
+      skipped: skipped.slice(0, 20),
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[parlays/quarantine-legacy] failed", err);
+    return res.status(500).json({ error: "quarantine_legacy_failed" });
   }
 });
 
