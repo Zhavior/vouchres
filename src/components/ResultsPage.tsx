@@ -529,10 +529,10 @@ export default function ResultsPage({
 
         return {
           id: String(parlay.backendPickId || parlay.pick_id || parlay.id || parlay.clientRef || `backend-ai-${Date.now()}`),
-          title: String(parlay.title || parlay.market || "V.A.I Smart Picks Parlay"),
+          title: getFriendlyParlayTitle(parlay),
           createdAt: new Date(parlay.createdAt || parlay.created_at || parlay.timestamp || Date.now()),
           status: normalizedStatus as any,
-          oddsDisplay: parlay.oddsDisplay || `${oddsValue.toFixed(2)}x`,
+          oddsDisplay: getFriendlyOddsDisplay(parlay, oddsValue),
           oddsValue: Number.isFinite(oddsValue) && oddsValue > 0 ? oddsValue : 2,
           wager: Number.isFinite(wager) && wager > 0 ? wager : 1,
           payout,
@@ -620,6 +620,44 @@ export default function ResultsPage({
       parlay: p.parlay,
       vouch: p.vouch
     }));
+
+
+  const getFriendlyParlayTitle = (parlay: any) => {
+    const rawTitle = String(parlay?.title ?? "").trim();
+    const rawMarket = String(parlay?.market ?? "").trim();
+    const rawSource = String(parlay?.source ?? "").trim().toLowerCase();
+
+    const candidate = rawTitle || rawMarket;
+
+    const isTechnical =
+      !candidate ||
+      candidate.includes("clientRef=") ||
+      candidate.includes("source=") ||
+      candidate.includes("backend-ai-") ||
+      candidate.length > 80;
+
+    if (!isTechnical) return candidate;
+
+    if (rawSource.includes("local_import")) return "Imported HR Parlay";
+    if (rawSource.includes("manual")) return "My Saved Parlay";
+    if (rawSource.includes("ai") || rawSource.includes("vai")) return "V.A.I Smart Picks Parlay";
+
+    return "My Parlay";
+  };
+
+  const getFriendlyOddsDisplay = (parlay: any, oddsValue: number) => {
+    const rawDisplay = String(parlay?.oddsDisplay ?? parlay?.odds_display ?? "").trim();
+
+    if (rawDisplay && rawDisplay !== "0" && rawDisplay !== "0x") {
+      return rawDisplay;
+    }
+
+    if (Number.isFinite(oddsValue) && oddsValue > 0) {
+      return `${oddsValue.toFixed(2)}x`;
+    }
+
+    return "Pending odds";
+  };
 
   const filteredAiParlays = selectedDateYMD
     ? aiParlays.filter((p) => getLocalYMD(p.createdAt) === selectedDateYMD)
