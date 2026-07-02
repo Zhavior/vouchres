@@ -387,13 +387,17 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
         const payload = await apiClient.get("/api/me/parlays");
 
         if (!cancelled) {
-          const picks = Array.isArray(payload)
+          const rawPicks = Array.isArray(payload)
             ? payload
-            : Array.isArray((payload as any)?.picks)
-              ? (payload as any).picks
-              : Array.isArray((payload as any)?.data)
-                ? (payload as any).data
-                : [];
+            : Array.isArray((payload as any)?.parlays)
+              ? (payload as any).parlays
+              : Array.isArray((payload as any)?.picks)
+                ? (payload as any).picks
+                : Array.isArray((payload as any)?.data)
+                  ? (payload as any).data
+                  : [];
+
+          const picks = uniqueByParlayParentId(rawPicks);
 
           setBackendLedger({ picks } as any);
         }
@@ -439,6 +443,35 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
     }));
 
 
+
+  const getParlayParentId = (parlay: any) =>
+    String(
+      parlay?.id ||
+      parlay?.pick_id ||
+      parlay?.backendPickId ||
+      parlay?.pick?.id ||
+      parlay?.parentPickId ||
+      ""
+    ).trim();
+
+  const uniqueByParlayParentId = <T extends any>(items: T[]): T[] => {
+    const seen = new Set<string>();
+    const unique: T[] = [];
+
+    for (const item of items) {
+      const parentId = getParlayParentId(item);
+      const fallbackId = String((item as any)?.clientRef || (item as any)?.event_key || (item as any)?.eventKey || "");
+      const key = parentId || fallbackId;
+
+      if (!key || seen.has(key)) continue;
+
+      seen.add(key);
+      unique.push(item);
+    }
+
+    return unique;
+  };
+
   const getFriendlyParlayTitle = (parlay: any) => {
     const rawTitle = String(parlay?.title ?? "").trim();
     const rawMarket = String(parlay?.market ?? "").trim();
@@ -476,9 +509,11 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
     return "Pending odds";
   };
 
-  const filteredAiParlays = selectedDateYMD
-    ? aiParlays.filter((p) => getLocalYMD(p.createdAt) === selectedDateYMD)
-    : aiParlays;
+  const filteredAiParlays = uniqueByParlayParentId(
+    selectedDateYMD
+      ? aiParlays.filter((p) => getLocalYMD(p.createdAt) === selectedDateYMD)
+      : aiParlays
+  );
 
   const filteredCommunityResults = selectedDateYMD
     ? results.filter((r) => getLocalYMD(r.timestamp) === selectedDateYMD)
