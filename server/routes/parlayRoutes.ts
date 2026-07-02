@@ -454,29 +454,30 @@ parlayRoutes.post("/parlays/save", requireAuth, async (req: AuthedRequest, res: 
    Body: { legs: [{ sport, gamePk, market, selection, threshold?, oddsDecimal? }], stakeUnits? }
    ============================================================ */
 parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Response) => {
-  const body = req.body ?? {};
-  const legs = body.legs;
-  const stakeUnits = typeof body.stakeUnits === "number" && body.stakeUnits > 0 ? body.stakeUnits : 1.0;
-
-  if (!Array.isArray(legs) || legs.length === 0 || legs.length > 12) {
-    return res.status(400).json({ error: "legs must be a 1–12 item array" });
-  }
-  const normalizedLegs: GradableLeg[] = legs.map((leg: any) => ({
-    ...leg,
-    sport: String(leg?.sport || "").trim().toLowerCase(),
-    gamePk: String(leg?.gamePk || "").trim(),
-    market: String(leg?.market || "").trim().toLowerCase(),
-    selection: String(leg?.selection || "").trim(),
-  }));
-
-  const valid = normalizedLegs.every(
-    (leg) => leg.sport && leg.gamePk && leg.market && leg.selection
-  );
-  if (!valid) {
-    return res.status(400).json({ error: "each leg needs sport, gamePk, market, selection" });
-  }
-
   try {
+    const body = req.body ?? {};
+    const legs = body.legs;
+    const stakeUnits = typeof body.stakeUnits === "number" && body.stakeUnits > 0 ? body.stakeUnits : 1.0;
+
+    if (!Array.isArray(legs) || legs.length === 0 || legs.length > 12) {
+      return res.status(400).json({ error: "legs must be a 1–12 item array" });
+    }
+
+    const normalizedLegs: GradableLeg[] = legs.map((leg: any) => ({
+      ...leg,
+      sport: String(leg?.sport || "").trim().toLowerCase(),
+      gamePk: String(leg?.gamePk || "").trim(),
+      market: String(leg?.market || "").trim().toLowerCase(),
+      selection: String(leg?.selection || "").trim(),
+    }));
+
+    const valid = normalizedLegs.every(
+      (leg) => leg.sport && leg.gamePk && leg.market && leg.selection
+    );
+    if (!valid) {
+      return res.status(400).json({ error: "each leg needs sport, gamePk, market, selection" });
+    }
+
     // Fetch each unique (sport+game) once.
     const gameCache = new Map<string, GameData | null>();
     for (const leg of normalizedLegs) {
@@ -517,8 +518,11 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
 
     return res.json({ legs: gradedLegs, parlay, gradedAt: new Date().toISOString() });
   } catch (err: any) {
-    console.error("[parlays/grade] failed", err?.message);
-    return res.status(500).json({ error: "grade_failed", message: err?.message });
+    console.error("[parlays/grade] failed", err?.message, err?.stack);
+    return res.status(500).json({
+      error: "grade_failed",
+      message: err?.message ?? "unknown grading error",
+    });
   }
 });
 
