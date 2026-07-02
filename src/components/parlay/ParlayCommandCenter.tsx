@@ -182,11 +182,12 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => P
         </p>
         <button
           type="button"
-          disabled
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm font-black text-slate-500"
+          onClick={handleSaveDraft}
+          disabled={!canSave}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500 px-4 py-3 text-sm font-black text-emerald-950 transition hover:bg-emerald-400 disabled:border-slate-700 disabled:bg-slate-900/80 disabled:text-slate-500"
         >
           <Save className="h-4 w-4" />
-          Save wiring next
+          {isSaving ? "Saving..." : "Save Draft"}
         </button>
       </div>
     </div>
