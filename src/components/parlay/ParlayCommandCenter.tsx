@@ -67,6 +67,8 @@ function EmptyPanel({
 
 function BuildSlipPanel() {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
+  const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
+  const clearDraft = useParlayCommandStore((state) => state.clearDraft);
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
@@ -76,8 +78,19 @@ function BuildSlipPanel() {
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Build Slip</p>
             <h3 className="mt-1 text-xl font-black text-white">One canonical builder</h3>
           </div>
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-3 py-2 text-xs font-black text-emerald-300">
-            {draftLegs.length} legs
+          <div className="flex items-center gap-2">
+            {draftLegs.length > 0 && (
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="rounded-2xl border border-rose-500/25 bg-rose-950/20 px-3 py-2 text-xs font-black text-rose-200 transition hover:border-rose-400/50 hover:bg-rose-950/35"
+              >
+                Clear Draft
+              </button>
+            )}
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-3 py-2 text-xs font-black text-emerald-300">
+              {draftLegs.length} legs
+            </div>
           </div>
         </div>
 
@@ -92,8 +105,40 @@ function BuildSlipPanel() {
             <div className="space-y-3">
               {draftLegs.map((leg) => (
                 <div key={leg.id} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <p className="text-sm font-black text-white">{leg.playerName || leg.selection}</p>
-                  <p className="mt-1 text-xs text-slate-400">{leg.marketLabel || leg.marketCode || "Player prop"}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-white">{leg.playerName || leg.selection}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {leg.marketLabel || leg.marketCode || "Player prop"}
+                        {leg.teamLabel ? ` · ${leg.teamLabel}` : ""}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
+                        {leg.odds !== undefined && (
+                          <span className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-slate-300">
+                            Odds {leg.odds}
+                          </span>
+                        )}
+                        {leg.statTarget !== undefined && (
+                          <span className="rounded-full border border-cyan-500/20 bg-cyan-950/20 px-2.5 py-1 text-cyan-200">
+                            Target {leg.statTarget}
+                          </span>
+                        )}
+                        {leg.source && (
+                          <span className="rounded-full border border-emerald-500/20 bg-emerald-950/20 px-2.5 py-1 text-emerald-200">
+                            {leg.source}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => removeDraftLeg(leg.id)}
+                      className="shrink-0 rounded-2xl border border-rose-500/25 bg-rose-950/15 px-3 py-2 text-[11px] font-black uppercase text-rose-200 transition hover:border-rose-400/50 hover:bg-rose-950/30"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
