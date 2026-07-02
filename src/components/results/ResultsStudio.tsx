@@ -391,6 +391,28 @@ function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pe
   );
 }
 
+
+function LivePulseBars({ active }: { active: boolean }) {
+  if (!active) return null;
+
+  return (
+    <div className="flex items-end gap-[3px] h-5" aria-label="Live parlay activity">
+      {[0, 1, 2, 3, 4].map((bar) => (
+        <span
+          key={bar}
+          className="w-[3px] rounded-full bg-cyan-300/90 shadow-[0_0_10px_rgba(34,211,238,0.65)]"
+          style={{
+            height: `${8 + (bar % 3) * 4}px`,
+            animation: "ve-live-bar 0.9s ease-in-out infinite",
+            animationDelay: `${bar * 110}ms`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+
 /* ============ Result Slip Card ============ */
 function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
   const statusConfig = {
@@ -401,9 +423,17 @@ function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
   };
   const config = statusConfig[slip.status as keyof typeof statusConfig] || statusConfig.PENDING;
   const Icon = config.icon;
+  const isLivePending = slip.status === "PENDING";
 
   return (
-    <motion.div
+    <>
+      <style>{`
+        @keyframes ve-live-bar {
+          0%, 100% { transform: scaleY(0.45); opacity: 0.45; }
+          50% { transform: scaleY(1.25); opacity: 1; }
+        }
+      `}</style>
+      <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
@@ -417,9 +447,12 @@ function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
             {slip.ownerName} · {slip.totalLegs}-leg · {new Date(slip.postedAt).toLocaleDateString()}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shrink-0" style={{ background: config.bg, border: `1px solid ${config.border}` }}>
-          <Icon className="w-3 h-3" style={{ color: config.color }} />
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.color }}>{config.label}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <LivePulseBars active={isLivePending} />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: config.bg, border: `1px solid ${config.border}` }}>
+            <Icon className="w-3 h-3" style={{ color: config.color }} />
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.color }}>{config.label}</span>
+          </div>
         </div>
       </div>
 
@@ -451,6 +484,7 @@ function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
         <span className="text-[9px] text-slate-600 ml-auto">Graded after final</span>
       </div>
     </motion.div>
+    </>
   );
 }
 
