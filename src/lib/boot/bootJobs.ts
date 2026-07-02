@@ -72,7 +72,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     required: true,
     weight: 10,
     timeoutMs: 3500,
-    run: (signal) => runAndCache("savedParlays", "/api/parlays/saved", signal),
+    run: (signal) => runAndCache("savedParlays", "/api/me/parlays", signal),
   },
   {
     id: "notifications",
