@@ -696,6 +696,91 @@ parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, async (req:
   }
 });
 
+async function countRows(query: any): Promise<number> {
+  const { count, error } = await query;
+  if (error) {
+    console.warn("[parlays/integrity] count failed", error.code, error.message);
+    return -1;
+  }
+  return typeof count === "number" ? count : 0;
+}
+
+/**
+ * GET /api/cron/parlays/integrity
+ *
+ * Nose scanner for the parlay grading architecture.
+ * Counts weak/stale rows that can break exact-field grading.
+ */
+parlayRoutes.get("/cron/parlays/integrity", async (req: Request, res: Response) => {
+  if (!isAuthorizedCronRequest(req)) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+
+    const [
+      missingEventKey,
+      missingGameId,
+      missingMarketCode,
+      missingComparator,
+      missingStatTarget,
+      missingPlayerId,
+      pendingLegs,
+      cachedResults,
+      weakHrTextLegs,
+    ] = await Promise.all([
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("event_key", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("game_id", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("market_code", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("comparator", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("stat_target", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).is("player_id", null)),
+      countRows(supabaseAdmin.from("pick_legs").select("*", { count: "exact", head: true }).eq("status", "pending")),
+      countRows(supabaseAdmin.from("graded_leg_results").select("*", { count: "exact", head: true })),
+      countRows(
+        supabaseAdmin
+          .from("pick_legs")
+          .select("*", { count: "exact", head: true })
+          .or("market.ilike.%hr%,selection.ilike.%home run%,selection.ilike.%homer%")
+          .is("market_code", null)
+      ),
+    ]);
+
+    const issues = {
+      missingEventKey,
+      missingGameId,
+      missingMarketCode,
+      missingComparator,
+      missingStatTarget,
+      missingPlayerId,
+      weakHrTextLegs,
+      pendingLegs,
+    };
+
+    const blockingIssueCount = Object.entries(issues)
+      .filter(([key]) => key !== "pendingLegs")
+      .reduce((sum, [, value]) => sum + Math.max(0, Number(value || 0)), 0);
+
+    return res.json({
+      ok: blockingIssueCount === 0,
+      scanner: "parlay_integrity_nose",
+      checkedAt: new Date().toISOString(),
+      issues,
+      cache: {
+        gradedLegResults: cachedResults,
+      },
+      advice:
+        blockingIssueCount === 0
+          ? "Parlay grading identity looks clean."
+          : "Some legs are missing exact grading identity. New saves should use /api/me/parlays only; old rows may need repair/backfill.",
+    });
+  } catch (err: any) {
+    console.error("[parlays/integrity] failed", err?.message);
+    return res.status(500).json({ error: "parlay_integrity_failed", message: err?.message });
+  }
+});
+
 type ParlayLegBody = {
   event_id: string;
   market: string;
