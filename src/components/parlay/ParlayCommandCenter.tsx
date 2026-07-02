@@ -65,10 +65,38 @@ function EmptyPanel({
   );
 }
 
-function BuildSlipPanel() {
+function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => Promise<void> | void }) {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
   const clearDraft = useParlayCommandStore((state) => state.clearDraft);
+  const [isSaving, setIsSaving] = useState(false);
+  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving;
+
+  const handleSaveDraft = async () => {
+    if (!onSaveParlay || draftLegs.length === 0 || isSaving) return;
+
+    const now = new Date().toISOString();
+    const draftParlay: Parlay = {
+      id: `command-draft-${Date.now()}`,
+      title: `Command Center ${draftLegs.length}-Leg Slip`,
+      summary: draftLegs.map((leg) => leg.playerName || leg.marketLabel || "Player prop").join(" · "),
+      legs: draftLegs,
+      status: "PENDING",
+      mode: "PRACTICE",
+      createdAt: now,
+      updatedAt: now,
+      aiGenerated: false,
+      source: "command_center",
+    } as Parlay;
+
+    setIsSaving(true);
+    try {
+      await onSaveParlay(draftParlay);
+      clearDraft();
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
@@ -367,7 +395,7 @@ type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
 };
 
-export default function ParlayCommandCenter({ savedSlips = [] }: ParlayCommandCenterProps) {
+export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: ParlayCommandCenterProps) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel = useParlayCommandStore((state) => state.setActivePanel);
   const hydrateSavedSlips = useParlayCommandStore((state) => state.hydrateSavedSlips);
