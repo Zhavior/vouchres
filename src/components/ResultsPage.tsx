@@ -472,7 +472,26 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
     return unique;
   };
 
-  const getFriendlyParlayTitle = (parlay: any) => {
+  
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const compactPublicTicketId = (id?: string | number | null): string => {
+  const raw = String(id ?? "").trim();
+  if (!raw) return "VOUCH";
+  return `VOUCH-${raw.replace(/[^a-z0-9]/gi, "").slice(-6).toUpperCase()}`;
+};
+
+const getFallbackHeadshot = (name?: string | null): string =>
+  `https://ui-avatars.com/api/?background=0f172a&color=94a3b8&name=${encodeURIComponent(cleanCustomerText(name) || "Player")}`;
+
+const getFriendlyParlayTitle = (parlay: any) => {
     const rawTitle = String(parlay?.title ?? "").trim();
     const rawMarket = String(parlay?.market ?? "").trim();
     const rawSource = String(parlay?.source ?? "").trim().toLowerCase();
@@ -1116,7 +1135,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                           ? 'border-sky-900/60 shadow-lg shadow-sky-500/5' 
                           : isWon 
                           ? 'border-emerald-950/80 bg-gradient-to-b from-[#0d131f] to-[#041916]' 
-                          : 'border-slate-900 opacity-80'
+                          : 'border-rose-950/70 bg-gradient-to-b from-[#0d131f] via-[#1a0b12] to-[#10070b] shadow-lg shadow-rose-950/10'
                       }`}
                     >
                       
@@ -1124,12 +1143,12 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5 font-mono text-[9.5px]">
                             <span className="bg-slate-900 px-1.5 py-0.5 border border-slate-800 rounded text-slate-400">
-                              {pick.id}
+                              {compactPublicTicketId(pick.id)}
                             </span>
                             <span className="text-sky-400 font-bold uppercase">{pick.bookie}</span>
                           </div>
                           <h4 className="text-xs font-bold text-slate-100 font-mono mt-1.5">
-                            {pick.title}
+                            {cleanCustomerText(pick.title) || "VouchEdge Parlay"}
                           </h4>
                         </div>
 
@@ -1142,47 +1161,83 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                             WON ✓
                           </span>
                         ) : (
-                          <span className="text-[9.5px] bg-slate-900 text-slate-500 font-bold border border-slate-850 rounded px-2 py-0.5 font-mono leading-none">
-                            LOST
+                          <span className="text-[9.5px] bg-rose-950/60 text-rose-300 font-black border border-rose-900 rounded px-2 py-1 font-mono leading-none">
+                            LOST ✕
                           </span>
                         )}
                       </div>
 
                       {/* Legs list */}
                       <div className="space-y-2">
-                        {pick.legs.map((leg, lIdx) => (
-                          <div key={lIdx} className="bg-slate-950/60 border border-slate-900/60 rounded-xl p-2.5 flex items-center justify-between gap-3 text-[10px] font-mono">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <img 
-                                src={leg.headshot} 
-                                alt={leg.playerName} 
-                                referrerPolicy="no-referrer"
-                                className="w-7 h-7 rounded-md object-cover bg-slate-900 border border-slate-800 flex-shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <h5 className="font-bold text-slate-200 truncate">
-                                  {leg.playerName} <span className="text-[8px] text-slate-500 font-bold">({leg.team})</span>
-                                </h5>
-                                <span className="text-[9px] text-slate-400 truncate block mt-0.5">
-                                  {leg.spec}
+                        {pick.legs.map((leg, lIdx) => {
+                          const legWon = leg.status === 'WON';
+                          const legLost = leg.status === 'LOST';
+                          const playerName = cleanCustomerText(leg.playerName) || "Unknown Player";
+                          const spec = cleanCustomerText(leg.spec) || "Player prop";
+                          const team = cleanCustomerText(leg.team) || "MLB";
+                          const fallbackHeadshot = getFallbackHeadshot(playerName);
+
+                          return (
+                            <div
+                              key={lIdx}
+                              className={`rounded-xl p-2.5 flex items-center justify-between gap-3 text-[10px] font-mono border transition-all ${
+                                legWon
+                                  ? 'bg-emerald-950/20 border-emerald-900/50'
+                                  : legLost
+                                  ? 'bg-rose-950/20 border-rose-900/50'
+                                  : 'bg-slate-950/60 border-slate-900/60'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`relative rounded-lg p-[1px] flex-shrink-0 ${
+                                  legWon ? 'bg-emerald-500/60' : legLost ? 'bg-rose-500/60' : 'bg-slate-800'
+                                }`}>
+                                  <img
+                                    src={leg.headshot || fallbackHeadshot}
+                                    alt={`${playerName} headshot`}
+                                    referrerPolicy="no-referrer"
+                                    onError={(event) => {
+                                      event.currentTarget.onerror = null;
+                                      event.currentTarget.src = fallbackHeadshot;
+                                    }}
+                                    className="w-8 h-8 rounded-lg object-cover bg-slate-900 border border-slate-950 flex-shrink-0"
+                                  />
+                                  <span className={`absolute -right-1 -bottom-1 w-4 h-4 rounded-full border border-slate-950 flex items-center justify-center text-[9px] font-black ${
+                                    legWon
+                                      ? 'bg-emerald-500 text-slate-950'
+                                      : legLost
+                                      ? 'bg-rose-500 text-white'
+                                      : 'bg-slate-700 text-slate-300'
+                                  }`}>
+                                    {legWon ? '✓' : legLost ? '×' : '•'}
+                                  </span>
+                                </div>
+
+                                <div className="min-w-0">
+                                  <h5 className="font-black text-slate-100 truncate">
+                                    {playerName} <span className="text-[8px] text-slate-500 font-bold">({team})</span>
+                                  </h5>
+                                  <span className="text-[9px] text-slate-400 truncate block mt-0.5">
+                                    {spec}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="text-right flex-shrink-0">
+                                <span className="text-[9.5px] font-bold text-slate-300">
+                                  dec {Number(leg.odds || 1).toFixed(2)}
                                 </span>
+                                {legWon ? (
+                                  <span className="text-[8px] text-emerald-300 font-black block uppercase">✓ HIT</span>
+                                ) : legLost ? (
+                                  <span className="text-[8px] text-rose-300 font-black block uppercase">✕ Miss</span>
+                                ) : (
+                                  <span className="text-[8px] text-slate-500 font-bold block uppercase">Pending</span>
+                                )}
                               </div>
                             </div>
-
-                            <div className="text-right flex-shrink-0">
-                              <span className="text-[9.5px] font-bold text-slate-300">
-                                dec {leg.odds.toFixed(2)}
-                              </span>
-                              {leg.status === 'WON' ? (
-                                <span className="text-[8px] text-emerald-400 font-bold block">✓ HIT</span>
-                              ) : leg.status === 'LOST' ? (
-                                <span className="text-[8px] text-rose-500 font-bold block">MISS</span>
-                              ) : (
-                                <span className="text-[8px] text-slate-500 block">PENDING</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Odds metrics */}
