@@ -24,6 +24,7 @@ import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
 import { normalizePlayerId } from './lib/mlbHeadshot';
 import { normalizeParlaySlip, buildSaveParlayPayload } from './lib/parlays/parlayBridge';
+import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
@@ -1272,7 +1273,22 @@ export default function App() {
       playerId,
     };
     setActiveLegs([...activeLegs, newLeg]);
-    alert(`🎯 Added "${prop.spec}" to your active parlay slip context!`);
+    useParlayCommandStore.getState().addDraftLeg({
+      id: newLeg.id,
+      source: "manual",
+      sport: newLeg.sport,
+      game: newLeg.game,
+      selection: newLeg.selection,
+      odds: newLeg.odds ?? undefined,
+      marketCode: newLeg.marketCode,
+      marketLabel: newLeg.market,
+      playerId: newLeg.playerId,
+      playerName: player.name,
+      teamLabel: player.team,
+      statTarget: newLeg.threshold,
+      gamePk: newLeg.gamePk,
+    });
+    alert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
   };
 
   // Render content depending on left sidebar active item
