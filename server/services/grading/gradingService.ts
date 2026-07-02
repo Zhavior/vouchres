@@ -433,7 +433,7 @@ async function gradeParlayPick(
       }
     }
 
-    const gradedLeg = gradeExactParlayLeg(leg, legBoxscore);
+    const gradedLeg = await gradeParlayLegWithCache(supabaseAdmin, leg, legBoxscore);
 
     legResults.push({
       leg_index: Number(leg.leg_index),
@@ -490,6 +490,65 @@ async function gradeParlayPick(
         : `Parlay won. ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`,
     leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
   };
+}
+
+async function gradeParlayLegWithCache(
+  supabaseAdmin: any,
+  leg: any,
+  boxscore: any
+): Promise<{ status: "won" | "lost" | "push"; note: string }> {
+  const eventKey = String(leg.event_key || "").trim();
+
+  if (eventKey) {
+    const { data: cached, error: cacheReadError } = await supabaseAdmin
+      .from("graded_leg_results")
+      .select("status, note")
+      .eq("event_key", eventKey)
+      .maybeSingle();
+
+    if (!cacheReadError && cached?.status) {
+      return {
+        status: cached.status as "won" | "lost" | "push",
+        note: cached.note ? `Cached result: ${cached.note}` : "Cached graded leg result.",
+      };
+    }
+  }
+
+  const graded = gradeExactParlayLeg(leg, boxscore);
+
+  if (eventKey) {
+    const marketCode = normalizeMarketCode(leg.market_code || leg.market);
+    const target = Number(leg.stat_target ?? defaultTargetForMarket(marketCode));
+    const playerStats = findPlayerStatsForLeg(boxscore, leg);
+    const actualValue = playerStats ? getActualStatForMarket(playerStats, marketCode) : null;
+
+    const { error: cacheWriteError } = await supabaseAdmin
+      .from("graded_leg_results")
+      .upsert(
+        {
+          event_key: eventKey,
+          sport: String(leg.sport || "mlb").toLowerCase(),
+          game_id: leg.game_id || leg.event_id || null,
+          player_id: leg.player_id || null,
+          market_code: marketCode || null,
+          stat_target: Number.isFinite(target) ? target : null,
+          comparator: leg.comparator || ">=",
+          actual_value: actualValue,
+          status: graded.status,
+          note: graded.note,
+          source_provider: leg.external_provider || "mlb_statsapi",
+          graded_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "event_key" }
+      );
+
+    if (cacheWriteError) {
+      console.warn("[grading] graded_leg_results upsert failed", cacheWriteError.code, cacheWriteError.message);
+    }
+  }
+
+  return graded;
 }
 
 function gradeExactParlayLeg(
