@@ -51,6 +51,8 @@ async function fetchConfirmedStarters(sport: SportId): Promise<StarterCandidate[
             battingOrder: p.battingOrder,
             gamePk,
             gameStartTime: start,
+            playerId: String(p.playerId || p.player_id || p.id || ''),
+            teamId: String(p.teamId || p.team_id || ''),
           });
         }
       });
@@ -68,17 +70,35 @@ function hrOddsFor(battingOrder: number): number {
 }
 
 function buildLeg(c: StarterCandidate, idx: number): Leg {
+  const gameId = String(c.gamePk || '');
+  const playerId = String(c.playerId || '');
+  const teamId = String(c.teamId || '');
+  const marketCode = 'ANYTIME_HR';
+  const statTarget = 1;
+  const comparator = '>=';
+  const comparatorKey = 'GTE';
+  const eventKey = ['MLB', gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join('_');
+  const popularityKey = ['MLB', playerId, marketCode, statTarget, comparatorKey].join('_');
+
   return {
-    id: `ai-leg-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 5)}`,
+    id: `ai-leg-${gameId}-${playerId || idx}-${marketCode}-${statTarget}`,
     sport: 'MLB',
     game: `${c.team}`,
     market: 'To Hit 1+ Home Run',
     selection: `${c.playerName} 1+ HR`,
     odds: hrOddsFor(c.battingOrder),
     status: 'PENDING',
-    gamePk: c.gamePk,
-    marketCode: 'hr',
-    threshold: 1,
+    gamePk: gameId,
+    gameId,
+    teamId,
+    playerId,
+    marketCode,
+    statTarget,
+    threshold: statTarget,
+    comparator,
+    eventKey,
+    popularityKey,
+    externalProvider: 'mlb_statsapi',
     gameStartTime: c.gameStartTime,
   };
 }
