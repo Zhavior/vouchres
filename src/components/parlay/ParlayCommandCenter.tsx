@@ -194,12 +194,21 @@ function CommandPanel() {
   return <BuildSlipPanel />;
 }
 
-export default function ParlayCommandCenter() {
+type ParlayCommandCenterProps = {
+  savedSlips?: unknown[];
+};
+
+export default function ParlayCommandCenter({ savedSlips = [] }: ParlayCommandCenterProps) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel = useParlayCommandStore((state) => state.setActivePanel);
+  const hydrateSavedSlips = useParlayCommandStore((state) => state.hydrateSavedSlips);
   const draftLegs = useParlayCommandStore(selectDraftLegs);
-  const savedSlips = useParlayCommandStore(selectSavedSlips);
-  const liveSlips = savedSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
+  const commandSavedSlips = useParlayCommandStore(selectSavedSlips);
+  const liveSlips = commandSavedSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
+
+  useEffect(() => {
+    hydrateSavedSlips(savedSlips);
+  }, [hydrateSavedSlips, savedSlips]);
 
   return (
     <section className="min-h-screen bg-[#020817] px-4 py-6 text-slate-100 sm:px-6 lg:px-8">

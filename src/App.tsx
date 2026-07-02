@@ -1344,7 +1344,7 @@ export default function App() {
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <ParlayCommandCenter />;
+        return <ParlayCommandCenter savedSlips={savedSlips} />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
