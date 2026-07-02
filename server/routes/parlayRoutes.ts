@@ -1827,7 +1827,10 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
     parlay = insertRes.data;
 
     const legsToInsert = legsJson.map((l) => ({ ...l, pick_id: parlay.id, status: "pending" as const }));
-    const { error: legsError } = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
+    const { data: insertedLegs, error: legsError } = await supabaseAdmin
+      .from("pick_legs")
+      .insert(legsToInsert)
+      .select("*");
 
     if (legsError) {
       // ROLLBACK: do not leave an orphan parent pick without legs.
@@ -1836,9 +1839,20 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
       return res.status(500).json({ error: "parlay_creation_failed", detail: "Leg insert failed; parlay rolled back." });
     }
 
-    const { data: legs } = await supabaseAdmin
-      .from("pick_legs").select("*").eq("pick_id", parlay.id).order("leg_index", { ascending: true });
-    return respond(parlay, legs ?? []);
+    if (!insertedLegs || insertedLegs.length !== legsToInsert.length) {
+      console.error("[me/parlays] legs insert count mismatch — rolling back parent", {
+        expected: legsToInsert.length,
+        actual: insertedLegs?.length ?? 0,
+      });
+      await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
+      return res.status(500).json({
+        error: "parlay_creation_failed",
+        detail: "Leg insert count mismatch; parlay rolled back.",
+      });
+    }
+
+    const legs = [...insertedLegs].sort((a, b) => Number(a.leg_index ?? 0) - Number(b.leg_index ?? 0));
+    return respond(parlay, legs);
   } catch (err: any) {
     console.error("[me/parlays] save failed", err?.message);
     return res.status(500).json({ error: "save_failed" });
