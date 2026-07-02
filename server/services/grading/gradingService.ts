@@ -373,10 +373,12 @@ async function gradeParlayPick(
   boxscore: any
 ): Promise<GradeResult> {
   const supabaseAdmin = await getSupabaseAdmin();
-  // 1. Load legs
+
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")
-    .select("leg_index, market, selection, event_id, game_id, market_code, player_id, event_key, odds_decimal")
+    .select(
+      "leg_index, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal"
+    )
     .eq("pick_id", pick.id)
     .order("leg_index", { ascending: true });
 
@@ -389,117 +391,93 @@ async function gradeParlayPick(
     };
   }
 
-  // 2. Group legs by event_id — fetch each unique boxscore once
-  const eventIds = [...new Set(legs.map((l: any) => l.event_id).filter(Boolean))] as string[];
   const boxscoreCache = new Map<string, any>();
+  const legResults: Array<{
+    leg_index: number;
+    status: "won" | "lost" | "push";
+    odds: number;
+    note?: string;
+  }> = [];
 
-  for (const eventId of eventIds) {
-    if (!isLikelyMlbGamePk(eventId)) {
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `legacy_manual_leg_event_skipped:${eventId}`,
-        warnings: [`legacy/manual leg event id skipped (${eventId})`],
-      };
+  for (const leg of legs as any[]) {
+    const rawGamePk = String(leg.game_id || leg.event_id || "").trim();
+
+    if (!isLikelyMlbGamePk(rawGamePk)) {
+      legResults.push({
+        leg_index: Number(leg.leg_index),
+        status: "push",
+        odds: Number(leg.odds_decimal ?? 1),
+        note: `Skipped legacy/manual leg with invalid game id: ${rawGamePk || "missing"}`,
+      });
+      continue;
     }
 
-    try {
-      // If this leg's event matches the parlay's parent event, reuse the boxscore
-      if (eventId === (pick as any).event_id?.toString()) {
-        boxscoreCache.set(eventId, boxscore);
-        continue;
-      }
-      const legBoxscore = await fetchBoxscore(eventId);
-      boxscoreCache.set(eventId, legBoxscore);
-    } catch (err: any) {
-      // Any leg's game not final → can't grade parlay yet
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_event_not_final:${eventId}: ${err.message}`,
-      };
-    }
-  }
+    let legBoxscore = boxscoreCache.get(rawGamePk);
 
-  // 3. Evaluate each leg
-  const legResults: Array<{ leg_index: number; status: "won" | "lost" | "push"; odds: number; note?: string }> = [];
-
-  for (const leg of legs) {
-    const legBoxscore = leg.event_id ? boxscoreCache.get(leg.event_id as string) : boxscore;
     if (!legBoxscore) {
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_no_boxscore:${leg.leg_index}`,
-      };
+      try {
+        if (rawGamePk === String((pick as any).event_id || "")) {
+          legBoxscore = boxscore;
+        } else {
+          legBoxscore = await fetchBoxscore(rawGamePk);
+        }
+        boxscoreCache.set(rawGamePk, legBoxscore);
+      } catch (err: any) {
+        return {
+          pick_id: pick.id,
+          status: "graded_error",
+          settled_units: null,
+          error: `parlay_leg_event_not_ready:${rawGamePk}: ${err?.message || "boxscore unavailable"}`,
+          warnings: [`Parlay leg ${leg.leg_index} game ${rawGamePk} is not ready/final yet.`],
+        };
+      }
     }
 
-    // Reuse the single-pick evaluation logic for this leg
-    const legResult = await evaluatePick(
-      {
-        id: pick.id,
-        market: leg.market,
-        selection: leg.selection,
-        odds_decimal: leg.odds_decimal ?? null,
-        stake_units: 1.0, // not used for individual leg eval
-        leg_type: "single",
-      },
-      legBoxscore
-    );
-
-    if (legResult.status === "graded_error") {
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_${leg.leg_index}_error: ${legResult.error}`,
-      };
-    }
+    const gradedLeg = gradeExactParlayLeg(leg, legBoxscore);
 
     legResults.push({
       leg_index: Number(leg.leg_index),
-      status: legResult.status as "won" | "lost" | "push",
-      odds: leg.odds_decimal ?? 2.0,
-      note: legResult.learning_note ?? legResult.error,
+      status: gradedLeg.status,
+      odds: Number(leg.odds_decimal ?? 2.0),
+      note: gradedLeg.note,
     });
   }
 
-  // 4. Combine leg results into parlay outcome
-  const stake = pick.stake_units ?? 1.0;
+  const stake = Number(pick.stake_units ?? 1.0);
 
-  // Any leg LOST → parlay LOST
+  if (legResults.length === 0) {
+    return {
+      pick_id: pick.id,
+      status: "graded_error",
+      settled_units: null,
+      error: "parlay_no_gradable_legs",
+    };
+  }
+
   if (legResults.some((r) => r.status === "lost")) {
     return {
       pick_id: pick.id,
       status: "lost",
       settled_units: -Number(stake.toFixed(2)),
-      learning_note: `Parlay lost: ${legResults.filter(r => r.status === "lost").length} leg(s) lost.`,
+      learning_note: `Parlay lost: ${legResults.filter((r) => r.status === "lost").length} leg(s) lost.`,
       leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
-  // Filter out pushes — they reduce the effective parlay size
   const wonLegs = legResults.filter((r) => r.status === "won");
   const pushLegs = legResults.filter((r) => r.status === "push");
 
-  // All legs pushed → refund stake
   if (wonLegs.length === 0) {
     return {
       pick_id: pick.id,
       status: "push",
       settled_units: 0.0,
-      learning_note: `Parlay pushed: all ${pushLegs.length} leg(s) pushed.`,
+      learning_note: `Parlay pushed/skipped: no losing legs and no winning legs were gradable.`,
       leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
-  // All remaining legs won → parlay won
-  // Payout = stake * product(wonLegs.odds)
-  // (Standard parlay math: pushes reduce leg count but don't lose)
-  const combinedOdds = wonLegs.reduce((product, leg) => product * leg.odds, 1);
+  const combinedOdds = wonLegs.reduce((product, leg) => product * Number(leg.odds || 1), 1);
   const payout = Number((stake * (combinedOdds - 1)).toFixed(2));
 
   return {
@@ -508,11 +486,152 @@ async function gradeParlayPick(
     settled_units: payout,
     learning_note:
       pushLegs.length > 0
-        ? `Parlay won with ${pushLegs.length} push(es). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
+        ? `Parlay won with ${pushLegs.length} push/skipped leg(s). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
         : `Parlay won. ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`,
     leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
   };
 }
+
+function gradeExactParlayLeg(
+  leg: any,
+  boxscore: any
+): { status: "won" | "lost" | "push"; note: string } {
+  const marketCode = normalizeMarketCode(leg.market_code || leg.market);
+  const target = Number(leg.stat_target ?? defaultTargetForMarket(marketCode));
+  const comparator = String(leg.comparator || ">=").trim();
+
+  const playerStats = findPlayerStatsForLeg(boxscore, leg);
+
+  if (!playerStats) {
+    return {
+      status: "push",
+      note: `Could not match player for leg ${leg.leg_index} by player_id or selection fallback.`,
+    };
+  }
+
+  const actual = getActualStatForMarket(playerStats, marketCode);
+
+  if (actual === null) {
+    return {
+      status: "push",
+      note: `Market ${marketCode || "UNKNOWN"} is not gradable from current boxscore stats.`,
+    };
+  }
+
+  const won = compareStat(actual, target, comparator);
+
+  return {
+    status: won ? "won" : "lost",
+    note: `${marketCode} graded ${actual} ${comparator} ${target} for ${playerStats.name || "matched player"}.`,
+  };
+}
+
+function normalizeMarketCode(value: unknown): string {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function defaultTargetForMarket(marketCode: string): number {
+  if (marketCode === "HITS_2_PLUS") return 2;
+  if (marketCode === "HITS_3_PLUS") return 3;
+  return 1;
+}
+
+function compareStat(actual: number, target: number, comparator: string): boolean {
+  if (comparator === ">" || comparator === "gt") return actual > target;
+  if (comparator === "<" || comparator === "lt") return actual < target;
+  if (comparator === "<=" || comparator === "lte") return actual <= target;
+  if (comparator === "=" || comparator === "==" || comparator === "eq") return actual === target;
+  return actual >= target;
+}
+
+function getActualStatForMarket(playerStats: any, marketCode: string): number | null {
+  const batting = playerStats?.stats?.batting || playerStats?.batting || {};
+
+  switch (marketCode) {
+    case "HR":
+    case "HOME_RUN":
+    case "HOME_RUNS":
+      return Number(batting.homeRuns ?? 0);
+
+    case "HIT":
+    case "HITS":
+      return Number(batting.hits ?? 0);
+
+    case "HITS_2_PLUS":
+      return Number(batting.hits ?? 0);
+
+    case "HITS_3_PLUS":
+      return Number(batting.hits ?? 0);
+
+    case "RBI":
+    case "RBIS":
+      return Number(batting.rbi ?? batting.rbis ?? 0);
+
+    case "RUN":
+    case "RUNS":
+      return Number(batting.runs ?? 0);
+
+    case "WALK":
+    case "WALKS":
+    case "BB":
+      return Number(batting.baseOnBalls ?? batting.walks ?? 0);
+
+    case "STOLEN_BASE":
+    case "STOLEN_BASES":
+    case "SB":
+      return Number(batting.stolenBases ?? 0);
+
+    case "TOTAL_BASES":
+    case "TB":
+      return Number(batting.totalBases ?? 0);
+
+    case "SINGLE":
+    case "SINGLES":
+      return Number(batting.singles ?? Math.max(0, Number(batting.hits ?? 0) - Number(batting.doubles ?? 0) - Number(batting.triples ?? 0) - Number(batting.homeRuns ?? 0)));
+
+    case "DOUBLE":
+    case "DOUBLES":
+      return Number(batting.doubles ?? 0);
+
+    case "TRIPLE":
+    case "TRIPLES":
+      return Number(batting.triples ?? 0);
+
+    default:
+      return null;
+  }
+}
+
+function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
+  const teams = [boxscore?.teams?.away?.players, boxscore?.teams?.home?.players].filter(Boolean);
+
+  if (leg.player_id) {
+    const playerKey = `ID${leg.player_id}`;
+    for (const players of teams) {
+      if (players?.[playerKey]) {
+        return players[playerKey];
+      }
+    }
+  }
+
+  const wantedName = extractPlayerName(String(leg.selection || ""));
+  if (!wantedName) return null;
+
+  for (const players of teams) {
+    for (const player of Object.values(players || {}) as any[]) {
+      const fullName = String(player?.person?.fullName || player?.name || "").toLowerCase();
+      if (fullName && fullName.includes(wantedName.toLowerCase())) {
+        return player;
+      }
+    }
+  }
+
+  return null;
+}
+
 
 async function applyParlayLegGrades(
   pickId: string,
