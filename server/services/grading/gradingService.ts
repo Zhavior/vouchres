@@ -170,33 +170,48 @@ export async function gradePendingPicks(opts: {
         }
 
         if (!opts.dryRun) {
-          const changed = await gradePick({
-            pickId: pick.id,
-            status: result.status,
-            settledUnits: result.settled_units,
-            learningNote: result.learning_note,
-            gameDate: result.game_date,
-          });
-          if (!changed) {
-            skipped.push({
-              pick_id: pick.id,
-              status: "graded_error",
-              settled_units: null,
-              error: "already_graded_or_missing",
-              warnings: ["Pick was no longer pending when grading attempted."],
-            });
-            continue;
+          let atomicSettlementSucceeded = false;
+
+          if (pick.leg_type === "parlay" && result.leg_results?.length) {
+            const atomicSettlement = await settleParlayPacketAtomically(pick.id, result);
+
+            if (atomicSettlement.ok) {
+              atomicSettlementSucceeded = true;
+            } else if (atomicSettlement.warning) {
+              result.warnings = [...(result.warnings ?? []), atomicSettlement.warning];
+            }
           }
-          if (result.leg_results?.length) {
-            const appliedLegGrades = await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
-            const failedLegGrades = appliedLegGrades.filter((leg) => !leg.updated);
-            if (failedLegGrades.length) {
-              result.warnings = [
-                ...(result.warnings ?? []),
-                ...failedLegGrades.map(
-                  (leg) => leg.warning ?? `Leg ${leg.leg_index} was not updated during grading.`
-                ),
-              ];
+
+          if (!atomicSettlementSucceeded) {
+            const changed = await gradePick({
+              pickId: pick.id,
+              status: result.status,
+              settledUnits: result.settled_units,
+              learningNote: result.learning_note,
+              gameDate: result.game_date,
+            });
+            if (!changed) {
+              skipped.push({
+                pick_id: pick.id,
+                status: "graded_error",
+                settled_units: null,
+                error: "already_graded_or_missing",
+                warnings: ["Pick was no longer pending when grading attempted."],
+              });
+              continue;
+            }
+
+            if (result.leg_results?.length) {
+              const appliedLegGrades = await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+              const failedLegGrades = appliedLegGrades.filter((leg) => !leg.updated);
+              if (failedLegGrades.length) {
+                result.warnings = [
+                  ...(result.warnings ?? []),
+                  ...failedLegGrades.map(
+                    (leg) => leg.warning ?? `Leg ${leg.leg_index} was not updated during grading.`
+                  ),
+                ];
+              }
             }
           }
           if (pick.leg_type === "parlay" && pick.user_id) {
@@ -701,6 +716,74 @@ function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
   return null;
 }
 
+
+type AtomicParlaySettlementResult = {
+  ok: boolean;
+  reason?: string;
+  pick_id?: string;
+  status?: string;
+  updated_leg_count?: number;
+  audit_id?: string;
+};
+
+async function settleParlayPacketAtomically(
+  pickId: string,
+  result: GradeResult
+): Promise<{ ok: boolean; warning?: string; proof?: AtomicParlaySettlementResult }> {
+  if (!result.leg_results?.length) {
+    return { ok: false, warning: "No leg_results supplied for atomic parlay settlement." };
+  }
+
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const p_leg_results = result.leg_results.map((leg) => ({
+    leg_index: leg.leg_index,
+    status: leg.status,
+  }));
+
+  const p_proof = {
+    source: "gradingService.ts",
+    settled_at: new Date().toISOString(),
+    game_date: result.game_date ?? null,
+    warnings: result.warnings ?? [],
+  };
+
+  const { data, error } = await supabaseAdmin.rpc("settle_parlay_packet", {
+    p_pick_id: pickId,
+    p_status: result.status,
+    p_settled_units: result.settled_units ?? null,
+    p_learning_note: result.learning_note ?? null,
+    p_game_date: result.game_date ?? null,
+    p_leg_results,
+    p_proof,
+  });
+
+  if (error) {
+    const missingRpc =
+      error.code === "42883" ||
+      error.code === "PGRST202" ||
+      /settle_parlay_packet/i.test(error.message ?? "");
+
+    return {
+      ok: false,
+      warning: missingRpc
+        ? `Atomic settlement RPC is not available yet; falling back to legacy proof updates. ${error.message}`
+        : `Atomic settlement RPC failed; falling back to legacy proof updates. ${error.message}`,
+    };
+  }
+
+  const proof = data as AtomicParlaySettlementResult;
+
+  if (!proof?.ok) {
+    return {
+      ok: false,
+      warning: `Atomic settlement RPC declined settlement: ${proof?.reason ?? "unknown_reason"}`,
+      proof,
+    };
+  }
+
+  return { ok: true, proof };
+}
 
 type AppliedParlayLegGrade = {
   leg_index: number;
