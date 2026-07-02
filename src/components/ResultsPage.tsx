@@ -734,7 +734,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
               Backend Ledger
             </div>
             <h3 className="mt-1 text-xl font-black text-white">
-              Results are now connected to /api/me/ledger
+              Results are now connected to account parlays
             </h3>
             <p className="mt-1 text-sm text-slate-400">
               {backendLedgerLoading
@@ -742,8 +742,8 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                 : backendLedgerError
                   ? backendLedgerError
                   : backendLedger
-                    ? `${backendLedger.summary.total} saved picks loaded from Supabase-backed ledger.`
-                    : 'Backend ledger waiting for login.'}
+                    ? `${backendLedger.picks.length} saved parlay${backendLedger.picks.length === 1 ? "" : "s"} loaded from your account.`
+                    : 'Account parlay results waiting for login.'}
             </p>
           </div>
 
