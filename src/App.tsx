@@ -23,6 +23,7 @@ import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
 import { normalizePlayerId } from './lib/mlbHeadshot';
+import { normalizeParlaySlip, buildSaveParlayPayload } from './lib/parlays/parlayBridge';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
@@ -1003,19 +1004,16 @@ export default function App() {
 
       markState('saving', { backendSyncError: undefined });
 
-      const result = await apiClient.post<{ id: string; deduped?: boolean }>('/api/me/parlays', {
-        // client_ref / idempotency key — the local parlay id.
-        clientRef: parlay.id,
-        title: parlay.title,
-        legs: parlay.legs,
-        wagerAmount: parlay.wagerAmount,
-        mode: parlay.mode,
-        riskTier: parlay.riskTier,
-        aiGenerated: parlay.aiGenerated ?? false,
-        source: parlay.aiGenerated ? 'ai_pick' : 'manual',
-        edgeScore: parlay.edgeScore,
-        sport: (parlay.legs?.[0] as any)?.sport || 'mlb',
-      });
+      const canonicalSlip = normalizeParlaySlip(
+        {
+          ...parlay,
+          source: parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
+        },
+        parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
+      );
+      const payload = buildSaveParlayPayload(canonicalSlip);
+
+      const result = await apiClient.post<{ id: string; deduped?: boolean }>('/api/me/parlays', payload);
 
       if (result?.id) {
         markState('synced', {
