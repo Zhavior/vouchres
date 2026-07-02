@@ -711,7 +711,7 @@ export default function App() {
     }
 
     try {
-      const created = await apiClient.post<{ id: string }>('/api/parlays', payload);
+      const created = await apiClient.post<{ id: string }>('/api/me/parlays', payload);
       return {
         ...parlay,
         backendPickId: created?.id || parlay.backendPickId,
