@@ -335,6 +335,40 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
   );
 }
 
+
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/\\n/g, " ")
+    .replace(/source=manual_builder\s*/gi, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/Legacy pick saved before canonical grading identity existed; cannot be honestly graded\.?/gi, "Legacy unverified pick")
+    .replace(/\bleg-\d+-[a-z0-9-]+\b/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getCustomerSlipTitle = (title?: string | null, status?: string | null): string => {
+  const cleaned = cleanCustomerText(title);
+  if (!cleaned || cleaned.toLowerCase() === "legacy unverified pick") {
+    return status === "VOID" ? "Legacy Unverified Parlay" : "VouchEdge Parlay";
+  }
+  return cleaned;
+};
+
+const getCustomerLegSelection = (selection?: string | null): string =>
+  cleanCustomerText(selection) || "Player prop";
+
+const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
+  const cleaned = cleanCustomerText(game);
+  if (!cleaned) return false;
+  if (/^leg-/i.test(cleaned)) return false;
+  if (/^[a-f0-9-]{12,}$/i.test(cleaned)) return false;
+  return true;
+};
+
+
 /* ============ Summary Cards ============ */
 function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number } }) {
   const cards = [
@@ -378,7 +412,7 @@ function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold text-white truncate">{slip.title}</div>
+          <div className="text-sm font-bold text-white truncate">{getCustomerSlipTitle(slip.title, slip.status)}</div>
           <div className="text-[10px] text-slate-500">
             {slip.ownerName} · {slip.totalLegs}-leg · {new Date(slip.postedAt).toLocaleDateString()}
           </div>
@@ -402,8 +436,8 @@ function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
           return (
             <div key={leg.id} className="flex items-center gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
               <span className="text-[9px] font-mono text-slate-600">{i + 1}.</span>
-              <span className="text-xs text-slate-300 flex-1 truncate">{leg.selection}</span>
-              <span className="text-[9px] text-slate-500">{leg.game}</span>
+              <span className="text-xs text-slate-300 flex-1 truncate">{getCustomerLegSelection(leg.selection)}</span>
+              {shouldShowPublicGameLabel(leg.game) && <span className="text-[9px] text-slate-500">{cleanCustomerText(leg.game)}</span>}
               <span className="text-xs font-mono font-bold" style={{ color: ls.color }}>{ls.icon}</span>
             </div>
           );
