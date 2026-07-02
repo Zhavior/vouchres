@@ -9,6 +9,7 @@ import { createPick } from "../services/persistence/pickService";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
 import { previewLiveHrParlayMatches } from "../services/grading/liveHrParlayService";
+import { applyLiveHrParlayMatches } from "../services/grading/liveHrParlayWriteService";
 import { getFeedComposerOptions, type ComposerOptionsResponse, type PlayerOption } from "../services/feed/composerOptionsService";
 
 /**
@@ -533,6 +534,29 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
    are now Final via MLB linescore, writes results to Supabase.
    This mutates DB state, so it must never run from a GET/read request.
    ============================================================ */
+
+parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
+  try {
+    const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
+    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
+    const result = await applyLiveHrParlayMatches(date);
+
+    return res.json({
+      ok: true,
+      mode: "live_hr_sync",
+      date: date ?? null,
+      ...result,
+    });
+  } catch (err: any) {
+    console.error("[parlays/live-hr-sync] failed", err?.message, err?.stack);
+    return res.status(500).json({
+      ok: false,
+      error: "live_hr_sync_failed",
+      message: err?.message ?? "unknown live HR sync error",
+    });
+  }
+});
+
 parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
   try {
     const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
