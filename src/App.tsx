@@ -12,7 +12,7 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
-import LiveParlaysPage from './pages/LiveParlaysPage';
+import ParlayCommandCenter from './components/parlay/ParlayCommandCenter';
 import { ProAccessGate } from './components/pro/ProAccessGate';
 import { resolveMarket } from './sports/markets';
 import { gradePendingParlays } from './lib/parlayGrading';
@@ -1344,7 +1344,7 @@ export default function App() {
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <LiveParlaysPage parlays={savedSlips} onGenerate={handleGenerateAiParlaysNow} onBuildParlay={() => navigateSection('build')} onUpdateParlay={handleUpdateParlaySlip} onRetrySync={handleRetryParlaySync} onRefreshGrades={handleGradeResults} isGrading={isGrading} lastGraded={gradingLastChecked} />;
+        return <ParlayCommandCenter />;
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>

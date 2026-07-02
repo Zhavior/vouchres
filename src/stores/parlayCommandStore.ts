@@ -4,7 +4,7 @@ import {
   normalizePublicSlip,
   normalizeSlipStatus,
   isLiveLikeStatus,
-} from "@/lib/parlayDisplay";
+} from "../lib/parlayDisplay";
 
 export type ParlayCommandPanel = "build" | "ai" | "live" | "premium";
 

@@ -1,5 +1,5 @@
 import { Bot, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
-import { PanelErrorBoundary } from "@/components/common/PanelErrorBoundary";
+import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
@@ -7,7 +7,7 @@ import {
   selectSavedSlips,
   useParlayCommandStore,
   type ParlayCommandPanel,
-} from "@/stores/parlayCommandStore";
+} from "../../stores/parlayCommandStore";
 
 const tabs: Array<{
   id: ParlayCommandPanel;
