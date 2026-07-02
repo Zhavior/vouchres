@@ -752,106 +752,17 @@ function isValidParlayBody(body: unknown): body is CreateParlayBody {
 /**
  * POST /api/parlays
  *
- * Creates a parlay pick + all legs atomically.
- *
- * Combined odds = product of leg odds (standard parlay math).
- * The pick's event_id is set to the FIRST leg's event_id (for grading
- * convenience — the grader will fetch each leg's event_id individually).
- */
-parlayRoutes.post(
-  "/parlays",
-  requireAuth,
-  requireLegalConfirmed,
-  pickLimiter,
-  requireTierOrQuota("gold", 2, "parlays_per_day"),
-  async (req: AuthedRequest, res: Response) => {
-    if (!isValidParlayBody(req.body)) {
-      return res.status(400).json({ error: "validation_error" });
-    }
-    const body = req.body;
-
-    // 1. Compute combined odds
-    const combinedOdds = body.legs.reduce((product, leg) => product * leg.odds_decimal, 1);
-
-    // 2. Use the first leg's event_id as the parlay's parent event
-    // (the grader handles multi-event parlays via pick_legs.event_id)
-    const parentEventId = body.legs[0].event_id;
-
-    try {
-      // 3. Create the parent parlay pick
-      const parlay = await createPick({
-        user_id: req.user!.id,
-        capper_id: null,
-        leg_type: "parlay",
-        sport: "mlb",
-        event_id: parentEventId,
-        market: `${body.legs.length}-leg parlay`,
-        selection: body.legs.map((l) => l.selection).join(" | "),
-        odds_decimal: Number(combinedOdds.toFixed(3)),
-        stake_units: body.stake_units ?? 1.0,
-        confidence: body.confidence ?? null,
-        judge_quality: body.judge_quality ?? null,
-        judge_risk: body.judge_risk ?? null,
-        judge_bias: body.judge_bias ?? null,
-        judge_trust: body.judge_trust ?? null,
-        judge_verdict: body.judge_verdict ?? null,
-        explanation: body.explanation ?? null,
-        is_demo: false,
-      });
-
-      // 4. Insert all legs in a single batch
-      const legsToInsert = body.legs.map((leg, index) => ({
-        pick_id: parlay.id,
-        leg_index: index,
-        event_id: leg.event_id,
-        market: leg.market,
-        selection: leg.selection,
-        odds_decimal: leg.odds_decimal,
-        status: "pending" as const,
-      }));
-
-      const supabaseAdmin = await getSupabaseAdmin();
-      const { error: legsError } = await supabaseAdmin
-        .from("pick_legs")
-        .insert(legsToInsert);
-
-      if (legsError) {
-        // Rollback the parent pick — legs failed to insert
-        console.error("[parlays] legs insert failed, rolling back parent", legsError);
-        await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
-        return res.status(500).json({ error: "parlay_creation_failed" });
-      }
-
-      // 5. Increment quota for free users
-      const q = (req as any).__quota;
-      if (q) {
-        await incrementQuota(req.user!.id, q.key, q.day);
-      }
-
-      // 6. Return the parlay with legs
-      return res.status(201).json({
-        ...parlay,
-        legs: legsToInsert.map((l, i) => ({
-          ...l,
-          id: `${parlay.id}-leg-${i}`, // synthetic ID for client display
-        })),
-        combined_odds: Number(combinedOdds.toFixed(3)),
-      });
-    } catch (err) {
-      console.error("[parlays] create failed", err);
-      return res.status(500).json({ error: "parlay_creation_failed" });
-    }
-  }
-);
-
-
-/**
- * Legacy duplicate POST /api/me/parlays route removed.
- *
- * The canonical save route lives later in this file and persists the full
- * grading identity: game_id, player_id, market_code, event_key,
+ * Legacy route disabled.
+ * Canonical parlay saves must use POST /api/me/parlays so every leg persists
+ * the full grading identity: game_id, player_id, market_code, event_key,
  * stat_target, comparator, and external_provider.
  */
+parlayRoutes.post("/parlays", requireAuth, async (_req: AuthedRequest, res: Response) => {
+  return res.status(410).json({
+    error: "legacy_parlay_route_disabled",
+    message: "Use POST /api/me/parlays for canonical parlay saves.",
+  });
+});
 
 
 /**
