@@ -420,6 +420,20 @@ export default function ParlayStudio({
   );
 }
 
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/source=manual_builder\s*/gi, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getCleanLegSelection = (leg: { selection?: string | null; market?: string | null }): string =>
+  cleanCustomerText(leg.selection) || cleanCustomerText(leg.market) || "Player prop";
+
+
 /* =====================================================================
    Pick Library — left panel
    ===================================================================== */
@@ -601,7 +615,7 @@ function ParlayCanvas({ legs, title, setTitle, onRemove, onMove, combinedOdds, r
         <div className="mt-4 p-3 rounded-xl flex items-start gap-2" style={{ background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.15)" }}>
           <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-red-300/80">
-            <span className="font-bold">Weakest leg:</span> {weakestLeg.selection} ({americanLabel(weakestLeg.odds)})
+            <span className="font-bold">Weakest leg:</span> {getCleanLegSelection(weakestLeg)} ({americanLabel(weakestLeg.odds)})
           </div>
         </div>
       )}
@@ -646,7 +660,7 @@ function LegCard({ leg, index, isWeak, onRemove, onMoveUp, onMoveDown, isFirst, 
       <div className="flex items-center gap-3 ml-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-white truncate">{leg.selection}</span>
+            <span className="text-xs font-bold text-white truncate">{getCleanLegSelection(leg)}</span>
             {isWeak && <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" />}
           </div>
           <div className="text-[9px] text-slate-500 truncate">{leg.game} · {leg.market}</div>
@@ -834,7 +848,7 @@ function VouchPreview({ legs, title, combinedOdds, riskTier, profile, onPost, on
         </div>
 
         {/* Title */}
-        <div className="text-sm font-bold text-white mb-3">{title}</div>
+        <div className="text-sm font-bold text-white mb-3">{cleanCustomerText(title) || "VouchEdge Parlay"}</div>
 
         {/* Legs */}
         <div className="space-y-1.5 mb-3">
@@ -842,7 +856,7 @@ function VouchPreview({ legs, title, combinedOdds, riskTier, profile, onPost, on
             <div key={leg.id} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] font-mono text-slate-600">{i + 1}.</span>
-                <span className="text-xs text-slate-300">{leg.selection}</span>
+                <span className="text-xs text-slate-300">{getCleanLegSelection(leg)}</span>
               </div>
               <span className="text-xs font-mono text-slate-400">{americanLabel(leg.odds)}</span>
             </div>
