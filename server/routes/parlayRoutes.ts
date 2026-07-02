@@ -580,6 +580,80 @@ parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, async
   }
 });
 
+const isAuthorizedCronRequest = (req: Request) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return true;
+
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length).trim() : "";
+  const queryToken = typeof req.query.token === "string" ? req.query.token : "";
+
+  return bearerToken === cronSecret || queryToken === cronSecret;
+};
+
+parlayRoutes.get("/cron/parlays/live-hr-sync", async (req: Request, res: Response) => {
+  if (!isAuthorizedCronRequest(req)) {
+    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
+  }
+
+  try {
+    const rawDate = req.query.date;
+    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
+    const result = await applyLiveHrParlayMatches(date);
+
+    return res.json({
+      ok: true,
+      mode: "cron_live_hr_sync",
+      date: date ?? null,
+      ...result,
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error("[cron/parlays/live-hr-sync] failed", err?.message, err?.stack);
+    return res.status(500).json({
+      ok: false,
+      error: "cron_live_hr_sync_failed",
+      message: err?.message ?? "unknown cron live HR sync error",
+    });
+  }
+});
+
+parlayRoutes.get("/cron/parlays/grade-due", async (req: Request, res: Response) => {
+  if (!isAuthorizedCronRequest(req)) {
+    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
+  }
+
+  try {
+    const rawDays = req.query.days ?? 2;
+    const days = Math.min(Number(rawDays), 7);
+    const result = await gradePendingPicks({ days });
+    const { graded, skipped, summary } = result;
+
+    const settled = graded.filter((r) => r.status !== "graded_error");
+    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
+    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
+
+    return res.json({
+      ok: true,
+      mode: "cron_grade_due",
+      gradedParlays: settled.length,
+      gradedLegs: graded.length,
+      pendingLegs: pending.length,
+      summary,
+      warnings: summary.warnings,
+      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error("[cron/parlays/grade-due] failed", err?.message, err?.stack);
+    return res.status(500).json({
+      ok: false,
+      error: "cron_grade_due_failed",
+      message: err?.message ?? "unknown cron grading error",
+    });
+  }
+});
+
 parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
   try {
     const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days ?? 2;
