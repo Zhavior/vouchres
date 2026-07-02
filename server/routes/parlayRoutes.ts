@@ -1355,14 +1355,46 @@ parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Re
   const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
   const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
 
-  const legsJson = rawLegs.map((leg: any, i: number) => ({
-    leg_index: i,
-    event_id: String(leg.gamePk || leg.event_id || leg.game || "manual").slice(0, 64),
-    market: String(leg.market || leg.marketCode || "prop").slice(0, 64),
-    selection: String(leg.selection || "").slice(0, 280) || "—",
-    odds_decimal: legOdds[i], // decimal or null — never a placeholder
-    player_id: legPlayerId(leg), // alias-safe; null if unknown
-  }));
+  const legsJson = rawLegs.map((leg: any, i: number) => {
+    const sportKey = String(leg.sport || sport || "mlb").trim().toLowerCase();
+    const gameId = String(leg.gameId || leg.game_id || leg.gamePk || leg.game_pk || leg.eventId || leg.event_id || leg.game || "manual").slice(0, 64);
+    const teamIdRaw = leg.teamId || leg.team_id || leg.team?.id || leg.teamCode || leg.teamAbbr || null;
+    const teamId = teamIdRaw == null ? null : String(teamIdRaw).trim().slice(0, 64) || null;
+    const playerId = legPlayerId(leg);
+    const marketCode = String(leg.marketCode || leg.market_code || leg.market || "prop").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "PROP";
+    const keySport = sportKey.toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "MLB";
+    const keyGame = gameId.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+    const keyTeam = String(teamId || "TEAM").toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+    const keyPlayer = playerId ? String(playerId).toUpperCase().replace(/[^A-Z0-9_-]/g, "") : "";
+    const eventKey =
+      String(leg.eventKey || leg.event_key || "").trim() ||
+      (keyGame && keyPlayer && marketCode !== "UNKNOWN"
+        ? [keySport, keyGame, keyTeam, keyPlayer, marketCode].join("_")
+        : null);
+    const popularityKey =
+      String(leg.popularityKey || leg.popularity_key || "").trim() ||
+      (keyPlayer && marketCode !== "UNKNOWN"
+        ? [keySport, keyPlayer, marketCode].join("_")
+        : null);
+
+    return {
+      leg_index: i,
+      sport: sportKey,
+      event_id: gameId,
+      game_id: gameId,
+      team_id: teamId,
+      market: String(leg.market || leg.marketCode || "prop").slice(0, 64),
+      market_code: marketCode,
+      selection: String(leg.selection || "").slice(0, 280) || "—",
+      odds_decimal: legOdds[i], // decimal or null — never a placeholder
+      player_id: playerId, // alias-safe; null if unknown
+      event_key: eventKey,
+      popularity_key: popularityKey,
+      stat_target: leg.statTarget ?? leg.stat_target ?? leg.target ?? leg.line ?? null,
+      comparator: leg.comparator || leg.operator || leg.direction || null,
+      external_provider: leg.externalProvider || leg.external_provider || leg.provider || null,
+    };
+  });
 
   const supabaseAdmin = await getSupabaseAdmin();
 
