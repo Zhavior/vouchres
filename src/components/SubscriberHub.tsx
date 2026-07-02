@@ -25,6 +25,34 @@ import { CreatorProofProfile, Parlay, Vouch } from '../types';
 import { decimalToAmerican } from '../utils/oddsHelper';
 import { getFounderPointsLabel } from "../lib/founderAccess";
 
+
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/\\n/g, " ")
+    .replace(/source=manual_builder\s*/gi, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/\bleg-\d+-[a-z0-9-]+\b/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getPublicParlayTitle = (title?: string | number | null): string =>
+  cleanCustomerText(title) || "VouchEdge Premium Slip";
+
+const getPublicLegSelection = (selection?: string | number | null): string =>
+  cleanCustomerText(selection) || "Player prop";
+
+const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
+  const cleaned = cleanCustomerText(game);
+  if (!cleaned) return false;
+  if (/^leg-/i.test(cleaned)) return false;
+  if (/^[a-f0-9-]{12,}$/i.test(cleaned)) return false;
+  return true;
+};
+
+
 interface SubscriberHubProps {
   profile: CreatorProofProfile;
   onUpdateProfile: (updated: Partial<CreatorProofProfile>) => void;
@@ -747,7 +775,7 @@ export default function SubscriberHub({
                             <div className="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
                               <span className="text-[10px] font-bold text-emerald-400 font-mono tracking-wider flex items-center gap-1.5 uppercase">
                                 <Ticket className="w-4 h-4 text-emerald-400 shrink-0" />
-                                {parlay.title}
+                                {getPublicParlayTitle(parlay.title)}
                               </span>
                               <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded-full font-bold">
                                 Wager: {parlay.wagerAmount} units
@@ -760,9 +788,9 @@ export default function SubscriberHub({
                                 <div key={leg.id} className="p-2.5 bg-slate-950/40 rounded-xl border border-slate-850/50 flex justify-between items-center text-xs">
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] font-bold font-mono px-1.5 bg-[#171e30] border border-blue-900/30 text-sky-400 rounded uppercase">
-                                      {leg.game}
+                                      {shouldShowPublicGameLabel(leg.game) ? cleanCustomerText(leg.game) : 'MLB'}
                                     </span>
-                                    <p className="font-extrabold text-slate-100 uppercase text-[11px] mt-1">{leg.selection}</p>
+                                    <p className="font-extrabold text-slate-100 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
                                   </div>
                                   <span className="font-mono text-[10px] font-black text-emerald-400">
                                     {(leg.odds > 0) ? `+${decimalToAmerican(leg.odds)}` : decimalToAmerican(leg.odds)}
