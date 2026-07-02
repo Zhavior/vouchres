@@ -554,6 +554,7 @@ function getActualStatForMarket(playerStats: any, marketCode: string): number | 
     case "HR":
     case "HOME_RUN":
     case "HOME_RUNS":
+    case "ANYTIME_HR":
       return Number(batting.homeRuns ?? 0);
 
     case "HIT":
