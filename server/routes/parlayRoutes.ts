@@ -1913,14 +1913,25 @@ parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res:
     return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
   }
 
-  await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("picks")
     .update({ status: "void", updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay");
+    .eq("leg_type", "parlay")
+    .select("id,status,updated_at")
+    .maybeSingle();
 
-  return res.json({ deleted: true, id });
+  if (error) {
+    console.error("[parlays] delete/void failed", error.code, error.message);
+    return res.status(500).json({ error: "delete_failed" });
+  }
+
+  if (!data) {
+    return res.status(404).json({ error: "parlay_not_found_or_not_updated" });
+  }
+
+  return res.json({ deleted: true, id: data.id, status: data.status, updated_at: data.updated_at });
 });
 
 /**
