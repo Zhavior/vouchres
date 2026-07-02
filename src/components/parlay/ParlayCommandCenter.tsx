@@ -130,6 +130,40 @@ function AiSmartPicksPanel() {
   );
 }
 
+function getLegResultVisual(leg: { status?: unknown; resultLabel?: unknown }) {
+  const raw = `${leg.status ?? ""} ${leg.resultLabel ?? ""}`.toUpperCase();
+
+  if (raw.includes("WON") || raw.includes("WIN") || raw.includes("HIT") || raw.includes("CASH")) {
+    return {
+      symbol: "✓",
+      rowClass: "border-emerald-500/25 bg-emerald-950/10",
+      badgeClass: "border-emerald-400/30 bg-emerald-950/35 text-emerald-200",
+    };
+  }
+
+  if (raw.includes("LOST") || raw.includes("LOSS") || raw.includes("LOSE") || raw.includes("MISS")) {
+    return {
+      symbol: "✕",
+      rowClass: "border-rose-500/25 bg-rose-950/10",
+      badgeClass: "border-rose-400/30 bg-rose-950/35 text-rose-200",
+    };
+  }
+
+  if (raw.includes("VOID") || raw.includes("PUSH") || raw.includes("CANCEL")) {
+    return {
+      symbol: "–",
+      rowClass: "border-slate-700/80 bg-slate-950/70",
+      badgeClass: "border-slate-700 bg-slate-900/80 text-slate-300",
+    };
+  }
+
+  return {
+    symbol: "…",
+    rowClass: "border-amber-400/20 bg-amber-950/10",
+    badgeClass: "border-amber-400/25 bg-amber-950/25 text-amber-200",
+  };
+}
+
 function LiveSavedParlaysPanel() {
   const allSlips = useParlayCommandStore(selectSavedSlips);
   const liveSlips = allSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
@@ -204,11 +238,14 @@ function LiveSavedParlaysPanel() {
 
                   {previewLegs.length > 0 && (
                     <div className="mt-4 grid gap-2">
-                      {previewLegs.map((leg) => (
-                        <div
-                          key={leg.publicId}
-                          className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-[#07101d]/80 px-3 py-2.5"
-                        >
+                      {previewLegs.map((leg) => {
+                        const resultVisual = getLegResultVisual(leg);
+
+                        return (
+                          <div
+                            key={leg.publicId}
+                            className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 ${resultVisual.rowClass}`}
+                          >
                           <div className="flex min-w-0 items-center gap-3">
                             {leg.headshotUrl ? (
                               <img
@@ -236,10 +273,14 @@ function LiveSavedParlaysPanel() {
 
                           <div className="shrink-0 text-right">
                             <p className="text-[11px] font-black text-slate-200">{leg.oddsLabel}</p>
-                            <p className="text-[10px] font-black uppercase text-slate-500">{leg.resultLabel}</p>
+                            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black uppercase ${resultVisual.badgeClass}`}>
+                              <span aria-hidden="true">{resultVisual.symbol}</span>
+                              {leg.resultLabel}
+                            </span>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
 
                       {hiddenLegCount > 0 && (
                         <div className="rounded-2xl border border-dashed border-slate-800 px-3 py-2 text-center text-[11px] font-black text-slate-500">
