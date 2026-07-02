@@ -1188,7 +1188,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                       {/* Odds metrics */}
                       <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-900/40 grid grid-cols-2 gap-3 items-center">
                         <div>
-                          <span className="text-[8px] text-slate-500 font-mono block">ACCUMULATION ODDS</span>
+                          <span className="text-[8px] text-slate-500 font-mono block">PRACTICE MULTIPLIER</span>
                           <strong className="text-sm font-black font-mono text-emerald-400">{pick.oddsDisplay}</strong>
                           <span className="text-[8px] text-slate-500 font-mono ml-1">({pick.oddsValue.toFixed(2)}x)</span>
                         </div>
@@ -1196,21 +1196,21 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         <div className="text-right font-mono">
                           {isWon ? (
                             <div>
-                              <span className="text-[8px] text-emerald-500 block">PROFIT UNITS</span>
+                              <span className="text-[8px] text-emerald-500 block">PRACTICE UNITS</span>
                               <span className="text-xs font-black text-emerald-400">
                                 +${(pick.wager * pick.oddsValue).toFixed(0)} (+{(pick.oddsValue - 1).toFixed(1)}U)
                               </span>
                             </div>
                           ) : isLost ? (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">OUTCOME LOSS</span>
+                              <span className="text-[8px] text-slate-500 block">PRACTICE RESULT</span>
                               <span className="text-xs font-black text-rose-500">
                                 -${pick.wager.toFixed(0)} (-1.00U)
                               </span>
                             </div>
                           ) : (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">EST. PAYOUT</span>
+                              <span className="text-[8px] text-slate-500 block">EST. PRACTICE SCORE</span>
                               <span className="text-xs font-bold text-slate-300">
                                 ${pick.payout.toFixed(0)} @ 100
                               </span>
@@ -1228,7 +1228,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                             className="flex-1 py-1.5 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-[10px] font-black rounded-xl text-slate-300 hover:text-emerald-400 transition-all flex items-center justify-center gap-1.5"
                           >
                             <Plus className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>TAIL SPORTS CARDS</span>
+                            <span>TAIL PARLAY</span>
                           </button>
 
                           <div className="py-1.5 px-2 bg-slate-950 text-[10px] rounded-xl border border-slate-900 font-bold text-slate-400">
@@ -1237,24 +1237,8 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         </div>
 
                         {isUpcoming && (
-                          <div className="flex gap-2 px-2.5 py-1.5 bg-slate-950/80 rounded-xl border border-dashed border-slate-800/80 justify-between items-center text-[9px]">
-                            <span className="font-bold text-slate-500">GRADE ASSIST:</span>
-                            <div className="flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleGradeParlay(pick.id, 'WON')}
-                                className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-900 text-emerald-400 rounded transition-all"
-                              >
-                                WIN
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleGradeParlay(pick.id, 'LOST')}
-                                className="px-2 py-0.5 bg-rose-950/80 border border-rose-900 text-rose-400 rounded transition-all"
-                              >
-                                LOSS
-                              </button>
-                            </div>
+                          <div className="px-2.5 py-1.5 bg-slate-950/80 rounded-xl border border-dashed border-slate-800/80 text-[9px] font-bold text-slate-500">
+                            VERIFIED GRADING PENDING OFFICIAL RESULT SYNC
                           </div>
                         )}
                       </div>
@@ -1275,7 +1259,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Settled Picks</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Settled Parlays</span>
               <span className="font-mono text-xl font-black text-slate-100 block mt-1">{totalCount}</span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
@@ -1285,20 +1269,20 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
               </span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Units Net Winnings</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Net Practice Units</span>
               <span className={`font-mono text-xl font-black block mt-1 ${totalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {totalUnitsProfit >= 0 ? '+' : ''}{totalUnitsProfit.toFixed(2)}U
               </span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Verified Win-Rate</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Verified Hit Rate</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{realWinRate.toFixed(1)}%</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-slate-350 uppercase tracking-widest font-mono pl-1">
-              COMMUNITY SETTLED TICKET TIMELINE ({filteredCommunityResults.length})
+              COMMUNITY VERIFIED PARLAY TIMELINE ({filteredCommunityResults.length})
             </h3>
 
             {filteredCommunityResults.length === 0 ? (
