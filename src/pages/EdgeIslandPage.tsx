@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Home, Users, Flame, Swords, UserRoundSearch, Radio, BarChart3,
-  ArrowRight, Sparkles, ShieldCheck, Check,
+  ArrowRight, Sparkles, ShieldCheck, Check, Bell, Crown, FlaskConical, Layers,
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { Parlay } from '../types';
@@ -23,13 +23,13 @@ interface Props {
 }
 
 const SHORTCUTS = [
-  { icon: Home, color: '#38bdf8', section: 'feed', title: 'Home Feed', sub: 'Community posts, vouches, and live picks' },
-  { icon: Users, color: '#f472b6', section: 'daily_players', title: 'Daily Players', sub: "Every player in today's games" },
-  { icon: Flame, color: '#fb923c', section: 'hr_board', title: 'HR Board', sub: "Today's best home-run edge targets" },
-  { icon: Swords, color: '#a78bfa', section: 'team_matchup_lab', title: 'Team Matchup Lab', sub: 'Pitcher vs. lineup, head to head' },
-  { icon: UserRoundSearch, color: '#fb7185', section: 'player_edge_lab', title: 'Player Edge Lab', sub: 'Deep player research & signal graphs' },
-  { icon: Radio, color: '#22d3ee', section: 'live_parlays', title: 'Parlay Hub', sub: 'Saved, live, and graded parlays' },
-  { icon: BarChart3, color: '#34d399', section: 'results', title: 'Results', sub: 'Your record, win rate, and ROI' },
+  { icon: Layers, color: '#38bdf8', section: 'daily_players', title: "Today's Slate", tag: 'START HERE', sub: 'Live games, upcoming games, high-run spots' },
+  { icon: ShieldCheck, color: '#22d3ee', section: 'live_parlays', title: 'Parlay Dock', tag: 'BUILDER', sub: 'Build, save, and track parlays' },
+  { icon: Flame, color: '#fb923c', section: 'hr_board', title: 'HR Board', tag: 'RESEARCH', sub: "Today's best home-run edge targets" },
+  { icon: FlaskConical, color: '#a78bfa', section: 'player_edge_lab', title: 'Research Lab', tag: 'DEEP DIVE', sub: 'Player, pitcher, matchup research' },
+  { icon: BarChart3, color: '#34d399', section: 'results', title: 'Ledger Vault', tag: 'PROOF', sub: 'Verified wins, losses, and full history' },
+  { icon: Bell, color: '#f472b6', section: 'notifications', title: 'Notifications', tag: 'ALERTS', sub: 'HR alerts, parlay alerts, live updates' },
+  { icon: Crown, color: '#818cf8', section: 'premium', title: 'Pro Tower', tag: 'PRO', sub: 'Premium tools and upgrade path' },
 ] as const;
 
 const PACKAGES = [
@@ -56,6 +56,40 @@ const PACKAGES = [
   },
 ] as const;
 
+
+function friendlyParlayTitle(parlay: any): string {
+  const rawTitle = String(parlay?.title || parlay?.market || '').trim();
+  const rawSource = String(parlay?.source || '').toLowerCase();
+
+  const isTechnical =
+    !rawTitle ||
+    rawTitle.includes('clientRef=') ||
+    rawTitle.includes('source=') ||
+    rawTitle.includes('backend-ai-') ||
+    rawTitle.length > 80;
+
+  if (!isTechnical) return rawTitle;
+  if (rawSource.includes('builder')) return 'Builder Parlay';
+  if (rawSource.includes('local_import')) return 'Imported HR Parlay';
+  if (rawSource.includes('ai') || rawSource.includes('vai')) return 'V.A.I Smart Picks Parlay';
+  return 'My Saved Parlay';
+}
+
+function getParlayOdds(parlay: any): string {
+  const raw =
+    parlay?.oddsDisplay ||
+    parlay?.odds_display ||
+    parlay?.totalOdds ||
+    parlay?.odds ||
+    parlay?.oddsValue ||
+    '';
+  const value = String(raw).trim();
+
+  if (!value || value === '0' || value === '0x') return 'Pending';
+  return value.startsWith('+') || value.includes('x') ? value : `+${value}`;
+}
+
+
 export default function EdgeIslandPage({ onSectionChange, savedSlips = [] }: Props) {
   const [gamesToday, setGamesToday] = useState<number | null>(null);
 
@@ -74,7 +108,10 @@ export default function EdgeIslandPage({ onSectionChange, savedSlips = [] }: Pro
     };
   }, []);
 
-  const pendingCount = savedSlips.filter((p) => p.status === 'PENDING').length;
+  const pendingSlips = savedSlips.filter((p) => String(p.status).toUpperCase() === 'PENDING');
+  const pendingCount = pendingSlips.length;
+  const settledCount = savedSlips.filter((p) => ['WON', 'LOST', 'VOID', 'PUSH'].includes(String(p.status).toUpperCase())).length;
+  const pendingPreview = pendingSlips.slice(0, 4);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 text-slate-100">
@@ -84,19 +121,21 @@ export default function EdgeIslandPage({ onSectionChange, savedSlips = [] }: Pro
           <Sparkles className="h-3.5 w-3.5" />
           Edge Island
         </div>
-        <h1 className="mt-2 text-2xl font-black tracking-tight">Welcome to Edge Island</h1>
-        <p className="text-xs text-slate-400 mt-0.5">Your command center for everything VouchEdge.</p>
+        <h1 className="mt-2 text-2xl font-black tracking-tight">Welcome back, ProEdge.</h1>
+        <p className="text-xs text-slate-400 mt-0.5">Your quick-launch dock for research, parlays, and verified results.</p>
       </div>
 
-      {/* Today's command cards */}
+      {/* Command Dock */}
       <Section
-        title="Today's command cards"
-        subtitle="Jump straight into the tools you use most."
+        title="Command Dock"
+        subtitle="Start research, build a slip, or verify your ledger from one clean hub."
         action={
           <span className="text-[10px] font-bold text-slate-500">
             {gamesToday !== null ? `${gamesToday} game${gamesToday === 1 ? '' : 's'} today` : 'Games today —'}
             {' · '}
-            {pendingCount} pending parlay{pendingCount === 1 ? '' : 's'}
+            {pendingCount} pending
+            {' · '}
+            {settledCount} settled
           </span>
         }
       >
@@ -111,15 +150,70 @@ export default function EdgeIslandPage({ onSectionChange, savedSlips = [] }: Pro
                 >
                   <Icon className="w-5 h-5" style={{ color: s.color }} />
                 </div>
-                <h3 className="text-sm font-black flex items-center gap-1">
-                  {s.title}
-                  <ArrowRight className="w-3 h-3 text-slate-600 group-hover:translate-x-0.5 group-hover:text-slate-300 transition-all" />
-                </h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-sm font-black flex items-center gap-1">
+                    {s.title}
+                    <ArrowRight className="w-3 h-3 text-slate-600 group-hover:translate-x-0.5 group-hover:text-slate-300 transition-all" />
+                  </h3>
+                  <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[8px] font-black tracking-[0.16em] text-slate-300">
+                    {s.tag}
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{s.sub}</p>
               </Card>
             );
           })}
         </div>
+      </Section>
+
+      {/* Parlay command preview */}
+      <Section
+        title="Pending parlays"
+        subtitle="Recent parent parlays waiting for verified grading."
+        action={
+          <button
+            type="button"
+            onClick={() => onSectionChange('results')}
+            className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300 hover:text-cyan-100"
+          >
+            View Verified Results →
+          </button>
+        }
+      >
+        {pendingPreview.length > 0 ? (
+          <div className="space-y-2">
+            {pendingPreview.map((parlay: any, index) => (
+              <button
+                key={parlay.id || parlay.backendPickId || parlay.clientRef || index}
+                type="button"
+                onClick={() => onSectionChange('results')}
+                className="w-full rounded-2xl border border-slate-800/80 bg-slate-950/45 px-3 py-2 text-left transition hover:border-cyan-400/40 hover:bg-cyan-400/5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-black text-slate-100">
+                      {friendlyParlayTitle(parlay)}
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                      {Array.isArray((parlay as any).legs) ? (parlay as any).legs.length : '—'} legs · Pending official sync
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-xs font-black text-slate-300">
+                    {getParlayOdds(parlay)}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <Card onClick={() => onSectionChange('live_parlays')}>
+            <div className="text-sm font-black text-slate-100">No pending parlays yet</div>
+            <p className="mt-1 text-xs text-slate-400">Build a parlay to start tracking verified results.</p>
+            <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-cyan-300">
+              Build Parlay <ArrowRight className="h-3 w-3" />
+            </span>
+          </Card>
+        )}
       </Section>
 
       {/* Package previews — copy mirrors the real tiers in PremiumSubPage.tsx */}
