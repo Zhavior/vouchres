@@ -188,7 +188,16 @@ export async function gradePendingPicks(opts: {
             continue;
           }
           if (result.leg_results?.length) {
-            await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+            const appliedLegGrades = await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+            const failedLegGrades = appliedLegGrades.filter((leg) => !leg.updated);
+            if (failedLegGrades.length) {
+              result.warnings = [
+                ...(result.warnings ?? []),
+                ...failedLegGrades.map(
+                  (leg) => leg.warning ?? `Leg ${leg.leg_index} was not updated during grading.`
+                ),
+              ];
+            }
           }
           if (pick.leg_type === "parlay" && pick.user_id) {
             const legResults = result.leg_results ?? [];
@@ -693,37 +702,84 @@ function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
 }
 
 
+type AppliedParlayLegGrade = {
+  leg_index: number;
+  status: string;
+  updated: boolean;
+  updatedRows: unknown[];
+  warning?: string;
+};
+
 async function applyParlayLegGrades(
   pickId: string,
   legResults: NonNullable<GradeResult["leg_results"]>,
   gameDate?: string | null
-): Promise<void> {
+): Promise<AppliedParlayLegGrade[]> {
   const supabaseAdmin = await getSupabaseAdmin();
   const gradedAt = new Date().toISOString();
+  const applied: AppliedParlayLegGrade[] = [];
+
   for (const leg of legResults) {
     const buildUpdate = (includeGameDate: boolean) => ({
       status: leg.status,
       graded_at: gradedAt,
       ...(includeGameDate && gameDate ? { game_date: gameDate } : {}),
     });
+
     let result = await supabaseAdmin
       .from("pick_legs")
       .update(buildUpdate(true))
       .eq("pick_id", pickId)
       .eq("leg_index", leg.leg_index)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select("id,pick_id,leg_index,status,graded_at,game_date");
+
     if (result.error && ["42703", "PGRST204"].includes(result.error.code)) {
       result = await supabaseAdmin
         .from("pick_legs")
         .update(buildUpdate(false))
         .eq("pick_id", pickId)
         .eq("leg_index", leg.leg_index)
-        .eq("status", "pending");
+        .eq("status", "pending")
+        .select("id,pick_id,leg_index,status,graded_at");
     }
+
     if (result.error) {
-      console.warn(`[grading] leg update failed pick=${pickId} leg=${leg.leg_index}`, result.error.message);
+      const warning = `[grading] leg update failed pick=${pickId} leg=${leg.leg_index}: ${result.error.message}`;
+      console.warn(warning);
+      applied.push({
+        leg_index: leg.leg_index,
+        status: leg.status,
+        updated: false,
+        updatedRows: [],
+        warning,
+      });
+      continue;
     }
+
+    const updatedRows = result.data ?? [];
+    if (updatedRows.length === 0) {
+      const warning = `[grading] no pending leg updated pick=${pickId} leg=${leg.leg_index}`;
+      console.warn(warning);
+      applied.push({
+        leg_index: leg.leg_index,
+        status: leg.status,
+        updated: false,
+        updatedRows,
+        warning,
+      });
+      continue;
+    }
+
+    applied.push({
+      leg_index: leg.leg_index,
+      status: leg.status,
+      updated: true,
+      updatedRows,
+    });
   }
+
+  return applied;
 }
 
 export function summarizeGradeRun(
