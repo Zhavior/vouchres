@@ -727,7 +727,7 @@ function SlipAndJudge({ legs, combinedOdds, riskTier, weakestLeg, volatility, mo
         </div>
         {weakestLeg && legs.length > 1 && (
           <div className="text-[10px] text-red-300/70 mb-2">
-            ⚠️ Weakest: {weakestLeg.selection}
+            ⚠️ Weakest: {getCleanLegSelection(weakestLeg)}
           </div>
         )}
       </div>
