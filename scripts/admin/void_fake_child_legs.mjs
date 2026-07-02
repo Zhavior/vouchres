@@ -46,13 +46,21 @@ const targetLegIds = fakePendingLegs
   .filter((leg) => voidParentIds.has(leg.pick_id))
   .map((leg) => leg.id);
 
+const shouldExecute = process.argv.includes("--execute");
+
 console.log(JSON.stringify({
-  mode: "dry_summary_before_update",
+  mode: shouldExecute ? "execute_summary_before_update" : "dry_run_summary",
+  execute: shouldExecute,
   fakePendingLegs: fakePendingLegs.length,
   parentPicks: parentPicks.length,
   targetChildLegsToVoid: targetLegIds.length,
   targetLegIds,
 }, null, 2));
+
+if (!shouldExecute) {
+  console.log("Dry run only. Re-run with --execute to update matching child legs.");
+  process.exit(0);
+}
 
 if (targetLegIds.length === 0) {
   process.exit(0);
