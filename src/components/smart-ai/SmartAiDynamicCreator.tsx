@@ -1,5 +1,6 @@
 import type { SmartAiBuilderCategory } from './smartAiEngine.logic';
 import { Bookmark, Cpu, Plus } from 'lucide-react';
+import { SmartAiResearchDecisionPanel } from './SmartAiResearchDecisionPanel';
 
 interface SmartAiDynamicCreatorProps {
   builderLegs: number;
@@ -225,88 +226,7 @@ export function SmartAiDynamicCreator({
           </div>
         </div>
 
-        {/* Researcher Decision Signals */}
-        <div className="rounded-3xl border border-violet-300/15 bg-violet-400/[0.04] p-4 shadow-lg shadow-violet-950/10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <span className="block text-[9px] font-mono text-violet-300 uppercase tracking-[0.22em] leading-none font-black">
-                Research Decision Layer
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <span className="rounded-full border border-violet-300/25 bg-violet-400/10 px-2.5 py-1 text-[10px] font-mono font-black text-violet-200">
-                  Grade {dynamicParlay.researchSignals.researchGrade}
-                </span>
-                <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-mono font-black text-cyan-200">
-                  {dynamicParlay.researchSignals.confidenceBand} confidence
-                </span>
-                <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-mono font-black text-amber-200">
-                  {dynamicParlay.researchSignals.dataCompleteness}% data complete
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 text-right">
-              <div>
-                <span className="block text-[9px] font-mono uppercase tracking-[0.18em] text-slate-500">Evidence</span>
-                <span className="text-sm font-black text-white">{dynamicParlay.researchSignals.evidenceScore}</span>
-              </div>
-              <div>
-                <span className="block text-[9px] font-mono uppercase tracking-[0.18em] text-slate-500">Market</span>
-                <span className="text-sm font-black text-white">{dynamicParlay.researchSignals.marketValueScore}</span>
-              </div>
-              <div>
-                <span className="block text-[9px] font-mono uppercase tracking-[0.18em] text-slate-500">Volatility</span>
-                <span className="text-sm font-black text-white">{dynamicParlay.researchSignals.volatilityScore}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            <div className="rounded-2xl border border-emerald-300/10 bg-emerald-400/5 p-3">
-              <span className="block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-emerald-300">
-                Why this pick
-              </span>
-              <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-slate-300">
-                {dynamicParlay.researchSignals.whyThisPick.map((item) => (
-                  <li key={item}>✓ {item}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-rose-300/10 bg-rose-400/5 p-3">
-              <span className="block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-rose-300">
-                What could go wrong
-              </span>
-              <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-slate-300">
-                {dynamicParlay.researchSignals.whatCouldGoWrong.map((item) => (
-                  <li key={item}>⚠ {item}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-amber-300/10 bg-amber-400/5 p-3">
-              <span className="block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-amber-300">
-                Research warnings
-              </span>
-              <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-slate-300">
-                {dynamicParlay.researchSignals.warningFlags.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {dynamicParlay.researchSignals.roleFit.map((role) => (
-                  <span
-                    key={role}
-                    className="rounded-full border border-slate-700 bg-slate-950/60 px-2 py-0.5 text-[9px] font-mono font-black uppercase text-slate-400"
-                  >
-                    {role}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <SmartAiResearchDecisionPanel researchSignals={dynamicParlay.researchSignals} />
 
         {/* Parlay Active Legs Cards List */}
         <div className="space-y-2.5 max-h-[290px] overflow-y-auto pr-1" id="dynamic-parlay-legs-scroller">
