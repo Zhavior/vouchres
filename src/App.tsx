@@ -1326,6 +1326,23 @@ export default function App() {
   };
 
   // Render content depending on left sidebar active item
+  const handleHideSavedParlay = async (parlayId: string) => {
+    const target = savedSlipsRef.current.find((slip) => String((slip as any).id) === String(parlayId));
+    if (!target) return;
+
+    const status = String((target as any).status ?? '').toLowerCase();
+    if (['live', 'active', 'in_progress'].includes(status)) {
+      throw new Error('Live parlays are locked to protect grading truth.');
+    }
+
+    await apiClient.delete(`/api/parlays/${encodeURIComponent(parlayId)}`);
+
+    const nextSlips = savedSlipsRef.current.filter((slip) => String((slip as any).id) !== String(parlayId));
+    setSavedSlips(nextSlips);
+    syncSlips(nextSlips);
+  };
+
+
   const renderMainView = () => {
     switch (activeSection) {
       case 'welcome':
@@ -1394,7 +1411,13 @@ export default function App() {
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
-        return <ParlayCommandCenter savedSlips={savedSlips} onSaveParlay={handleSaveParlaySlip} />;
+        return (
+          <ParlayCommandCenter
+            savedSlips={savedSlips}
+            onSaveParlay={handleSaveParlaySlip}
+            onHideParlay={handleHideSavedParlay}
+          />
+        );
       case 'live_game_lab':
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>

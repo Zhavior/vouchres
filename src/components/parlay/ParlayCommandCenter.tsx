@@ -252,9 +252,37 @@ function getLegResultVisual(leg: { status?: unknown; resultLabel?: unknown }) {
   };
 }
 
-function LiveSavedParlaysPanel() {
+function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: string) => Promise<void> | void }) {
   const allSlips = useParlayCommandStore(selectSavedSlips);
+  const [hidingSlipId, setHidingSlipId] = useState<string | null>(null);
+  const [hideError, setHideError] = useState<string | null>(null);
   const liveSlips = allSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
+
+  const handleHide = async (slipId: string) => {
+    if (!onHideParlay) return;
+
+    const slip = allSlips.find((item) => String((item as any).id ?? (item as any).publicId) === String(slipId));
+    const status = String(slip?.status ?? '').toLowerCase();
+
+    if (['pending', 'live', 'open', 'active', 'in_progress'].includes(status)) return;
+
+    const ok = window.confirm(
+      'Hide this parlay from My Parlay Board? This will not void it, change its grading status, or alter Results Ledger truth.'
+    );
+    if (!ok) return;
+
+    setHideError(null);
+    setHidingSlipId(slipId);
+
+    try {
+      await onHideParlay(slipId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not hide this parlay.';
+      setHideError(message);
+    } finally {
+      setHidingSlipId(null);
+    }
+  };
 
   return (
     <div className="rounded-3xl border border-slate-800/80 bg-[#07101d]/90 p-5 shadow-2xl shadow-black/20">
@@ -268,6 +296,12 @@ function LiveSavedParlaysPanel() {
           <span className="text-xs font-black text-cyan-200">{liveSlips.length} live</span>
         </div>
       </div>
+
+      {hideError && (
+        <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100">
+          {hideError}
+        </div>
+      )}
 
       <div className="mt-5">
         {allSlips.length === 0 ? (
@@ -316,11 +350,35 @@ function LiveSavedParlaysPanel() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
-                      <LivePulseBars active={slip.isLiveLike} />
-                      <span className="text-[10px] font-black uppercase text-slate-300">
-                        {slip.isLiveLike ? "Live watch" : "Saved"}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+                        <LivePulseBars active={slip.isLiveLike} />
+                        <span className="text-[10px] font-black uppercase text-slate-300">
+                          {slip.isLiveLike ? "Live watch" : "Saved"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleHide(String((slip as any).id ?? slip.publicId))}
+                        disabled={
+                          !onHideParlay ||
+                          hidingSlipId === String((slip as any).id ?? slip.publicId) ||
+                          ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                        }
+                        title={
+                          ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                            ? 'Live or pending parlays are locked to protect grading truth.'
+                            : 'Hide this parlay from My Parlay Board. This does not void or change grading truth.'
+                        }
+                        className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-300 transition hover:border-rose-300/50 hover:bg-rose-400/10 hover:text-rose-200 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-600"
+                      >
+                        {['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                          ? 'Live Locked'
+                          : hidingSlipId === String((slip as any).id ?? slip.publicId)
+                            ? 'Hiding'
+                            : 'Hide'}
+                      </button>
                     </div>
                   </div>
 
@@ -397,11 +455,17 @@ function PremiumPostedPanel() {
   );
 }
 
-function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void }) {
+function CommandPanel({
+  onSaveParlay,
+  onHideParlay,
+}: {
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
+  onHideParlay?: (parlayId: string) => Promise<void> | void;
+}) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
 
   if (activePanel === "ai") return <AiSmartPicksPanel />;
-  if (activePanel === "live") return <LiveSavedParlaysPanel />;
+  if (activePanel === "live") return <LiveSavedParlaysPanel onHideParlay={onHideParlay} />;
   if (activePanel === "premium") return <PremiumPostedPanel />;
   return <BuildSlipPanel onSaveParlay={onSaveParlay} />;
 }
@@ -409,9 +473,10 @@ function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalParla
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
+  onHideParlay?: (parlayId: string) => Promise<void> | void;
 };
 
-export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: ParlayCommandCenterProps) {
+export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onHideParlay }: ParlayCommandCenterProps) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel = useParlayCommandStore((state) => state.setActivePanel);
   const hydrateSavedSlips = useParlayCommandStore((state) => state.hydrateSavedSlips);
@@ -502,7 +567,7 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: P
         </div>
 
         <PanelErrorBoundary title="Parlay Command Center Panel">
-          <CommandPanel onSaveParlay={onSaveParlay} />
+          <CommandPanel onSaveParlay={onSaveParlay} onHideParlay={onHideParlay} />
         </PanelErrorBoundary>
       </div>
     </section>
