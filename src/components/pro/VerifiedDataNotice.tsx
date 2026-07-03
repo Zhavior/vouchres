@@ -1,6 +1,7 @@
 import React from 'react';
 import { CloudOff, Database, Lock, ShieldCheck } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
+import { VECard } from '../ui/ve';
 
 export type VerifiedDataNoticeVariant =
   | 'locked'
@@ -57,8 +58,9 @@ export const VerifiedDataNotice: React.FC<VerifiedDataNoticeProps> = React.memo(
   const Icon = config.icon;
 
   return (
-    <div
-      className={`flex items-start gap-2.5 rounded-xl border p-3 ${className}`}
+    <VECard
+      tone="soft"
+      className={`flex items-start gap-2.5 rounded-xl p-3 ${className}`}
       style={{ borderColor: withAlpha(config.color, 0.22), background: withAlpha(config.color, 0.04) }}
     >
       <span
@@ -75,7 +77,7 @@ export const VerifiedDataNotice: React.FC<VerifiedDataNoticeProps> = React.memo(
           {detail ?? message ?? config.defaultDetail}
         </p>
       </div>
-    </div>
+    </VECard>
   );
 });
 
