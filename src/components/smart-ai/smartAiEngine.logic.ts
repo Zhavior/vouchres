@@ -59,6 +59,77 @@ export function americanToDecimalOdds(am: unknown): number {
   return n > 20 ? Math.round((1 + n / 100) * 100) / 100 : n;
 }
 
+function getCandidateAdapterSignals(candidate: RealCandidate) {
+  const availableCount = [
+    Boolean(candidate.opponentPitcherName),
+    Boolean(candidate.pitcherHand),
+    typeof candidate.pitcherVulnerability === 'number',
+    typeof candidate.parkFactor === 'number',
+    Boolean(candidate.lineupStatus),
+  ].filter(Boolean).length;
+
+  const missingCount = 5 - availableCount;
+
+  return {
+    availableCount,
+    missingCount,
+    pitcherVulnerability: typeof candidate.pitcherVulnerability === 'number' ? candidate.pitcherVulnerability : 0,
+    parkFactor: typeof candidate.parkFactor === 'number' ? candidate.parkFactor : 0,
+    hasLineupStatus: Boolean(candidate.lineupStatus),
+    hasPitcherContext: Boolean(candidate.opponentPitcherName || candidate.pitcherHand),
+  };
+}
+
+function scoreSmartAiCandidateForMarket(candidate: RealCandidate, category: SmartAiBuilderCategory) {
+  const signals = getCandidateAdapterSignals(candidate);
+  const baseScore = Number.isFinite(candidate.score) ? candidate.score : 0;
+  const adapterBonus = signals.availableCount * 2.5;
+  const missingPenalty = signals.missingCount * 1.75;
+
+  if (category === 'HITS') {
+    return baseScore + adapterBonus + (signals.hasPitcherContext ? 4 : 0) - missingPenalty;
+  }
+
+  if (category === 'RBIS') {
+    return (
+      baseScore +
+      adapterBonus +
+      signals.pitcherVulnerability * 0.08 +
+      (signals.hasLineupStatus ? 5 : 0) -
+      missingPenalty * 1.1
+    );
+  }
+
+  if (category === 'RUNS') {
+    return (
+      baseScore +
+      adapterBonus +
+      signals.parkFactor * 0.06 +
+      (signals.hasLineupStatus ? 6 : 0) -
+      missingPenalty * 1.05
+    );
+  }
+
+  if (category === 'HR') {
+    return (
+      baseScore +
+      adapterBonus +
+      signals.pitcherVulnerability * 0.12 +
+      signals.parkFactor * 0.08 -
+      missingPenalty * 1.25
+    );
+  }
+
+  return (
+    baseScore +
+    adapterBonus +
+    (signals.hasPitcherContext ? 3 : 0) +
+    (signals.hasLineupStatus ? 4 : 0) -
+    missingPenalty * 2.4
+  );
+}
+
+
 export function buildSmartAiMarket(
   cand: RealCandidate,
   category: SmartAiBuilderCategory | string,
@@ -355,7 +426,11 @@ export function buildSmartAiDynamicParlay(params: {
 
   const selected = realCandidates
     .slice()
-    .sort((a, b) => b.score - a.score)
+    .sort(
+      (a, b) =>
+        scoreSmartAiCandidateForMarket(b, builderCategory) -
+        scoreSmartAiCandidateForMarket(a, builderCategory)
+    )
     .slice(0, builderLegs);
 
   if (selected.length === 0) return null;
@@ -414,7 +489,10 @@ export function buildSmartAiDynamicParlay(params: {
 
   const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
   const avgConf = Math.round(
-    selected.reduce((s, c, i) => s + Math.max(45, 92 - i * 3), 0) / selected.length
+    selected.reduce((sum, candidate) => {
+      const marketScore = scoreSmartAiCandidateForMarket(candidate, builderCategory);
+      return sum + Math.max(45, Math.min(92, marketScore));
+    }, 0) / selected.length
   );
 
   const confidenceBand = avgConf > 82 ? 'HIGH' : avgConf > 64 ? 'MEDIUM' : 'LOW';
@@ -426,7 +504,10 @@ export function buildSmartAiDynamicParlay(params: {
   const marketValueScore = Math.round(
     selected.reduce((sum, candidate) => sum + Math.min(100, candidate.oddsDecimal * 18), 0) / selected.length
   );
-  const evidenceScore = Math.round(selected.reduce((sum, candidate) => sum + candidate.score, 0) / selected.length);
+  const evidenceScore = Math.round(
+    selected.reduce((sum, candidate) => sum + scoreSmartAiCandidateForMarket(candidate, builderCategory), 0) /
+      selected.length
+  );
   const marketResearch = buildMarketResearchProfile({
     builderCategory,
     builderThreshold,
