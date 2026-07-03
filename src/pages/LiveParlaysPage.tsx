@@ -19,6 +19,7 @@ import type { Parlay } from '../types';
 import { earliestStart, isLive } from '../lib/parlayLifecycle';
 import { americanLabel, decimalLabel } from '../lib/odds';
 import PlayerHeadshot from '../components/parlays/PlayerHeadshot';
+import { apiClient } from '../lib/apiClient';
 import {
   normalizeParlayStatus,
   statusLabel,
@@ -192,12 +193,23 @@ function SyncChip({ p, onRetry }: { p: Parlay; onRetry?: (id: string) => void })
   );
 }
 
-function ParlayCard({ p, onRetry }: { p: Parlay; onRetry?: (id: string) => void }) {
+function ParlayCard({
+  p,
+  onRetry,
+  onHide,
+  hiding,
+}: {
+  p: Parlay;
+  onRetry?: (id: string) => void;
+  onHide?: (id: string) => void;
+  hiding?: boolean;
+}) {
   const start = earliestStart(p);
   const norm = normalizeParlayStatus(p);
   const live = norm === 'live';
   const sync = getSyncStatus(p);
   const payout = formatPayout(p);
+  const hideLocked = live || sync === 'local_only';
 
   return (
     <div
@@ -223,6 +235,27 @@ function ParlayCard({ p, onRetry }: { p: Parlay; onRetry?: (id: string) => void 
             <SyncChip p={p} onRetry={onRetry} />
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onHide?.(p.id)}
+          disabled={!onHide || hideLocked || hiding}
+          title={
+            live
+              ? 'Live parlays are locked to protect grading truth.'
+              : sync === 'local_only'
+                ? 'Local-only parlays must be synced before they can be hidden from your account.'
+                : 'Hide this parlay from My Parlay Board. This does not void or change grading truth.'
+          }
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition ${
+            hideLocked
+              ? 'cursor-not-allowed border-slate-700 bg-slate-900/60 text-slate-500'
+              : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-rose-300/50 hover:bg-rose-400/10 hover:text-rose-200'
+          }`}
+        >
+          {hiding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Archive className="h-3 w-3" />}
+          {live ? 'Live Locked' : hiding ? 'Hiding' : 'Hide'}
+        </button>
       </div>
 
       {/* Legs */}
@@ -301,8 +334,42 @@ export default function LiveParlaysPage({
   lastGraded,
 }: Props) {
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [hiddenParlayIds, setHiddenParlayIds] = useState<Set<string>>(() => new Set());
+  const [hidingParlayId, setHidingParlayId] = useState<string | null>(null);
+  const [hideError, setHideError] = useState<string | null>(null);
 
-  const all = parlays || [];
+  const handleHideParlay = async (parlayId: string) => {
+    const target = (parlays || []).find((p) => p.id === parlayId);
+    if (!target) return;
+
+    const norm = normalizeParlayStatus(target);
+    const sync = getSyncStatus(target);
+    if (norm === 'live' || sync === 'local_only') return;
+
+    const ok = window.confirm(
+      'Hide this parlay from My Parlay Board? This will not void it, change its grading status, or alter Results Ledger truth.'
+    );
+    if (!ok) return;
+
+    setHideError(null);
+    setHidingParlayId(parlayId);
+
+    try {
+      await apiClient.delete(`/api/parlays/${encodeURIComponent(parlayId)}`);
+      setHiddenParlayIds((prev) => {
+        const next = new Set(prev);
+        next.add(parlayId);
+        return next;
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not hide this parlay.';
+      setHideError(message);
+    } finally {
+      setHidingParlayId(null);
+    }
+  };
+
+  const all = (parlays || []).filter((p) => !hiddenParlayIds.has(p.id));
 
   // Apply filter, then group.
   const filtered = useMemo(
@@ -502,7 +569,13 @@ export default function LiveParlaysPage({
                   </div>
                   <div className="space-y-4">
                     {items.map((p) => (
-                      <ParlayCard key={p.id} p={p} onRetry={onRetrySync} />
+                      <ParlayCard
+                      key={p.id}
+                      p={p}
+                      onRetry={onRetrySync}
+                      onHide={handleHideParlay}
+                      hiding={hidingParlayId === p.id}
+                    />
                     ))}
                   </div>
                 </section>
