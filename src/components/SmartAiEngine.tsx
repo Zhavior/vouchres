@@ -150,6 +150,17 @@ export default function SmartAiEngine({
             opponent: c.opponent ?? c.opponentTeam ?? c.opponentPitcherName ?? 'opponent',
             oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds ?? '+350'),
             score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
+            opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
+            pitcherHand: c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
+            pitcherVulnerability:
+              typeof c.pitcherVulnerability === 'number'
+                ? c.pitcherVulnerability
+                : typeof c.probablePitcher?.vulnerability === 'number'
+                  ? c.probablePitcher.vulnerability
+                  : null,
+            parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
+            venue: c.venue ?? c.ballpark ?? null,
+            lineupStatus: c.lineupStatus ?? c.lineup_status ?? null,
           }));
         setRealCandidates(mapped);
         setCandidatesLoading(false);

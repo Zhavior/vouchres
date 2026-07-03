@@ -8,6 +8,12 @@ export interface RealCandidate {
   opponent: string;
   oddsDecimal: number;
   score: number;
+  opponentPitcherName?: string | null;
+  pitcherHand?: string | null;
+  pitcherVulnerability?: number | null;
+  parkFactor?: number | null;
+  venue?: string | null;
+  lineupStatus?: string | null;
 }
 
 export interface PrecomputedPick {
@@ -159,6 +165,12 @@ export type SmartAiLegResearchProfile = {
   verifiedBoardScore: number;
   opponent: string;
   gamePk: string;
+  opponentPitcherName?: string | null;
+  pitcherHand?: string | null;
+  pitcherVulnerability?: number | null;
+  parkFactor?: number | null;
+  venue?: string | null;
+  lineupStatus?: string | null;
   dataWarnings: string[];
   researcherNotes: string[];
 };
@@ -366,14 +378,35 @@ export function buildSmartAiDynamicParlay(params: {
         verifiedBoardScore: c.score,
         opponent: c.opponent,
         gamePk: c.gamePk,
+        opponentPitcherName: c.opponentPitcherName ?? null,
+        pitcherHand: c.pitcherHand ?? null,
+        pitcherVulnerability: typeof c.pitcherVulnerability === 'number' ? c.pitcherVulnerability : null,
+        parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
+        venue: c.venue ?? null,
+        lineupStatus: c.lineupStatus ?? null,
         dataWarnings: [
           'Missing Statcast rolling window',
-          'Missing confirmed pitcher hand',
           'Using verified board score only',
+          ...(c.opponentPitcherName ? [] : ['Missing probable pitcher data']),
+          ...(c.pitcherHand ? [] : ['Missing confirmed pitcher hand']),
+          ...(typeof c.pitcherVulnerability === 'number' ? [] : ['Missing pitcher vulnerability profile']),
+          ...(typeof c.parkFactor === 'number' ? [] : ['Missing park-factor adjustment']),
+          ...(c.lineupStatus ? [] : ['Missing confirmed lineup context']),
         ],
         researcherNotes: [
           `${c.playerName} ranks inside the selected Smart AI candidate pool for this build.`,
           `${c.team} vs ${c.opponent} is tied to gamePk ${c.gamePk} for grading identity.`,
+          ...(c.opponentPitcherName
+            ? [`Opponent pitcher context: ${c.opponentPitcherName}${c.pitcherHand ? ` (${c.pitcherHand})` : ''}.`]
+            : ['Opponent pitcher context is not available from the current adapter payload.']),
+          ...(typeof c.pitcherVulnerability === 'number'
+            ? [`Pitcher vulnerability score available from adapter: ${c.pitcherVulnerability}.`]
+            : []),
+          ...(typeof c.parkFactor === 'number'
+            ? [`Park factor available from adapter: ${c.parkFactor}.`]
+            : []),
+          ...(c.venue ? [`Venue context available from adapter: ${c.venue}.`] : []),
+          ...(c.lineupStatus ? [`Lineup status from adapter: ${c.lineupStatus}.`] : []),
         ],
       },
     };
