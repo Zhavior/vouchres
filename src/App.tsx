@@ -23,7 +23,7 @@ import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
 import { normalizePlayerId } from './lib/mlbHeadshot';
-import { normalizeParlaySlip, buildSaveParlayPayload } from './lib/parlays/parlayBridge';
+import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from './lib/parlays/parlayBridge';
 import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
@@ -1034,15 +1034,29 @@ export default function App() {
     }
   };
 
-  const handleSaveParlaySlip = async (newParlay: Parlay) => {
+  const handleSaveParlaySlip = async (newParlay: Parlay | CanonicalParlaySlip) => {
+    const normalizedUiStatus =
+      newParlay.status === 'won'
+        ? 'WON'
+        : newParlay.status === 'lost'
+          ? 'LOST'
+          : newParlay.status === 'void'
+            ? 'VOID'
+            : 'PENDING';
+
     const savedParlay: Parlay = {
-      ...newParlay,
       id: newParlay.id || `parlay-${Date.now()}`,
-      status: newParlay.status || 'PENDING',
+      title: newParlay.title,
+      legs: Array.isArray(newParlay.legs) ? (newParlay.legs as unknown as Leg[]) : [],
+      status: normalizedUiStatus,
       mode: newParlay.mode || 'PRACTICE',
       createdAt: newParlay.createdAt || new Date().toISOString(),
+      totalOdds: "totalOdds" in newParlay ? String(newParlay.totalOdds || "") : "",
+      oddsValue: "oddsValue" in newParlay ? Number(newParlay.oddsValue || 0) : 0,
+      riskTier: "riskTier" in newParlay ? newParlay.riskTier : "LOW",
       lockNotified: false,
       backendSyncState: 'saving',
+      aiGenerated: "aiGenerated" in newParlay ? Boolean(newParlay.aiGenerated) : false,
     };
 
     // Optimistic localStorage save — instant

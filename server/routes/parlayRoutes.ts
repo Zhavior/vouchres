@@ -61,14 +61,28 @@ type AiParlayLegInput = {
   team?: string;
   teamAbbr?: string;
   gameStartTime?: string;
+  teamId?: string | number | null;
+  statTarget?: string | number | null;
+  comparator?: string | null;
+  externalProvider?: string | null;
 };
 
 type NormalizedAiLeg = {
   event_id: string;
   market: string;
+  market_code?: string | null;
   selection: string;
   odds_decimal: number | null;
-  player_id: string | null;
+  player_id: string | number | null;
+  player_name?: string | null;
+  game_id?: string | null;
+  game_pk?: string | null;
+  team_id?: string | number | null;
+  stat_target?: string | number | null;
+  comparator?: string | null;
+  external_provider?: string | null;
+  event_key?: string | null;
+  popularity_key?: string | null;
 };
 
 function todayYmd(): string {
@@ -104,6 +118,11 @@ function decimalOddsFromAny(value: unknown): number | null {
   return n > 1.01 ? Number(n.toFixed(3)) : null;
 }
 
+
+function ownershipWarning(result: { ok: true } | { ok: false; warning: string }): string {
+  return "warning" in result ? result.warning : "resource not found for authenticated user";
+}
+
 function normalizeAiLegs(rawLegs: unknown[]): { legs: NormalizedAiLeg[]; warnings: string[] } {
   const warnings: string[] = [];
   const legs = rawLegs.map((raw, index) => {
@@ -124,9 +143,23 @@ function normalizeAiLegs(rawLegs: unknown[]): { legs: NormalizedAiLeg[]; warning
     return {
       event_id: eventId,
       market: marketResult.market,
+      market_code: marketResult.market,
       selection: selection || `AI parlay leg ${index + 1}`,
       odds_decimal: odds,
       player_id: normalizeBackendPlayerId(leg.playerId),
+      player_name: playerName || null,
+      game_id: eventId,
+      game_pk: eventId,
+      team_id: leg.teamId ?? null,
+      stat_target: leg.statTarget ?? null,
+      comparator: leg.comparator ?? null,
+      external_provider: leg.externalProvider ?? "vouchedge_ai",
+      event_key: eventId && marketResult.market
+        ? `MLB_${eventId}_${normalizeBackendPlayerId(leg.playerId) ?? "team"}_${marketResult.market}`
+        : null,
+      popularity_key: playerName && marketResult.market
+        ? `MLB_${playerName.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_${marketResult.market}`
+        : null,
     };
   });
 
@@ -1193,7 +1226,7 @@ parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Re
 
   const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
   if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
   }
 
   const pickRes = await supabaseAdmin
@@ -1877,7 +1910,7 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
 
   const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
   if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
   }
 
   const allowed: Record<string, true> = { explanation: true, status: true, stake_units: true };
@@ -1918,7 +1951,7 @@ parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res:
 
   const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
   if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownership.warning] });
+    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
   }
 
   const { data, error } = await supabaseAdmin

@@ -18,6 +18,8 @@ export type DraftParlayLeg = {
   teamId?: string | number | null;
   teamLabel?: string | null;
   gameId?: string | number | null;
+  game?: unknown;
+  gamePk?: string;
   gameDate?: string | null;
   marketCode?: string | null;
   marketLabel?: string | null;

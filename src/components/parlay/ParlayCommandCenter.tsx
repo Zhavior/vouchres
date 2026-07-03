@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Bot, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
 import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
+import { normalizeParlayLeg } from "../../lib/parlays/parlayBridge";
+import type { CanonicalParlaySlip } from "../../lib/parlays/parlayBridge";
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
@@ -65,7 +67,7 @@ function EmptyPanel({
   );
 }
 
-function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => Promise<void> | void }) {
+function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void }) {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
   const clearDraft = useParlayCommandStore((state) => state.clearDraft);
@@ -76,18 +78,29 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => P
     if (!onSaveParlay || draftLegs.length === 0 || isSaving) return;
 
     const now = new Date().toISOString();
-    const draftParlay: Parlay = {
-      id: `command-draft-${Date.now()}`,
+    const draftId = `command-draft-${Date.now()}`;
+    const draftParlay: CanonicalParlaySlip = {
+      id: draftId,
+      clientRef: draftId,
       title: `Command Center ${draftLegs.length}-Leg Slip`,
-      summary: draftLegs.map((leg) => leg.playerName || leg.marketLabel || "Player prop").join(" · "),
-      legs: draftLegs,
-      status: "PENDING",
+      legs: draftLegs.map((leg) =>
+        normalizeParlayLeg({
+          ...leg,
+          sport: leg.sport || "mlb",
+          source: "command_center",
+        })
+      ),
+      status: "pending",
       mode: "PRACTICE",
+      wagerAmount: 0,
+      sport: "mlb",
       createdAt: now,
-      updatedAt: now,
-      aiGenerated: false,
+      metadata: {
+        summary: draftLegs.map((leg) => leg.playerName || leg.marketLabel || "Player prop").join(" · "),
+        aiGenerated: false,
+      },
       source: "command_center",
-    } as Parlay;
+    };
 
     setIsSaving(true);
     try {
@@ -384,7 +397,7 @@ function PremiumPostedPanel() {
   );
 }
 
-function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => Promise<void> | void }) {
+function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void }) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
 
   if (activePanel === "ai") return <AiSmartPicksPanel />;
@@ -395,7 +408,7 @@ function CommandPanel({ onSaveParlay }: { onSaveParlay?: (parlay: Parlay) => Pro
 
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
-  onSaveParlay?: (parlay: Parlay) => Promise<void> | void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
 };
 
 export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay }: ParlayCommandCenterProps) {

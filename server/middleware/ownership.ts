@@ -33,9 +33,11 @@ export async function assertUserOwnsResource(
 ): Promise<{ ok: true } | { ok: false; warning: string }> {
   const lookup = OWNERSHIP_LOOKUPS[resourceType];
   const supabaseAdmin = await getSupabaseAdmin();
-  let query = supabaseAdmin
-    .from(lookup.table)
-    .select(`${lookup.idColumn}, ${lookup.ownerColumn}`)
+  // Dynamic table/column ownership checks are runtime-safe but too dynamic for
+  // Supabase's typed select parser. Keep the runtime filters, but prevent the
+  // typed query builder from bottlenecking this generic helper.
+  let query = (supabaseAdmin.from(lookup.table) as any)
+    .select("*")
     .eq(lookup.idColumn, resourceId)
     .eq(lookup.ownerColumn, userId)
     .limit(1)

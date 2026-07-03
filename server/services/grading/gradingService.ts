@@ -90,7 +90,7 @@ export async function gradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, graded_at, status")
+    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -751,7 +751,7 @@ function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
     }
   }
 
-  const wantedName = extractPlayerName(String(leg.selection || ""));
+  const wantedName = extractPlayerName(String(leg.selection || ""), String(leg.market || ""));
   if (!wantedName) return null;
 
   for (const players of teams) {

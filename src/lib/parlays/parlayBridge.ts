@@ -8,8 +8,9 @@ export type ParlaySource =
   | "manual_builder"
   | "posted_parlay"
   | "tailed_parlay"
-  | "local_import";
-
+  | "local_import"
+  | "ai_pick"
+  | "command_center";
 export type ParlayMarketCode =
   | "ANYTIME_HR"
   | "HIT"
@@ -62,6 +63,14 @@ export interface CanonicalParlayLeg {
   source: ParlaySource;
 
   gamePk?: string;
+  gameId?: string;
+  gameDate?: string;
+  teamId?: string | number | null;
+  eventKey?: string;
+  popularityKey?: string;
+  statTarget?: number | string | null;
+  comparator?: string;
+  externalProvider?: string;
   eventId?: string;
   gameLabel?: string;
   gameStartTime?: string;
