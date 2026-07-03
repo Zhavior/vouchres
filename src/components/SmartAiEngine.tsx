@@ -115,6 +115,8 @@ export default function SmartAiEngine({
       setBuilderThreshold(2);
     } else if (builderCategory === 'RUNS') {
       setBuilderThreshold(2);
+    } else if (builderCategory === 'SB') {
+      setBuilderThreshold(1);
     } else if (builderCategory === 'HR') {
       setBuilderThreshold(1);
     }

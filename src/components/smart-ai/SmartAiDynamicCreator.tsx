@@ -96,7 +96,8 @@ export function SmartAiDynamicCreator({
         {[
           { id: 'HITS', label: '📈 1-3 Hits Focus' },
           { id: 'RBIS', label: '🎯 1-6 RBIs Focus' },
-          { id: 'RUNS', label: '🏃 1-5 Runs Focus' },
+          { id: 'RUNS', label: '🏃 Runs' },
+          { id: 'SB', label: '💨 Stolen Bases' },
           { id: 'HR', label: '⚾ Homeruns Focus' }
         ].map(cat => (
           <button
@@ -164,6 +165,20 @@ export function SmartAiDynamicCreator({
             }`}
           >
             {val} Run{val > 1 ? 's' : ''}
+          </button>
+        ))}
+        {builderCategory === 'SB' && [1, 2].map(val => (
+          <button
+            key={val}
+            type="button"
+            onClick={() => onBuilderThresholdChange(val)}
+            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
+              builderThreshold === val
+                ? 'bg-slate-900 border-cyan-500 text-cyan-400'
+                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {val} SB{val > 1 ? 's' : ''}
           </button>
         ))}
         {builderCategory === 'HR' && [1, 2].map(val => (

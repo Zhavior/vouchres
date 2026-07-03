@@ -1,4 +1,4 @@
-export type SmartAiBuilderCategory = 'HITS' | 'RBIS' | 'RUNS' | 'HR';
+export type SmartAiBuilderCategory = 'HITS' | 'RBIS' | 'RUNS' | 'SB' | 'HR';
 
 export interface RealCandidate {
   playerId: string;
@@ -82,6 +82,14 @@ export function buildSmartAiMarket(
       marketName: `To Record ${threshold}+ Runs`,
       customSpec: `${n} ${threshold}+ Runs`,
       odds: 1.6 + threshold * 0.6,
+    };
+  }
+
+  if (category === 'SB') {
+    return {
+      marketName: threshold >= 2 ? 'To Record 2+ Stolen Bases' : 'To Record 1+ Stolen Base',
+      customSpec: `${n} ${threshold}+ SB`,
+      odds: threshold >= 2 ? 5.5 : 2.15,
     };
   }
 
