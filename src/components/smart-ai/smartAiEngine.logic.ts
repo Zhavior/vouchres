@@ -163,6 +163,164 @@ export type SmartAiLegResearchProfile = {
   researcherNotes: string[];
 };
 
+type MarketResearchProfile = {
+  dataCompleteness: number;
+  roleFit: SmartAiResearchSignals['roleFit'];
+  warningFlags: string[];
+  whyThisPick: string[];
+  whatCouldGoWrong: string[];
+};
+
+function buildMarketResearchProfile(params: {
+  builderCategory: SmartAiBuilderCategory;
+  builderThreshold: number;
+  builderLegs: number;
+  evidenceScore: number;
+}): MarketResearchProfile {
+  const { builderCategory, builderThreshold, builderLegs, evidenceScore } = params;
+
+  const sharedWarnings = [
+    'Missing Statcast rolling window',
+    'Missing confirmed probable pitcher',
+    'Missing confirmed pitcher hand',
+    'Missing confirmed lineup context',
+    'Missing park-factor adjustment',
+  ];
+
+  const sharedWhy = [
+    'Selected from today\'s verified Smart AI candidate pool.',
+    `Average verified-board evidence score: ${evidenceScore}.`,
+    `Builder category ${builderCategory} with threshold ${builderThreshold}.`,
+  ];
+
+  const sharedRisk = [
+    'Advanced market-specific data is not fully wired into this return yet.',
+    'Probable pitcher, pitcher handedness, bullpen context, and lineup context are not fully confirmed in this helper yet.',
+    'Higher leg counts increase parlay volatility even when individual candidates look strong.',
+  ];
+
+  const baseRoleFit: SmartAiResearchSignals['roleFit'] =
+    builderLegs <= 2 ? ['single', 'parlay'] : builderLegs <= 4 ? ['parlay', 'ladder'] : ['ladder', 'avoid'];
+
+  if (builderCategory === 'HITS') {
+    return {
+      dataCompleteness: 46,
+      roleFit: baseRoleFit,
+      warningFlags: [
+        ...sharedWarnings,
+        'Missing recent contact-quality trend',
+        'Missing batter-vs-pitcher handedness split confirmation',
+        'Missing opposing pitcher contact-allowed profile',
+      ],
+      whyThisPick: [
+        ...sharedWhy,
+        'Hits markets need contact quality, recent form, lineup spot, pitcher hand, and opposing pitcher contact-allowed profile.',
+        'Use as a Hits research flag until recent batted-ball quality and matchup splits are wired.',
+      ],
+      whatCouldGoWrong: [
+        ...sharedRisk,
+        'A low-contact day, strong pitcher command, defensive positioning, or rest-day lineup change can break the hits angle.',
+      ],
+    };
+  }
+
+  if (builderCategory === 'RBIS') {
+    return {
+      dataCompleteness: 40,
+      roleFit: builderLegs <= 1 ? ['single'] : ['parlay', 'avoid'],
+      warningFlags: [
+        ...sharedWarnings,
+        'Missing projected batting order',
+        'Missing teammate on-base context',
+        'Missing opposing pitcher traffic-allowed profile',
+        'Missing team run-total context',
+      ],
+      whyThisPick: [
+        ...sharedWhy,
+        'RBI markets need lineup opportunity, teammates reaching base, pitcher traffic allowed, and team run environment.',
+        'Use as an RBI opportunity flag until batting order and teammate context are wired.',
+      ],
+      whatCouldGoWrong: [
+        ...sharedRisk,
+        'RBI legs can fail even on a good player day if teammates do not reach base ahead of him.',
+        'Low team total, bad lineup spot, or a pitcher limiting traffic can remove RBI chances.',
+      ],
+    };
+  }
+
+  if (builderCategory === 'RUNS') {
+    return {
+      dataCompleteness: 42,
+      roleFit: baseRoleFit,
+      warningFlags: [
+        ...sharedWarnings,
+        'Missing on-base path confirmation',
+        'Missing hitters-behind context',
+        'Missing team scoring environment',
+        'Missing opposing pitcher run-prevention profile',
+      ],
+      whyThisPick: [
+        ...sharedWhy,
+        'Runs markets need on-base path, lineup position, hitters behind the player, team scoring environment, and pitcher context.',
+        'Use as a team-context Runs research flag until lineup and run environment are confirmed.',
+      ],
+      whatCouldGoWrong: [
+        ...sharedRisk,
+        'Runs legs can fail if the player reaches base but hitters behind him do not drive him in.',
+        'Bad lineup placement, weak team context, or low-scoring game script can break the Runs angle.',
+      ],
+    };
+  }
+
+  if (builderCategory === 'HR') {
+    return {
+      dataCompleteness: 38,
+      roleFit: builderThreshold >= 2 ? ['ladder', 'avoid'] : ['single', 'parlay'],
+      warningFlags: [
+        ...sharedWarnings,
+        'Missing barrel-rate rolling window',
+        'Missing hard-hit and launch-angle quality',
+        'Missing opposing pitcher HR-allowed profile',
+        'Missing weather/wind carry confirmation',
+      ],
+      whyThisPick: [
+        ...sharedWhy,
+        'Home Run markets need barrel rate, hard-hit rate, launch-angle quality, pitcher HR weakness, park factor, weather, and lineup confirmation.',
+        'Use as an HR Watch flag until Statcast, pitcher HR profile, and weather are wired.',
+      ],
+      whatCouldGoWrong: [
+        ...sharedRisk,
+        'HR markets are naturally high volatility even when the matchup looks strong.',
+        'A pitcher avoiding the zone, park/weather suppression, or missing lineup confirmation can break the HR angle.',
+      ],
+    };
+  }
+
+  return {
+    dataCompleteness: 34,
+    roleFit: builderThreshold >= 2 ? ['ladder', 'avoid'] : ['single'],
+    warningFlags: [
+      ...sharedWarnings,
+      'Missing pitcher/catcher run-game data',
+      'Missing confirmed catcher throw-out profile',
+      'Missing player steal-attempt rate',
+      'Confirm lineup and on-base path before trusting stolen-base markets',
+    ],
+    whyThisPick: [
+      ...sharedWhy,
+      'Possible stolen-base angle from the verified Smart AI candidate pool.',
+      'This player is being surfaced as an SB Watch candidate, not a fully confirmed run-game edge yet.',
+      'Best used as a research flag until pitcher hold, catcher arm, lineup spot, steal tendency, and on-base path are wired.',
+    ],
+    whatCouldGoWrong: [
+      ...sharedRisk,
+      'Stolen-base markets can fail if the player does not reach first base.',
+      'A strong catcher, quick pitcher delivery, pickoff risk, pitchout risk, or bad game script can remove the steal attempt.',
+      'This helper does not yet verify catcher pop time, pitcher hold time, pickoff tendency, or team steal aggression.',
+    ],
+  };
+}
+
 export type SmartAiDynamicParlay = {
   legs: SmartAiDynamicLeg[];
   totalOdds: string;
@@ -228,52 +386,21 @@ export function buildSmartAiDynamicParlay(params: {
 
   const confidenceBand = avgConf > 82 ? 'HIGH' : avgConf > 64 ? 'MEDIUM' : 'LOW';
   const riskTier = avgConf > 82 ? 'LOW' : avgConf > 64 ? 'MEDIUM' : 'HIGH';
-  const isStolenBaseBuild = builderCategory === 'SB';
   const volatilityScore = Math.min(
     100,
-    Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12 + (isStolenBaseBuild ? 14 : 0))
+    Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12 + (builderCategory === 'SB' ? 14 : 0) + (builderCategory === 'HR' ? 10 : 0))
   );
   const marketValueScore = Math.round(
     selected.reduce((sum, candidate) => sum + Math.min(100, candidate.oddsDecimal * 18), 0) / selected.length
   );
   const evidenceScore = Math.round(selected.reduce((sum, candidate) => sum + candidate.score, 0) / selected.length);
-  const dataCompleteness = isStolenBaseBuild ? 34 : 42;
-
-  const sharedWarningFlags = [
-    'Missing Statcast rolling window',
-    'Missing confirmed pitcher hand',
-    'Missing park-factor adjustment',
-  ];
-
-  const stolenBaseWarningFlags = [
-    'Missing pitcher/catcher run-game data',
-    'Missing confirmed catcher throw-out profile',
-    'Confirm lineup and on-base path before trusting stolen-base markets',
-  ];
-
-  const sharedWhyThisPick = [
-    'Selected from today\'s verified Smart AI candidate pool.',
-    `Average verified-board evidence score: ${evidenceScore}.`,
-    `Builder category ${builderCategory} with threshold ${builderThreshold}.`,
-  ];
-
-  const stolenBaseWhyThisPick = [
-    'Possible stolen-base angle from the verified Smart AI candidate pool.',
-    'This player is being surfaced as an SB Watch candidate, not a fully confirmed run-game edge yet.',
-    'Best used as a research flag until pitcher hold, catcher arm, lineup spot, and on-base path are wired.',
-  ];
-
-  const sharedWhatCouldGoWrong = [
-    'Advanced contact-quality data is not wired into this return yet.',
-    'Pitcher handedness and bullpen context are not confirmed in this helper yet.',
-    'Higher leg counts increase parlay volatility even when individual candidates look strong.',
-  ];
-
-  const stolenBaseWhatCouldGoWrong = [
-    'Stolen-base markets can fail if the player does not reach first base.',
-    'A strong catcher, quick pitcher delivery, pitchout risk, or bad game script can remove the steal attempt.',
-    'This helper does not yet verify catcher pop time, pitcher hold time, pickoff tendency, or team steal aggression.',
-  ];
+  const marketResearch = buildMarketResearchProfile({
+    builderCategory,
+    builderThreshold,
+    builderLegs,
+    evidenceScore,
+  });
+  const dataCompleteness = marketResearch.dataCompleteness;
 
   return {
     legs,
@@ -300,16 +427,10 @@ export function buildSmartAiDynamicParlay(params: {
       marketValueScore,
       volatilityScore,
       matchupScore: evidenceScore,
-      roleFit: builderLegs <= 2 ? ['single', 'parlay'] : builderLegs <= 4 ? ['parlay', 'ladder'] : ['ladder', 'avoid'],
-      warningFlags: isStolenBaseBuild
-        ? [...sharedWarningFlags, ...stolenBaseWarningFlags]
-        : sharedWarningFlags,
-      whyThisPick: isStolenBaseBuild
-        ? [...sharedWhyThisPick, ...stolenBaseWhyThisPick]
-        : sharedWhyThisPick,
-      whatCouldGoWrong: isStolenBaseBuild
-        ? [...sharedWhatCouldGoWrong, ...stolenBaseWhatCouldGoWrong]
-        : sharedWhatCouldGoWrong,
+      roleFit: marketResearch.roleFit,
+      warningFlags: marketResearch.warningFlags,
+      whyThisPick: marketResearch.whyThisPick,
+      whatCouldGoWrong: marketResearch.whatCouldGoWrong,
     },
   };
 }
