@@ -133,6 +133,8 @@ export default function SmartAiEngine({
             opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
             opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
             pitcherHand: c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
+            batSide: c.batSide === 'L' || c.batSide === 'R' || c.batSide === 'S' ? c.batSide : null,
+            injuryStatus: typeof c.injuryStatus === 'string' ? c.injuryStatus : null,
             pitcherVulnerability:
               typeof c.pitcherVulnerability === 'number'
                 ? c.pitcherVulnerability

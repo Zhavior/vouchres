@@ -392,6 +392,31 @@ export function SmartAiDeepResearchPanel({
                           missing={typeof c.parkFactor !== 'number'}
                         />
                         <ContextChip label="Lineup" value={lineupLabel} missing={lineupLabel === 'Projected'} />
+                        {c.batSide ? (
+                          <ContextChip
+                            label="Bat"
+                            value={
+                              c.pitcherHand === 'L' || c.pitcherHand === 'R'
+                                ? `${c.batSide} vs ${c.pitcherHand}HP`
+                                : `Bats ${c.batSide}`
+                            }
+                          />
+                        ) : null}
+                        {['day_to_day', 'questionable', 'injured_list', 'scratched'].includes(String(c.injuryStatus ?? '')) ? (
+                          <ContextChip
+                            label="INJ"
+                            value={
+                              c.injuryStatus === 'day_to_day'
+                                ? 'Day-to-Day'
+                                : c.injuryStatus === 'questionable'
+                                  ? 'Questionable'
+                                  : c.injuryStatus === 'injured_list'
+                                    ? 'Injured List'
+                                    : 'Scratched'
+                            }
+                            missing
+                          />
+                        ) : null}
                         {(() => {
                           const chip = weatherChipProps(weatherByGame[String(c.gamePk)]);
                           return <ContextChip label="WX" value={chip.value} missing={chip.missing} />;

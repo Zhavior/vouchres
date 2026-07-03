@@ -22,6 +22,8 @@ export interface RealCandidate {
   opponentPitcherName?: string | null;
   opponentPitcherId?: number | null;
   pitcherHand?: string | null;
+  batSide?: 'L' | 'R' | 'S' | null;
+  injuryStatus?: string | null;
   pitcherVulnerability?: number | null;
   parkFactor?: number | null;
   venue?: string | null;
