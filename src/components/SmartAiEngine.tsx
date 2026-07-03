@@ -393,23 +393,23 @@ export default function SmartAiEngine({
             baseOdds = 18.0;
             marketName = "To Hit 2+ Home Runs";
             customSpec = `${player.name} Over 1.5 HRs`;
-            justification = `${player.name} profiles with ultra-high barrel velocity of ${player.advanced.barrelPercent}% and matches against an opponent pitcher throwing high-ratio fastballs. Wind carrying ${windDirection} at ${windMph}mph increases travel trajectory by approx. ${(elevationCoef * 5).toFixed(1)} feet.`;
+            justification = `${player.name} is surfaced as a Home Run research candidate from the current Smart AI board. Treat this as a verified-board flag only until barrel rate, pitcher HR-allowed profile, weather, park factor, and confirmed lineup data are fully wired.`;
           } else {
             baseOdds = player.id === 'mlb_ohtani' ? 3.20 : player.id === 'mlb_judge' ? 2.90 : 3.65;
             marketName = "To Hit 1+ Home Run";
             customSpec = `${player.name} Over 0.5 HRs`;
-            justification = `${player.name} holds ${player.seasonStats.hr} HRs on the season. Advanced analytics yields launch angle consistency (${player.advanced.launchAngle}°) with favorable Stadium plume carries today.`;
+            justification = `${player.name} is being flagged for Home Run research based on the current board profile. Missing data check: live Statcast rolling window, pitcher hand, pitcher HR weakness, weather carry, and park adjustment should be confirmed before raising confidence.`;
           }
         } else if (template.type === 'HITS') {
           baseOdds = 2.15;
           marketName = "To Record 2+ Hits";
           customSpec = `${player.name} Over 1.5 Hits`;
-          justification = `Presents high contact rating (${player.advanced.sweetSpotPercent}% sweet-spot alignment). Holds outstanding lifetime splits (.${player.splits.vRHP.avg} OBP against Right-handed pitchers).`;
+          justification = `Hits research flag for ${player.name}. The board shows a contact-oriented profile, but this helper still needs verified recent contact quality, pitcher handedness, lineup spot, and matchup splits before calling it high-confidence.`;
         } else if (template.type === 'RBIS') {
           baseOdds = 1.95 + (idx * 0.15);
           marketName = "To Record 1+ Over RBIs";
           customSpec = `${player.name} Over 0.5 RBIs`;
-          justification = `${player.name} occupies a high scoring lineup sequence. Seasonal RBI tally reaches ${player.seasonStats.rbi} with peak platoon scenario conversions.`;
+          justification = `${player.name} is surfaced as an RBI research candidate. Confirm batting order, teammate on-base context, opposing pitcher traffic allowed, and team run environment before trusting the RBI angle.`;
         } else if (template.type === 'RUNS') {
           baseOdds = 1.80 + (idx * 0.10);
           marketName = "To Record 1+ Runs";
@@ -421,7 +421,7 @@ export default function SmartAiEngine({
           baseOdds = pProp.odds;
           marketName = pProp.market;
           customSpec = pProp.spec;
-          justification = `${player.name} ranks within ninety-fifth percentile for hard-hit outcomes (${player.advanced.exitVelocity} mph average). Atmospheric climate of ${temp}°F reduces split finger curve breaks.`;
+          justification = `${player.name} is surfaced as a Runs research candidate. Confirm on-base path, lineup position, hitters behind him, team run context, and opposing pitcher profile before raising confidence.`;
         }
 
         oddsMultiplier *= baseOdds;
@@ -447,7 +447,7 @@ export default function SmartAiEngine({
         title: `${template.title} #${i}`,
         typeLabel: template.label,
         marketType: template.type,
-        description: `Sabermetric sequence optimized for Stadium Atmosphere carry. Wind carrying ${windDirection} at ${windMph} MPH, Adjusted for temperature of ${temp}°F.`,
+        description: `Research-board sequence generated from available Smart AI candidate data. Missing-data checks remain active for Statcast, confirmed pitcher hand, park factor, weather, lineup context, and market-specific matchup inputs.`,
         players: selectedPlayers,
         legs: generatedLegs,
         totalOdds: toAmericanOdds(oddsValue),
