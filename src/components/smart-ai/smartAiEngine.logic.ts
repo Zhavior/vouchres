@@ -101,3 +101,173 @@ export function decimalToAmericanOdds(dec: number): string {
     ? `+${Math.round((dec - 1) * 100)}`
     : `-${Math.round(100 / (dec - 1))}`;
 }
+
+
+export type SmartAiDynamicLeg = {
+  playerId: string;
+  playerName: string;
+  gamePk: string;
+  team: string;
+  marketName: string;
+  customSpec: string;
+  odds: number;
+  isFinal: false;
+  justification: string;
+  researchProfile?: SmartAiLegResearchProfile;
+};
+
+export type SmartAiDynamicDisplayPlayer = {
+  id: string;
+  name: string;
+  team: string;
+  headshot?: string;
+  position?: string;
+  number?: string | number;
+  injuryStatus?: string;
+  playerId?: string;
+  playerName?: string;
+  gamePk?: string;
+  opponent?: string;
+  oddsDecimal?: number;
+  score?: number;
+};
+
+export type SmartAiResearchSignals = {
+  researchGrade: 'A' | 'B' | 'C' | 'D';
+  confidenceBand: 'LOW' | 'MEDIUM' | 'HIGH';
+  dataCompleteness: number;
+  evidenceScore: number;
+  marketValueScore: number;
+  volatilityScore: number;
+  matchupScore: number;
+  roleFit: Array<'single' | 'parlay' | 'ladder' | 'avoid'>;
+  warningFlags: string[];
+  whyThisPick: string[];
+  whatCouldGoWrong: string[];
+};
+
+export type SmartAiLegResearchProfile = {
+  boardRank: number;
+  verifiedBoardScore: number;
+  opponent: string;
+  gamePk: string;
+  dataWarnings: string[];
+  researcherNotes: string[];
+};
+
+export type SmartAiDynamicParlay = {
+  legs: SmartAiDynamicLeg[];
+  totalOdds: string;
+  oddsValue: number;
+  aiConfidenceScore: number;
+  players: SmartAiDynamicDisplayPlayer[];
+  riskTier: 'LOW' | 'MEDIUM' | 'HIGH';
+  researchSignals: SmartAiResearchSignals;
+};
+
+export function buildSmartAiDynamicParlay(params: {
+  realCandidates: RealCandidate[];
+  builderLegs: number;
+  builderCategory: SmartAiBuilderCategory;
+  builderThreshold: number;
+}): SmartAiDynamicParlay | null {
+  const { realCandidates, builderLegs, builderCategory, builderThreshold } = params;
+
+  if (!realCandidates.length) return null;
+
+  const selected = realCandidates
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .slice(0, builderLegs);
+
+  if (selected.length === 0) return null;
+
+  const legs = selected.map((c, index) => {
+    const { marketName, customSpec, odds } = buildSmartAiMarket(c, builderCategory, builderThreshold);
+
+    return {
+      playerId: c.playerId,
+      playerName: c.playerName,
+      gamePk: c.gamePk,
+      team: c.team,
+      marketName,
+      customSpec,
+      odds,
+      isFinal: false as const,
+      justification: `Confirmed on today's verified board — ${c.team} vs ${c.opponent}. Live MLB game (graded from the official boxscore).`,
+      researchProfile: {
+        boardRank: index + 1,
+        verifiedBoardScore: c.score,
+        opponent: c.opponent,
+        gamePk: c.gamePk,
+        dataWarnings: [
+          'Missing Statcast rolling window',
+          'Missing confirmed pitcher hand',
+          'Using verified board score only',
+        ],
+        researcherNotes: [
+          `${c.playerName} ranks inside the selected Smart AI candidate pool for this build.`,
+          `${c.team} vs ${c.opponent} is tied to gamePk ${c.gamePk} for grading identity.`,
+        ],
+      },
+    };
+  });
+
+  const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
+  const avgConf = Math.round(
+    selected.reduce((s, c, i) => s + Math.max(45, 92 - i * 3), 0) / selected.length
+  );
+
+  const confidenceBand = avgConf > 82 ? 'HIGH' : avgConf > 64 ? 'MEDIUM' : 'LOW';
+  const riskTier = avgConf > 82 ? 'LOW' : avgConf > 64 ? 'MEDIUM' : 'HIGH';
+  const volatilityScore = Math.min(100, Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12));
+  const marketValueScore = Math.round(
+    selected.reduce((sum, candidate) => sum + Math.min(100, candidate.oddsDecimal * 18), 0) / selected.length
+  );
+  const evidenceScore = Math.round(selected.reduce((sum, candidate) => sum + candidate.score, 0) / selected.length);
+  const dataCompleteness = 42;
+
+  return {
+    legs,
+    totalOdds: decimalToAmericanOdds(combined),
+    oddsValue: combined,
+    aiConfidenceScore: avgConf,
+    players: selected.map((c) => ({
+      id: c.playerId,
+      name: c.playerName,
+      team: c.team,
+      playerId: c.playerId,
+      playerName: c.playerName,
+      gamePk: c.gamePk,
+      opponent: c.opponent,
+      oddsDecimal: c.oddsDecimal,
+      score: c.score,
+    })),
+    riskTier,
+    researchSignals: {
+      researchGrade: evidenceScore >= 85 && dataCompleteness >= 70 ? 'A' : evidenceScore >= 75 ? 'B' : evidenceScore >= 62 ? 'C' : 'D',
+      confidenceBand,
+      dataCompleteness,
+      evidenceScore,
+      marketValueScore,
+      volatilityScore,
+      matchupScore: evidenceScore,
+      roleFit: builderLegs <= 2 ? ['single', 'parlay'] : builderLegs <= 4 ? ['parlay', 'ladder'] : ['ladder', 'avoid'],
+      warningFlags: [
+        'Missing Statcast rolling window',
+        'Missing confirmed pitcher hand',
+        'Missing park-factor adjustment',
+      ],
+      whyThisPick: [
+        'Selected from today\'s verified Smart AI candidate pool.',
+        `Average verified-board evidence score: ${evidenceScore}.`,
+        `Builder category ${builderCategory} with threshold ${builderThreshold}.`,
+      ],
+      whatCouldGoWrong: [
+        'Advanced contact-quality data is not wired into this return yet.',
+        'Pitcher handedness and bullpen context are not confirmed in this helper yet.',
+        'Higher leg counts increase parlay volatility even when individual candidates look strong.',
+      ],
+    },
+  };
+}

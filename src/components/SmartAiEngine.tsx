@@ -33,8 +33,8 @@ import { safeJsonFetch } from '../api/safeApiClient';
 import { resolveMarket } from '../sports/markets';
 import {
   americanToDecimalOdds,
+  buildSmartAiDynamicParlay,
   buildSmartAiMarket,
-  decimalToAmericanOdds,
   type RealCandidate,
   type SmartAiBuilderCategory,
 } from './smart-ai/smartAiEngine.logic';
@@ -159,52 +159,73 @@ export default function SmartAiEngine({
   // so any leg with a real gamePk + real player settles correctly.
   const buildMarket = buildSmartAiMarket;
 
-  const dynamicParlay = useMemo(() => {
-    if (!realCandidates.length) return null;
+  const dynamicParlay = useMemo(
+    () =>
+      buildSmartAiDynamicParlay({
+        realCandidates,
+        builderLegs,
+        builderCategory,
+        builderThreshold,
+      }),
+    [builderLegs, builderCategory, builderThreshold, realCandidates],
+  );
 
-    // Top candidates by board score (already the day's strongest hitters).
-    const selected = realCandidates
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .slice(0, builderLegs);
-    if (selected.length === 0) return null;
-
-    const legs = selected.map((c) => {
-      const { marketName, customSpec, odds } = buildMarket(c, builderCategory, builderThreshold);
-      return {
-        playerId: c.playerId,
-        playerName: c.playerName,
-        gamePk: c.gamePk,
-        team: c.team,
-        marketName,
-        customSpec,
-        odds,
-        isFinal: false,
-        justification: `Confirmed on today's verified board — ${c.team} vs ${c.opponent}. Live MLB game (graded from the official boxscore).`,
-      };
-    });
-
-    const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
-    // Confidence proxy from board ranking (top of board = higher confidence).
-    const avgConf = Math.round(
-      selected.reduce((s, c, i) => s + Math.max(45, 92 - i * 3), 0) / selected.length
-    );
+  const toDynamicParlayMLBPlayer = (leg: NonNullable<typeof dynamicParlay>["legs"][number]): MLBPlayer => {
+    const source = realCandidates.find((candidate) => candidate.playerId === leg.playerId);
+    const score = source?.score ?? 0;
 
     return {
-      legs,
-      totalOdds: decimalToAmericanOdds(combined),
-      oddsValue: combined,
-      aiConfidenceScore: avgConf,
-      players: selected.map((c) => ({ id: c.playerId, name: c.playerName, team: c.team } as MLBPlayer)),
-      riskTier: avgConf > 82 ? 'LOW' : avgConf > 64 ? 'MEDIUM' : 'HIGH',
+      id: leg.playerId,
+      name: leg.playerName,
+      team: leg.team,
+      position: 'Batter',
+      number: '',
+      headshot: '',
+      injuryStatus: 'Healthy',
+      injurySeverity: 'NONE',
+      injuryNotes: '',
+      batterScore: score,
+      seasonStats: {
+        avg: '.000',
+        hr: '0',
+        rbi: '0',
+        ops: '.000',
+        obp: '.000',
+        slg: '.000',
+      },
+      gameLogs: [],
+      propositions: [],
+      bats: 'R',
+      throws: 'R',
+      height: '',
+      weight: '',
+      birthdate: '',
+      advanced: {} as MLBPlayer['advanced'],
+      splits: {
+        vLHP: { avg: '.000', obp: '.000', slg: '.000', ops: '.000' },
+        vRHP: { avg: '.000', obp: '.000', slg: '.000', ops: '.000' },
+        home: { avg: '.000', obp: '.000', slg: '.000', ops: '.000' },
+        away: { avg: '.000', obp: '.000', slg: '.000', ops: '.000' },
+        last10: { avg: '.000', obp: '.000', slg: '.000', ops: '.000' },
+      },
+      scoutingReport: {
+        powerText: 'Dynamic AI parlay candidate generated from the verified board.',
+        contactText: 'Fallback display profile for parlay transfer.',
+        disciplineText: 'No expanded discipline profile available in this context.',
+        overallScouting: source
+          ? `${source.playerName} is included from today's verified Smart AI candidate pool.`
+          : `${leg.playerName} is included from the current dynamic parlay.`,
+        hotZones: [],
+        riskFactor: 'MEDIUM',
+      },
     };
-  }, [builderLegs, builderCategory, builderThreshold, realCandidates]);
+  };
 
   const handleAddCustomParlayToSlip = () => {
     if (!dynamicParlay) return;
     let addedCount = 0;
     dynamicParlay.legs.forEach((leg) => {
-      const player = dynamicParlay.players.find((p) => p.id === leg.playerId) || ({ id: leg.playerId, name: leg.playerName, team: leg.team } as MLBPlayer);
+      const player = toDynamicParlayMLBPlayer(leg);
       onAddLegToParlay(player, {
         id: `prop-ai-custom-${leg.playerId}-${Date.now()}`,
         market: leg.marketName,
