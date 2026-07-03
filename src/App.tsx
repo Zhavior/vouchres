@@ -72,6 +72,41 @@ interface BackendProfile {
   jurisdiction?: string | null;
 }
 
+type BackendParlayLeg = {
+  id?: string | number | null;
+  event_id?: string | number | null;
+  game_id?: string | number | null;
+  game_pk?: string | number | null;
+  market?: string | null;
+  market_code?: string | null;
+  selection?: string | null;
+  odds_decimal?: number | string | null;
+  status?: string | null;
+  actual?: number | string | null;
+  game_start_time?: string | null;
+  player_id?: string | number | null;
+};
+
+type BackendParlay = {
+  id: string;
+  title?: string | null;
+  status?: string | null;
+  mode?: string | null;
+  sport?: string | null;
+  legs?: BackendParlayLeg[];
+  combined_odds?: number | string | null;
+  odds_decimal?: number | string | null;
+  stake_units?: number | string | null;
+  wager_amount?: number | string | null;
+  ai_generated?: boolean | null;
+  source?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  resolved_at?: string | null;
+  game_date?: string | null;
+  game_start_time?: string | null;
+};
+
 function isAiBackendCandidate(parlay: Parlay): boolean {
   return Boolean(parlay.aiGenerated);
 }
@@ -614,11 +649,20 @@ export default function App() {
         if (!result?.parlays?.length || cancelled) return;
 
         const backendParlays = result.parlays.map(mapBackendParlay);
-        const backendIds = new Set(backendParlays.map(p => p.id));
+        const backendPickIds = new Set(
+          backendParlays
+            .map((p) => p.backendPickId || p.id)
+            .filter(Boolean)
+            .map(String)
+        );
 
         const localSlips = savedSlipsRef.current;
-        // Keep local parlays that have no backend record yet (new unsaved slips)
-        const localOnly = localSlips.filter(p => !p.backendPickId || !backendIds.has(p.backendPickId));
+        // Backend rows are authoritative. Keep only local slips that have not
+        // been synced yet, or whose backend id is not present in the hydrated GET.
+        const localOnly = localSlips.filter((p) => {
+          if (!p.backendPickId) return true;
+          return !backendPickIds.has(String(p.backendPickId));
+        });
 
         const merged = [...backendParlays, ...localOnly];
         const seen = new Set<string>();
@@ -1014,14 +1058,23 @@ export default function App() {
       );
       const payload = buildSaveParlayPayload(canonicalSlip);
 
-      const result = await apiClient.post<{ id: string; deduped?: boolean }>('/api/me/parlays', payload);
+      const result = await apiClient.post<BackendParlay & { deduped?: boolean }>('/api/me/parlays', payload);
 
       if (result?.id) {
-        markState('synced', {
-          backendPickId: result.id,
-          backendSyncedAt: new Date().toISOString(),
-          backendSyncError: undefined,
-        });
+        const backendTruth = mapBackendParlay(result);
+        syncSlips(
+          savedSlipsRef.current.map((p) =>
+            p.id === parlay.id
+              ? {
+                  ...backendTruth,
+                  backendPickId: result.id,
+                  backendSyncedAt: new Date().toISOString(),
+                  backendSyncState: 'synced',
+                  backendSyncError: undefined,
+                }
+              : p
+          )
+        );
       } else {
         markState('failed', { backendSyncError: 'Backend did not return a parlay id.' });
       }

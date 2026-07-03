@@ -1504,7 +1504,7 @@ const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
 const MISSING_FUNCTION_CODES = new Set(["42883", "PGRST202"]);
 
 const MAX_LEGS = 12;
-const VALID_SOURCES = new Set(["manual", "scanner", "ai_pick", "edge_island"]);
+const VALID_SOURCES = new Set(["manual", "scanner", "ai_pick", "edge_island", "command_center"]);
 const NORMALIZED_STATUSES = new Set(["pending", "live", "won", "lost", "void", "partially_void"]);
 /** Map the app's normalized status onto the DB pick_status enum. */
 function toDbStatus(normalized: string): "pending" | "won" | "lost" | "void" | "push" {
