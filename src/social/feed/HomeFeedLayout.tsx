@@ -19,6 +19,7 @@ interface HomeFeedLayoutProps {
   children: React.ReactNode;
   activeLegs?: Leg[];
   savedSlips?: Parlay[];
+  isRouteSwitching?: boolean;
 }
 
 export default function HomeFeedLayout({
@@ -31,6 +32,7 @@ export default function HomeFeedLayout({
   children,
   activeLegs = [],
   savedSlips = [],
+  isRouteSwitching = false,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
@@ -83,6 +85,7 @@ export default function HomeFeedLayout({
       }`} 
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
+      data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
       
       {/* Dynamic Animated Cyber Background Layer (only if not customized fully by profile theme) */}
@@ -225,6 +228,7 @@ export default function HomeFeedLayout({
         <FeedMobileNav 
           activeSection={activeSection} 
           onSectionChange={onSectionChange} 
+          profile={profile}
         />
       )}
 
