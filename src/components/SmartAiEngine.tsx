@@ -407,14 +407,14 @@ export default function SmartAiEngine({
           justification = `Hits research flag for ${player.name}. The board shows a contact-oriented profile, but this helper still needs verified recent contact quality, pitcher handedness, lineup spot, and matchup splits before calling it high-confidence.`;
         } else if (template.type === 'RBIS') {
           baseOdds = 1.95 + (idx * 0.15);
-          marketName = "To Record 1+ Over RBIs";
+          marketName = "To Record 1+ RBI";
           customSpec = `${player.name} Over 0.5 RBIs`;
           justification = `${player.name} is surfaced as an RBI research candidate. Confirm batting order, teammate on-base context, opposing pitcher traffic allowed, and team run environment before trusting the RBI angle.`;
         } else if (template.type === 'RUNS') {
           baseOdds = 1.80 + (idx * 0.10);
           marketName = "To Record 1+ Runs";
           customSpec = `${player.name} Over 0.5 Runs`;
-          justification = `Acts as stellar sparkplug lead asset on the batting order. OBP stands at stable .${player.splits.home.obp} during home field matches.`;
+          justification = `${player.name} is surfaced as a Runs research candidate. Confirm on-base path, lineup position, hitters behind him, team run context, and opposing pitcher profile before trusting the Runs angle.`;
         } else {
           // AI Sabermetric Edge (combines high ops from propositions list)
           const pProp = player.propositions[idx % player.propositions.length] || { market: "To Record 1+ Hits", odds: 1.50, spec: `${player.name} Over 0.5 Hits` };
