@@ -31,6 +31,13 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { resolveMarket } from '../sports/markets';
+import {
+  americanToDecimalOdds,
+  buildSmartAiMarket,
+  decimalToAmericanOdds,
+  type RealCandidate,
+  type SmartAiBuilderCategory,
+} from './smart-ai/smartAiEngine.logic';
 import { CyberBadge } from "./ui";
 
 interface SmartAiEngineProps {
@@ -40,24 +47,6 @@ interface SmartAiEngineProps {
   onPostCreated?: (newPost: FeedPost) => void;
   onSaveParlay?: (parlay: Parlay) => void;
   liveGames?: any[];
-}
-
-/** Normalized real candidate from the live HR Board (carries gamePk → gradable). */
-interface RealCandidate {
-  playerId: string;
-  playerName: string;
-  gamePk?: string;
-  team: string;
-  opponent: string;
-  oddsDecimal: number;
-  score: number;
-}
-
-function americanToDecimalOdds(am: unknown): number {
-  if (typeof am === 'number') return am > 0 ? 1 + am / 100 : 1 + 100 / Math.abs(am);
-  const n = parseInt(String(am ?? '').replace(/[+]/g, ''), 10);
-  if (!n || isNaN(n)) return 2.0;
-  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
 }
 
 // Procedural, deterministic generation of 850 distinct high-quality AI picks
@@ -114,7 +103,7 @@ export default function SmartAiEngine({
 
   // Dynamic parlay parameters (2, 3, 4, 5 Legs, based on AI confidence & physical evidence)
   const [builderLegs, setBuilderLegs] = useState<number>(3);
-  const [builderCategory, setBuilderCategory] = useState<'HITS' | 'RBIS' | 'RUNS' | 'HR'>('HITS');
+  const [builderCategory, setBuilderCategory] = useState<SmartAiBuilderCategory>('HITS');
   const [builderThreshold, setBuilderThreshold] = useState<number>(2);
 
   // Auto adjusting threshold bounds so that focus options make complete tactical sense
@@ -168,22 +157,7 @@ export default function SmartAiEngine({
   // Build a market label + spec + odds for a candidate given category/threshold.
   // Grading reads the final boxscore (which has HR/RBI/runs/hits for every player),
   // so any leg with a real gamePk + real player settles correctly.
-  const buildMarket = (cand: RealCandidate, category: string, threshold: number) => {
-    const n = cand.playerName;
-    if (category === 'HITS') {
-      const odds = threshold === 1 ? 1.4 : threshold === 2 ? 2.3 : 5.0;
-      return { marketName: `To Record ${threshold}+ Hits`, customSpec: `${n} ${threshold}+ Hits`, odds };
-    }
-    if (category === 'RBIS') {
-      return { marketName: `To Record ${threshold}+ RBIs`, customSpec: `${n} ${threshold}+ RBI`, odds: 1.7 + threshold * 0.7 };
-    }
-    if (category === 'RUNS') {
-      return { marketName: `To Record ${threshold}+ Runs`, customSpec: `${n} ${threshold}+ Runs`, odds: 1.6 + threshold * 0.6 };
-    }
-    // HR — use the candidate's real implied odds from the board
-    const odds = threshold >= 2 ? Math.max(8, cand.oddsDecimal * 4) : cand.oddsDecimal || 3.5;
-    return { marketName: threshold >= 2 ? 'To Hit 2+ Home Runs' : 'To Hit 1+ Home Run', customSpec: `${n} ${threshold}+ HR`, odds: Math.round(odds * 100) / 100 };
-  };
+  const buildMarket = buildSmartAiMarket;
 
   const dynamicParlay = useMemo(() => {
     if (!realCandidates.length) return null;
@@ -211,7 +185,6 @@ export default function SmartAiEngine({
     });
 
     const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
-    const decimalToAmericanOdds = (dec: number) => (dec >= 2.0 ? `+${Math.round((dec - 1) * 100)}` : `-${Math.round(100 / (dec - 1))}`);
     // Confidence proxy from board ranking (top of board = higher confidence).
     const avgConf = Math.round(
       selected.reduce((s, c, i) => s + Math.max(45, 92 - i * 3), 0) / selected.length
