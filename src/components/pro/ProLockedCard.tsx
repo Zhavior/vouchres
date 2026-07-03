@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
+import { VECard, VEBadge } from '../ui/ve';
 
 export interface ProLockedCardProps {
   title: string;
@@ -24,8 +25,9 @@ export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function P
   const copy = detail ?? description ?? 'Verified data feed required. No fake data shown.';
 
   return (
-    <div
-      className={`ve-card-compact group relative overflow-hidden rounded-xl p-3 ${className}`}
+    <VECard
+      tone="soft"
+      className={`group relative overflow-hidden rounded-xl p-3 ${className}`}
       style={{ borderColor: withAlpha(accent, 0.22) }}
     >
       <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.20),transparent,hsl(var(--ve-bg-panel)/0.34))] opacity-60" />
@@ -39,15 +41,16 @@ export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function P
         <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-secondary))]">
           {title}
         </span>
-        <span
-          className="ml-auto rounded-full border px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider"
+        <VEBadge
+          tone="neutral"
+          className="ml-auto font-mono text-[8px]"
           style={{ borderColor: withAlpha(accent, 0.28), color: accent, background: withAlpha(accent, 0.07) }}
         >
           {badge}
-        </span>
+        </VEBadge>
       </div>
       <p className="relative mt-1.5 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">{copy}</p>
-    </div>
+    </VECard>
   );
 });
 
