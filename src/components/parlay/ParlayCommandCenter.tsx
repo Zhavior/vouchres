@@ -261,7 +261,7 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
   const handleHide = async (slipId: string) => {
     if (!onHideParlay) return;
 
-    const slip = allSlips.find((item) => String((item as any).id ?? (item as any).publicId) === String(slipId));
+    const slip = allSlips.find((item) => String(item.sourceId) === String(slipId));
     const status = String(slip?.status ?? '').toLowerCase();
 
     if (['pending', 'live', 'open', 'active', 'in_progress'].includes(status)) return;
@@ -360,10 +360,10 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
 
                       <button
                         type="button"
-                        onClick={() => handleHide(String((slip as any).id ?? slip.publicId))}
+                        onClick={() => handleHide(slip.sourceId)}
                         disabled={
                           !onHideParlay ||
-                          hidingSlipId === String((slip as any).id ?? slip.publicId) ||
+                          hidingSlipId === slip.sourceId ||
                           ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
                         }
                         title={
@@ -375,7 +375,7 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
                       >
                         {['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
                           ? 'Live Locked'
-                          : hidingSlipId === String((slip as any).id ?? slip.publicId)
+                          : hidingSlipId === slip.sourceId
                             ? 'Hiding'
                             : 'Hide'}
                       </button>

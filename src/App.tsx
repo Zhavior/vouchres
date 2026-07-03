@@ -1327,8 +1327,10 @@ export default function App() {
 
   // Render content depending on left sidebar active item
   const handleHideSavedParlay = async (parlayId: string) => {
-    const target = savedSlipsRef.current.find((slip) => String((slip as any).id) === String(parlayId));
-    if (!target) return;
+    const target = savedSlipsRef.current.find((slip) => String((slip as any).id ?? (slip as any).sourceId) === String(parlayId));
+    if (!target) {
+      throw new Error('Could not find the real saved parlay id. Refresh My Parlay Board and try again.');
+    }
 
     const status = String((target as any).status ?? '').toLowerCase();
     if (['live', 'active', 'in_progress'].includes(status)) {
@@ -1337,8 +1339,7 @@ export default function App() {
 
     await apiClient.delete(`/api/parlays/${encodeURIComponent(parlayId)}`);
 
-    const nextSlips = savedSlipsRef.current.filter((slip) => String((slip as any).id) !== String(parlayId));
-    setSavedSlips(nextSlips);
+    const nextSlips = savedSlipsRef.current.filter((slip) => String((slip as any).id ?? (slip as any).sourceId) !== String(parlayId));
     syncSlips(nextSlips);
   };
 

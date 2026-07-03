@@ -20,6 +20,7 @@ export type PublicParlayLeg = {
 
 export type PublicParlaySlip = {
   publicId: string;
+  sourceId: string;
   title: string;
   status: PublicSlipStatus;
   statusLabel: string;
@@ -157,6 +158,7 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
 
   return {
     publicId: compactPublicTicketId(raw?.id),
+    sourceId: String(raw?.id ?? raw?.sourceId ?? ""),
     title: getPublicParlayTitle(raw?.title || raw?.selection, status),
     status,
     statusLabel: publicStatusLabel(status),
