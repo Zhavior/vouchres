@@ -27,6 +27,7 @@ export type PublicParlaySlip = {
   summary: string;
   oddsLabel: string;
   syncedLabel: string;
+  createdAt: string | null;
   isLiveLike: boolean;
   legs: PublicParlayLeg[];
 };
@@ -165,6 +166,7 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
     summary,
     oddsLabel: getOddsLabel(raw?.odds || raw?.totalOdds || raw?.decimalOdds),
     syncedLabel: raw?.synced ? "Synced" : raw?.syncStatus ? cleanCustomerText(raw.syncStatus) : "Local",
+    createdAt: String(raw?.created_at ?? raw?.createdAt ?? raw?.savedAt ?? raw?.updated_at ?? raw?.updatedAt ?? "") || null,
     isLiveLike: isLiveLikeStatus(status),
     legs,
   };

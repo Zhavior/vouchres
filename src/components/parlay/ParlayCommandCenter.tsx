@@ -312,7 +312,13 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
           />
         ) : (
           <div className="grid gap-4">
-            {allSlips.map((slip) => {
+            {[...allSlips]
+              .sort((a, b) => {
+                const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+                const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+                return bTime - aTime;
+              })
+              .map((slip) => {
               const previewLegs = slip.legs.slice(0, 3);
               const hiddenLegCount = Math.max(0, slip.legs.length - previewLegs.length);
 
