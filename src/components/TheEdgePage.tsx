@@ -6,11 +6,6 @@ type TheEdgePageProps = {
   onSectionChange: (section: string) => void;
   savedSlips: any[];
 };
-
-function triggerEdgeIslandTransition() {
-  sessionStorage.setItem("vouchedge_entering_edge_island", "true");
-}
-
 export default function TheEdgePage({
   isLoggedIn,
   onSectionChange,
@@ -22,6 +17,8 @@ export default function TheEdgePage({
 
   return (
     <EdgeIslandCommandCenter
+      open={false}
+      onClose={() => undefined}
       onSectionChange={onSectionChange}
       savedSlips={savedSlips}
     />

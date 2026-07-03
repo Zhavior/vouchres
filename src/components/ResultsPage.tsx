@@ -349,6 +349,29 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [visualToast, setVisualToast] = useState<string | null>(null);
   const [backendLedger, setBackendLedger] = useState<BackendLedgerResponse | null>(null);
+
+  const loadBackendLedger = async () => {
+    // Safe read-only compatibility reload for legacy action buttons.
+    // Does not mutate grading truth or live-parlay identity.
+    setBackendLedgerLoading(true);
+    setBackendLedgerError(null);
+
+    try {
+      const response = await apiClient.get("/api/me/results-ledger");
+      setBackendLedger(response as BackendLedgerResponse);
+    } catch (err: any) {
+      setBackendLedgerError(err?.message || "Could not reload backend ledger.");
+    } finally {
+      setBackendLedgerLoading(false);
+    }
+  };
+  const [ledgerNotice, setLedgerNotice] = useState<string | null>(null);
+
+  const triggerNotification = (message: string) => {
+    setLedgerNotice(message);
+    window.setTimeout(() => setLedgerNotice(null), 3500);
+  };
+
   const [backendLedgerLoading, setBackendLedgerLoading] = useState(false);
   const [backendLedgerError, setBackendLedgerError] = useState<string | null>(null);
 
@@ -796,7 +819,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                 : backendLedgerError
                   ? backendLedgerError
                   : backendLedger
-                    ? `${backendLedger.picks.length} saved parlay${backendLedger.picks.length === 1 ? "" : "s"} loaded from your account.`
+                    ? `${Object.values(backendLedger).find(Array.isArray)?.length ?? 0} saved parlay${(Object.values(backendLedger).find(Array.isArray)?.length ?? 0) === 1 ? "" : "s"} loaded from your account.`
                     : 'Account parlay results waiting for login.'}
             </p>
           </div>

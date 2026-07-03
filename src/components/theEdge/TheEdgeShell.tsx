@@ -90,8 +90,8 @@ interface SlateGame {
 
 /* ── small shared primitives (one accent: cyan; emerald=proof, rose=loss, amber=live) ── */
 
-function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' }) {
-  const color = tone === 'cyan' ? 'text-cyan-300' : tone === 'emerald' ? 'text-emerald-300' : tone === 'rose' ? 'text-rose-300' : 'text-white';
+function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' | 'violet' }) {
+  const color = tone === 'cyan' ? 'text-cyan-300' : tone === 'emerald' ? 'text-emerald-300' : tone === 'rose' ? 'text-rose-300' : tone === 'violet' ? 'text-violet-300' : 'text-white';
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center">
       <div className={`text-2xl font-black ${color}`}>{value}</div>
@@ -970,11 +970,11 @@ export default function TheEdgeShell({
 
                   {/* Real widgets */}
                   <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <Stat label="Saved picks" value={dashboardSummaryLoading ? '...' : stats.savedPicks} tone="cyan" />
+                    <Stat label="Saved picks" value={dashboardSummaryLoading ? '...' : stats.saved} tone="cyan" />
                     <Stat label="Saved parlays" value={dashboardSummaryLoading ? '...' : stats.saved} tone="cyan" />
                     <Stat label="Pending" value={dashboardSummaryLoading ? '...' : stats.pending} tone="white" />
                     <Stat label="Win rate" value={stats.winRate != null ? `${stats.winRate}%` : '—'} tone="emerald" />
-                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.proofScore} tone="violet" />
+                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.winRate} tone="violet" />
                     <Stat label="Record" value={stats.settled > 0 ? `${stats.won}-${stats.lost}` : '0-0'} tone={stats.won >= stats.lost ? 'emerald' : 'rose'} />
                   </div>
                 </section>

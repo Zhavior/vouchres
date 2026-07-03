@@ -1579,7 +1579,7 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
 
             <button
               type="button"
-              onClick={fetchBoard}
+              onClick={() => fetchBoard()}
               className="ve-btn-primary w-full px-4 py-2.5 text-xs uppercase tracking-wide sm:w-auto"
             >
               Refresh Board

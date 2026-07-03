@@ -149,7 +149,7 @@ export function EdgePublicSalesDeck({ onGo }: EdgeValueDeckProps) {
 
             <div className="mt-4 grid gap-2">
               {tier.benefits.map(([label, included]) => (
-                <div key={label} className="flex items-center gap-2 text-xs font-bold">
+                <div key={String(label)} className="flex items-center gap-2 text-xs font-bold">
                   {included ? (
                     <Check className="h-4 w-4 text-emerald-300" />
                   ) : (

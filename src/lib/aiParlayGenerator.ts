@@ -16,6 +16,8 @@ import { getFounderPointsLabel } from "../lib/founderAccess";
 interface StarterCandidate {
   playerName: string;
   team: string;
+  playerId?: string;
+  teamId?: string;
   battingOrder: number;
   gamePk: string;
   gameStartTime: string;

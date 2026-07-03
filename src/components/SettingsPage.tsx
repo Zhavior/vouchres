@@ -250,8 +250,13 @@ export default function SettingsPage({
     setCheckoutLoading(tier);
     const result = await startStripeCheckout(tier === 'GOLD' ? 'gold' : 'seller_pro');
     setCheckoutLoading(null);
-    if (result.ok) { window.location.href = result.url; return; }
-    showToast(`Checkout failed: ${result.error}`, 'err');
+    if (result.ok) {
+      window.location.href = result.url;
+      return;
+    }
+
+    const checkoutError = "error" in result ? result.error : "Unknown checkout error";
+    showToast(`Checkout failed: ${checkoutError}`, 'err');
   };
 
   const handleManageBilling = async () => {
@@ -259,10 +264,13 @@ export default function SettingsPage({
     setPortalLoading(true);
     const result = await openBillingPortal();
     setPortalLoading(false);
-    if (result.ok) { window.location.href = result.url; return; }
+    if (result.ok) {
+      window.location.href = result.url;
+      return;
+    }
 
     // Map known error codes to readable messages
-    const raw = result.error ?? '';
+    const raw = "error" in result ? result.error ?? "" : "";
     let msg: string;
     if (raw === 'unauthorized' || raw.includes('unauthorized')) {
       msg = 'You must be signed in to manage billing.';

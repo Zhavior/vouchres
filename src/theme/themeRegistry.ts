@@ -1,7 +1,7 @@
 export interface VisualTheme {
   id: string;
   name: string;
-  category: 'Core' | 'Sport' | 'Flex' | 'Retro' | 'Premium' | 'Trust' | 'Seasonal' | 'Minimal';
+  category: 'Core' | 'Sport' | 'Flex' | 'Retro' | 'Premium' | 'Trust' | 'Seasonal' | 'Minimal' | 'VouchEdge';
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'verified' | 'founder' | 'seasonal';
   description: string;
   

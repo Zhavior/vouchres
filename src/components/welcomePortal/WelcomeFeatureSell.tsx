@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from '../../lib/motion';
 import {
@@ -160,7 +161,7 @@ interface Slide {
   eyebrow: string;
   title: string;
   bullets: string[];
-  Visual: () => JSX.Element;
+  Visual: () => ReactElement;
 }
 
 const SLIDES: Slide[] = [

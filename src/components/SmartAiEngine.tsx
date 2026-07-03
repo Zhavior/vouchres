@@ -631,9 +631,18 @@ export default function SmartAiEngine({
       title: pick.title,
       legs: pick.legs.map((l, index) => {
         const playerRecord = pick.players.find(p => p.id === l.playerId);
-        const gameId = String(playerRecord?.gamePk || playerRecord?.gameId || '');
+        type SmartAiPlayerIdentity = {
+          gamePk?: string | number;
+          gameId?: string | number;
+          teamId?: string | number;
+          team_id?: string | number;
+          gameStartTime?: string;
+        };
+
+        const identityRecord = playerRecord as MLBPlayer & SmartAiPlayerIdentity;
+        const gameId = String(identityRecord?.gamePk || identityRecord?.gameId || '');
         const playerId = String(l.playerId || playerRecord?.id || '');
-        const teamId = String(playerRecord?.teamId || playerRecord?.team_id || '');
+        const teamId = String(identityRecord?.teamId || identityRecord?.team_id || '');
         const { marketCode, threshold } = resolveMarket('mlb', l.marketName, l.customSpec);
         const statTarget = threshold || 1;
         const comparator = '>=';
@@ -660,7 +669,7 @@ export default function SmartAiEngine({
           eventKey,
           popularityKey,
           externalProvider: 'mlb_statsapi',
-          gameStartTime: playerRecord?.gameStartTime
+          gameStartTime: identityRecord?.gameStartTime
         };
       }),
       totalOdds: pick.totalOdds,

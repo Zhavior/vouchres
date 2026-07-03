@@ -575,7 +575,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                   <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
                     <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
-                    <p className="text-sm font-black text-slate-100">{activeGame.hrWatch?.length ?? 0} players</p>
+                    <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
                   </div>
                   <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>

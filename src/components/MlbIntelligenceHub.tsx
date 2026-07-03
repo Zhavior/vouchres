@@ -311,7 +311,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <StatTile label="Win Rate" value={judge.winRate == null ? 'New' : `${judge.winRate}%`} tone="emerald" />
-          <StatTile label="Trust" value={Math.round(Number(judge.trustScore ?? 50))} tone="sky" />
+          <StatTile label="Trust" value={String(Math.round(Number(judge.trustScore ?? 50)))} tone="sky" />
           <StatTile label="Record" value={`${judge.record?.won ?? 0}-${judge.record?.lost ?? 0}`} tone="slate" />
         </div>
       </div>
@@ -332,8 +332,6 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
               type="button"
               onClick={() => {
                 void copyJudgeParlayLegs(judge, (message) => {
-                  setCopyMessage(message);
-                  window.setTimeout(() => setCopyMessage(null), 2500);
                 });
               }}
               disabled={eligibleLegs.length === 0}
