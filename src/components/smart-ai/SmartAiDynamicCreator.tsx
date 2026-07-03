@@ -218,9 +218,9 @@ export function SmartAiDynamicCreator({
             </div>
 
             <div className="text-right">
-              <span className="block text-[9px] font-mono text-emerald-300 uppercase tracking-[0.22em] leading-none font-black">AI Accuracy Edge</span>
+              <span className="block text-[9px] font-mono text-emerald-300 uppercase tracking-[0.22em] leading-none font-black">AI Confidence Edge</span>
               <div className="mt-1 inline-flex items-center rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-sm font-mono font-black text-emerald-300">
-                {dynamicParlay.aiConfidenceScore}% Accu
+                {dynamicParlay.aiConfidenceScore}% Conf
               </div>
             </div>
           </div>

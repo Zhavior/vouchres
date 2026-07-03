@@ -700,7 +700,7 @@ export default function SmartAiEngine({
       sportBadge: 'MLB',
       sourceBadge: 'Precomputed AI',
       postType: 'PARLAY',
-      content: `⚡ **AUTOMATED PRE-COMPILED SABERMETRIC recommendation** ⚡\n\nI have retrieved verified parlay slip registration **${pick.id}** from our high-performance client modeling vault.\n\n* **Model Accuracy Edge**: ${pick.aiConfidenceScore}%\n* **Atmosphere Carry**: Temp ${pick.weather.temp}°F / Wind ${pick.weather.windMph}mph ${pick.weather.windDirection}\n* **Risk Profile**: ${pick.riskTier}\n\nClick the dossier buttons to review detailed Statcast margins or transfer immediately into your slips!`,
+      content: `⚡ **AUTOMATED PRE-COMPILED SABERMETRIC recommendation** ⚡\n\nI have retrieved verified parlay slip registration **${pick.id}** from our high-performance client modeling vault.\n\n* **Model Confidence**: ${pick.aiConfidenceScore}%\n* **Atmosphere Carry**: Temp ${pick.weather.temp}°F / Wind ${pick.weather.windMph}mph ${pick.weather.windDirection}\n* **Risk Profile**: ${pick.riskTier}\n\nClick the dossier buttons to review detailed Statcast margins or transfer immediately into your slips!`,
       parlay: feedParlay,
       likesCount: 14,
       commentsCount: 2,
