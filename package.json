@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=9999",
     "verify:daily-report-cache": "tsx scripts/verifyDailyReportCache.ts",
     "verify:grading-flow": "tsx scripts/verifyGradingFlow.ts",
     "verify:composer-options": "tsx scripts/verifyComposerOptions.ts",
@@ -18,7 +18,11 @@
     "verify:entitlements": "tsx scripts/verifyEntitlements.ts",
     "verify:auth-smoke": "tsx scripts/verifyAuthSmoke.ts",
     "verify:billing-hardening": "tsx scripts/verifyBillingHardening.ts",
-    "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts"
+    "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts",
+    "typecheck": "tsc --noEmit",
+    "quality": "npm run typecheck && npm run lint && npm run build",
+    "lint:strict": "eslint . --max-warnings=0",
+    "quality:strict": "npm run typecheck && npm run lint:strict && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -53,6 +57,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -64,10 +69,15 @@
     "@vercel/node": "^5.8.21",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
     "react-refresh": "^0.18.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.62.1",
     "vite": "^6.2.3"
   }
 }
