@@ -148,7 +148,7 @@ export default function SmartAiEngine({
             gamePk: String(c.gamePk ?? c.gameId),
             team: c.team ?? c.teamAbbrev ?? 'MLB',
             opponent: c.opponent ?? c.opponentTeam ?? c.opponentPitcherName ?? 'opponent',
-            oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds ?? '+350'),
+            oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds), // null when the board has no real price — never fabricated
             score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
             opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
             pitcherHand: c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
@@ -291,7 +291,7 @@ export default function SmartAiEngine({
       title: `V.A.I ${builderLegs}-Leg ${builderCategory} Parlay`,
       legs,
       totalOdds: dynamicParlay.totalOdds,
-      oddsValue: dynamicParlay.oddsValue,
+      oddsValue: dynamicParlay.oddsValue ?? 0, // Parlay contract: 0 = odds unknown ("Odds TBD")
       riskTier: (dynamicParlay.riskTier === 'LOW' ? 'LOW' : dynamicParlay.riskTier === 'HIGH' ? 'HIGH' : 'MEDIUM'),
       status: 'PENDING',
       createdAt: new Date().toISOString(),

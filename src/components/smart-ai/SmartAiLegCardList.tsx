@@ -35,7 +35,7 @@ export function SmartAiLegCardList({ legs, players }: SmartAiLegCardListProps) {
                 <div className="flex justify-between gap-2 items-start">
                   <span className="text-sm font-black text-white truncate block leading-tight">{leg.playerName}</span>
                   <span className="shrink-0 rounded-full border border-sky-300/20 bg-sky-400/10 px-2 py-0.5 text-[10px] font-mono text-sky-200 font-black">
-                    +{leg.odds.toFixed(2)}
+                    {typeof leg.odds === 'number' ? `+${leg.odds.toFixed(2)}` : 'Odds TBD'}
                   </span>
                 </div>
                 <span className="mt-0.5 text-[10px] text-slate-400 block truncate uppercase tracking-[0.14em] font-mono">

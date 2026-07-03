@@ -6,7 +6,7 @@ export interface RealCandidate {
   gamePk: string;
   team: string;
   opponent: string;
-  oddsDecimal: number;
+  oddsDecimal: number | null;
   score: number;
   opponentPitcherName?: string | null;
   pitcherHand?: string | null;
@@ -35,28 +35,33 @@ export interface PrecomputedPick {
 export type SmartAiMarket = {
   marketName: string;
   customSpec: string;
-  odds: number;
+  /** Decimal odds when a real market price exists, null when unknown ("Odds TBD"). */
+  odds: number | null;
 };
 
-export function americanToDecimalOdds(am: unknown): number {
+/** Convert American (or passthrough decimal) odds to decimal, or null when the
+ *  price is missing/invalid. NEVER fabricates a price — a missing market price
+ *  must surface as "Odds TBD", not an invented number. */
+export function americanToDecimalOdds(am: unknown): number | null {
   const s = String(am ?? '').trim();
 
-  if (!s) return 3.5;
+  if (!s) return null;
 
   if (s.startsWith('+')) {
     const n = Number(s.slice(1));
-    return Number.isFinite(n) ? Math.round((1 + n / 100) * 100) / 100 : 3.5;
+    return Number.isFinite(n) && n > 0 ? Math.round((1 + n / 100) * 100) / 100 : null;
   }
 
   if (s.startsWith('-')) {
     const n = Number(s.slice(1));
-    return Number.isFinite(n) && n > 0 ? Math.round((1 + 100 / n) * 100) / 100 : 1.8;
+    return Number.isFinite(n) && n > 0 ? Math.round((1 + 100 / n) * 100) / 100 : null;
   }
 
   const n = Number(s);
-  if (!Number.isFinite(n)) return 3.5;
+  if (!Number.isFinite(n) || n <= 0) return null;
 
-  return n > 20 ? Math.round((1 + n / 100) * 100) / 100 : n;
+  if (n > 20) return Math.round((1 + n / 100) * 100) / 100;
+  return n > 1.01 ? n : null;
 }
 
 function getCandidateAdapterSignals(candidate: RealCandidate) {
@@ -138,11 +143,11 @@ export function buildSmartAiMarket(
   const n = cand.playerName;
 
   if (category === 'HITS') {
-    const odds = threshold === 1 ? 1.4 : threshold === 2 ? 2.3 : 5.0;
+    // No real Hits market feed is wired yet — odds must stay null, never invented.
     return {
       marketName: `To Record ${threshold}+ Hits`,
       customSpec: `${n} ${threshold}+ Hits`,
-      odds,
+      odds: null,
     };
   }
 
@@ -150,7 +155,7 @@ export function buildSmartAiMarket(
     return {
       marketName: `To Record ${threshold}+ RBIs`,
       customSpec: `${n} ${threshold}+ RBI`,
-      odds: 1.7 + threshold * 0.7,
+      odds: null,
     };
   }
 
@@ -158,7 +163,7 @@ export function buildSmartAiMarket(
     return {
       marketName: `To Record ${threshold}+ Runs`,
       customSpec: `${n} ${threshold}+ Runs`,
-      odds: 1.6 + threshold * 0.6,
+      odds: null,
     };
   }
 
@@ -166,16 +171,18 @@ export function buildSmartAiMarket(
     return {
       marketName: threshold >= 2 ? 'To Record 2+ Stolen Bases' : 'To Record 1+ Stolen Base',
       customSpec: `${n} ${threshold}+ SB`,
-      odds: threshold >= 2 ? 5.5 : 2.15,
+      odds: null,
     };
   }
 
-  const odds = threshold >= 2 ? Math.max(8, cand.oddsDecimal * 4) : cand.oddsDecimal || 3.5;
+  // HR: the board's implied price only covers 1+ HR. A 2+ HR market price
+  // does not exist in our data, so it stays null instead of a scaled guess.
+  const odds = threshold >= 2 ? null : cand.oddsDecimal;
 
   return {
     marketName: threshold >= 2 ? 'To Hit 2+ Home Runs' : 'To Hit 1+ Home Run',
     customSpec: `${n} ${threshold}+ HR`,
-    odds: Math.round(odds * 100) / 100,
+    odds: typeof odds === 'number' ? Math.round(odds * 100) / 100 : null,
   };
 }
 
@@ -195,7 +202,7 @@ export type SmartAiDynamicLeg = {
   team: string;
   marketName: string;
   customSpec: string;
-  odds: number;
+  odds: number | null;
   isFinal: false;
   justification: string;
   researchProfile?: SmartAiLegResearchProfile;
@@ -407,7 +414,8 @@ function buildMarketResearchProfile(params: {
 export type SmartAiDynamicParlay = {
   legs: SmartAiDynamicLeg[];
   totalOdds: string;
-  oddsValue: number;
+  /** Combined decimal odds when EVERY leg has a real price, else null (unknown). */
+  oddsValue: number | null;
   aiConfidenceScore: number;
   players: SmartAiDynamicDisplayPlayer[];
   riskTier: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -462,6 +470,7 @@ export function buildSmartAiDynamicParlay(params: {
         dataWarnings: [
           'Missing Statcast rolling window',
           'Using verified board score only',
+          ...(typeof odds === 'number' ? [] : ['Missing market odds — leg tracks without a price']),
           ...(c.opponentPitcherName ? [] : ['Missing probable pitcher data']),
           ...(c.pitcherHand ? [] : ['Missing confirmed pitcher hand']),
           ...(typeof c.pitcherVulnerability === 'number' ? [] : ['Missing pitcher vulnerability profile']),
@@ -487,7 +496,12 @@ export function buildSmartAiDynamicParlay(params: {
     };
   });
 
-  const combined = Math.round(legs.reduce((p, l) => p * l.odds, 1) * 100) / 100;
+  // Combined odds are only real when EVERY leg carries a real price.
+  // Never multiply invented placeholders into a displayed/saved return.
+  const allLegsPriced = legs.length > 0 && legs.every((l) => typeof l.odds === 'number');
+  const combined = allLegsPriced
+    ? Math.round(legs.reduce((p, l) => p * (l.odds as number), 1) * 100) / 100
+    : null;
   const avgConf = Math.round(
     selected.reduce((sum, candidate) => {
       const marketScore = scoreSmartAiCandidateForMarket(candidate, builderCategory);
@@ -501,9 +515,13 @@ export function buildSmartAiDynamicParlay(params: {
     100,
     Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12 + (builderCategory === 'SB' ? 14 : 0) + (builderCategory === 'HR' ? 10 : 0))
   );
-  const marketValueScore = Math.round(
-    selected.reduce((sum, candidate) => sum + Math.min(100, candidate.oddsDecimal * 18), 0) / selected.length
-  );
+  const pricedCandidates = selected.filter((candidate) => typeof candidate.oddsDecimal === 'number');
+  const marketValueScore = pricedCandidates.length
+    ? Math.round(
+        pricedCandidates.reduce((sum, candidate) => sum + Math.min(100, (candidate.oddsDecimal as number) * 18), 0) /
+          pricedCandidates.length
+      )
+    : 0;
   const evidenceScore = Math.round(
     selected.reduce((sum, candidate) => sum + scoreSmartAiCandidateForMarket(candidate, builderCategory), 0) /
       selected.length
@@ -550,7 +568,7 @@ export function buildSmartAiDynamicParlay(params: {
 
   return {
     legs,
-    totalOdds: decimalToAmericanOdds(combined),
+    totalOdds: combined !== null ? decimalToAmericanOdds(combined) : 'Odds TBD',
     oddsValue: combined,
     aiConfidenceScore: avgConf,
     players: selected.map((c) => ({

@@ -214,7 +214,9 @@ export function SmartAiDynamicCreator({
               <span className="block text-[9px] font-mono text-cyan-300 uppercase tracking-[0.22em] leading-none font-black">Cumulative Return</span>
               <div className="mt-1 flex items-end gap-2">
                 <span className="text-xl font-mono font-black text-white">{dynamicParlay.totalOdds}</span>
-                <span className="pb-0.5 text-[10px] text-slate-400 font-mono">({dynamicParlay.oddsValue}x)</span>
+                {typeof dynamicParlay.oddsValue === 'number' && (
+                  <span className="pb-0.5 text-[10px] text-slate-400 font-mono">({dynamicParlay.oddsValue}x)</span>
+                )}
               </div>
             </div>
 
