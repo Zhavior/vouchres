@@ -131,6 +131,7 @@ export default function SmartAiEngine({
             oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds), // null when the board has no real price — never fabricated
             score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
             opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
+            opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
             pitcherHand: c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
             pitcherVulnerability:
               typeof c.pitcherVulnerability === 'number'

@@ -20,6 +20,7 @@ export interface RealCandidate {
   oddsDecimal: number | null;
   score: number;
   opponentPitcherName?: string | null;
+  opponentPitcherId?: number | null;
   pitcherHand?: string | null;
   pitcherVulnerability?: number | null;
   parkFactor?: number | null;

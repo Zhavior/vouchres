@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Search, FlaskConical, Plus, Microscope, ShieldAlert } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Search, FlaskConical, Plus, Microscope, ShieldAlert, History } from 'lucide-react';
 import type { RealCandidate, CandidateScoreBreakdown } from './smartAiEngine.logic';
 import { getMlbHeadshotUrl } from '../../lib/parlayDisplay';
+import { safeJsonFetch } from '../../api/safeApiClient';
 
 /**
  * Deep Research Board — real candidates only.
@@ -20,6 +21,24 @@ interface SmartAiDeepResearchPanelProps {
 }
 
 type SortKey = 'score' | 'confidence' | 'form' | 'park';
+
+/** Real career batter-vs-pitcher line from /api/mlb/matchup-matrix (MLB vsPlayerTotal). */
+type MatchupBatter = {
+  id: number;
+  name: string;
+  recentForm: { games: number; hr: number; hits: number; atBats: number; strikeOuts: number } | null;
+  vsPitcher: {
+    ab: number;
+    h: number;
+    hr: number;
+    avgText: string | null;
+    slgText: string | null;
+    opsText: string | null;
+  } | null;
+  tags: string[];
+};
+
+type MatchupState = 'loading' | 'error' | MatchupBatter[];
 
 const SORT_OPTIONS: Array<{ id: SortKey; label: string }> = [
   { id: 'score', label: 'Board Score' },
@@ -102,6 +121,33 @@ export function SmartAiDeepResearchPanel({
   const [query, setQuery] = useState('');
   const [lineupFilter, setLineupFilter] = useState<'all' | 'confirmed' | 'projected'>('all');
   const [sortBy, setSortBy] = useState<SortKey>('score');
+
+  // Matchup history cache keyed by `${gamePk}:${pitcherId}` — one fetch covers
+  // every candidate facing that pitcher. `revealed` controls which cards show it.
+  const [matchups, setMatchups] = useState<Record<string, MatchupState>>({});
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  const loadMatchup = (candidate: RealCandidate) => {
+    if (!candidate.opponentPitcherId) return;
+    const cardKey = `${candidate.playerId}:${candidate.gamePk}`;
+    const fetchKey = `${candidate.gamePk}:${candidate.opponentPitcherId}`;
+    setRevealed((prev) => ({ ...prev, [cardKey]: true }));
+
+    const existing = matchups[fetchKey];
+    if (existing && existing !== 'error') return; // loaded or in flight
+
+    setMatchups((prev) => ({ ...prev, [fetchKey]: 'loading' }));
+    safeJsonFetch<any>(
+      `/api/mlb/matchup-matrix/${candidate.gamePk}/pitcher/${candidate.opponentPitcherId}`,
+      { fallbackData: null, timeoutMs: 12000 }
+    ).then((r) => {
+      const lineup = r.data?.opponent?.projectedLineup;
+      setMatchups((prev) => ({
+        ...prev,
+        [fetchKey]: Array.isArray(lineup) ? (lineup as MatchupBatter[]) : 'error',
+      }));
+    });
+  };
 
   const filtered = useMemo(() => {
     let result = candidates;
@@ -316,6 +362,16 @@ export function SmartAiDeepResearchPanel({
                       </span>
                     </div>
                     <div className="flex gap-2">
+                      {c.opponentPitcherId ? (
+                        <button
+                          type="button"
+                          onClick={() => loadMatchup(c)}
+                          className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-300 transition hover:border-sky-300/40 hover:text-sky-200"
+                        >
+                          <History className="h-3.5 w-3.5" />
+                          Matchup
+                        </button>
+                      ) : null}
                       {onOpenResearch && (
                         <button
                           type="button"
@@ -362,6 +418,66 @@ export function SmartAiDeepResearchPanel({
                     Signal breakdown unavailable for this candidate — using verified board score only.
                   </div>
                 )}
+
+                {/* Career batter-vs-pitcher history — real MLB vsPlayerTotal, never estimated */}
+                {revealed[`${c.playerId}:${c.gamePk}`] && c.opponentPitcherId ? (() => {
+                  const state = matchups[`${c.gamePk}:${c.opponentPitcherId}`];
+                  const pitcherLabel = c.opponentPitcherName && c.opponentPitcherName !== 'TBD'
+                    ? c.opponentPitcherName
+                    : 'this pitcher';
+
+                  let body: ReactNode;
+                  if (!state || state === 'loading') {
+                    body = <p className="text-[11px] font-semibold text-slate-400">Loading career history vs {pitcherLabel}...</p>;
+                  } else if (state === 'error') {
+                    body = <p className="text-[11px] font-semibold text-amber-200/90">Matchup history unavailable right now — nothing is estimated in its place.</p>;
+                  } else {
+                    const batter = state.find((b) => String(b.id) === String(c.playerId));
+                    if (!batter) {
+                      body = <p className="text-[11px] font-semibold text-slate-400">Not in the posted lineup for this matchup yet.</p>;
+                    } else if (!batter.vsPitcher || batter.vsPitcher.ab === 0) {
+                      body = <p className="text-[11px] font-semibold text-slate-400">No recorded career at-bats vs {pitcherLabel}.</p>;
+                    } else {
+                      const v = batter.vsPitcher;
+                      body = (
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-black text-slate-200">
+                            {v.h}-for-{v.ab} career vs {pitcherLabel} · {v.hr} HR
+                            <span className="ml-2 font-mono text-[10px] text-slate-400">
+                              AVG {v.avgText ?? '—'} · SLG {v.slgText ?? '—'} · OPS {v.opsText ?? '—'}
+                            </span>
+                          </p>
+                          {batter.recentForm && (
+                            <p className="text-[10px] font-mono text-slate-500">
+                              Last {batter.recentForm.games} games: {batter.recentForm.hits}/{batter.recentForm.atBats}, {batter.recentForm.hr} HR
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-1.5">
+                            {v.ab < 6 && (
+                              <span className="rounded-full border border-amber-300/20 bg-amber-400/5 px-2 py-0.5 text-[9px] font-mono font-black uppercase text-amber-300/90">
+                                Small sample ({v.ab} AB)
+                              </span>
+                            )}
+                            {batter.tags.map((tag) => (
+                              <span key={tag} className="rounded-full border border-sky-300/20 bg-sky-400/10 px-2 py-0.5 text-[9px] font-mono font-black uppercase text-sky-200">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                  }
+
+                  return (
+                    <div className="mt-3 rounded-2xl border border-sky-300/15 bg-sky-400/5 p-3">
+                      <span className="mb-1.5 block text-[9px] font-mono font-black uppercase tracking-[0.2em] text-sky-300">
+                        Matchup History — MLB career data
+                      </span>
+                      {body}
+                    </div>
+                  );
+                })() : null}
 
                 {/* Reasons + warnings, straight from the pipeline */}
                 {(c.reasons?.length || c.boardWarnings?.length) ? (
