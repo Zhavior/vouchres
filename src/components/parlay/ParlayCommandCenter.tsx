@@ -382,6 +382,35 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
                     </div>
                   </div>
 
+                  <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 p-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-[11px] font-bold leading-relaxed text-rose-100/90">
+                        Board action only. Hide removes this card from your saved board but does not void, grade, or change ledger truth.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleHide(slip.sourceId)}
+                        disabled={
+                          !onHideParlay ||
+                          hidingSlipId === slip.sourceId ||
+                          ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                        }
+                        title={
+                          ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                            ? 'Live or pending parlays are locked to protect grading truth.'
+                            : 'Hide this parlay from My Parlay Board. This does not void or change grading truth.'
+                        }
+                        className="inline-flex w-full items-center justify-center rounded-2xl border border-rose-300/40 bg-rose-400/15 px-4 py-2.5 text-[11px] font-black uppercase tracking-wide text-rose-100 transition hover:border-rose-200/70 hover:bg-rose-400/25 disabled:cursor-not-allowed disabled:border-slate-800 disabled:bg-slate-950/50 disabled:text-slate-600 sm:w-auto"
+                      >
+                        {['pending', 'live', 'open', 'active', 'in_progress'].includes(String(slip.status ?? '').toLowerCase())
+                          ? 'Live Locked'
+                          : hidingSlipId === slip.sourceId
+                            ? 'Hiding'
+                            : 'Hide Parlay'}
+                      </button>
+                    </div>
+                  </div>
+
                   {previewLegs.length > 0 && (
                     <div className="mt-4 grid gap-2">
                       {previewLegs.map((leg) => {
