@@ -40,6 +40,21 @@ type MatchupBatter = {
 
 type MatchupState = 'loading' | 'error' | MatchupBatter[];
 
+/** Real season Statcast quality from /api/mlb/statcast/batters (Baseball Savant). */
+type StatcastQuality = {
+  pa: number | null;
+  xba: number | null;
+  xslg: number | null;
+  xwoba: number | null;
+  barrelPct: number | null;
+  hardHitPct: number | null;
+  avgExitVelo: number | null;
+};
+
+function fmt3(value: number | null): string {
+  return typeof value === 'number' ? value.toFixed(3).replace(/^0\./, '.') : '—';
+}
+
 /** Real first-pitch weather from /api/mlb/weather/today (Open-Meteo). */
 type GameWeather = {
   gamePk: number;
@@ -158,6 +173,9 @@ export function SmartAiDeepResearchPanel({
   // Real first-pitch weather, one fetch for all of today's games.
   const [weatherByGame, setWeatherByGame] = useState<Record<string, GameWeather>>({});
 
+  // Real season Statcast quality, one fetch covers every qualified batter.
+  const [statcastByPlayer, setStatcastByPlayer] = useState<Record<string, StatcastQuality>>({});
+
   useEffect(() => {
     let alive = true;
     safeJsonFetch<any>('/api/mlb/weather/today', { fallbackData: null, timeoutMs: 12000 }).then((r) => {
@@ -168,6 +186,13 @@ export function SmartAiDeepResearchPanel({
         if (row && row.gamePk != null) map[String(row.gamePk)] = row as GameWeather;
       }
       setWeatherByGame(map);
+    });
+    safeJsonFetch<any>('/api/mlb/statcast/batters', { fallbackData: null, timeoutMs: 25000 }).then((r) => {
+      if (!alive) return;
+      const batters = r.data?.batters;
+      if (batters && typeof batters === 'object') {
+        setStatcastByPlayer(batters as Record<string, StatcastQuality>);
+      }
     });
     return () => { alive = false; };
   }, []);
@@ -492,6 +517,45 @@ export function SmartAiDeepResearchPanel({
                     Signal breakdown unavailable for this candidate — using verified board score only.
                   </div>
                 )}
+
+                {/* Season Statcast quality — real Baseball Savant leaderboards, never estimated */}
+                {(() => {
+                  const sc = statcastByPlayer[String(c.playerId)];
+                  if (!sc) {
+                    return (
+                      <div className="mt-3 rounded-2xl border border-slate-800/60 bg-slate-950/40 px-3 py-2 text-[10px] font-mono text-slate-500">
+                        Season Statcast unavailable (under sample threshold or feed down) — nothing estimated.
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="mt-3 rounded-2xl border border-violet-300/15 bg-violet-400/5 p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] text-violet-300">
+                          Season Statcast — Baseball Savant
+                        </span>
+                        {typeof sc.pa === 'number' && (
+                          <span className="text-[9px] font-mono font-black uppercase text-slate-500">{sc.pa} PA</span>
+                        )}
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                        {[
+                          { label: 'xwOBA', value: fmt3(sc.xwoba) },
+                          { label: 'xBA', value: fmt3(sc.xba) },
+                          { label: 'xSLG', value: fmt3(sc.xslg) },
+                          { label: 'Barrel%', value: typeof sc.barrelPct === 'number' ? `${sc.barrelPct}%` : '—' },
+                          { label: 'HardHit%', value: typeof sc.hardHitPct === 'number' ? `${sc.hardHitPct}%` : '—' },
+                          { label: 'Avg EV', value: typeof sc.avgExitVelo === 'number' ? `${sc.avgExitVelo}` : '—' },
+                        ].map((stat) => (
+                          <div key={stat.label} className="rounded-xl border border-slate-800 bg-slate-950/55 px-2 py-1.5 text-center">
+                            <span className="block text-[8px] font-mono uppercase tracking-[0.14em] text-slate-500">{stat.label}</span>
+                            <span className="mt-0.5 block text-[11px] font-mono font-black text-slate-200">{stat.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Career batter-vs-pitcher history — real MLB vsPlayerTotal, never estimated */}
                 {revealed[`${c.playerId}:${c.gamePk}`] && c.opponentPitcherId ? (() => {

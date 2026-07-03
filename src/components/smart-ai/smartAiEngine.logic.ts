@@ -492,7 +492,7 @@ export function buildSmartAiDynamicParlay(params: {
         venue: c.venue ?? null,
         lineupStatus: c.lineupStatus ?? null,
         dataWarnings: [
-          'Missing Statcast rolling window',
+          'Missing Statcast rolling window (season Statcast available on the research board)',
           'Using verified board score only',
           ...(typeof odds === 'number' ? [] : ['Missing market odds — leg tracks without a price']),
           ...(c.opponentPitcherName ? [] : ['Missing probable pitcher data']),

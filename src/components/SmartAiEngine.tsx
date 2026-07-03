@@ -402,7 +402,8 @@ export default function SmartAiEngine({
           <p className="leading-relaxed">
             Candidates come from the validated HR board pipeline: real MLB season stats, probable pitchers with confirmed
             throwing hand where posted, and sourced park factors. First-pitch weather is a real Open-Meteo forecast with roofed
-            venues flagged; batter-vs-pitcher history is real MLB career data. Sportsbook odds are not connected and are never
+            venues flagged; batter-vs-pitcher history is real MLB career data; season Statcast quality (xwOBA, barrel rate,
+            hard-hit rate) comes from Baseball Savant leaderboards. Sportsbook odds are not connected and are never
             estimated. Model HR probabilities are research estimates — not betting advice and not market prices. Verify player
             detail in the <b>Player Research Console</b> before trusting any single signal.
           </p>

@@ -4,6 +4,7 @@ import { getGameMatchups, getGameMatchup, getLiveMatchupMatrix, getMatchupMatrix
 import { buildSportsTruthSnapshot } from "../services/hubs/sportsTruthHub";
 import { getPitcherMatchup } from "../services/mlb/pitcherMatchupService";
 import { getTodayGamesWeather } from "../services/mlb/weatherService";
+import { getStatcastBatterMap, STATCAST_MIN_PA } from "../services/mlb/statcastClient";
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
@@ -136,6 +137,25 @@ export function registerMatchupRoutes(app: Express): void {
     } catch (err: any) {
       console.error("[weather/today] failed:", err?.message);
       res.status(500).json({ error: "weather_fetch_failed" });
+    }
+  });
+
+  /** Season Statcast batter quality (Baseball Savant leaderboards, 12h cache).
+   *  Players under the PA threshold are absent — nothing is estimated for them. */
+  app.get("/api/mlb/statcast/batters", async (_req: Request, res: Response) => {
+    try {
+      const batters = await getStatcastBatterMap();
+      res.json({
+        batters,
+        count: Object.keys(batters).length,
+        minPa: STATCAST_MIN_PA,
+        scope: "season",
+        source: "baseball-savant",
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      console.error("[statcast/batters] failed:", err?.message);
+      res.status(500).json({ error: "statcast_fetch_failed" });
     }
   });
 }
