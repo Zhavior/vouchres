@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "../../lib/motion";
 import { ArrowUpRight } from "lucide-react";
 
 /**

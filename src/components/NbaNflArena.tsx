@@ -16,7 +16,7 @@ import {
   Zap,
   Info
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from '../lib/motion';
 
 interface NbaNflArenaProps {
   onSectionChange: (section: string) => void;

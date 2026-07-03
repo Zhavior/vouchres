@@ -20,7 +20,7 @@ import {
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from '../lib/motion';
 import { CreatorProofProfile, Parlay } from '../types';
 import { canAccessThemeStore } from '../lib/adminDevAccess';
 

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from '../lib/motion';
 import { useMemo, useState } from 'react';
 import {
   ArrowRight,

@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "motion/react";
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "../../lib/motion";
 import {
   Sparkles,
   Check,

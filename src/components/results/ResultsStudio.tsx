@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "../../lib/motion";
 import {
   BarChart3, Calendar, CheckCircle2, XCircle, Clock, Lock,
   TrendingUp, Award, Filter, Search, ChevronLeft, ChevronRight,

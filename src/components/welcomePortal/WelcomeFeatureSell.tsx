@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from '../../lib/motion';
 import {
   Check, ArrowRight, Flame, Layers3, Swords, Bot, LineChart,
   ChevronLeft, ChevronRight, ShieldCheck, Sparkles,

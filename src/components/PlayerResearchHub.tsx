@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "../lib/motion";
 import {
   Search, LayoutGrid, Table2, X, Plus, Shield, TrendingUp,
   Activity, Zap, ChevronRight, BarChart3, Crosshair, Sparkles,
