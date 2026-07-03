@@ -795,47 +795,14 @@ export default function App() {
   savedSlipsRef.current = savedSlips;
   profileRef.current = profile;
 
+  // Legacy AI parlay auto-sync is intentionally quarantined.
+  // New save truth must flow through pushParlayToBackend() -> /api/me/parlays
+  // and consume the enriched backend response. Leaving this heartbeat active
+  // caused old localStorage/parlay feature code to compete with Command Center
+  // hydration and refresh truth.
   useEffect(() => {
-    let cancelled = false;
-
-    const runBackendParlaySync = async () => {
-      if (backendParlaySyncRef.current) return;
-
-      const candidates = savedSlipsRef.current.filter((parlay) =>
-        isAiBackendCandidate(parlay) &&
-        !parlay.backendPickId &&
-        parlay.backendSyncState !== 'not_syncable'
-      );
-
-      if (!candidates.length) return;
-
-      backendParlaySyncRef.current = true;
-      try {
-        let next = savedSlipsRef.current;
-        let changed = false;
-
-        for (const parlay of candidates) {
-          const updated = await syncParlayToBackend(parlay);
-          if (JSON.stringify(updated) !== JSON.stringify(parlay)) {
-            next = next.map((row) => (row.id === parlay.id ? updated : row));
-            changed = true;
-          }
-        }
-
-        if (!cancelled && changed) {
-          syncSlips(next);
-        }
-      } finally {
-        backendParlaySyncRef.current = false;
-      }
-    };
-
-    void runBackendParlaySync();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [savedSlips]);
+    backendParlaySyncRef.current = false;
+  }, []);
 
   // Interaction: Create post
   const handlePostCreated = (postData: Partial<FeedPost>) => {
