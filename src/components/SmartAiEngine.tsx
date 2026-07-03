@@ -195,9 +195,9 @@ export default function SmartAiEngine({
       position: 'Batter',
       number: '',
       headshot: '',
-      injuryStatus: 'Healthy',
+      injuryStatus: 'Unknown',
       injurySeverity: 'NONE',
-      injuryNotes: '',
+      injuryNotes: 'Injury status is not verified in this transfer context.',
       batterScore: score,
       seasonStats: {
         avg: '.000',
@@ -209,6 +209,10 @@ export default function SmartAiEngine({
       },
       gameLogs: [],
       propositions: [],
+      // MLBPlayer requires bats/throws but real handedness is not wired in this
+      // transfer shim — the leg-transfer path never reads these fields. Do NOT
+      // render them as verified data; widen the type to allow "unknown" before
+      // any UI consumes handedness from this object.
       bats: 'R',
       throws: 'R',
       height: '',
@@ -700,7 +704,7 @@ export default function SmartAiEngine({
       sportBadge: 'MLB',
       sourceBadge: 'Precomputed AI',
       postType: 'PARLAY',
-      content: `⚡ **AUTOMATED PRE-COMPILED SABERMETRIC recommendation** ⚡\n\nI have retrieved verified parlay slip registration **${pick.id}** from our high-performance client modeling vault.\n\n* **Model Confidence**: ${pick.aiConfidenceScore}%\n* **Atmosphere Carry**: Temp ${pick.weather.temp}°F / Wind ${pick.weather.windMph}mph ${pick.weather.windDirection}\n* **Risk Profile**: ${pick.riskTier}\n\nClick the dossier buttons to review detailed Statcast margins or transfer immediately into your slips!`,
+      content: `⚡ **AUTOMATED PRE-COMPILED SABERMETRIC recommendation** ⚡\n\nI have retrieved verified parlay slip registration **${pick.id}** from our high-performance client modeling vault.\n\n* **Model Confidence**: ${pick.aiConfidenceScore}%\n* **Atmosphere Carry**: Temp ${pick.weather.temp}°F / Wind ${pick.weather.windMph}mph ${pick.weather.windDirection}\n* **Risk Profile**: ${pick.riskTier}\n\nClick the dossier buttons to review the research dossier or transfer immediately into your slips!`,
       parlay: feedParlay,
       likesCount: 14,
       commentsCount: 2,
