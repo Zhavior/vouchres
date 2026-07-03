@@ -228,12 +228,52 @@ export function buildSmartAiDynamicParlay(params: {
 
   const confidenceBand = avgConf > 82 ? 'HIGH' : avgConf > 64 ? 'MEDIUM' : 'LOW';
   const riskTier = avgConf > 82 ? 'LOW' : avgConf > 64 ? 'MEDIUM' : 'HIGH';
-  const volatilityScore = Math.min(100, Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12));
+  const isStolenBaseBuild = builderCategory === 'SB';
+  const volatilityScore = Math.min(
+    100,
+    Math.max(15, builderLegs * 16 + (builderThreshold - 1) * 12 + (isStolenBaseBuild ? 14 : 0))
+  );
   const marketValueScore = Math.round(
     selected.reduce((sum, candidate) => sum + Math.min(100, candidate.oddsDecimal * 18), 0) / selected.length
   );
   const evidenceScore = Math.round(selected.reduce((sum, candidate) => sum + candidate.score, 0) / selected.length);
-  const dataCompleteness = 42;
+  const dataCompleteness = isStolenBaseBuild ? 34 : 42;
+
+  const sharedWarningFlags = [
+    'Missing Statcast rolling window',
+    'Missing confirmed pitcher hand',
+    'Missing park-factor adjustment',
+  ];
+
+  const stolenBaseWarningFlags = [
+    'Missing pitcher/catcher run-game data',
+    'Missing confirmed catcher throw-out profile',
+    'Confirm lineup and on-base path before trusting stolen-base markets',
+  ];
+
+  const sharedWhyThisPick = [
+    'Selected from today\'s verified Smart AI candidate pool.',
+    `Average verified-board evidence score: ${evidenceScore}.`,
+    `Builder category ${builderCategory} with threshold ${builderThreshold}.`,
+  ];
+
+  const stolenBaseWhyThisPick = [
+    'Possible stolen-base angle from the verified Smart AI candidate pool.',
+    'This player is being surfaced as an SB Watch candidate, not a fully confirmed run-game edge yet.',
+    'Best used as a research flag until pitcher hold, catcher arm, lineup spot, and on-base path are wired.',
+  ];
+
+  const sharedWhatCouldGoWrong = [
+    'Advanced contact-quality data is not wired into this return yet.',
+    'Pitcher handedness and bullpen context are not confirmed in this helper yet.',
+    'Higher leg counts increase parlay volatility even when individual candidates look strong.',
+  ];
+
+  const stolenBaseWhatCouldGoWrong = [
+    'Stolen-base markets can fail if the player does not reach first base.',
+    'A strong catcher, quick pitcher delivery, pitchout risk, or bad game script can remove the steal attempt.',
+    'This helper does not yet verify catcher pop time, pitcher hold time, pickoff tendency, or team steal aggression.',
+  ];
 
   return {
     legs,
@@ -261,21 +301,15 @@ export function buildSmartAiDynamicParlay(params: {
       volatilityScore,
       matchupScore: evidenceScore,
       roleFit: builderLegs <= 2 ? ['single', 'parlay'] : builderLegs <= 4 ? ['parlay', 'ladder'] : ['ladder', 'avoid'],
-      warningFlags: [
-        'Missing Statcast rolling window',
-        'Missing confirmed pitcher hand',
-        'Missing park-factor adjustment',
-      ],
-      whyThisPick: [
-        'Selected from today\'s verified Smart AI candidate pool.',
-        `Average verified-board evidence score: ${evidenceScore}.`,
-        `Builder category ${builderCategory} with threshold ${builderThreshold}.`,
-      ],
-      whatCouldGoWrong: [
-        'Advanced contact-quality data is not wired into this return yet.',
-        'Pitcher handedness and bullpen context are not confirmed in this helper yet.',
-        'Higher leg counts increase parlay volatility even when individual candidates look strong.',
-      ],
+      warningFlags: isStolenBaseBuild
+        ? [...sharedWarningFlags, ...stolenBaseWarningFlags]
+        : sharedWarningFlags,
+      whyThisPick: isStolenBaseBuild
+        ? [...sharedWhyThisPick, ...stolenBaseWhyThisPick]
+        : sharedWhyThisPick,
+      whatCouldGoWrong: isStolenBaseBuild
+        ? [...sharedWhatCouldGoWrong, ...stolenBaseWhatCouldGoWrong]
+        : sharedWhatCouldGoWrong,
     },
   };
 }
