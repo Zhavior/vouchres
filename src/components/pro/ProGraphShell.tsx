@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart3, Lock } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
+import { VECard } from '../ui/ve';
 
 export interface ProGraphShellProps {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -28,8 +29,9 @@ export const ProGraphShell: React.FC<ProGraphShellProps> = React.memo(function P
   const helperText = subtitle ?? description;
 
   return (
-    <section
-      className={`ve-card relative overflow-hidden rounded-2xl p-3 ${className}`}
+    <VECard
+      tone="soft"
+      className={`relative overflow-hidden rounded-2xl p-3 ${className}`}
       style={{ borderColor: withAlpha(accent, 0.22) }}
     >
       <span
@@ -65,7 +67,7 @@ export const ProGraphShell: React.FC<ProGraphShellProps> = React.memo(function P
       {footer && (
         <p className="mt-3 font-mono text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">{footer}</p>
       )}
-    </section>
+    </VECard>
   );
 });
 
