@@ -1,5 +1,16 @@
 export type SmartAiBuilderCategory = 'HITS' | 'RBIS' | 'RUNS' | 'SB' | 'HR';
 
+/** Real per-signal score breakdown from the validated HR board pipeline. */
+export type CandidateScoreBreakdown = {
+  hitterPower: number;
+  pitcherVulnerability: number;
+  parkContext: number;
+  lineupVolume: number;
+  handednessEdge: number;
+  recentForm: number;
+  penalties: number;
+};
+
 export interface RealCandidate {
   playerId: string;
   playerName: string;
@@ -14,6 +25,16 @@ export interface RealCandidate {
   parkFactor?: number | null;
   venue?: string | null;
   lineupStatus?: string | null;
+  // Real board research context (present when the validated pipeline supplies it).
+  confidenceTier?: 'elite' | 'strong' | 'watchlist' | 'thin' | 'avoid' | null;
+  riskLabel?: string | null;
+  estimatedHrProbability?: number | null;
+  dataConfidence?: number | null;
+  battingOrder?: number | null;
+  dataQuality?: string | null;
+  reasons?: string[];
+  boardWarnings?: string[];
+  scoreBreakdown?: CandidateScoreBreakdown | null;
 }
 
 export interface PrecomputedPick {

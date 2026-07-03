@@ -151,7 +151,7 @@ export default function SmartAiEngine({
             oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds), // null when the board has no real price — never fabricated
             score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
             opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
-            pitcherHand: c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
+            pitcherHand: c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
             pitcherVulnerability:
               typeof c.pitcherVulnerability === 'number'
                 ? c.pitcherVulnerability
@@ -161,6 +161,15 @@ export default function SmartAiEngine({
             parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
             venue: c.venue ?? c.ballpark ?? null,
             lineupStatus: c.lineupStatus ?? c.lineup_status ?? null,
+            confidenceTier: c.confidenceTier ?? null,
+            riskLabel: typeof c.riskTier === 'string' ? c.riskTier : null,
+            estimatedHrProbability: typeof c.estimatedHrProbability === 'number' ? c.estimatedHrProbability : null,
+            dataConfidence: typeof c.dataConfidence === 'number' ? c.dataConfidence : null,
+            battingOrder: typeof c.battingOrder === 'number' ? c.battingOrder : null,
+            dataQuality: typeof c.dataQuality === 'string' ? c.dataQuality : null,
+            reasons: Array.isArray(c.reasons) ? c.reasons.map(String) : [],
+            boardWarnings: Array.isArray(c.warnings) ? c.warnings.map(String) : [],
+            scoreBreakdown: c.scoreBreakdown && typeof c.scoreBreakdown === 'object' ? c.scoreBreakdown : null,
           }));
         setRealCandidates(mapped);
         setCandidatesLoading(false);
