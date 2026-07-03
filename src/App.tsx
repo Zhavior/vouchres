@@ -1327,19 +1327,34 @@ export default function App() {
 
   // Render content depending on left sidebar active item
   const handleHideSavedParlay = async (parlayId: string) => {
-    const target = savedSlipsRef.current.find((slip) => String((slip as any).id ?? (slip as any).sourceId) === String(parlayId));
+    const target = savedSlipsRef.current.find((slip) => {
+      const realId = String((slip as any).id ?? (slip as any).sourceId ?? '');
+      const publicId = String((slip as any).publicId ?? '');
+      return realId === String(parlayId) || publicId === String(parlayId);
+    });
+
     if (!target) {
-      throw new Error('Could not find the real saved parlay id. Refresh My Parlay Board and try again.');
+      throw new Error('Could not find this saved parlay. Refresh My Parlay Board and try again.');
     }
 
     const status = String((target as any).status ?? '').toLowerCase();
-    if (['live', 'active', 'in_progress'].includes(status)) {
-      throw new Error('Live parlays are locked to protect grading truth.');
+    if (['pending', 'live', 'open', 'active', 'in_progress'].includes(status)) {
+      throw new Error('Pending or live parlays are locked to protect grading truth.');
     }
 
-    await apiClient.delete(`/api/parlays/${encodeURIComponent(parlayId)}`);
+    const realId = String((target as any).id ?? (target as any).sourceId ?? parlayId);
+    const isBackendSynced = Boolean((target as any).synced) && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(realId);
 
-    const nextSlips = savedSlipsRef.current.filter((slip) => String((slip as any).id ?? (slip as any).sourceId) !== String(parlayId));
+    if (isBackendSynced) {
+      await apiClient.delete(`/api/parlays/${encodeURIComponent(realId)}`);
+    }
+
+    const nextSlips = savedSlipsRef.current.filter((slip) => {
+      const slipRealId = String((slip as any).id ?? (slip as any).sourceId ?? '');
+      const slipPublicId = String((slip as any).publicId ?? '');
+      return slipRealId !== realId && slipRealId !== String(parlayId) && slipPublicId !== String(parlayId);
+    });
+
     syncSlips(nextSlips);
   };
 
