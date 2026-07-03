@@ -1943,36 +1943,30 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
 
 /**
  * DELETE /api/parlays/:id
- * Soft-deletes a parlay by setting status='void'. Ownership enforced.
+ *
+ * Truth firewall:
+ * User remove/hide must NEVER mutate status='void'.
+ * `void` is reserved for official sportsbook/no-action outcomes only.
+ *
+ * Until the picks table has a real user-hide column such as user_hidden_at
+ * or deleted_at, this route refuses to perform a truth-corrupting mutation.
  */
 parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
-  const supabaseAdmin = await getSupabaseAdmin();
 
   const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
   if (!ownership.ok) {
     return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("picks")
-    .update({ status: "void", updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .select("id,status,updated_at")
-    .maybeSingle();
-
-  if (error) {
-    console.error("[parlays] delete/void failed", error.code, error.message);
-    return res.status(500).json({ error: "delete_failed" });
-  }
-
-  if (!data) {
-    return res.status(404).json({ error: "parlay_not_found_or_not_updated" });
-  }
-
-  return res.json({ deleted: true, id: data.id, status: data.status, updated_at: data.updated_at });
+  return res.status(409).json({
+    error: "user_remove_not_configured",
+    message:
+      "Parlay remove is temporarily disabled because user removal must not mark a parlay as sportsbook void. Add a user_hidden_at/deleted_at column and filter list routes before enabling this action.",
+    required_schema: ["picks.user_hidden_at or picks.deleted_at"],
+    truth_rule: "void_status_reserved_for_sportsbook_no_action",
+    parlay_id: id,
+  });
 });
 
 /**
