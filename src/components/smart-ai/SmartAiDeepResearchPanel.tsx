@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Search, FlaskConical, Plus, Microscope, ShieldAlert, History } from 'lucide-react';
 import type { RealCandidate, CandidateScoreBreakdown } from './smartAiEngine.logic';
 import { getMlbHeadshotUrl } from '../../lib/parlayDisplay';
@@ -39,6 +39,34 @@ type MatchupBatter = {
 };
 
 type MatchupState = 'loading' | 'error' | MatchupBatter[];
+
+/** Real first-pitch weather from /api/mlb/weather/today (Open-Meteo). */
+type GameWeather = {
+  gamePk: number;
+  status: 'forecast' | 'retractable' | 'indoor' | 'unavailable';
+  tempF: number | null;
+  windMph: number | null;
+  windCompass: string | null;
+  precipChancePct: number | null;
+  note: string;
+};
+
+function weatherChipProps(w: GameWeather | undefined): { value: string; missing: boolean } {
+  if (!w || w.status === 'unavailable') {
+    return { value: 'Weather N/A', missing: true };
+  }
+  if (w.status === 'indoor') {
+    return { value: 'Indoor — roof', missing: false };
+  }
+  const parts: string[] = [];
+  if (typeof w.tempF === 'number') parts.push(`${w.tempF}°F`);
+  if (typeof w.windMph === 'number') parts.push(`${w.windMph}mph${w.windCompass ? ` ${w.windCompass}` : ''}`);
+  if (typeof w.precipChancePct === 'number' && w.precipChancePct >= 30) parts.push(`${w.precipChancePct}% rain`);
+  if (w.status === 'retractable') parts.push('roof?');
+  return parts.length
+    ? { value: parts.join(' · '), missing: false }
+    : { value: 'Weather N/A', missing: true };
+}
 
 const SORT_OPTIONS: Array<{ id: SortKey; label: string }> = [
   { id: 'score', label: 'Board Score' },
@@ -126,6 +154,23 @@ export function SmartAiDeepResearchPanel({
   // every candidate facing that pitcher. `revealed` controls which cards show it.
   const [matchups, setMatchups] = useState<Record<string, MatchupState>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  // Real first-pitch weather, one fetch for all of today's games.
+  const [weatherByGame, setWeatherByGame] = useState<Record<string, GameWeather>>({});
+
+  useEffect(() => {
+    let alive = true;
+    safeJsonFetch<any>('/api/mlb/weather/today', { fallbackData: null, timeoutMs: 12000 }).then((r) => {
+      if (!alive) return;
+      const rows: any[] = Array.isArray(r.data?.weather) ? r.data.weather : [];
+      const map: Record<string, GameWeather> = {};
+      for (const row of rows) {
+        if (row && row.gamePk != null) map[String(row.gamePk)] = row as GameWeather;
+      }
+      setWeatherByGame(map);
+    });
+    return () => { alive = false; };
+  }, []);
 
   const loadMatchup = (candidate: RealCandidate) => {
     if (!candidate.opponentPitcherId) return;
@@ -347,6 +392,10 @@ export function SmartAiDeepResearchPanel({
                           missing={typeof c.parkFactor !== 'number'}
                         />
                         <ContextChip label="Lineup" value={lineupLabel} missing={lineupLabel === 'Projected'} />
+                        {(() => {
+                          const chip = weatherChipProps(weatherByGame[String(c.gamePk)]);
+                          return <ContextChip label="WX" value={chip.value} missing={chip.missing} />;
+                        })()}
                       </div>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import { getGameMatchups, getGameMatchup, getLiveMatchupMatrix, getMatchupMatrix } from "../services/mlb/gameMatchupService";
 import { buildSportsTruthSnapshot } from "../services/hubs/sportsTruthHub";
 import { getPitcherMatchup } from "../services/mlb/pitcherMatchupService";
+import { getTodayGamesWeather } from "../services/mlb/weatherService";
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
@@ -120,6 +121,21 @@ export function registerMatchupRoutes(app: Express): void {
     } catch (err: any) {
       console.error("[matchup-matrix/pitcher] failed:", err?.message);
       res.status(500).json({ error: "pitcher_matchup_fetch_failed" });
+    }
+  });
+
+  /** Real first-pitch weather per game (Open-Meteo + sourced stadium table).
+   *  Roofed venues are flagged; unknown venues return "unavailable" — never estimated. */
+  app.get("/api/mlb/weather/today", async (req: Request, res: Response) => {
+    try {
+      const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
+        ? req.query.date
+        : undefined;
+      const weather = await getTodayGamesWeather(date);
+      res.json({ weather, source: "open-meteo", updatedAt: new Date().toISOString() });
+    } catch (err: any) {
+      console.error("[weather/today] failed:", err?.message);
+      res.status(500).json({ error: "weather_fetch_failed" });
     }
   });
 }
