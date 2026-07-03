@@ -1420,6 +1420,7 @@ parlayRoutes.get("/me/parlays", requireAuth, async (req: AuthedRequest, res: Res
     .select("*", { count: "exact" })
     .eq("user_id", req.user!.id)
     .eq("leg_type", "parlay")
+    .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -1944,28 +1945,49 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
 /**
  * DELETE /api/parlays/:id
  *
- * Truth firewall:
- * User remove/hide must NEVER mutate status='void'.
+ * User-facing hide/remove.
+ * This must NEVER mutate status='void'.
  * `void` is reserved for official sportsbook/no-action outcomes only.
  *
- * Until the picks table has a real user-hide column such as user_hidden_at
- * or deleted_at, this route refuses to perform a truth-corrupting mutation.
+ * Hiding preserves grading identity, saved parlay ID, Results Ledger truth,
+ * live status, and official sportsbook outcome semantics.
  */
 parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+  const supabaseAdmin = await getSupabaseAdmin();
 
   const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
   if (!ownership.ok) {
     return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
   }
 
-  return res.status(409).json({
-    error: "user_remove_not_configured",
-    message:
-      "Parlay remove is temporarily disabled because user removal must not mark a parlay as sportsbook void. Add a user_hidden_at/deleted_at column and filter list routes before enabling this action.",
-    required_schema: ["picks.user_hidden_at or picks.deleted_at"],
-    truth_rule: "void_status_reserved_for_sportsbook_no_action",
-    parlay_id: id,
+  const hiddenAt = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .update({ user_hidden_at: hiddenAt, updated_at: hiddenAt })
+    .eq("id", id)
+    .eq("user_id", req.user!.id)
+    .eq("leg_type", "parlay")
+    .is("user_hidden_at", null)
+    .select("id,status,user_hidden_at,updated_at")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[parlays] user hide failed", error.code, error.message);
+    return res.status(500).json({ error: "hide_failed" });
+  }
+
+  if (!data) {
+    return res.status(404).json({ error: "parlay_not_found_or_already_hidden" });
+  }
+
+  return res.json({
+    hidden: true,
+    id: data.id,
+    status: data.status,
+    user_hidden_at: data.user_hidden_at,
+    updated_at: data.updated_at,
+    truth_rule: "status_preserved_void_reserved_for_sportsbook_no_action",
   });
 });
 
@@ -1990,6 +2012,7 @@ parlayRoutes.get("/parlays", requireAuth, async (req: AuthedRequest, res: Respon
     .select("*", { count: "exact" })
     .eq("user_id", userId)
     .eq("leg_type", "parlay")
+    .is("user_hidden_at", null)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
