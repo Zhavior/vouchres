@@ -651,6 +651,7 @@ function scoreCandidate(
     opponentPitcherName: pitcher?.pitcherName ?? "TBD",
     opponentPitcher: pitcher?.pitcherName ?? "TBD",
     opponentPitcherId: pitcher?.pitcherId ?? 0,
+    opponentPitcherHand: pitcher?.throws === "L" || pitcher?.throws === "R" ? pitcher.throws : null,
     venue: venueName,
     parkFactor,
     parkSource: (park as any).source ?? "park_factor_table",

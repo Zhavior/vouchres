@@ -85,6 +85,8 @@ export interface ScoredHrCandidate {
   opponentPitcherName: string;
   opponentPitcher: string;
   opponentPitcherId: number;
+  /** Real probable-pitcher hand from the MLB schedule feed. null = not yet posted/unknown — never guessed. */
+  opponentPitcherHand: "L" | "R" | null;
   lineupStatus: LineupStatus;
   injuryStatus: InjuryStatus;
   hrScore: number;
