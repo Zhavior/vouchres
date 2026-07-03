@@ -433,7 +433,39 @@ export function buildSmartAiDynamicParlay(params: {
     builderLegs,
     evidenceScore,
   });
-  const dataCompleteness = marketResearch.dataCompleteness;
+
+  const adapterCompletenessScore = Math.round(
+    selected.reduce((sum, candidate) => {
+      const availableSignals = [
+        Boolean(candidate.opponentPitcherName),
+        Boolean(candidate.pitcherHand),
+        typeof candidate.pitcherVulnerability === 'number',
+        typeof candidate.parkFactor === 'number',
+        Boolean(candidate.lineupStatus),
+      ].filter(Boolean).length;
+
+      return sum + availableSignals * 6;
+    }, 0) / selected.length
+  );
+
+  const missingDataPenalty = Math.round(
+    selected.reduce((sum, candidate) => {
+      const missingSignals = [
+        !candidate.opponentPitcherName,
+        !candidate.pitcherHand,
+        typeof candidate.pitcherVulnerability !== 'number',
+        typeof candidate.parkFactor !== 'number',
+        !candidate.lineupStatus,
+      ].filter(Boolean).length;
+
+      return sum + missingSignals * 3;
+    }, 0) / selected.length
+  );
+
+  const dataCompleteness = Math.max(
+    20,
+    Math.min(92, marketResearch.dataCompleteness + adapterCompletenessScore - missingDataPenalty)
+  );
 
   return {
     legs,
