@@ -1,3 +1,5 @@
+import { withCanonicalHrScore } from './hr-engine/hrScoreAdapter';
+
 export function parsePreviewLimit(value: unknown): number {
   const parsed = Number.parseInt(String(value ?? ""), 10);
   if (!Number.isFinite(parsed)) return 50;
@@ -10,12 +12,13 @@ export function buildHrBoardApiPayload(result: any, previewLimitInput?: unknown)
     result?.debug?.eligiblePreviewPoolCount ?? result?.projectedCandidates?.length ?? 0;
   const scoredPreviewPoolCount =
     result?.debug?.scoredPreviewPoolCount ?? result?.projectedCandidates?.length ?? 0;
-  const confirmedCandidates = Array.isArray(result?.candidates) ? result.candidates : [];
-  const fullProjectedCandidates = Array.isArray(result?.projectedCandidates)
+  const confirmedCandidates = (Array.isArray(result?.candidates) ? result.candidates : []).map(withCanonicalHrScore);
+  const fullProjectedCandidates = (Array.isArray(result?.projectedCandidates)
     ? result.projectedCandidates
-    : [];
+    : []
+  ).map(withCanonicalHrScore);
   const projectedCandidates = fullProjectedCandidates.slice(0, previewLimit);
-  const blockedPlayers = Array.isArray(result?.debug?.blockedPlayers) ? result.debug.blockedPlayers : [];
+  const blockedPlayers = (Array.isArray(result?.debug?.blockedPlayers) ? result.debug.blockedPlayers : []).map(withCanonicalHrScore);
   const blockedReasons = result?.debug?.blockedReasons ?? {};
 
   const counts = {
