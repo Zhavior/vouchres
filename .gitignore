@@ -14,3 +14,10 @@ src/**/*.before*.tsx
 src/**/*.backup*.ts
 src/**/*.backup*.tsx
 _code_backups/
+
+.env
+.env.*
+!.env.example
+*.zip
+__MACOSX/
+.DS_Store
