@@ -11,7 +11,7 @@ const ENV_COLOR: Record<HrBoardGame['environmentTag'], string> = {
   'Hitter-Friendly': '#34d399', 'Pitcher-Friendly': '#f87171', Neutral: '#94a3b8',
 };
 
-function GameHeader({ game }: { game: HrBoardGame }) {
+export function GameHeader({ game }: { game: HrBoardGame }) {
   const c = ENV_COLOR[game.environmentTag];
   const time = game.gameTime ? new Date(game.gameTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   return (
