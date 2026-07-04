@@ -1,4 +1,5 @@
 import { withCanonicalHrScore } from './hr-engine/hrScoreAdapter';
+import { parseHrBoardResult } from './hr-engine/hrBoardSchema';
 
 export function parsePreviewLimit(value: unknown): number {
   const parsed = Number.parseInt(String(value ?? ""), 10);
@@ -6,20 +7,21 @@ export function parsePreviewLimit(value: unknown): number {
   return Math.max(10, Math.min(350, parsed));
 }
 
-export function buildHrBoardApiPayload(result: any, previewLimitInput?: unknown) {
+export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unknown) {
+  const parsedResult = parseHrBoardResult(result);
   const previewLimit = parsePreviewLimit(previewLimitInput);
   const eligiblePreviewPoolCount =
-    result?.debug?.eligiblePreviewPoolCount ?? result?.projectedCandidates?.length ?? 0;
+    parsedResult?.debug?.eligiblePreviewPoolCount ?? parsedResult?.projectedCandidates?.length ?? 0;
   const scoredPreviewPoolCount =
-    result?.debug?.scoredPreviewPoolCount ?? result?.projectedCandidates?.length ?? 0;
-  const confirmedCandidates = (Array.isArray(result?.candidates) ? result.candidates : []).map(withCanonicalHrScore);
-  const fullProjectedCandidates = (Array.isArray(result?.projectedCandidates)
-    ? result.projectedCandidates
+    parsedResult?.debug?.scoredPreviewPoolCount ?? parsedResult?.projectedCandidates?.length ?? 0;
+  const confirmedCandidates = (Array.isArray(parsedResult?.candidates) ? parsedResult.candidates : []).map(withCanonicalHrScore);
+  const fullProjectedCandidates = (Array.isArray(parsedResult?.projectedCandidates)
+    ? parsedResult.projectedCandidates
     : []
   ).map(withCanonicalHrScore);
   const projectedCandidates = fullProjectedCandidates.slice(0, previewLimit);
-  const blockedPlayers = (Array.isArray(result?.debug?.blockedPlayers) ? result.debug.blockedPlayers : []).map(withCanonicalHrScore);
-  const blockedReasons = result?.debug?.blockedReasons ?? {};
+  const blockedPlayers = (Array.isArray(parsedResult?.debug?.blockedPlayers) ? parsedResult.debug.blockedPlayers : []).map(withCanonicalHrScore);
+  const blockedReasons = parsedResult?.debug?.blockedReasons ?? {};
 
   const counts = {
     confirmedCandidates: confirmedCandidates.length,
@@ -51,14 +53,14 @@ export function buildHrBoardApiPayload(result: any, previewLimitInput?: unknown)
           : "Waiting for official lineups or safe preview candidates.";
 
   return {
-    date: result.date,
-    gameCount: result.gameCount,
+    date: parsedResult.date,
+    gameCount: parsedResult.gameCount,
     generatedAt: new Date().toISOString(),
     dataQuality: truthMode,
     disclaimer:
-      result.disclaimer ??
+      parsedResult.disclaimer ??
       "Probability-based research using real MLB season stats. For entertainment only — not betting advice. No guaranteed outcomes.",
-    rosterAudit: result.rosterAudit,
+    rosterAudit: parsedResult.rosterAudit,
     candidates: confirmedCandidates,
     rows: confirmedCandidates,
     projectedCandidates,
@@ -82,15 +84,15 @@ export function buildHrBoardApiPayload(result: any, previewLimitInput?: unknown)
       hiddenProjectedCount: counts.hiddenProjectedCandidates,
     },
     pool: {
-      totalPlayersChecked: result.pool.totalPlayersChecked,
-      confirmedStarters: result.pool.confirmedStarters,
-      projectedStarters: result.pool.projectedStarters,
-      benchOrUnknown: result.pool.benchOrUnknown,
-      injuredScratchedBlocked: result.pool.injuredScratchedBlocked,
-      hrCandidatesScored: result.pool.hrCandidatesScored,
+      totalPlayersChecked: parsedResult.pool.totalPlayersChecked,
+      confirmedStarters: parsedResult.pool.confirmedStarters,
+      projectedStarters: parsedResult.pool.projectedStarters,
+      benchOrUnknown: parsedResult.pool.benchOrUnknown,
+      injuredScratchedBlocked: parsedResult.pool.injuredScratchedBlocked,
+      hrCandidatesScored: parsedResult.pool.hrCandidatesScored,
     },
     debug: {
-      ...result.debug,
+      ...parsedResult.debug,
       eligiblePreviewPoolCount,
       scoredPreviewPoolCount,
       projectedPreviewCount: projectedCandidates.length,
