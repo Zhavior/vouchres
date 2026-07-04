@@ -508,13 +508,21 @@ function CommandPanel({
   return <BuildSlipPanel onSaveParlay={onSaveParlay} />;
 }
 
+type ParlayCommandPanelName = "build" | "ai" | "live" | "premium";
+
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
+  initialPanel?: ParlayCommandPanelName;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 };
 
-export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onHideParlay }: ParlayCommandCenterProps) {
+export default function ParlayCommandCenter({
+  savedSlips = [],
+  initialPanel = "live",
+  onSaveParlay,
+  onHideParlay,
+}: ParlayCommandCenterProps) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel = useParlayCommandStore((state) => state.setActivePanel);
   const hydrateSavedSlips = useParlayCommandStore((state) => state.hydrateSavedSlips);
@@ -529,6 +537,10 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onH
     { label: 'Saved slips', value: commandSavedSlips.length, note: 'account board' },
     { label: 'Tracked legs', value: totalLegsTracked, note: `${gradedSlips.length} graded slips` },
   ];
+
+  useEffect(() => {
+    setActivePanel(initialPanel);
+  }, [initialPanel, setActivePanel]);
 
   useEffect(() => {
     hydrateSavedSlips(savedSlips);

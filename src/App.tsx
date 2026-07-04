@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
-import ParlayStudio from './components/ParlayStudio';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
 import EdgeIslandCommandCenter from './components/theEdge/EdgeIslandCommandCenter';
@@ -1395,17 +1394,11 @@ export default function App() {
         );
       case 'build':
         return (
-          <ParlayStudio
+          <ParlayCommandCenter
+            savedSlips={savedSlips}
+            initialPanel="build"
             onSaveParlay={handleSaveParlaySlip}
-            savedParlays={savedSlips}
-            legs={activeLegs}
-            setLegs={setActiveLegs}
-            onSectionChange={navigateSection}
-            liveGames={liveGames}
-            onSaveVouch={handleSaveVouch}
-            posts={posts}
-            profile={profile}
-            initialTab="builder"
+            onHideParlay={handleHideSavedParlay}
           />
         );
       case 'ai_engine':
@@ -1430,6 +1423,7 @@ export default function App() {
         return (
           <ParlayCommandCenter
             savedSlips={savedSlips}
+            initialPanel="live"
             onSaveParlay={handleSaveParlaySlip}
             onHideParlay={handleHideSavedParlay}
           />
