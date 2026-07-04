@@ -199,22 +199,7 @@ export default function SmartAiEngine({
   };
 
   const handleAddCustomParlayToSlip = () => {
-    if (!dynamicParlay) return;
-    let addedCount = 0;
-    dynamicParlay.legs.forEach((leg) => {
-      const player = toDynamicParlayMLBPlayer(leg);
-      onAddLegToParlay(player, {
-        id: `prop-ai-custom-${leg.playerId}-${Date.now()}`,
-        market: leg.marketName,
-        odds: leg.odds,
-        spec: leg.customSpec,
-        gamePk: leg.gamePk, // real game → gradable
-        playerId: leg.playerId,
-      });
-      addedCount++;
-    });
-    alert(`🎯 Transferred ${addedCount} verified legs into your active parlay builder slip!`);
-    onSectionChange('build');
+    alert('V.A.I parlays are locked and cannot be transferred into the manual builder. Save this as an AI Made Parlay so results stay separate and trustworthy.');
   };
 
   // Save the current AI parlay directly as a gradable Parlay → Results grades it
@@ -262,32 +247,28 @@ export default function SmartAiEngine({
       wagerAmount: 1,
       edgeScore: dynamicParlay.aiConfidenceScore,
       aiGenerated: true,
+      source: 'vai_ai_made_parlay',
+      parlayType: 'AI_MADE',
+      locked: true,
+      canEditLegs: false,
+      resultBucket: 'ai_made_parlays',
+    } as Parlay & {
+      source: 'vai_ai_made_parlay';
+      parlayType: 'AI_MADE';
+      locked: boolean;
+      canEditLegs: boolean;
+      resultBucket: 'ai_made_parlays';
     };
     onSaveParlay(parlay);
     const gradable = legs.filter((l) => l.gamePk).length;
-    alert(`✅ Saved "${parlay.title}" to your slips.\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
+    alert(`✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
     onSectionChange('results');
   };
 
   // Deep Research → Build Slip. Model probability is NOT a market price, so the
   // transferred leg carries odds: null ("Odds TBD") — grading is boxscore-based.
-  const handleAddCandidateToSlip = (candidate: RealCandidate) => {
-    const player = buildTransferPlayerShim(
-      candidate.playerId,
-      candidate.playerName,
-      candidate.team,
-      `${candidate.playerName} is included from today's verified Smart AI candidate pool.`,
-    );
-    player.batterScore = candidate.score ?? 0;
-
-    onAddLegToParlay(player, {
-      id: `prop-ai-research-${candidate.playerId}-${Date.now()}`,
-      market: 'To Hit 1+ Home Run',
-      odds: null,
-      spec: `${candidate.playerName} Over 0.5 HRs`,
-      gamePk: candidate.gamePk,
-      playerId: candidate.playerId,
-    });
+  const handleAddCandidateToSlip = (_candidate: RealCandidate) => {
+    alert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
   };
 
   // Safe redirect to Player Research Console with the real MLB player id.

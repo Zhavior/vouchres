@@ -490,14 +490,9 @@ export function SmartAiDeepResearchPanel({
                         </button>
                       )}
                       {onAddToSlip && (
-                        <button
-                          type="button"
-                          onClick={() => onAddToSlip(c)}
-                          className="inline-flex items-center gap-1.5 rounded-2xl border border-emerald-400/30 bg-emerald-500/90 px-3 py-2 text-[10px] font-mono font-black uppercase text-emerald-950 transition hover:bg-emerald-400"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          Add to Slip
-                        </button>
+                        <span className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-[10px] font-mono font-black uppercase text-slate-400">
+                          Research Only
+                        </span>
                       )}
                     </div>
                   </div>

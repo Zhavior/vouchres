@@ -234,25 +234,18 @@ export function SmartAiDynamicCreator({
         {/* Parlay Active Legs Cards List */}
         <SmartAiLegCardList legs={dynamicParlay.legs} players={dynamicParlay.players} />
 
-        {/* Save (gradable) + Transfer CTAs */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Locked AI Made Parlay CTA */}
+        <div className="grid grid-cols-1 gap-2">
           <button
             onClick={onSaveGradableParlay}
             className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-emerald-950/30 active:scale-[0.98]"
           >
             <Bookmark className="w-4 h-4" />
-            SAVE &amp; TRACK
-          </button>
-          <button
-            onClick={onAddCustomParlayToSlip}
-            className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4 text-sky-100" />
-            TO BUILDER
+            SAVE LOCKED AI PARLAY
           </button>
         </div>
         <p className="mt-2 text-center text-[10px] text-slate-500 font-mono">
-          Save &amp; Track logs a gradable parlay — it auto-settles in Results from the live MLB boxscore.
+          Locked V.A.I parlays stay separate from manual builder slips and auto-settle in Results from the live MLB boxscore.
         </p>
 
       </div>
