@@ -28,6 +28,7 @@ export type DraftParlayLeg = {
   odds?: string | number | null;
   externalProvider?: string | null;
   eventKey?: string | null;
+  tags?: string[];
 };
 
 export type AiRecommendedLeg = DraftParlayLeg & {

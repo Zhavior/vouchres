@@ -1292,6 +1292,28 @@ export default function App() {
     // Capture the MLB player id for headshots (prop.playerId, the player record,
     // or parsed from prop.id like "hr-665487"). Never guessed from the name.
     const playerId = normalizePlayerId(prop.playerId ?? player.id ?? prop.id);
+    const makeTag = (value: unknown) => {
+      const raw = String(value ?? "")
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, "");
+
+      return raw ? `#${raw}` : null;
+    };
+
+    const marketTag =
+      prop.market.toLowerCase().includes("home run") || prop.market.toLowerCase().includes("hr")
+        ? "#HR"
+        : makeTag(prop.market);
+
+    const draftTags = [
+      makeTag("MLB"),
+      makeTag(player.team),
+      makeTag(player.name),
+      marketTag,
+      makeTag("PlayerProp"),
+      makeTag("Research"),
+    ].filter((tag): tag is string => Boolean(tag));
+
     const newLeg: Leg = {
       id: `leg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       sport: "MLB",
@@ -1320,6 +1342,7 @@ export default function App() {
       teamLabel: player.team,
       statTarget: newLeg.threshold,
       gamePk: newLeg.gamePk,
+      tags: draftTags,
     });
     alert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
   };
