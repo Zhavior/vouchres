@@ -183,10 +183,17 @@ export default function SmartAiEngine({
   // Final paid access enforcement should move to the server route.
   const vaiTodayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const vaiAccessTier = useMemo(() => {
+  const [vaiAccessTier, setVaiAccessTier] = useState<string>(() => {
     if (typeof window === 'undefined') return 'pro';
     return window.localStorage.getItem('vouchedge_vai_tier') ?? 'pro';
-  }, []);
+  });
+
+  const handleVaiAccessTierChange = (tier: string) => {
+    setVaiAccessTier(tier);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('vouchedge_vai_tier', tier);
+    }
+  };
 
   const vaiEntitlements = useMemo(
     () => getVaiEntitlements({ tier: vaiAccessTier, dateKey: vaiTodayKey }),
@@ -487,6 +494,28 @@ export default function SmartAiEngine({
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
             <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
             <div className="font-bold text-white">{vaiEntitlements.reason}</div>
+
+            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="V.A.I access preview">
+              {[
+                ['free', 'Free'],
+                ['pro', 'Pro'],
+                ['research_seller_pro', 'Seller Pro'],
+                ['admin', 'Admin'],
+              ].map(([tier, label]) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => handleVaiAccessTierChange(tier)}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                    vaiAccessTier === tier
+                      ? 'border-sky-300/60 bg-sky-400/15 text-sky-100'
+                      : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
