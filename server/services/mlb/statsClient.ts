@@ -4,6 +4,7 @@
  * Cached 15 minutes (stats change only after games complete).
  */
 import { TTLCache, TTL } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const SEASON = new Date().getFullYear();
@@ -119,21 +120,19 @@ export async function getBatterVsPitcher(
 
 async function fetchJson<T>(url: string): Promise<T> {
   const requestNumber = ++statsRequestCount;
-  const start = Date.now();
   const shouldLogStatsRequests = process.env.DEBUG_MLB_STATS === "true";
 
   if (shouldLogStatsRequests) {
-    console.log(`[statsClient] request #${requestNumber} ${url}`);
+    console.log(`[statsClient] request #${requestNumber}`);
   }
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-
-  if (shouldLogStatsRequests) {
-    console.log(`[statsClient] request #${requestNumber} complete ${Date.now() - start}ms`);
-  }
-
-  return res.json();
+  return sportsFetchJson<T>(url, {
+    cacheKey: `mlb:stats:${url}`,
+    ttlMs: 15 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "statsClient",
+  });
 }
 
 export function getStatsRequestCount(): number {
