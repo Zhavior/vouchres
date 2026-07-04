@@ -18,6 +18,54 @@ function buildEventKey(match: any): string {
   return `mlb:${gamePk}:${playerId}:home_run:${inning}:${timestamp}`;
 }
 
+function deriveParentStatusFromLegs(legs: Array<{ status: string | null }>): "won" | "lost" | "push" | "void" | null {
+  if (!legs.length) return null;
+
+  const statuses = legs.map((leg) => String(leg.status ?? "").toLowerCase());
+  const hasOpenLeg = statuses.some((status) => status === "pending" || status === "grading" || status === "live" || status === "open" || status === "active" || status === "in_progress");
+
+  if (hasOpenLeg) return null;
+  if (statuses.some((status) => status === "lost")) return "lost";
+  if (statuses.some((status) => status === "won")) return "won";
+  if (statuses.every((status) => status === "push")) return "push";
+  if (statuses.every((status) => status === "void")) return "void";
+
+  return null;
+}
+
+async function refreshParentPickStatusFromLegs(admin: any, pickId: string): Promise<boolean> {
+  const { data: legs, error: legError } = await admin
+    .from("pick_legs")
+    .select("status")
+    .eq("pick_id", pickId);
+
+  if (legError) {
+    console.error("[liveHrParlayWrite] parent refresh leg load failed", legError.message);
+    return false;
+  }
+
+  const nextStatus = deriveParentStatusFromLegs(legs ?? []);
+  if (!nextStatus) return false;
+
+  const { error: pickError } = await admin
+    .from("picks")
+    .update({
+      status: nextStatus,
+      graded_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", pickId)
+    .in("status", ["pending", "grading", "live", "open", "active", "in_progress"]);
+
+  if (pickError) {
+    console.error("[liveHrParlayWrite] parent refresh failed", pickError.message);
+    return false;
+  }
+
+  return true;
+}
+
+
 export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyncResult> {
   const admin = await getSupabaseAdmin();
   const matches = await previewLiveHrParlayMatches(date);
@@ -68,13 +116,15 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
       graded_at: new Date().toISOString(),
     };
 
-    let q = admin
+    const baseUpdate = admin
       .from("pick_legs")
       .update(update)
-      .eq("pick_id", leg.pick_id)
-      .eq("leg_index", leg.leg_index)
       .eq("status", "pending")
       .select("pick_id");
+
+    const q = leg.id
+      ? baseUpdate.eq("id", leg.id)
+      : baseUpdate.eq("pick_id", leg.pick_id).eq("leg_index", leg.leg_index);
 
     const { data: updated, error: updateError } = await q;
 
@@ -84,7 +134,12 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
       continue;
     }
 
-    result.updatedLegs += updated?.length ?? 0;
+    const updatedCount = updated?.length ?? 0;
+    result.updatedLegs += updatedCount;
+
+    if (updatedCount > 0) {
+      await refreshParentPickStatusFromLegs(admin, String(leg.pick_id));
+    }
   }
 
   return result;

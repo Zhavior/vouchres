@@ -7,15 +7,29 @@ export interface LiveHrLegMatch {
     id?: string;
     pick_id: string;
     leg_index: number;
+    game_id?: string | number | null;
     event_id: string | number | null;
     player_id: string | number | null;
+    market_code?: string | null;
     market: string | null;
     selection: string | null;
+    stat_target?: string | number | null;
+    comparator?: string | null;
+    event_key?: string | null;
     status: string | null;
   };
 }
 
-function isAnytimeHrMarket(market: string | null | undefined, selection: string | null | undefined): boolean {
+function isAnytimeHrMarket(
+  market: string | null | undefined,
+  selection: string | null | undefined,
+  marketCode?: string | null | undefined
+): boolean {
+  const canonicalMarket = String(marketCode ?? "").trim().toUpperCase();
+  if (canonicalMarket === "HR" || canonicalMarket === "HOME_RUN" || canonicalMarket === "ANYTIME_HR") {
+    return true;
+  }
+
   const haystack = `${market ?? ""} ${selection ?? ""}`.toLowerCase();
   return haystack.includes("hr") || haystack.includes("home run") || haystack.includes("homer");
 }
@@ -37,7 +51,7 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
 
   const { data: pendingLegs, error: legsError } = await admin
     .from("pick_legs")
-    .select("id,pick_id,leg_index,event_id,player_id,market,selection,status,game_date,picks(game_date,created_at)")
+    .select("id,pick_id,leg_index,game_id,event_id,player_id,market_code,market,selection,stat_target,comparator,event_key,status,game_date,picks(game_date,created_at)")
     .eq("status", "pending");
 
   if (legsError) {
@@ -46,9 +60,9 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
   }
 
   const candidateLegs = (pendingLegs ?? []).filter((leg: any) =>
-    leg?.event_id &&
+    (leg?.game_id || leg?.event_id) &&
     leg?.player_id &&
-    isAnytimeHrMarket(leg.market, leg.selection)
+    isAnytimeHrMarket(leg.market, leg.selection, leg.market_code)
   );
 
   if (candidateLegs.length === 0) {
@@ -81,7 +95,7 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
 
   for (const event of events) {
     for (const leg of candidateLegs) {
-      const sameGame = String(leg.event_id ?? "") === String(event.gamePk);
+      const sameGame = String(leg.game_id || leg.event_id || "") === String(event.gamePk);
       const samePlayer = String(leg.player_id ?? "") === String(event.playerId);
       if (!sameGame || !samePlayer) continue;
 
