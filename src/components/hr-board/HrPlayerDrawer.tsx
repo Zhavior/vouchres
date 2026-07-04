@@ -56,23 +56,31 @@ function scoreColor(value: number) {
 }
 
 function GraphBar({ label, value, max = 100, color }: { label: string; value?: number; max?: number; color?: string }) {
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
   const hasValue = isFiniteNumber(value);
-  const normalized = hasValue && max > 0 ? clampPercent((value / max) * 100) : 0;
-  const display = hasValue ? (max === 1 ? value.toFixed(3) : String(Math.round(value))) : 'N/A';
+  const safeValue = hasValue ? Number(value) : 0;
+  const clampedValue = Math.max(0, Math.min(safeMax, safeValue));
+  const normalized = hasValue ? clampPercent((clampedValue / safeMax) * 100) : 0;
+  const isMaxed = hasValue && normalized >= 99.5;
+  const display = hasValue ? (safeMax === 1 ? safeValue.toFixed(3) : String(Math.round(safeValue))) : '—';
+  const barColor = hasValue ? color ?? scoreColor(clampedValue) : '#334155';
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-        <span className="text-[10px] font-mono font-black text-slate-200">{display}</span>
+    <div className="rounded-xl border border-slate-800/60 bg-slate-950/30 p-2.5">
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="shrink-0 text-[10px] font-mono font-black text-slate-200">
+          {display}
+          {isMaxed ? <span className="ml-1 text-[8px] text-amber-300">MAX</span> : null}
+        </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-950/80 border border-slate-800/70 overflow-hidden">
+      <div className="h-2 overflow-hidden rounded-full border border-slate-800/70 bg-slate-950/80 ring-1 ring-white/5">
         <div
-          className="h-full rounded-full transition-all"
+          className="h-full rounded-full transition-[width] duration-500"
           style={{
             width: `${normalized}%`,
-            background: hasValue ? color ?? scoreColor(value) : '#334155',
-            boxShadow: hasValue ? `0 0 14px ${color ?? scoreColor(value)}55` : 'none',
+            background: barColor,
+            boxShadow: hasValue ? `0 0 14px ${barColor}55` : 'none',
           }}
         />
       </div>
@@ -102,12 +110,45 @@ function SignalTile({ label, value, color }: { label: string; value?: number; co
 
 function LockedGraphPlaceholder({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="rounded-xl border border-slate-800/80 bg-slate-950/45 p-3 opacity-90">
-      <div className="flex items-center gap-2">
-        <Lock className="h-3.5 w-3.5 text-slate-500" />
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">{title}</span>
+    <div
+      aria-disabled="true"
+      className="group relative overflow-hidden rounded-2xl border border-slate-800/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.72))] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.24)] transition hover:border-sky-400/35"
+    >
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
+        <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-sky-400/10 blur-2xl" />
+        <div className="absolute -bottom-12 left-4 h-24 w-24 rounded-full bg-violet-400/10 blur-2xl" />
       </div>
-      <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">{detail}</p>
+
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-sky-300">
+            <Lock className="h-3.5 w-3.5" />
+            Pro Data Module
+          </div>
+          <h4 className="mt-2 text-sm font-black uppercase tracking-wide text-slate-100">
+            {title}
+          </h4>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+            {detail}
+          </p>
+        </div>
+
+        <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+          Locked
+        </span>
+      </div>
+
+      <div className="relative mt-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-emerald-300">
+          Truth gated
+        </span>
+        <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-sky-300">
+          Upgrade path
+        </span>
+        <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-violet-300">
+          No fake graph
+        </span>
+      </div>
     </div>
   );
 }
@@ -166,30 +207,42 @@ function ProLockedPanel({ onLockedFeature }: { onLockedFeature: (title: string) 
           <button
             type="button"
             key={feature.title}
+            aria-disabled="true"
             onClick={() => onLockedFeature(feature.title)}
-            className="group w-full rounded-xl border border-slate-800/80 bg-slate-950/55 p-3 text-left transition-colors hover:border-sky-500/25 hover:bg-sky-500/5"
+            className="group relative w-full overflow-hidden rounded-2xl border border-slate-800/80 bg-[linear-gradient(135deg,rgba(15,23,42,0.82),rgba(2,6,23,0.7))] p-3 text-left shadow-[0_14px_45px_rgba(0,0,0,0.18)] transition hover:border-sky-400/35 hover:bg-sky-500/5"
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Lock className="h-3.5 w-3.5 text-slate-500 group-hover:text-sky-300" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-200">
-                  {feature.title}
-                </span>
+            <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-sky-400/10 blur-2xl opacity-0 transition group-hover:opacity-100" />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-3.5 w-3.5 text-sky-300" />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-100">
+                    {feature.title}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+                  {feature.detail}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-emerald-300">
+                    Truth gated
+                  </span>
+                  <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-violet-300">
+                    Pro module
+                  </span>
+                </div>
               </div>
-              <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-slate-500">
+              <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-slate-400">
                 Locked
               </span>
             </div>
-            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
-              {feature.detail}
-            </p>
           </button>
         ))}
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-        <p className="text-[10px] leading-relaxed text-slate-500">
-          Pro modules are locked until verified data feeds are connected. VouchEdge will not show fake batter-vs-pitcher, zone, or matchup-history stats.
+      <div className="mt-4 rounded-2xl border border-amber-400/15 bg-amber-400/5 p-3">
+        <p className="text-[10px] leading-relaxed text-amber-100/75">
+          Locked on purpose: these modules open only when verified Pro feeds are connected. VouchEdge will not invent batter-vs-pitcher, zone, matchup-history, or weather-impact stats.
         </p>
       </div>
     </div>
@@ -197,13 +250,13 @@ function ProLockedPanel({ onLockedFeature }: { onLockedFeature: (title: string) 
 }
 
 const FUTURE_GRAPHS = [
-  ['Last 15 games trend', 'Coming soon with Pro data feed.'],
-  ['Player trend graphs', 'Coming soon with Pro data feed.'],
-  ['Batter vs pitcher history', 'Requires matchup history module.'],
-  ['Pitch type matchup', 'Requires pitch-type module.'],
-  ['Ballpark split chart', 'Requires ballpark split module.'],
-  ['Hot/cold zone heatmap', 'Requires zone heatmap module.'],
-  ['Weather impact graph', 'Requires weather impact module.'],
+  ['Last 15 games trend', 'Pro data feed required · no fake trend shown.'],
+  ['Player trend graphs', 'Pro data feed required · no fake trend shown.'],
+  ['Batter vs pitcher history', 'Pro matchup-history module required · no fake history shown.'],
+  ['Pitch type matchup', 'Pro pitch-type module required · no fake pitch data shown.'],
+  ['Ballpark split chart', 'Pro ballpark split module required · no fake split chart shown.'],
+  ['Hot/cold zone heatmap', 'Pro zone heatmap module required · no fake zone map shown.'],
+  ['Weather impact graph', 'Pro weather module required · no fake weather edge shown.'],
 ] as const;
 
 const PRO_TABS = ['Overview', 'Recent Form', 'Vs Team', 'Vs Pitcher', 'Bat Box', 'Graphs', 'AI Notes'] as const;
@@ -628,14 +681,14 @@ function ProTabContent({
     return (
       <Section icon={ShieldCheck} title={`Vs ${row.opponent} research`} tone="#34d399">
         <div className="grid gap-2 md:grid-cols-2">
-          <LockedGraphPlaceholder title="Last 10 games vs current opponent team" detail="Coming soon: last 10 games vs team." />
-          <LockedGraphPlaceholder title="Hits vs this team" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="RBIs vs this team" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Runs vs this team" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Stolen bases vs this team" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Home runs vs this team" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Doubles / extra-base hits" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Strikeouts and walks" detail="Requires Pro matchup history feed." />
+          <LockedGraphPlaceholder title="Last 10 games vs current opponent team" detail="Pro matchup-history feed required · no fake vs-team trend shown." />
+          <LockedGraphPlaceholder title="Hits vs this team" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="RBIs vs this team" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Runs vs this team" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Stolen bases vs this team" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Home runs vs this team" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Doubles / extra-base hits" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Strikeouts and walks" detail="Pro matchup-history feed required · no fake matchup stat shown." />
         </div>
       </Section>
     );
@@ -653,8 +706,8 @@ function ProTabContent({
               <GraphBar label="Pitcher Vulnerability" value={breakdown?.pitcherVulnerability ?? row.pitcherVulnerability} color="#38bdf8" />
             </div>
           </div>
-          <LockedGraphPlaceholder title="Batter vs pitcher history" detail="Requires Pro matchup history feed." />
-          <LockedGraphPlaceholder title="Pitch type matchup" detail="Requires pitch-type module." />
+          <LockedGraphPlaceholder title="Batter vs pitcher history" detail="Pro matchup-history feed required · no fake matchup stat shown." />
+          <LockedGraphPlaceholder title="Pitch type matchup" detail="Pro pitch-type module required · no fake pitch data shown." />
         </div>
       </Section>
     );
@@ -669,9 +722,9 @@ function ProTabContent({
             <GraphBar label="Hitter Power" value={breakdown?.hitterPower} color="#fb923c" />
             <p className="mt-2 text-[10px] text-slate-500">Current view uses HR Engine hitter power. Detailed box-location percentage requires zone feed.</p>
           </div>
-          <LockedGraphPlaceholder title="Hot/cold zones" detail="Requires zone heatmap module." />
-          <LockedGraphPlaceholder title="Team vulnerability" detail="Requires team vulnerability module." />
-          <LockedGraphPlaceholder title="Park/weather impact" detail="Weather impact graph requires weather module. Park factor uses existing payload." />
+          <LockedGraphPlaceholder title="Hot/cold zones" detail="Pro zone heatmap module required · no fake zone map shown." />
+          <LockedGraphPlaceholder title="Team vulnerability" detail="Pro team-vulnerability module required · no fake team weakness shown." />
+          <LockedGraphPlaceholder title="Park/weather impact" detail="Pro weather module required for impact graph · current park factor remains payload-based." />
         </div>
       </Section>
     );
