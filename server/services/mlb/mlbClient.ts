@@ -25,21 +25,13 @@ export function todayISO(): string {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const requestNumber = ++mlbRequestCount;
-  const start = Date.now();
-  if (process.env.DEBUG_MLB_CLIENT === "true") {
-    console.log(`[mlbClient] request #${requestNumber} ${new URL(url).pathname}`);
-  }
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`MLB API ${res.status} for ${new URL(url).pathname}`);
-    console.log(`[mlbClient] request #${requestNumber} complete ${Date.now() - start}ms`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  return sportsFetchJson<T>(url, {
+    cacheKey: `mlb:${url}`,
+    ttlMs: 30_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "mlbClient",
+  });
 }
 
 export function getMlbRequestCount(): number {
