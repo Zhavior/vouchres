@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { vouchedgeApi } from "../api/vouchedgeApi";
 import { useVouchResource } from "./useVouchResource";
 
-const PREVIEW_LIMIT = 18;
+const PREVIEW_LIMIT = 999;
 const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
 
 function todayISO() {

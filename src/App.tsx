@@ -53,7 +53,6 @@ const EpicThemeShowcase = lazy(() =>
 );
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
-const DailyHrBoardPage = lazy(() => import('./pages/DailyHrBoardPage'));
 const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
@@ -1551,7 +1550,12 @@ export default function App() {
         );
 
       case 'hr_board':
-        return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} profile={profile} />;
+        return (
+          <DailyHrWatchNewPage
+            onAddLegToParlay={handleAddLegFromResearch}
+            profile={profile}
+          />
+        );
       case 'daily_players':
         return <DailyPlayersPage />;
       case 'live_parlays':
