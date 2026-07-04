@@ -44,9 +44,12 @@ type OptimisticSaveState = {
   lastSavedAt: string | null;
 };
 
+type DraftMode = "manual" | "ai_locked";
+
 type ParlayCommandState = {
   activePanel: ParlayCommandPanel;
   draftLegs: DraftParlayLeg[];
+  draftMode: DraftMode;
   aiPicks: AiRecommendedLeg[];
   savedSlips: PublicParlaySlip[];
   optimistic: OptimisticSaveState;
@@ -92,6 +95,7 @@ const normalizeDraftLeg = (leg: DraftParlayLeg): DraftParlayLeg => ({
 export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => ({
   activePanel: "build",
   draftLegs: [],
+  draftMode: "manual",
   aiPicks: [],
   savedSlips: [],
   optimistic: {
@@ -107,23 +111,49 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
   addDraftLeg: (leg) =>
     set((state) => {
       const normalized = normalizeDraftLeg(leg);
+      const isAiLeg = normalized.source === "vai";
+
+      if (state.draftMode === "ai_locked" && !isAiLeg) {
+        return state;
+      }
+
+      if (state.draftMode === "manual" && state.draftLegs.some((existing) => existing.source === "vai") && !isAiLeg) {
+        return state;
+      }
+
       const exists = state.draftLegs.some((existing) => existing.id === normalized.id);
       return {
         draftLegs: exists ? state.draftLegs : [...state.draftLegs, normalized],
       };
     }),
 
-  addAiLegToDraft: (leg) => {
-    get().addDraftLeg({ ...leg, source: "vai" });
-    set({ activePanel: "build" });
-  },
+  addAiLegToDraft: (leg) =>
+    set((state) => {
+      if (state.draftMode === "manual" && state.draftLegs.length > 0) {
+        return state;
+      }
+
+      const normalized = normalizeDraftLeg({ ...leg, source: "vai" });
+      const exists = state.draftLegs.some((existing) => existing.id === normalized.id);
+
+      return {
+        activePanel: "build",
+        draftMode: "ai_locked",
+        draftLegs: exists ? state.draftLegs : [...state.draftLegs, normalized],
+      };
+    }),
 
   removeDraftLeg: (id) =>
-    set((state) => ({
-      draftLegs: state.draftLegs.filter((leg) => leg.id !== id),
-    })),
+    set((state) => {
+      const nextDraftLegs = state.draftLegs.filter((leg) => leg.id !== id);
 
-  clearDraft: () => set({ draftLegs: [] }),
+      return {
+        draftLegs: nextDraftLegs,
+        draftMode: nextDraftLegs.length === 0 ? "manual" : state.draftMode,
+      };
+    }),
+
+  clearDraft: () => set({ draftLegs: [], draftMode: "manual" }),
 
   setAiPicks: (legs) => set({ aiPicks: legs.map(normalizeDraftLeg) }),
 

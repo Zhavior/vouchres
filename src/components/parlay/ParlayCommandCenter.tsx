@@ -69,11 +69,13 @@ function EmptyPanel({
 
 function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void }) {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
+  const draftMode = useParlayCommandStore((state) => state.draftMode);
   const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
   const clearDraft = useParlayCommandStore((state) => state.clearDraft);
   const [isSaving, setIsSaving] = useState(false);
   const [showAllDraftLegs, setShowAllDraftLegs] = useState(false);
-  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving;
+  const [responsibleAgreementAccepted, setResponsibleAgreementAccepted] = useState(false);
+  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving && responsibleAgreementAccepted;
   const visibleDraftLegs = showAllDraftLegs ? draftLegs : draftLegs.slice(0, 5);
   const hiddenDraftLegCount = Math.max(0, draftLegs.length - visibleDraftLegs.length);
   const readableOdds = draftLegs
@@ -103,6 +105,12 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
         : draftLegs.length > 4
           ? "This slip is entering high-volatility exposure. Consider trimming weaker legs."
           : "Slip structure looks disciplined enough to review and save.";
+
+  useEffect(() => {
+    if (draftLegs.length === 0) {
+      setResponsibleAgreementAccepted(false);
+    }
+  }, [draftLegs.length]);
 
   const getTextField = (leg: unknown, keys: string[]) => {
     const record = leg as Record<string, unknown>;
@@ -151,6 +159,8 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
   const handleSaveDraft = async () => {
     if (!onSaveParlay || draftLegs.length === 0 || isSaving) return;
 
+    if (!responsibleAgreementAccepted) return;
+
     const now = new Date().toISOString();
     const draftId = `command-draft-${Date.now()}`;
     const draftParlay: CanonicalParlaySlip = {
@@ -161,7 +171,7 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
         normalizeParlayLeg({
           ...leg,
           sport: leg.sport || "mlb",
-          source: "command_center",
+          source: draftMode === "ai_locked" ? "vai" : "command_center",
         })
       ),
       status: "pending",
@@ -171,9 +181,10 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
       createdAt: now,
       metadata: {
         summary: draftLegs.map((leg) => leg.playerName || leg.marketLabel || "Player prop").join(" · "),
-        aiGenerated: false,
+        aiGenerated: draftMode === "ai_locked",
+        draftMode,
       },
-      source: "command_center",
+      source: draftMode === "ai_locked" ? "ai_pick" : "command_center",
     };
 
     setIsSaving(true);
@@ -325,6 +336,24 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
             Save runs through the Command Center contract and your canonical backend route. No local-only parlay truth.
           </p>
 
+          <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4">
+            <div className="flex items-start gap-3">
+              <input
+                id="responsible-parlay-agreement"
+                type="checkbox"
+                checked={responsibleAgreementAccepted}
+                onChange={(event) => setResponsibleAgreementAccepted(event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-amber-200/40 bg-slate-950"
+              />
+              <label htmlFor="responsible-parlay-agreement" className="text-xs leading-relaxed text-amber-50/90">
+                <span className="font-black text-amber-100">Responsible Research Agreement:</span>{" "}
+                VouchEdge provides research tools, data, and probability-style insights only. This is not financial advice,
+                betting advice, or a guarantee of outcome. You are responsible for your own decisions, bankroll, and local laws.
+                Never risk money you cannot afford to lose.
+              </label>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={handleSaveDraft}
@@ -344,6 +373,7 @@ function AiSmartPicksPanel() {
   const aiPicks = useParlayCommandStore((state) => state.aiPicks);
   const addAiLegToDraft = useParlayCommandStore((state) => state.addAiLegToDraft);
   const draftLegs = useParlayCommandStore(selectDraftLegs);
+  const draftMode = useParlayCommandStore((state) => state.draftMode);
 
   const hasAiPicks = aiPicks.length > 0;
   const stagedIds = new Set(draftLegs.map((leg) => leg.id));
@@ -354,9 +384,9 @@ function AiSmartPicksPanel() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">V.A.I Smart Picks</p>
-            <h3 className="mt-1 text-xl font-black text-white">Add research legs into the same slip</h3>
+            <h3 className="mt-1 text-xl font-black text-white">Locked V.A.I research slips</h3>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-              This panel reads the Command Center AI-pick queue. Every Add to Slip action pushes a canonical draft leg into Build Slip.
+              V.A.I slips are locked for trust. Save them as AI-made, or clear the draft to build a manual slip.
             </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
@@ -369,6 +399,8 @@ function AiSmartPicksPanel() {
           {hasAiPicks ? (
             aiPicks.map((pick) => {
               const alreadyStaged = stagedIds.has(pick.id);
+              const manualDraftOpen = draftMode === "manual" && draftLegs.length > 0;
+              const disabled = alreadyStaged || manualDraftOpen;
 
               return (
                 <article
@@ -395,10 +427,11 @@ function AiSmartPicksPanel() {
                     <button
                       type="button"
                       onClick={() => addAiLegToDraft(pick)}
-                      disabled={alreadyStaged}
+                      disabled={disabled}
+                      title={manualDraftOpen ? "Clear the manual slip before staging a locked V.A.I slip." : undefined}
                       className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-300/15 disabled:border-slate-700 disabled:bg-slate-900/70 disabled:text-slate-500"
                     >
-                      {alreadyStaged ? "Staged" : "Add to Slip"}
+                      {alreadyStaged ? "Staged" : manualDraftOpen ? "Clear Manual First" : "Stage Locked V.A.I"}
                     </button>
                   </div>
                 </article>
