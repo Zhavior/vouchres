@@ -13,7 +13,7 @@ import {
    ----------------------------------------------------------------------------
    3 modes: Scout (deep dive) / Compare (head-to-head) / Build (prop board)
    List: toggle between card grid and sortable table
-   Detail: modal overlay with 5 tabs (Overview / Splits / Game Log / AI / Props)
+   Detail: modal overlay with 5 tabs (Overview / Splits / Game Log / AI / Markets)
    Style: Bloomberg terminal — dark glass, large numbers, data-confidence badges
 
    Drop-in replacement for: src/components/PlayerResearchConsole.tsx
@@ -25,17 +25,44 @@ import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
 import { apiUrl } from "../lib/apiBase";
 
-interface Props {
-  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+interface Markets {
+  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
   onSaveVouch: (vouch: Vouch) => void;
   savedVouchIds: string[];
   activeLegs: Leg[];
   liveGames?: any[];
 }
 
+
+const PLAYER_RESEARCH_PRO_TABS = [
+  'Overview',
+  'Game Log',
+  'Splits',
+  'Statcast',
+  'Matchup',
+  'Markets',
+  'V.A.I Fit',
+] as const;
+
+const PLAYER_RESEARCH_TRUTH_RULES = [
+  'Official IDs only: playerId, teamId, gamePk, gameStartTime.',
+  'No fake odds. Unknown sportsbook prices display as Odds TBD.',
+  'Sourced stats render with truth badges. Missing stats render as Unavailable.',
+  'Model scores are labeled estimates, never guarantees.',
+];
+
+const PLAYER_RESEARCH_PRO_IDEAS = [
+  'Last 10 / 15 / 30 / season game logs',
+  'Hits, total bases, HR, RBI, runs, stolen base trends',
+  'Statcast trend panels for EV, launch angle, barrels, hard-hit, xwOBA',
+  'Pitcher matchup, park, weather, lineup, and game status context',
+  'Banker / Analyst / Hunter / Shark fit panel',
+  'Research receipts and parlay-safe market buttons',
+] as const;
+
 type Mode = "scout" | "compare" | "build";
 type ListStyle = "grid" | "table";
-type DetailTab = "overview" | "splits" | "gamelog" | "ai" | "props";
+type DetailTab = "overview" | "splits" | "gamelog" | "ai" | "markets";
 
 interface BackendRegistryPlayer {
   playerId: number;
@@ -78,8 +105,28 @@ function fallbackPlayerShell(player: BackendRegistryPlayer): MLBPlayer {
     seasonStats: { avg: "—", hr: "—", rbi: "—", ops: "—" },
     gameLogs: [],
     propositions: [
-      { id: `prop_${player.playerId}_hits`, market: "To Record 1+ Hits", odds: 1.9, spec: `${name} 1+ Hits` },
-      { id: `prop_${player.playerId}_hr`, market: "To Hit 1+ Home Run", odds: 4.5, spec: `${name} 1+ HR` },
+      { id: `prop_${player.playerId}_hit_1`, market: "1+ Hit", odds: null, spec: `${name} 1+ Hit`, truthLabel: "Hit market · price unknown" },
+      { id: `prop_${player.playerId}_hit_2`, market: "2+ Hits", odds: null, spec: `${name} 2+ Hits`, truthLabel: "Multi-hit market · price unknown" },
+      { id: `prop_${player.playerId}_hit_3`, market: "3+ Hits", odds: null, spec: `${name} 3+ Hits`, truthLabel: "High hit-count market · price unknown" },
+      { id: `prop_${player.playerId}_hit_4`, market: "4+ Hits", odds: null, spec: `${name} 4+ Hits`, truthLabel: "Rare hit-count market · price unknown" },
+
+      { id: `prop_${player.playerId}_single`, market: "Single", odds: null, spec: `${name} Single`, truthLabel: "Base-hit type · price unknown" },
+      { id: `prop_${player.playerId}_double`, market: "Double", odds: null, spec: `${name} Double`, truthLabel: "Extra-base market · price unknown" },
+      { id: `prop_${player.playerId}_triple`, market: "Triple", odds: null, spec: `${name} Triple`, truthLabel: "Rare extra-base market · price unknown" },
+      { id: `prop_${player.playerId}_hr`, market: "Home Run", odds: null, spec: `${name} HR`, truthLabel: "Power market · price unknown" },
+
+      { id: `prop_${player.playerId}_rbi_1`, market: "1+ RBI", odds: null, spec: `${name} 1+ RBI`, truthLabel: "Run-production market · price unknown" },
+      { id: `prop_${player.playerId}_rbi_2`, market: "2+ RBI", odds: null, spec: `${name} 2+ RBI`, truthLabel: "Run-production market · price unknown" },
+      { id: `prop_${player.playerId}_rbi_3`, market: "3+ RBI", odds: null, spec: `${name} 3+ RBI`, truthLabel: "High run-production market · price unknown" },
+      { id: `prop_${player.playerId}_rbi_4`, market: "4+ RBI", odds: null, spec: `${name} 4+ RBI`, truthLabel: "Rare run-production market · price unknown" },
+      { id: `prop_${player.playerId}_rbi_5`, market: "5+ RBI", odds: null, spec: `${name} 5+ RBI`, truthLabel: "Ceiling run-production market · price unknown" },
+
+      { id: `prop_${player.playerId}_sb_1`, market: "1 Stolen Base", odds: null, spec: `${name} 1 SB`, truthLabel: "Speed market · price unknown" },
+
+      { id: `prop_${player.playerId}_tb_1`, market: "1+ Total Base", odds: null, spec: `${name} 1+ TB`, truthLabel: "Total-base floor market · price unknown" },
+      { id: `prop_${player.playerId}_tb_2`, market: "2+ Total Bases", odds: null, spec: `${name} 2+ TB`, truthLabel: "Total-base market · price unknown" },
+      { id: `prop_${player.playerId}_tb_3`, market: "3+ Total Bases", odds: null, spec: `${name} 3+ TB`, truthLabel: "Extra-base ceiling market · price unknown" },
+      { id: `prop_${player.playerId}_tb_4`, market: "4+ Total Bases", odds: null, spec: `${name} 4+ TB`, truthLabel: "Quadra / 4-base market · price unknown" },
     ],
     bats: normalizeHand(player.bats),
     throws: normalizeThrow(player.throws),
@@ -150,7 +197,7 @@ export default function PlayerResearchHub({
   savedVouchIds,
   activeLegs,
   liveGames,
-}: Props) {
+}: Markets) {
   const [mode, setMode] = useState<Mode>("scout");
   const [listStyle, setListStyle] = useState<ListStyle>("grid");
   const [search, setSearch] = useState("");
@@ -291,7 +338,9 @@ export default function PlayerResearchHub({
             <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
               {backendCount ?? players.length} players · {registryStatus === "ready" ? "backend registry" : registryStatus === "loading" ? "loading registry" : "fallback records"}
             </span>
-            {registryError && <span className="text-[10px] text-amber-400 font-mono hidden md:inline">{registryError}</span>}
+            {registryError && <span className="text-[10px] text-amber-400 font-mono hidden md:inline">{registryError}</span>}\n            <span className="text-[10px] text-cyan-300 font-mono uppercase tracking-widest hidden lg:inline">
+              Truth Lens · no fake odds · unknown prices show as TBD
+            </span>
           </div>
           {/* Mode tabs */}
           <div className="flex p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -530,16 +579,133 @@ function PlayerTable({ players, onRowClick, sortBy }: { players: MLBPlayer[]; on
 /* ============================================================================
    Compare View — side-by-side
    ============================================================================ */
+
+
+function getTruthMarketGroup(market: string): string {
+  const normalized = market.toLowerCase();
+
+  if (normalized.includes("hit")) return "Hits";
+
+  if (
+    normalized.includes("single") ||
+    normalized.includes("double") ||
+    normalized.includes("triple") ||
+    normalized.includes("home run")
+  ) {
+    return "Base Types";
+  }
+
+  if (normalized.includes("rbi")) return "Run Production";
+  if (normalized.includes("stolen")) return "Speed";
+  if (normalized.includes("total base")) return "Total Bases";
+
+  return "Other";
+}
+
+function groupTruthMarkets<T extends { prop: { market: string } }>(items: T[]) {
+  const order = ["Hits", "Base Types", "Run Production", "Speed", "Total Bases", "Other"];
+  const groups = new Map<string, T[]>();
+
+  for (const item of items) {
+    const group = getTruthMarketGroup(item.prop.market);
+    groups.set(group, [...(groups.get(group) ?? []), item]);
+  }
+
+  return order
+    .map((group) => ({ group, items: groups.get(group) ?? [] }))
+    .filter((entry) => entry.items.length > 0);
+}
+
+function ProTruthLensIntro() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6 overflow-hidden rounded-[2rem] border border-cyan-400/15 bg-slate-950/70 shadow-2xl shadow-cyan-950/20"
+    >
+      <div className="relative p-5 sm:p-6">
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
+              Player Truth Lens Pro
+            </div>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-black text-white">
+              Research the player before you build the slip.
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Built for sourced player truth: official IDs, game context, Statcast availability,
+              market readiness, and V.A.I fit. If VouchEdge cannot source a stat, it should say
+              unavailable — never fake confidence or odds.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 text-xs text-slate-300 lg:min-w-[260px]">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-slate-500">
+              Truth standard
+            </div>
+            <div className="mt-1 font-bold text-white">No fake odds · no fake stats</div>
+            <div className="mt-2 text-slate-400">Unknown pricing shows as Odds TBD.</div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+          {PLAYER_RESEARCH_PRO_TABS.map((tab) => (
+            <span
+              key={tab}
+              className="shrink-0 rounded-full border border-white/10 bg-slate-900/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-300"
+            >
+              {tab}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
+              Truth rules
+            </div>
+            <div className="mt-3 grid gap-2">
+              {PLAYER_RESEARCH_TRUTH_RULES.map((rule) => (
+                <div key={rule} className="flex gap-2 text-xs text-slate-300">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
+                  <span>{rule}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-sky-300">
+              Pro research layer
+            </div>
+            <div className="mt-3 grid gap-2">
+              {PLAYER_RESEARCH_PRO_IDEAS.map((feature) => (
+                <div key={feature} className="flex gap-2 text-xs text-slate-300">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddLeg }: {
   players: MLBPlayer[];
   compareA: MLBPlayer | null;
   compareB: MLBPlayer | null;
   onSelectA: (p: MLBPlayer) => void;
   onSelectB: (p: MLBPlayer) => void;
-  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
 }) {
   return (
     <div>
+      <ProTruthLensIntro />
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Player A */}
         <CompareSlot label="Player A" player={compareA} players={players} onSelect={onSelectA} accent="#22d3ee" />
@@ -580,9 +746,9 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
             );
           })}
 
-          {/* Edge propositions */}
+          {/* Truth markets */}
           <div className="p-4 border-t border-white/5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Edge Propositions</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Truth Markets</div>
             <div className="grid md:grid-cols-2 gap-3">
               {[compareA, compareB].map((p) => p && (
                 <div key={p.id} className="space-y-2">
@@ -591,7 +757,7 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
                     <div key={prop.id} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
                       <span className="text-[11px] text-slate-400">{prop.market}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-[var(--ve-accent)]">{prop.odds.toFixed(2)}</span>
+                        <span className="text-xs font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>
                         <button onClick={() => onAddLeg(p, prop)} className="text-[9px] font-bold uppercase px-2 py-1 rounded text-slate-950" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
                           Add
                         </button>
@@ -648,29 +814,35 @@ function CompareSlot({ label, player, players, onSelect, accent }: {
    ============================================================================ */
 function BuildView({ players, onAddLeg, activeLegs }: {
   players: MLBPlayer[];
-  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
   activeLegs: Leg[];
 }) {
   const [propFilter, setPropFilter] = useState("ALL");
-  const allProps = useMemo(() => {
-    const props: Array<{ player: MLBPlayer; prop: any }> = [];
+  const allMarkets = useMemo(() => {
+    const markets: Array<{ player: MLBPlayer; prop: any }> = [];
     for (const p of players) {
       for (const prop of p.propositions) {
-        props.push({ player: p, prop });
+        markets.push({ player: p, prop });
       }
     }
-    return props;
+    return markets;
   }, [players]);
 
-  const filtered = propFilter === "ALL" ? allProps : allProps.filter(({ prop }) => prop.market.toLowerCase().includes(propFilter.toLowerCase()));
+  const filtered =
+    propFilter === "ALL"
+      ? allMarkets
+      : allMarkets.filter(({ prop }) => getTruthMarketGroup(prop.market) === propFilter);
+
+  const groupedMarkets = groupTruthMarkets(filtered);
   const activeLegIds = new Set(activeLegs.map((l) => l.selection));
 
   return (
     <div>
+      <ProTruthLensIntro />
       <div className="flex items-center gap-3 mb-5">
-        <div className="text-sm text-slate-400">{filtered.length} props available</div>
+        <div className="text-sm text-slate-400">{filtered.length} markets available</div>
         <div className="flex gap-1.5">
-          {["ALL", "Hits", "Home", "Bases"].map((f) => (
+          {["ALL", "Hits", "Base Types", "Run Production", "Speed", "Total Bases"].map((f) => (
             <button
               key={f}
               onClick={() => setPropFilter(f)}
@@ -683,37 +855,62 @@ function BuildView({ players, onAddLeg, activeLegs }: {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map(({ player, prop }, i) => {
-          const isActive = activeLegIds.has(prop.spec);
-          return (
-            <motion.div
-              key={prop.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.02 }}
-              className="rounded-xl p-3 flex items-center gap-3"
-              style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${isActive ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.06)"}` }}
-            >
-              <img src={player.headshot} alt={player.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate">{player.name}</div>
-                <div className="text-[10px] text-slate-500 truncate">{prop.market}</div>
+      <div className="space-y-5">
+        {groupedMarkets.map(({ group, items }) => (
+          <section
+            key={group}
+            className="rounded-2xl border border-white/10 bg-slate-950/40 p-3 sm:p-4"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  {group}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {items.length} truth markets · odds stay TBD until a real feed is connected
+                </div>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-sm font-mono font-bold text-[var(--ve-accent)]">{prop.odds.toFixed(2)}</div>
-                <button
-                  onClick={() => onAddLeg(player, prop)}
-                  disabled={isActive}
-                  className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded transition-all mt-1 ${isActive ? "bg-emerald-500/15 text-emerald-400" : "text-slate-950"}`}
-                  style={!isActive ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
-                >
-                  {isActive ? "Added" : "+ Slip"}
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {items.map(({ player, prop }, i) => {
+                const isActive = activeLegIds.has(prop.spec);
+                return (
+                  <motion.div
+                    key={prop.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.015 }}
+                    className="rounded-xl p-3 flex items-center gap-3"
+                    style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${isActive ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.06)"}` }}
+                  >
+                    <img src={player.headshot} alt={player.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-white truncate">{player.name}</div>
+                      <div className="text-[10px] text-slate-400 truncate">{prop.market}</div>
+                      {prop.truthLabel && (
+                        <div className="mt-0.5 truncate text-[9px] uppercase tracking-wider text-cyan-300/75">
+                          {prop.truthLabel}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xs font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</div>
+                      <button
+                        onClick={() => onAddLeg(player, prop)}
+                        disabled={isActive}
+                        className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded transition-all mt-1 ${isActive ? "bg-emerald-500/15 text-emerald-400" : "text-slate-950"}`}
+                        style={!isActive ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
+                      >
+                        {isActive ? "Added" : "+ Slip"}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
@@ -727,7 +924,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
   tab: DetailTab;
   onTabChange: (t: DetailTab) => void;
   onClose: () => void;
-  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
   onSaveVouch: (vouch: Vouch) => void;
   aiReport?: string;
   researching: boolean;
@@ -738,7 +935,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
     { id: "splits", label: "Splits", icon: BarChart3 },
     { id: "gamelog", label: "Game Log", icon: TrendingUp },
     { id: "ai", label: "AI Report", icon: Sparkles },
-    { id: "props", label: "Props", icon: Crosshair },
+    { id: "markets", label: "Markets", icon: Crosshair },
   ];
 
   return (
@@ -794,7 +991,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
           {tab === "splits" && <SplitsTab player={player} />}
           {tab === "gamelog" && <GameLogTab player={player} />}
           {tab === "ai" && <AITab player={player} report={aiReport} researching={researching} onRun={onRunAI} />}
-          {tab === "props" && <PropsTab player={player} onAddLeg={onAddLeg} />}
+          {tab === "markets" && <MarketsTab player={player} onAddLeg={onAddLeg} />}
         </div>
       </motion.div>
     </motion.div>
@@ -970,8 +1167,8 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
   );
 }
 
-/* ============ Props Tab ============ */
-function PropsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void }) {
+/* ============ Markets Tab ============ */
+function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void }) {
   return (
     <div className="space-y-2">
       {player.propositions.map((prop) => (
@@ -981,7 +1178,7 @@ function PropsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: 
             <div className="text-[10px] text-slate-500">{prop.spec}</div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-lg font-mono font-bold text-[var(--ve-accent)]">{prop.odds.toFixed(2)}</span>
+            <span className="text-lg font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>
             <button
               onClick={() => onAddLeg(player, prop)}
               className="text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg text-slate-950"

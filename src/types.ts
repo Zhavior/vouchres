@@ -235,6 +235,7 @@ export interface PlayerProposition {
   market: string;
   odds: number;
   spec: string;
+  truthLabel?: string;
 }
 
 export interface AdvMetrics {
