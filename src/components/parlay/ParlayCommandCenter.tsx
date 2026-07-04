@@ -576,20 +576,6 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onH
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
-                <p className="text-[10px] font-black uppercase text-slate-500">Draft legs</p>
-                <p className="mt-1 text-2xl font-black text-white">{draftLegs.length}</p>
-              </div>
-              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-3">
-                <p className="text-[10px] font-black uppercase text-cyan-300">Live</p>
-                <p className="mt-1 text-2xl font-black text-white">{liveSlips.length}</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-3">
-                <p className="text-[10px] font-black uppercase text-emerald-300">Backend</p>
-                <p className="mt-1 text-sm font-black text-emerald-200">Canonical</p>
-              </div>
-            </div>
           </div>
         </div>
 
