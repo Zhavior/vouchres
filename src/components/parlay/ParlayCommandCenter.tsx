@@ -518,6 +518,14 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onH
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const commandSavedSlips = useParlayCommandStore(selectSavedSlips);
   const liveSlips = commandSavedSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
+  const gradedSlips = commandSavedSlips.filter((slip) => ['won', 'lost', 'push', 'void'].includes(String(slip.status).toLowerCase()));
+  const totalLegsTracked = commandSavedSlips.reduce((count, slip) => count + (Array.isArray(slip.legs) ? slip.legs.length : 0), 0);
+  const commandStats = [
+    { label: 'Draft legs', value: draftLegs.length, note: 'builder queue' },
+    { label: 'Live locked', value: liveSlips.length, note: 'truth protected' },
+    { label: 'Saved slips', value: commandSavedSlips.length, note: 'account board' },
+    { label: 'Tracked legs', value: totalLegsTracked, note: `${gradedSlips.length} graded slips` },
+  ];
 
   useEffect(() => {
     hydrateSavedSlips(savedSlips);
@@ -533,6 +541,23 @@ export default function ParlayCommandCenter({ savedSlips = [], onSaveParlay, onH
       `}</style>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {commandStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-xl shadow-slate-950/20 backdrop-blur"
+            >
+              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-200/70">{stat.label}</p>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-3xl font-black text-white">{stat.value}</span>
+                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100">
+                  {stat.note}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="relative overflow-hidden rounded-[2rem] border border-cyan-500/20 bg-gradient-to-br from-[#07101d] via-[#061120] to-[#020817] p-6 shadow-2xl shadow-cyan-950/20">
           <div className="absolute right-[-80px] top-[-80px] h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
           <div className="absolute bottom-[-90px] left-[-90px] h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl" />
