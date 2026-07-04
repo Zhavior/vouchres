@@ -46,10 +46,10 @@ interface SmartAiEngineProps {
     player: MLBPlayer,
     prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }
   ) => void;
-  onSaveVouch: (vouchItem: Record<string, unknown>) => void;
+  onSaveVouch: (vouchItem: unknown) => void;
   onPostCreated?: (newPost: FeedPost) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => void;
-  liveGames?: Record<string, unknown>[];
+  liveGames?: any[];
 }
 
 /** Minimal MLBPlayer shim for leg transfer. The transfer path only reads
@@ -139,7 +139,7 @@ export default function SmartAiEngine({
         const raw: Record<string, unknown>[] = confirmed.length ? confirmed : projected.length ? projected : rows;
         const mapped: RealCandidate[] = raw
           .filter((c) => c && (c.gamePk ?? c.gameId) != null)
-          .map((c) => ({
+          .map((c: SmartAiRawCandidate) => ({
             playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
             playerName: c.playerName ?? c.player_name ?? c.name ?? 'Unknown',
             gamePk: String(c.gamePk ?? c.gameId),

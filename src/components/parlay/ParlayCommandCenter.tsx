@@ -834,13 +834,78 @@ function PremiumPostedPanel() {
 }
 
 
-function isVaiLedgerSlip(slip: Record<string, unknown>) {
-  const source = String(slip?.source ?? slip?.metadata?.source ?? "").toLowerCase();
+type VaiLedgerMeta = {
+  source?: string;
+  aiGenerated?: boolean;
+  ai_generated?: boolean;
+  title?: string;
+  displayName?: string;
+  display_name?: string;
+  summary?: string;
+};
+
+type VaiLedgerLeg = {
+  playerName?: string;
+  player_name?: string;
+  selection?: string;
+  marketLabel?: string;
+  market?: string;
+};
+
+type VaiLedgerSlip = {
+  source?: string;
+  aiGenerated?: boolean;
+  ai_generated?: boolean;
+  title?: string;
+  name?: string;
+  summary?: string;
+  legs?: VaiLedgerLeg[];
+  pick_legs?: VaiLedgerLeg[];
+  metadata?: VaiLedgerMeta;
+};
+
+type VaiLedgerMeta = {
+  source?: string;
+  aiGenerated?: boolean;
+  ai_generated?: boolean;
+  title?: string;
+  displayName?: string;
+  display_name?: string;
+  summary?: string;
+};
+
+type VaiLedgerLeg = {
+  playerName?: string;
+  player_name?: string;
+  selection?: string;
+  marketLabel?: string;
+  market?: string;
+};
+
+type VaiLedgerSlip = {
+  id?: string | number;
+  source?: string;
+  aiGenerated?: boolean;
+  ai_generated?: boolean;
+  title?: string;
+  name?: string;
+  summary?: string;
+  status?: string;
+  result?: string;
+  legs?: VaiLedgerLeg[];
+  pick_legs?: VaiLedgerLeg[];
+  metadata?: VaiLedgerMeta;
+};
+
+function isVaiLedgerSlip(slip: unknown): slip is VaiLedgerSlip {
+  if (!slip || typeof slip !== "object") return false;
+  const candidate = slip as VaiLedgerSlip;
+  const source = String(candidate.source ?? candidate.metadata?.source ?? "").toLowerCase();
   return (
-    slip?.aiGenerated === true ||
-    slip?.ai_generated === true ||
-    slip?.metadata?.aiGenerated === true ||
-    slip?.metadata?.ai_generated === true ||
+    candidate.aiGenerated === true ||
+    candidate.ai_generated === true ||
+    candidate.metadata?.aiGenerated === true ||
+    candidate.metadata?.ai_generated === true ||
     source === "ai_pick" ||
     source === "vai" ||
     source === "vai_locked" ||
@@ -849,6 +914,7 @@ function isVaiLedgerSlip(slip: Record<string, unknown>) {
 }
 
 function isRawVaiMetaText(value: unknown) {
+
   if (typeof value !== "string") return false;
   const normalized = value.toLowerCase();
   return (
@@ -859,11 +925,11 @@ function isRawVaiMetaText(value: unknown) {
   );
 }
 
-function getVaiSlipLegs(slip: Record<string, unknown>) {
+function getVaiSlipLegs(slip: VaiLedgerSlip) {
   return Array.isArray(slip?.legs) ? slip.legs : Array.isArray(slip?.pick_legs) ? slip.pick_legs : [];
 }
 
-function getVaiSlipTitle(slip: Record<string, unknown>) {
+function getVaiSlipTitle(slip: VaiLedgerSlip) {
   const candidates = [
     slip?.title,
     slip?.name,
@@ -881,7 +947,7 @@ function getVaiSlipTitle(slip: Record<string, unknown>) {
   return "V.A.I Research Slip";
 }
 
-function getVaiSlipSummary(slip: Record<string, unknown>) {
+function getVaiSlipSummary(slip: VaiLedgerSlip) {
   const directSummary = typeof slip?.summary === "string" && !isRawVaiMetaText(slip.summary) ? slip.summary.trim() : "";
   const metadataSummary =
     typeof slip?.metadata?.summary === "string" && !isRawVaiMetaText(slip.metadata.summary) ? slip.metadata.summary.trim() : "";
@@ -890,7 +956,7 @@ function getVaiSlipSummary(slip: Record<string, unknown>) {
   if (metadataSummary) return metadataSummary;
 
   return getVaiSlipLegs(slip)
-    .map((leg: Record<string, unknown>) => leg?.playerName || leg?.player_name || leg?.selection || leg?.marketLabel || leg?.market || "Research leg")
+    .map((leg: VaiLedgerLeg) => leg?.playerName || leg?.player_name || leg?.selection || leg?.marketLabel || leg?.market || "Research leg")
     .slice(0, 4)
     .join(" · ");
 }
@@ -983,13 +1049,13 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
                   const legs = getVaiSlipLegs(slip);
                   const summary = getVaiSlipSummary(slip);
                   const slipAny = slip as Record<string, unknown>;
-                  const hasLegacyWarning = [slipAny?.title, slipAny?.name, slipAny?.summary, slipAny?.metadata?.summary]
+                  const hasLegacyWarning = [slipData.title, slipData.name, slipData.summary, slipData.metadata?.summary]
                     .filter(Boolean)
                     .some(isRawVaiMetaText);
 
                   return (
                     <article
-                      key={slipAny.id ?? `${bucket.id}-${getVaiSlipTitle(slip)}`}
+                      key={String(slipData.id ?? `${bucket.id}-${getVaiSlipTitle(slipData)}`)}
                       className="rounded-3xl border border-slate-800 bg-[#07101d]/90 p-4"
                     >
                       <div className="flex flex-wrap items-center gap-2">
