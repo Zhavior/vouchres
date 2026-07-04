@@ -715,11 +715,12 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
       const updatedLegs = Number((result as any)?.updatedLegs ?? 0);
       const checked = Number((result as any)?.checked ?? 0);
+      const repairedCount = Number((result as any)?.repair?.repairedCount ?? 0);
 
       triggerNotification(
         updatedLegs > 0
-          ? `✅ Live HR sync updated ${updatedLegs} leg(s).`
-          : `✅ Live HR sync checked ${checked} match(es). No live updates yet.`
+          ? `✅ Live HR sync updated ${updatedLegs} leg(s). Repaired ${repairedCount} legacy leg(s).`
+          : `✅ Live HR sync checked ${checked} match(es). Repaired ${repairedCount} legacy leg(s).`
       );
 
       await loadBackendLedger();
