@@ -46,10 +46,10 @@ interface SmartAiEngineProps {
     player: MLBPlayer,
     prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }
   ) => void;
-  onSaveVouch: (vouchItem: any) => void;
+  onSaveVouch: (vouchItem: Record<string, unknown>) => void;
   onPostCreated?: (newPost: FeedPost) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => void;
-  liveGames?: any[];
+  liveGames?: Record<string, unknown>[];
 }
 
 /** Minimal MLBPlayer shim for leg transfer. The transfer path only reads
@@ -133,10 +133,10 @@ export default function SmartAiEngine({
         // Use confirmed candidates when available, else fall back to projected
         // candidates (pre-lineup), so the vault always has real players to build
         // from instead of showing "no eligible players".
-        const confirmed: any[] = Array.isArray(r.data?.candidates) ? r.data.candidates : [];
-        const projected: any[] = Array.isArray(r.data?.projectedCandidates) ? r.data.projectedCandidates : [];
-        const rows: any[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
-        const raw: any[] = confirmed.length ? confirmed : projected.length ? projected : rows;
+        const confirmed: Record<string, unknown>[] = Array.isArray(r.data?.candidates) ? r.data.candidates : [];
+        const projected: Record<string, unknown>[] = Array.isArray(r.data?.projectedCandidates) ? r.data.projectedCandidates : [];
+        const rows: Record<string, unknown>[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
+        const raw: Record<string, unknown>[] = confirmed.length ? confirmed : projected.length ? projected : rows;
         const mapped: RealCandidate[] = raw
           .filter((c) => c && (c.gamePk ?? c.gameId) != null)
           .map((c) => ({

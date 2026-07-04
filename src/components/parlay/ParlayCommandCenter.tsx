@@ -834,7 +834,7 @@ function PremiumPostedPanel() {
 }
 
 
-function isVaiLedgerSlip(slip: any) {
+function isVaiLedgerSlip(slip: Record<string, unknown>) {
   const source = String(slip?.source ?? slip?.metadata?.source ?? "").toLowerCase();
   return (
     slip?.aiGenerated === true ||
@@ -859,11 +859,11 @@ function isRawVaiMetaText(value: unknown) {
   );
 }
 
-function getVaiSlipLegs(slip: any) {
+function getVaiSlipLegs(slip: Record<string, unknown>) {
   return Array.isArray(slip?.legs) ? slip.legs : Array.isArray(slip?.pick_legs) ? slip.pick_legs : [];
 }
 
-function getVaiSlipTitle(slip: any) {
+function getVaiSlipTitle(slip: Record<string, unknown>) {
   const candidates = [
     slip?.title,
     slip?.name,
@@ -881,7 +881,7 @@ function getVaiSlipTitle(slip: any) {
   return "V.A.I Research Slip";
 }
 
-function getVaiSlipSummary(slip: any) {
+function getVaiSlipSummary(slip: Record<string, unknown>) {
   const directSummary = typeof slip?.summary === "string" && !isRawVaiMetaText(slip.summary) ? slip.summary.trim() : "";
   const metadataSummary =
     typeof slip?.metadata?.summary === "string" && !isRawVaiMetaText(slip.metadata.summary) ? slip.metadata.summary.trim() : "";
@@ -890,7 +890,7 @@ function getVaiSlipSummary(slip: any) {
   if (metadataSummary) return metadataSummary;
 
   return getVaiSlipLegs(slip)
-    .map((leg: any) => leg?.playerName || leg?.player_name || leg?.selection || leg?.marketLabel || leg?.market || "Research leg")
+    .map((leg: Record<string, unknown>) => leg?.playerName || leg?.player_name || leg?.selection || leg?.marketLabel || leg?.market || "Research leg")
     .slice(0, 4)
     .join(" · ");
 }
@@ -908,11 +908,11 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
   const vaiSlips = savedSlips.filter(isVaiLedgerSlip);
 
   const buckets = {
-    open: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "open"),
-    live: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "live"),
-    won: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "won"),
-    lost: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "lost"),
-    voided: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "voided"),
+    open: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "open"),
+    live: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "live"),
+    won: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "won"),
+    lost: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "lost"),
+    voided: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "voided"),
   };
 
   const gradedCount = buckets.won.length + buckets.lost.length;
@@ -982,7 +982,7 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
                 bucket.slips.map((slip) => {
                   const legs = getVaiSlipLegs(slip);
                   const summary = getVaiSlipSummary(slip);
-                  const slipAny = slip as any;
+                  const slipAny = slip as Record<string, unknown>;
                   const hasLegacyWarning = [slipAny?.title, slipAny?.name, slipAny?.summary, slipAny?.metadata?.summary]
                     .filter(Boolean)
                     .some(isRawVaiMetaText);
