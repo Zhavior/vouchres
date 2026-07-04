@@ -71,6 +71,10 @@ type SmartAiRawCandidate = {
     throws?: string;
     vulnerability?: number;
   } | null;
+  opponentPitcherName?: string | null;
+  opponentPitcherId?: number | null;
+  opponentPitcherHand?: string | null;
+  opposingPitcher?: string | null;
   pitcherHand?: string;
   opposingPitcherHand?: string;
   batSide?: string;
@@ -183,39 +187,8 @@ export default function SmartAiEngine({
         const rows: Record<string, unknown>[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
         const raw: Record<string, unknown>[] = confirmed.length ? confirmed : projected.length ? projected : rows;
         const mapped: RealCandidate[] = raw
-          .filter((c) => c && (c.gamePk ?? c.gameId) != null)
-          .map((c: SmartAiRawCandidate) => ({
-            playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
-            playerName: c.playerName ?? c.player_name ?? c.name ?? 'Unknown',
-            gamePk: String(c.gamePk ?? c.gameId),
-            team: c.team ?? c.teamAbbrev ?? 'MLB',
-            opponent: c.opponent ?? c.opponentTeam ?? c.opponentPitcherName ?? 'opponent',
-            oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds), // null when the board has no real price — never fabricated
-            score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
-            opponentPitcherName: c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name ?? null,
-            opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
-            pitcherHand: c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws ?? null,
-            batSide: c.batSide === 'L' || c.batSide === 'R' || c.batSide === 'S' ? c.batSide : null,
-            injuryStatus: typeof c.injuryStatus === 'string' ? c.injuryStatus : null,
-            pitcherVulnerability:
-              typeof c.pitcherVulnerability === 'number'
-                ? c.pitcherVulnerability
-                : typeof c.probablePitcher?.vulnerability === 'number'
-                  ? c.probablePitcher.vulnerability
-                  : null,
-            parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
-            venue: c.venue ?? c.ballpark ?? null,
-            lineupStatus: c.lineupStatus ?? c.lineup_status ?? null,
-            confidenceTier: c.confidenceTier ?? null,
-            riskLabel: typeof c.riskTier === 'string' ? c.riskTier : null,
-            estimatedHrProbability: typeof c.estimatedHrProbability === 'number' ? c.estimatedHrProbability : null,
-            dataConfidence: typeof c.dataConfidence === 'number' ? c.dataConfidence : null,
-            battingOrder: typeof c.battingOrder === 'number' ? c.battingOrder : null,
-            dataQuality: typeof c.dataQuality === 'string' ? c.dataQuality : null,
-            reasons: Array.isArray(c.reasons) ? c.reasons.map(String) : [],
-            boardWarnings: Array.isArray(c.warnings) ? c.warnings.map(String) : [],
-            scoreBreakdown: c.scoreBreakdown && typeof c.scoreBreakdown === 'object' ? c.scoreBreakdown : null,
-          }));
+          .filter(isSmartAiRawCandidateWithGame)
+          .map(normalizeSmartAiCandidate);
         setRealCandidates(mapped);
         setCandidatesLoading(false);
       });
@@ -724,4 +697,72 @@ export default function SmartAiEngine({
 
     </div>
   );
+}
+
+
+function isSmartAiRawCandidateWithGame(value: Record<string, unknown>): value is SmartAiRawCandidate {
+  return value != null && (value.gamePk != null || value.gameId != null);
+}
+
+function normalizeScoreBreakdown() {
+  return {
+    hitterPower: 0,
+    pitcherVulnerability: 0,
+    parkContext: 0,
+    lineupVolume: 0,
+    weatherContext: 0,
+    oddsValue: 0,
+    recentForm: 0,
+    handednessEdge: 0,
+    penalties: 0,
+  };
+}
+
+function normalizeSmartAiCandidate(c: SmartAiRawCandidate): RealCandidate {
+  return {
+    playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
+    playerName: toStringOrNull(c.playerName ?? c.player_name ?? c.name) ?? 'Unknown',
+    gamePk: String(c.gamePk ?? c.gameId),
+    team: toStringOrNull(c.team ?? c.teamAbbrev) ?? 'MLB',
+    opponent: toStringOrNull(c.opponent ?? c.opponentTeam ?? c.opponentPitcherName) ?? 'opponent',
+    oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds),
+    score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
+    opponentPitcherName: toStringOrNull(c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name),
+    opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
+    pitcherHand: toStringOrNull(c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws),
+    batSide: c.batSide === 'L' || c.batSide === 'R' || c.batSide === 'S' ? c.batSide : null,
+    injuryStatus: toStringOrNull(c.injuryStatus),
+    pitcherVulnerability:
+      typeof c.pitcherVulnerability === 'number'
+        ? c.pitcherVulnerability
+        : typeof c.probablePitcher?.vulnerability === 'number'
+          ? c.probablePitcher.vulnerability
+          : null,
+    parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
+    venue: toStringOrNull(c.venue ?? c.ballpark),
+    lineupStatus: toStringOrNull(c.lineupStatus ?? c.lineup_status),
+    confidenceTier: normalizeConfidenceTier(c.confidenceTier),
+    riskLabel: toStringOrNull(c.riskTier),
+    estimatedHrProbability: typeof c.estimatedHrProbability === 'number' ? c.estimatedHrProbability : null,
+    dataConfidence: typeof c.dataConfidence === 'number' ? c.dataConfidence : null,
+    battingOrder: typeof c.battingOrder === 'number' ? c.battingOrder : null,
+    dataQuality: toStringOrNull(c.dataQuality),
+    reasons: Array.isArray(c.reasons) ? c.reasons.map(String) : [],
+    boardWarnings: Array.isArray(c.warnings) ? c.warnings.map(String) : [],
+    scoreBreakdown: normalizeScoreBreakdown(),
+  };
+}
+
+function toStringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function normalizeConfidenceTier(value: unknown): "thin" | "elite" | "strong" | "watchlist" | "avoid" {
+  return value === "thin" ||
+    value === "elite" ||
+    value === "strong" ||
+    value === "watchlist" ||
+    value === "avoid"
+    ? value
+    : "thin";
 }

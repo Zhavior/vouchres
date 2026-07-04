@@ -923,7 +923,7 @@ function getVaiBucket(statusValue: unknown) {
 }
 
 function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
-  const vaiSlips = savedSlips.filter(isVaiLedgerSlip);
+  const vaiSlips = savedSlips.filter((slip): slip is VaiLedgerSlip => Boolean(slip && typeof slip === 'object'));
 
   const buckets = {
     open: vaiSlips.filter((slip) => getVaiBucket((slip as Record<string, unknown>).status ?? (slip as Record<string, unknown>).result) === "open"),
@@ -1008,7 +1008,7 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
 
                   return (
                     <article
-                      key={String(slipData.id ?? `${bucket.id}-${getVaiSlipTitle(slipData)}`)}
+                      key={`${bucket.id}-${getVaiSlipTitle(slipData)}`}
                       className="rounded-3xl border border-slate-800 bg-[#07101d]/90 p-4"
                     >
                       <div className="flex flex-wrap items-center gap-2">

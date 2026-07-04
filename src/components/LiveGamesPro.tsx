@@ -429,13 +429,15 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     }
   }, [loadScores]);
 
-  useEffect(() => { load(); const id = setInterval(load, REFRESH_MS); return () => clearInterval(id); }, [load]);
-
-  // Poll scores every 45s independently so the scoreboard stays fresh.
   useEffect(() => {
-    const id = setInterval(loadScores, 45_000);
-    return () => clearInterval(id);
-  }, [loadScores]);
+    load();
+
+    const id = window.setInterval(() => {
+      load();
+    }, REFRESH_MS);
+
+    return () => window.clearInterval(id);
+  }, [load]);
 
   // Always overlay the latest scores from the fast scores endpoint.
   const scoredMatchups = applyScores(matchups, liveScores);

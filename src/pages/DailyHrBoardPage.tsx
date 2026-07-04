@@ -142,13 +142,14 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
     }
   }, [date]);
 
-  useEffect(() => { load(); }, [load]);
-
   // Auto-refresh every 5 min while viewing today's board.
   useEffect(() => {
+    load();
     if (date !== todayISO()) return;
-    const id = setInterval(load, REFRESH_MS);
-    return () => clearInterval(id);
+    const id = window.setInterval(() => {
+      load();
+    }, REFRESH_MS);
+    return () => window.clearInterval(id);
   }, [date, load]);
 
   const confirmedCandidates = useMemo(
