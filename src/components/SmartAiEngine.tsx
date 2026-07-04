@@ -319,7 +319,7 @@ export default function SmartAiEngine({
       canEditLegs: boolean;
       resultBucket: 'ai_made_parlays';
     };
-    onSaveParlay(normalizeParlaySlip(parlay, 'smart_ai_engine'));
+    onSaveParlay(normalizeParlaySlip(parlay, 'vai_ai_made_parlay'));
     const gradable = legs.filter((l) => l.gamePk).length;
     alert(`✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
     onSectionChange('results');
