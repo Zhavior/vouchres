@@ -1205,7 +1205,7 @@ export default function ParlayCommandCenter({
             onSaveVouch={onSaveVouch}
             onPostCreated={onPostCreated}
             onSaveParlay={(parlay) => {
-              void onSaveParlay?.(parlay as unknown as CanonicalParlaySlip);
+              void onSaveParlay?.(normalizeParlaySlip(parlay, 'vai_ai_made_parlay'));
             }}
             onHideParlay={onHideParlay}
           />
