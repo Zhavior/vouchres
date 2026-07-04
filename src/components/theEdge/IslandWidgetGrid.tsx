@@ -51,9 +51,9 @@ const STORAGE_KEY = "vouchres.edgeIsland.layout.v1";
 const DEFAULT_WIDGETS: Widget[] = [
   {
     id: "daily-edge-board",
-    title: "Daily Edge Board",
+    title: "HR Board",
     subtitle: "HR board, high-value edges, daily research cards",
-    section: "daily_edge_board",
+    section: "hr_board",
     tag: "HR",
     icon: Target,
   },
