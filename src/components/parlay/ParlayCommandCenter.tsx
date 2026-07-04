@@ -73,6 +73,77 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
   const clearDraft = useParlayCommandStore((state) => state.clearDraft);
   const [isSaving, setIsSaving] = useState(false);
   const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving;
+  const readableOdds = draftLegs
+    .map((leg) => Number((leg as Record<string, unknown>).odds))
+    .filter((odds) => Number.isFinite(odds));
+  const averageOdds =
+    readableOdds.length > 0 ? Math.round(readableOdds.reduce((sum, odds) => sum + odds, 0) / readableOdds.length) : null;
+  const plusMoneyLegs = readableOdds.filter((odds) => odds > 0).length;
+  const weakLegCount = draftLegs.filter((leg) => {
+    const record = leg as Record<string, unknown>;
+    const score = Number(record.edgeScore ?? record.confidence ?? record.probability);
+    return Number.isFinite(score) && score > 0 && score < 55;
+  }).length;
+  const exposureLabel =
+    draftLegs.length === 0
+      ? "No exposure"
+      : draftLegs.length <= 2
+        ? "Focused"
+        : draftLegs.length <= 4
+          ? "Volatile"
+          : "High volatility";
+  const judgeTone =
+    draftLegs.length === 0
+      ? "Start with 1–2 high-conviction legs. Do not build lottery slips."
+      : weakLegCount > 0
+        ? `${weakLegCount} leg${weakLegCount === 1 ? "" : "s"} may need review before saving.`
+        : draftLegs.length > 4
+          ? "This slip is entering high-volatility exposure. Consider trimming weaker legs."
+          : "Slip structure looks disciplined enough to review and save.";
+
+  const getTextField = (leg: unknown, keys: string[]) => {
+    const record = leg as Record<string, unknown>;
+    for (const key of keys) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+      if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    }
+    return "";
+  };
+
+  const formatGameStart = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const getDraftLegGameContext = (leg: unknown) => {
+    const awayTeam = getTextField(leg, ["awayTeam", "awayTeamName", "visitorTeam", "visitorTeamName"]);
+    const homeTeam = getTextField(leg, ["homeTeam", "homeTeamName"]);
+    const team = getTextField(leg, ["teamLabel", "teamName", "team"]);
+    const opponent = getTextField(leg, ["opponent", "opponentName", "opponentTeam", "opponentTeamName"]);
+    const gameStart = getTextField(leg, ["gameDate", "gameTime", "startTime", "gameStartTime", "commenceTime", "scheduled"]);
+
+    const matchup =
+      awayTeam && homeTeam
+        ? `${awayTeam} vs ${homeTeam}`
+        : team && opponent
+          ? `${team} vs ${opponent}`
+          : "";
+
+    const startLabel = gameStart ? formatGameStart(gameStart) : "";
+
+    if (matchup && startLabel) return `${matchup} · ${startLabel}`;
+    if (matchup) return matchup;
+    if (startLabel) return startLabel;
+    return "";
+  };
 
   const handleSaveDraft = async () => {
     if (!onSaveParlay || draftLegs.length === 0 || isSaving) return;
@@ -153,6 +224,11 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
                         {leg.marketLabel || leg.marketCode || "Player prop"}
                         {leg.teamLabel ? ` · ${leg.teamLabel}` : ""}
                       </p>
+                      {getDraftLegGameContext(leg) && (
+                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          {getDraftLegGameContext(leg)}
+                        </p>
+                      )}
                       <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
                         {leg.odds !== undefined && (
                           <span className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-slate-300">
@@ -187,22 +263,49 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
         </div>
       </div>
 
-      <div className="rounded-3xl border border-cyan-500/15 bg-cyan-950/10 p-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Slip Actions</p>
-        <h3 className="mt-1 text-lg font-black text-white">Backend contract locked</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Save/post actions will reuse buildSaveParlayPayload and POST /api/me/parlays. No second parlay system.
-        </p>
+      <div className="space-y-4">
+        <div className="rounded-3xl border border-cyan-500/15 bg-cyan-950/10 p-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Slip Summary</p>
+          <h3 className="mt-1 text-lg font-black text-white">Exposure stack</h3>
 
-        <button
-          type="button"
-          onClick={handleSaveDraft}
-          disabled={!canSave}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500 px-4 py-3 text-sm font-black text-emerald-950 transition hover:bg-emerald-400 disabled:border-slate-700 disabled:bg-slate-900/80 disabled:text-slate-500"
-        >
-          <Save className="h-4 w-4" />
-          {isSaving ? "Saving..." : "Save Draft"}
-        </button>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Legs</p>
+              <p className="mt-1 text-2xl font-black text-white">{draftLegs.length}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Avg odds</p>
+              <p className="mt-1 text-2xl font-black text-white">{averageOdds === null ? "—" : averageOdds > 0 ? `+${averageOdds}` : averageOdds}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Plus money</p>
+              <p className="mt-1 text-2xl font-black text-white">{plusMoneyLegs}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Risk band</p>
+              <p className="mt-1 text-sm font-black text-cyan-100">{exposureLabel}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-amber-400/20 bg-amber-950/10 p-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-300">AI Judge</p>
+          <h3 className="mt-1 text-lg font-black text-white">Discipline check</h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">{judgeTone}</p>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            Save runs through the Command Center contract and your canonical backend route. No local-only parlay truth.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={!canSave}
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500 px-4 py-3 text-sm font-black text-emerald-950 transition hover:bg-emerald-400 disabled:border-slate-700 disabled:bg-slate-900/80 disabled:text-slate-500"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? "Saving..." : "Save Slip"}
+          </button>
+        </div>
       </div>
     </div>
   );
