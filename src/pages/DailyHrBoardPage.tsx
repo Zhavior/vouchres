@@ -355,16 +355,47 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
 
   const totalRows = filteredGames.reduce((s, g) => s + g.rows.length, 0);
 
-  const displayedPreviewCount = projectedCandidates.length;
+  const truthCounts = (board as any)?.counts ?? {};
+  const truthSummary = (board as any)?.truthSummary ?? {};
+  const candidateBuckets = (board as any)?.candidateBuckets ?? {};
+
+  const confirmedCount =
+    Number(truthCounts.confirmedCandidates ?? confirmedCandidates.length ?? 0);
+
+  const projectedCount =
+    Number(truthCounts.projectedCandidates ?? projectedCandidates.length ?? 0);
+
+  const hiddenProjectedCount =
+    Number(
+      truthCounts.hiddenProjectedCandidates ??
+      Math.max(
+        0,
+        Number(previewMeta?.eligiblePreviewPoolCount ?? 0) -
+          Number(previewMeta?.projectedPreviewCount ?? previewMeta?.scoredPreviewPoolCount ?? 0)
+      )
+    );
+
+  const blockedCount =
+    Number(truthCounts.blockedPlayers ?? candidateBuckets?.blocked?.length ?? 0);
+
+  const totalTruthPool =
+    Number(truthCounts.totalTruthPool ?? confirmedCount + projectedCount + hiddenProjectedCount + blockedCount);
+
+  const totalVisiblePool =
+    Number(truthCounts.totalVisiblePool ?? confirmedCount + projectedCount);
+
+  const displayedPreviewCount = projectedCount;
   const totalPreviewPool =
     previewMeta?.eligiblePreviewPoolCount ??
+    truthCounts.eligiblePreviewPoolCount ??
     previewMeta?.scoredPreviewPoolCount ??
     displayedPreviewCount;
 
+  const truthMode = String(truthSummary.mode ?? boardMode ?? 'loading');
+  const truthMessage = String(truthSummary.message ?? (board as any)?.note ?? '');
+
   const boardSummary = board
-    ? boardMode === 'preview'
-      ? `${board.date} · ${board.gameCount} games · Showing full projected pool: ${displayedPreviewCount} of ${totalPreviewPool} MLB-verified preview hitters · Projected HR Board · data: ${board.dataQuality}`
-      : `${board.date} · ${board.gameCount} games · ${totalRows} ranked hitters · ${boardMode === 'confirmed' ? 'Confirmed HR Board' : 'Projected HR Board · official lineups not confirmed yet'} · data: ${board.dataQuality}`
+    ? `${board.date} · ${board.gameCount} games · ${confirmedCount} confirmed · ${projectedCount} projected · ${hiddenProjectedCount} hidden preview · ${blockedCount} blocked/waiting · ${totalTruthPool} truth pool · data: ${truthMode}`
     : 'Loading today’s slate…';
 
   // Star Watch source — resilient to where the engine puts it (dev emits it under
@@ -457,6 +488,34 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
           {board?.disclaimer ?? 'HR edge estimates are probability-based research for entertainment — not betting advice. Lineups, park, and weather are projected placeholders.'}
         </p>
       </div>
+
+      {/* HR Watch truth contract */}
+      {board && (
+        <div className="mb-4 rounded-2xl border border-[hsl(var(--ve-border)/0.42)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-300">
+              {confirmedCount} Confirmed
+            </span>
+            <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.1)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))]">
+              {projectedCount} Projected
+            </span>
+            {hiddenProjectedCount > 0 && (
+              <span className="rounded-full border border-blue-400/25 bg-blue-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-300">
+                {hiddenProjectedCount} Hidden Preview
+              </span>
+            )}
+            <span className="rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-yellow-300">
+              {blockedCount} Blocked/Waiting
+            </span>
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-300">
+              {totalVisiblePool}/{totalTruthPool} Visible Truth Pool
+            </span>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+            {truthMessage || 'HR Watch separates confirmed, projected, and blocked rows so partial MLB data never looks complete.'}
+          </p>
+        </div>
+      )}
 
       {boardMode === 'preview' && (
         <div className="mb-3 flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-accent-gold)/0.26)] bg-[hsl(var(--ve-accent-gold)/0.08)] p-3">
