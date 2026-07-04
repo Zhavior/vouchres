@@ -96,6 +96,13 @@ export interface HrBoardResponse {
   games?: HrBoardGame[];
   candidates?: Array<Record<string, unknown>>;
   projectedCandidates?: Array<Record<string, unknown>>;
+  allProjectedCandidates?: Array<Record<string, unknown>>;
+  candidateBuckets?: {
+    confirmed?: Array<Record<string, unknown>>;
+    projected?: Array<Record<string, unknown>>;
+    allProjected?: Array<Record<string, unknown>>;
+    blocked?: Array<Record<string, unknown>>;
+  };
   previewMeta?: {
     previewLimit: number;
     eligiblePreviewPoolCount: number;

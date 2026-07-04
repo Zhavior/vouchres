@@ -92,6 +92,7 @@ function getBootHrBoard(date: string): { data: HrBoardResponse; ts: number } | n
 export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardPageProps = {}) {
   const initialDate = todayISO();
   const [view, setView] = useState<'tier' | 'game'>('tier');
+  const [projectedPoolView, setProjectedPoolView] = useState<'curated' | 'all'>('curated');
   const [date, setDate] = useState(initialDate);
   // Seed from the module cache so re-visiting renders instantly (sticky) instead
   // of flashing blank while the slow HR engine endpoint re-fetches.
@@ -156,15 +157,29 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   );
 
   const projectedCandidates = useMemo(
-    () => (Array.isArray((board as any)?.projectedCandidates) ? (board as any).projectedCandidates : []),
+    () => (Array.isArray(board?.projectedCandidates) ? board.projectedCandidates : []),
     [board]
   );
+
+  const allProjectedCandidates = useMemo(
+    () => {
+      const direct = board?.allProjectedCandidates;
+      const bucket = board?.candidateBuckets?.allProjected;
+      if (Array.isArray(direct)) return direct;
+      if (Array.isArray(bucket)) return bucket;
+      return projectedCandidates;
+    },
+    [board, projectedCandidates]
+  );
+
+  const selectedProjectedCandidates =
+    projectedPoolView === 'all' ? allProjectedCandidates : projectedCandidates;
 
   const previewMeta = board?.previewMeta;
 
   const boardMode = confirmedCandidates.length > 0
     ? 'confirmed'
-    : projectedCandidates.length > 0
+    : selectedProjectedCandidates.length > 0
       ? 'preview'
       : 'empty';
 
@@ -177,15 +192,15 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
       Array.isArray(game?.players)
     );
 
-    // In preview mode, the backend may include the full game/player pool for audit/research.
-    // The main HR Board must use projectedCandidates[] so users see the curated Top N, not all hitters.
+    // In confirmed mode, use backend game rows when available.
+    // In preview mode, use the selected projected pool so Curated Preview / All Projected actually changes the board.
     if (existingGames.length && gamesHaveHrRows && boardMode !== 'preview') {
       return existingGames;
     }
 
     const candidates =
       confirmedCandidates.length ? confirmedCandidates :
-      projectedCandidates.length ? projectedCandidates :
+      selectedProjectedCandidates.length ? selectedProjectedCandidates :
       Array.isArray((board as any)?.rows) ? (board as any).rows :
       Array.isArray((board as any)?.players) ? (board as any).players :
       Array.isArray((board as any)?.targets) ? (board as any).targets :
@@ -365,6 +380,8 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   const projectedCount =
     Number(truthCounts.projectedCandidates ?? projectedCandidates.length ?? 0);
 
+  const allProjectedCount = allProjectedCandidates.length;
+
   const hiddenProjectedCount =
     Number(
       truthCounts.hiddenProjectedCandidates ??
@@ -488,6 +505,28 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
           {board?.disclaimer ?? 'HR edge estimates are probability-based research for entertainment — not betting advice. Lineups, park, and weather are projected placeholders.'}
         </p>
       </div>
+
+      {boardMode === 'preview' && allProjectedCount > projectedCandidates.length && (
+        <div className="mb-4 flex rounded-2xl border border-[hsl(var(--ve-border)/0.38)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-1">
+          {([
+            ['curated', `Curated Preview (${projectedCandidates.length})`],
+            ['all', `All Projected (${allProjectedCount})`],
+          ] as const).map(([mode, label]) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setProjectedPoolView(mode)}
+              className={`flex-1 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wide transition ${
+                projectedPoolView === mode
+                  ? 'bg-[hsl(var(--ve-accent-cyan)/0.16)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_24px_hsl(var(--ve-accent-cyan)/0.12)]'
+                  : 'text-[hsl(var(--ve-text-muted))] hover:bg-white/[0.04] hover:text-slate-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* HR Watch truth contract */}
       {board && (
