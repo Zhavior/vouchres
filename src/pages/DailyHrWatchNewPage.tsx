@@ -976,8 +976,8 @@ export default function DailyHrWatchNewPage({ profile, onAddLegToParlay }: Daily
                         title={tier.title}
                         subtitle={tier.subtitle}
                         rows={tier.rows}
-                        visibleCount={visibleCounts[tier.key] ?? 18}
-                        onLoadMore={() => handleLoadMore(tier.key)}
+                        visibleCount={visibleCounts[`${game.key}:${tier.key}`] ?? 18}
+                        onLoadMore={() => handleLoadMore(`${game.key}:${tier.key}`)}
                         onAddHrLeg={handleAddHrLeg}
                       />
                     ))}

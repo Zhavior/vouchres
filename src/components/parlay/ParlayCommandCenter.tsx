@@ -1041,9 +1041,9 @@ function CommandPanel({
   savedSlips: unknown[];
   liveGames?: unknown[];
   onSectionChange?: (section: string) => void;
-  onAddLegToParlay?: (...args: any[]) => void;
-  onSaveVouch?: (...args: any[]) => void;
-  onPostCreated?: (...args: any[]) => void;
+  onAddLegToParlay?: (...args: unknown[]) => void;
+  onSaveVouch?: (...args: unknown[]) => void;
+  onPostCreated?: (...args: unknown[]) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 }) {
@@ -1056,9 +1056,7 @@ function CommandPanel({
         onAddLegToParlay={onAddLegToParlay ?? (() => {})}
         onSaveVouch={onSaveVouch ?? (() => {})}
         onPostCreated={onPostCreated ?? (() => {})}
-        onSaveParlay={(parlay) => {
-          void onSaveParlay?.(parlay as unknown as CanonicalParlaySlip);
-        }}
+        onSaveParlay={onSaveParlay}
         liveGames={liveGames ?? []}
       />
     );
@@ -1076,9 +1074,9 @@ type ParlayCommandCenterProps = {
   liveGames?: unknown[];
   initialPanel?: ParlayCommandPanelName;
   onSectionChange?: (section: string) => void;
-  onAddLegToParlay?: (...args: any[]) => void;
-  onSaveVouch?: (...args: any[]) => void;
-  onPostCreated?: (...args: any[]) => void;
+  onAddLegToParlay?: (...args: unknown[]) => void;
+  onSaveVouch?: (...args: unknown[]) => void;
+  onPostCreated?: (...args: unknown[]) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 };
