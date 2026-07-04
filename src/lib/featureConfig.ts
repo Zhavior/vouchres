@@ -56,7 +56,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
 
   // Daily — sport-scoped boards and slates
-  { id: "hr_board", label: "Daily Edge Board", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS },
+  { id: "hr_board", label: "HR Board", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },
   { id: "live_games", label: "Live Projections", icon: "Tv", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS },
 
