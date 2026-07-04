@@ -10,6 +10,7 @@ import { hasTierAccess } from '../components/pro/ProAccessGate';
 import { bootDataStore } from '../lib/boot/bootDataStore';
 import { useDailyHrBoard } from '../hooks/useDailyHrBoard';
 import { useHrBoardFilters } from '../hooks/useHrBoardFilters';
+import { useHrBoardSelection } from '../hooks/useHrBoardSelection';
 
 
 function todayISO() {
@@ -44,7 +45,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   const [view, setView] = useState<'tier' | 'game'>('tier');
   const [projectedPoolView, setProjectedPoolView] = useState<'curated' | 'all'>('curated');
   const [date, setDate] = useState(initialDate);
-  const [selected, setSelected] = useState<HrBoardRow | null>(null);
+  const { selected, setSelected, clearSelected } = useHrBoardSelection();
   const { data: board, loading, error, lastUpdated, refresh } = useDailyHrBoard(date);
 
   const confirmedCandidates = useMemo(
@@ -510,7 +511,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
         )
       )}
 
-      <HrPlayerDrawer row={selected} onClose={() => setSelected(null)} isProUser={profile ? hasTierAccess(profile, 'GOLD') : false} />
+      <HrPlayerDrawer row={selected} onClose={clearSelected} isProUser={profile ? hasTierAccess(profile, 'GOLD') : false} />
     </div>
   );
 }
