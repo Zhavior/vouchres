@@ -1089,7 +1089,8 @@ export default function App() {
       section: 'live_parlays',
     });
 
-    navigateSection('vai_parlays');
+    useParlayCommandStore.getState().setActivePanel('vai_ledger');
+    navigateSection('live_parlays');
 
     // Background backend sync — non-blocking, best-effort
     await pushParlayToBackend(savedParlay);
@@ -1448,16 +1449,6 @@ export default function App() {
             key="live_parlays"
             savedSlips={savedSlips}
             initialPanel="live"
-            onSaveParlay={handleSaveParlaySlip}
-            onHideParlay={handleHideSavedParlay}
-          />
-        );
-      case 'vai_parlays':
-        return (
-          <ParlayCommandCenter
-            key="vai_parlays"
-            savedSlips={savedSlips}
-            initialPanel="vai_ledger"
             onSaveParlay={handleSaveParlaySlip}
             onHideParlay={handleHideSavedParlay}
           />
