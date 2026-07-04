@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bot, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
+import { Bot,
+  Brain, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
 import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
 import { normalizeParlayLeg } from "../../lib/parlays/parlayBridge";
 import type { CanonicalParlaySlip } from "../../lib/parlays/parlayBridge";
@@ -19,6 +20,7 @@ const tabs: Array<{
 }> = [
   { id: "build", label: "Build Slip", eyebrow: "Manual builder", icon: Layers3 },
   { id: "ai", label: "V.A.I Picks", eyebrow: "AI discovery", icon: Bot },
+  { id: "vai_ledger", label: "V.A.I Ledger", eyebrow: "AI truth", icon: Brain },
   { id: "live", label: "Live Parlays", eyebrow: "Saved + synced", icon: Radio },
   { id: "premium", label: "Premium", eyebrow: "Posted slips", icon: Crown },
 ];
@@ -601,7 +603,7 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
         </div>
       )}
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {bucketTabs.map((tab) => {
           const isActive = activeBucket === tab.id;
           const voidedCount = bucketVoidCounts[tab.id];
@@ -830,22 +832,220 @@ function PremiumPostedPanel() {
   );
 }
 
+
+function isVaiLedgerSlip(slip: any) {
+  const source = String(slip?.source ?? slip?.metadata?.source ?? "").toLowerCase();
+  return (
+    slip?.aiGenerated === true ||
+    slip?.ai_generated === true ||
+    slip?.metadata?.aiGenerated === true ||
+    slip?.metadata?.ai_generated === true ||
+    source === "ai_pick" ||
+    source === "vai" ||
+    source === "vai_locked" ||
+    source === "vouch_ai"
+  );
+}
+
+function isRawVaiMetaText(value: unknown) {
+  if (typeof value !== "string") return false;
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("clientref=") ||
+    normalized.includes("aigenerated=") ||
+    normalized.includes("legacy pick") ||
+    normalized.startsWith("source=")
+  );
+}
+
+function getVaiSlipLegs(slip: any) {
+  return Array.isArray(slip?.legs) ? slip.legs : Array.isArray(slip?.pick_legs) ? slip.pick_legs : [];
+}
+
+function getVaiSlipTitle(slip: any) {
+  const candidates = [
+    slip?.title,
+    slip?.name,
+    slip?.metadata?.title,
+    slip?.metadata?.displayName,
+    slip?.metadata?.display_name,
+  ];
+
+  const cleanTitle = candidates.find((value) => typeof value === "string" && value.trim() && !isRawVaiMetaText(value));
+  if (cleanTitle) return cleanTitle.trim();
+
+  const legs = getVaiSlipLegs(slip);
+  if (legs.length > 0) return `V.A.I ${legs.length}-Leg Research Slip`;
+
+  return "V.A.I Research Slip";
+}
+
+function getVaiSlipSummary(slip: any) {
+  const directSummary = typeof slip?.summary === "string" && !isRawVaiMetaText(slip.summary) ? slip.summary.trim() : "";
+  const metadataSummary =
+    typeof slip?.metadata?.summary === "string" && !isRawVaiMetaText(slip.metadata.summary) ? slip.metadata.summary.trim() : "";
+
+  if (directSummary) return directSummary;
+  if (metadataSummary) return metadataSummary;
+
+  return getVaiSlipLegs(slip)
+    .map((leg: any) => leg?.playerName || leg?.player_name || leg?.selection || leg?.marketLabel || leg?.market || "Research leg")
+    .slice(0, 4)
+    .join(" · ");
+}
+
+function getVaiBucket(statusValue: unknown) {
+  const status = String(statusValue ?? "open").toLowerCase();
+  if (["won", "win", "graded_win"].includes(status)) return "won";
+  if (["lost", "loss", "graded_loss"].includes(status)) return "lost";
+  if (["live", "active", "in_progress"].includes(status)) return "live";
+  if (["void", "voided", "push", "pushed", "no_action", "cancelled"].includes(status)) return "voided";
+  return "open";
+}
+
+function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
+  const vaiSlips = savedSlips.filter(isVaiLedgerSlip);
+
+  const buckets = {
+    open: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "open"),
+    live: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "live"),
+    won: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "won"),
+    lost: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "lost"),
+    voided: vaiSlips.filter((slip) => getVaiBucket((slip as any).status ?? (slip as any).result) === "voided"),
+  };
+
+  const gradedCount = buckets.won.length + buckets.lost.length;
+  const winRate = gradedCount > 0 ? Math.round((buckets.won.length / gradedCount) * 100) : 0;
+
+  const bucketCards = [
+    { id: "open", label: "Open", eyebrow: "Not settled", slips: buckets.open },
+    { id: "live", label: "Live", eyebrow: "Truth moving", slips: buckets.live },
+    { id: "won", label: "Won", eyebrow: "Verified wins", slips: buckets.won },
+    { id: "lost", label: "Lost", eyebrow: "Verified losses", slips: buckets.lost },
+    { id: "voided", label: "Voided / Pushed", eyebrow: "Truth context", slips: buckets.voided },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div className="overflow-hidden rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-400/[0.10] via-slate-950 to-slate-950 p-5 shadow-2xl shadow-cyan-950/20">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.34em] text-cyan-200/70">Vouch Artificial Intelligence</p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-white">V.A.I Parlays Ledger</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+              Locked AI-made research slips stay separate from manual parlays while sharing the same command cockpit and truth ledger.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-center">
+              <p className="text-2xl font-black text-white">{vaiSlips.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">AI Slips</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-center">
+              <p className="text-2xl font-black text-white">{winRate}%</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">W/L Rate</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-center">
+              <p className="text-2xl font-black text-white">{buckets.live.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Live</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-xs leading-relaxed text-amber-50/90">
+          <span className="font-black text-amber-100">Responsible Research:</span> V.A.I parlays are research outputs only,
+          not betting advice, financial advice, or guaranteed outcomes. Users remain responsible for their own decisions.
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {bucketCards.map((bucket) => (
+          <section key={bucket.id} className="rounded-[1.75rem] border border-slate-800 bg-slate-950/70 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200/45">{bucket.eyebrow}</p>
+                <h3 className="mt-1 text-xl font-black text-white">{bucket.label}</h3>
+              </div>
+              <span className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.08] px-3 py-1.5 text-sm font-black text-cyan-50">
+                {bucket.slips.length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {bucket.slips.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-700/70 bg-black/20 p-5 text-sm font-bold text-slate-500">
+                  No V.A.I slips here yet.
+                </div>
+              ) : (
+                bucket.slips.map((slip) => {
+                  const legs = getVaiSlipLegs(slip);
+                  const summary = getVaiSlipSummary(slip);
+                  const slipAny = slip as any;
+                  const hasLegacyWarning = [slipAny?.title, slipAny?.name, slipAny?.summary, slipAny?.metadata?.summary]
+                    .filter(Boolean)
+                    .some(isRawVaiMetaText);
+
+                  return (
+                    <article
+                      key={slipAny.id ?? `${bucket.id}-${getVaiSlipTitle(slip)}`}
+                      className="rounded-3xl border border-slate-800 bg-[#07101d]/90 p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-base font-black leading-tight text-white">{getVaiSlipTitle(slip)}</h4>
+                        <span className="rounded-full border border-cyan-400/20 bg-cyan-950/25 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-100">
+                          V.A.I Locked
+                        </span>
+                        {hasLegacyWarning ? (
+                          <span className="rounded-full border border-amber-400/25 bg-amber-950/25 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-200">
+                            Legacy identity repaired
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                        {summary || "Awaiting V.A.I leg summary."}
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-wide">
+                        <span className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-slate-300">
+                          {legs.length} legs
+                        </span>
+                        <span className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-slate-300">
+                          Source protected
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CommandPanel({
+  savedSlips,
   onSaveParlay,
   onHideParlay,
 }: {
+  savedSlips: unknown[];
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 }) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
 
   if (activePanel === "ai") return <AiSmartPicksPanel />;
+  if (activePanel === "vai_ledger") return <VaiLedgerPanel savedSlips={savedSlips} />;
   if (activePanel === "live") return <LiveSavedParlaysPanel onHideParlay={onHideParlay} />;
   if (activePanel === "premium") return <PremiumPostedPanel />;
   return <BuildSlipPanel onSaveParlay={onSaveParlay} />;
 }
 
-type ParlayCommandPanelName = "build" | "ai" | "live" | "premium";
+type ParlayCommandPanelName = "build" | "ai" | "vai_ledger" | "live" | "premium";
 
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
@@ -893,7 +1093,7 @@ export default function ParlayCommandCenter({
       `}</style>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {commandStats.map((stat) => (
             <div
               key={stat.label}
@@ -931,7 +1131,7 @@ export default function ParlayCommandCenter({
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activePanel === tab.id;
@@ -965,7 +1165,7 @@ export default function ParlayCommandCenter({
         </div>
 
         <PanelErrorBoundary title="Parlay Command Center Panel">
-          <CommandPanel onSaveParlay={onSaveParlay} onHideParlay={onHideParlay} />
+          <CommandPanel savedSlips={savedSlips} onSaveParlay={onSaveParlay} onHideParlay={onHideParlay} />
         </PanelErrorBoundary>
       </div>
     </section>

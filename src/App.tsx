@@ -42,7 +42,6 @@ const PremiumSubPage = lazy(() => import('./components/PremiumSubPage'));
 const PlayerResearchHub = lazy(() => import('./components/PlayerResearchHub'));
 const CustomizePage = lazy(() => import('./components/CustomizePage'));
 const ResultsStudio = lazy(() => import('./components/results/ResultsStudio'));
-const VAIParlaysPage = lazy(() => import('./components/parlay/VAIParlaysPage'));
 const SmartAiEngine = lazy(() => import('./components/SmartAiEngine'));
 const MlbIntelligenceHub = lazy(() => import('./components/MlbIntelligenceHub'));
 const Leaderboard = lazy(() => import('./components/Leaderboard'));
@@ -1446,6 +1445,7 @@ export default function App() {
       case 'live_parlays':
         return (
           <ParlayCommandCenter
+            key="live_parlays"
             savedSlips={savedSlips}
             initialPanel="live"
             onSaveParlay={handleSaveParlaySlip}
@@ -1454,9 +1454,12 @@ export default function App() {
         );
       case 'vai_parlays':
         return (
-          <VAIParlaysPage
+          <ParlayCommandCenter
+            key="vai_parlays"
             savedSlips={savedSlips}
-            onSectionChange={navigateSection}
+            initialPanel="vai_ledger"
+            onSaveParlay={handleSaveParlaySlip}
+            onHideParlay={handleHideSavedParlay}
           />
         );
       case 'live_game_lab':

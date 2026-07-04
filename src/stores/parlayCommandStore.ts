@@ -6,7 +6,7 @@ import {
   isLiveLikeStatus,
 } from "../lib/parlayDisplay";
 
-export type ParlayCommandPanel = "build" | "ai" | "live" | "premium";
+export type ParlayCommandPanel = "build" | "ai" | "vai_ledger" | "live" | "premium";
 
 export type DraftParlayLeg = {
   id: string;

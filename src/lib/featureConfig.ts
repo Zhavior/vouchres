@@ -70,7 +70,6 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Build & Track
   { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: true, order: 10, group: "Build & Track" },
-  { id: "vai_parlays", label: "V.A.I Parlays", icon: "Brain", enabled: true, order: 10.25, group: "Build & Track" },
   { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track" },
   { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 11, group: "Build & Track" },
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
