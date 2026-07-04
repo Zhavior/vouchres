@@ -5,6 +5,7 @@
  * Any mismatch is logged and dropped — no fallbacks, no synthetic pools.
  */
 import { TTLCache, limitConcurrency } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
@@ -18,9 +19,13 @@ function bats(code?: string): "L" | "R" | "S" | "U" {
 }
 
 async function getMlbTeams(): Promise<Array<{ id: number; name: string; abbreviation: string }>> {
-  const res = await fetch(`${BASE}/v1/teams?sportId=1&activeStatus=Y`);
-  if (!res.ok) throw new Error(`teams ${res.status}`);
-  const data = await res.json();
+  const data = await sportsFetchJson<any>(`${BASE}/v1/teams?sportId=1&activeStatus=Y`, {
+    cacheKey: "mlb:teams:active",
+    ttlMs: 20 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "teamRosterClient",
+  });
   const teams: any[] = Array.isArray(data?.teams) ? data.teams : [];
   return teams
     .filter((t) => typeof t.id === "number" && t.name)
@@ -38,12 +43,13 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
     const batch = playerIds.slice(i, i + BATCH);
     try {
       const url = `${BASE}/v1/people?personIds=${batch.join(",")}&hydrate=currentTeam`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.warn(`[teamRosterClient] people verification ${res.status} for batch starting at ${i}`);
-        continue;
-      }
-      const data = await res.json();
+      const data = await sportsFetchJson<any>(url, {
+        cacheKey: `mlb:people:current-team:${batch.join(",")}`,
+        ttlMs: 20 * 60_000,
+        timeoutMs: 8_000,
+        retries: 1,
+        debugLabel: "teamRosterClient",
+      });
       for (const p of data?.people ?? []) {
         const ctId: number | undefined = p?.currentTeam?.id;
         if (p?.id && ctId) {
@@ -63,10 +69,13 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
 
 async function getTeamActiveHitters(team: { id: number; name: string; abbreviation: string }): Promise<NormalizedPlayer[]> {
   const teamId = team.id;
-  const res = await fetch(`${BASE}/v1/teams/${teamId}/roster?rosterType=active`);
-  if (!res.ok) throw new Error(`team ${teamId} roster ${res.status}`);
-
-  const data = await res.json();
+  const data = await sportsFetchJson<any>(`${BASE}/v1/teams/${teamId}/roster?rosterType=active`, {
+    cacheKey: `mlb:team:${teamId}:active-roster`,
+    ttlMs: 20 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "teamRosterClient",
+  });
   const roster: any[] = Array.isArray(data?.roster) ? data.roster : [];
 
   // Step 1: filter to non-pitchers with valid IDs
