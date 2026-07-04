@@ -1271,6 +1271,79 @@ export default function App() {
 
   const savedVouchIds = savedVouches.map((v) => v.id);
 
+  const resolvePlayerResearchMarket = (market: string, spec: string) => {
+    const text = `${market} ${spec}`.toLowerCase();
+
+    const parseTarget = (fallback = 1) => {
+      const plus = text.match(/(\d+)\s*\+/);
+      if (plus) return Number.parseInt(plus[1], 10);
+
+      const leading = text.match(/^\s*(\d+)\b/);
+      if (leading) return Number.parseInt(leading[1], 10);
+
+      return fallback;
+    };
+
+    if (/home\s*run|\bhr\b/.test(text)) {
+      return { marketCode: "ANYTIME_HR", statTarget: 1, threshold: 1, comparator: ">=" };
+    }
+
+    if (/stolen\s*base|\bsb\b/.test(text)) {
+      return { marketCode: "STOLEN_BASE", statTarget: 1, threshold: 1, comparator: ">=" };
+    }
+
+    if (/total\s*bases|\btb\b/.test(text)) {
+      const target = parseTarget(1);
+      return { marketCode: "TOTAL_BASES", statTarget: target, threshold: target, comparator: ">=" };
+    }
+
+    if (/\brbi\b|runs?\s+batted\s+in/.test(text)) {
+      const target = parseTarget(1);
+      return { marketCode: "RBI", statTarget: target, threshold: target, comparator: ">=" };
+    }
+
+    if (/\btriple\b/.test(text)) {
+      return { marketCode: "TRIPLE", statTarget: 1, threshold: 1, comparator: ">=" };
+    }
+
+    if (/\bdouble\b/.test(text)) {
+      return { marketCode: "DOUBLE", statTarget: 1, threshold: 1, comparator: ">=" };
+    }
+
+    if (/\bsingle\b/.test(text)) {
+      return { marketCode: "SINGLE", statTarget: 1, threshold: 1, comparator: ">=" };
+    }
+
+    if (/\bhits?\b/.test(text)) {
+      const target = parseTarget(1);
+      return { marketCode: "HIT", statTarget: target, threshold: target, comparator: ">=" };
+    }
+
+    const fallback = resolveMarket("mlb", market, spec);
+    return {
+      marketCode: fallback.marketCode,
+      statTarget: fallback.threshold,
+      threshold: fallback.threshold,
+      comparator: ">=",
+    };
+  };
+
+  const buildPlayerResearchEventKey = (parts: {
+    sport: string;
+    gamePk?: string;
+    playerId?: string | number | null;
+    marketCode?: string | null;
+    statTarget?: string | number | null;
+    comparator?: string | null;
+  }) => {
+    const gamePart = parts.gamePk ?? "GAME_TBD";
+    const playerPart = parts.playerId ?? "PLAYER_TBD";
+    const marketPart = parts.marketCode ?? "MARKET_TBD";
+    const targetPart = parts.statTarget ?? "TARGET_TBD";
+    const comparatorPart = String(parts.comparator ?? ">=").replace(/[^a-zA-Z0-9]+/g, "");
+    return `${parts.sport}_${gamePart}_${playerPart}_${marketPart}_${targetPart}_${comparatorPart}`;
+  };
+
   const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
     // Check if player's game has played already and status is Final
     const playerTeam = player.team ? player.team.toLowerCase() : '';
@@ -1288,11 +1361,21 @@ export default function App() {
       alert("This player prop selection is already added to your current parlay slip!");
       return;
     }
-    const { marketCode, threshold } = resolveMarket('mlb', prop.market, prop.spec);
+    const { marketCode, statTarget, threshold, comparator } = resolvePlayerResearchMarket(prop.market, prop.spec);
     const gamePk = prop.gamePk != null ? String(prop.gamePk) : (matchedGame?.gamePk != null ? String(matchedGame.gamePk) : undefined);
     // Capture the MLB player id for headshots (prop.playerId, the player record,
     // or parsed from prop.id like "hr-665487"). Never guessed from the name.
     const playerId = normalizePlayerId(prop.playerId ?? player.id ?? prop.id);
+    const teamId = (player as { teamId?: string | number | null }).teamId ?? null;
+    const eventKey = buildPlayerResearchEventKey({
+      sport: "MLB",
+      gamePk,
+      playerId,
+      marketCode,
+      statTarget,
+      comparator,
+    });
+    const popularityKey = `MLB_${playerId ?? "PLAYER_TBD"}_${marketCode || "MARKET_TBD"}_${statTarget ?? "TARGET_TBD"}`;
     const makeTag = (value: unknown) => {
       const raw = String(value ?? "")
         .trim()
@@ -1325,8 +1408,14 @@ export default function App() {
       status: 'PENDING',
       gamePk,
       marketCode,
+      statTarget,
       threshold,
+      comparator,
+      eventKey,
+      popularityKey,
+      externalProvider: "vouchedge_player_research",
       playerId,
+      teamId,
     };
     setActiveLegs([...activeLegs, newLeg]);
     useParlayCommandStore.getState().addDraftLeg({
@@ -1341,7 +1430,11 @@ export default function App() {
       playerId: newLeg.playerId,
       playerName: player.name,
       teamLabel: player.team,
-      statTarget: newLeg.threshold,
+      statTarget: newLeg.statTarget ?? newLeg.threshold,
+      comparator: newLeg.comparator,
+      externalProvider: newLeg.externalProvider ?? "vouchedge_player_research",
+      eventKey: newLeg.eventKey,
+      teamId: newLeg.teamId,
       gamePk: newLeg.gamePk,
       tags: draftTags,
     });
