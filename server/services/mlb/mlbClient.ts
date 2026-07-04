@@ -14,6 +14,8 @@ import {
   sleep,
 } from "../../lib/upstashRedis";
 
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
 let mlbRequestCount = 0;
