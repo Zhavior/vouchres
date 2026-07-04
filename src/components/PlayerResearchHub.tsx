@@ -191,6 +191,25 @@ async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+const isSeedPlayerRecord = (player: MLBPlayer) => {
+  return MLB_PLAYER_RECORDS.some((seed) => seed.id === player.id);
+};
+
+const getOfficialSeasonStat = (player: MLBPlayer, key: keyof MLBPlayer["seasonStats"]) => {
+  if (isSeedPlayerRecord(player)) return "—";
+  return player.seasonStats[key] || "—";
+};
+
+const getSeasonStatSourceLabel = (player: MLBPlayer) => {
+  return isSeedPlayerRecord(player) ? "Seed Data" : "MLB API";
+};
+
+const parseOfficialSeasonStat = (player: MLBPlayer, key: keyof MLBPlayer["seasonStats"]) => {
+  const value = getOfficialSeasonStat(player, key);
+  const numeric = Number.parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(numeric) ? numeric : Number.NEGATIVE_INFINITY;
+};
+
 export default function PlayerResearchHub({
   onAddLegToParlay,
   onSaveVouch,
@@ -277,6 +296,7 @@ export default function PlayerResearchHub({
 
   const players = registryPlayers.length ? registryPlayers : MLB_PLAYER_RECORDS;
 
+
   const teams = useMemo(() => {
     const set = new Set(players.map((p) => p.team));
     return ["ALL", ...Array.from(set).sort()];
@@ -297,9 +317,9 @@ export default function PlayerResearchHub({
     sorted.sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
       if (sortBy === "batterScore") return b.batterScore - a.batterScore;
-      if (sortBy === "hr") return parseInt(b.seasonStats.hr) - parseInt(a.seasonStats.hr);
-      if (sortBy === "avg") return parseFloat(b.seasonStats.avg) - parseFloat(a.seasonStats.avg);
-      if (sortBy === "ops") return parseFloat(b.seasonStats.ops) - parseFloat(a.seasonStats.ops);
+      if (sortBy === "hr") return parseOfficialSeasonStat(b, "hr") - parseOfficialSeasonStat(a, "hr");
+      if (sortBy === "avg") return parseOfficialSeasonStat(b, "avg") - parseOfficialSeasonStat(a, "avg");
+      if (sortBy === "ops") return parseOfficialSeasonStat(b, "ops") - parseOfficialSeasonStat(a, "ops");
       return 0;
     });
     return sorted;
@@ -319,7 +339,7 @@ export default function PlayerResearchHub({
     setTimeout(() => {
       setAiReports((prev) => ({
         ...prev,
-        [player.id]: `${player.name} shows ${player.advanced.barrelPercent > 15 ? "elite" : "above-average"} barrel rate (${player.advanced.barrelPercent}%) with ${player.advanced.hardHitPercent}% hard-hit contact. His ${player.splits.vRHP.ops} OPS vs RHP suggests a strong platoon advantage against right-handed pitching. Recent form (${player.splits.last10.ops} OPS over last 10) indicates ${parseFloat(player.splits.last10.ops) > parseFloat(player.seasonStats.ops) ? "heating up" : "cooling off"}. Key risk: ${player.scoutingReport.riskFactor} risk factor. Hot zones: ${player.scoutingReport.hotZones.join(", ")}.`,
+        [player.id]: `${player.name} shows ${player.advanced.barrelPercent > 15 ? "elite" : "above-average"} barrel rate (${player.advanced.barrelPercent}%) with ${player.advanced.hardHitPercent}% hard-hit contact. His ${player.splits.vRHP.ops} OPS vs RHP suggests a strong platoon advantage against right-handed pitching. Recent form (${player.splits.last10.ops} OPS over last 10) indicates ${parseFloat(player.splits.last10.ops) > parseOfficialSeasonStat(player, "ops") ? "heating up" : "cooling off"}. Key risk: ${player.scoutingReport.riskFactor} risk factor. Hot zones: ${player.scoutingReport.hotZones.join(", ")}.`,
       }));
       setResearching(null);
     }, 1500);
@@ -504,15 +524,19 @@ function PlayerCard({ player, index, onClick }: { player: MLBPlayer; index: numb
       {/* Stats row */}
       <div className="flex items-center gap-2 mt-3">
         {[
-          { label: "AVG", value: player.seasonStats.avg },
-          { label: "HR", value: player.seasonStats.hr },
-          { label: "OPS", value: player.seasonStats.ops },
+          { label: "AVG", value: getOfficialSeasonStat(player, "avg") },
+          { label: "HR", value: getOfficialSeasonStat(player, "hr") },
+          { label: "OPS", value: getOfficialSeasonStat(player, "ops") },
         ].map((s) => (
           <div key={s.label} className="flex-1 text-center py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
             <div className="text-[7px] text-slate-600 font-mono uppercase">{s.label}</div>
             <div className="text-xs font-bold text-slate-300">{s.value}</div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-2 text-[8px] font-mono uppercase text-slate-600">
+        {getSeasonStatSourceLabel(player)}
       </div>
 
       {/* Injury badge */}
@@ -557,10 +581,10 @@ function PlayerTable({ players, onRowClick, sortBy }: { players: MLBPlayer[]; on
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-xs text-slate-400">{p.team.split(" ").pop()}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{p.seasonStats.avg}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{p.seasonStats.hr}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{p.seasonStats.rbi}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-[var(--ve-accent)]">{p.seasonStats.ops}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "avg")}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "hr")}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "rbi")}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-[var(--ve-accent)]">{getOfficialSeasonStat(p, "ops")}</td>
                 <td className="px-3 py-2.5 text-xs font-mono text-slate-400">{p.advanced.barrelPercent?.toFixed(1)}%</td>
                 <td className="px-3 py-2.5 text-xs font-mono text-slate-400">{p.advanced.hardHitPercent?.toFixed(1)}%</td>
                 <td className="px-3 py-2.5">
@@ -723,10 +747,10 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
           </div>
           {[
             { label: "Batter Score", a: compareA.batterScore, b: compareB.batterScore, higher: true },
-            { label: "AVG", a: parseFloat(compareA.seasonStats.avg), b: parseFloat(compareB.seasonStats.avg), higher: true },
-            { label: "Home Runs", a: parseInt(compareA.seasonStats.hr), b: parseInt(compareB.seasonStats.hr), higher: true },
-            { label: "RBI", a: parseInt(compareA.seasonStats.rbi), b: parseInt(compareB.seasonStats.rbi), higher: true },
-            { label: "OPS", a: parseFloat(compareA.seasonStats.ops), b: parseFloat(compareB.seasonStats.ops), higher: true },
+            { label: "AVG", a: parseOfficialSeasonStat(compareA, "avg"), b: parseOfficialSeasonStat(compareB, "avg"), higher: true },
+            { label: "Home Runs", a: parseOfficialSeasonStat(compareA, "hr"), b: parseOfficialSeasonStat(compareB, "hr"), higher: true },
+            { label: "RBI", a: parseOfficialSeasonStat(compareA, "rbi"), b: parseOfficialSeasonStat(compareB, "rbi"), higher: true },
+            { label: "OPS", a: parseOfficialSeasonStat(compareA, "ops"), b: parseOfficialSeasonStat(compareB, "ops"), higher: true },
             { label: "Barrel %", a: compareA.advanced.barrelPercent, b: compareB.advanced.barrelPercent, higher: true },
             { label: "Hard Hit %", a: compareA.advanced.hardHitPercent, b: compareB.advanced.hardHitPercent, higher: true },
             { label: "Exit Velocity", a: compareA.advanced.exitVelocity, b: compareB.advanced.exitVelocity, higher: true },
@@ -1001,10 +1025,10 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
 /* ============ Overview Tab ============ */
 function OverviewTab({ player }: { player: MLBPlayer }) {
   const stats = [
-    { label: "AVG", value: player.seasonStats.avg, color: "#e2e8f0" },
-    { label: "HR", value: player.seasonStats.hr, color: "#fbbf24" },
-    { label: "RBI", value: player.seasonStats.rbi, color: "#22d3ee" },
-    { label: "OPS", value: player.seasonStats.ops, color: "#34d399" },
+    { label: "AVG", value: getOfficialSeasonStat(player, "avg"), color: "#e2e8f0" },
+    { label: "HR", value: getOfficialSeasonStat(player, "hr"), color: "#fbbf24" },
+    { label: "RBI", value: getOfficialSeasonStat(player, "rbi"), color: "#22d3ee" },
+    { label: "OPS", value: getOfficialSeasonStat(player, "ops"), color: "#34d399" },
   ];
   const adv = [
     { label: "Barrel %", value: player.advanced.barrelPercent?.toFixed(1), max: 25 },
