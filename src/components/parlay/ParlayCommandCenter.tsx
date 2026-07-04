@@ -312,12 +312,92 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
 }
 
 function AiSmartPicksPanel() {
+  const aiPicks = useParlayCommandStore((state) => state.aiPicks);
+  const addAiLegToDraft = useParlayCommandStore((state) => state.addAiLegToDraft);
+  const draftLegs = useParlayCommandStore(selectDraftLegs);
+
+  const hasAiPicks = aiPicks.length > 0;
+  const stagedIds = new Set(draftLegs.map((leg) => leg.id));
+
   return (
-    <EmptyPanel
-      icon={Bot}
-      title="V.A.I Smart Picks will live here"
-      body="AI pick discovery will become a panel inside the Command Center. Add to Slip will push canonical legs into the same Zustand draft."
-    />
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="rounded-3xl border border-cyan-500/15 bg-slate-950/70 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">V.A.I Smart Picks</p>
+            <h3 className="mt-1 text-xl font-black text-white">Add research legs into the same slip</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+              This panel reads the Command Center AI-pick queue. Every Add to Slip action pushes a canonical draft leg into Build Slip.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">Queued picks</p>
+            <p className="mt-1 text-2xl font-black text-white">{aiPicks.length}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {hasAiPicks ? (
+            aiPicks.map((pick) => {
+              const alreadyStaged = stagedIds.has(pick.id);
+
+              return (
+                <article
+                  key={pick.id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-white">{pick.playerName || pick.selection || "AI pick"}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {pick.marketLabel || pick.marketCode || "Player prop"}
+                        {pick.teamLabel ? ` · ${pick.teamLabel}` : ""}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
+                        <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-cyan-100">
+                          {pick.sport || "MLB"}
+                        </span>
+                        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-emerald-100">
+                          {typeof pick.odds === "number" ? (pick.odds > 0 ? `+${pick.odds}` : pick.odds) : "odds pending"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => addAiLegToDraft(pick)}
+                      disabled={alreadyStaged}
+                      className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-300/15 disabled:border-slate-700 disabled:bg-slate-900/70 disabled:text-slate-500"
+                    >
+                      {alreadyStaged ? "Staged" : "Add to Slip"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <div className="rounded-3xl border border-dashed border-slate-700 bg-black/20 p-8 text-center">
+              <p className="text-sm font-black text-white">No V.A.I picks queued yet</p>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-500">
+                The next step is wiring SmartAiEngine, HR Board, and Player Research outputs into this queue with setAiPicks/addAiLegToDraft.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-amber-400/20 bg-amber-950/10 p-5">
+        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-300">Command Rule</p>
+        <h3 className="mt-1 text-lg font-black text-white">One slip owner</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          V.A.I does not save parlays directly. It only stages legs into the Command Center draft. Save Slip remains the only backend save action.
+        </p>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">Draft legs staged</p>
+          <p className="mt-1 text-2xl font-black text-white">{draftLegs.length}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
