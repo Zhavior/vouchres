@@ -1,68 +1,37 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Flame, RefreshCw, AlertTriangle } from 'lucide-react';
-import type { HrBoardResponse, HrBoardRow, HrBoardFilterState, SortKey } from '../types/hrBoard';
+import type { HrBoardResponse, HrBoardRow } from '../types/hrBoard';
 import HrBoardFilters from '../components/hr-board/HrBoardFilters';
-import HrBoardTable from '../components/hr-board/HrBoardTable';
+import HrGameTierBoard from '../components/hr-board/HrGameTierBoard';
 import HrTierView from '../components/hr-board/HrTierView';
 import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
 import type { CreatorProofProfile, MLBPlayer } from '../types';
 import { hasTierAccess } from '../components/pro/ProAccessGate';
 import { bootDataStore } from '../lib/boot/bootDataStore';
 import { useDailyHrBoard } from '../hooks/useDailyHrBoard';
+import { useHrBoardFilters } from '../hooks/useHrBoardFilters';
 
-const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const DEFAULT_FILTERS: HrBoardFilterState = {
-  team: 'ALL', grade: 'ALL', risk: 'ALL', hotOnly: false, sneakyOnly: false,
-  confirmedOnly: false, minPitcherVuln: 0, search: '', sortKey: 'hrEdge',
-};
-
-function formTagFromRecentPowerScore(score: number | null | undefined) {
-  if (score === null || score === undefined || Number.isNaN(Number(score))) return 'Average';
-  if (score >= 82) return 'Hot';
-  if (score >= 68) return 'Average';
-  if (score >= 54) return 'Cold';
-  return 'Slump';
-}
-
-function firstFiniteNumber(...values: unknown[]): number | undefined {
+function firstFiniteNumber(...values: unknown[]): number | null {
   for (const value of values) {
-    if (value === null || value === undefined || value === '') continue;
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
   }
-
-  return undefined;
+  return null;
 }
 
-function sortRows(rows: HrBoardRow[], key: SortKey): HrBoardRow[] {
-  const arr = [...rows];
-  switch (key) {
-    case 'grade': return arr.sort((a, b) => (GRADE_RANK[b.grade] ?? 0) - (GRADE_RANK[a.grade] ?? 0) || b.hrEdge - a.hrEdge);
-    case 'bestOdds':
-      return arr.sort((a, b) => {
-        const cleanOdds = (value: unknown) => {
-          const parsed = Number.parseInt(String(value ?? '').replace(/[^-+0-9]/g, ''), 10);
-          return Number.isFinite(parsed) ? parsed : -9999;
-        };
-
-        return cleanOdds(b.bestOdds) - cleanOdds(a.bestOdds);
-      });
-    case 'lineupSpot':
-      return arr.sort((a, b) => {
-        const aSpot = typeof a.lineupSpot === 'number' ? a.lineupSpot : 99;
-        const bSpot = typeof b.lineupSpot === 'number' ? b.lineupSpot : 99;
-        return aSpot - bSpot;
-      });
-    case 'vouchScore': return arr.sort((a, b) => b.vouchScore - a.vouchScore);
-    case 'pitcherVulnerability': return arr.sort((a, b) => b.pitcherVulnerability - a.pitcherVulnerability);
-    case 'dataConfidence': return arr.sort((a, b) => b.dataConfidence - a.dataConfidence);
-    case 'weatherBoost': return arr.sort((a, b) => b.weatherBoost - a.weatherBoost);
-    default: return arr.sort((a, b) => b.hrEdge - a.hrEdge);
-  }
+function formTagFromRecentPowerScore(score: number | null): HrBoardRow["formTag"] {
+  if (score == null) return "Cold";
+  if (score >= 70) return "Hot";
+  if (score <= 35) return "Cold";
+  return "Cold";
 }
 
 interface HrBoardPageProps {
@@ -75,7 +44,6 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   const [view, setView] = useState<'tier' | 'game'>('tier');
   const [projectedPoolView, setProjectedPoolView] = useState<'curated' | 'all'>('curated');
   const [date, setDate] = useState(initialDate);
-  const [filters, setFilters] = useState<HrBoardFilterState>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<HrBoardRow | null>(null);
   const { data: board, loading, error, lastUpdated, refresh } = useDailyHrBoard(date);
 
@@ -268,33 +236,11 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
     });
     return ['ALL', ...Array.from(set).sort()];
   }, [games]);
+  const isVercelSafePartial =
+    (board as any)?.dataQuality === 'vercel_safe_partial' ||
+    (board as any)?.runtime === 'vercel_standalone_no_server_imports';
 
-  const update = (next: Partial<HrBoardFilterState>) => setFilters((f) => ({ ...f, ...next }));
-
-  const filteredGames = useMemo(() => {
-    if (!board) return [];
-    const isVercelSafePartial =
-      (board as any)?.dataQuality === 'vercel_safe_partial' ||
-      (board as any)?.runtime === 'vercel_standalone_no_server_imports';
-
-    const q = filters.search.trim().toLowerCase();
-    return games
-      .map((g) => {
-        const rows = (Array.isArray(g.rows) ? g.rows : []).filter((r) => {
-          if (filters.team !== 'ALL' && r.team !== filters.team) return false;
-          if (filters.grade !== 'ALL' && r.grade !== filters.grade) return false;
-          if (filters.risk !== 'ALL' && r.riskLabel !== filters.risk) return false;
-          if (!isVercelSafePartial && filters.hotOnly && r.formTag !== 'Hot') return false;
-          if (!isVercelSafePartial && filters.sneakyOnly && r.riskLabel !== 'Sneaky') return false;
-          if (!isVercelSafePartial && filters.confirmedOnly && r.projectionType !== 'Confirmed') return false;
-          if (r.pitcherVulnerability < filters.minPitcherVuln) return false;
-          if (q && !(r.playerName ?? '').toLowerCase().includes(q)) return false;
-          return true;
-        });
-        return { ...g, rows: sortRows(rows, filters.sortKey) };
-      })
-      .filter((g) => g.rows.length > 0);
-  }, [board, games, filters]);
+  const { filters, update, filteredRows: filteredGames } = useHrBoardFilters(games, isVercelSafePartial);
 
   const totalRows = filteredGames.reduce((s, g) => s + g.rows.length, 0);
 
@@ -558,7 +504,9 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
         ) : view === 'tier' ? (
           <HrTierView games={filteredGames} onSelect={setSelected} onAddLeg={onAddLegToParlay} />
         ) : (
-          filteredGames.map((g) => <HrBoardTable key={g.gamePk} game={g} onSelect={setSelected} />)
+          filteredGames.map((g) => (
+            <HrGameTierBoard key={g.gamePk} game={g} onSelect={setSelected} onAddLeg={onAddLegToParlay} />
+          ))
         )
       )}
 
