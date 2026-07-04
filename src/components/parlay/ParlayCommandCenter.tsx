@@ -464,11 +464,64 @@ function getLegResultVisual(leg: { status?: unknown; resultLabel?: unknown }) {
   };
 }
 
+type LiveSlipBucket = "open" | "live" | "lost" | "won";
+
 function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: string) => Promise<void> | void }) {
   const allSlips = useParlayCommandStore(selectSavedSlips);
   const [hidingSlipId, setHidingSlipId] = useState<string | null>(null);
   const [hideError, setHideError] = useState<string | null>(null);
-  const liveSlips = allSlips.filter((slip) => ['pending', 'live', 'open', 'active'].includes(String(slip.status).toLowerCase()));
+  const [activeBucket, setActiveBucket] = useState<LiveSlipBucket>("live");
+
+  const getSlipStatus = (status: unknown) => String(status ?? "").toLowerCase();
+  const isOpenStatus = (status: unknown) => ["pending", "open", "scheduled", "pre_game"].includes(getSlipStatus(status));
+  const isLiveStatus = (status: unknown) => ["live", "active", "in_progress"].includes(getSlipStatus(status));
+  const isLostStatus = (status: unknown) => ["lost", "loss", "failed"].includes(getSlipStatus(status));
+  const isWonStatus = (status: unknown) => ["won", "win", "hit"].includes(getSlipStatus(status));
+
+  const getSlipBucket = (slip: (typeof allSlips)[number]): LiveSlipBucket => {
+    if (isWonStatus(slip.status)) return "won";
+    if (isLostStatus(slip.status)) return "lost";
+    if (isLiveStatus(slip.status)) return "live";
+    return "open";
+  };
+
+  const hasVoidedLegs = (slip: (typeof allSlips)[number]) =>
+    slip.legs.some((leg) => {
+      const record = leg as Record<string, unknown>;
+      const values = [record.status, record.result, record.outcome, record.legStatus]
+        .map((value) => String(value ?? "").toLowerCase());
+
+      return values.some((value) => ["void", "voided", "push", "no_action", "cancelled", "canceled"].includes(value));
+    });
+
+  const liveSlips = allSlips.filter((slip) => isOpenStatus(slip.status) || isLiveStatus(slip.status));
+  const bucketTabs: Array<{ id: LiveSlipBucket; label: string; helper: string }> = [
+    { id: "open", label: "Open", helper: "not started" },
+    { id: "live", label: "Live", helper: "in progress" },
+    { id: "lost", label: "Lost", helper: "truth ledger" },
+    { id: "won", label: "Won", helper: "truth ledger" },
+  ];
+  const bucketCounts = bucketTabs.reduce(
+    (counts, tab) => {
+      counts[tab.id] = allSlips.filter((slip) => getSlipBucket(slip) === tab.id).length;
+      return counts;
+    },
+    {} as Record<LiveSlipBucket, number>
+  );
+  const bucketVoidCounts = bucketTabs.reduce(
+    (counts, tab) => {
+      counts[tab.id] = allSlips.filter((slip) => getSlipBucket(slip) === tab.id && hasVoidedLegs(slip)).length;
+      return counts;
+    },
+    {} as Record<LiveSlipBucket, number>
+  );
+  const visibleSlips = [...allSlips]
+    .filter((slip) => getSlipBucket(slip) === activeBucket)
+    .sort((a, b) => {
+      const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+      const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+      return bTime - aTime;
+    });
 
   const handleHide = async (slipId: string) => {
     if (!onHideParlay) return;
@@ -515,6 +568,39 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
         </div>
       )}
 
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {bucketTabs.map((tab) => {
+          const isActive = activeBucket === tab.id;
+          const voidedCount = bucketVoidCounts[tab.id];
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveBucket(tab.id)}
+              className={`rounded-2xl border px-4 py-3 text-left transition ${
+                isActive
+                  ? "border-cyan-300/40 bg-cyan-400/15 text-cyan-50"
+                  : "border-slate-800 bg-slate-950/70 text-slate-300 hover:border-cyan-400/25 hover:bg-cyan-400/10"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-black uppercase tracking-[0.2em]">{tab.label}</span>
+                <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-black">
+                  {bucketCounts[tab.id]}
+                </span>
+              </div>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{tab.helper}</p>
+              {voidedCount > 0 && (
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200">
+                  {voidedCount} with voided leg{voidedCount === 1 ? "" : "s"}
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-5">
         {allSlips.length === 0 ? (
           <EmptyPanel
@@ -522,19 +608,20 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
             title="No synced parlays yet"
             body="Once the backend saved slips are hydrated into the Command Center store, this panel will show pending/live cards with animation bars."
           />
+        ) : visibleSlips.length === 0 ? (
+          <EmptyPanel
+            icon={Radio}
+            title={`No ${activeBucket} parlays`}
+            body="This truth bucket is empty. Lost, won, live, and open records stay separated without changing backend grading truth."
+          />
         ) : (
           <div className="grid gap-4">
-            {[...allSlips]
-              .sort((a, b) => {
-                const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
-                const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
-                return bTime - aTime;
-              })
-              .map((slip, slipIndex) => {
+            {visibleSlips.map((slip, slipIndex) => {
               const previewLegs = slip.legs.slice(0, 3);
               const hiddenLegCount = Math.max(0, slip.legs.length - previewLegs.length);
               const slipRenderKey =
                 slip.sourceId || `${slip.publicId}-${slip.createdAt ?? "unknown"}-${slipIndex}`;
+              const slipHasVoidedLegs = hasVoidedLegs(slip);
 
               return (
                 <article
@@ -551,6 +638,11 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
                         {slip.isLiveLike && (
                           <span className="rounded-full border border-cyan-400/25 bg-cyan-950/25 px-2.5 py-1 text-[10px] font-black uppercase text-cyan-200">
                             Tracking
+                          </span>
+                        )}
+                        {slipHasVoidedLegs && (
+                          <span className="rounded-full border border-amber-400/25 bg-amber-950/25 px-2.5 py-1 text-[10px] font-black uppercase text-amber-200">
+                            Voided leg
                           </span>
                         )}
                       </div>
