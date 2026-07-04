@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Flame, RefreshCw, AlertTriangle } from 'lucide-react';
-import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { HrBoardResponse, HrBoardRow, HrBoardFilterState, SortKey } from '../types/hrBoard';
 import HrBoardFilters from '../components/hr-board/HrBoardFilters';
 import HrBoardTable from '../components/hr-board/HrBoardTable';
@@ -9,12 +8,9 @@ import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
 import type { CreatorProofProfile, MLBPlayer } from '../types';
 import { hasTierAccess } from '../components/pro/ProAccessGate';
 import { bootDataStore } from '../lib/boot/bootDataStore';
-import { useVouchResource } from '../hooks/useVouchResource';
+import { useDailyHrBoard } from '../hooks/useDailyHrBoard';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
-const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
-const PREVIEW_LIMIT = 999;
-
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -81,18 +77,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
   const [date, setDate] = useState(initialDate);
   const [filters, setFilters] = useState<HrBoardFilterState>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<HrBoardRow | null>(null);
-  // Seed from the module cache so re-visiting renders instantly (sticky) instead
-  // of flashing blank while the slow HR engine endpoint re-fetches.
-  const { data: board, loading, error, lastUpdated, refresh } = useVouchResource<HrBoardResponse>({
-    cacheKey: `hr-board:${date}`,
-    enabled: true,
-    refreshMs: date === todayISO() ? REFRESH_MS : null,
-    staleMs: REFRESH_MS,
-    fetcher: () =>
-      date === todayISO()
-        ? vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
-        : vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT),
-  });
+  const { data: board, loading, error, lastUpdated, refresh } = useDailyHrBoard(date);
 
   const confirmedCandidates = useMemo(
     () => (Array.isArray((board as any)?.candidates) ? (board as any).candidates : []),
