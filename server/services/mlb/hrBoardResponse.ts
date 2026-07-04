@@ -64,9 +64,11 @@ export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unkn
     candidates: confirmedCandidates,
     rows: confirmedCandidates,
     projectedCandidates,
+    allProjectedCandidates: fullProjectedCandidates,
     candidateBuckets: {
       confirmed: confirmedCandidates,
       projected: projectedCandidates,
+      allProjected: fullProjectedCandidates,
       blocked: blockedPlayers,
     },
     counts,
