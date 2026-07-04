@@ -8,10 +8,9 @@ import {
 } from "lucide-react";
 import { Parlay, Leg, Vouch, FeedPost, CreatorProofProfile } from "../types";
 import { apiUrl } from "../lib/apiBase";
-import { apiClient } from "../lib/apiClient";
 import { americanToDecimal, decimalToAmerican, americanLabel } from "../lib/odds";
 import { getFounderPointsLabel } from "../lib/founderAccess";
-import { buildSaveParlayPayload, normalizeParlaySlip } from "../lib/parlays/parlayBridge";
+import { normalizeParlaySlip } from "../lib/parlays/parlayBridge";
 
 /** A leg has a real, usable price only when odds is a finite American number. */
 function hasOdds(leg: Leg): leg is Leg & { odds: number } {
@@ -219,39 +218,18 @@ export default function ParlayStudio({
       createdAt: new Date().toISOString(),
     };
 
-    try {
-      const canonicalSlip = normalizeParlaySlip({
-        ...parlay,
-        source: "builder",
-        metadata: {
-          builder: "ParlayStudio",
-          mode,
-          riskTier: parlay.riskTier,
-        },
-      });
+    const canonicalSlip = normalizeParlaySlip({
+      ...parlay,
+      source: "builder",
+      metadata: {
+        builder: "ParlayStudio",
+        mode,
+        riskTier: parlay.riskTier,
+      },
+    });
 
-      const payload = buildSaveParlayPayload(canonicalSlip);
-      const saved = await apiClient.post("/api/me/parlays", payload);
-      const backendPickId =
-        (saved as any)?.pick?.id ||
-        (saved as any)?.pickId ||
-        (saved as any)?.id ||
-        (saved as any)?.data?.id ||
-        null;
-
-      onSaveParlay({
-        ...parlay,
-        backendPickId,
-        backendSyncState: backendPickId ? "synced" : "unknown",
-        backendSyncedAt: new Date().toISOString(),
-      } as any);
-
-      showToast("Parlay saved to your account");
-    } catch (error: any) {
-      console.error("[parlay-studio-save] failed", error);
-      onSaveParlay(parlay);
-      showToast(`Saved locally only: ${error?.message || "account save failed"}`);
-    }
+    onSaveParlay(canonicalSlip as any);
+    showToast("Saving parlay to your account...");
   };
 
   const handlePost = () => {
