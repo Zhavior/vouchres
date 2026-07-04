@@ -69,7 +69,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 9.5, group: "Pro Labs" },
 
   // Build & Track
-  { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: true, order: 10, group: "Build & Track" },
+  { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: false, order: 10, group: "Build & Track" },
   { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track" },
   { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 11, group: "Build & Track" },
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
@@ -118,7 +118,8 @@ export function loadFeatureLayout(): FeatureLayout {
     const storedById = new Map(parsed.features.map((f) => [f.id, f]));
     parsed.features = ALL_FEATURES.map((def) => {
       const prev = storedById.get(def.id);
-      return { ...def, enabled: prev ? prev.enabled : def.enabled };
+      const enabled = def.id === "ai_engine" ? false : prev ? prev.enabled : def.enabled;
+      return { ...def, enabled };
     });
 
     return parsed;
@@ -143,6 +144,7 @@ export function getEnabledFeatures(
   options: { canAccessThemeStore?: boolean; activeSport?: SportId } = {},
 ): FeatureConfig[] {
   return layout.features
+    .filter((f) => f.id !== "ai_engine")
     .filter((f) => f.enabled)
     .filter((f) => f.access !== "admin_dev" || options.canAccessThemeStore)
     // Sport-scoped features only show when the active sport is in their list.

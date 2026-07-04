@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bot,
   Brain, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
 import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
+import SmartAiEngine from "../SmartAiEngine";
 import { normalizeParlayLeg } from "../../lib/parlays/parlayBridge";
 import type { CanonicalParlaySlip } from "../../lib/parlays/parlayBridge";
 import {
@@ -1029,16 +1030,39 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
 
 function CommandPanel({
   savedSlips,
+  liveGames,
+  onSectionChange,
+  onAddLegToParlay,
+  onSaveVouch,
+  onPostCreated,
   onSaveParlay,
   onHideParlay,
 }: {
   savedSlips: unknown[];
+  liveGames?: unknown[];
+  onSectionChange?: (section: string) => void;
+  onAddLegToParlay?: (...args: any[]) => void;
+  onSaveVouch?: (...args: any[]) => void;
+  onPostCreated?: (...args: any[]) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 }) {
   const activePanel = useParlayCommandStore(selectActiveParlayPanel);
 
-  if (activePanel === "ai") return <AiSmartPicksPanel />;
+  if (activePanel === "ai") {
+    return (
+      <SmartAiEngine
+        onSectionChange={onSectionChange ?? (() => {})}
+        onAddLegToParlay={onAddLegToParlay ?? (() => {})}
+        onSaveVouch={onSaveVouch ?? (() => {})}
+        onPostCreated={onPostCreated ?? (() => {})}
+        onSaveParlay={(parlay) => {
+          void onSaveParlay?.(parlay as unknown as CanonicalParlaySlip);
+        }}
+        liveGames={liveGames ?? []}
+      />
+    );
+  }
   if (activePanel === "vai_ledger") return <VaiLedgerPanel savedSlips={savedSlips} />;
   if (activePanel === "live") return <LiveSavedParlaysPanel onHideParlay={onHideParlay} />;
   if (activePanel === "premium") return <PremiumPostedPanel />;
@@ -1049,14 +1073,24 @@ type ParlayCommandPanelName = "build" | "ai" | "vai_ledger" | "live" | "premium"
 
 type ParlayCommandCenterProps = {
   savedSlips?: unknown[];
+  liveGames?: unknown[];
   initialPanel?: ParlayCommandPanelName;
+  onSectionChange?: (section: string) => void;
+  onAddLegToParlay?: (...args: any[]) => void;
+  onSaveVouch?: (...args: any[]) => void;
+  onPostCreated?: (...args: any[]) => void;
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
 };
 
 export default function ParlayCommandCenter({
   savedSlips = [],
+  liveGames = [],
   initialPanel = "live",
+  onSectionChange,
+  onAddLegToParlay,
+  onSaveVouch,
+  onPostCreated,
   onSaveParlay,
   onHideParlay,
 }: ParlayCommandCenterProps) {
@@ -1165,7 +1199,18 @@ export default function ParlayCommandCenter({
         </div>
 
         <PanelErrorBoundary title="Parlay Command Center Panel">
-          <CommandPanel savedSlips={savedSlips} onSaveParlay={onSaveParlay} onHideParlay={onHideParlay} />
+          <CommandPanel
+            savedSlips={savedSlips}
+            liveGames={liveGames}
+            onSectionChange={onSectionChange}
+            onAddLegToParlay={onAddLegToParlay}
+            onSaveVouch={onSaveVouch}
+            onPostCreated={onPostCreated}
+            onSaveParlay={(parlay) => {
+              void onSaveParlay?.(parlay as unknown as CanonicalParlaySlip);
+            }}
+            onHideParlay={onHideParlay}
+          />
         </PanelErrorBoundary>
       </div>
     </section>

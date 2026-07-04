@@ -164,6 +164,7 @@ export function SmartAiDeepResearchPanel({
   const [query, setQuery] = useState('');
   const [lineupFilter, setLineupFilter] = useState<'all' | 'confirmed' | 'projected'>('all');
   const [sortBy, setSortBy] = useState<SortKey>('score');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Matchup history cache keyed by `${gamePk}:${pitcherId}` — one fetch covers
   // every candidate facing that pitcher. `revealed` controls which cards show it.
@@ -242,6 +243,13 @@ export function SmartAiDeepResearchPanel({
     return [...result].sort((a, b) => sortValue(b, sortBy) - sortValue(a, sortBy));
   }, [candidates, query, lineupFilter, sortBy]);
 
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [query, lineupFilter, sortBy, candidates.length]);
+
+  const visibleCandidates = filtered.slice(0, visibleCount);
+  const hasMoreCandidates = visibleCandidates.length < filtered.length;
+
   // Per-signal maxima across the visible list so bars are relative, not invented scales.
   const maxima = useMemo<CandidateScoreBreakdown>(() => {
     const base: CandidateScoreBreakdown = {
@@ -253,14 +261,14 @@ export function SmartAiDeepResearchPanel({
       recentForm: 0,
       penalties: 0,
     };
-    for (const c of filtered) {
+    for (const c of visibleCandidates) {
       if (!c.scoreBreakdown) continue;
       for (const { key } of SIGNAL_LABELS) {
         base[key] = Math.max(base[key], c.scoreBreakdown[key] ?? 0);
       }
     }
     return base;
-  }, [filtered]);
+  }, [visibleCandidates]);
 
   const confirmedCount = candidates.filter((c) => String(c.lineupStatus ?? '').toLowerCase() === 'confirmed').length;
 
@@ -342,7 +350,7 @@ export function SmartAiDeepResearchPanel({
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((c) => {
+          {visibleCandidates.map((c) => {
             const tier = c.confidenceTier ?? null;
             const headshot = getMlbHeadshotUrl(c.playerId);
             const probability =
@@ -639,6 +647,21 @@ export function SmartAiDeepResearchPanel({
               </article>
             );
           })}
+
+          {hasMoreCandidates && (
+            <div className="col-span-full flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((count) => Math.min(count + 12, filtered.length))}
+                className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-100 transition hover:border-cyan-200/50 hover:bg-cyan-400/20"
+              >
+                Load more verified candidates
+                <span className="ml-2 text-cyan-200/70">
+                  {visibleCandidates.length}/{filtered.length}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

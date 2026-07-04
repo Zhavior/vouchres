@@ -1420,6 +1420,11 @@ export default function App() {
         return (
           <ParlayCommandCenter
             savedSlips={savedSlips}
+            liveGames={liveGames}
+            onSectionChange={navigateSection}
+            onAddLegToParlay={handleAddLegFromResearch}
+            onSaveVouch={handleSaveVouch}
+            onPostCreated={handlePostCreated}
             initialPanel="build"
             onSaveParlay={handleSaveParlaySlip}
             onHideParlay={handleHideSavedParlay}
@@ -1448,6 +1453,11 @@ export default function App() {
           <ParlayCommandCenter
             key="live_parlays"
             savedSlips={savedSlips}
+            liveGames={liveGames}
+            onSectionChange={navigateSection}
+            onAddLegToParlay={handleAddLegFromResearch}
+            onSaveVouch={handleSaveVouch}
+            onPostCreated={handlePostCreated}
             initialPanel="live"
             onSaveParlay={handleSaveParlaySlip}
             onHideParlay={handleHideSavedParlay}

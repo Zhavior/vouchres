@@ -43,7 +43,7 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
   const enabledFeatures = getEnabledFeatures(layout, {
     canAccessThemeStore: canAccessThemeStore(profile),
     activeSport,
-  }).filter((feature) => !['feed', 'profile', 'settings'].includes(feature.id));
+  }).filter((feature) => !['feed', 'profile', 'settings', 'ai_engine'].includes(feature.id));
 
   // Split into ungrouped (top) + grouped sections, preserving order
   const ungrouped = enabledFeatures.filter((f) => !f.group);
