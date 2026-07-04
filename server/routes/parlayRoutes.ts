@@ -568,12 +568,18 @@ parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, async (r
   try {
     const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
     const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
+    const repair = await repairLegacyParlayIdentityForSync({
+      dryRun: false,
+      limit: 100,
+      externalProvider: "live_hr_sync_repair",
+    });
     const result = await applyLiveHrParlayMatches(date);
 
     return res.json({
       ok: true,
       mode: "live_hr_sync",
       date: date ?? null,
+      repair,
       ...result,
     });
   } catch (err: any) {
@@ -628,12 +634,18 @@ parlayRoutes.get("/cron/parlays/live-hr-sync", async (req: Request, res: Respons
   try {
     const rawDate = req.query.date;
     const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
+    const repair = await repairLegacyParlayIdentityForSync({
+      dryRun: false,
+      limit: 100,
+      externalProvider: "cron_live_hr_sync_repair",
+    });
     const result = await applyLiveHrParlayMatches(date);
 
     return res.json({
       ok: true,
       mode: "cron_live_hr_sync",
       date: date ?? null,
+      repair,
       ...result,
       checkedAt: new Date().toISOString(),
     });
@@ -969,6 +981,83 @@ function repairStatTarget(row: any, marketCode: string | null): number | null {
  * - skips unsafe rows with reasons
  * - keeps the job capped so serverless functions do not run forever
  */
+async function repairLegacyParlayIdentityForSync(options: {
+  dryRun?: boolean;
+  limit?: number;
+  externalProvider?: string;
+} = {}) {
+  const dryRun = options.dryRun ?? true;
+  const limit = Math.min(Math.max(Number(options.limit ?? 50), 1), 250);
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const { data: rows, error } = await supabaseAdmin
+    .from("pick_legs")
+    .select("id,pick_id,leg_index,sport,game_id,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status,picks(event_id,metadata)")
+    .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null")
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  let repairedCount = 0;
+  let skippedCount = 0;
+
+  for (const row of rows ?? []) {
+    const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
+    const gameId = repairGameIdFromRow(row);
+    const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
+    const playerId = repairCleanKey(row.player_id || repairPlayerIdFromSelection(row.selection));
+    const marketCode = repairMarketCode(row);
+    const statTarget = repairStatTarget(row, marketCode);
+    const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
+    const comparatorKey = repairComparatorKey(comparator);
+
+    if (!gameId || !playerId || !marketCode || statTarget == null || !comparatorKey) {
+      skippedCount += 1;
+      continue;
+    }
+
+    const eventKey = [sport, gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join("_");
+    const popularityKey = [sport, playerId, marketCode, statTarget, comparatorKey].join("_");
+
+    const patch = {
+      sport,
+      game_id: gameId,
+      team_id: teamId,
+      player_id: playerId,
+      market_code: marketCode,
+      stat_target: statTarget,
+      comparator,
+      event_key: eventKey,
+      popularity_key: popularityKey,
+      external_provider: row.external_provider || options.externalProvider || "repair_identity",
+    };
+
+    if (!dryRun) {
+      const { error: updateError } = await supabaseAdmin
+        .from("pick_legs")
+        .update(patch)
+        .eq("id", row.id);
+
+      if (updateError) {
+        skippedCount += 1;
+        continue;
+      }
+    }
+
+    repairedCount += 1;
+  }
+
+  return {
+    dryRun,
+    scanned: rows?.length ?? 0,
+    repairedCount,
+    skippedCount,
+  };
+}
+
+
 parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Response) => {
   if (!isAuthorizedCronRequest(req)) {
     return res.status(401).json({ error: "unauthorized" });
