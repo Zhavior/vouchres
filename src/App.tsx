@@ -54,6 +54,7 @@ const EpicThemeShowcase = lazy(() =>
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
 const DailyHrBoardPage = lazy(() => import('./pages/DailyHrBoardPage'));
+const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
 const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
@@ -225,6 +226,10 @@ function resolveDevSectionFromLocation() {
   const pathname = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
   const target = hash || pathname;
+
+  if (target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new') {
+    return 'daily_hr_watch_new';
+  }
 
   if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
     return 'hr_board';
@@ -1536,6 +1541,14 @@ export default function App() {
         );
       case 'intel':
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
+
+      case 'daily_hr_watch_new':
+        return (
+          <DailyHrWatchNewPage
+            profile={profile}
+            onAddLegToParlay={handleAddLegFromResearch}
+          />
+        );
 
       case 'hr_board':
         return <DailyHrBoardPage onAddLegToParlay={handleAddLegFromResearch} profile={profile} />;
