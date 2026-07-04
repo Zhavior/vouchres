@@ -38,7 +38,7 @@ const proofCards = [
 const islandActions = [
   ['Open Upcoming Games', 'upcoming_games', Flame],
   ['Check Alerts', 'notifications', Bell],
-  ['Build Parlay', 'parlay_lab', Compass],
+  ['Build Parlay', 'build', Compass],
   ['View Results', 'results', Activity],
 ];
 

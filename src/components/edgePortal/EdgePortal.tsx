@@ -394,7 +394,7 @@ export default function EdgePortal({
                                   ['Upcoming Games', 'daily_players'],
                                   ['Notifications', 'notifications'],
                                   ['My Results', 'results'],
-                                  ['Parlay Lab', 'parlay_lab'],
+                                  ['Parlay Lab', 'build'],
                                 ].map(([label, section]) => (
                                   <button
                                     key={label}
