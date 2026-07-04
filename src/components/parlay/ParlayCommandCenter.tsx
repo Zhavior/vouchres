@@ -72,7 +72,10 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
   const removeDraftLeg = useParlayCommandStore((state) => state.removeDraftLeg);
   const clearDraft = useParlayCommandStore((state) => state.clearDraft);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAllDraftLegs, setShowAllDraftLegs] = useState(false);
   const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving;
+  const visibleDraftLegs = showAllDraftLegs ? draftLegs : draftLegs.slice(0, 5);
+  const hiddenDraftLegCount = Math.max(0, draftLegs.length - visibleDraftLegs.length);
   const readableOdds = draftLegs
     .map((leg) => Number((leg as Record<string, unknown>).odds))
     .filter((odds) => Number.isFinite(odds));
@@ -215,7 +218,7 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
             />
           ) : (
             <div className="space-y-3">
-              {draftLegs.map((leg) => (
+              {visibleDraftLegs.map((leg) => (
                 <div key={leg.id} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -229,6 +232,20 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
                           {getDraftLegGameContext(leg)}
                         </p>
                       )}
+
+                      {Array.isArray(leg.tags) && leg.tags.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {leg.tags.slice(0, 6).map((tag) => (
+                            <span
+                              key={`${leg.id}-${tag}`}
+                              className="rounded-full border border-sky-400/15 bg-sky-400/10 px-2 py-0.5 text-[10px] font-black text-sky-100"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
                         {leg.odds !== undefined && (
                           <span className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-slate-300">
@@ -258,6 +275,18 @@ function BuildSlipPanel({ onSaveParlay }: { onSaveParlay?: (parlay: CanonicalPar
                   </div>
                 </div>
               ))}
+
+              {draftLegs.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDraftLegs((current) => !current)}
+                  className="w-full rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-100 transition hover:bg-cyan-400/15"
+                >
+                  {showAllDraftLegs
+                    ? "Collapse legs"
+                    : `Show all ${draftLegs.length} legs${hiddenDraftLegCount > 0 ? ` · ${hiddenDraftLegCount} hidden` : ""}`}
+                </button>
+              )}
             </div>
           )}
         </div>
