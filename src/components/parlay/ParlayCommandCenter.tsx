@@ -318,13 +318,15 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
                 const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
                 return bTime - aTime;
               })
-              .map((slip) => {
+              .map((slip, slipIndex) => {
               const previewLegs = slip.legs.slice(0, 3);
               const hiddenLegCount = Math.max(0, slip.legs.length - previewLegs.length);
+              const slipRenderKey =
+                slip.sourceId || `${slip.publicId}-${slip.createdAt ?? "unknown"}-${slipIndex}`;
 
               return (
                 <article
-                  key={slip.publicId}
+                  key={slipRenderKey}
                   className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-xl shadow-black/10"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -419,12 +421,13 @@ function LiveSavedParlaysPanel({ onHideParlay }: { onHideParlay?: (parlayId: str
 
                   {previewLegs.length > 0 && (
                     <div className="mt-4 grid gap-2">
-                      {previewLegs.map((leg) => {
+                      {previewLegs.map((leg, legIndex) => {
                         const resultVisual = getLegResultVisual(leg);
+                        const legRenderKey = `${slipRenderKey}-${leg.publicId}-${legIndex}`;
 
                         return (
                           <div
-                            key={leg.publicId}
+                            key={legRenderKey}
                             className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 ${resultVisual.rowClass}`}
                           >
                           <div className="flex min-w-0 items-center gap-3">
