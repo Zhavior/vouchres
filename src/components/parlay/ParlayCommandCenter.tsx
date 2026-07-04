@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Bot,
   Brain, Crown, Flame, Layers3, Radio, Save, Sparkles, Wand2 } from "lucide-react";
 import { PanelErrorBoundary } from "../common/PanelErrorBoundary";
-import SmartAiEngine from "../SmartAiEngine";
+import { lazy, Suspense } from "react";
+const SmartAiEngine = lazy(() => import("../SmartAiEngine"));
 import { normalizeParlayLeg, normalizeParlaySlip } from "../../lib/parlays/parlayBridge";
 import type { CanonicalParlaySlip } from "../../lib/parlays/parlayBridge";
 import {

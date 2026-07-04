@@ -9,6 +9,7 @@ import HrPlayerDrawer from '../components/hr-board/HrPlayerDrawer';
 import type { CreatorProofProfile, MLBPlayer } from '../types';
 import { hasTierAccess } from '../components/pro/ProAccessGate';
 import { bootDataStore } from '../lib/boot/bootDataStore';
+import { useVouchResource } from '../hooks/useVouchResource';
 
 const GRADE_RANK: Record<string, number> = { 'A+': 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
@@ -73,84 +74,25 @@ interface HrBoardPageProps {
   profile?: CreatorProofProfile;
 }
 
-// Module-level cache (survives unmount/navigation) so re-opening the HR Edge
-// Board is instant and never flashes blank while the slow engine re-fetches.
-const hrBoardCache: Record<string, { data: HrBoardResponse; ts: number }> = {};
-
-function getBootHrBoard(date: string): { data: HrBoardResponse; ts: number } | null {
-  if (date !== todayISO()) return null;
-
-  const bootBoard = bootDataStore.get<HrBoardResponse>("dailyHrBoard");
-  if (!bootBoard) return null;
-
-  return {
-    data: bootBoard,
-    ts: bootDataStore.getUpdatedAt("dailyHrBoard") ?? Date.now(),
-  };
-}
-
 export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardPageProps = {}) {
   const initialDate = todayISO();
   const [view, setView] = useState<'tier' | 'game'>('tier');
   const [projectedPoolView, setProjectedPoolView] = useState<'curated' | 'all'>('curated');
   const [date, setDate] = useState(initialDate);
-  // Seed from the module cache so re-visiting renders instantly (sticky) instead
-  // of flashing blank while the slow HR engine endpoint re-fetches.
-  const [board, setBoard] = useState<HrBoardResponse | null>(() => {
-    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
-    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
-    return cached?.data ?? null;
-  });
-  const [loading, setLoading] = useState(() => {
-    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
-    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
-    return !cached;
-  });
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HrBoardFilterState>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<HrBoardRow | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
-    const cached = hrBoardCache[initialDate] ?? getBootHrBoard(initialDate);
-    if (cached && !hrBoardCache[initialDate]) hrBoardCache[initialDate] = cached;
-    return cached ? new Date(cached.ts) : null;
+  // Seed from the module cache so re-visiting renders instantly (sticky) instead
+  // of flashing blank while the slow HR engine endpoint re-fetches.
+  const { data: board, loading, error, lastUpdated, refresh } = useVouchResource<HrBoardResponse>({
+    cacheKey: `hr-board:${date}`,
+    enabled: true,
+    refreshMs: date === todayISO() ? REFRESH_MS : null,
+    staleMs: REFRESH_MS,
+    fetcher: () =>
+      date === todayISO()
+        ? vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
+        : vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT),
   });
-
-  const load = useCallback(async () => {
-    // Keep showing cached data (no blank) and refresh quietly in the background;
-    // only show the loading state when there's nothing cached for this date.
-    const cached = hrBoardCache[date] ?? getBootHrBoard(date);
-    if (cached) {
-      if (!hrBoardCache[date]) hrBoardCache[date] = cached;
-      setBoard(cached.data);
-      setLastUpdated(new Date(cached.ts));
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-    try {
-      const data = date === todayISO()
-        ? await vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
-        : await vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT);
-      hrBoardCache[date] = { data, ts: Date.now() };
-      setBoard(data);
-      setLastUpdated(new Date());
-    } catch {
-      if (!hrBoardCache[date]) setError('HR Board data unavailable right now.');
-    } finally {
-      setLoading(false);
-    }
-  }, [date]);
-
-  // Auto-refresh every 5 min while viewing today's board.
-  useEffect(() => {
-    load();
-    if (date !== todayISO()) return;
-    const id = window.setInterval(() => {
-      load();
-    }, REFRESH_MS);
-    return () => window.clearInterval(id);
-  }, [date, load]);
 
   const confirmedCandidates = useMemo(
     () => (Array.isArray((board as any)?.candidates) ? (board as any).candidates : []),
@@ -493,7 +435,7 @@ export default function DailyHrBoardPage({ onAddLegToParlay, profile }: HrBoardP
               {lastUpdated && <span className="text-[hsl(var(--ve-text-muted)/0.76)]"> · updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
             </p>
           </div>
-          <button onClick={load} className="ve-btn-secondary px-3.5 py-2.5 text-xs uppercase tracking-wide hover:border-[hsl(var(--ve-accent-cyan)/0.44)] hover:text-[hsl(var(--ve-accent-cyan))]">
+          <button onClick={() => void refresh()} className="ve-btn-secondary px-3.5 py-2.5 text-xs uppercase tracking-wide hover:border-[hsl(var(--ve-accent-cyan)/0.44)] hover:text-[hsl(var(--ve-accent-cyan))]">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
