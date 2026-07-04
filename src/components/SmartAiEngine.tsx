@@ -1,5 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Cpu, Database, CheckCircle2, Activity, Award, Gauge } from 'lucide-react';
+import {
+  Cpu,
+  Database,
+  CheckCircle2,
+  Activity,
+  Award,
+  Gauge,
+  Lock,
+  Unlock,
+  Crown,
+  Bookmark,
+} from 'lucide-react';
+import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
+import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
+
 import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { resolveMarket } from '../sports/markets';
@@ -87,6 +101,7 @@ export default function SmartAiEngine({
   const [builderLegs, setBuilderLegs] = useState<number>(3);
   const [builderCategory, setBuilderCategory] = useState<SmartAiBuilderCategory>('HITS');
   const [builderThreshold, setBuilderThreshold] = useState<number>(2);
+  const [aiAgreementAccepted, setAiAgreementAccepted] = useState(false);
 
   // Auto adjusting threshold bounds so that focus options make complete tactical sense
   useEffect(() => {
@@ -157,8 +172,44 @@ export default function SmartAiEngine({
         setRealCandidates(mapped);
         setCandidatesLoading(false);
       });
-    return () => { alive = false; };
+  
+
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  // V.A.I Rooms shell: frontend/dev adapter for now.
+  // Final paid access enforcement should move to the server route.
+  const vaiTodayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  const vaiAccessTier = useMemo(() => {
+    if (typeof window === 'undefined') return 'pro';
+    return window.localStorage.getItem('vouchedge_vai_tier') ?? 'pro';
+  }, []);
+
+  const vaiEntitlements = useMemo(
+    () => getVaiEntitlements({ tier: vaiAccessTier, dateKey: vaiTodayKey }),
+    [vaiAccessTier, vaiTodayKey]
+  );
+
+  const [selectedVaiPersonaId, setSelectedVaiPersonaId] = useState<VaiPersonaId>(() =>
+    getDailyVaiPersona(vaiTodayKey)
+  );
+
+  useEffect(() => {
+    if (
+      vaiEntitlements.allowedPersonaIds.length > 0 &&
+      !vaiEntitlements.allowedPersonaIds.includes(selectedVaiPersonaId)
+    ) {
+      setSelectedVaiPersonaId(vaiEntitlements.allowedPersonaIds[0]);
+    }
+  }, [selectedVaiPersonaId, vaiEntitlements.allowedPersonaIds]);
+
+  const selectedVaiPersona =
+    VAI_PERSONAS.find((persona) => persona.id === selectedVaiPersonaId) ?? VAI_PERSONAS[0];
+
+  const isSelectedVaiRoomUnlocked = vaiEntitlements.allowedPersonaIds.includes(selectedVaiPersona.id);
 
   const dynamicParlay = useMemo(
     () =>
@@ -281,6 +332,73 @@ export default function SmartAiEngine({
     onSectionChange('research');
   };
 
+  if (!aiAgreementAccepted) {
+    return (
+      <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-agreement-gate">
+        <div className="relative overflow-hidden rounded-[2rem] border border-sky-400/20 bg-slate-950/90 p-6 sm:p-8 shadow-2xl shadow-sky-950/20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_35%)]" />
+          <div className="relative space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl border border-sky-300/25 bg-sky-400/10 p-3">
+                <Award className="h-6 w-6 text-sky-300" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-300">
+                  V.A.I Locked AI Made Parlays
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight">
+                  Research tool only — not betting advice.
+                </h1>
+                <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+                  V.A.I generates locked AI Made Parlays from available research signals. These picks can be wrong, player
+                  status can change, odds are not guaranteed, and sportsbook markets may differ. Use this as research support,
+                  verify every leg yourself, and never risk money you cannot afford to lose.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <CheckCircle2 className="mb-3 h-5 w-5 text-emerald-300" />
+                <h3 className="text-sm font-black text-white">Locked separation</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  AI Made Parlays stay separate from manual Build Parlay slips.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <Database className="mb-3 h-5 w-5 text-sky-300" />
+                <h3 className="text-sm font-black text-white">Research inputs</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Candidate boards are informational and must be verified before use.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <Gauge className="mb-3 h-5 w-5 text-indigo-300" />
+                <h3 className="text-sm font-black text-white">No guarantees</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Model confidence is not a promise, price, sportsbook line, or financial recommendation.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-100/90">
+              By unlocking V.A.I, you understand that this feature is for sports research and entertainment only. You are
+              responsible for your own choices and local rules.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAiAgreementAccepted(true)}
+              className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-sky-950/30 transition hover:from-sky-400 hover:to-emerald-400 active:scale-[0.99]"
+            >
+              I Understand — Unlock V.A.I
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-ledger-root">
 
@@ -349,6 +467,115 @@ export default function SmartAiEngine({
         </div>
       </div>
 
+
+      {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
+      <div className="rounded-[2rem] border border-slate-800/80 bg-slate-950/80 p-4 sm:p-5 shadow-2xl shadow-black/30" id="vai-rooms-command-deck">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
+              <Crown className="h-3.5 w-3.5" />
+              V.A.I Rooms
+            </div>
+            <h2 className="mt-1 text-xl sm:text-2xl font-black text-white">
+              Choose today&apos;s AI research room
+            </h2>
+            <p className="mt-1 max-w-3xl text-xs sm:text-sm text-slate-400">
+              All four rooms are visible. Pro unlocks one room per day. Research Seller Pro unlocks the full AI desk.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
+            <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
+            <div className="font-bold text-white">{vaiEntitlements.reason}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {VAI_PERSONAS.map((persona) => {
+            const unlocked = vaiEntitlements.allowedPersonaIds.includes(persona.id);
+            const selected = selectedVaiPersonaId === persona.id;
+
+            return (
+              <button
+                key={persona.id}
+                type="button"
+                onClick={() => setSelectedVaiPersonaId(persona.id)}
+                className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${persona.gradient} ${persona.border} p-4 text-left transition-all duration-200 ${
+                  selected ? `ring-2 ring-white/25 shadow-2xl ${persona.glow}` : 'hover:border-slate-500/50'
+                }`}
+              >
+                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/5 blur-2xl" />
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                        {persona.accent}
+                      </div>
+                      <h3 className="mt-1 text-lg font-black text-white">{persona.name}</h3>
+                    </div>
+
+                    <div className={`rounded-2xl border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                      unlocked
+                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+                        : 'border-slate-700 bg-slate-950/70 text-slate-400'
+                    }`}>
+                      {unlocked ? (
+                        <span className="inline-flex items-center gap-1"><Unlock className="h-3 w-3" /> Open</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Locked</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="min-h-[44px] text-xs leading-relaxed text-slate-300">
+                    {persona.specialtyLine}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {persona.specialties.slice(0, 4).map((specialty) => (
+                      <span
+                        key={`${persona.id}-${specialty}`}
+                        className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-1 text-[10px] font-bold text-slate-300"
+                      >
+                        {specialty.replace('_', ' ')}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-white/10 pt-3 text-[11px] text-slate-400">
+                    <span className="font-bold text-slate-200">{persona.roomName}</span>
+                    <span className="mx-1">·</span>
+                    <span>{unlocked ? 'Tap to enter today.' : persona.lockedLine}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={`rounded-[2rem] border ${selectedVaiPersona.border} bg-slate-950/70 p-4 sm:p-5 shadow-2xl ${selectedVaiPersona.glow}`} id="vai-selected-room-panel">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+              Selected room
+            </div>
+            <h2 className="mt-1 text-2xl font-black text-white">{selectedVaiPersona.name}</h2>
+            <p className="mt-1 text-sm text-slate-400">{selectedVaiPersona.toneLine}</p>
+          </div>
+
+          <div className={`w-fit rounded-2xl border px-3 py-2 text-xs font-black uppercase tracking-wider ${
+            isSelectedVaiRoomUnlocked
+              ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+              : 'border-slate-700 bg-slate-900/80 text-slate-400'
+          }`}>
+            {isSelectedVaiRoomUnlocked ? 'Room open today' : 'Upgrade to unlock'}
+          </div>
+        </div>
+
+        {isSelectedVaiRoomUnlocked ? (
+          <>
+
       {/* DUAL WORKSPACE LAYOUT: builder left, research board right */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="ai-workspace-container">
         <div className="xl:col-span-5 space-y-6" id="ai-dynamic-creator-column">
@@ -373,6 +600,34 @@ export default function SmartAiEngine({
             onOpenResearch={handleOpenResearch}
           />
         </div>
+      </div>
+
+          </>
+        ) : (
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 p-6 sm:p-8 text-center" id="vai-locked-room-upgrade-panel">
+            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
+              <Lock className="h-7 w-7 text-slate-300" />
+            </div>
+            <div className="mx-auto max-w-xl space-y-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+                {selectedVaiPersona.roomName} sealed
+              </div>
+              <h3 className="text-2xl font-black text-white">{selectedVaiPersona.lockedLine}</h3>
+              <p className="text-sm leading-relaxed text-slate-400">
+                You can see the room identity, specialty, and risk style, but the actual slips, player names,
+                and research receipts stay hidden until this room is unlocked.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="mt-5 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-5 py-3 text-xs font-black uppercase tracking-wider text-sky-200 hover:bg-sky-500/20"
+              onClick={() => onSectionChange('pricing')}
+            >
+              Upgrade to enter room
+            </button>
+          </div>
+        )}
       </div>
 
       {/* DISCLOSURE CARD SECTION */}

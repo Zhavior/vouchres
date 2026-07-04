@@ -10,7 +10,8 @@ export type ParlaySource =
   | "tailed_parlay"
   | "local_import"
   | "ai_pick"
-  | "command_center";
+  | "command_center"
+  | "vai_ai_made_parlay";
 export type ParlayMarketCode =
   | "ANYTIME_HR"
   | "HIT"

@@ -455,7 +455,7 @@ function AiSmartPicksPanel() {
         <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-300">Command Rule</p>
         <h3 className="mt-1 text-lg font-black text-white">One slip owner</h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-          V.A.I does not save parlays directly. It only stages legs into the Command Center draft. Save Slip remains the only backend save action.
+          Manual Build Parlay and locked V.A.I parlays are separate slip owners. Manual slips use the builder save flow, while V.A.I AI Made Parlays save as locked AI slips with their own tracking identity.
         </p>
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
           <p className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">Draft legs staged</p>
