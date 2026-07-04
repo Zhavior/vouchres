@@ -15,6 +15,8 @@ import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
 import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
 
 import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
+import { normalizeParlaySlip } from '../lib/parlays/parlayBridge';
+import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { safeJsonFetch } from '../api/safeApiClient';
 import { resolveMarket } from '../sports/markets';
 import {
@@ -46,7 +48,7 @@ interface SmartAiEngineProps {
   ) => void;
   onSaveVouch: (vouchItem: any) => void;
   onPostCreated?: (newPost: FeedPost) => void;
-  onSaveParlay?: (parlay: Parlay) => void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => void;
   liveGames?: any[];
 }
 
@@ -317,7 +319,7 @@ export default function SmartAiEngine({
       canEditLegs: boolean;
       resultBucket: 'ai_made_parlays';
     };
-    onSaveParlay(parlay);
+    onSaveParlay(normalizeParlaySlip(parlay, 'ai_engine'));
     const gradable = legs.filter((l) => l.gamePk).length;
     alert(`✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
     onSectionChange('results');
