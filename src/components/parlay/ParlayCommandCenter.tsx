@@ -864,54 +864,6 @@ type VaiLedgerSlip = {
   metadata?: VaiLedgerMeta;
 };
 
-type VaiLedgerMeta = {
-  source?: string;
-  aiGenerated?: boolean;
-  ai_generated?: boolean;
-  title?: string;
-  displayName?: string;
-  display_name?: string;
-  summary?: string;
-};
-
-type VaiLedgerLeg = {
-  playerName?: string;
-  player_name?: string;
-  selection?: string;
-  marketLabel?: string;
-  market?: string;
-};
-
-type VaiLedgerSlip = {
-  id?: string | number;
-  source?: string;
-  aiGenerated?: boolean;
-  ai_generated?: boolean;
-  title?: string;
-  name?: string;
-  summary?: string;
-  status?: string;
-  result?: string;
-  legs?: VaiLedgerLeg[];
-  pick_legs?: VaiLedgerLeg[];
-  metadata?: VaiLedgerMeta;
-};
-
-function isVaiLedgerSlip(slip: unknown): slip is VaiLedgerSlip {
-  if (!slip || typeof slip !== "object") return false;
-  const candidate = slip as VaiLedgerSlip;
-  const source = String(candidate.source ?? candidate.metadata?.source ?? "").toLowerCase();
-  return (
-    candidate.aiGenerated === true ||
-    candidate.ai_generated === true ||
-    candidate.metadata?.aiGenerated === true ||
-    candidate.metadata?.ai_generated === true ||
-    source === "ai_pick" ||
-    source === "vai" ||
-    source === "vai_locked" ||
-    source === "vouch_ai"
-  );
-}
 
 function isRawVaiMetaText(value: unknown) {
 
@@ -1049,6 +1001,7 @@ function VaiLedgerPanel({ savedSlips }: { savedSlips: unknown[] }) {
                   const legs = getVaiSlipLegs(slip);
                   const summary = getVaiSlipSummary(slip);
                   const slipAny = slip as Record<string, unknown>;
+                  const slipData = slip as VaiLedgerSlip;
                   const hasLegacyWarning = [slipData.title, slipData.name, slipData.summary, slipData.metadata?.summary]
                     .filter(Boolean)
                     .some(isRawVaiMetaText);

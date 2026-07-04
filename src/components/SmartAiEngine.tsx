@@ -52,6 +52,51 @@ interface SmartAiEngineProps {
   liveGames?: any[];
 }
 
+
+type SmartAiRawCandidate = {
+  playerId?: string | number;
+  player_id?: string | number;
+  id?: string | number;
+  playerName?: string;
+  player_name?: string;
+  name?: string;
+  gamePk?: string | number;
+  gameId?: string | number;
+  team?: string;
+  teamAbbrev?: string;
+  opponent?: string;
+  opponentTeam?: string;
+  probablePitcher?: {
+    name?: string;
+    throws?: string;
+    vulnerability?: number;
+  } | null;
+  pitcherHand?: string;
+  opposingPitcherHand?: string;
+  batSide?: string;
+  injuryStatus?: string;
+  pitcherVulnerability?: number;
+  parkFactor?: number;
+  venue?: string;
+  ballpark?: string;
+  lineupStatus?: string;
+  lineup_status?: string;
+  confidenceTier?: string;
+  riskTier?: string;
+  estimatedHrProbability?: number;
+  dataConfidence?: number;
+  battingOrder?: number;
+  dataQuality?: string;
+  reasons?: unknown[];
+  warnings?: unknown[];
+  scoreBreakdown?: Record<string, unknown> | null;
+  score?: number;
+  hrScore?: number;
+  edge?: number;
+  impliedOdds?: number;
+  odds?: number;
+};
+
 /** Minimal MLBPlayer shim for leg transfer. The transfer path only reads
  *  id/name/team; the remaining fields are type-required placeholders and must
  *  NOT be rendered as verified data (bats/throws cannot express "unknown" yet). */
