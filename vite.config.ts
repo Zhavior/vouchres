@@ -30,18 +30,66 @@ export default defineConfig(({ mode }) => {
       include: ['@supabase/supabase-js'],
     },
     build: {
+      chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+
+            // Core React runtime — smallest possible initial chunk
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/')
+            ) {
               return 'react-vendor';
             }
+
+            // Supabase — large auth/realtime SDK
             if (id.includes('@supabase/')) return 'supabase-vendor';
-            if (id.includes('/recharts/') || id.includes('/d3-')) return 'charts-vendor';
-            if (id.includes('/framer-motion/') || id.includes('/motion/')) return 'motion-vendor';
+
+            // Charts — recharts + all d3 sub-packages
+            if (
+              id.includes('/recharts/') ||
+              id.includes('/d3-') ||
+              id.includes('victory-')
+            ) {
+              return 'charts-vendor';
+            }
+
+            // Animation — framer-motion + motion
+            if (id.includes('/framer-motion/') || id.includes('/motion/')) {
+              return 'motion-vendor';
+            }
+
+            // Drag and drop
             if (id.includes('@dnd-kit/')) return 'dnd-vendor';
-            if (id.includes('@sentry/') || id.includes('posthog-js')) return 'telemetry-vendor';
+
+            // Observability — never needed on first paint
+            if (
+              id.includes('@sentry/') ||
+              id.includes('posthog-js') ||
+              id.includes('@vercel/')
+            ) {
+              return 'telemetry-vendor';
+            }
+
+            // Icons — lucide is large, isolate it
+            if (id.includes('lucide-react')) return 'icons-vendor';
+
+            // Stripe — only needed on billing pages
+            if (id.includes('stripe')) return 'stripe-vendor';
+
+            // State + validation
+            if (id.includes('zustand') || id.includes('zod')) {
+              return 'state-vendor';
+            }
+
+            // Google AI SDK
+            if (id.includes('@google/genai')) return 'ai-vendor';
+
+            // Google auth
+            if (id.includes('google-auth-library')) return 'ai-vendor';
           },
         },
       },
