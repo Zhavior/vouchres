@@ -3,8 +3,9 @@ import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import FeedMobileNav from './FeedMobileNav';
 import CyberBackground from '../../components/CyberBackground';
+import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
-import { Sliders, ShieldCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck, Sparkles, Bell } from 'lucide-react';
 import AisFeatureAgent from '../../components/AisFeatureAgent';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
@@ -37,6 +38,9 @@ export default function HomeFeedLayout({
   
   const { activeTheme, reduceMotion } = useTheme();
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
+  const [cmdKOpen, setCmdKOpen] = React.useState(false);
+  // Placeholder: wire to real notification store when available
+  const unreadNotifications = 0;
   const previousSectionRef = React.useRef(activeSection);
 
   React.useEffect(() => {
@@ -50,6 +54,18 @@ export default function HomeFeedLayout({
 
     return () => window.clearTimeout(timer);
   }, [activeSection, reduceMotion]);
+
+  // Global Cmd+K / Ctrl+K shortcut
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdKOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const getThemeVars = (theme: VisualTheme) => {
     return {
@@ -110,15 +126,20 @@ export default function HomeFeedLayout({
             {Array.from({ length: 42 }).map((_, i) => {
               const animDuration = `${0.5 + (i % 8) * 0.12}s`;
               const animDelay = `-${(i % 5) * 0.18}s`;
+              const barColor = i % 4 === 0 ? 'hsl(var(--ve-accent-cyan))' : i % 3 === 0 ? 'hsl(var(--ve-accent-pink))' : 'hsl(var(--ve-accent-gold))';
               return (
                 <div 
                   key={i} 
-                  className="w-1.5 rounded-t-md bg-gradient-to-t from-fuchsia-500 via-purple-500 to-cyan-400 border-t border-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.6)]"
+                  className="w-1.5 rounded-t-md origin-bottom"
                   style={{
-                    animation: `equalizer-pulse ${animDuration} ease-in-out infinite alternate`,
+                    background: barColor,
+                    animationName: 'equalizer-pulse',
+                    animationDuration: animDuration,
                     animationDelay: animDelay,
-                    height: '20px'
-                  } as React.CSSProperties}
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'ease-in-out',
+                    height: '16px',
+                  }}
                 />
               );
             })}
@@ -126,7 +147,7 @@ export default function HomeFeedLayout({
         </>
       )}
 
-      {/* Explosive Ambient Drifting floating particles of the equipped theme */}
+      {/* Drifting theme particles */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
           {driftingParticles.map((p, idx) => (
@@ -163,7 +184,9 @@ export default function HomeFeedLayout({
             <FeedSidebar 
               activeSection={activeSection} 
               onSectionChange={onSectionChange} 
-              profile={profile} 
+              profile={profile}
+              onOpenCmdK={() => setCmdKOpen(true)}
+              unreadNotifications={unreadNotifications}
             />
           </div>
         )}
@@ -172,29 +195,43 @@ export default function HomeFeedLayout({
         <main className={`flex-1 min-w-0 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-[hsl(var(--ve-border)/0.24)] pb-[74px] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
           {activeSection !== 'welcome' && (
-            <header className="md:hidden sticky top-0 bg-[#0b0f19]/90 backdrop-blur-md border-b border-slate-850 px-4 py-3 flex items-center justify-between z-30 select-none">
+            <header className="md:hidden sticky top-0 bg-[hsl(var(--ve-bg-deep)/0.90)] backdrop-blur-md border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex items-center justify-between z-30 select-none">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSectionChange('feed')}>
-                <div className="w-8 h-8 rounded-lg bg-amber-955/40 border border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-bold text-xs shadow-[0_0_10px_rgba(255,232,31,0.2)]">
-                  ★
+                <div className="w-8 h-8 rounded-lg border border-[hsl(var(--ve-accent-cyan)/0.50)] bg-[hsl(var(--ve-accent-cyan)/0.12)] flex items-center justify-center text-[hsl(var(--ve-accent-cyan))] font-bold text-xs shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.20)]">
+                  VE
                 </div>
-                <span className="text-sm font-black text-white starwars-font-crawl tracking-wider">
-                  VOUCH<span className="text-[#FFE81F] starwars-font-solid font-black">EDGE</span>
+                <span className="text-sm font-black text-[hsl(var(--ve-text-primary))] tracking-wider">
+                  VOUCH<span className="text-[hsl(var(--ve-accent-cyan))] font-black">EDGE</span>
                 </span>
               </div>
 
-              {/* Track Record compact view & PRO Upgrade */}
+              {/* Track Record compact view & PRO Upgrade + Notifications */}
               <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                {/* Notification bell — mobile */}
+                <button
+                  onClick={() => onSectionChange('notifications')}
+                  className="relative flex items-center justify-center w-8 h-8 rounded-full border border-[hsl(var(--ve-border)/0.40)] bg-[hsl(var(--ve-bg-panel)/0.40)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] hover:border-[hsl(var(--ve-accent-cyan)/0.30)] transition-all"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[hsl(var(--ve-accent-pink))] text-[7px] font-black text-[hsl(var(--ve-bg))]">
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </span>
+                  )}
+                </button>
+
                 <div 
                   onClick={() => onSectionChange('premium')}
-                  className="flex items-center gap-1 bg-gradient-to-r from-sky-500/20 to-indigo-500/20 border border-sky-500/30 px-2.5 py-1 rounded-full text-sky-400 font-bold cursor-pointer active:scale-95 transition-all animate-pulse"
+                  className="flex items-center gap-1 bg-[hsl(var(--ve-accent-cyan)/0.12)] border border-[hsl(var(--ve-accent-cyan)/0.30)] px-2.5 py-1 rounded-full text-[hsl(var(--ve-accent-cyan))] font-bold cursor-pointer active:scale-95 transition-all animate-pulse"
                 >
-                  <Sparkles className="w-3 h-3 text-sky-400" />
+                  <Sparkles className="w-3 h-3" />
                   <span>UPGRADE</span>
                 </div>
 
                 <div 
                   onClick={() => onSectionChange('profile')}
-                  className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-full text-emerald-400 font-bold cursor-pointer"
+                  className="flex items-center gap-1 bg-[hsl(var(--ve-bg-panel)/0.60)] border border-[hsl(var(--ve-border)/0.40)] px-2 py-1 rounded-full text-[hsl(var(--ve-success))] font-bold cursor-pointer"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>{profile.winRate.toFixed(1)}% WR</span>
@@ -237,9 +274,15 @@ export default function HomeFeedLayout({
         profile={profile} 
         savedSlips={savedSlips} 
         activeLegs={activeLegs} 
-        activeThemeId={profile.activeTheme} 
-        onSectionChange={onSectionChange} 
       />
+
+      {/* Command Palette (Cmd+K) */}
+      <CmdKPalette
+        open={cmdKOpen}
+        onClose={() => setCmdKOpen(false)}
+        onNavigate={onSectionChange}
+      />
+
     </div>
   );
 }
