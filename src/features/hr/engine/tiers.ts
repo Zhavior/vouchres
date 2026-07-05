@@ -1,16 +1,25 @@
 /**
- * Tier Assignment (Section 2)
+ * VouchEdge HR Engine — Tier Assignment
  *
- * Score tiers:
- *   90-100 = Elite HR Target
- *   80-89  = Strong HR Target
- *   70-79  = Good HR Target
- *   60-69  = Sneaky HR Target
- *   Below 60 = Weak / Avoid
+ * Tier thresholds (your spec):
+ *   97–100  → Elite
+ *   92–96   → Strong
+ *   85–91   → Watch
+ *   75–84   → Sleeper
+ *   < 75    → Fade
+ *
+ * These replace the previous Elite/Strong/Good/Sneaky/Avoid labeling.
+ * Updated to match the sportsbook-grade tier naming used across all UI.
  */
 
-import { HrTier, TierResult } from "./types";
-import { TIER_THRESHOLDS } from "./constants";
+import { HrTier, TierResult } from './types';
+
+export const TIER_THRESHOLDS = {
+  elite:   97,
+  strong:  92,
+  watch:   85,
+  sleeper: 75,
+} as const;
 
 export function assignHrTier(score: number): TierResult {
   let tier: HrTier;
@@ -18,25 +27,25 @@ export function assignHrTier(score: number): TierResult {
   let description: string;
 
   if (score >= TIER_THRESHOLDS.elite) {
-    tier = "Elite";
-    label = "Elite HR Target";
-    description = "Top-tier HR opportunity — multiple strong signals align";
+    tier = 'Elite';
+    label = 'Elite HR Target';
+    description = 'All major signals aligned — top probability, maximum edge';
   } else if (score >= TIER_THRESHOLDS.strong) {
-    tier = "Strong";
-    label = "Strong HR Target";
-    description = "Strong HR profile with favorable matchup conditions";
-  } else if (score >= TIER_THRESHOLDS.good) {
-    tier = "Good";
-    label = "Good HR Target";
-    description = "Solid HR candidate with some mixed signals";
-  } else if (score >= TIER_THRESHOLDS.sneaky) {
-    tier = "Sneaky";
-    label = "Sneaky HR Target";
-    description = "Lower-probability HR with upside if matchup breaks right";
+    tier = 'Strong';
+    label = 'Strong HR Target';
+    description = 'Strong HR profile with favorable matchup and park conditions';
+  } else if (score >= TIER_THRESHOLDS.watch) {
+    tier = 'Watch';
+    label = 'Watch — HR Candidate';
+    description = 'Solid HR candidate with some mixed signals — worth monitoring';
+  } else if (score >= TIER_THRESHOLDS.sleeper) {
+    tier = 'Sleeper';
+    label = 'Sleeper HR Target';
+    description = 'Lower-probability HR with upside if matchup breaks right';
   } else {
-    tier = "Avoid";
-    label = "Weak / Avoid";
-    description = "Insufficient HR signals — probability too low to recommend";
+    tier = 'Avoid';
+    label = 'Fade';
+    description = 'Insufficient signals — book likely has better price';
   }
 
   return { tier, label, description };
