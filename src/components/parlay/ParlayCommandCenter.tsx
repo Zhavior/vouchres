@@ -60,7 +60,8 @@ import {
   type DfsLegContext,
 } from './types/parlayHubTypes';
 
-const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
+const SmartAiEngine  = lazy(() => import('../SmartAiEngine'));
+const ResultsStudio  = lazy(() => import('../results/ResultsStudio'));
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -779,74 +780,76 @@ function AiPicksPanel() {
   );
 }
 
-// ─── Track Record panel (was V.A.I Ledger) ───────────────────────────────────
+// ─── Track Record panel — embeds ResultsStudio inline ─────────────────────────
+//
+// PublicParlaySlip (from store) is mapped to the Parlay shape that ResultsStudio
+// expects. The fields overlap: id, title, legs, status, createdAt, riskTier,
+// oddsValue. ResultsStudio only reads those surface fields, so the cast is safe.
+// A "Full Results page" button deep-links via onSectionChange('results').
 
-function TrackRecordPanel({ savedSlips }: { savedSlips: unknown[] }) {
-  const aiSlips = savedSlips.filter((s) => {
-    const rec = s as Record<string, unknown>;
-    const src = String(rec.source ?? rec.metadata?.['source'] ?? '');
-    return src.includes('vai') || src.includes('ai');
-  });
-
-  const won  = aiSlips.filter((s) => String((s as Record<string, unknown>).status ?? '').toLowerCase() === 'won');
-  const lost = aiSlips.filter((s) => String((s as Record<string, unknown>).status ?? '').toLowerCase() === 'lost');
+function TrackRecordPanel({
+  savedSlips,
+  onSectionChange,
+}: {
+  savedSlips: unknown[];
+  onSectionChange?: (section: string) => void;
+}) {
+  // Map PublicParlaySlip[] → Parlay[] shape for ResultsStudio
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mappedParlays = useMemo(() => (
+    savedSlips.map((s) => {
+      const rec = s as Record<string, unknown>;
+      return {
+        // ResultsStudio reads: id, title, legs, status, createdAt, riskTier, oddsValue
+        id:         String(rec.publicId ?? rec.sourceId ?? rec.id ?? Math.random()),
+        title:      String(rec.title ?? 'Saved Parlay'),
+        legs:       Array.isArray(rec.legs) ? rec.legs : [],
+        status:     String(rec.status ?? 'PENDING').toUpperCase(),
+        createdAt:  String(rec.createdAt ?? new Date().toISOString()),
+        riskTier:   String(rec.riskTier ?? 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH',
+        oddsValue:  Number(rec.oddsValue ?? 0),
+        totalOdds:  String(rec.totalOdds ?? ''),
+        wagerAmount: Number(rec.wagerAmount ?? 0),
+      };
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [savedSlips]);
 
   return (
-    <div className="flex flex-col gap-5">
-      <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-        Every V.A.I-generated parlay is logged here with grading truth — no cherry-picking.
-      </p>
-
-      {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Total V.A.I Slips', value: aiSlips.length, token: '--ve-text-primary' },
-          { label: 'Won', value: won.length, token: '--ve-success' },
-          { label: 'Lost', value: lost.length, token: '--ve-danger' },
-        ].map((item) => (
-          <div key={item.label} className="flex flex-col gap-0.5 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{item.label}</span>
-            <span className="text-xl font-extrabold" style={{ color: `hsl(var(${item.token}))` }}>{item.value}</span>
-          </div>
-        ))}
+    <div className="flex flex-col gap-0">
+      {/* Deep-link bar */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-[hsl(var(--ve-text-muted))]">
+          Every saved slip — graded from the official box score. No cherry-picking.
+        </p>
+        {onSectionChange && (
+          <button
+            onClick={() => onSectionChange('results')}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
+            style={{
+              background:  'hsl(var(--ve-accent-cyan)/0.12)',
+              border:      '1px solid hsl(var(--ve-accent-cyan)/0.3)',
+              color:       'hsl(var(--ve-accent-cyan))',
+            }}
+            aria-label="Open full Results page"
+          >
+            <TrendingUp className="w-3 h-3" aria-hidden="true" />
+            Full Results
+          </button>
+        )}
       </div>
 
-      {aiSlips.length === 0 ? (
-        <div className="text-center py-8 text-xs text-[hsl(var(--ve-text-muted))]">
-          No V.A.I slips saved yet. Go to AI Picks to build your first.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {aiSlips.slice(0, 20).map((slip, i) => {
-            const rec = slip as Record<string, unknown>;
-            const status = String(rec.status ?? 'pending').toLowerCase() as SlipGradeStatus;
-            const meta = SLIP_STATUS_META[status] ?? SLIP_STATUS_META.pending;
-            return (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.4)] bg-[hsl(var(--ve-surface)/0.4)]">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[hsl(var(--ve-text-primary))] truncate">
-                    {String(rec.title ?? 'V.A.I Parlay')}
-                  </p>
-                  <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-                    {String(rec.createdAt ?? '').slice(0, 10)}
-                  </p>
-                </div>
-                <span
-                  className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
-                  style={{
-                    color:       `hsl(var(${meta.token}))`,
-                    borderColor: `hsl(var(${meta.token})/0.4)`,
-                    background:  `hsl(var(${meta.token})/0.12)`,
-                  }}
-                >
-                  <span aria-hidden="true">{meta.icon}</span>
-                  {meta.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Embedded ResultsStudio — no chrome, full data */}
+      <PanelErrorBoundary>
+        <Suspense fallback={
+          <div className="py-12 text-center text-xs text-[hsl(var(--ve-text-muted))]">Loading results…</div>
+        }>
+          <ResultsStudio
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            savedParlays={mappedParlays as any}
+          />
+        </Suspense>
+      </PanelErrorBoundary>
     </div>
   );
 }
@@ -961,11 +964,13 @@ function TabContent({
   savedSlips,
   onSaveParlay,
   onHideParlay,
+  onSectionChange,
 }: {
   activePanel: ParlayCommandPanel;
   savedSlips:  unknown[];
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?: (parlayId: string) => Promise<void> | void;
+  onSectionChange?: (section: string) => void;
 }) {
   switch (activePanel) {
     case 'build':
@@ -979,7 +984,7 @@ function TabContent({
         </PanelErrorBoundary>
       );
     case 'vai_ledger':
-      return <TrackRecordPanel savedSlips={savedSlips} />;
+      return <TrackRecordPanel savedSlips={savedSlips} onSectionChange={onSectionChange} />;
     case 'live':
       return <MyParlaysPanel onHideParlay={onHideParlay} />;
     case 'premium':
@@ -1009,6 +1014,7 @@ interface ParlayCommandCenterProps {
 export default function ParlayCommandCenter({
   savedSlips    = [],
   initialPanel  = 'live',
+  onSectionChange,
   onSaveParlay,
   onHideParlay,
 }: ParlayCommandCenterProps) {
@@ -1149,6 +1155,7 @@ export default function ParlayCommandCenter({
                     savedSlips={savedSlips}
                     onSaveParlay={onSaveParlay}
                     onHideParlay={onHideParlay}
+                    onSectionChange={onSectionChange}
                   />
                 </PanelErrorBoundary>
               )}

@@ -327,6 +327,45 @@ function mapBackendParlay(pick: any): Parlay {
   };
 }
 
+function mapBackendVouch(row: any): Vouch {
+  const status = ((): Vouch['status'] => {
+    const s = String(row.status || 'pending').toLowerCase();
+    if (s === 'won') return 'WON';
+    if (s === 'lost') return 'LOST';
+    if (s === 'void' || s === 'push') return 'VOID';
+    return 'PENDING';
+  })();
+
+  return {
+    id: row.id,
+    vouchSource: row.vouch_source,
+    userNote: row.user_note || '',
+    market: row.market,
+    sport: row.sport,
+    playerOrTeam: row.player_or_team || undefined,
+    gameName: row.game_name,
+    odds: row.odds,
+    status,
+    savedCount: row.saved_count ?? 0,
+    vouchedCount: row.vouched_count ?? 0,
+    createdAt: row.created_at,
+    isSavedByUser: true,
+    line: row.line || undefined,
+    selection: row.selection || undefined,
+    aiConfidence: row.ai_confidence ?? undefined,
+    capperConfidence: row.capper_confidence ?? undefined,
+    riskTier: row.risk_tier || undefined,
+    isLocked: row.is_locked,
+    lockTime: row.lock_time || undefined,
+    longerBreakdown: row.longer_breakdown || undefined,
+    cardTheme: row.card_theme || undefined,
+    visibility: row.visibility,
+    backendVouchId: row.id,
+    backendSyncState: 'synced',
+    backendSyncedAt: row.updated_at || row.created_at,
+  };
+}
+
 export default function App() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
     return sessionStorage.getItem("vouchedge_entering_edge_island") === "true";
@@ -358,6 +397,7 @@ export default function App() {
   const backendParlaySyncRef = useRef(false);
   const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
   const savedSlipsRef = useRef<Parlay[]>([]);
+  const savedVouchesRef = useRef<Vouch[]>([]);
   const profileRef = useRef<CreatorProofProfile | null>(null);
   const [isPendingRoute, startRouteTransition] = useTransition();
   const [isRouteSwitching, setIsRouteSwitching] = useState(false);
@@ -690,6 +730,48 @@ export default function App() {
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load backend vouches on startup if user is authenticated. Same merge
+  // strategy as parlays above: backend rows are authoritative, local-only
+  // vouches (never synced) are kept.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const token = await getAuthToken();
+        if (!token || cancelled) return;
+
+        const result = await apiClient.get<{ vouches: any[] }>('/api/vouches');
+        if (!result?.vouches?.length || cancelled) return;
+
+        const backendVouches = result.vouches.map(mapBackendVouch);
+        const backendVouchIds = new Set(
+          backendVouches.map((v) => v.backendVouchId || v.id).filter(Boolean).map(String)
+        );
+
+        const localOnly = savedVouchesRef.current.filter((v) => {
+          if (!v.backendVouchId) return true;
+          return !backendVouchIds.has(String(v.backendVouchId));
+        });
+
+        const merged = [...backendVouches, ...localOnly];
+        const seen = new Set<string>();
+        const deduped = merged.filter((v) => {
+          if (seen.has(v.id)) return false;
+          seen.add(v.id);
+          return true;
+        });
+
+        syncVouches(deduped);
+      } catch (err) {
+        console.warn('[vouches] backend load failed (localStorage vouches still active)', err);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sync state modifications helper
   const syncPosts = (newPosts: FeedPost[]) => {
     setPosts(newPosts);
@@ -802,6 +884,7 @@ export default function App() {
   // Keep refs fresh for the mount-once lifecycle heartbeat (avoids stale closures
   // and prevents the interval from re-subscribing on every state change).
   savedSlipsRef.current = savedSlips;
+  savedVouchesRef.current = savedVouches;
   profileRef.current = profile;
 
   // Legacy AI parlay auto-sync is intentionally quarantined.
@@ -847,10 +930,14 @@ export default function App() {
     syncPosts(updatedPosts);
 
     // If posting a vouch, auto-save/add to Vouch Board
+    let vouchForBackend: Vouch | undefined;
     if (newPost.postType === 'VOUCH' && newPost.vouch) {
       const exists = savedVouches.some((v) => v.id === newPost.vouch?.id);
       if (!exists) {
-        syncVouches([...savedVouches, { ...newPost.vouch, isSavedByUser: true }]);
+        vouchForBackend = { ...newPost.vouch, isSavedByUser: true };
+        syncVouches([...savedVouches, vouchForBackend]);
+      } else {
+        vouchForBackend = savedVouches.find((v) => v.id === newPost.vouch?.id);
       }
     }
 
@@ -877,6 +964,25 @@ export default function App() {
         };
         syncProfile(updatedProfile);
       }
+    }
+
+    // Best-effort backend sync — never blocks the optimistic UI update above.
+    // Guests keep the existing local-only behavior (no network call, no error).
+    if (newPost.content.trim()) {
+      (async () => {
+        const backendVouchId = vouchForBackend ? await pushVouchToBackend(vouchForBackend) : undefined;
+        const token = await getAuthToken();
+        if (!token) return;
+        try {
+          await apiClient.post('/api/posts', {
+            body: newPost.content,
+            pick_id: newPost.parlay?.backendPickId,
+            vouch_id: backendVouchId,
+          });
+        } catch (err) {
+          console.warn('[posts] backend save failed (kept in localStorage)', err);
+        }
+      })();
     }
   };
 
@@ -930,20 +1036,29 @@ export default function App() {
 
   // Interaction: Save Vouch to Board (either from feed or right-hand matchups)
   const handleSaveVouch = (vouch: Vouch) => {
-    const exists = savedVouches.some((v) => v.id === vouch.id);
-    let updatedVouches: Vouch[];
+    const existing = savedVouches.find((v) => v.id === vouch.id);
 
-    if (exists) {
-      updatedVouches = savedVouches.filter((v) => v.id !== vouch.id);
-    } else {
-      updatedVouches = [...savedVouches, { ...vouch, isSavedByUser: true }];
+    if (existing) {
+      syncVouches(savedVouches.filter((v) => v.id !== vouch.id));
+      if (existing.backendVouchId) {
+        apiClient.delete(`/api/vouches/${encodeURIComponent(existing.backendVouchId)}`)
+          .catch((err) => console.warn('[vouches] backend hide failed', err));
+      }
+      return;
     }
-    syncVouches(updatedVouches);
+
+    const newVouch: Vouch = { ...vouch, isSavedByUser: true };
+    syncVouches([...savedVouches, newVouch]);
+    void pushVouchToBackend(newVouch);
   };
 
   const handleRemoveVouchFromBoard = (vouchId: string) => {
-    const updated = savedVouches.filter((v) => v.id !== vouchId);
-    syncVouches(updated);
+    const existing = savedVouches.find((v) => v.id === vouchId);
+    syncVouches(savedVouches.filter((v) => v.id !== vouchId));
+    if (existing?.backendVouchId) {
+      apiClient.delete(`/api/vouches/${encodeURIComponent(existing.backendVouchId)}`)
+        .catch((err) => console.warn('[vouches] backend hide failed', err));
+    }
   };
 
   // Interaction: Write comment
@@ -1060,6 +1175,76 @@ export default function App() {
       markState('failed', {
         backendSyncError: err?.error || err?.message || 'Backend save failed.',
       });
+    }
+  };
+
+  // Background backend sync for a saved vouch — mirrors pushParlayToBackend.
+  // Never throws: the vouch always survives in localStorage regardless of
+  // backend outcome. Returns the backend-assigned id on success.
+  const pushVouchToBackend = async (vouch: Vouch): Promise<string | undefined> => {
+    if (!isSupabaseConfigured) return undefined;
+
+    if (vouch.backendVouchId && vouch.backendSyncState === 'synced') {
+      return vouch.backendVouchId;
+    }
+
+    const markState = (state: Vouch['backendSyncState'], extra?: Partial<Vouch>) => {
+      setSavedVouches((prev) => {
+        const next = prev.map((v) =>
+          v.id === vouch.id ? { ...v, backendSyncState: state, ...extra } : v
+        );
+        localStorage.setItem('vouchedge_vouches', JSON.stringify(next));
+        return next;
+      });
+    };
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        markState('auth_required', {
+          backendSyncError: 'Sign in to sync this vouch to your account.',
+        });
+        return undefined;
+      }
+
+      markState('saving', { backendSyncError: undefined });
+
+      const payload = {
+        vouch_source: vouch.vouchSource,
+        user_note: vouch.userNote,
+        market: vouch.market,
+        sport: vouch.sport,
+        player_or_team: vouch.playerOrTeam,
+        game_name: vouch.gameName,
+        odds: vouch.odds,
+        line: vouch.line,
+        selection: vouch.selection,
+        ai_confidence: vouch.aiConfidence,
+        capper_confidence: vouch.capperConfidence,
+        risk_tier: vouch.riskTier,
+        longer_breakdown: vouch.longerBreakdown,
+        card_theme: vouch.cardTheme,
+        visibility: vouch.visibility,
+      };
+
+      const result = await apiClient.post<{ id: string }>('/api/vouches', payload);
+
+      if (result?.id) {
+        markState('synced', {
+          backendVouchId: result.id,
+          backendSyncedAt: new Date().toISOString(),
+        });
+        return result.id;
+      }
+
+      markState('failed', { backendSyncError: 'Backend did not return a vouch id.' });
+      return undefined;
+    } catch (err: any) {
+      console.warn('[vouches] backend save failed (kept in localStorage)', err);
+      markState('failed', {
+        backendSyncError: err?.error || err?.message || 'Backend save failed.',
+      });
+      return undefined;
     }
   };
 

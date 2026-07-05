@@ -8,6 +8,7 @@ import { billingRoutes } from "./billingRoutes";
 import { adminRoutes } from "./adminRoutes";
 import { privacyRoutes } from "./privacyRoutes";
 import { postRoutes } from "./postRoutes";
+import { vouchRoutes } from "./vouchRoutes";
 import { feedRoutes } from "./feedRoutes";
 import { notificationRoutes } from "./notificationRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
@@ -35,6 +36,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", publicRoutes);
   app.use("/api", parlayRoutes);
   app.use("/api", postRoutes);
+  app.use("/api", vouchRoutes);
   app.use("/api", feedRoutes);
   app.use("/api", notificationRoutes);
   app.use("/api", playerRegistryRoutes);

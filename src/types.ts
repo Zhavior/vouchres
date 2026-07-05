@@ -113,6 +113,13 @@ export interface Vouch {
   addToProfileFeed?: boolean;
   createXPreview?: boolean;
   addHashtags?: boolean;
+
+  // Backend sync truth (mirrors Parlay's backendPickId/backendSyncState) —
+  // was localStorage-only before Pass 2 of the Vouch backend-wiring judge pass.
+  backendVouchId?: string;
+  backendSyncState?: 'synced' | 'saving' | 'auth_required' | 'failed';
+  backendSyncedAt?: string;
+  backendSyncError?: string;
 }
 
 export interface FeedPost {
