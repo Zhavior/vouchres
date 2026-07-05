@@ -12,7 +12,7 @@
 import React, { useState } from 'react';
 import {
   AlertTriangle, ShieldCheck, ShieldQuestion, ShieldAlert,
-  ShieldOff, TrendingUp, Zap,
+  ShieldOff, TrendingUp, Zap, ChevronRight,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -71,6 +71,7 @@ export interface HrWatchRow {
 export interface HrPlayerCardProps {
   player: HrWatchRow;
   onClick?: (player: HrWatchRow) => void;
+  onViewProfile?: (player: HrWatchRow) => void;
 }
 
 // ─── Tier system (matches your spec) ─────────────────────────────────────────
@@ -222,7 +223,7 @@ const ScoreRing: React.FC<{ score: number; hexColor: string }> = ({ score, hexCo
 
 // ─── Main card ────────────────────────────────────────────────────────────────
 
-export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick }) => {
+export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onViewProfile }) => {
   const [imgError, setImgError] = useState(false);
   const tier = getTier(player.hrScore);
   const badge = truthBadge(player.truthStatus);
@@ -379,6 +380,24 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick }) =
         <div className="absolute bottom-3 right-3 opacity-30 group-hover:opacity-70 transition-opacity">
           <TrendingUp className={`h-3.5 w-3.5 ${tier.textClass}`} />
         </div>
+      )}
+
+      {/* Full Profile CTA */}
+      {onViewProfile && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onViewProfile(player); }}
+          className={[
+            'mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border py-1.5',
+            'text-[10px] font-bold uppercase tracking-[0.14em] transition-all duration-150',
+            'opacity-0 group-hover:opacity-100',
+            `border-[hsl(var(--${tier.tokenAccent})/0.28)] text-[hsl(var(--${tier.tokenAccent}))]`,
+            `hover:bg-[hsl(var(--${tier.tokenAccent})/0.08)]`,
+          ].join(' ')}
+        >
+          Full Profile
+          <ChevronRight className="h-3 w-3" />
+        </button>
       )}
     </button>
   );

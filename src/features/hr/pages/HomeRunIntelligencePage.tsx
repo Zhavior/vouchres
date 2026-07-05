@@ -6,6 +6,7 @@ import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
+import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 
 interface MiniStatChipProps {
   label: string;
@@ -131,6 +132,7 @@ const EmptyState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
 const HomeRunIntelligencePage: React.FC = () => {
   const vm = useHrBoardViewModel();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const eliteCount: number = vm.stats?.elite ?? vm.buckets?.Elite?.length ?? 0;
@@ -255,7 +257,7 @@ const HomeRunIntelligencePage: React.FC = () => {
             rows={(vm.rows ?? []) as any}
             onSelectPlayer={(player) => {
               vm.setSelectedPlayer(player);
-              setIsDrawerOpen(true);
+              setIsProfileOpen(true);
             }}
           />
         ) : (
@@ -265,6 +267,10 @@ const HomeRunIntelligencePage: React.FC = () => {
               vm.setSelectedPlayer(player);
               setIsDrawerOpen(true);
             }}
+            onViewProfile={(player) => {
+              vm.setSelectedPlayer(player);
+              setIsProfileOpen(true);
+            }}
           />
         )}
 
@@ -273,6 +279,15 @@ const HomeRunIntelligencePage: React.FC = () => {
           isOpen={isDrawerOpen && Boolean(vm.selectedPlayer)}
           onClose={() => {
             setIsDrawerOpen(false);
+            vm.setSelectedPlayer(null);
+          }}
+        />
+
+        <HrPlayerProfile
+          player={vm.selectedPlayer as any}
+          isOpen={isProfileOpen && Boolean(vm.selectedPlayer)}
+          onClose={() => {
+            setIsProfileOpen(false);
             vm.setSelectedPlayer(null);
           }}
         />
