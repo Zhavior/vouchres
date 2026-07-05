@@ -268,6 +268,11 @@ export default function FeedSidebar({
       const hr = ALL_FEATURES.find(f => f.id === 'hr_board');
       if (hr) items.push(hr);
     }
+    // Always include MLB Stat Hub
+    if (!items.some(f => f.id === 'mlb_stats')) {
+      const mlb = ALL_FEATURES.find(f => f.id === 'mlb_stats');
+      if (mlb) items.push(mlb);
+    }
     return items
       // Notifications live in the header — exclude from sidebar
       .filter(f => f.id !== 'notifications')

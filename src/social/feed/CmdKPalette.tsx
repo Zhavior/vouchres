@@ -32,6 +32,7 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'welcome',         label: 'Edge Island',           group: 'Home',          icon: LayoutDashboard, keywords: ['island', 'dashboard', 'home'] },
   // Daily
   { id: 'hr_board',        label: 'Home Run Intelligence', group: 'Daily',         icon: Flame,           keywords: ['hr', 'home run', 'hitter', 'mlb', 'intel'] },
+  { id: 'mlb_stats',       label: 'MLB Stat Hub',          group: 'Daily',         icon: Flame,           keywords: ['mlb', 'stat', 'rbi', 'runs', 'sb', 'stolen bases', 'hits', 'strikeouts', 'k', 'hub'] },
   { id: 'daily_players',   label: 'Daily Players',         group: 'Daily',         icon: Users,           keywords: ['players', 'slate', 'daily', 'lineup'] },
   { id: 'live_games',      label: 'Live Projections',      group: 'Daily',         icon: Tv,              keywords: ['live', 'projections', 'games', 'in-play'] },
   // Pro Labs

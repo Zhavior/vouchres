@@ -57,6 +57,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Daily — sport-scoped boards and slates
   { id: "hr_board", label: "Home Run Intelligence", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "mlb_stats", label: "MLB Stat Hub", icon: "BarChart3", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS, locked: false },
   // Legacy HR board is off by default — Home Run Intelligence is the canonical page.
   { id: "daily_hr_watch_new", label: "HR Board (Legacy)", icon: "Flame", enabled: false, order: 2.5, group: "Daily", sports: ALL_SPORTS },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },

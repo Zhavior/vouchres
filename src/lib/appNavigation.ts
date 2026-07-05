@@ -1,5 +1,6 @@
 export type AppSectionId =
   | 'hr_board'
+  | 'mlb_stats'
   | 'daily_players'
   | 'live_parlays'
   | 'live_game_lab'
@@ -9,6 +10,7 @@ export type AppSectionId =
 
 const SECTION_HASH: Record<AppSectionId, string> = {
   hr_board: '#hr-board',
+  mlb_stats: '#mlb-stat-hub',
   daily_players: '#daily-players',
   live_parlays: '#live-parlays',
   live_game_lab: '#live-game-lab',

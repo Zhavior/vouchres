@@ -55,6 +55,7 @@ const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
 const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
 const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
+const MlbStatHubPage = lazy(() => import('./features/mlb-stats/pages/MlbStatHubPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
 const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
@@ -153,6 +154,7 @@ const STICKY_PUBLIC_SECTIONS = new Set([
   'daily_hr_watch_new',
   'game_research',
   'player_research',
+  'mlb_stats',
 ]);
 
 const PUBLIC_SECTIONS = new Set([
@@ -168,6 +170,7 @@ const PUBLIC_SECTIONS = new Set([
   'top_cappers',
   'subscribers_club',
   'subscriber_club',
+  'mlb_stats',
 ]);
 
 function hasRealAuthToken() {
@@ -1555,6 +1558,12 @@ export default function App() {
       case 'hr_board':
         return (
           <HomeRunIntelligencePage />
+        );
+      case 'mlb_stats':
+        return (
+          <Suspense fallback={null}>
+            <MlbStatHubPage />
+          </Suspense>
         );
       case 'daily_players':
         return <DailyPlayersPage />;
