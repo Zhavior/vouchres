@@ -8,10 +8,16 @@ const UnknownRecordSchema = z.record(z.string(), z.unknown());
 
 const RawBoardSchema = z
   .object({
+    candidates: z.array(UnknownRecordSchema).optional(),
     confirmedCandidates: z.array(UnknownRecordSchema).optional(),
     projectedCandidates: z.array(UnknownRecordSchema).optional(),
     allProjectedCandidates: z.array(UnknownRecordSchema).optional(),
     blockedPlayers: z.array(UnknownRecordSchema).optional(),
+    counts: UnknownRecordSchema.optional(),
+    truthSummary: UnknownRecordSchema.optional(),
+    previewMeta: UnknownRecordSchema.optional(),
+    note: z.string().optional(),
+    disclaimer: z.string().optional(),
     candidateBuckets: z
       .object({
         confirmed: z.array(UnknownRecordSchema).optional(),
@@ -72,6 +78,7 @@ interface HrWatchRow {
   riskTier: RiskTier;
   oddsLabel: string;
   reasons: string[];
+  warnings: string[];
   sourceMode: HrWatchMode;
 }
 
@@ -81,6 +88,16 @@ interface HrWatchBoard {
   all: HrWatchRow[];
   blocked: HrWatchRow[];
   warnings: string[];
+  note: string | null;
+  disclaimer: string | null;
+  truthMessage: string | null;
+  counts: {
+    confirmedCandidates: number;
+    projectedCandidates: number;
+    hiddenProjectedCandidates: number;
+    blockedPlayers: number;
+    totalVisiblePool: number;
+  };
 }
 
 const TIERS = [
@@ -221,6 +238,24 @@ function readReasons(row: UnknownRecord): string[] {
   return single ? [single] : [];
 }
 
+function readWarnings(row: UnknownRecord): string[] {
+  const values = [row.warnings, row.warningCodes, row.safetyWarnings];
+
+  for (const value of values) {
+    if (!Array.isArray(value)) continue;
+
+    const warnings = value
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map((item) => item.trim())
+      .slice(0, 3);
+
+    if (warnings.length > 0) return warnings;
+  }
+
+  const single = firstString(row, ['warning', 'safetyWarning'], '');
+  return single ? [single] : [];
+}
+
 function readBreakdown(row: UnknownRecord) {
   const nested = readRecord(row.scoreBreakdown);
 
@@ -296,6 +331,7 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       riskTier: riskTier(hrScore, truth),
       oddsLabel: firstString(row, ['impliedOdds', 'odds', 'americanOdds'], 'Odds TBD'),
       reasons: readReasons(row),
+      warnings: readWarnings(row),
       sourceMode: mode,
     });
   }
@@ -307,10 +343,12 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
 function buildBoard(input: unknown): HrWatchBoard {
   const { board, warnings } = parseBoard(input);
 
-  const confirmedRaw = firstArray(board.confirmedCandidates, board.candidateBuckets?.confirmed);
+  const confirmedRaw = firstArray(board.candidates, board.confirmedCandidates, board.candidateBuckets?.confirmed);
   const curatedRaw = firstArray(board.projectedCandidates, board.candidateBuckets?.projected);
   const allRaw = firstArray(board.allProjectedCandidates, board.candidateBuckets?.allProjected, curatedRaw);
   const blockedRaw = firstArray(board.blockedPlayers, board.candidateBuckets?.blocked);
+  const counts = readRecord(board.counts);
+  const truthSummary = readRecord(board.truthSummary);
 
   return {
     confirmed: normalizeRows(confirmedRaw, 'confirmed'),
@@ -318,6 +356,16 @@ function buildBoard(input: unknown): HrWatchBoard {
     all: normalizeRows(allRaw, 'all'),
     blocked: normalizeRows(blockedRaw, 'blocked'),
     warnings,
+    note: board.note ?? null,
+    disclaimer: board.disclaimer ?? null,
+    truthMessage: firstString(truthSummary, ['message'], '') || board.note || null,
+    counts: {
+      confirmedCandidates: firstNumber(counts, ['confirmedCandidates'], confirmedRaw.length),
+      projectedCandidates: firstNumber(counts, ['projectedCandidates'], curatedRaw.length),
+      hiddenProjectedCandidates: firstNumber(counts, ['hiddenProjectedCandidates', 'hiddenProjectedCount'], Math.max(0, allRaw.length - curatedRaw.length)),
+      blockedPlayers: firstNumber(counts, ['blockedPlayers'], blockedRaw.length),
+      totalVisiblePool: firstNumber(counts, ['totalVisiblePool'], confirmedRaw.length + curatedRaw.length),
+    },
   };
 }
 
@@ -469,6 +517,7 @@ function HrWatchCard({
         : row.truthStatus === 'blocked'
           ? 'Blocked'
           : 'Truth TBD';
+  const isPreview = row.truthStatus === 'projected';
 
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-[hsl(var(--ve-border)/0.30)] bg-[linear-gradient(145deg,hsl(var(--ve-surface)/0.88),hsl(var(--ve-surface-raised)/0.44))] p-4 shadow-xl shadow-black/10 transition duration-300 ease-out hover:-translate-y-1 hover:scale-[1.012] hover:border-[hsl(var(--ve-accent-cyan)/0.46)] hover:shadow-[0_18px_46px_rgba(34,211,238,0.14)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100">
@@ -537,6 +586,18 @@ function HrWatchCard({
         </span>
       </div>
 
+      {isPreview ? (
+        <div className="mt-3 rounded-2xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-[11px] font-semibold leading-snug text-amber-100">
+          Official lineup not posted yet. Projection preview only; this player is not confirmed.
+        </div>
+      ) : null}
+
+      {row.truthStatus === 'blocked' ? (
+        <div className="mt-3 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-[11px] font-semibold leading-snug text-rose-100">
+          Blocked reason: Team mismatch / stale roster assignment
+        </div>
+      ) : null}
+
       <div className="py-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[9px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-muted))]">
@@ -569,6 +630,19 @@ function HrWatchCard({
               </p>
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {row.warnings.length > 0 ? (
+        <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/10 px-3 py-2">
+          <div className="mb-1 text-[9px] font-black uppercase tracking-[0.22em] text-amber-200/80">
+            Safety notes
+          </div>
+          {row.warnings.map((warning) => (
+            <p key={`${row.stableId}-${warning}`} className="text-[11px] leading-snug text-amber-100/85">
+              {warning}
+            </p>
+          ))}
         </div>
       ) : null}
 
@@ -750,7 +824,9 @@ export default function DailyHrWatchNewPage({ profile, onAddLegToParlay }: Daily
       try {
         const response = await vouchedgeApi.hrBoardToday();
         if (!alive) return;
-        setBoard(buildBoard(response as unknown));
+        const nextBoard = buildBoard(response as unknown);
+        setBoard(nextBoard);
+        setMode(nextBoard.confirmed.length > 0 ? 'confirmed' : nextBoard.curated.length > 0 ? 'curated' : 'blocked');
       } catch (err) {
         if (!alive) return;
         setError(err instanceof Error ? err.message : 'Failed to load Daily HR Watch.');
@@ -796,8 +872,6 @@ export default function DailyHrWatchNewPage({ profile, onAddLegToParlay }: Daily
     });
   }, [allRows, search]);
 
-  const tieredRows = useMemo(() => groupRowsByTier(activeRows), [activeRows]);
-
   const handleLoadMore = (tierKey: string): void => {
     setVisibleCounts((previous) => ({
       ...previous,
@@ -817,25 +891,56 @@ export default function DailyHrWatchNewPage({ profile, onAddLegToParlay }: Daily
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[hsl(var(--ve-text-muted))]">
-                Daily HR Watch New
+                Verified MLB HR Board
               </p>
               <h1 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
-                Premium HR truth board
+                HR board
               </h1>
               <p className="max-w-2xl text-sm text-[hsl(var(--ve-text-muted))]">
-                Mobile-first, truth-first, with cleaner spacing, stronger hierarchy, and direct parlay actions.
+                {board?.truthMessage ??
+                  'Confirmed rows use official batting orders only. Preview rows stay clearly marked until lineups post.'}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[hsl(var(--ve-border)/0.24)] bg-black/10 px-3 py-2 text-right">
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
-                Visible rows
+            <div className="grid grid-cols-3 gap-2 text-right">
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100/70">
+                  Confirmed
+                </div>
+                <div className="font-mono text-2xl font-black text-emerald-200">
+                  {board?.counts.confirmedCandidates ?? 0}
+                </div>
               </div>
-              <div className="font-mono text-2xl font-black text-[hsl(var(--ve-accent-gold))]">
-                {activeRows.length}
+              <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 px-3 py-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-100/70">
+                  Preview
+                </div>
+                <div className="font-mono text-2xl font-black text-amber-200">
+                  {board?.counts.projectedCandidates ?? 0}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-3 py-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-rose-100/70">
+                  Blocked
+                </div>
+                <div className="font-mono text-2xl font-black text-rose-200">
+                  {board?.counts.blockedPlayers ?? 0}
+                </div>
               </div>
             </div>
           </div>
+
+          {mode === 'curated' || mode === 'all' ? (
+            <div className="mt-4 rounded-2xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm font-semibold text-amber-100">
+              Official lineup not posted yet. Projection preview rows are safe roster previews only and are never treated as confirmed candidates.
+            </div>
+          ) : null}
+
+          {board?.counts.hiddenProjectedCandidates ? (
+            <div className="mt-3 text-xs font-semibold text-[hsl(var(--ve-text-muted))]">
+              {board.counts.hiddenProjectedCandidates} additional projected rows are hidden by the backend preview limit.
+            </div>
+          ) : null}
 
           <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
             <label className="flex items-center gap-2 rounded-2xl border border-[hsl(var(--ve-border)/0.22)] bg-black/10 px-3 py-2">
@@ -862,7 +967,13 @@ export default function DailyHrWatchNewPage({ profile, onAddLegToParlay }: Daily
                       : 'border-[hsl(var(--ve-border)/0.22)] bg-black/10 text-[hsl(var(--ve-text-muted))]'
                   }`}
                 >
-                  {item === 'all' ? 'All Projected' : item}
+                  {item === 'confirmed'
+                    ? `Confirmed ${board?.confirmed.length ?? 0}`
+                    : item === 'curated'
+                      ? `Preview ${board?.curated.length ?? 0}`
+                      : item === 'all'
+                        ? `All Projected ${board?.all.length ?? 0}`
+                        : `Blocked ${board?.blocked.length ?? 0}`}
                 </button>
               ))}
             </div>
