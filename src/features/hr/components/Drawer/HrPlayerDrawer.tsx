@@ -17,9 +17,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Sparkles, AlertTriangle, ShieldCheck, ShieldQuestion,
   ShieldAlert, ShieldOff, Award, Clock, Gauge, TrendingUp,
-  Zap, BarChart3, Wind,
+  Zap, BarChart3, Wind, LineChart,
 } from 'lucide-react';
 import type { HrWatchRow, HrTruthStatus } from './HrPlayerCard';
+import { HrStatsTab } from '../Stats/HrStatsTab';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ export interface HrPlayerDrawerProps {
   onClose: () => void;
 }
 
-type DrawerTab = 'overview' | 'layers' | 'vegas';
+type DrawerTab = 'overview' | 'layers' | 'vegas' | 'stats';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -242,6 +243,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
     { id: 'overview', label: 'Overview',  icon: <Gauge className="h-3 w-3" /> },
     { id: 'layers',   label: 'Layers',    icon: <BarChart3 className="h-3 w-3" /> },
     { id: 'vegas',    label: 'VE Edge',   icon: <Zap className="h-3 w-3" /> },
+    { id: 'stats',    label: 'Pro Stats', icon: <LineChart className="h-3 w-3" /> },
   ];
 
   return (
@@ -592,6 +594,11 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                     </p>
                   </div>
                 </div>
+              )}
+
+              {/* STATS TAB */}
+              {tab === 'stats' && (
+                <HrStatsTab player={player} isPro={true} />
               )}
             </div>
           </motion.aside>
