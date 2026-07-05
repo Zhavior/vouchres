@@ -54,6 +54,7 @@ const EpicThemeShowcase = lazy(() =>
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
 const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
+const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
 const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
@@ -149,6 +150,7 @@ const STICKY_PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
+  'daily_hr_watch_new',
   'game_research',
   'player_research',
 ]);
@@ -160,6 +162,7 @@ const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
+  'daily_hr_watch_new',
   'game_research',
   'player_research',
   'top_cappers',
@@ -231,7 +234,7 @@ function resolveDevSectionFromLocation() {
   }
 
   if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
-    return 'hr_board';
+    return 'daily_hr_watch_new';
   }
 
   if (target === 'daily-players' || target === '/daily-players') {
@@ -340,7 +343,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
+    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'daily_hr_watch_new';
     return 'welcome';
   });
   const [authStateVersion, setAuthStateVersion] = useState(0);
@@ -1551,10 +1554,7 @@ export default function App() {
 
       case 'hr_board':
         return (
-          <DailyHrWatchNewPage
-            onAddLegToParlay={handleAddLegFromResearch}
-            profile={profile}
-          />
+          <HomeRunIntelligencePage />
         );
       case 'daily_players':
         return <DailyPlayersPage />;

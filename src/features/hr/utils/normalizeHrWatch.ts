@@ -169,6 +169,7 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       parkFactor: breakdown.parkFactor,
       recentForm: breakdown.recentForm,
       vouchScore: breakdown.vouchScore,
+      dataConfidence: firstNullableNumber(row, ['dataConfidence']),
       truthStatus: truth,
       riskTier: riskTier(hrScore, truth),
       oddsLabel: firstString(row, ['impliedOdds', 'odds', 'americanOdds'], 'Odds TBD'),

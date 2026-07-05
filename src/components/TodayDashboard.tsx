@@ -198,7 +198,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <CommandButton label="Open Daily Players" section="daily_players" onSectionChange={onSectionChange} primary />
-                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} />
+                <CommandButton label="Review HR Board" section="daily_hr_watch_new" onSectionChange={onSectionChange} />
                 <CommandButton label="Build Parlay" section="build" onSectionChange={onSectionChange} />
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
                   detail={topHr ? `HR score ${topHr.hrScore}` : 'Open the board when live data is available.'}
                   accent="gold"
                   loading={loading}
-                  onClick={() => onSectionChange('hr_board')}
+                  onClick={() => onSectionChange('daily_hr_watch_new')}
                 />
                 <SignalRow
                   icon={LineChart}

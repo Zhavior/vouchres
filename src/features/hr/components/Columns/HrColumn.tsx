@@ -13,24 +13,26 @@ interface HrColumnProps {
 
 export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSelect }: HrColumnProps) => {
   return (
-    <div className="flex flex-col gap-4">
-      <div className={`flex items-center justify-between pb-2 border-b ${borderClass}`}>
-        <div className={`flex items-center gap-2 font-bold tracking-widest text-sm uppercase ${colorClass}`}>
-          <span>{icon}</span> {title}
+    <section className={`min-h-0 overflow-hidden rounded-2xl border ${borderClass} bg-[rgba(10,13,20,.88)]`}>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-[#0A0D14]/95 px-3 py-2 backdrop-blur">
+        <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${colorClass}`}>
+          <span>{icon}</span>
+          <span>{title}</span>
         </div>
-        <span className="text-xs text-zinc-500 font-mono">{players.length}</span>
+        <span className="font-mono text-[11px] text-zinc-500">{players.length}</span>
       </div>
-      
-      <div className="flex flex-col gap-3">
-        {players.map(player => (
+
+      <div className="flex max-h-[calc(100vh-270px)] flex-col gap-2 overflow-y-auto p-2">
+        {players.map((player) => (
           <HrPlayerCard key={player.stableId} player={player} onClick={() => onSelect(player)} />
         ))}
+
         {players.length === 0 && (
-          <div className="p-8 text-center text-zinc-600 text-xs uppercase tracking-widest border border-dashed border-white/[0.05] rounded-xl bg-[#0A0D14]/50">
+          <div className="rounded-xl border border-dashed border-white/[0.06] bg-black/20 p-6 text-center text-[11px] uppercase tracking-[0.18em] text-zinc-600">
             No active targets
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };

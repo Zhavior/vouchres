@@ -1,17 +1,17 @@
 import type { HrWatchMode } from '../../types/hrWatch';
 
-const VIEW_OPTIONS: Array<{ value: HrWatchMode; label: string }> = [
+const MODES: Array<{ value: HrWatchMode; label: string }> = [
   { value: 'confirmed', label: 'Confirmed' },
   { value: 'curated', label: 'Preview' },
-  { value: 'all', label: 'All Projected' },
+  { value: 'all', label: 'All' },
   { value: 'blocked', label: 'Blocked' },
 ];
 
 const TIERS = [
-  { key: 'Elite', label: 'Elite', color: 'text-[#FACC15]' },
-  { key: 'Strong', label: 'Strong', color: 'text-[#22C55E]' },
-  { key: 'Watch', label: 'Watch', color: 'text-[#3B82F6]' },
-  { key: 'Sleepers', label: 'Sleepers', color: 'text-[#8B5CF6]' },
+  { key: 'Elite', label: 'Elite', color: 'text-amber-300 border-amber-400/30 bg-amber-400/10' },
+  { key: 'Strong', label: 'Strong', color: 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10' },
+  { key: 'Watch', label: 'Watch', color: 'text-blue-300 border-blue-400/30 bg-blue-400/10' },
+  { key: 'Sleepers', label: 'Sleepers', color: 'text-violet-300 border-violet-400/30 bg-violet-400/10' },
 ];
 
 interface HrFiltersProps {
@@ -23,49 +23,29 @@ interface HrFiltersProps {
 
 export function HrFilters({ mode, onModeChange, selectedTiers, onToggleTier }: HrFiltersProps) {
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Mode</div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {VIEW_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onModeChange(option.value)}
-              className={`rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition ${
-                mode === option.value
-                  ? 'border-white/20 bg-white/10 text-slate-100'
-                  : 'border-white/10 bg-transparent text-slate-400 hover:border-white/20 hover:bg-white/5'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <select
+        value={mode}
+        onChange={(e) => onModeChange(e.target.value as HrWatchMode)}
+        className="h-9 rounded-lg border border-white/[0.06] bg-[#0B0F18] px-3 font-mono text-[11px] uppercase text-zinc-300 outline-none"
+      >
+        {MODES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
 
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Tiers</div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {TIERS.map((tier) => {
-            const active = selectedTiers.includes(tier.key);
-            return (
-              <button
-                key={tier.key}
-                type="button"
-                onClick={() => onToggleTier(tier.key)}
-                className={`rounded-2xl border px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.22em] transition ${
-                  active
-                    ? `border-white/20 bg-white/10 ${tier.color}`
-                    : 'border-white/10 bg-transparent text-slate-400 hover:border-white/20 hover:bg-white/5'
-                }`}
-              >
-                {tier.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {TIERS.map((tier) => {
+        const active = (selectedTiers ?? []).includes(tier.key);
+        return (
+          <button
+            key={tier.key}
+            onClick={() => onToggleTier(tier.key)}
+            className={`h-9 rounded-lg border px-3 font-mono text-[11px] font-bold uppercase transition ${
+              active ? tier.color : 'border-white/[0.06] bg-white/[0.03] text-zinc-500'
+            }`}
+          >
+            {tier.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default function FeedMobileNav({ activeSection, onSectionChange, profile 
   const navItems = [
     // Primary mobile tabs (verdict): Today, HRs, My Parlays, Results, Profile
     { id: 'today', label: 'Today', icon: LayoutDashboard },
-    { id: 'hr_board', label: 'Edge', icon: Flame },
+    { id: 'daily_hr_watch_new', label: 'Edge', icon: Flame },
     { id: 'build', label: 'My Parlays', icon: Sliders },
     { id: 'results', label: 'Results', icon: BarChart3 },
     { id: 'notifications', label: 'Alerts', icon: Bell },

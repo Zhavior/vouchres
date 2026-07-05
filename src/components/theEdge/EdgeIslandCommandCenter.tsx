@@ -27,7 +27,7 @@ type Props = {
 };
 
 const ZONES = [
-  { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "hr_board", icon: Target, tag: "Start here" },
+  { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "daily_hr_watch_new", icon: Target, tag: "Start here" },
   { title: "Parlay Dock", subtitle: "Build, save, and track parlays", section: "build", icon: Shield, tag: "Builder" },
   { title: "Research Lab", subtitle: "Player, pitcher, matchup research", section: "research", icon: FlaskConical, tag: "Deep dive" },
   { title: "Ledger Vault", subtitle: "Wins, losses, and full history", section: "results", icon: ScrollText, tag: "Proof" },

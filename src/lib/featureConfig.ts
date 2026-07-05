@@ -56,7 +56,9 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
 
   // Daily — sport-scoped boards and slates
-  { id: "hr_board", label: "HR Board", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS },
+  { id: "hr_board", label: "Home Run Intelligence", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS, locked: true },
+  // Legacy HR board is off by default — Home Run Intelligence is the canonical page.
+  { id: "daily_hr_watch_new", label: "HR Board (Legacy)", icon: "Flame", enabled: false, order: 2.5, group: "Daily", sports: ALL_SPORTS },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },
   { id: "live_games", label: "Live Projections", icon: "Tv", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS },
 
@@ -118,7 +120,7 @@ export function loadFeatureLayout(): FeatureLayout {
     const storedById = new Map(parsed.features.map((f) => [f.id, f]));
     parsed.features = ALL_FEATURES.map((def) => {
       const prev = storedById.get(def.id);
-      const enabled = def.id === "ai_engine" ? false : prev ? prev.enabled : def.enabled;
+      const enabled = def.locked ? true : def.id === "ai_engine" ? false : prev ? prev.enabled : def.enabled;
       return { ...def, enabled };
     });
 
@@ -139,18 +141,28 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 /* ============ Helpers ============ */
 
 /** Returns only enabled features, sorted by order — for sidebar rendering */
+const SIDEBAR_HIDDEN_FEATURES = ['feed', 'profile', 'settings', 'ai_engine', 'build'];
+
 export function getEnabledFeatures(
   layout: FeatureLayout,
   options: { canAccessThemeStore?: boolean; activeSport?: SportId } = {},
 ): FeatureConfig[] {
   return layout.features
-    .filter((f) => f.id !== "ai_engine")
+    .filter((f) => f.id !== 'ai_engine')
     .filter((f) => f.enabled)
-    .filter((f) => f.access !== "admin_dev" || options.canAccessThemeStore)
+    .filter((f) => f.access !== 'admin_dev' || options.canAccessThemeStore)
     // Sport-scoped features only show when the active sport is in their list.
     // Sport-agnostic features (no `sports`) always show.
     .filter((f) => !f.sports || !options.activeSport || f.sports.includes(options.activeSport))
     .sort((a, b) => a.order - b.order);
+}
+
+export function getSidebarFeatures(
+  layout: FeatureLayout,
+  options: { canAccessThemeStore?: boolean; activeSport?: SportId; excludedFeatureIds?: string[] } = {},
+): FeatureConfig[] {
+  const excluded = [...SIDEBAR_HIDDEN_FEATURES, ...(options.excludedFeatureIds ?? [])];
+  return getEnabledFeatures(layout, options).filter((feature) => !excluded.includes(feature.id));
 }
 
 /** Toggle a feature on/off */

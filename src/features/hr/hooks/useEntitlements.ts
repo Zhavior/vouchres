@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiUrl } from '../../../lib/apiBase';
+import { apiClient } from '../../../lib/apiClient';
 
 export type CanonicalTier = 'free' | 'pro' | 'creator';
 export type DatabaseTier = 'free' | 'gold' | 'seller_pro';
@@ -81,31 +81,26 @@ export function useEntitlements(): FrontendEntitlements {
     setError(null);
 
     try {
-      const res = await fetch(apiUrl('/api/auth/me'), {
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        setTier('free');
-        setSourceTier(null);
-        setIsStaff(false);
-        setWarnings([]);
-        return;
-      }
-
-      const data = await res.json();
+      // apiClient attaches the Supabase Bearer token — a raw cookie-only fetch
+      // always 401s here and silently locked every pro feature as "free".
+      const data = await apiClient.get<any>('/api/auth/me');
       const normalized = normalizeTier(readTierFromAuthPayload(data));
 
       setTier(normalized.tier);
       setSourceTier(normalized.sourceTier);
       setIsStaff(readStaffFromAuthPayload(data));
       setWarnings(normalized.warnings);
-    } catch (err) {
+    } catch (err: any) {
       setTier('free');
       setSourceTier(null);
       setIsStaff(false);
-      setWarnings(['Entitlements check failed; defaulted to free.']);
-      setError(err instanceof Error ? err.message : 'Failed to check entitlements');
+      if (Number(err?.status) === 401) {
+        // Logged out — free tier is the correct, quiet answer.
+        setWarnings([]);
+      } else {
+        setWarnings(['Entitlements check failed; defaulted to free.']);
+        setError(err instanceof Error ? err.message : 'Failed to check entitlements');
+      }
     } finally {
       setLoading(false);
     }

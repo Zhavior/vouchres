@@ -1,5 +1,5 @@
-import type { HrWatchMode } from '../../types/hrWatch';
 import { Columns, Table } from 'lucide-react';
+import type { HrWatchMode } from '../../types/hrWatch';
 
 interface HrHeaderProps {
   viewMode: 'cards' | 'spreadsheet';
@@ -9,56 +9,27 @@ interface HrHeaderProps {
 
 export function HrHeader({ viewMode, onViewModeChange, mode }: HrHeaderProps) {
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-[#081124]/80 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.32em] text-slate-400">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#FACC15]">🔥</span>
+    <header className="rounded-2xl border border-white/[0.06] bg-[rgba(10,13,20,.88)] px-4 py-3 shadow-sm backdrop-blur">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.26em] text-amber-400">
+            <span>🔥</span>
             HOME RUN INTELLIGENCE
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-black tracking-tight text-slate-100 sm:text-4xl">Premium MLB home run research</h1>
-            <p className="max-w-2xl text-sm leading-6 text-slate-400">
-              A fast, explainable HR board built on existing data feeds. Switch between compact cards and a sticky spreadsheet for the same live player universe.
-            </p>
+          <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+            MLB • TODAY • {mode.toUpperCase()}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => onViewModeChange('cards')}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-              viewMode === 'cards'
-                ? 'border-[#FACC15] bg-[#FACC15]/10 text-slate-100 shadow-[0_12px_24px_rgba(250,204,21,0.14)]'
-                : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10'
-            }`}
-          >
-            <Columns className="h-4 w-4" />
-            Cards
+        <div className="flex items-center gap-2">
+          <button onClick={() => onViewModeChange('cards')} className={`rounded-lg border px-3 py-2 text-xs font-bold ${viewMode === 'cards' ? 'border-amber-400/40 bg-amber-400/10 text-amber-300' : 'border-white/[0.06] bg-white/[0.03] text-zinc-400'}`}>
+            <Columns className="mr-1 inline h-3.5 w-3.5" /> Cards
           </button>
-          <button
-            type="button"
-            onClick={() => onViewModeChange('spreadsheet')}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-              viewMode === 'spreadsheet'
-                ? 'border-[#3B82F6] bg-[#3B82F6]/10 text-slate-100 shadow-[0_12px_24px_rgba(59,130,246,0.14)]'
-                : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10'
-            }`}
-          >
-            <Table className="h-4 w-4" />
-            Spreadsheet
+          <button onClick={() => onViewModeChange('spreadsheet')} className={`rounded-lg border px-3 py-2 text-xs font-bold ${viewMode === 'spreadsheet' ? 'border-blue-400/40 bg-blue-400/10 text-blue-300' : 'border-white/[0.06] bg-white/[0.03] text-zinc-400'}`}>
+            <Table className="mr-1 inline h-3.5 w-3.5" /> Table
           </button>
         </div>
       </div>
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6 text-sm text-slate-500">
-        <div className="flex flex-wrap gap-4">
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Data mode: {mode === 'confirmed' ? 'Confirmed' : mode === 'curated' ? 'Preview' : mode === 'all' ? 'All Projected' : 'Blocked'}</span>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Live HR universe</span>
-        </div>
-        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-      </div>
-    </div>
+    </header>
   );
 }

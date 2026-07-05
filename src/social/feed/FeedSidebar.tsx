@@ -1,19 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { UserCircle, Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Crown, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield, Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders, Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
-import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
+import { ALL_FEATURES, getSidebarFeatures, loadFeatureLayout, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 
-/** Sidebar section order. Ungrouped items (e.g. The Edge) render first, headerless. */
-const GROUP_ORDER = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
+const SIDEBAR_GROUPS = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
-  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles,
-  MessageSquare, ShoppingBag, User, Settings, Users,
-  UserRoundSearch, Swords, LineChart, Bell,
+  Trophy,
+  LayoutDashboard,
+  Home,
+  Award,
+  Tv,
+  Radio,
+  Sliders,
+  Cpu,
+  Activity,
+  Flame,
+  ScanLine,
+  Search,
+  ClipboardCheck,
+  BarChart3,
+  Sparkles,
+  MessageSquare,
+  ShoppingBag,
+  User,
+  Settings,
+  Users,
+  UserRoundSearch,
+  Swords,
+  LineChart,
+  Bell,
 };
 
 interface FeedSidebarProps {
@@ -39,28 +58,37 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
     setActiveSportState(id);
   };
 
-  // Build menu items from the feature config, filtered by the active sport
-  const enabledFeatures = getEnabledFeatures(layout, {
-    canAccessThemeStore: canAccessThemeStore(profile),
-    activeSport,
-  }).filter((feature) => !['feed', 'profile', 'settings', 'ai_engine'].includes(feature.id));
+  const sidebarFeatures = useMemo(() => {
+    const items = getSidebarFeatures(layout, {
+      canAccessThemeStore: canAccessThemeStore(profile),
+      activeSport,
+    });
 
-  // Split into ungrouped (top) + grouped sections, preserving order
-  const ungrouped = enabledFeatures.filter((f) => !f.group);
-  const grouped = GROUP_ORDER
-    .map((group) => ({
+    if (!items.some((feature) => feature.id === 'hr_board')) {
+      const hrBoardFeature = ALL_FEATURES.find((feature) => feature.id === 'hr_board');
+      if (hrBoardFeature) items.push(hrBoardFeature);
+    }
+
+    return items.sort((a, b) => a.order - b.order);
+  }, [layout, profile, activeSport]);
+
+  const ungrouped = useMemo(() => sidebarFeatures.filter((f) => !f.group), [sidebarFeatures]);
+  const grouped = useMemo(
+    () => SIDEBAR_GROUPS.map((group) => ({
       group,
-      items: enabledFeatures.filter((f) => f.group === group),
-    }))
-    .filter((section) => section.items.length > 0);
+      items: sidebarFeatures.filter((f) => f.group === group),
+    })).filter((section) => section.items.length > 0),
+    [sidebarFeatures],
+  );
 
   const renderItem = (f: { id: string; label: string; icon: string }) => {
     const IconComponent = ICON_MAP[f.icon] || Settings;
+    const sectionId = f.id;
     const isActive = activeSection === f.id;
     return (
       <button
         key={f.id}
-        onClick={() => onSectionChange(f.id)}
+        onClick={() => onSectionChange(sectionId)}
         className={`group relative w-full flex items-center justify-center xl:justify-start gap-3 pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl border text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.28)] ${
           isActive
             ? 'border-[hsl(var(--ve-accent-cyan)/0.35)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-text-primary))] font-black shadow-lg shadow-[hsl(var(--ve-shadow)/0.24)]'
@@ -195,112 +223,106 @@ export default function FeedSidebar({ activeSection, onSectionChange, profile }:
         </div>
 
         {/* Navigation Items */}
-        <nav className="space-y-1" id="sidebar-nav-container">
-          {/* Ungrouped (e.g. The Edge) */}
-          {ungrouped.map(renderItem)}
+        <nav className="space-y-4" id="sidebar-nav-container">
+          <div className="rounded-[2rem] border border-slate-800/70 bg-slate-900/85 p-4 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.75)]">
+            <div className="mb-4 flex items-center justify-between gap-2 text-xs uppercase tracking-[0.3em] text-slate-500">
+              <span>Quick tools</span>
+              <span className="text-[10px] text-slate-500">{sidebarFeatures.length}</span>
+            </div>
+            <div className="space-y-3">
+              {ungrouped.map(renderItem)}
+            </div>
+          </div>
 
-          {/* Grouped sections */}
-          {grouped.map((section, idx) => (
-              <div
-                key={section.group}
-                className={`space-y-0.5 ${idx === 0 && ungrouped.length === 0 ? 'pt-1' : 'mt-2 pt-3 border-t border-[hsl(var(--ve-border)/0.20)]'}`}
-              >
-                <p className="hidden xl:block px-3.5 pb-1 text-[10px] font-black uppercase tracking-[0.24em] text-[hsl(var(--ve-text-muted)/0.72)]">
-                  {section.group}
-                </p>
+          {grouped.map((section) => (
+            <div key={section.group} className="rounded-[2rem] border border-slate-800/70 bg-slate-900/85 p-4 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.75)]">
+              <div className="mb-3 flex items-center justify-between gap-2 text-xs uppercase tracking-[0.24em] text-slate-500">
+                <span>{section.group}</span>
+                <span className="text-[10px] text-slate-500">{section.items.length} items</span>
+              </div>
+              <div className="space-y-2">
                 {section.items.map(renderItem)}
               </div>
-            ))}
+            </div>
+          ))}
         </nav>
+      </div>
 
-        {/* Primary CTA: Build Parlay */}
-        <div className="px-1 pt-1">
+      <div className="space-y-4">
+        <div className="hidden xl:block rounded-[2rem] border border-slate-800/70 bg-slate-900/85 p-4 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.75)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Sync status</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              Online
+            </span>
+          </div>
+          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+            Ledger, results, and parlay tracking are connected.
+          </p>
+        </div>
+
+        <div
+          onClick={() => onSectionChange('profile')}
+          className="flex items-center gap-3 p-4 rounded-[2rem] bg-slate-900/85 border border-slate-800/70 cursor-pointer transition-all duration-200 hover:border-slate-600 hover:bg-slate-900 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.75)]"
+          id="sidebar-profile-footer"
+        >
+          <ProfileAvatarBorder
+            borderId={profile.profileBorderId}
+            displayName={profile.displayName}
+            initials={profile.displayName.split(' ').map(n => n[0]).join('')}
+            size="md"
+            winRate={profile.winRate}
+            isVerified={profile.verified}
+          />
+          <div className="hidden xl:block min-w-0 flex-1">
+            <div className="flex items-center gap-1">
+              <h4 className="font-semibold text-sm text-slate-100 truncate leading-none">{profile.displayName}</h4>
+              {profile.verified && <Shield className="w-3 h-3 text-emerald-400 fill-emerald-400" />}
+            </div>
+            <p className="text-[11px] text-slate-400 truncate leading-none mt-0.5">@{profile.username}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <button
-            onClick={() => onSectionChange('build')}
-            className="group/cta relative w-full overflow-hidden border border-[hsl(var(--ve-accent-cyan)/0.38)] bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] font-black py-3 px-4 rounded-2xl shadow-[0_18px_45px_-18px_hsl(var(--ve-accent-cyan)/0.9)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[hsl(var(--ve-accent-cyan)/0.30)]"
-            id="sidebar-cta-build-parlay"
+            onClick={toggleMode}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-3xl text-[10px] font-black uppercase tracking-[0.14em] text-slate-100 transition-all border border-slate-700 bg-slate-900/80 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.75)]"
+            style={{
+              background: layout.mode === "pro" ? "rgba(34,211,238,0.12)" : "rgba(148,163,184,0.12)",
+              borderColor: layout.mode === "pro" ? "rgba(34,211,238,0.35)" : "rgba(148,163,184,0.24)",
+              color: layout.mode === "pro" ? "#22d3ee" : "#cbd5e1",
+            }}
           >
-            <Sliders className="w-4 h-4 transition-transform duration-300 group-hover/cta:rotate-90" />
-            <span className="hidden xl:inline">Build Parlay</span>
+            {layout.mode === "pro" ? <Zap className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+            <span className="hidden xl:inline">{layout.mode === "pro" ? "Pro Mode" : "Beginner"}</span>
+            <span className="hidden xl:inline ml-auto text-[8px] opacity-60">click to switch</span>
+          </button>
+          <button
+            onClick={() => onSectionChange("customize")}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-3xl text-[10px] font-black uppercase tracking-[0.14em] text-slate-300 hover:text-cyan-300 hover:border-cyan-400/30 hover:bg-slate-900/80 transition-all border border-slate-700 bg-slate-900/80"
+          >
+            <Palette className="w-3 h-3" />
+            <span className="hidden xl:inline">Customize Layout</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onSectionChange("settings")}
+            aria-label="Settings"
+            title="Settings"
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-3xl text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
+              activeSection === 'settings'
+                ? 'border border-cyan-300/40 bg-cyan-400/10 text-cyan-200'
+                : 'text-slate-300 hover:text-cyan-300 hover:border-cyan-400/30 hover:bg-slate-900/80'
+            }`}
+            style={{ background: activeSection === 'settings' ? undefined : 'rgba(148,163,184,0.08)', border: activeSection === 'settings' ? undefined : '1px solid rgba(148,163,184,0.14)' }}
+          >
+            <Settings className="w-3 h-3" />
+            <span className="hidden xl:inline">Settings</span>
           </button>
         </div>
-      </div>
-
-      {/* Mini Profile Footer */}
-      <div className="hidden xl:block rounded-2xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.26)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-secondary))]">VAI Sync</span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
-            Online
-          </span>
-        </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">
-          Ledger, results, and AI parlay tracking are connected.
-        </p>
-      </div>
-
-      <div
-        onClick={() => onSectionChange('profile')}
-        className="flex items-center gap-3 p-2 rounded-2xl bg-[hsl(var(--ve-bg-panel)/0.26)] cursor-pointer transition-all duration-200 border border-[hsl(var(--ve-border)/0.26)] hover:border-[hsl(var(--ve-accent-cyan)/0.38)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] shadow-lg shadow-[hsl(var(--ve-shadow)/0.10)]"
-        id="sidebar-profile-footer"
-      >
-        <ProfileAvatarBorder 
-          borderId={profile.profileBorderId}
-          displayName={profile.displayName}
-          initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
-          size="md"
-          winRate={profile.winRate}
-          isVerified={profile.verified}
-        />
-        <div className="hidden xl:block min-w-0 flex-1 ml-0.5">
-          <div className="flex items-center gap-1">
-            <h4 className="font-semibold text-[hsl(var(--ve-text-primary))] text-xs truncate leading-none">{profile.displayName}</h4>
-            {profile.verified && <Shield className="w-3 h-3 text-emerald-400 fill-emerald-400" />}
-          </div>
-          <p className="text-[hsl(var(--ve-text-muted))] text-[10px] truncate leading-none mt-0.5">@{profile.username}</p>
-        </div>
-      </div>
-
-      {/* Mode toggle + Customize link */}
-      <div className="space-y-2 pt-2">
-        <button
-          onClick={toggleMode}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] transition-all border shadow-lg shadow-black/10"
-          style={{
-            background: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan) / 0.10)" : "hsl(var(--ve-surface-raised) / 0.28)",
-            borderColor: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan) / 0.35)" : "hsl(var(--ve-border) / 0.22)",
-            color: layout.mode === "pro" ? "hsl(var(--ve-accent-cyan))" : "hsl(var(--ve-text-muted))",
-          }}
-        >
-          {layout.mode === "pro" ? <Zap className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-          <span className="hidden xl:inline">{layout.mode === "pro" ? "Pro Mode" : "Beginner"}</span>
-          <span className="hidden xl:inline ml-auto text-[8px] opacity-50">click to switch</span>
-        </button>
-        <button
-          onClick={() => onSectionChange("customize")}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.28)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)] transition-all"
-          style={{ background: "hsl(var(--ve-surface-raised) / 0.28)", border: "1px solid hsl(var(--ve-border) / 0.22)" }}
-        >
-          <Palette className="w-3 h-3" />
-          <span className="hidden xl:inline">Customize Layout</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onSectionChange("settings")}
-          aria-label="Settings"
-          title="Settings"
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
-            activeSection === 'settings'
-              ? 'border border-[hsl(var(--ve-accent-cyan)/0.35)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
-              : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.28)] hover:bg-[hsl(var(--ve-accent-cyan)/0.07)]'
-          }`}
-          style={{ background: activeSection === 'settings' ? undefined : "hsl(var(--ve-surface-raised) / 0.28)", border: activeSection === 'settings' ? undefined : "1px solid hsl(var(--ve-border) / 0.22)" }}
-        >
-          <Settings className="w-3 h-3" />
-          <span className="hidden xl:inline">Settings</span>
-        </button>
       </div>
     </aside>
   );
 }
+

@@ -18,39 +18,54 @@ export interface HrBuckets {
   Sleepers: HrWatchRow[];
 }
 
+/** Engine risk tiers → board display columns. Blocked rows never render on the board. */
+const DISPLAY_TIER: Record<HrWatchRow['riskTier'], keyof HrBuckets | null> = {
+  Elite: 'Elite',
+  Core: 'Strong',
+  Watch: 'Watch',
+  Deep: 'Sleepers',
+  Blocked: null,
+};
+
 export function useHrBoardViewModel() {
   const [mode, setMode] = useState<HrWatchMode>('confirmed');
   const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('cards');
   const [search, setSearch] = useState('');
+  const [selectedTiers, setSelectedTiers] = useState<string[]>(['Elite', 'Strong', 'Watch', 'Sleepers']);
   const [selectedPlayer, setSelectedPlayer] = useState<HrWatchRow | null>(null);
 
+  const onToggleTier = (tier: string) => {
+    setSelectedTiers((current) =>
+      current.includes(tier) ? current.filter((item) => item !== tier) : [...current, tier]
+    );
+  };
+
   const today = new Date().toISOString().slice(0, 10);
-  const { data: rawBoard, loading, error, mutate: refresh } = useDailyHrBoard(today);
+  const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(today);
 
   const board = useMemo(() => rawBoard ? buildBoard(rawBoard as unknown) : null, [rawBoard]);
   const rows = useMemo(() => board ? rowsForMode(board, mode) : [], [board, mode]);
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return rows;
-    
     return rows.filter((row) => {
+      const tier = DISPLAY_TIER[row.riskTier];
+      if (!tier || !selectedTiers.includes(tier)) return false;
+      if (!query) return true;
       const haystack = [
         row.playerName, row.team, row.opponent, row.pitcherName, 
         row.venue, row.reasons?.join(' '), row.oddsLabel
       ].join(' ').toLowerCase();
       return haystack.includes(query);
     });
-  }, [rows, search]);
+  }, [rows, search, selectedTiers]);
 
   const buckets = useMemo<HrBuckets>(() => {
     const b: HrBuckets = { Elite: [], Strong: [], Watch: [], Sleepers: [] };
     
     for (const row of filteredRows) {
-      if (row.riskTier === 'Elite') b.Elite.push(row);
-      else if (row.riskTier === 'Core') b.Strong.push(row);
-      else if (row.riskTier === 'Watch') b.Watch.push(row);
-      else b.Sleepers.push(row);
+      const tier = DISPLAY_TIER[row.riskTier];
+      if (tier) b[tier].push(row);
     }
     return b;
   }, [filteredRows]);
@@ -64,7 +79,7 @@ export function useHrBoardViewModel() {
   }), [buckets, filteredRows.length]);
 
   return {
-    buckets, stats, selectedPlayer, loading, error, mode, viewMode, search,
-    setMode, setViewMode, setSearch, setSelectedPlayer, refresh,
+    buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers,
+    setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
   };
 }

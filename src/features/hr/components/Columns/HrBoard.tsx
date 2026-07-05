@@ -10,7 +10,7 @@ interface HrBoardProps {
 
 export const HrBoard = ({ buckets, onSelectPlayer }: HrBoardProps) => {
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 xl:h-[calc(100vh-220px)]">
       <HrColumn 
         title="Elite" icon="🥇" colorClass="text-amber-400" borderClass="border-amber-500/20" 
         players={buckets.Elite} onSelect={onSelectPlayer} 

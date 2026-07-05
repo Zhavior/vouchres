@@ -9,37 +9,46 @@ export default function HomeRunIntelligencePage() {
   const vm = useHrBoardViewModel();
 
   if (vm.error) {
-    return <div className="p-6 text-red-400 bg-red-500/10 rounded-xl m-6">Failed to load HR Data: {String(vm.error)}</div>;
+    return (
+      <div className="m-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300">
+        Failed to load HR Data: {String(vm.error)}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-zinc-300 font-sans selection:bg-indigo-500/30 p-6">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        <HrHeader search={vm.search} onSearchChange={vm.setSearch} />
-        
-        <HrToolbar 
-          stats={vm.stats} 
+    <div className="min-h-screen bg-[#05070B] px-3 py-3 text-zinc-300 sm:px-4 lg:px-6">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-3">
+        <HrHeader
           viewMode={vm.viewMode}
           onViewModeChange={vm.setViewMode}
-          onRefresh={vm.refresh}
-          loading={vm.loading}
+          mode={vm.mode}
+        />
+
+        <HrToolbar
+          searchValue={vm.search}
+          onSearchChange={vm.setSearch}
+          mode={vm.mode}
+          onModeChange={vm.setMode}
+          selectedTiers={vm.selectedTiers}
+          onToggleTier={vm.onToggleTier}
+          visibleCount={vm.rows?.length ?? 0}
+          totalCount={vm.stats?.total ?? 0}
+          onExportCsv={() => {}}
         />
 
         {vm.loading ? (
-          <div className="flex items-center justify-center h-64 text-zinc-500 tracking-widest uppercase text-sm animate-pulse">
+          <div className="flex h-64 items-center justify-center text-xs uppercase tracking-[0.24em] text-zinc-500">
             Syncing MLB Data Feeds...
           </div>
         ) : (
-          <HrBoard 
-            buckets={vm.buckets} 
-            onSelectPlayer={vm.setSelectedPlayer} 
-          />
+          <HrBoard buckets={vm.buckets} onSelectPlayer={vm.setSelectedPlayer} />
         )}
       </div>
 
-      <HrPlayerDrawer 
-        selectedPlayer={vm.selectedPlayer} 
-        onClose={() => vm.setSelectedPlayer(null)} 
+      <HrPlayerDrawer
+        row={vm.selectedPlayer}
+        onClose={() => vm.setSelectedPlayer(null)}
       />
     </div>
   );

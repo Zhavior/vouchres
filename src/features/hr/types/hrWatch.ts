@@ -39,6 +39,8 @@ export interface HrWatchRow {
   parkFactor: number | null;
   recentForm: number | null;
   vouchScore: number | null;
+  /** Real pipeline data-confidence (0-100), null when the payload omits it. */
+  dataConfidence: number | null;
   truthStatus: TruthStatus;
   riskTier: RiskTier;
   oddsLabel: string;

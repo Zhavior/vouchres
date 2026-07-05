@@ -62,7 +62,10 @@ export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unkn
       "Probability-based research using real MLB season stats. For entertainment only — not betting advice. No guaranteed outcomes.",
     rosterAudit: parsedResult.rosterAudit,
     candidates: confirmedCandidates,
-    rows: confirmedCandidates,
+    // rows = what the board renders. Before official lineups post there are no
+    // confirmed candidates, so fall back to the projected preview pool instead
+    // of returning an empty board.
+    rows: confirmedCandidates.length > 0 ? confirmedCandidates : projectedCandidates,
     projectedCandidates,
     allProjectedCandidates: fullProjectedCandidates,
     candidateBuckets: {
