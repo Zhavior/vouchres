@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { vouchedgeApi } from "../api/vouchedgeApi";
+import { HrBoardRepository } from "../repositories/HrBoardRepository";
 import { useVouchResource } from "./useVouchResource";
 
 const PREVIEW_LIMIT = 999;
@@ -15,8 +15,8 @@ export function useDailyHrBoard(date: string) {
   const fetcher = useCallback(
     () =>
       isToday
-        ? vouchedgeApi.hrBoardToday(PREVIEW_LIMIT)
-        : vouchedgeApi.hrBoardByDate(date, PREVIEW_LIMIT),
+        ? HrBoardRepository.getToday(PREVIEW_LIMIT)
+        : HrBoardRepository.getByDate(date, PREVIEW_LIMIT),
     [date, isToday]
   );
 
