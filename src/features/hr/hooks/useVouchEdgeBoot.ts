@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { vouchEdgeBootJobs, type VouchEdgeBootJob } from "../lib/boot/bootJobs";
+import { vouchEdgeBootJobs, type VouchEdgeBootJob } from "../../../lib/boot/bootJobs";
 
 type BootJobStatus = "pending" | "running" | "success" | "error" | "timeout";
 

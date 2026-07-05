@@ -1,4 +1,4 @@
-import { calculateHRScore } from "../../engine/hr/hrScoreEngine";
+import { calculateHRScore } from "../../features/hr/engine/hrScoreEngine";
 
 export function computeHrBoard(players: any[]) {
   const scored = players.map((player) => {

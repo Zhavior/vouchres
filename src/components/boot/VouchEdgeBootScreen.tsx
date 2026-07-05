@@ -1,4 +1,4 @@
-import type { VouchEdgeBootState } from "../../hooks/useVouchEdgeBoot";
+import type { VouchEdgeBootState } from "../../features/hr/hooks/useVouchEdgeBoot";
 
 type Props = {
   boot: VouchEdgeBootState;

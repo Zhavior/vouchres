@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { HrBoardRepository } from "../repositories/HrBoardRepository";
+import { HrBoardRepository } from "../../../repositories/HrBoardRepository";
 import { useVouchResource } from "./useVouchResource";
 
 const PREVIEW_LIMIT = 999;

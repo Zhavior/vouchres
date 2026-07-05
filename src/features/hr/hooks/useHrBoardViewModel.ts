@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
+import type { HrBoardResponse, HrBoardRow } from "../../../types/hrBoard";
 
 function firstFiniteNumber(...values: unknown[]): number | null {
   for (const value of values) {

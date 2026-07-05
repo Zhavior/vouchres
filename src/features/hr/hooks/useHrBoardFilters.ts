@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
-import type { HrBoardFilterState, HrBoardRow, SortKey } from "../types/hrBoard";
+import type { HrBoardFilterState, HrBoardRow, SortKey } from "../../../types/hrBoard";
 
-import type { HrBoardGame } from "../types/hrBoard";
+import type { HrBoardGame } from "../../../types/hrBoard";
 
 const GRADE_RANK: Record<string, number> = { "A+": 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 

@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo } from "react";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
-import { useVouchEdgeBoot } from "../../hooks/useVouchEdgeBoot";
+import { useVouchEdgeBoot } from "../../features/hr/hooks/useVouchEdgeBoot";
 import VouchEdgeBootScreen from "./VouchEdgeBootScreen";
 
 type Props = {

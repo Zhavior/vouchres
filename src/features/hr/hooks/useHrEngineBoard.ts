@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { computeHrBoard } from "../lib/hr/computeHrBoard";
+import { computeHrBoard } from "../../../lib/hr/computeHrBoard";
 
 export function useHrEngineBoard(players: any[]) {
   return useMemo(() => {

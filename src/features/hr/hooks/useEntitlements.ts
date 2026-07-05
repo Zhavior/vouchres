@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiUrl } from '../../../lib/apiBase';
 
 export type CanonicalTier = 'free' | 'pro' | 'creator';
 export type DatabaseTier = 'free' | 'gold' | 'seller_pro';
