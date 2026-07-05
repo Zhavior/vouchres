@@ -66,38 +66,60 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
     return result;
   }, [allSlips, filter, selectedDate, search]);
 
-  // Calendar data
+  // Calendar data — now includes winRate % and net units per day
   const calendarDays = useMemo(() => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const days: Array<{ date: string; day: number; slips: number; wins: number; losses: number; pending: number }> = [];
+    const days: Array<{
+      date: string; day: number; slips: number;
+      wins: number; losses: number; pending: number;
+      winRate: number; units: number;
+    }> = [];
 
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const daySlips = allSlips.filter((s) => s.resultDate === dateStr);
+      const wins    = daySlips.filter((s) => s.status === "WON");
+      const losses  = daySlips.filter((s) => s.status === "LOST");
+      const settled = wins.length + losses.length;
+      // Net units: wins return (decimalOdds − 1), losses cost 1 unit each.
+      // Falls back to +1 flat when oddsValue is missing or ≤ 1.
+      const units = wins.reduce((sum, s) => {
+        const dec = Number(s.oddsValue ?? 0);
+        return sum + (dec > 1 ? dec - 1 : 1);
+      }, 0) - losses.length;
       days.push({
         date: dateStr,
         day: d,
         slips: daySlips.length,
-        wins: daySlips.filter((s) => s.status === "WON").length,
-        losses: daySlips.filter((s) => s.status === "LOST").length,
+        wins: wins.length,
+        losses: losses.length,
         pending: daySlips.filter((s) => s.status === "PENDING").length,
+        winRate: settled > 0 ? Math.round((wins.length / settled) * 100) : -1,
+        units: Math.round(units * 10) / 10,
       });
     }
     return days;
   }, [calendarMonth, allSlips]);
 
-  // Summary stats
+  // Summary stats — includes net units P&L
   const stats = useMemo(() => {
-    const won = allSlips.filter((s) => s.status === "WON").length;
-    const lost = allSlips.filter((s) => s.status === "LOST").length;
+    const wonSlips  = allSlips.filter((s) => s.status === "WON");
+    const lostSlips = allSlips.filter((s) => s.status === "LOST");
+    const won     = wonSlips.length;
+    const lost    = lostSlips.length;
     const pending = allSlips.filter((s) => s.status === "PENDING").length;
-    const voids = allSlips.filter((s) => s.status === "VOID").length;
+    const voids   = allSlips.filter((s) => s.status === "VOID").length;
     const settled = won + lost;
     const winRate = settled > 0 ? Math.round((won / settled) * 100) : 0;
-    return { won, lost, pending, voids, settled, winRate, total: allSlips.length };
+    const units   = Math.round((
+      wonSlips.reduce((sum, s) => {
+        const dec = Number(s.oddsValue ?? 0);
+        return sum + (dec > 1 ? dec - 1 : 1);
+      }, 0) - lost
+    ) * 10) / 10;
+    return { won, lost, pending, voids, settled, winRate, total: allSlips.length, units };
   }, [allSlips]);
 
   // Parlay type breakdown
@@ -142,13 +164,15 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                 Every saved slip, graded after final from the official box score. Unverified until settled — no faked records.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {[
-                { label: 'Slips', value: stats.total, tone: 'text-white' },
-                { label: 'Graded', value: stats.settled, tone: 'text-cyan-300' },
-                { label: 'Win rate', value: stats.settled > 0 ? `${stats.winRate ?? Math.round((stats.won / stats.settled) * 100)}%` : '—', tone: 'text-emerald-300' },
+                { label: 'Slips',    value: stats.total,                                                         tone: 'text-white' },
+                { label: 'Graded',   value: stats.settled,                                                        tone: 'text-cyan-300' },
+                { label: 'Win rate', value: stats.settled > 0 ? `${stats.winRate}%` : '—',                       tone: 'text-emerald-300' },
+                { label: 'Net units',value: stats.settled > 0 ? `${stats.units >= 0 ? '+' : ''}${stats.units}u` : '—',
+                                     tone: stats.units > 0 ? 'text-emerald-300' : stats.units < 0 ? 'text-red-400' : 'text-slate-400' },
               ].map((kpi) => (
-                <div key={kpi.label} className="min-w-[78px] rounded-2xl border border-white/[0.06] bg-slate-950/50 px-3 py-2.5 text-center">
+                <div key={kpi.label} className="min-w-[72px] rounded-2xl border border-white/[0.06] bg-slate-950/50 px-3 py-2.5 text-center">
                   <div className={`text-xl font-black ${kpi.tone}`}>{kpi.value}</div>
                   <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{kpi.label}</div>
                 </div>
@@ -168,7 +192,14 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
             {/* Calendar */}
             <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Calendar</div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Calendar</div>
+                  <div className="flex items-center gap-2.5 text-[9px] text-slate-600">
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(52,211,153,0.25)",border:"1px solid rgba(52,211,153,0.4)"}} />Win</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(248,113,113,0.2)",border:"1px solid rgba(248,113,113,0.35)"}} />Loss</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm" style={{background:"rgba(34,211,238,0.15)",border:"1px solid rgba(34,211,238,0.3)"}} />Pending</span>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="text-slate-600 hover:text-white p-1">
                     <ChevronLeft className="w-4 h-4" />
@@ -199,32 +230,92 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
                       <div key={`empty-${i}`} />
                     ))}
                     {calendarDays.map((day) => {
-                      const hasSlips = day.slips > 0;
-                      const isAllWins = hasSlips && day.wins > 0 && day.losses === 0;
-                      const isAllLosses = hasSlips && day.losses > 0 && day.wins === 0;
+                      const hasSlips   = day.slips > 0;
+                      const hasSettled = day.wins + day.losses > 0;
+                      const isAllWins  = hasSettled && day.losses === 0;
+                      const isAllLoss  = hasSettled && day.wins  === 0;
+                      const isMixed    = hasSettled && day.wins > 0 && day.losses > 0;
                       const isSelected = selectedDate === day.date;
-                      const today = new Date().toISOString().slice(0, 10);
-                      const isToday = day.date === today;
+                      const today      = new Date().toISOString().slice(0, 10);
+                      const isToday    = day.date === today;
+                      const unitsPos   = day.units > 0;
+                      const unitsNeg   = day.units < 0;
+
+                      // Background tint
+                      const bg = isAllWins  ? "rgba(52,211,153,0.09)"
+                               : isAllLoss  ? "rgba(248,113,113,0.09)"
+                               : isMixed    ? "rgba(251,191,36,0.07)"
+                               : hasSlips   ? "rgba(34,211,238,0.05)"
+                               :              "rgba(255,255,255,0.01)";
+
+                      // Border
+                      const borderColor = isSelected   ? "rgba(34,211,238,0.7)"
+                                        : isToday      ? "rgba(34,211,238,0.3)"
+                                        : isAllWins    ? "rgba(52,211,153,0.2)"
+                                        : isAllLoss    ? "rgba(248,113,113,0.2)"
+                                        : isMixed      ? "rgba(251,191,36,0.15)"
+                                        :                "rgba(255,255,255,0.03)";
+
                       return (
                         <button
                           key={day.date}
                           onClick={() => hasSlips && setSelectedDate(isSelected ? null : day.date)}
-                          className={`aspect-square rounded-lg flex flex-col items-center justify-center transition-all relative ${
-                            isSelected ? "ring-1 ring-cyan-400" : ""
-                          } ${hasSlips ? "cursor-pointer" : "cursor-default"}`}
-                          style={{
-                            background: isAllWins ? "rgba(52,211,153,0.08)" : isAllLosses ? "rgba(248,113,113,0.08)" : hasSlips ? "rgba(34,211,238,0.05)" : "rgba(255,255,255,0.01)",
-                            border: isToday ? "1px solid rgba(34,211,238,0.3)" : "1px solid rgba(255,255,255,0.03)",
-                          }}
+                          className={`rounded-lg flex flex-col items-center pt-1.5 pb-1 px-0.5 gap-0.5 transition-all relative ${
+                            hasSlips ? "cursor-pointer hover:brightness-125" : "cursor-default"
+                          } ${isSelected ? "ring-1 ring-cyan-400" : ""}`}
+                          style={{ background: bg, border: `1px solid ${borderColor}`, minHeight: "56px" }}
+                          title={hasSettled ? `${day.wins}W-${day.losses}L · ${day.winRate}% · ${day.units >= 0 ? "+" : ""}${day.units}u` : undefined}
                         >
-                          <span className={`text-[10px] font-mono ${hasSlips ? "text-white" : "text-slate-700"}`}>{day.day}</span>
-                          {hasSlips && (
-                            <div className="flex gap-0.5 mt-0.5">
-                              {day.wins > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
-                              {day.losses > 0 && <div className="w-1 h-1 rounded-full bg-red-400" />}
-                              {day.pending > 0 && <div className="w-1 h-1 rounded-full bg-cyan-400" />}
-                            </div>
-                          )}
+                          {/* Day number */}
+                          <span className={`text-[10px] font-mono leading-none ${
+                            hasSlips ? "text-white" : "text-slate-700"
+                          }`}>
+                            {day.day}
+                          </span>
+
+                          {hasSettled ? (
+                            <>
+                              {/* Win rate */}
+                              <span
+                                className="text-[8px] font-extrabold leading-none"
+                                style={{
+                                  color: isAllWins ? "#34d399"
+                                       : isAllLoss ? "#f87171"
+                                       : day.winRate >= 50 ? "#fbbf24" : "#f87171",
+                                }}
+                              >
+                                {day.winRate}%
+                              </span>
+
+                              {/* Units P&L */}
+                              <span
+                                className="text-[7.5px] font-bold leading-none rounded px-0.5"
+                                style={{
+                                  color: unitsPos ? "#34d399" : unitsNeg ? "#f87171" : "#94a3b8",
+                                  background: unitsPos ? "rgba(52,211,153,0.12)"
+                                            : unitsNeg ? "rgba(248,113,113,0.12)"
+                                            :             "rgba(148,163,184,0.08)",
+                                }}
+                              >
+                                {day.units >= 0 ? "+" : ""}{day.units}u
+                              </span>
+
+                              {/* Slip count dots */}
+                              <div className="flex gap-[2px] mt-0.5">
+                                {day.wins    > 0 && <div className="w-1 h-1 rounded-full bg-emerald-400" />}
+                                {day.losses  > 0 && <div className="w-1 h-1 rounded-full bg-red-400" />}
+                                {day.pending > 0 && <div className="w-1 h-1 rounded-full bg-cyan-400" />}
+                              </div>
+                            </>
+                          ) : hasSlips ? (
+                            // Pending-only days — no settled record yet
+                            <>
+                              <span className="text-[8px] font-bold leading-none" style={{ color: "#22d3ee" }}>live</span>
+                              <div className="flex gap-[2px] mt-0.5">
+                                <div className="w-1 h-1 rounded-full bg-cyan-400" />
+                              </div>
+                            </>
+                          ) : null}
                         </button>
                       );
                     })}
@@ -370,18 +461,19 @@ const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
 
 
 /* ============ Summary Cards ============ */
-function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number } }) {
+function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number; units: number } }) {
+  const unitsColor = stats.units > 0 ? "#34d399" : stats.units < 0 ? "#f87171" : "#64748b";
   const cards = [
-    { label: "Total Slips", value: stats.total, icon: BarChart3, color: "#22d3ee" },
-    { label: "Wins", value: stats.won, icon: CheckCircle2, color: "#34d399" },
-    { label: "Losses", value: stats.lost, icon: XCircle, color: "#f87171" },
-    { label: "Pending", value: stats.pending, icon: Clock, color: "#fbbf24" },
-    { label: "Win Rate", value: stats.settled > 0 ? `${stats.winRate}%` : "—", icon: TrendingUp, color: "#a78bfa" },
+    { label: "Total Slips", value: stats.total,                                                                              icon: BarChart3,    color: "#22d3ee" },
+    { label: "Wins",        value: stats.won,                                                                                icon: CheckCircle2, color: "#34d399" },
+    { label: "Losses",      value: stats.lost,                                                                               icon: XCircle,      color: "#f87171" },
+    { label: "Win Rate",    value: stats.settled > 0 ? `${stats.winRate}%` : "—",                                          icon: TrendingUp,   color: "#a78bfa" },
+    { label: "Net Units",   value: stats.settled > 0 ? `${stats.units >= 0 ? "+" : ""}${stats.units}u` : "—",             icon: Zap,          color: unitsColor },
   ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {cards.map((c) => (
-        <div key={c.label} className="rounded-xl p-3" style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${c.color}15` }}>
+        <div key={c.label} className="rounded-xl p-3" style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${c.color}20` }}>
           <c.icon className="w-3.5 h-3.5 mb-2" style={{ color: c.color }} />
           <div className="text-lg font-bold font-mono" style={{ color: c.color }}>{c.value}</div>
           <div className="text-[8px] text-slate-600 uppercase tracking-widest">{c.label}</div>
