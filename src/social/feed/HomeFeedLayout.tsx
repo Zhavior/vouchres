@@ -273,7 +273,8 @@ export default function HomeFeedLayout({
       <AisFeatureAgent 
         profile={profile} 
         savedSlips={savedSlips} 
-        activeLegs={activeLegs} 
+        activeLegs={activeLegs}
+        onSectionChange={onSectionChange}
       />
 
       {/* Command Palette (Cmd+K) */}

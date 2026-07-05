@@ -201,7 +201,7 @@ export interface ConfidenceResult {
 // Tier (Section 2)
 // =========================================================
 
-export type HrTier = "Elite" | "Strong" | "Good" | "Sneaky" | "Avoid";
+export type HrTier = "Elite" | "Strong" | "Watch" | "Sleeper" | "Good" | "Sneaky" | "Avoid";
 
 export interface TierResult {
   tier: HrTier;

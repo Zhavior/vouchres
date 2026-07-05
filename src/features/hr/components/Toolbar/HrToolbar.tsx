@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2 } from 'lucide-react';
-import type { HrWatchRow, HrRiskTier } from './HrPlayerCard';
+import type { HrWatchRow } from '../../types/hrWatch';
+import type { HrRiskTier } from '../Cards/HrPlayerCard';
 
 export type HrSourceMode = 'confirmed' | 'preview' | 'all';
 export type HrViewMode = 'cards' | 'table';

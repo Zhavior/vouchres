@@ -187,7 +187,8 @@ const Dot: React.FC<{ hrs: number }> = ({ hrs }) => (
 
 interface LayerRow { id: string; label: string; icon: string; value: number | null | undefined; weight: number; avg: number; hex: string; }
 
-function getLayers(p: HrWatchRow): LayerRow[] {
+function getLayers(p: HrWatchRow | null): LayerRow[] {
+  if (!p) return [];
   return [
     { id: 'power',   label: 'Hitter Power',          icon: '💪', weight: 25, value: p.hitterPower,          avg: 52, hex: '#f59e0b' },
     { id: 'pitcher', label: 'Pitcher Vulnerability',  icon: '⚾', weight: 20, value: p.pitcherVulnerability, avg: 48, hex: '#ef4444' },
@@ -229,27 +230,29 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     return { pa: t.pa, hrs: t.hrs, avg: t.pa > 0 ? (t.avgW / t.pa).toFixed(3) : '.000', slg: t.pa > 0 ? (t.slgW / t.pa).toFixed(3) : '.000', hrPct: t.pa > 0 ? ((t.hrs / t.pa) * 100).toFixed(1) : '0.0' };
   }, [bvpLogs]);
 
-  // Early return AFTER all hooks (Rules of Hooks: no conditional hooks)
-  const tier    = player ? tierConfig(player.hrScore) : tierConfig(0);
+  // compositeScore must be a hook — keep it before the null guard
+  const compositeScore = useMemo(() => {
+    const ls = getLayers(player);
+    let sum = 0, wt = 0;
+    for (const l of ls) { if (l.value != null && l.weight > 0) { sum += l.value * l.weight; wt += l.weight; } }
+    return wt > 0 ? Math.round(sum / wt) : (player?.hrScore ?? 0);
+  }, [player]);
+
+  // ── All hooks above this line ── null guard safe here ──
+  if (!player) return null;
+
+  const tier    = tierConfig(player.hrScore);
   const layers  = getLayers(player);
   const hue     = teamHue(player.team);
   const showImg = player.headshotUrl && !imgErr;
 
   const formHRs = formLogs.filter(g => g.hrs > 0).length;
-  const formEV  = Math.round(formLogs.reduce((s, g) => s + (g.exitVelo ?? 90), 0) / formLogs.length);
+  const formEV  = formLogs.length > 0 ? Math.round(formLogs.reduce((s, g) => s + (g.exitVelo ?? 90), 0) / formLogs.length) : 0;
   const teamHRs = teamLogs.reduce((s, g) => s + g.hrs, 0);
-  const teamEV  = Math.round(teamLogs.reduce((s, g) => s + (g.exitVelo ?? 90), 0) / teamLogs.length);
+  const teamEV  = teamLogs.length > 0 ? Math.round(teamLogs.reduce((s, g) => s + (g.exitVelo ?? 90), 0) / teamLogs.length) : 0;
 
   const EVSeries  = formLogs.map(g => (g.exitVelo ?? 88) / 105);
   const teamEVSeries = teamLogs.map(g => (g.exitVelo ?? 88) / 105);
-
-  const compositeScore = useMemo(() => {
-    let sum = 0, wt = 0;
-    for (const l of layers) { if (l.value != null && l.weight > 0) { sum += l.value * l.weight; wt += l.weight; } }
-    return wt > 0 ? Math.round(sum / wt) : (player?.hrScore ?? 0);
-  }, [layers, player.hrScore]);
-
-  if (!player) return null;
 
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
@@ -308,7 +311,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 <div className="relative shrink-0">
                   <div
                     className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl ring-2 shadow-xl"
-                    style={{ background: `hsl(${hue} 52% 18%)`, ringColor: `hsl(${hue} 52% 35%)` }}
+                    style={{ background: `hsl(${hue} 52% 18%)`, ['--tw-ring-color' as string]: `hsl(${hue} 52% 35%)` } as React.CSSProperties}
                   >
                     {showImg ? (
                       <img src={player.headshotUrl!} alt={player.playerName} className="h-full w-full object-cover" onError={() => setImgErr(true)} />
@@ -341,17 +344,17 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                   {/* Odds chip row */}
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     {player.oddsLabel && (
-                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1" style={{ background: 'hsl(var(--ve-surface))', color: 'hsl(var(--ve-text-primary))', ringColor: 'hsl(var(--ve-border) / 0.4)' }}>
+                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1" style={{ background: 'hsl(var(--ve-surface))', color: 'hsl(var(--ve-text-primary))', ['--tw-ring-color' as string]: 'hsl(var(--ve-border) / 0.4)' } as React.CSSProperties}>
                         {player.oddsLabel}
                       </span>
                     )}
                     {player.bookOdds != null && (
-                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1" style={{ background: 'hsl(var(--ve-accent-gold) / 0.10)', color: 'hsl(var(--ve-accent-gold))', ringColor: 'hsl(var(--ve-accent-gold) / 0.3)' }}>
+                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1" style={{ background: 'hsl(var(--ve-accent-gold) / 0.10)', color: 'hsl(var(--ve-accent-gold))', ['--tw-ring-color' as string]: 'hsl(var(--ve-accent-gold) / 0.3)' } as React.CSSProperties}>
                         {fmtOdds(player.bookOdds)}
                       </span>
                     )}
                     {player.truthStatus && (
-                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1" style={{ background: 'hsl(var(--ve-surface))', color: 'hsl(var(--ve-text-muted))', ringColor: 'hsl(var(--ve-border) / 0.3)' }}>
+                      <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1" style={{ background: 'hsl(var(--ve-surface))', color: 'hsl(var(--ve-text-muted))', ['--tw-ring-color' as string]: 'hsl(var(--ve-border) / 0.3)' } as React.CSSProperties}>
                         {player.truthStatus === 'official' ? '✅ Official' : player.truthStatus === 'projected' ? '🔮 Projected' : '⛔ Blocked'}
                       </span>
                     )}

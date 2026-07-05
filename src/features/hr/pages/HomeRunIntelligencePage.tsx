@@ -167,8 +167,8 @@ const HomeRunIntelligencePage: React.FC = () => {
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
         <HrHeader
           mode={vm.mode}
-          viewMode={vm.viewMode}
-          onViewModeChange={vm.setViewMode}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
           onRefresh={handleRefresh}
           isRefreshing={vm.loading}
           lastUpdated={lastUpdated}

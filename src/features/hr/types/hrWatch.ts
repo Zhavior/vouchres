@@ -27,23 +27,42 @@ export interface HrWatchRow {
   opponent: string;
   teamLogoUrl: string | null;
   opponentLogoUrl: string | null;
-  pitcherName: string;
-  venue: string;
+  pitcherName?: string | null;
+  venue?: string | null;
   gamePk: string | number | null;
   gameTime: string | null;
   headshotUrl: string | null;
   rank: number | null;
   hrScore: number;
+
+  // Layer sub-scores (0–100 each)
   hitterPower: number | null;
   pitcherVulnerability: number | null;
+  pitchMix?: number | null;
   parkFactor: number | null;
+  weather?: number | null;
+  platoon?: number | null;
   recentForm: number | null;
+  swingDecisions?: number | null;
+  lineupContext?: number | null;
+  bullpen?: number | null;
+  bvpScore?: number | null;
+  vegasEdgeScore?: number | null;
+
   vouchScore: number | null;
   /** Real pipeline data-confidence (0-100), null when the payload omits it. */
   dataConfidence: number | null;
   truthStatus: TruthStatus;
   riskTier: RiskTier;
   oddsLabel: string;
+
+  /** American odds for Vegas edge display, e.g. +280 */
+  bookOdds?: number | null;
+  /** Model HR probability 0–1 */
+  hrProbability?: number | null;
+  /** Book implied probability 0–1 (after vig) */
+  impliedProbability?: number | null;
+
   reasons: string[];
   warnings: string[];
   sourceMode: HrWatchMode;

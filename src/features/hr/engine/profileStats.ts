@@ -100,6 +100,8 @@ function findBestAndWorstTiers(
   const expectedRates: Record<HrTier, number> = {
     Elite: 0.10,
     Strong: 0.08,
+    Watch: 0.07,
+    Sleeper: 0.05,
     Good: 0.06,
     Sneaky: 0.04,
     Avoid: 0.02,
@@ -155,6 +157,8 @@ function emptyStats(): HrProfileStats {
     hitRateByTier: {
       Elite: 0,
       Strong: 0,
+      Watch: 0,
+      Sleeper: 0,
       Good: 0,
       Sneaky: 0,
       Avoid: 0,

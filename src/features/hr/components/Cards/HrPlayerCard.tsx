@@ -14,59 +14,14 @@ import {
   AlertTriangle, ShieldCheck, ShieldQuestion, ShieldAlert,
   ShieldOff, TrendingUp, Zap, ChevronRight,
 } from 'lucide-react';
+import type { HrWatchRow } from '../../types/hrWatch';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Re-export for consumers that import HrWatchRow from here ────────────────
+export type { HrWatchRow } from '../../types/hrWatch';
 
+// ─── Legacy local aliases (kept for backward compat) ────────────────────────
 export type HrTruthStatus = 'official' | 'projected' | 'blocked' | string;
 export type HrRiskTier = 'elite' | 'strong' | 'watch' | 'sleeper' | 'fade' | string;
-
-export interface HrWatchRow {
-  stableId: string;
-  playerName: string;
-  playerId: string;
-  team: string;
-  opponent: string;
-  teamLogoUrl?: string | null;
-  opponentLogoUrl?: string | null;
-  pitcherName?: string | null;
-  venue?: string | null;
-  gamePk?: string | null;
-  gameTime?: string | null;
-  headshotUrl?: string | null;
-  rank?: number | null;
-  hrScore: number;
-
-  // Layer sub-scores (0–100 each)
-  hitterPower?: number | null;
-  pitcherVulnerability?: number | null;
-  pitchMix?: number | null;
-  parkFactor?: number | null;
-  weather?: number | null;
-  platoon?: number | null;
-  recentForm?: number | null;
-  swingDecisions?: number | null;
-  lineupContext?: number | null;
-  bullpen?: number | null;
-  bvpScore?: number | null;
-  vegasEdgeScore?: number | null;
-
-  vouchScore?: number | null;
-  dataConfidence?: number | null;
-  truthStatus: HrTruthStatus;
-  riskTier: HrRiskTier;
-  oddsLabel?: string | null;
-
-  /** American odds for Vegas edge display, e.g. +280 */
-  bookOdds?: number | null;
-  /** Model HR probability 0–1 */
-  hrProbability?: number | null;
-  /** Book implied probability 0–1 (after vig) */
-  impliedProbability?: number | null;
-
-  reasons?: string[];
-  warnings?: string[];
-  sourceMode?: string;
-}
 
 export interface HrPlayerCardProps {
   player: HrWatchRow;

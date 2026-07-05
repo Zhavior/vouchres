@@ -264,10 +264,7 @@ const ProLock: React.FC<{ label: string }> = ({ label }) => (
     >
       <div
         className="flex h-9 w-9 items-center justify-center rounded-full ring-1"
-        style={{
-          background: 'hsl(var(--ve-accent-gold) / 0.12)',
-          ringColor: 'hsl(var(--ve-accent-gold) / 0.35)',
-        }}
+        style={{ background: 'hsl(var(--ve-accent-gold) / 0.12)', ['--tw-ring-color' as string]: 'hsl(var(--ve-accent-gold) / 0.35)' } as React.CSSProperties}
       >
         <Lock className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-gold))' }} />
       </div>
@@ -542,11 +539,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
               </div>
               <span
                 className="rounded-full px-2.5 py-0.5 text-[10px] font-bold ring-1"
-                style={{
-                  background: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success) / 0.12)' : 'hsl(var(--ve-border) / 0.2)',
-                  color: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success))' : 'hsl(var(--ve-text-muted))',
-                  ringColor: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success) / 0.3)' : 'hsl(var(--ve-border) / 0.3)',
-                }}
+                style={{ background: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success) / 0.12)' : 'hsl(var(--ve-border) / 0.2)', color: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success))' : 'hsl(var(--ve-text-muted))', ['--tw-ring-color' as string]: bvpTotals.hrs >= 2 ? 'hsl(var(--ve-success) / 0.3)' : 'hsl(var(--ve-border) / 0.3)' } as React.CSSProperties}
               >
                 {bvpTotals.hrs >= 2 ? 'Owns Pitcher' : bvpTotals.hrs === 1 ? 'Neutral History' : 'No History'}
               </span>
