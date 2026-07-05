@@ -1192,7 +1192,7 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
 }
 
 /* ============ Markets Tab ============ */
-function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void }) {
+function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void }) {
   return (
     <div className="space-y-2">
       {player.propositions.map((prop) => (

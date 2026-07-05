@@ -233,7 +233,7 @@ export interface GameLog {
 export interface PlayerProposition {
   id: string;
   market: string;
-  odds: number;
+  odds: number | null;
   spec: string;
   truthLabel?: string;
 }
