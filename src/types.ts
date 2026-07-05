@@ -32,6 +32,9 @@ export interface Leg {
   popularityKey?: string;
   /** External data provider that produced the identity. */
   externalProvider?: string;
+  /** Whether the odds are a sportsbook-confirmed price or an AI model estimate.
+   *  Always 'estimated' for AI-generated legs — surfaced as a badge in the UI. */
+  oddsSource?: 'live' | 'estimated';
   /** Observed stat value after grading, for display. */
   actual?: number | null;
   /** ISO start time of this leg's game; drives the 30-min lock. */
