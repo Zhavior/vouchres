@@ -4,8 +4,8 @@ import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrBoard } from '../components/Columns/HrBoard';
+import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
-// existing imports — keep all of them
 
 interface MiniStatChipProps {
   label: string;
@@ -17,7 +17,8 @@ interface MiniStatChipProps {
 
 const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
   <div
-    className={`flex items-center gap-2.5 rounded-xl border bg-[#0A0D14] px-3.5 py-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}
+    className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}
+    style={{ background: 'hsl(var(--ve-bg-panel))' }}
   >
     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">{icon}</div>
     <div className="flex flex-col leading-tight">
@@ -44,12 +45,17 @@ function formatRelativeTime(date: Date | null | undefined): string {
 const LoadingSkeleton: React.FC = () => (
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     {Array.from({ length: 4 }).map((_, colIdx) => (
-      <div key={colIdx} className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-[#0A0D14] p-4">
+      <div
+        key={colIdx}
+        className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-4"
+        style={{ background: 'hsl(var(--ve-bg-panel))' }}
+      >
         <div className="h-4 w-24 animate-pulse rounded-full bg-white/[0.08]" />
         {Array.from({ length: 3 }).map((__, cardIdx) => (
           <div
             key={cardIdx}
-            className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-[#090C13] p-4"
+            className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-4"
+            style={{ background: 'hsl(var(--ve-surface))' }}
           >
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-white/[0.08]" />
@@ -98,7 +104,10 @@ const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
 );
 
 const EmptyState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-  <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] bg-[#0A0D14] px-6 py-16 text-center">
+  <div
+    className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] px-6 py-16 text-center"
+    style={{ background: 'hsl(var(--ve-bg-panel))' }}
+  >
     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04] ring-1 ring-white/[0.08]">
       <Inbox className="h-7 w-7 text-zinc-500" />
     </div>
@@ -111,7 +120,7 @@ const EmptyState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
     <button
       type="button"
       onClick={onRetry}
-      className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-200 hover:border-cyan-500/30 hover:text-cyan-300"
+      className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-200 hover:bg-white/[0.06]"
     >
       <RefreshCw className="h-4 w-4" />
       Refresh
@@ -119,12 +128,11 @@ const EmptyState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
   </div>
 );
 
-export const HomeRunIntelligencePage: React.FC = () => {
+const HomeRunIntelligencePage: React.FC = () => {
   const vm = useHrBoardViewModel();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Map vm.buckets (capitalized keys) to counts
   const eliteCount: number = vm.stats?.elite ?? vm.buckets?.Elite?.length ?? 0;
   const strongCount: number = vm.stats?.strong ?? vm.buckets?.Strong?.length ?? 0;
   const watchCount: number = vm.stats?.watch ?? vm.buckets?.Watch?.length ?? 0;
@@ -138,14 +146,22 @@ export const HomeRunIntelligencePage: React.FC = () => {
   const isAllZero = totalCount === 0 && !vm.loading;
   const lastUpdatedLabel = formatRelativeTime(lastUpdated);
 
-  // Track last successful refresh time
   const handleRefresh = React.useCallback(() => {
     vm.refresh?.();
     setLastUpdated(new Date());
   }, [vm]);
 
+  // viewMode is managed by the ViewModel (persists across re-renders)
+  const viewMode = (vm.viewMode === 'spreadsheet' ? 'table' : vm.viewMode) as 'cards' | 'table';
+  const handleViewModeChange = (mode: 'cards' | 'table') => {
+    vm.setViewMode(mode === 'table' ? 'spreadsheet' : mode);
+  };
+
   return (
-    <div className="min-h-screen bg-[#05070B] px-4 py-6 md:px-8">
+    <div
+      className="min-h-screen px-4 py-6 md:px-8"
+      style={{ background: 'hsl(var(--ve-bg-deep))' }}
+    >
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
         <HrHeader
           mode={vm.mode}
@@ -187,7 +203,10 @@ export const HomeRunIntelligencePage: React.FC = () => {
               colorClasses="border-purple-500/30"
               glowClasses="hover:shadow-[0_0_20px_-8px_rgba(168,85,247,0.5)]"
             />
-            <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-[#0A0D14] px-3.5 py-2.5">
+            <div
+              className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] px-3.5 py-2.5"
+              style={{ background: 'hsl(var(--ve-bg-panel))' }}
+            >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10">
                 <span className="text-xs font-black text-cyan-300">Σ</span>
               </div>
@@ -221,6 +240,8 @@ export const HomeRunIntelligencePage: React.FC = () => {
           onToggleTier={(t) => vm.onToggleTier(t.charAt(0).toUpperCase() + t.slice(1))}
           visibleCount={vm.rows?.length ?? totalCount}
           rows={(vm.rows ?? []) as any}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
 
         {vm.loading ? (
@@ -229,6 +250,14 @@ export const HomeRunIntelligencePage: React.FC = () => {
           <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
         ) : isAllZero ? (
           <EmptyState onRetry={handleRefresh} />
+        ) : viewMode === 'table' ? (
+          <HrSpreadsheet
+            rows={(vm.rows ?? []) as any}
+            onSelectPlayer={(player) => {
+              vm.setSelectedPlayer(player);
+              setIsDrawerOpen(true);
+            }}
+          />
         ) : (
           <HrBoard
             buckets={vm.buckets}

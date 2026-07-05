@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { Search, X, Download, SlidersHorizontal } from 'lucide-react';
+import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2 } from 'lucide-react';
 import type { HrWatchRow, HrRiskTier } from './HrPlayerCard';
 
 export type HrSourceMode = 'confirmed' | 'preview' | 'all';
+export type HrViewMode = 'cards' | 'table';
 
 export interface HrTierFilter {
   key: HrRiskTier;
@@ -18,6 +19,8 @@ export interface HrToolbarProps {
   onToggleTier: (tier: HrRiskTier) => void;
   visibleCount: number;
   rows: HrWatchRow[];
+  viewMode: HrViewMode;
+  onViewModeChange: (mode: HrViewMode) => void;
 }
 
 const TIER_OPTIONS: HrTierFilter[] = [
@@ -125,6 +128,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
   onToggleTier,
   visibleCount,
   rows,
+  viewMode,
+  onViewModeChange,
 }) => {
   const exportDisabled = rows.length === 0;
   const countLabel = useMemo(
@@ -133,7 +138,13 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
   );
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-[#0A0D14] p-4">
+    <div
+      className="flex flex-col gap-3 rounded-2xl border p-4"
+      style={{
+        borderColor: 'hsl(var(--ve-border))',
+        background: 'hsl(var(--ve-bg-panel))',
+      }}
+    >
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-[220px]">
@@ -174,6 +185,42 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
               {opt.label}
             </button>
           ))}
+        </div>
+
+        {/* View mode toggle — Cards / Table */}
+        <div
+          className="flex items-center rounded-full border border-white/[0.06] bg-white/[0.03] p-1"
+          role="group"
+          aria-label="View mode"
+        >
+          <button
+            type="button"
+            onClick={() => onViewModeChange('cards')}
+            aria-pressed={viewMode === 'cards'}
+            title="Card view"
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+              viewMode === 'cards'
+                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Cards</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange('table')}
+            aria-pressed={viewMode === 'table'}
+            title="Table view"
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+              viewMode === 'table'
+                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <Table2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Table</span>
+          </button>
         </div>
 
         {/* CSV export */}
