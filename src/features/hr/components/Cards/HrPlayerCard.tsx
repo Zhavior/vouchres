@@ -239,11 +239,13 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
   const edgeNegative = edgeVal != null && parseFloat(edgeVal) <= -2;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick?.(player)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(player); } }}
       className={[
-        'group relative flex w-full flex-col gap-3 rounded-2xl border',
+        'group relative flex w-full cursor-pointer flex-col gap-3 rounded-2xl border',
         tier.borderClass,
         'bg-[hsl(var(--ve-bg-panel)/0.46)] p-4 text-left',
         'transition-all duration-[var(--ve-duration-normal)]',
@@ -399,7 +401,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           <ChevronRight className="h-3 w-3" />
         </button>
       )}
-    </button>
+    </div>
   );
 };
 

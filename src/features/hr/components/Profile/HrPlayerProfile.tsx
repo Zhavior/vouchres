@@ -229,9 +229,8 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     return { pa: t.pa, hrs: t.hrs, avg: t.pa > 0 ? (t.avgW / t.pa).toFixed(3) : '.000', slg: t.pa > 0 ? (t.slgW / t.pa).toFixed(3) : '.000', hrPct: t.pa > 0 ? ((t.hrs / t.pa) * 100).toFixed(1) : '0.0' };
   }, [bvpLogs]);
 
-  if (!player) return null;
-
-  const tier    = tierConfig(player.hrScore);
+  // Early return AFTER all hooks (Rules of Hooks: no conditional hooks)
+  const tier    = player ? tierConfig(player.hrScore) : tierConfig(0);
   const layers  = getLayers(player);
   const hue     = teamHue(player.team);
   const showImg = player.headshotUrl && !imgErr;
@@ -247,8 +246,10 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   const compositeScore = useMemo(() => {
     let sum = 0, wt = 0;
     for (const l of layers) { if (l.value != null && l.weight > 0) { sum += l.value * l.weight; wt += l.weight; } }
-    return wt > 0 ? Math.round(sum / wt) : player.hrScore;
+    return wt > 0 ? Math.round(sum / wt) : (player?.hrScore ?? 0);
   }, [layers, player.hrScore]);
+
+  if (!player) return null;
 
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
