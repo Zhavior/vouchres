@@ -5,6 +5,8 @@ import './index.css';
 import { AppErrorBoundary } from './components/system/AppErrorBoundary';
 import { forceFounderPoints } from "./lib/founderAccess";
 
+import { patchPublicNotificationsFetch } from "./lib/patchPublicNotificationsFetch";
+patchPublicNotificationsFetch();
 forceFounderPoints();
 
 
