@@ -3,9 +3,11 @@
  * Purely additive: new @theme tokens + utility classes, on top of the existing
  * Tailwind build. Nothing here overrides existing selectors — components opt in
  * by using these classes/tokens explicitly.
+ *
+ * The Inter font is imported at the top of index.css directly (all @import
+ * statements must precede other CSS in the final bundle — nesting it here
+ * would land it after Tailwind's expanded output and break the build).
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 @theme {
   --color-obsidian-900: #050505;
   --color-obsidian-800: #0A0A0A;
