@@ -85,7 +85,12 @@ Also watch for: a stray unrelated `node --import tsx server.ts` process sometime
 - **`3e8ca84` — Rebuild The Edge Island on Z8 Obsidian design system**
   Redesigned both Edge Island surfaces: `src/components/theEdge/EdgeIslandCommandCenter.tsx` (the floating popup, opened via a persistent bottom-nav/floating button once logged in) and `src/pages/EdgeIslandPage.tsx` (the full-page dashboard, mounted right after signup/login via the `'island'` section). `EdgeIslandPage.tsx` was deliberately kept off the shared `Section`/`Card` primitives (see rule 5 above). Also fixed the Inter-font `@import` ordering bug described above.
 
-Both commits verified line-by-line diffable to confirm zero content/feature loss — only classNames and structural div→button swaps changed.
+- **`9afc655` — Rebuild the post-signup welcome/loading screen on Z8 tokens**
+  The `edgeLayer === 'welcomeBack'` transition ("Welcome back / Building your dashboard…", shown for ~900ms right after signup/login completes, inside `TheEdgeShell.tsx`) had been missed by the two commits above. Same token swap, no logic changes.
+
+All commits verified line-by-line diffable to confirm zero content/feature loss — only classNames and structural div→button swaps changed.
+
+**Note on stray backup folders found on Desktop**: `Desktop/vouchres copy 2` and `Desktop/vouchres copy 3` contain real historical snapshots of this app (useful for comparing "was this ever different" questions); `Desktop/vouchres copy 4` is empty/junk (just a stray `node_modules`) despite its name. Don't assume a numbered copy folder has real content without checking first.
 
 ## What's left (the rest of the site)
 
