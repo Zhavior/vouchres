@@ -298,7 +298,7 @@ export default function HomeFeedPage({
       <div className="glass-panel glass-border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 z-20">
         <div className="flex flex-col">
           <h1 className="text-lg md:text-xl font-black text-white flex items-center gap-1.5 uppercase tracking-wide">
-            Vouch<span className="text-vouch-cyan">Edge</span> Home Feed
+            Home Feed
             {proOnlyMode && (
               <span className="terminal-text bg-vouch-emerald/10 text-vouch-emerald px-2 py-0.5 rounded-full ml-1.5 flex items-center gap-1">
                 <Crown className="w-2.5 h-2.5" /> PRO STREAM
