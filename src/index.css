@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
 @import "tailwindcss";
+@import "./styles/z8-design-system.css";
 
 /* Baseball Team brand fonts */
 .baseball-script {
@@ -1236,16 +1237,11 @@ body {
 
 #root .edge-space-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 56% -8%, rgba(148, 163, 184, 0.16), transparent 32%),
-    radial-gradient(circle at 88% 28%, rgba(56, 189, 248, 0.08), transparent 28%),
-    linear-gradient(180deg, #02030a 0%, #05070d 44%, #020203 100%) !important;
+  background: #050505 !important;
 }
 
 #root .edge-space-shell .edge-space-backdrop {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 22%),
-    radial-gradient(circle at 50% 110%, rgba(148, 163, 184, 0.10), transparent 34%) !important;
+  background: transparent !important;
 }
 
 #root .edge-space-header {
@@ -1256,65 +1252,42 @@ body {
   min-height: min(760px, calc(100vh - 132px));
   display: flex;
   align-items: center;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  background:
-    radial-gradient(circle at 72% 18%, rgba(125, 211, 252, 0.14), transparent 26%),
-    radial-gradient(circle at 22% 88%, rgba(148, 163, 184, 0.09), transparent 28%),
-    linear-gradient(180deg, rgba(12, 14, 20, 0.82), rgba(3, 5, 10, 0.94)) !important;
-  box-shadow: 0 30px 90px rgba(0,0,0,0.42) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: rgba(10, 10, 10, 0.4) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
 }
 
-#root .edge-space-orbit {
-  position: absolute;
-  pointer-events: none;
-  border: 1px solid rgba(226, 232, 240, 0.10);
-  border-radius: 9999px;
-}
-
-#root .edge-space-orbit-one {
-  right: -18%;
-  top: 8%;
-  width: min(680px, 58vw);
-  aspect-ratio: 1;
-}
-
+#root .edge-space-orbit,
+#root .edge-space-orbit-one,
 #root .edge-space-orbit-two {
-  right: -10%;
-  top: 20%;
-  width: min(460px, 42vw);
-  aspect-ratio: 1;
-  opacity: 0.7;
+  display: none;
 }
 
 #root .edge-product-panel,
 #root .edge-space-module {
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.070), rgba(255,255,255,0.030)),
-    rgba(3, 5, 10, 0.78) !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,0.34) !important;
-  backdrop-filter: blur(20px) saturate(1.15) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: rgba(10, 10, 10, 0.4) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 
 #root .edge-space-module:hover {
-  border-color: rgba(255,255,255,0.18) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.090), rgba(255,255,255,0.040)),
-    rgba(5, 7, 12, 0.86) !important;
+  border-color: rgba(0, 255, 148, 0.3) !important;
 }
 
 #root .edge-space-primary {
-  border: 1px solid rgba(255,255,255,0.74) !important;
-  background: #f5f5f7 !important;
-  color: #020203 !important;
-  box-shadow: 0 18px 48px rgba(255,255,255,0.12) !important;
+  border: none !important;
+  background: #00FF94 !important;
+  color: #000 !important;
+  box-shadow: none !important;
 }
 
 #root .edge-space-secondary,
 #root .edge-space-ghost {
-  border: 1px solid rgba(255,255,255,0.13) !important;
-  background: rgba(255,255,255,0.055) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  background: rgba(255,255,255,0.03) !important;
   color: #f5f5f7 !important;
   box-shadow: none !important;
 }
