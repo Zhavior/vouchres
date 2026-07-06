@@ -188,7 +188,7 @@ export default function HomeFeedLayout({
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex-1 min-w-0 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-[hsl(var(--ve-border)/0.24)] pb-[74px] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex-1 min-w-0 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-white/10 pb-[74px] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
           {activeSection !== 'welcome' && (
             <header className="md:hidden sticky top-0 bg-[hsl(var(--ve-bg-deep)/0.90)] backdrop-blur-md border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex items-center justify-between z-30 select-none">
