@@ -111,6 +111,13 @@ const TRUST_POINTS = [
   'Research & entertainment only',
 ];
 
+const MODULE_ACCENTS = [
+  { box: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200', text: 'text-cyan-200' },
+  { box: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-200', text: 'text-emerald-200' },
+  { box: 'border-violet-300/20 bg-violet-300/10 text-violet-200', text: 'text-violet-200' },
+  { box: 'border-amber-300/20 bg-amber-300/10 text-amber-200', text: 'text-amber-200' },
+];
+
 const WORKSPACE_MODULES = [
   {
     title: 'Daily Board',
@@ -510,31 +517,37 @@ export default function TheEdgeShell({
                         <ShieldCheck className="h-3.5 w-3.5" /> MLB probability workspace
                       </div>
 
-                      <h1 className="mt-6 text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl xl:text-7xl 2xl:text-8xl">
-                        VouchEdge
+                      <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.02] tracking-tight text-white sm:text-6xl xl:text-[4.5rem]">
+                        Stop trusting cappers who{' '}
+                        <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                          delete their losses.
+                        </span>
                       </h1>
 
-                      <p className="mt-5 max-w-2xl text-xl font-semibold leading-8 text-slate-200 sm:text-2xl">
-                        Research the slate. Build the slip. Keep the receipts.
-                      </p>
-
-                      <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-                        A simple, space-clean MLB command surface for daily boards, parlays, alerts, and proof tracking. Lineups and players stay labeled by their real status.
+                      <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-slate-200 sm:text-xl">
+                        VouchEdge grades every MLB pick to the final box score and publishes it — wins and losses both. Research the slate, build your slip, keep the receipts.
                       </p>
 
                       <div className="mt-7 flex flex-wrap gap-3">
-                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
-                          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-7 py-4 text-base font-black transition hover:-translate-y-0.5">
+                          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-5 w-5" /></span>
                         </button>
-                        <button onClick={() => enterSite('daily_players')} className="edge-space-secondary rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                        <button onClick={() => enterSite('daily_players')} className="edge-space-secondary rounded-2xl px-6 py-4 text-sm font-black text-white/80 transition hover:-translate-y-0.5 hover:text-white">
                           Open Daily Board
                         </button>
-                        <button onClick={() => setEdgeLayer('login')} className="edge-space-ghost rounded-2xl px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5">
+                        <button onClick={() => setEdgeLayer('login')} className="edge-space-ghost rounded-2xl px-6 py-4 text-sm font-black text-white/70 transition hover:-translate-y-0.5 hover:text-white">
                           <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
                         </button>
                       </div>
 
-                      <div className="mt-7 grid max-w-xl gap-2 sm:grid-cols-2">
+                      {/* Real numbers (from `stats`, no placeholders) as an immediate trust strip */}
+                      <div className="mt-8 grid grid-cols-3 gap-2 max-w-md">
+                        <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
+                        <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
+                        <Stat label="Saved slips" value={stats.saved} tone="cyan" />
+                      </div>
+
+                      <div className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2">
                         {TRUST_POINTS.map((point) => (
                           <div key={point} className="flex items-center gap-2 text-xs font-bold text-slate-300">
                             <Check className="h-4 w-4 text-slate-100" />
@@ -543,13 +556,20 @@ export default function TheEdgeShell({
                         ))}
                       </div>
 
-                      <div className="mt-6 max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                        <div className="mb-2 flex items-center justify-between">
+                      <div className="mt-6 max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div className="mb-2.5 flex items-center justify-between">
                           <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Example graded pick</span>
                           <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-200">Won</span>
                         </div>
-                        <div className="text-sm font-bold text-white">Aaron Judge — Over 0.5 HR (+150)</div>
-                        <div className="mt-1 text-[11px] text-slate-500">Graded to the final box score. No edits after lock.</div>
+                        <div className="text-base font-bold text-white">Aaron Judge — Over 0.5 HR (+150)</div>
+                        <div className="mt-2.5 flex items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">AI Confidence</span>
+                          <div className="h-1.5 flex-1 rounded-full bg-white/10">
+                            <div className="h-full w-[87%] rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" />
+                          </div>
+                          <span className="text-[10px] font-black text-cyan-200">87%</span>
+                        </div>
+                        <div className="mt-2.5 text-[11px] text-slate-500">Graded to the final box score. No edits after lock.</div>
                       </div>
                     </div>
 
@@ -615,8 +635,9 @@ export default function TheEdgeShell({
                 </div>
 
                 <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {WORKSPACE_MODULES.map((module) => {
+                  {WORKSPACE_MODULES.map((module, index) => {
                     const Icon = module.icon;
+                    const accent = MODULE_ACCENTS[index % MODULE_ACCENTS.length];
                     return (
                       <button
                         key={module.title}
@@ -624,12 +645,12 @@ export default function TheEdgeShell({
                         onClick={() => enterSite(module.section)}
                         className="edge-space-module group rounded-3xl p-4 text-left transition hover:-translate-y-0.5"
                       >
-                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100">
+                        <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border ${accent.box}`}>
                           <Icon className="h-5 w-5" />
                         </div>
                         <h3 className="text-base font-black text-white">{module.title}</h3>
                         <p className="mt-2 text-sm font-semibold leading-6 text-slate-400">{module.body}</p>
-                        <div className="mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-slate-300 opacity-70 transition group-hover:opacity-100">
+                        <div className={`mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide opacity-70 transition group-hover:opacity-100 ${accent.text}`}>
                           Open <ArrowRight className="h-3.5 w-3.5" />
                         </div>
                       </button>
