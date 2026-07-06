@@ -53,7 +53,6 @@ const EpicThemeShowcase = lazy(() =>
 );
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
-const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
 const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
 const MlbStatHubPage = lazy(() => import('./features/mlb-stats/pages/MlbStatHubPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
@@ -151,7 +150,6 @@ const STICKY_PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
-  'daily_hr_watch_new',
   'game_research',
   'player_research',
   'mlb_stats',
@@ -164,7 +162,6 @@ const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
-  'daily_hr_watch_new',
   'game_research',
   'player_research',
   'top_cappers',
@@ -232,12 +229,12 @@ function resolveDevSectionFromLocation() {
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
   const target = hash || pathname;
 
-  if (target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new') {
-    return 'daily_hr_watch_new';
-  }
-
-  if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
-    return 'daily_hr_watch_new';
+  if (
+    target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
+    target === 'hr-board' || target === '/hr-board' ||
+    target === 'daily-hr-board' || target === '/daily-hr-board'
+  ) {
+    return 'hr_board';
   }
 
   if (target === 'daily-players' || target === '/daily-players') {
@@ -385,7 +382,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'daily_hr_watch_new';
+    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
     return 'welcome';
   });
   const [authStateVersion, setAuthStateVersion] = useState(0);
@@ -1732,14 +1729,11 @@ export default function App() {
       case 'intel':
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 
+      // 'daily_hr_watch_new' was the legacy HR page's section id. Kept here
+      // (rather than removed outright) so any stale bookmark/localStorage
+      // value from before this merge still resolves to the real page
+      // instead of hitting the "View not found" fallback below.
       case 'daily_hr_watch_new':
-        return (
-          <DailyHrWatchNewPage
-            profile={profile}
-            onAddLegToParlay={handleAddLegFromResearch}
-          />
-        );
-
       case 'hr_board':
         return (
           <HomeRunIntelligencePage />

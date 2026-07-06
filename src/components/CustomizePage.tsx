@@ -65,12 +65,6 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     description: "Home run board, power spots, and matchup context.",
     icon: BarChart3,
   },
-  daily_hr_watch_new: {
-    id: "daily_hr_watch_new",
-    label: "HR Board (Legacy)",
-    description: "Legacy HR watch page and older HR board UI.",
-    icon: BarChart3,
-  },
   dailyHrBoard: {
     id: "dailyHrBoard",
     label: "HR Board",
