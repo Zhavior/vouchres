@@ -19,7 +19,7 @@ export default function FeedRightRail({
   onSaveVouch,
 }: FeedRightRailProps) {
   return (
-    <aside className="hidden lg:flex flex-col gap-6 w-[340px] xl:w-[380px] py-6 overflow-y-auto no-scrollbar max-h-screen sticky top-0 bg-[#0b0f19]/20 backdrop-blur-md px-4 border-l border-slate-900/40" id="feed-right-rail">
+    <aside className="font-z8 hidden lg:flex flex-col gap-6 w-[340px] xl:w-[380px] py-6 overflow-y-auto no-scrollbar max-h-screen sticky top-0 px-4 border-l border-white/10" id="feed-right-rail">
       {/* 1. Hot MLB Markets Selection */}
       <HotMarketsPanel onQuickVouch={onSaveVouch} savedVouchIds={savedVouchIds} />
 
@@ -30,13 +30,12 @@ export default function FeedRightRail({
       <ProofBuildersPanel profile={profile} />
 
       {/* 4. Risk Reminder Plate */}
-      <div className="bg-[#121824]/35 backdrop-blur-xs rounded-xl border border-rose-950/40 p-4 relative overflow-hidden" id="risk-reminder-plate">
-        <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500/5 rounded-full blur-xl"></div>
+      <div className="glass-panel glass-border rounded-2xl p-4 border-rose-400/15" id="risk-reminder-plate">
         <div className="flex gap-2.5 items-start">
           <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
           <div className="text-xs">
             <h4 className="font-bold text-rose-400 mb-1">Responsible Trading Alert</h4>
-            <p className="text-slate-300 leading-relaxed font-medium">
+            <p className="text-white/40 leading-relaxed font-medium">
               No guaranteed wins. Parlays increase risk and compound volatility. Please track responsibly.
             </p>
           </div>
