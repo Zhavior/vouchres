@@ -43,24 +43,24 @@ export default function FeedTabs({
   ];
 
   return (
-    <div className="flex flex-col border-b border-slate-850 sticky top-0 bg-[#0b0f19]/95 backdrop-blur-md z-30 w-full" id="feed-navigation-tabs-composite">
+    <div className="glass-panel glass-border font-z8 flex flex-col sticky top-0 z-30 w-full rounded-none border-x-0" id="feed-navigation-tabs-composite">
       {/* Primary tabs scroll */}
-      <div className="flex border-b border-slate-850/60 overflow-x-auto no-scrollbar scroll-smooth w-full select-none">
+      <div className="flex overflow-x-auto no-scrollbar scroll-smooth w-full select-none">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="flex-1 py-4 text-center font-bold text-xs select-none min-w-[80px] text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 relative transition-colors transition-all duration-150 shrink-0 uppercase tracking-wider animate-fade-in"
+              className="flex-1 py-4 text-center font-bold text-xs select-none min-w-[80px] relative transition-colors shrink-0 uppercase tracking-wider"
               id={`tab-btn-${tab.id}`}
             >
-              <span className={`${isActive ? 'text-sky-400' : 'text-slate-400'}`}>
+              <span className={isActive ? 'text-vouch-emerald' : 'text-white/40 hover:text-white'}>
                 {tab.label}
               </span>
               {isActive && (
-                <div 
-                  className="absolute bottom-0 left-[20%] right-[20%] h-1 bg-sky-500 rounded-t-full transition-all duration-300"
+                <div
+                  className="absolute bottom-0 left-[20%] right-[20%] h-0.5 bg-vouch-emerald rounded-t-full"
                   id={`active-tab-indicator-${tab.id}`}
                 ></div>
               )}
@@ -71,23 +71,23 @@ export default function FeedTabs({
 
       {/* For You Filters Sub-bar */}
       {activeTab === 'for-you' && (
-        <div 
-          className="px-4 py-2 bg-[#121824] border-b border-slate-850 flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs"
+        <div
+          className="px-4 py-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs"
           id="for-you-filters-panel"
         >
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[9px] tracking-wider">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
+          <div className="terminal-text flex items-center gap-1.5 text-white/40">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-vouch-cyan" />
             <span>Refine 'For You' stream:</span>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Sport Filter Dropdown */}
             <div className="flex items-center gap-1.5" id="sport-selector-container">
-              <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <Trophy className="w-3.5 h-3.5 text-vouch-emerald shrink-0" />
               <select
                 value={selectedSport}
                 onChange={(e) => onSportChange(e.target.value)}
-                className="bg-slate-900 border border-slate-800 text-slate-200 text-[11px] font-bold py-1 px-2 rounded-lg focus:border-sky-500 outline-none transition-all cursor-pointer"
+                className="bg-white/[0.02] border border-white/10 text-white text-[11px] font-bold py-1 px-2 rounded-lg focus:border-vouch-cyan/40 outline-none transition-all cursor-pointer"
                 id="sport-filter-select"
               >
                 {sports.map((sport) => (
@@ -98,11 +98,11 @@ export default function FeedTabs({
 
             {/* Post Type Filter Dropdown */}
             <div className="flex items-center gap-1.5" id="posttype-selector-container">
-              <Layers className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <Layers className="w-3.5 h-3.5 text-vouch-cyan shrink-0" />
               <select
                 value={selectedPostType}
                 onChange={(e) => onPostTypeChange(e.target.value)}
-                className="bg-slate-900 border border-slate-800 text-slate-200 text-[11px] font-bold py-1 px-2.5 rounded-lg focus:border-sky-500 outline-none transition-all cursor-pointer"
+                className="bg-white/[0.02] border border-white/10 text-white text-[11px] font-bold py-1 px-2.5 rounded-lg focus:border-vouch-cyan/40 outline-none transition-all cursor-pointer"
                 id="posttype-filter-select"
               >
                 {postTypes.map((type) => (
@@ -110,7 +110,7 @@ export default function FeedTabs({
                 ))}
               </select>
             </div>
-            
+
             {/* Clear Filters Indicator */}
             {(selectedSport !== 'ALL' || selectedPostType !== 'ALL') && (
               <button
@@ -118,7 +118,7 @@ export default function FeedTabs({
                   onSportChange('ALL');
                   onPostTypeChange('ALL');
                 }}
-                className="text-[10px] text-rose-450 hover:text-rose-400 font-extrabold uppercase hover:underline transition-colors leading-none"
+                className="text-[10px] text-rose-400 hover:text-rose-300 font-extrabold uppercase hover:underline transition-colors leading-none"
               >
                 Reset filters
               </button>
