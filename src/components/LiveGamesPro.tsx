@@ -70,11 +70,15 @@ function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
 }
 
 function buildMatchupsFromHrBoard(board: HrBoardResponse): GameMatchup[] {
-  const sourceRows = Array.isArray(board.candidates) && board.candidates.length > 0
-    ? board.candidates
-    : Array.isArray(board.projectedCandidates)
-      ? board.projectedCandidates
-      : [];
+  const sourceRows = Array.isArray(board.rows) && board.rows.length > 0
+    ? board.rows
+    : Array.isArray(board.confirmedCandidates) && board.confirmedCandidates.length > 0
+      ? board.confirmedCandidates
+      : Array.isArray(board.projectedCandidates) && board.projectedCandidates.length > 0
+        ? board.projectedCandidates
+        : Array.isArray(board.allProjectedCandidates)
+          ? board.allProjectedCandidates
+          : [];
   const groups = new Map<string, Record<string, unknown>[]>();
 
   sourceRows.forEach((raw) => {
