@@ -773,10 +773,10 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease }}
-                className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-slate-800 bg-slate-950/70 p-10 text-center"
+                className="glass-panel glass-border mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8"
               >
                 <motion.div
-                  className="flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300"
+                  className="flex h-16 w-16 items-center justify-center rounded-3xl bg-vouch-emerald/10 text-vouch-emerald"
                   animate={{ scale: [1, 1.08, 1] }}
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                 >
@@ -785,7 +785,7 @@ export default function TheEdgeShell({
                 <h2 className="mt-5 text-4xl font-black text-white">
                   Welcome{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ' back'}.
                 </h2>
-                <p className="mt-3 text-sm text-slate-400">Building your dashboard…</p>
+                <p className="mt-3 text-sm text-white/40">Building your dashboard…</p>
               </motion.section>
             )}
 
