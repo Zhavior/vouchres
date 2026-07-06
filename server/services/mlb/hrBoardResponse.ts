@@ -1,138 +1,200 @@
-import { withCanonicalHrScore } from './hr-engine/hrScoreAdapter';
-import { parseHrBoardResult } from './hr-engine/hrBoardSchema';
+type AnyRecord = Record<string, any>;
 
-export function resolveVisibleHrRows({
-  confirmedCandidates,
-  projectedCandidates,
-  fullProjectedCandidates,
-  previewLimit,
-}: {
-  confirmedCandidates: Array<Record<string, unknown>>;
-  projectedCandidates: Array<Record<string, unknown>>;
-  fullProjectedCandidates: Array<Record<string, unknown>>;
-  previewLimit: number;
-}) {
-  if (confirmedCandidates.length > 0) {
-    return confirmedCandidates;
-  }
-
-  if (projectedCandidates.length > 0) {
-    return projectedCandidates;
-  }
-
-  const fallbackLimit = Math.max(1, Math.min(20, previewLimit));
-  return fullProjectedCandidates.slice(0, fallbackLimit);
+export interface HrCandidateLike extends AnyRecord {
+  playerName?: string;
+  team?: string;
+  playerId?: string | number;
+  gameId?: string | number;
+  source?: string;
+  hrScore?: number;
+  rank?: number;
+  isConfirmed?: boolean;
 }
 
-export function parsePreviewLimit(value: unknown): number {
-  const parsed = Number.parseInt(String(value ?? ""), 10);
-  if (!Number.isFinite(parsed)) return 50;
-  return Math.max(10, Math.min(350, parsed));
+export interface HrBoardLike extends AnyRecord {
+  generatedAt?: string;
+  safeLimit?: number;
+  limit?: number;
+  rows?: unknown;
+  confirmedCandidates?: unknown;
+  projectedCandidates?: unknown;
+  allProjectedCandidates?: unknown;
+  candidateBuckets?: unknown;
+  counts?: AnyRecord;
+  debug?: AnyRecord;
 }
 
-export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unknown) {
-  const parsedResult = parseHrBoardResult(result);
-  const previewLimit = parsePreviewLimit(previewLimitInput);
-  const eligiblePreviewPoolCount =
-    parsedResult?.debug?.eligiblePreviewPoolCount ?? parsedResult?.projectedCandidates?.length ?? 0;
-  const scoredPreviewPoolCount =
-    parsedResult?.debug?.scoredPreviewPoolCount ?? parsedResult?.projectedCandidates?.length ?? 0;
-  const confirmedCandidates = (Array.isArray(parsedResult?.candidates) ? parsedResult.candidates : []).map(withCanonicalHrScore);
-  const fullProjectedCandidates = (Array.isArray(parsedResult?.projectedCandidates)
-    ? parsedResult.projectedCandidates
-    : []
-  ).map(withCanonicalHrScore);
-  const projectedCandidates = fullProjectedCandidates.slice(0, previewLimit);
-  const blockedPlayers = (Array.isArray(parsedResult?.debug?.blockedPlayers) ? parsedResult.debug.blockedPlayers : []).map(withCanonicalHrScore);
-  const blockedReasons = parsedResult?.debug?.blockedReasons ?? {};
+function isRecord(value: unknown): value is AnyRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-  const visibleRows = resolveVisibleHrRows({
-    confirmedCandidates,
-    projectedCandidates,
-    fullProjectedCandidates,
-    previewLimit,
-  });
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
 
-  const counts = {
-    confirmedCandidates: confirmedCandidates.length,
-    projectedCandidates: projectedCandidates.length,
-    hiddenProjectedCandidates: Math.max(0, fullProjectedCandidates.length - projectedCandidates.length),
-    eligiblePreviewPoolCount,
-    scoredPreviewPoolCount,
-    blockedPlayers: blockedPlayers.length,
-    totalVisiblePool: confirmedCandidates.length + visibleRows.length,
-    totalTruthPool: confirmedCandidates.length + fullProjectedCandidates.length + blockedPlayers.length,
-  };
+function text(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
 
-  const truthMode =
-    confirmedCandidates.length > 0
-      ? "confirmed"
-      : projectedCandidates.length > 0
-        ? "projection_preview"
-        : blockedPlayers.length > 0
-          ? "blocked_waiting"
-          : "limited";
+function num(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
+}
 
-  const truthMessage =
-    confirmedCandidates.length > 0
-      ? "Confirmed HR Board — every candidate passed team/game/injury/lineup/pitcher checks."
-      : projectedCandidates.length > 0
-        ? "Projection Preview — official lineups are not posted yet. Preview rows are roster/currentTeam verified only."
-        : blockedPlayers.length > 0
-          ? "HR Watch is waiting on official lineups, pitchers, stats, or safe roster verification."
-          : "Waiting for official lineups or safe preview candidates.";
+function clampLimit(value: unknown, fallback = 20): number {
+  return Math.max(1, Math.min(50, Math.floor(num(value, fallback) || fallback)));
+}
+
+function candidateKey(c: HrCandidateLike): string {
+  return [
+    c.playerId != null ? String(c.playerId) : "",
+    text(c.playerName).toLowerCase(),
+    text(c.team).toLowerCase(),
+    c.gameId != null ? String(c.gameId) : "",
+    text(c.source).toLowerCase(),
+  ]
+    .filter(Boolean)
+    .join("|");
+}
+
+function normalizeCandidate(raw: unknown): HrCandidateLike | null {
+  if (!isRecord(raw)) return null;
 
   return {
-    date: parsedResult.date,
-    gameCount: parsedResult.gameCount,
-    generatedAt: new Date().toISOString(),
-    dataQuality: truthMode,
-    disclaimer:
-      parsedResult.disclaimer ??
-      "Probability-based research using real MLB season stats. For entertainment only — not betting advice. No guaranteed outcomes.",
-    rosterAudit: parsedResult.rosterAudit,
-    candidates: confirmedCandidates,
-    // rows = what the board renders. Before official lineups post there are no
-    // confirmed candidates, so fall back to the projected preview pool and then
-    // to the full projected pool if both candidate slices are empty.
-    rows: visibleRows,
+    ...raw,
+    playerName: text(raw.playerName ?? raw.name ?? raw.player),
+    team: text(raw.team ?? raw.abbr ?? raw.club),
+    source: text(raw.source ?? raw.bucket ?? raw.origin),
+    playerId: raw.playerId ?? raw.id ?? raw.mlbId ?? raw.personId,
+    gameId: raw.gameId ?? raw.game_id ?? raw.matchupId,
+    hrScore: num(raw.hrScore ?? raw.score ?? raw.projectionScore ?? raw.expectedHr, 0),
+    rank: num(raw.rank ?? raw.sortRank ?? raw.order, Number.POSITIVE_INFINITY),
+    isConfirmed: Boolean(raw.isConfirmed ?? raw.confirmed ?? raw.locked),
+  };
+}
+
+function normalizePool(raw: unknown): HrCandidateLike[] {
+  return asArray(raw)
+    .map(normalizeCandidate)
+    .filter((x): x is HrCandidateLike => Boolean(x));
+}
+
+function dedupeAndSort(candidates: HrCandidateLike[]): HrCandidateLike[] {
+  const map = new Map<string, HrCandidateLike>();
+
+  for (const c of candidates) {
+    const key = candidateKey(c);
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, c);
+      continue;
+    }
+
+    const existingScore = num(existing.hrScore, Number.NEGATIVE_INFINITY);
+    const nextScore = num(c.hrScore, Number.NEGATIVE_INFINITY);
+    if (nextScore > existingScore) {
+      map.set(key, c);
+      continue;
+    }
+
+    if (nextScore === existingScore) {
+      const existingRank = num(existing.rank, Number.POSITIVE_INFINITY);
+      const nextRank = num(c.rank, Number.POSITIVE_INFINITY);
+      if (nextRank < existingRank) map.set(key, c);
+    }
+  }
+
+  return [...map.values()].sort((a, b) => {
+    const scoreDiff = num(b.hrScore, 0) - num(a.hrScore, 0);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const rankDiff = num(a.rank, Number.POSITIVE_INFINITY) - num(b.rank, Number.POSITIVE_INFINITY);
+    if (rankDiff !== 0) return rankDiff;
+
+    return text(a.playerName).localeCompare(text(b.playerName));
+  });
+}
+
+export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLimit?: number) {
+  const limit = clampLimit(requestedLimit ?? input.limit ?? input.safeLimit ?? 50);
+
+  const rawRows = normalizePool(input.rows);
+  const confirmedCandidates = dedupeAndSort(
+    normalizePool(
+      isRecord(input.candidateBuckets)
+        ? input.confirmedCandidates ?? input.candidateBuckets.confirmed
+        : input.confirmedCandidates
+    )
+  );
+  const projectedCandidates = dedupeAndSort(
+    normalizePool(
+      isRecord(input.candidateBuckets)
+        ? input.projectedCandidates ?? input.candidateBuckets.projected
+        : input.projectedCandidates
+    )
+  );
+
+  const allProjectedCandidates = dedupeAndSort(
+    normalizePool(input.allProjectedCandidates).concat(projectedCandidates)
+  );
+
+  const fallbackPool = dedupeAndSort([
+    ...confirmedCandidates,
+    ...projectedCandidates,
+    ...allProjectedCandidates,
+    ...rawRows,
+  ]);
+
+  const rows =
+    confirmedCandidates.length > 0
+      ? confirmedCandidates
+      : projectedCandidates.length > 0
+        ? projectedCandidates
+        : rawRows.length > 0
+          ? rawRows
+          : fallbackPool;
+
+  return {
+    ...(isRecord(input) ? input : {}),
+    generatedAt: typeof input.generatedAt === "string" ? input.generatedAt : new Date().toISOString(),
+    rows,
+    confirmedCandidates,
     projectedCandidates,
-    allProjectedCandidates: fullProjectedCandidates,
+    allProjectedCandidates,
     candidateBuckets: {
       confirmed: confirmedCandidates,
       projected: projectedCandidates,
-      allProjected: fullProjectedCandidates,
-      blocked: blockedPlayers,
     },
-    counts,
-    truthSummary: {
-      mode: truthMode,
-      dataQuality: truthMode,
-      message: truthMessage,
-      blockedReasons,
-    },
-    previewMeta: {
-      previewLimit,
-      eligiblePreviewPoolCount,
-      scoredPreviewPoolCount,
-      projectedPreviewCount: projectedCandidates.length,
-      hiddenProjectedCount: counts.hiddenProjectedCandidates,
-    },
-    pool: {
-      totalPlayersChecked: parsedResult.pool.totalPlayersChecked,
-      confirmedStarters: parsedResult.pool.confirmedStarters,
-      projectedStarters: parsedResult.pool.projectedStarters,
-      benchOrUnknown: parsedResult.pool.benchOrUnknown,
-      injuredScratchedBlocked: parsedResult.pool.injuredScratchedBlocked,
-      hrCandidatesScored: parsedResult.pool.hrCandidatesScored,
+    counts: {
+      ...(isRecord(input.counts) ? input.counts : {}),
+      rows: rows.length,
+      confirmedCandidates: confirmedCandidates.length,
+      projectedCandidates: projectedCandidates.length,
+      allProjectedCandidates: allProjectedCandidates.length,
+      totalCandidates: fallbackPool.length,
     },
     debug: {
-      ...parsedResult.debug,
-      eligiblePreviewPoolCount,
-      scoredPreviewPoolCount,
-      projectedPreviewCount: projectedCandidates.length,
-      hiddenProjectedCount: counts.hiddenProjectedCandidates,
+      ...(isRecord(input.debug) ? input.debug : {}),
+      limit,
+      rowCount: rows.length,
+      confirmedCount: confirmedCandidates.length,
+      projectedCount: projectedCandidates.length,
+      allProjectedCount: allProjectedCandidates.length,
     },
-    note: truthMessage,
+    dataQuality:
+      confirmedCandidates.length > 0
+        ? "confirmed"
+        : projectedCandidates.length > 0
+          ? "projection_preview"
+          : rows.length > 0
+            ? "fallback"
+            : "limited",
   };
 }
+
+export const buildHrBoardApiPayload = buildFutureProofHrBoardResponse;
+export const buildHrBoardResponse = buildFutureProofHrBoardResponse;
