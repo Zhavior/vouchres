@@ -117,6 +117,9 @@ Also watch for: a stray unrelated `node --import tsx server.ts` process sometime
 
   **Pattern worth remembering**: `index.css` still has many more `#inner-view-slot`-scoped `!important` rules (composer/publisher gradient override, avatar ring, empty-state, card/panel substring matchers, etc. — grep `#inner-view-slot` for the full list, ~50+ hits). Most are now dead against our rebuilt components since the old class names/substrings they target no longer appear in the new JSX, but if a future "there's still blue/old color somewhere" report comes in, check this file first via `grep -n "rgba(2, 6, 23\|rgba(15, 23, 42\|hsl(var(--ve-bg" src/index.css` before assuming it's a component issue — the bug is almost always a legacy `!important` override, not the new Tailwind classes being wrong.
 
+- **`ee4b6df` — Remove the feed-shell blue gradient + center column blue divider**
+  `#layout-inner-frame.ve-layout-feed/.ve-layout-wide` in `index.css` had a background with an actual blue-500 radial gradient (`rgba(59, 130, 246, 0.08)`) under the whole 3-column shell, plus a nested rule force-setting a navy gradient + `border-left`/`border-right` on `#center-main-content-column` (unlayered, so it beat Tailwind classes on `<main>` regardless of source). Removed both. Also switched `<main>`'s own border in `HomeFeedLayout.tsx` from `hsl(var(--ve-border)/0.24)` (a blue-gray token) to `border-white/10` to match the rails.
+
   **Still-open bug (from an earlier session, not yet fixed)**: a logged-in user clicking "Edge Island" can land on the public landing page instead of the real dashboard. Suspected root cause: `App.tsx`'s `isOpenEdgeDashboardMode` `useMemo` checks legacy localStorage keys (`vouchedge_auth_token`, `mlb_ai_auth_token`) rather than real Supabase session state — needs verification and a fix.
 
 All commits verified line-by-line diffable to confirm zero content/feature loss — only classNames and structural div→button swaps changed.
