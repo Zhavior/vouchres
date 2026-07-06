@@ -1942,11 +1942,17 @@ export default function App() {
             <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
           )}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
-        <AuthStatusBadge
-          hideGuest={activeSection === 'welcome'}
-          onLoginSuccess={handleLoginSuccess}
-          onLogoutComplete={handleLogoutComplete}
-        />
+        {/* Desktop only — on mobile this is rendered inline inside each page's
+            own compact header (see HomeFeedLayout.tsx) instead of floating
+            fixed over content, since a fixed corner badge collided with
+            whatever page content happened to scroll underneath it. */}
+        <div className="hidden md:block">
+          <AuthStatusBadge
+            hideGuest={activeSection === 'welcome'}
+            onLoginSuccess={handleLoginSuccess}
+            onLogoutComplete={handleLogoutComplete}
+          />
+        </div>
         <HomeFeedLayout
           activeSection={activeSection}
           onSectionChange={navigateSection}
@@ -1956,6 +1962,8 @@ export default function App() {
           onSaveVouch={handleSaveVouch}
           activeLegs={activeLegs}
           savedSlips={savedSlips}
+          onAuthLoginSuccess={handleLoginSuccess}
+          onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isRouteSwitching || isPendingRoute}
         >
           <Suspense
