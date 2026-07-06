@@ -30,7 +30,7 @@
 }
 
 body {
-  background-color: #0b0f19;
+  background-color: #050505;
   color: hsl(var(--ve-text-primary));
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   overflow-y: scroll;
@@ -1107,7 +1107,7 @@ html:not([data-ve-theme]) {
    ========================================================== */
 
 :root {
-  --ve-bg: 222 47% 7%;
+  --ve-bg: 0 0% 2%;
   --ve-bg-deep: 224 56% 4%;
   --ve-bg-panel: 222 42% 8%;
   --ve-surface: 220 40% 11%;
