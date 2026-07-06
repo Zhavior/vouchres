@@ -70,29 +70,27 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
   const tierLabel = profile?.subscriptionTier ? TIER_LABEL[profile.subscriptionTier] ?? profile.subscriptionTier : "Basic";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="The Edge Island">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 font-z8" role="dialog" aria-modal="true" aria-label="The Edge Island">
       <button
         type="button"
         aria-label="Close The Edge Island"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+        className="absolute inset-0 bg-obsidian-900/80 backdrop-blur-sm"
       />
 
-      <div className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-slate-950 shadow-2xl shadow-cyan-950/40">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_32%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#020617,#0f172a)]" />
-
+      <div className="glass-panel glass-border relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem]">
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
-                <Sparkles className="h-3.5 w-3.5" />
-                The Edge Island
+              <div className="glass-panel glass-border inline-flex items-center gap-2 rounded-full px-3 py-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-vouch-emerald" />
+                <span className="terminal-text">The Edge Island</span>
               </div>
               <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
                 {firstName ? `Welcome back, ${firstName}.` : "Your command island."}
               </h1>
-              <p className="mt-1.5 text-sm font-semibold text-slate-400">
+              <p className="mt-1.5 text-sm text-white/40">
                 A quick-launch dock for the routes you use most.
               </p>
             </div>
@@ -100,7 +98,7 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+              className="glass-panel glass-border grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white/50 transition hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>
@@ -108,25 +106,25 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
 
           {/* Real stats — every value is derived from props, not invented */}
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 text-center">
-              <Gauge className="mx-auto mb-1.5 h-4 w-4 text-cyan-200" />
+            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+              <Gauge className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
               <div className="text-xl font-black text-white">{decided ? `${profile!.winRate.toFixed(1)}%` : "—"}</div>
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Win Rate</div>
+              <div className="terminal-text mt-0.5">Win Rate</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 text-center">
-              <Trophy className="mx-auto mb-1.5 h-4 w-4 text-emerald-200" />
+            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+              <Trophy className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
               <div className="text-xl font-black text-white">{decided ? `${profile!.wonPicks}-${profile!.totalPicks - profile!.wonPicks}` : "0-0"}</div>
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Record</div>
+              <div className="terminal-text mt-0.5">Record</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 text-center">
-              <Layers3 className="mx-auto mb-1.5 h-4 w-4 text-amber-200" />
+            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+              <Layers3 className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
               <div className="text-xl font-black text-white">{pendingParlays.length}</div>
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Pending</div>
+              <div className="terminal-text mt-0.5">Pending</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 text-center">
-              <Crown className="mx-auto mb-1.5 h-4 w-4 text-violet-200" />
+            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+              <Crown className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
               <div className="text-xl font-black text-white">{tierLabel}</div>
-              <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Plan</div>
+              <div className="terminal-text mt-0.5">Plan</div>
             </div>
           </div>
 
@@ -139,28 +137,26 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                   key={zone.title}
                   type="button"
                   onClick={() => go(zone.section)}
-                  className="group rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                  className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
                 >
                   <div className="mb-3 flex items-center justify-between">
-                    <div className="rounded-2xl bg-cyan-300/10 p-2.5 text-cyan-200">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
                       <Icon className="h-4.5 w-4.5" />
                     </div>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-300">
-                      {zone.tag}
-                    </span>
+                    <span className="terminal-text text-vouch-cyan">{zone.tag}</span>
                   </div>
-                  <h3 className="text-sm font-black text-white">{zone.title}</h3>
-                  <p className="mt-1 text-xs font-semibold text-slate-400">{zone.subtitle}</p>
+                  <h3 className="text-sm font-bold text-white">{zone.title}</h3>
+                  <p className="mt-1 text-xs text-white/40">{zone.subtitle}</p>
                 </button>
               );
             })}
           </div>
 
           {/* Real pending parlays — no fake list */}
-          <div className="mt-5 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4">
+          <div className="glass-panel glass-border mt-5 rounded-2xl p-4">
             <div className="mb-3 flex items-center gap-2">
-              <Bell className="h-4 w-4 text-slate-300" />
-              <h2 className="text-sm font-black text-white">Pending parlays</h2>
+              <Bell className="h-4 w-4 text-white/40" />
+              <h2 className="text-sm font-bold text-white">Pending parlays</h2>
             </div>
             {pendingParlays.length > 0 ? (
               <div className="space-y-2">
@@ -168,24 +164,24 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                   <button
                     key={p.id}
                     onClick={() => go("live_parlays")}
-                    className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2.5 text-left transition hover:border-cyan-300/30"
+                    className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left transition hover:border-vouch-cyan/30"
                   >
-                    <span className="truncate text-xs font-bold text-slate-200">{p.title || "Saved parlay"}</span>
-                    <span className="font-mono text-[11px] text-slate-400">{p.totalOdds}</span>
+                    <span className="truncate text-xs font-bold text-white/80">{p.title || "Saved parlay"}</span>
+                    <span className="font-mono text-[11px] text-white/40">{p.totalOdds}</span>
                   </button>
                 ))}
               </div>
             ) : (
               <button
                 onClick={() => go("build")}
-                className="w-full rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-3.5 text-center text-xs font-bold text-slate-500 transition hover:text-slate-300"
+                className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-3.5 text-center text-xs font-bold text-white/40 transition hover:text-white/70"
               >
                 No pending parlays — build one
               </button>
             )}
           </div>
 
-          <p className="mt-5 text-center text-[10px] font-bold text-slate-500">
+          <p className="mt-5 text-center text-[10px] text-white/25">
             Research &amp; entertainment only — no guaranteed outcomes.
           </p>
         </div>

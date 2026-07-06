@@ -7,6 +7,7 @@ import { safeJsonFetch } from '../../api/safeApiClient';
 import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
 import { bootDataStore } from "../../lib/boot/bootDataStore";
+import WelcomeIntro from './WelcomeIntro';
 
 type TheEdgeMode = 'public' | 'dashboard';
 type TheEdgePresentation = 'page' | 'overlay';
@@ -102,95 +103,6 @@ function Stat({ label, value, tone = 'white' }: { label: string; value: string |
 const PRIMARY = 'rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3.5 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5';
 const SECONDARY = 'rounded-2xl border border-cyan-300/25 bg-cyan-300/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5';
 const GHOST = 'rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-3.5 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:text-white';
-
-const TRUST_POINTS = [
-  'Official MLB data only',
-  'No fake confirmed lineups',
-  'Every saved pick stays visible',
-  'Research & entertainment only',
-];
-
-const MODULE_ACCENTS = [
-  { box: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200', text: 'text-cyan-200' },
-  { box: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-200', text: 'text-emerald-200' },
-  { box: 'border-violet-300/20 bg-violet-300/10 text-violet-200', text: 'text-violet-200' },
-  { box: 'border-amber-300/20 bg-amber-300/10 text-amber-200', text: 'text-amber-200' },
-];
-
-const WORKSPACE_MODULES = [
-  {
-    title: 'Daily Board',
-    body: 'Official slate context, with lineup status shown honestly before lock.',
-    section: 'daily_players',
-    icon: Radio,
-  },
-  {
-    title: 'Build',
-    body: 'Save parlays and keep the reasoning attached to the slip.',
-    section: 'build',
-    icon: Layers3,
-  },
-  {
-    title: 'Ledger',
-    body: 'Track pending, won, and lost results without hiding misses.',
-    section: 'results',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Pro Labs',
-    body: 'Move into deeper player, matchup, and graph research when data exists.',
-    section: 'player_edge_lab',
-    icon: TrendingUp,
-  },
-];
-
-/**
- * Small looping animation showing a pick move through lock → live → graded.
- * Stands in for a real product demo video (none exists yet) — motion that
- * demonstrates the mechanism instead of a static claim.
- */
-const GRADING_DEMO_FRAMES = [
-  { label: 'Pick locked', detail: 'Aaron Judge — Over 0.5 HR · +150', tone: 'text-slate-300', dot: 'bg-slate-400' },
-  { label: 'Live · Top 6th', detail: '2–1 · tracking official box score', tone: 'text-cyan-200', dot: 'bg-cyan-300 animate-pulse' },
-  { label: 'Graded: Won', detail: 'Published to ledger · no edits made', tone: 'text-emerald-200', dot: 'bg-emerald-300' },
-];
-
-function GradingDemo() {
-  const [frame, setFrame] = useState(0);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setFrame((f) => (f + 1) % GRADING_DEMO_FRAMES.length);
-    }, 2400);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const current = GRADING_DEMO_FRAMES[frame];
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
-        <Radio className="h-3.5 w-3.5" /> Live example
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={frame}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.35 }}
-          className="mt-3"
-        >
-          <div className={`flex items-center gap-2 text-sm font-black ${current.tone}`}>
-            <span className={`h-2 w-2 rounded-full ${current.dot}`} />
-            {current.label}
-          </div>
-          <div className="mt-1 font-mono text-xs text-slate-500">{current.detail}</div>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function friendlyAuthError(message?: string) {
   const text = String(message ?? '').toLowerCase();
@@ -543,7 +455,7 @@ export default function TheEdgeShell({
         <div className={presentation === 'page' ? 'relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8' : 'relative min-h-0 flex-1 overflow-y-auto p-4 sm:p-6'}>
           <AnimatePresence mode="wait">
 
-            {/* ── INTRO: one sports-native sell screen (video + welcome merged) ── */}
+            {/* ── INTRO: brand-new welcome page built on the Z8 design system ── */}
             {edgeLayer === 'intro' && (
               <motion.section
                 key="intro"
@@ -551,238 +463,15 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
-                className="edge-welcome-front mx-auto max-w-7xl"
               >
-                <div className="edge-space-hero relative overflow-hidden rounded-[2rem] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
-                  <div className="relative z-10 grid gap-8 2xl:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] 2xl:items-center">
-                    <div className="max-w-3xl">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200">
-                        <ShieldCheck className="h-3.5 w-3.5" /> MLB probability workspace
-                      </div>
-
-                      <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.02] tracking-tight text-white sm:text-6xl xl:text-[4.5rem]">
-                        Stop trusting cappers who{' '}
-                        <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                          delete their losses.
-                        </span>
-                      </h1>
-
-                      <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-slate-200 sm:text-xl">
-                        VouchEdge grades every MLB pick to the final box score and publishes it — wins and losses both. Research the slate, build your slip, keep the receipts.
-                      </p>
-
-                      <div className="mt-7 flex flex-wrap items-center gap-5">
-                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-8 py-4 text-base font-black transition hover:-translate-y-0.5">
-                          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-5 w-5" /></span>
-                        </button>
-                        <button onClick={() => enterSite('daily_players')} className="text-sm font-bold text-slate-400 underline decoration-slate-700 underline-offset-4 transition hover:text-slate-200">
-                          Open Daily Board
-                        </button>
-                        <button onClick={() => setEdgeLayer('login')} className="text-sm font-bold text-slate-400 underline decoration-slate-700 underline-offset-4 transition hover:text-slate-200">
-                          Login
-                        </button>
-                      </div>
-
-                      <div className="mt-8 grid max-w-xl gap-2 sm:grid-cols-2">
-                        {TRUST_POINTS.map((point) => (
-                          <div key={point} className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                            <Check className="h-4 w-4 text-slate-100" />
-                            {point}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <motion.div
-                      className="edge-slate-stage"
-                      initial={{ opacity: 0, scale: 0.96, y: 24 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ duration: 0.7, delay: 0.1, ease }}
-                    >
-                      <div className="edge-product-panel relative overflow-hidden rounded-[1.75rem] p-4 shadow-2xl shadow-black/45 sm:p-5">
-                        <div className="mb-4 flex items-center justify-between gap-3">
-                          <div>
-                            <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Today</div>
-                            <div className="mt-1 text-lg font-black text-white">MLB slate monitor</div>
-                          </div>
-                          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-200">
-                            {slate.length ? `${slate.length} games` : 'Loading'}
-                          </span>
-                        </div>
-
-                        <div className="edge-slate-list max-h-[330px] divide-y divide-white/10 overflow-y-auto rounded-2xl border border-white/10 bg-black/25">
-                          {slate.length === 0 ? (
-                            <div className="px-4 py-10 text-center text-xs text-slate-400">Loading today’s official slate...</div>
-                          ) : (
-                            slate.map((g, i) => (
-                              <motion.div
-                                key={`${g.away}-${g.home}-${i}`}
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.04, duration: 0.3 }}
-                                className="flex items-center justify-between gap-3 px-4 py-3"
-                              >
-                                <div className="min-w-0 flex items-center gap-2 font-mono text-sm font-black text-slate-100">
-                                  <span className="w-10 truncate">{g.away}</span>
-                                  <span className="text-slate-500">@</span>
-                                  <span className="w-10 truncate">{g.home}</span>
-                                </div>
-                                {g.live ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-rose-200">
-                                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-300" /> Live
-                                  </span>
-                                ) : (
-                                  <span className="text-[11px] font-mono text-slate-400">{g.time || 'TBD'}</span>
-                                )}
-                              </motion.div>
-                            ))
-                          )}
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                          <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
-                          <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
-                          <Stat label="Saved slips" value={stats.saved} tone="white" />
-                        </div>
-
-                        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold leading-5 text-slate-300">
-                          Official lineups are treated as confirmed only when the source says they are. Preview rows stay clearly marked until then.
-                        </div>
-                      </div>
-                    </motion.div>
-
-                  </div>
-                </div>
-
-                {/* ── THE PROBLEM: agitate before the solution (Psychology of Sales) ── */}
-                <motion.section
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.5, ease }}
-                  className="mt-8 rounded-[2rem] border border-white/10 border-t-2 border-t-rose-400/50 bg-white/[0.03] px-6 py-8 text-center sm:px-10 sm:py-10"
-                >
-                  <div className="mx-auto max-w-2xl">
-                    <div className="text-[10px] font-black uppercase tracking-[0.24em] text-rose-300">The problem</div>
-                    <p className="mt-3 text-xl font-black leading-8 text-white sm:text-2xl">
-                      Free capper accounts post a win, delete the loss, and screenshot their way to a fake track record.
-                    </p>
-                    <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">
-                      There's no lock time, no box score check, no way to tell hype from a real edge. VouchEdge removes the option to hide.
-                    </p>
-                  </div>
-                </motion.section>
-
-                {/* ── HOW GRADING WORKS: the mechanism, not just the claim (Pro Capper) ── */}
-                <motion.section
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.5, ease }}
-                  className="mt-5 rounded-[2rem] border border-white/10 border-t-2 border-t-cyan-400/50 bg-white/[0.03] px-6 py-8 sm:px-10 sm:py-10"
-                >
-                  <div className="mb-6 max-w-xl">
-                    <div className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300">How grading works</div>
-                    <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Three steps. No human can edit step three.</h2>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    {[
-                      { icon: Lock, step: '1', title: 'Pick locks', body: 'Your pick is timestamped and frozen the moment the game starts. No edits after lock.' },
-                      { icon: Radio, step: '2', title: 'Game plays out', body: 'We track the live box score from the official MLB feed while the game is in progress.' },
-                      { icon: ShieldCheck, step: '3', title: 'Graded automatically', body: 'Final score decides won or lost. Published to your public ledger either way, same day.' },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <div key={item.step} className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <span className="font-mono text-xs font-black text-slate-500">STEP {item.step}</span>
-                          </div>
-                          <h3 className="mt-3 text-base font-black text-white">{item.title}</h3>
-                          <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.body}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4">
-                    <GradingDemo />
-                  </div>
-                </motion.section>
-
-                {/* ── PROOF LEDGER: real numbers + a win and a loss, not one cherry-picked win (Pro Capper) ── */}
-                <motion.section
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.5, ease }}
-                  className="mt-5 rounded-[2rem] border border-white/10 border-t-2 border-t-emerald-400/50 bg-white/[0.03] px-6 py-8 sm:px-10 sm:py-10"
-                >
-                  <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">Example ledger</div>
-                      <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Wins and losses both stay visible.</h2>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 font-mono sm:w-auto">
-                      <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
-                      <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
-                      <Stat label="Saved slips" value={stats.saved} tone="cyan" />
-                    </div>
-                  </div>
-                  <div className="overflow-hidden rounded-2xl border border-white/10">
-                    <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/20 px-5 py-3.5">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-bold text-white">Aaron Judge — Over 0.5 HR</div>
-                        <div className="font-mono text-[11px] text-slate-500">+150 · locked before first pitch · graded final</div>
-                      </div>
-                      <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase text-emerald-200">Won</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 bg-black/10 px-5 py-3.5">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-bold text-white">Corbin Burnes — Under 5.5 K</div>
-                        <div className="font-mono text-[11px] text-slate-500">-110 · locked before first pitch · graded final</div>
-                      </div>
-                      <span className="shrink-0 rounded-full border border-rose-300/25 bg-rose-300/10 px-3 py-1 text-[10px] font-black uppercase text-rose-200">Lost</span>
-                    </div>
-                  </div>
-                </motion.section>
-
-                <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {WORKSPACE_MODULES.map((module, index) => {
-                    const Icon = module.icon;
-                    const accent = MODULE_ACCENTS[index % MODULE_ACCENTS.length];
-                    return (
-                      <button
-                        key={module.title}
-                        type="button"
-                        onClick={() => enterSite(module.section)}
-                        className="edge-space-module group rounded-3xl p-4 text-left transition hover:-translate-y-0.5"
-                      >
-                        <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border ${accent.box}`}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <h3 className="text-base font-black text-white">{module.title}</h3>
-                        <p className="mt-2 text-sm font-semibold leading-6 text-slate-400">{module.body}</p>
-                        <div className={`mt-4 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide opacity-70 transition group-hover:opacity-100 ${accent.text}`}>
-                          Open <ArrowRight className="h-3.5 w-3.5" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </section>
-
-                {/* ── CLOSING CTA: repeat the one primary action (Psychology of Sales) ── */}
-                <section className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-10 text-center sm:px-10">
-                  <h2 className="text-2xl font-black text-white sm:text-3xl">Ready to keep receipts instead of excuses?</h2>
-                  <p className="mx-auto mt-2 max-w-lg text-sm font-semibold text-slate-400">Free to start. No card required.</p>
-                  <button onClick={() => openSignup('pro_trial')} className="edge-space-primary mt-6 rounded-2xl px-8 py-4 text-base font-black transition hover:-translate-y-0.5">
-                    <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-5 w-5" /></span>
-                  </button>
-                  <p className="mx-auto mt-6 max-w-lg text-[10px] leading-5 text-slate-600">
-                    You must be 21+ and in a jurisdiction where this is legal. Probability-based research for entertainment — not betting advice.
-                  </p>
-                </section>
+                <WelcomeIntro
+                  slate={slate}
+                  stats={stats}
+                  onStartTrial={() => openSignup('pro_trial')}
+                  onOpenDailyBoard={() => enterSite('daily_players')}
+                  onLogin={() => setEdgeLayer('login')}
+                  onOpenModule={(section) => enterSite(section)}
+                />
               </motion.section>
             )}
 
@@ -1084,10 +773,10 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease }}
-                className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-slate-800 bg-slate-950/70 p-10 text-center"
+                className="glass-panel glass-border mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8"
               >
                 <motion.div
-                  className="flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-300"
+                  className="flex h-16 w-16 items-center justify-center rounded-3xl bg-vouch-emerald/10 text-vouch-emerald"
                   animate={{ scale: [1, 1.08, 1] }}
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                 >
@@ -1096,7 +785,7 @@ export default function TheEdgeShell({
                 <h2 className="mt-5 text-4xl font-black text-white">
                   Welcome{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ' back'}.
                 </h2>
-                <p className="mt-3 text-sm text-slate-400">Building your dashboard…</p>
+                <p className="mt-3 text-sm text-white/40">Building your dashboard…</p>
               </motion.section>
             )}
 
@@ -1108,18 +797,21 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
-                className="mx-auto max-w-6xl space-y-4"
+                className="mx-auto max-w-6xl space-y-4 font-z8"
               >
-                <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5">
+                <section className="glass-panel glass-border rounded-3xl p-5">
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Your Dashboard</div>
+                      <div className="terminal-text text-vouch-emerald">Your Dashboard</div>
                       <h2 className="mt-1.5 text-3xl font-black text-white sm:text-4xl">
                         Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}.
                       </h2>
-                      <p className="mt-1.5 max-w-2xl text-sm text-slate-400">Your command island — real numbers, quick jumps into the site.</p>
+                      <p className="mt-1.5 max-w-2xl text-sm text-white/40">Your command island — real numbers, quick jumps into the site.</p>
                     </div>
-                    <button onClick={() => enterSite('feed')} className={PRIMARY}>
+                    <button
+                      onClick={() => enterSite('feed')}
+                      className="rounded-xl bg-vouch-emerald px-6 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                    >
                       <span className="inline-flex items-center gap-2"><Home className="h-4 w-4" /> Enter VouchEdge Site</span>
                     </button>
                   </div>
@@ -1130,7 +822,7 @@ export default function TheEdgeShell({
                     <Stat label="Saved parlays" value={dashboardSummaryLoading ? '...' : stats.saved} tone="cyan" />
                     <Stat label="Pending" value={dashboardSummaryLoading ? '...' : stats.pending} tone="white" />
                     <Stat label="Win rate" value={stats.winRate != null ? `${stats.winRate}%` : '—'} tone="emerald" />
-                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.winRate} tone="violet" />
+                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.winRate} tone="emerald" />
                     <Stat label="Record" value={stats.settled > 0 ? `${stats.won}-${stats.lost}` : '0-0'} tone={stats.won >= stats.lost ? 'emerald' : 'rose'} />
                   </div>
                 </section>
@@ -1138,7 +830,6 @@ export default function TheEdgeShell({
                 {/* Quick jumps — routes verified against App.tsx */}
                 <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    
                     ['Live Parlays', 'live_parlays', Radio],
                     ['Parlay Lab', 'build', Layers3],
                     ['Results Ledger', 'results', Trophy],
@@ -1146,11 +837,11 @@ export default function TheEdgeShell({
                     <button
                       key={label}
                       onClick={() => enterSite(section)}
-                      className="group rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-900"
+                      className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
                     >
-                      <Icon className="h-5 w-5 text-cyan-300" />
-                      <div className="mt-3 text-sm font-black text-white">{label}</div>
-                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 opacity-0 transition group-hover:opacity-100">
+                      <Icon className="h-5 w-5 text-vouch-emerald" />
+                      <div className="mt-3 text-sm font-bold text-white">{label}</div>
+                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-vouch-cyan opacity-0 transition group-hover:opacity-100">
                         Open <ArrowRight className="h-3 w-3" />
                       </div>
                     </button>
@@ -1158,34 +849,34 @@ export default function TheEdgeShell({
                 </section>
 
                 <section className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
-                    <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-cyan-300" /><h3 className="text-sm font-black text-white">Pending picks</h3></div>
+                  <div className="glass-panel glass-border rounded-2xl p-5">
+                    <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">Pending picks</h3></div>
                     <div className="mt-4 space-y-2">
                       {savedParlays.filter((p) => p.status === 'PENDING').slice(0, 4).map((p) => (
-                        <button key={p.id} onClick={() => enterSite('live_parlays')} className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-left hover:border-cyan-300/30">
-                          <span className="truncate text-xs font-bold text-slate-200">{p.title || 'Saved parlay'}</span>
-                          <span className="font-mono text-[11px] text-cyan-300">{p.totalOdds}</span>
+                        <button key={p.id} onClick={() => enterSite('live_parlays')} className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left hover:border-vouch-cyan/30">
+                          <span className="truncate text-xs font-bold text-white/80">{p.title || 'Saved parlay'}</span>
+                          <span className="font-mono text-[11px] text-vouch-cyan">{p.totalOdds}</span>
                         </button>
                       ))}
                       {stats.pending === 0 && (
-                        <button onClick={() => enterSite('ai_engine')} className="w-full rounded-xl border border-dashed border-slate-700 bg-slate-900/30 px-3 py-4 text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                        <button onClick={() => enterSite('ai_engine')} className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-4 text-center text-xs font-bold text-white/40 hover:text-white/70">
                           No pending picks — build one in V.A.I Smart Picks →
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
-                    <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-cyan-300" /><h3 className="text-sm font-black text-white">AI Seat</h3></div>
+                  <div className="glass-panel glass-border rounded-2xl p-5">
+                    <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">AI Seat</h3></div>
                     <div className="mt-4 grid gap-2">
                       {['Explain today’s board', 'Compare players', 'Build parlay logic'].map((tool) => (
-                        <button key={tool} onClick={() => enterSite('ai_engine')} className="rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:border-cyan-300/30">
+                        <button key={tool} onClick={() => enterSite('ai_engine')} className="rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left text-xs font-bold text-white/80 hover:border-vouch-cyan/30">
                           {tool}
                         </button>
                       ))}
                     </div>
-                    <button onClick={() => enterSite('themestore')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-200">
-                      <Palette className="h-4 w-4 text-cyan-300" /> Theme Studio
+                    <button onClick={() => enterSite('themestore')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-xs font-bold text-white/40 hover:text-white/70">
+                      <Palette className="h-4 w-4 text-vouch-emerald" /> Theme Studio
                     </button>
                   </div>
                 </section>
