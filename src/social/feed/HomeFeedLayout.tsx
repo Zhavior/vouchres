@@ -2,7 +2,6 @@ import React from 'react';
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import FeedMobileNav from './FeedMobileNav';
-import CyberBackground from '../../components/CyberBackground';
 import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
 import { ShieldCheck, Sparkles, Bell } from 'lucide-react';
@@ -95,18 +94,15 @@ export default function HomeFeedLayout({
     : [];
 
   return (
-    <div 
+    <div
       className={`min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-[#0b0f19]'
-      }`} 
+        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-obsidian-900'
+      }`}
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-      
-      {/* Dynamic Animated Cyber Background Layer (only if not customized fully by profile theme) */}
-      {(!activeTheme || activeTheme.id === 'cyber-blue') && <CyberBackground />}
-      
+
       {/* Grid Overlay matching theme particles vibe */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && activeTheme.gridOverlay && (
         <div className={`absolute inset-0 pointer-events-none z-0 ${activeTheme.gridOverlay}`} />
