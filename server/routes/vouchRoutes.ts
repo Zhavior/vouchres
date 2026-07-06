@@ -34,8 +34,13 @@ const CreateVouchSchema = z.object({
 
 vouchRoutes.get("/vouches", optionalAuth, async (req: AuthedRequest, res: Response) => {
   if (!req.user) return res.json({ vouches: [] });
-  const vouches = await listVouchesForUser(req.user.id);
-  return res.json({ vouches });
+  try {
+    const vouches = await listVouchesForUser(req.user.id);
+    return res.json({ vouches });
+  } catch (error) {
+    console.error("[vouches] list failed", error);
+    return res.status(500).json({ error: "fetch_failed" });
+  }
 });
 
 vouchRoutes.post(
@@ -56,7 +61,12 @@ vouchRoutes.post(
 
 vouchRoutes.delete("/vouches/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
-  const hidden = await hideVouch(id, req.user!.id);
-  if (!hidden) return res.status(404).json({ error: "not_found" });
-  return res.json({ ok: true });
+  try {
+    const hidden = await hideVouch(id, req.user!.id);
+    if (!hidden) return res.status(404).json({ error: "not_found" });
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error("[vouches] hide failed", error);
+    return res.status(500).json({ error: "hide_failed" });
+  }
 });

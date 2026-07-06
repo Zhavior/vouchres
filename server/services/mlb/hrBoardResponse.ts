@@ -1,6 +1,29 @@
 import { withCanonicalHrScore } from './hr-engine/hrScoreAdapter';
 import { parseHrBoardResult } from './hr-engine/hrBoardSchema';
 
+export function resolveVisibleHrRows({
+  confirmedCandidates,
+  projectedCandidates,
+  fullProjectedCandidates,
+  previewLimit,
+}: {
+  confirmedCandidates: Array<Record<string, unknown>>;
+  projectedCandidates: Array<Record<string, unknown>>;
+  fullProjectedCandidates: Array<Record<string, unknown>>;
+  previewLimit: number;
+}) {
+  if (confirmedCandidates.length > 0) {
+    return confirmedCandidates;
+  }
+
+  if (projectedCandidates.length > 0) {
+    return projectedCandidates;
+  }
+
+  const fallbackLimit = Math.max(1, Math.min(20, previewLimit));
+  return fullProjectedCandidates.slice(0, fallbackLimit);
+}
+
 export function parsePreviewLimit(value: unknown): number {
   const parsed = Number.parseInt(String(value ?? ""), 10);
   if (!Number.isFinite(parsed)) return 50;
@@ -23,6 +46,13 @@ export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unkn
   const blockedPlayers = (Array.isArray(parsedResult?.debug?.blockedPlayers) ? parsedResult.debug.blockedPlayers : []).map(withCanonicalHrScore);
   const blockedReasons = parsedResult?.debug?.blockedReasons ?? {};
 
+  const visibleRows = resolveVisibleHrRows({
+    confirmedCandidates,
+    projectedCandidates,
+    fullProjectedCandidates,
+    previewLimit,
+  });
+
   const counts = {
     confirmedCandidates: confirmedCandidates.length,
     projectedCandidates: projectedCandidates.length,
@@ -30,7 +60,7 @@ export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unkn
     eligiblePreviewPoolCount,
     scoredPreviewPoolCount,
     blockedPlayers: blockedPlayers.length,
-    totalVisiblePool: confirmedCandidates.length + projectedCandidates.length,
+    totalVisiblePool: confirmedCandidates.length + visibleRows.length,
     totalTruthPool: confirmedCandidates.length + fullProjectedCandidates.length + blockedPlayers.length,
   };
 
@@ -63,9 +93,9 @@ export function buildHrBoardApiPayload(result: unknown, previewLimitInput?: unkn
     rosterAudit: parsedResult.rosterAudit,
     candidates: confirmedCandidates,
     // rows = what the board renders. Before official lineups post there are no
-    // confirmed candidates, so fall back to the projected preview pool instead
-    // of returning an empty board.
-    rows: confirmedCandidates.length > 0 ? confirmedCandidates : projectedCandidates,
+    // confirmed candidates, so fall back to the projected preview pool and then
+    // to the full projected pool if both candidate slices are empty.
+    rows: visibleRows,
     projectedCandidates,
     allProjectedCandidates: fullProjectedCandidates,
     candidateBuckets: {

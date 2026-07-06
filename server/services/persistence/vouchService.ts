@@ -66,8 +66,27 @@ export async function listVouchesForUser(userId: string): Promise<VouchRecord[]>
   return (data ?? []) as VouchRecord[];
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Public lookup for the /v/:id share permalink and share-card image — no auth. */
+export async function getPublicVouch(id: string): Promise<VouchRecord | null> {
+  if (!UUID_RE.test(id)) return null;
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("vouches")
+    .select("*")
+    .eq("id", id)
+    .eq("visibility", "public")
+    .is("user_hidden_at", null)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as VouchRecord) ?? null;
+}
+
 /** User-facing hide, not a real delete — mirrors picks.user_hidden_at. */
 export async function hideVouch(id: string, userId: string): Promise<boolean> {
+  if (!UUID_RE.test(id)) return false;
   const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("vouches")

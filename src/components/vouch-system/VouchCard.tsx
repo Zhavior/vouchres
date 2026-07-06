@@ -168,10 +168,28 @@ export default function VouchCard({
     }
   };
 
+  // Only meaningful once the vouch is actually saved server-side (Pass 2) and
+  // public — otherwise there's no stable id for X/Slack/iMessage to unfurl.
+  const getPermalink = (): string | null => {
+    if (!vouch.backendVouchId || vouch.visibility === 'private') return null;
+    return `${window.location.origin}/v/${vouch.backendVouchId}`;
+  };
+
   const generateXShareIntent = () => {
     const text = `🔥 VERIFIED PROOF VOUCH 🔥\n\n📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}\n📊 Game: ${vouch.gameName}\n📈 Odds: ${vouch.odds}\n\n🤖 AI Confidence: ${aiConfidence}%\n✍️ My Confidence: ${capperConfidence}%\n\n🛡️ Verified Pre-Lock via VouchEdge.ai\n\n⚠️ Probability-based. No guarantees. #sportsbetting #proof`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    const permalink = getPermalink();
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}${permalink ? `&url=${encodeURIComponent(permalink)}` : ''}`;
     window.open(url, '_blank');
+  };
+
+  const handleCopyShareLink = () => {
+    const permalink = getPermalink();
+    if (!permalink) {
+      triggerToast('⚠️ Save this vouch to your account first to get a shareable link.');
+      return;
+    }
+    navigator.clipboard.writeText(permalink);
+    triggerToast('🔗 Share link copied!');
   };
 
   // Helper for rendering a confidence gauge or sparkline
@@ -749,7 +767,16 @@ export default function VouchCard({
                 <Download className="w-3.5 h-3.5" />
                 <span>Copy Caption</span>
               </button>
-              
+
+              <button
+                onClick={handleCopyShareLink}
+                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.46)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-secondary))] font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-[hsl(var(--ve-border)/0.32)]"
+                title="Copy a link that shows a rich preview card on X, Slack, and iMessage"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Copy Share Link</span>
+              </button>
+
               <button
                 onClick={generateXShareIntent}
                 className="px-5 py-2 bg-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.86)] text-[hsl(var(--ve-bg-deep))] font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
