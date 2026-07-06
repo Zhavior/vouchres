@@ -797,18 +797,21 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
-                className="mx-auto max-w-6xl space-y-4"
+                className="mx-auto max-w-6xl space-y-4 font-z8"
               >
-                <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5">
+                <section className="glass-panel glass-border rounded-3xl p-5">
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Your Dashboard</div>
+                      <div className="terminal-text text-vouch-emerald">Your Dashboard</div>
                       <h2 className="mt-1.5 text-3xl font-black text-white sm:text-4xl">
                         Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}.
                       </h2>
-                      <p className="mt-1.5 max-w-2xl text-sm text-slate-400">Your command island — real numbers, quick jumps into the site.</p>
+                      <p className="mt-1.5 max-w-2xl text-sm text-white/40">Your command island — real numbers, quick jumps into the site.</p>
                     </div>
-                    <button onClick={() => enterSite('feed')} className={PRIMARY}>
+                    <button
+                      onClick={() => enterSite('feed')}
+                      className="rounded-xl bg-vouch-emerald px-6 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                    >
                       <span className="inline-flex items-center gap-2"><Home className="h-4 w-4" /> Enter VouchEdge Site</span>
                     </button>
                   </div>
@@ -819,7 +822,7 @@ export default function TheEdgeShell({
                     <Stat label="Saved parlays" value={dashboardSummaryLoading ? '...' : stats.saved} tone="cyan" />
                     <Stat label="Pending" value={dashboardSummaryLoading ? '...' : stats.pending} tone="white" />
                     <Stat label="Win rate" value={stats.winRate != null ? `${stats.winRate}%` : '—'} tone="emerald" />
-                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.winRate} tone="violet" />
+                    <Stat label="Proof score" value={dashboardSummaryLoading ? '...' : stats.winRate} tone="emerald" />
                     <Stat label="Record" value={stats.settled > 0 ? `${stats.won}-${stats.lost}` : '0-0'} tone={stats.won >= stats.lost ? 'emerald' : 'rose'} />
                   </div>
                 </section>
@@ -827,7 +830,6 @@ export default function TheEdgeShell({
                 {/* Quick jumps — routes verified against App.tsx */}
                 <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    
                     ['Live Parlays', 'live_parlays', Radio],
                     ['Parlay Lab', 'build', Layers3],
                     ['Results Ledger', 'results', Trophy],
@@ -835,11 +837,11 @@ export default function TheEdgeShell({
                     <button
                       key={label}
                       onClick={() => enterSite(section)}
-                      className="group rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-900"
+                      className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
                     >
-                      <Icon className="h-5 w-5 text-cyan-300" />
-                      <div className="mt-3 text-sm font-black text-white">{label}</div>
-                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 opacity-0 transition group-hover:opacity-100">
+                      <Icon className="h-5 w-5 text-vouch-emerald" />
+                      <div className="mt-3 text-sm font-bold text-white">{label}</div>
+                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-vouch-cyan opacity-0 transition group-hover:opacity-100">
                         Open <ArrowRight className="h-3 w-3" />
                       </div>
                     </button>
@@ -847,34 +849,34 @@ export default function TheEdgeShell({
                 </section>
 
                 <section className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
-                    <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-cyan-300" /><h3 className="text-sm font-black text-white">Pending picks</h3></div>
+                  <div className="glass-panel glass-border rounded-2xl p-5">
+                    <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">Pending picks</h3></div>
                     <div className="mt-4 space-y-2">
                       {savedParlays.filter((p) => p.status === 'PENDING').slice(0, 4).map((p) => (
-                        <button key={p.id} onClick={() => enterSite('live_parlays')} className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-left hover:border-cyan-300/30">
-                          <span className="truncate text-xs font-bold text-slate-200">{p.title || 'Saved parlay'}</span>
-                          <span className="font-mono text-[11px] text-cyan-300">{p.totalOdds}</span>
+                        <button key={p.id} onClick={() => enterSite('live_parlays')} className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left hover:border-vouch-cyan/30">
+                          <span className="truncate text-xs font-bold text-white/80">{p.title || 'Saved parlay'}</span>
+                          <span className="font-mono text-[11px] text-vouch-cyan">{p.totalOdds}</span>
                         </button>
                       ))}
                       {stats.pending === 0 && (
-                        <button onClick={() => enterSite('ai_engine')} className="w-full rounded-xl border border-dashed border-slate-700 bg-slate-900/30 px-3 py-4 text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                        <button onClick={() => enterSite('ai_engine')} className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-4 text-center text-xs font-bold text-white/40 hover:text-white/70">
                           No pending picks — build one in V.A.I Smart Picks →
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
-                    <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-cyan-300" /><h3 className="text-sm font-black text-white">AI Seat</h3></div>
+                  <div className="glass-panel glass-border rounded-2xl p-5">
+                    <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">AI Seat</h3></div>
                     <div className="mt-4 grid gap-2">
                       {['Explain today’s board', 'Compare players', 'Build parlay logic'].map((tool) => (
-                        <button key={tool} onClick={() => enterSite('ai_engine')} className="rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:border-cyan-300/30">
+                        <button key={tool} onClick={() => enterSite('ai_engine')} className="rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left text-xs font-bold text-white/80 hover:border-vouch-cyan/30">
                           {tool}
                         </button>
                       ))}
                     </div>
-                    <button onClick={() => enterSite('themestore')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-200">
-                      <Palette className="h-4 w-4 text-cyan-300" /> Theme Studio
+                    <button onClick={() => enterSite('themestore')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-xs font-bold text-white/40 hover:text-white/70">
+                      <Palette className="h-4 w-4 text-vouch-emerald" /> Theme Studio
                     </button>
                   </div>
                 </section>
