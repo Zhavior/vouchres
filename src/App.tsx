@@ -1971,17 +1971,22 @@ export default function App() {
         </HomeFeedLayout>
         <AppNotificationsHost onNavigate={navigateSection} />
 
-        {/* The Edge Island launcher — sits directly under the notification
-            bell (which lives at bottom-44/40 right-6/8 in AppNotificationsHost). */}
+        {/* The Edge Island launcher — third button in the stack: app
+            notifications bell sits at bottom-44/40, HR notifications bell
+            at bottom-28/24 (see HrNotifications.tsx). On mobile there's
+            also a fixed bottom nav bar (~60px), leaving too little room
+            for a third full-size button between the HR bell and the nav
+            bar — so this one renders smaller on mobile only (w-10/h-10 vs
+            w-12/h-12 on desktop) to fit without overlapping either. */}
         {activeSection !== 'welcome' && (
           <button
             type="button"
             onClick={() => setEdgeIslandOpen(true)}
             aria-label="Open The Edge Island"
             title="The Edge Island"
-            className="fixed bottom-28 md:bottom-24 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
+            className="fixed bottom-16 md:bottom-8 right-6 md:right-8 z-[60] w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
           >
-            <EdgeIslandIcon className="w-5 h-5 text-cyan-300" />
+            <EdgeIslandIcon className="w-4 h-4 md:w-5 md:h-5 text-cyan-300" />
           </button>
         )}
 

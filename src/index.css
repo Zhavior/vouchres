@@ -3739,7 +3739,9 @@ body,
   margin: 0 !important;
 }
 
-/* Mobile */
+/* Mobile — selectors must match the desktop rules' specificity
+   (#id.class #id) above, otherwise the hardcoded 680px/260px/320px
+   desktop widths win regardless of viewport width. */
 @media (max-width: 1180px) {
   #layout-inner-frame.ve-layout-feed,
   #layout-inner-frame.ve-layout-wide {
@@ -3752,10 +3754,13 @@ body,
     display: none !important;
   }
 
-  #layout-inner-frame #center-main-content-column,
-  #layout-inner-frame #inner-view-slot {
+  #layout-inner-frame.ve-layout-feed #center-main-content-column,
+  #layout-inner-frame.ve-layout-wide #center-main-content-column,
+  #layout-inner-frame.ve-layout-feed #inner-view-slot,
+  #layout-inner-frame.ve-layout-wide #inner-view-slot {
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
