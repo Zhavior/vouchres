@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useDailyHrBoard } from './useDailyHrBoard';
 import { buildBoard, rowsForMode } from '../utils/normalizeHrWatch';
 import type { HrWatchMode, HrWatchRow } from '../types/hrWatch';
@@ -28,11 +28,19 @@ const DISPLAY_TIER: Record<HrWatchRow['riskTier'], keyof HrBuckets | null> = {
 };
 
 export function useHrBoardViewModel() {
-  const [mode, setMode] = useState<HrWatchMode>('confirmed');
+  const [mode, setModeState] = useState<HrWatchMode>('confirmed');
   const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('cards');
   const [search, setSearch] = useState('');
   const [selectedTiers, setSelectedTiers] = useState<string[]>(['Elite', 'Strong', 'Watch', 'Sleepers']);
   const [selectedPlayer, setSelectedPlayer] = useState<HrWatchRow | null>(null);
+  const [autoSwitchedToPreview, setAutoSwitchedToPreview] = useState(false);
+  const userPickedModeRef = useRef(false);
+
+  const setMode = (next: HrWatchMode) => {
+    userPickedModeRef.current = true;
+    setAutoSwitchedToPreview(false);
+    setModeState(next);
+  };
 
   const onToggleTier = (tier: string) => {
     setSelectedTiers((current) =>
@@ -44,6 +52,20 @@ export function useHrBoardViewModel() {
   const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(today);
 
   const board = useMemo(() => rawBoard ? buildBoard(rawBoard as unknown) : null, [rawBoard]);
+
+  // The board should never land on a dead-end empty view when data exists.
+  // If confirmed lineups aren't posted yet but preview candidates are ready,
+  // auto-switch once (never overriding a mode the user picked themselves) —
+  // and say so, since silently substituting preview for confirmed would
+  // violate the "no fake confirmed lineups" rule if left unlabeled.
+  useEffect(() => {
+    if (!board || userPickedModeRef.current) return;
+    if (mode === 'confirmed' && board.confirmed.length === 0 && board.curated.length > 0) {
+      setModeState('curated');
+      setAutoSwitchedToPreview(true);
+    }
+  }, [board, mode]);
+
   const rows = useMemo(() => board ? rowsForMode(board, mode) : [], [board, mode]);
 
   const filteredRows = useMemo(() => {
@@ -78,8 +100,18 @@ export function useHrBoardViewModel() {
     sleepers: buckets.Sleepers.length,
   }), [buckets, filteredRows.length]);
 
+  // Counts across ALL modes regardless of the current filter, so the empty
+  // state can explain *why* it's empty (e.g. no confirmed lineups posted yet)
+  // instead of a dead-end "no players" message.
+  const modeCounts = useMemo(() => ({
+    confirmed: board?.confirmed.length ?? 0,
+    curated: board?.curated.length ?? 0,
+    all: board?.all.length ?? 0,
+  }), [board]);
+
   return {
-    buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers,
+    buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
+    autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
   };
 }

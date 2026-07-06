@@ -81,7 +81,13 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     required: true,
     weight: 10,
     timeoutMs: 3500,
-    run: (signal) => runAndCache("notifications", "/api/notifications", signal),
+    run: async (signal) => {
+      try {
+        return await runAndCache("notifications", "/api/notifications", signal);
+      } catch {
+        return [];
+      }
+    },
   },
   {
     id: "playerRegistryCount",

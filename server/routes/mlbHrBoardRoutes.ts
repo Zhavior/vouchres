@@ -20,6 +20,14 @@ import { getCachedValidatedHrBoard, getCachedDeepHrBoard } from "../services/hub
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 
+/** Express query values can be string | ParsedQs | array | undefined — never trust the raw type. */
+function parsePreviewLimit(raw: unknown): number | undefined {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value !== "string") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
   app.get("/api/mlb/hr-feed/today", async (_req: Request, res: Response) => {
@@ -35,7 +43,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/today", async (req: Request, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard();
-      res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
+      res.json(buildHrBoardApiPayload(result, parsePreviewLimit(req.query.previewLimit)));
     } catch (err: any) {
       console.error("[hr-board/today] validated pipeline failed:", err.message);
       res.status(503).json({
@@ -87,7 +95,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/date/:date", async (req: Request, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard(req.params.date);
-      res.json(buildHrBoardApiPayload(result, req.query.previewLimit));
+      res.json(buildHrBoardApiPayload(result, parsePreviewLimit(req.query.previewLimit)));
     } catch (err: any) {
       res.status(503).json({ error: "HR board unavailable", message: err?.message });
     }

@@ -3,7 +3,6 @@ import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Bell, Bot, Check, CreditCard, Crown, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
 import '../edgePortal/edgePortalTheme.css';
-import Starfield from '../welcomePortal/Starfield';
 import { safeJsonFetch } from '../../api/safeApiClient';
 import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
@@ -144,6 +143,54 @@ const WORKSPACE_MODULES = [
     icon: TrendingUp,
   },
 ];
+
+/**
+ * Small looping animation showing a pick move through lock → live → graded.
+ * Stands in for a real product demo video (none exists yet) — motion that
+ * demonstrates the mechanism instead of a static claim.
+ */
+const GRADING_DEMO_FRAMES = [
+  { label: 'Pick locked', detail: 'Aaron Judge — Over 0.5 HR · +150', tone: 'text-slate-300', dot: 'bg-slate-400' },
+  { label: 'Live · Top 6th', detail: '2–1 · tracking official box score', tone: 'text-cyan-200', dot: 'bg-cyan-300 animate-pulse' },
+  { label: 'Graded: Won', detail: 'Published to ledger · no edits made', tone: 'text-emerald-200', dot: 'bg-emerald-300' },
+];
+
+function GradingDemo() {
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setFrame((f) => (f + 1) % GRADING_DEMO_FRAMES.length);
+    }, 2400);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const current = GRADING_DEMO_FRAMES[frame];
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+        <Radio className="h-3.5 w-3.5" /> Live example
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={frame}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.35 }}
+          className="mt-3"
+        >
+          <div className={`flex items-center gap-2 text-sm font-black ${current.tone}`}>
+            <span className={`h-2 w-2 rounded-full ${current.dot}`} />
+            {current.label}
+          </div>
+          <div className="mt-1 font-mono text-xs text-slate-500">{current.detail}</div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function friendlyAuthError(message?: string) {
   const text = String(message ?? '').toLowerCase();
@@ -445,9 +492,8 @@ export default function TheEdgeShell({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
-      <div className="edge-space-backdrop" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,hsl(var(--ve-accent-cyan)/0.18),transparent_34%),radial-gradient(circle_at_80%_20%,hsl(var(--ve-accent-pink)/0.14),transparent_30%),linear-gradient(135deg,hsl(var(--ve-bg-deep)),hsl(var(--ve-bg-panel)))]" />
-      <Starfield />
+      {/* Stadium-floodlight backdrop — one clean layer, not stacked sci-fi space effects */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--ve-accent-cyan)/0.14),transparent_38%),linear-gradient(180deg,hsl(var(--ve-bg-deep)),hsl(var(--ve-bg-panel))_60%,hsl(var(--ve-bg-deep)))]" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <header className="edge-space-header border-b border-[hsl(var(--ve-border)/0.45)] bg-[hsl(var(--ve-surface)/0.58)] px-4 py-4 shadow-[0_18px_60px_hsl(var(--ve-shadow)/0.32)] backdrop-blur-2xl sm:px-6">
@@ -508,9 +554,6 @@ export default function TheEdgeShell({
                 className="edge-welcome-front mx-auto max-w-7xl"
               >
                 <div className="edge-space-hero relative overflow-hidden rounded-[2rem] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
-                  <div className="edge-space-orbit edge-space-orbit-one" />
-                  <div className="edge-space-orbit edge-space-orbit-two" />
-
                   <div className="relative z-10 grid gap-8 2xl:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] 2xl:items-center">
                     <div className="max-w-3xl">
                       <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200">
@@ -528,48 +571,25 @@ export default function TheEdgeShell({
                         VouchEdge grades every MLB pick to the final box score and publishes it — wins and losses both. Research the slate, build your slip, keep the receipts.
                       </p>
 
-                      <div className="mt-7 flex flex-wrap gap-3">
-                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-7 py-4 text-base font-black transition hover:-translate-y-0.5">
+                      <div className="mt-7 flex flex-wrap items-center gap-5">
+                        <button onClick={() => openSignup('pro_trial')} className="edge-space-primary rounded-2xl px-8 py-4 text-base font-black transition hover:-translate-y-0.5">
                           <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-5 w-5" /></span>
                         </button>
-                        <button onClick={() => enterSite('daily_players')} className="edge-space-secondary rounded-2xl px-6 py-4 text-sm font-black text-white/80 transition hover:-translate-y-0.5 hover:text-white">
+                        <button onClick={() => enterSite('daily_players')} className="text-sm font-bold text-slate-400 underline decoration-slate-700 underline-offset-4 transition hover:text-slate-200">
                           Open Daily Board
                         </button>
-                        <button onClick={() => setEdgeLayer('login')} className="edge-space-ghost rounded-2xl px-6 py-4 text-sm font-black text-white/70 transition hover:-translate-y-0.5 hover:text-white">
-                          <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
+                        <button onClick={() => setEdgeLayer('login')} className="text-sm font-bold text-slate-400 underline decoration-slate-700 underline-offset-4 transition hover:text-slate-200">
+                          Login
                         </button>
                       </div>
 
-                      {/* Real numbers (from `stats`, no placeholders) as an immediate trust strip */}
-                      <div className="mt-8 grid grid-cols-3 gap-2 max-w-md">
-                        <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
-                        <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
-                        <Stat label="Saved slips" value={stats.saved} tone="cyan" />
-                      </div>
-
-                      <div className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2">
+                      <div className="mt-8 grid max-w-xl gap-2 sm:grid-cols-2">
                         {TRUST_POINTS.map((point) => (
                           <div key={point} className="flex items-center gap-2 text-xs font-bold text-slate-300">
                             <Check className="h-4 w-4 text-slate-100" />
                             {point}
                           </div>
                         ))}
-                      </div>
-
-                      <div className="mt-6 max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                        <div className="mb-2.5 flex items-center justify-between">
-                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Example graded pick</span>
-                          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-200">Won</span>
-                        </div>
-                        <div className="text-base font-bold text-white">Aaron Judge — Over 0.5 HR (+150)</div>
-                        <div className="mt-2.5 flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">AI Confidence</span>
-                          <div className="h-1.5 flex-1 rounded-full bg-white/10">
-                            <div className="h-full w-[87%] rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" />
-                          </div>
-                          <span className="text-[10px] font-black text-cyan-200">87%</span>
-                        </div>
-                        <div className="mt-2.5 text-[11px] text-slate-500">Graded to the final box score. No edits after lock.</div>
                       </div>
                     </div>
 
@@ -634,6 +654,100 @@ export default function TheEdgeShell({
                   </div>
                 </div>
 
+                {/* ── THE PROBLEM: agitate before the solution (Psychology of Sales) ── */}
+                <motion.section
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, ease }}
+                  className="mt-8 rounded-[2rem] border border-white/10 border-t-2 border-t-rose-400/50 bg-white/[0.03] px-6 py-8 text-center sm:px-10 sm:py-10"
+                >
+                  <div className="mx-auto max-w-2xl">
+                    <div className="text-[10px] font-black uppercase tracking-[0.24em] text-rose-300">The problem</div>
+                    <p className="mt-3 text-xl font-black leading-8 text-white sm:text-2xl">
+                      Free capper accounts post a win, delete the loss, and screenshot their way to a fake track record.
+                    </p>
+                    <p className="mt-3 text-sm font-semibold leading-7 text-slate-400">
+                      There's no lock time, no box score check, no way to tell hype from a real edge. VouchEdge removes the option to hide.
+                    </p>
+                  </div>
+                </motion.section>
+
+                {/* ── HOW GRADING WORKS: the mechanism, not just the claim (Pro Capper) ── */}
+                <motion.section
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, ease }}
+                  className="mt-5 rounded-[2rem] border border-white/10 border-t-2 border-t-cyan-400/50 bg-white/[0.03] px-6 py-8 sm:px-10 sm:py-10"
+                >
+                  <div className="mb-6 max-w-xl">
+                    <div className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300">How grading works</div>
+                    <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Three steps. No human can edit step three.</h2>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {[
+                      { icon: Lock, step: '1', title: 'Pick locks', body: 'Your pick is timestamped and frozen the moment the game starts. No edits after lock.' },
+                      { icon: Radio, step: '2', title: 'Game plays out', body: 'We track the live box score from the official MLB feed while the game is in progress.' },
+                      { icon: ShieldCheck, step: '3', title: 'Graded automatically', body: 'Final score decides won or lost. Published to your public ledger either way, same day.' },
+                    ].map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={item.step} className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <span className="font-mono text-xs font-black text-slate-500">STEP {item.step}</span>
+                          </div>
+                          <h3 className="mt-3 text-base font-black text-white">{item.title}</h3>
+                          <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.body}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4">
+                    <GradingDemo />
+                  </div>
+                </motion.section>
+
+                {/* ── PROOF LEDGER: real numbers + a win and a loss, not one cherry-picked win (Pro Capper) ── */}
+                <motion.section
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, ease }}
+                  className="mt-5 rounded-[2rem] border border-white/10 border-t-2 border-t-emerald-400/50 bg-white/[0.03] px-6 py-8 sm:px-10 sm:py-10"
+                >
+                  <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">Example ledger</div>
+                      <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Wins and losses both stay visible.</h2>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 font-mono sm:w-auto">
+                      <Stat label="Games today" value={stats.gamesToday || '—'} tone="white" />
+                      <Stat label="Live now" value={stats.liveNow} tone={stats.liveNow > 0 ? 'rose' : 'white'} />
+                      <Stat label="Saved slips" value={stats.saved} tone="cyan" />
+                    </div>
+                  </div>
+                  <div className="overflow-hidden rounded-2xl border border-white/10">
+                    <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/20 px-5 py-3.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-white">Aaron Judge — Over 0.5 HR</div>
+                        <div className="font-mono text-[11px] text-slate-500">+150 · locked before first pitch · graded final</div>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase text-emerald-200">Won</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 bg-black/10 px-5 py-3.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-white">Corbin Burnes — Under 5.5 K</div>
+                        <div className="font-mono text-[11px] text-slate-500">-110 · locked before first pitch · graded final</div>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-rose-300/25 bg-rose-300/10 px-3 py-1 text-[10px] font-black uppercase text-rose-200">Lost</span>
+                    </div>
+                  </div>
+                </motion.section>
+
                 <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   {WORKSPACE_MODULES.map((module, index) => {
                     const Icon = module.icon;
@@ -656,6 +770,18 @@ export default function TheEdgeShell({
                       </button>
                     );
                   })}
+                </section>
+
+                {/* ── CLOSING CTA: repeat the one primary action (Psychology of Sales) ── */}
+                <section className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-10 text-center sm:px-10">
+                  <h2 className="text-2xl font-black text-white sm:text-3xl">Ready to keep receipts instead of excuses?</h2>
+                  <p className="mx-auto mt-2 max-w-lg text-sm font-semibold text-slate-400">Free to start. No card required.</p>
+                  <button onClick={() => openSignup('pro_trial')} className="edge-space-primary mt-6 rounded-2xl px-8 py-4 text-base font-black transition hover:-translate-y-0.5">
+                    <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-5 w-5" /></span>
+                  </button>
+                  <p className="mx-auto mt-6 max-w-lg text-[10px] leading-5 text-slate-600">
+                    You must be 21+ and in a jurisdiction where this is legal. Probability-based research for entertainment — not betting advice.
+                  </p>
                 </section>
               </motion.section>
             )}

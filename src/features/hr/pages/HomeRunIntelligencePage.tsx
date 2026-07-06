@@ -104,30 +104,54 @@ const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
   </div>
 );
 
-const EmptyState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-  <div
-    className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] px-6 py-16 text-center"
-    style={{ background: 'hsl(var(--ve-bg-panel))' }}
-  >
-    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04] ring-1 ring-white/[0.08]">
-      <Inbox className="h-7 w-7 text-zinc-500" />
-    </div>
-    <div>
-      <p className="text-base font-bold text-slate-100">No players to show</p>
-      <p className="mt-1 max-w-sm text-sm text-zinc-500">
-        There are no Home Run Intelligence candidates for the current filters or slate.
-      </p>
-    </div>
-    <button
-      type="button"
-      onClick={onRetry}
-      className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-200 hover:bg-white/[0.06]"
+const EmptyState: React.FC<{
+  onRetry: () => void;
+  mode: 'confirmed' | 'curated' | 'all' | 'blocked';
+  previewCount: number;
+  onShowPreview: () => void;
+}> = ({ onRetry, mode, previewCount, onShowPreview }) => {
+  const noLineupsYet = mode === 'confirmed' && previewCount > 0;
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] px-6 py-16 text-center"
+      style={{ background: 'hsl(var(--ve-bg-panel))' }}
     >
-      <RefreshCw className="h-4 w-4" />
-      Refresh
-    </button>
-  </div>
-);
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04] ring-1 ring-white/[0.08]">
+        <Inbox className="h-7 w-7 text-zinc-500" />
+      </div>
+      <div>
+        <p className="text-base font-bold text-slate-100">
+          {noLineupsYet ? 'No confirmed lineups posted yet' : 'No players to show'}
+        </p>
+        <p className="mt-1 max-w-sm text-sm text-zinc-500">
+          {noLineupsYet
+            ? `MLB hasn't posted official batting orders for today's games yet — we never fake a confirmed lineup. ${previewCount} preview candidates are already scored from projected lineups.`
+            : 'There are no Home Run Intelligence candidates for the current filters or slate.'}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        {noLineupsYet && (
+          <button
+            type="button"
+            onClick={onShowPreview}
+            className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition duration-200 hover:bg-cyan-500/15"
+          >
+            Show preview candidates ({previewCount})
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onRetry}
+          className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-200 hover:bg-white/[0.06]"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const HomeRunIntelligencePage: React.FC = () => {
   const vm = useHrBoardViewModel();
@@ -173,6 +197,13 @@ const HomeRunIntelligencePage: React.FC = () => {
           isRefreshing={vm.loading}
           lastUpdated={lastUpdated}
         />
+
+        {vm.autoSwitchedToPreview && (
+          <div className="flex items-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] px-4 py-2.5 text-xs font-semibold text-cyan-200">
+            <AlertOctagon className="h-4 w-4 shrink-0" />
+            No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Switch back to the Confirmed tab anytime.
+          </div>
+        )}
 
         {/* Stats bar row */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -251,7 +282,12 @@ const HomeRunIntelligencePage: React.FC = () => {
         ) : vm.error ? (
           <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
         ) : isAllZero ? (
-          <EmptyState onRetry={handleRefresh} />
+          <EmptyState
+            onRetry={handleRefresh}
+            mode={vm.mode}
+            previewCount={vm.modeCounts?.curated ?? 0}
+            onShowPreview={() => vm.setMode('curated')}
+          />
         ) : viewMode === 'table' ? (
           <HrSpreadsheet
             rows={(vm.rows ?? []) as any}
