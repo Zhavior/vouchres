@@ -4098,30 +4098,6 @@ body,
   box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10) !important;
 }
 
-/* Sidebar + right rail should match Dashboard surface */
-#layout-inner-frame .ve-edge-rail-left > *,
-#layout-inner-frame .ve-edge-rail-right > * {
-  background:
-    radial-gradient(circle at 22% 0%, rgba(45, 212, 191, 0.08), transparent 36%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96)) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-}
-
-/* Right rail cards */
-#layout-inner-frame .ve-edge-rail-right :is(
-  section,
-  article,
-  .card,
-  [class*="card"],
-  [class*="Card"],
-  [class*="panel"],
-  [class*="Panel"]
-) {
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.86)) !important;
-  border: 1px solid rgba(148, 163, 184, 0.13) !important;
-  border-radius: 20px !important;
-}
 
 /* Avatar treatment: cleaner premium ring */
 #inner-view-slot :is(img[alt*="avatar" i], .avatar, [class*="avatar"], [class*="Avatar"]) {
