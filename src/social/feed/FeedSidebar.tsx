@@ -87,6 +87,41 @@ interface NavItemProps {
 function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
   const IconComponent = ICON_MAP[icon] || Settings;
 
+  // The Edge Island entry gets the Z8 Obsidian treatment (glass-panel/vouch-emerald)
+  // instead of the rest of the sidebar's --ve-* cyan system, since TheEdgeShell.tsx
+  // it routes to has already been fully rebuilt on that design system. Every other
+  // nav item is untouched.
+  const isEdgeIsland = id === 'welcome';
+
+  if (isEdgeIsland) {
+    return (
+      <button
+        key={id}
+        onClick={onClick}
+        id={`sidebar-link-${id}`}
+        aria-current={isActive ? 'page' : undefined}
+        className={[
+          'glass-panel glass-border font-z8 group relative w-full flex items-center justify-center xl:justify-start gap-3',
+          'pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl text-sm transition-all outline-none',
+          isActive ? 'text-white font-black' : 'text-white/50 hover:text-white',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-all',
+            isActive ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'bg-vouch-emerald/10 text-vouch-emerald/70 group-hover:text-vouch-emerald',
+          ].join(' ')}
+        >
+          <IconComponent className="h-3.5 w-3.5" />
+        </span>
+        <span className="relative z-10 hidden xl:block truncate text-[13px] font-semibold leading-none">
+          {label}
+        </span>
+        {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
+      </button>
+    );
+  }
+
   return (
     <button
       key={id}
