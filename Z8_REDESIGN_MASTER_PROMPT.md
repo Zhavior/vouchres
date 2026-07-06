@@ -106,6 +106,12 @@ Also watch for: a stray unrelated `node --import tsx server.ts` process sometime
 - **`b25000d` — Rebuild the feed right rail on Z8 tokens**
   `FeedRightRail.tsx`, `HotMarketsPanel.tsx` (real MLB Stats API schedule fetch), `TrendingVouchesPanel.tsx` (real `vouchedCount`-derived trending), `ProofBuildersPanel.tsx` (real profile win-rate/units) were on a third, unrelated palette (hardcoded `#121824`/`#0b0f19`/sky/slate/amber hex, not `--ve-*` tokens at all). Now on `glass-panel`/`glass-border` + `vouch-emerald`/`vouch-cyan`; rose kept only for the risk-reminder plate (danger/loss token per rule 1). No data/logic changes.
 
+- **`2d20249` — Remove the navy-blue base background behind both sidebars**
+  Root cause: the `--ve-bg` token (`hsl(222 47% 7%)`, navy) is painted directly via `body, #root { background: hsl(var(--ve-bg)); }` in `index.css` — a later duplicate rule that overrides any direct `body` edit. Retuned `--ve-bg` to `hsl(0 0% 2%)` (~`#050505`, matches obsidian-900). Left `--ve-bg-panel`/`--ve-surface`/etc. untouched so un-migrated pages (e.g. HR board) keep their existing look — only the base backdrop changed. Also bumped `FeedSidebar`/`FeedRightRail` from `bg-obsidian-900/60` to fully opaque `bg-obsidian-900`.
+
+- **`463f99b` — Remove the blue canvas background layer (`CyberBackground.tsx`)**
+  Found and deleted the actual biggest remaining source of "blue in the back": a canvas animation mounted by default (no active theme) behind the whole feed in `HomeFeedLayout.tsx` — navy `#0b0f19` base fill, cyan/purple/indigo glow orbs, a neural-mesh node network, scanning neon laser lines. Exactly the gradient-blob/glow-orbit/starfield anti-pattern the master prompt already calls out. Only ever imported from `HomeFeedLayout.tsx`, so deleted outright (confirmed no other references) rather than left dead. Also swapped the layout root's `bg-[#0b0f19]` fallback for `bg-obsidian-900`. Bundle shrank ~9KB as a side effect.
+
   **Still-open bug (from an earlier session, not yet fixed)**: a logged-in user clicking "Edge Island" can land on the public landing page instead of the real dashboard. Suspected root cause: `App.tsx`'s `isOpenEdgeDashboardMode` `useMemo` checks legacy localStorage keys (`vouchedge_auth_token`, `mlb_ai_auth_token`) rather than real Supabase session state — needs verification and a fix.
 
 All commits verified line-by-line diffable to confirm zero content/feature loss — only classNames and structural div→button swaps changed.
