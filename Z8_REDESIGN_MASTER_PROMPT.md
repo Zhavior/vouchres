@@ -95,6 +95,9 @@ Also watch for: a stray unrelated `node --import tsx server.ts` process sometime
   3. **The inline `edgeLayer === 'dashboard'` block living directly inside `TheEdgeShell.tsx`** (around line ~792) — this is the one that actually renders in the "Front page → loading → Edge Island" flow (intro → `welcomeBack` → `dashboard`, all inside the same component). It was missed by `3e8ca84` because it isn't in either of the two files above; redesigned separately here.
   If asked to fix "the Edge Island" again, check all three before assuming which one is meant — grep for `edgeLayer === 'dashboard'` inside `TheEdgeShell.tsx` specifically for #3.
 
+- **`10b98a4` — Give the Edge Island sidebar nav item its own Z8 treatment**
+  `src/social/feed/FeedSidebar.tsx` already had a real, working "Edge Island" nav entry (`id: "welcome"`, defined in `src/lib/featureConfig.ts`, rendered "ungrouped" above the "Daily" group) that correctly routes to `TheEdgeShell.tsx`. Scoped this to just that one `NavItem` instance inside `FeedSidebar.tsx` (branch on `id === 'welcome'`) — `glass-panel`/`glass-border`/`vouch-emerald` for that item only, every other nav item untouched (still the old `--ve-*` cyan system; redesigning the whole sidebar is a separate, larger task, see below). No routing/logic changes.
+
 All commits verified line-by-line diffable to confirm zero content/feature loss — only classNames and structural div→button swaps changed.
 
 **Note on stray backup folders found on Desktop**: `Desktop/vouchres copy 2` and `Desktop/vouchres copy 3` contain real historical snapshots of this app (useful for comparing "was this ever different" questions); `Desktop/vouchres copy 4` is empty/junk (just a stray `node_modules`) despite its name. Don't assume a numbered copy folder has real content without checking first.
