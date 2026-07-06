@@ -542,6 +542,15 @@ export default function TheEdgeShell({
                           </div>
                         ))}
                       </div>
+
+                      <div className="mt-6 max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Example graded pick</span>
+                          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-200">Won</span>
+                        </div>
+                        <div className="text-sm font-bold text-white">Aaron Judge — Over 0.5 HR (+150)</div>
+                        <div className="mt-1 text-[11px] text-slate-500">Graded to the final box score. No edits after lock.</div>
+                      </div>
                     </div>
 
                     <motion.div
@@ -643,7 +652,7 @@ export default function TheEdgeShell({
                 <form onSubmit={handleLoginSubmit}>
                   <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Login</div>
                   <h2 className="mt-2 text-3xl font-black text-white">Welcome back.</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then The Edge becomes your Island.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then you're straight into your dashboard.</p>
                   <div className="mt-6 grid gap-3">
                     <input
                       className="ve-input px-4 py-3 text-sm"
@@ -673,7 +682,7 @@ export default function TheEdgeShell({
                     </div>
                   )}
                   <button type="submit" disabled={authBusy} className={`mt-6 w-full ${PRIMARY} ${authBusy ? 'cursor-wait opacity-70 hover:translate-y-0' : ''}`}>
-                    {authBusy ? 'Logging in...' : 'Login → Enter The Island'}
+                    {authBusy ? 'Logging in...' : 'Login → Enter Dashboard'}
                   </button>
                   <button type="button" onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
                     New here? Start a free trial →
@@ -940,7 +949,7 @@ export default function TheEdgeShell({
                 <h2 className="mt-5 text-4xl font-black text-white">
                   Welcome{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ' back'}.
                 </h2>
-                <p className="mt-3 text-sm text-slate-400">Building your Island dashboard…</p>
+                <p className="mt-3 text-sm text-slate-400">Building your dashboard…</p>
               </motion.section>
             )}
 
@@ -957,7 +966,7 @@ export default function TheEdgeShell({
                 <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5">
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">The Island</div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Your Dashboard</div>
                       <h2 className="mt-1.5 text-3xl font-black text-white sm:text-4xl">
                         Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}.
                       </h2>
