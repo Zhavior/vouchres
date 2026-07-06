@@ -265,9 +265,9 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               transition={{ duration: 0.65, delay: 0.05, ease }}
               className="max-w-4xl text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl"
             >
-              The only sports platform that holds{' '}
+              Stop trusting cappers who{' '}
               <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                every pick accountable.
+                delete their losses.
               </span>
             </motion.h1>
 
@@ -277,7 +277,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               transition={{ duration: 0.65, delay: 0.14, ease }}
               className="mt-6 max-w-2xl text-base leading-8 text-slate-400 sm:text-lg"
             >
-              Research the slate. Build your slip. Every pick is graded to the final box score and published to your public proof ledger — no hiding losses.
+              VouchEdge grades every MLB pick to the final box score and publishes it to a public ledger — wins and losses both. Research the slate, build your slip, keep the receipts.
             </motion.p>
 
             <motion.div
@@ -291,31 +291,25 @@ export default function WelcomePortal({ onSectionChange }: Props) {
                 className="edge-portal-shine relative overflow-hidden rounded-2xl ve-theme-accent-bg px-6 py-3.5 text-sm font-black text-slate-950 shadow-2xl shadow-cyan-950/30 transition hover:-translate-y-0.5"
               >
                 <span className="relative flex items-center gap-2">
-                  Start the Portal <ArrowRight className="h-4 w-4" />
+                  Get Started Free <ArrowRight className="h-4 w-4" />
                 </span>
               </button>
 
               <button
                 onClick={() => enterApp('daily_players')}
-                className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-6 py-3.5 text-sm font-black text-cyan-50 shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-200/35"
+                className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-6 py-3.5 text-sm font-black text-cyan-50/80 shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-200/35 hover:text-cyan-50"
               >
                 Preview Daily Board
               </button>
             </motion.div>
 
-            <div className="mt-6 grid grid-cols-3 gap-2 max-w-sm">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
-                <div className="text-xl font-black text-cyan-300">12k+</div>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Picks tracked</div>
+            <div className="mt-6 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Example graded pick</span>
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-200">Won</span>
               </div>
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
-                <div className="text-xl font-black text-emerald-300">100%</div>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">To final score</div>
-              </div>
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-center">
-                <div className="text-xl font-black text-violet-300">4.2k</div>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Active cappers</div>
-              </div>
+              <div className="text-sm font-bold text-white">Aaron Judge — Over 0.5 HR (+150)</div>
+              <div className="mt-1 text-[11px] text-slate-500">Graded to the final box score. No edits after lock.</div>
             </div>
           </div>
 
@@ -330,7 +324,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
               <div className="mb-4 flex items-center justify-between">
                 <div className="inline-flex items-center gap-2 rounded-full border ve-theme-border ve-theme-soft-bg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-white">
                   <Waves className="h-3.5 w-3.5" />
-                  Tidal Glass Motion
+                  Today's Board
                 </div>
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase text-emerald-100">
                   Live
@@ -427,7 +421,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
                 Clear plans. Simple comparison.
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-400">
-                Show users what is included, what is locked, and why Pro matters.
+                See exactly what's free, what's locked, and what Pro unlocks — no surprises at checkout.
               </p>
             </div>
             <button onClick={startAmplifier} className="rounded-2xl border ve-theme-border ve-theme-soft-bg px-5 py-3 text-sm font-black text-white">
@@ -572,6 +566,10 @@ export default function WelcomePortal({ onSectionChange }: Props) {
                 Preview the board
               </button>
             </div>
+
+            <p className="mt-8 text-[10px] leading-5 text-slate-600">
+              You must be 21+ and in a jurisdiction where this is legal. Probability-based research for entertainment — not betting advice.
+            </p>
           </div>
         </section>
 
@@ -594,7 +592,7 @@ export default function WelcomePortal({ onSectionChange }: Props) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-[0.24em] ve-theme-accent-text">
-                        New User Amplifier
+                        Quick Start
                       </div>
                       <h3 className="mt-2 text-2xl font-black">
                         {isThemeStep ? 'Choose your theme' : currentSlide.title}
