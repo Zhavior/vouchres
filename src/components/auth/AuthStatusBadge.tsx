@@ -131,8 +131,8 @@ export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onL
 
   return (
     <>
-      <div className="fixed right-4 top-4 z-[80]">
-        <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/95 px-3 py-2 text-xs font-black text-white shadow-2xl backdrop-blur">
+      <div className="fixed right-3 top-[60px] z-[80] md:right-4 md:top-4">
+        <div className="flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-950/95 px-2.5 py-1.5 text-xs font-black text-white shadow-2xl backdrop-blur md:gap-2 md:px-3 md:py-2">
         {checking ? (
           <span>Checking login...</span>
         ) : email ? (
