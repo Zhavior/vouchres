@@ -5,6 +5,7 @@ import {
   normalizeSubscriptionTier,
   type TierEntitlements,
 } from "../services/billing/tierConfig";
+import { AppError } from "../errors/AppError";
 
 /**
  * Entitlements — server-side feature gates.
@@ -30,11 +31,41 @@ function tierRank(tier: unknown): number {
   return TIER_RANK[normalizeSubscriptionTier(tier).tier];
 }
 
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+type QuotaRequest = AuthedRequest & {
+  __quota?: {
+    key: string;
+    day: string;
+    count: number;
+    limit: number;
+  };
+};
+
 /**
  * Hard tier gate — reject if user's tier rank is below the required tier.
  */
-export function requireTier(_required: Tier) {
-  return (_req: AuthedRequest, _res: Response, next: NextFunction) => {
+export function requireTier(required: Tier) {
+  return (req: AuthedRequest, res: Response, next: NextFunction) => {
+    const profileTier = req.user?.profile?.tier;
+    if (!profileTier) {
+      return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
+    }
+
+    if (tierRank(profileTier) < tierRank(required)) {
+      return next(new AppError({
+        status: 403,
+        code: "entitlement_required",
+        message: "Your current plan does not include this feature.",
+        details: {
+          requiredTier: normalizeSubscriptionTier(required).tier,
+          currentTier: normalizeSubscriptionTier(profileTier).tier,
+        },
+      }));
+    }
+
     next();
   };
 }
@@ -59,12 +90,64 @@ export function requireTier(_required: Tier) {
  * Increment in a transaction with the actual operation.
  */
 export function requireTierOrQuota(
-  _required: Tier,
-  _freeDailyLimit: number,
-  _quotaKey: string
+  required: Tier,
+  freeDailyLimit: number,
+  quotaKey: string
 ) {
-  return (_req: AuthedRequest, _res: Response, next: NextFunction) => {
-    next();
+  return async (req: QuotaRequest, res: Response, next: NextFunction) => {
+    const profile = req.user?.profile;
+    if (!profile) {
+      return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
+    }
+
+    if (tierRank(profile.tier) >= tierRank(required)) {
+      return next();
+    }
+
+    const day = todayUtc();
+    const { supabaseAdmin } = await import("./auth");
+    const { data, error } = await supabaseAdmin
+      .from("daily_quotas")
+      .select("count")
+      .eq("profile_id", req.user!.id)
+      .eq("quota_key", quotaKey)
+      .eq("day", day)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[entitlements] quota lookup failed", {
+        profileId: req.user!.id,
+        quotaKey,
+        day,
+        error,
+      });
+      return next(new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Quota check is temporarily unavailable.",
+        expose: true,
+        cause: error,
+      }));
+    }
+
+    const count = Number(data?.count ?? 0);
+    if (count >= freeDailyLimit) {
+      return next(new AppError({
+        status: 429,
+        code: "quota_exceeded",
+        message: "Daily free quota exceeded.",
+        details: {
+          quotaKey,
+          limit: freeDailyLimit,
+          count,
+          requiredTier: normalizeSubscriptionTier(required).tier,
+          currentTier: normalizeSubscriptionTier(profile.tier).tier,
+        },
+      }));
+    }
+
+    req.__quota = { key: quotaKey, day, count, limit: freeDailyLimit };
+    return next();
   };
 }
 
@@ -101,27 +184,53 @@ export async function incrementQuota(
   day: string
 ): Promise<void> {
   const { supabaseAdmin } = await import("./auth");
-  // Upsert with explicit increment
-  const { error } = await supabaseAdmin
+
+  const seed = await supabaseAdmin
     .from("daily_quotas")
     .upsert(
-      { profile_id: profileId, quota_key: quotaKey, day, count: 1 },
-      { onConflict: "profile_id,quota_key,day" }
+      { profile_id: profileId, quota_key: quotaKey, day, count: 0 },
+      { onConflict: "profile_id,quota_key,day", ignoreDuplicates: true }
     );
 
-  if (error) {
-    // Best-effort — log and continue. Don't fail the user's request because
-    // we couldn't count it. (Trade-off: a user might get one extra call.)
-    console.error("[entitlements] quota increment failed", error);
+  if (seed.error) {
+    console.error("[entitlements] quota seed failed", seed.error);
     return;
   }
 
-  // Race-condition-tolerant increment via RPC
-  await supabaseAdmin.rpc("increment_quota", {
+  const increment = await supabaseAdmin.rpc("increment_quota", {
     p_profile_id: profileId,
     p_quota_key: quotaKey,
     p_day: day,
   });
+
+  if (!increment.error) return;
+
+  console.error("[entitlements] quota rpc increment failed", increment.error);
+
+  const current = await supabaseAdmin
+    .from("daily_quotas")
+    .select("count")
+    .eq("profile_id", profileId)
+    .eq("quota_key", quotaKey)
+    .eq("day", day)
+    .maybeSingle();
+
+  if (current.error) {
+    console.error("[entitlements] quota fallback read failed", current.error);
+    return;
+  }
+
+  const nextCount = Number(current.data?.count ?? 0) + 1;
+  const fallback = await supabaseAdmin
+    .from("daily_quotas")
+    .upsert(
+      { profile_id: profileId, quota_key: quotaKey, day, count: nextCount },
+      { onConflict: "profile_id,quota_key,day" }
+    );
+
+  if (fallback.error) {
+    console.error("[entitlements] quota fallback increment failed", fallback.error);
+  }
 }
 
 /*

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getGrader, settleParlay } from "../sportGraders";
+import { getGrader, settleParlay } from "../../server/services/grading/sportGraders";
 
 /** Build a minimal MLB boxscore with one batter in the home lineup. */
 function mockBoxscore(playerName: string, stats: { homeRuns?: number; rbi?: number; runs?: number; hits?: number }) {

@@ -8,12 +8,65 @@ import { getStatcastBatterMap, STATCAST_MIN_PA } from "../services/mlb/statcastC
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 
 const scoresCache = new TTLCache<unknown>(45_000);
+const MLB_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function dateQueryOrToday(value: unknown, field = "date"): string {
+  if (value == null || value === "") return todayISO();
+  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
+  throw new AppError({
+    status: 400,
+    code: "validation_error",
+    message: `${field} must use YYYY-MM-DD format.`,
+    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
+  });
+}
+
+function requiredDateParam(value: unknown, field = "date"): string {
+  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
+  throw new AppError({
+    status: 400,
+    code: "validation_error",
+    message: `${field} must use YYYY-MM-DD format.`,
+    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
+  });
+}
+
+function optionalDateQuery(value: unknown): string | undefined {
+  if (value == null || value === "") return undefined;
+  return requiredDateParam(value, "date");
+}
+
+function requiredPositiveIntParam(value: unknown, field: string): number {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (/^\d+$/.test(raw)) {
+    const parsed = Number(raw);
+    if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
+  }
+
+  throw new AppError({
+    status: 400,
+    code: "validation_error",
+    message: `${field} must be a positive integer.`,
+    details: [{ path: field, message: "Expected a positive integer." }],
+  });
+}
+
+function upstreamUnavailable(message: string, cause: unknown): AppError {
+  return new AppError({
+    status: 503,
+    code: "external_service_error",
+    message,
+    cause,
+  });
+}
 
 export function registerMatchupRoutes(app: Express): void {
   /** Lightweight live scores — schedule + linescore only, no roster work. 45s TTL. */
-  app.get("/api/mlb/scores/today", async (_req: Request, res: Response) => {
+  app.get("/api/mlb/scores/today", asyncHandler(async (_req: Request, res: Response) => {
     try {
       const date = todayISO();
       const scores = await scoresCache.getOrSet(`scores:${date}`, async () => {
@@ -31,23 +84,23 @@ export function registerMatchupRoutes(app: Express): void {
       res.json({ scores, updatedAt: new Date().toISOString() });
     } catch (err: any) {
       console.error("[scores/today] failed:", err?.message);
-      res.status(500).json({ error: "scores_fetch_failed" });
+      throw upstreamUnavailable("Scores unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/internal/sports-truth/mlb/today", async (req: Request, res: Response) => {
+  app.get("/api/internal/sports-truth/mlb/today", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const date = dateQueryOrToday(req.query.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       res.json(snapshot);
     } catch (err: any) {
       console.error("[sports-truth/mlb/today] failed:", err?.message);
-      res.status(500).json({ error: "sports_truth_snapshot_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Sports truth snapshot unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/mlb/matchups/today", async (_req: Request, res: Response) => {
+  app.get("/api/mlb/matchups/today", asyncHandler(async (_req: Request, res: Response) => {
     try {
       const date = todayISO();
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
@@ -55,39 +108,38 @@ export function registerMatchupRoutes(app: Express): void {
       res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
     } catch (err: any) {
       console.error("[matchups/today] failed:", err?.message);
-      res.status(500).json({ error: "matchups_today_fetch_failed" });
+      throw upstreamUnavailable("Today matchups unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/mlb/matchups/date/:date", async (req: Request, res: Response) => {
+  app.get("/api/mlb/matchups/date/:date", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const requestedDate = req.params.date;
-      const date = /^\\d{4}-\\d{2}-\\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const date = requiredDateParam(req.params.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUPS_DATE] served from SportsTruthHub date=${date}`);
       res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
     } catch (err: any) {
       console.error("[matchups/date] failed:", err?.message);
-      res.status(500).json({ error: "matchups_date_fetch_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Date matchups unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/mlb/matchup-matrix", async (req: Request, res: Response) => {
+  app.get("/api/mlb/matchup-matrix", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const date = dateQueryOrToday(req.query.date);
       const matrix = await getMatchupMatrix(date);
       res.json(matrix);
     } catch (err: any) {
       console.error("[matchup-matrix] failed:", err?.message);
-      res.status(500).json({ error: "matchup_matrix_fetch_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Matchup matrix unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/mlb/matchup-matrix/live", async (req: Request, res: Response) => {
+  app.get("/api/mlb/matchup-matrix/live", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const requestedDate = typeof req.query.date === "string" ? req.query.date : todayISO();
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : todayISO();
+      const date = dateQueryOrToday(req.query.date);
 
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUP_MATRIX_LIVE] served from SportsTruthHub date=${date}`);
@@ -95,54 +147,52 @@ export function registerMatchupRoutes(app: Express): void {
       res.json(snapshot.matchupMatrix);
     } catch (err: any) {
       console.error("[matchup-matrix/live] failed:", err?.message);
-      res.status(500).json({ error: "matchup_matrix_live_fetch_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Live matchup matrix unavailable.", err);
     }
-  });
+  }));
 
-  app.get("/api/mlb/matchup/:gamePk", async (req: Request, res: Response) => {
-    const m = await getGameMatchup(Number(req.params.gamePk), (req.query.date as string) || undefined);
-    if (!m) return res.status(404).json({ error: "Matchup not found" });
+  app.get("/api/mlb/matchup/:gamePk", asyncHandler(async (req: Request, res: Response) => {
+    const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
+    const date = optionalDateQuery(req.query.date);
+    const m = await getGameMatchup(gamePk, date);
+    if (!m) throw new AppError({ status: 404, code: "not_found", message: "Matchup not found." });
     res.json({ matchup: m });
-  });
+  }));
 
   /** Pro Pitcher Matchup Drawer — pitcher card + opponent lineup with BvP. */
-  app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", async (req: Request, res: Response) => {
+  app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const gamePk = Number(req.params.gamePk);
-      const pitcherId = Number(req.params.pitcherId);
-      if (!Number.isFinite(gamePk) || !Number.isFinite(pitcherId)) {
-        return res.status(400).json({ error: "invalid_ids" });
-      }
-      const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
-        ? req.query.date
-        : undefined;
+      const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
+      const pitcherId = requiredPositiveIntParam(req.params.pitcherId, "pitcherId");
+      const date = optionalDateQuery(req.query.date);
       const result = await getPitcherMatchup(gamePk, pitcherId, date);
-      if (!result) return res.status(404).json({ error: "pitcher_matchup_not_found" });
+      if (!result) throw new AppError({ status: 404, code: "not_found", message: "Pitcher matchup not found." });
       res.json(result);
     } catch (err: any) {
       console.error("[matchup-matrix/pitcher] failed:", err?.message);
-      res.status(500).json({ error: "pitcher_matchup_fetch_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Pitcher matchup unavailable.", err);
     }
-  });
+  }));
 
   /** Real first-pitch weather per game (Open-Meteo + sourced stadium table).
    *  Roofed venues are flagged; unknown venues return "unavailable" — never estimated. */
-  app.get("/api/mlb/weather/today", async (req: Request, res: Response) => {
+  app.get("/api/mlb/weather/today", asyncHandler(async (req: Request, res: Response) => {
     try {
-      const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
-        ? req.query.date
-        : undefined;
+      const date = optionalDateQuery(req.query.date);
       const weather = await getTodayGamesWeather(date);
       res.json({ weather, source: "open-meteo", updatedAt: new Date().toISOString() });
     } catch (err: any) {
       console.error("[weather/today] failed:", err?.message);
-      res.status(500).json({ error: "weather_fetch_failed" });
+      if (err instanceof AppError) throw err;
+      throw upstreamUnavailable("Weather unavailable.", err);
     }
-  });
+  }));
 
   /** Season Statcast batter quality (Baseball Savant leaderboards, 12h cache).
    *  Players under the PA threshold are absent — nothing is estimated for them. */
-  app.get("/api/mlb/statcast/batters", async (_req: Request, res: Response) => {
+  app.get("/api/mlb/statcast/batters", asyncHandler(async (_req: Request, res: Response) => {
     try {
       const batters = await getStatcastBatterMap();
       res.json({
@@ -155,7 +205,7 @@ export function registerMatchupRoutes(app: Express): void {
       });
     } catch (err: any) {
       console.error("[statcast/batters] failed:", err?.message);
-      res.status(500).json({ error: "statcast_fetch_failed" });
+      throw upstreamUnavailable("Statcast batters unavailable.", err);
     }
-  });
+  }));
 }

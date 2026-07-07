@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { ZodSchema, ZodError } from "zod";
+import { ZodSchema } from "zod";
 
 /**
  * Request validation via Zod.
@@ -29,16 +29,7 @@ export function validate(schemas: {
       if (schemas.params) req.params = schemas.params.parse(req.params) as any;
       next();
     } catch (err) {
-      if (err instanceof ZodError) {
-        return res.status(400).json({
-          error: "validation_error",
-          details: err.issues.map((i) => ({
-            path: i.path.join("."),
-            message: i.message,
-          })),
-        });
-      }
-      return res.status(400).json({ error: "invalid_request" });
+      next(err);
     }
   };
 }

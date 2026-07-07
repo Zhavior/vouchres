@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { resolveVisibleHrRows } from '../server/services/mlb/hrBoardResponse';
+import { buildHrBoardApiPayload } from '../server/services/mlb/hrBoardResponse';
 
-describe('resolveVisibleHrRows', () => {
+describe('buildHrBoardApiPayload', () => {
   it('falls back to the full projected pool when no confirmed or preview rows are available', () => {
-    const visibleRows = resolveVisibleHrRows({
+    const payload = buildHrBoardApiPayload({
       confirmedCandidates: [],
       projectedCandidates: [],
-      fullProjectedCandidates: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      allProjectedCandidates: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
       previewLimit: 0,
     });
 
-    expect(visibleRows).toEqual([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    expect(payload.rows.map((row) => row.id)).toEqual(['a', 'b', 'c']);
   });
 });
