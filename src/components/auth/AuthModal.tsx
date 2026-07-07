@@ -21,6 +21,7 @@ import {
   Trophy,
   Coins,
   ClipboardCheck,
+  ScrollText,
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -34,7 +35,37 @@ import { startStripeCheckout } from '../../lib/billingClient';
 type Mode = 'login' | 'signup';
 type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro' | 'capper';
-type SignupStep = 'intro' | 'plan' | 'form';
+type SignupStep = 'intro' | 'plan' | 'policy' | 'form';
+type AgreementKey = 'age' | 'terms' | 'research';
+
+const POLICY_SECTIONS = [
+  {
+    title: 'Age & jurisdiction',
+    body: 'You must be at least 21 years old and located in a jurisdiction where probability-based sports research is legal. VouchEdge does not verify your location beyond what you confirm here — you are responsible for knowing your local laws.',
+  },
+  {
+    title: 'Research & entertainment only',
+    body: 'VouchEdge is a research and record-keeping tool, not a sportsbook and not betting advice. Every score, grade, and "edge" shown is a probability estimate built from public stats — never a guarantee. We publish wins and losses both; nothing here predicts outcomes with certainty.',
+  },
+  {
+    title: 'No guaranteed returns',
+    body: 'Pro and Capper unlock research tools and publishing features, not winning picks. Past grading history (yours or anyone else’s) is not a promise of future results. Never research or wager more than you can afford to lose.',
+  },
+  {
+    title: 'Your data',
+    body: 'We store your email, username, saved picks, and grading history to run your account. We don’t sell your data to third parties. You can request deletion of your account and data at any time from Settings.',
+  },
+  {
+    title: 'Billing (Pro & Capper only)',
+    body: 'Paid plans renew monthly via Stripe until you cancel. Beta pricing is locked in for as long as you stay subscribed without a lapse. You can cancel or manage billing anytime from the Upgrade page — no phone call or email required.',
+  },
+] as const;
+
+const AGREEMENTS: Array<{ id: AgreementKey; label: string }> = [
+  { id: 'age', label: 'I am 21+ and in a jurisdiction where this is legal.' },
+  { id: 'terms', label: 'I’ve read and agree to the Terms of Service, Privacy Policy, and billing terms above.' },
+  { id: 'research', label: 'I understand this is probability research for entertainment — not betting advice, with no guaranteed returns.' },
+];
 
 const INTRO_SLIDES = [
   {
@@ -113,6 +144,7 @@ export default function AuthModal({
   const [introIndex, setIntroIndex] = useState(0);
   const [plan, setPlan] = useState<SignupPlan>('free');
   const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
+  const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({ age: false, terms: false, research: false });
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -135,6 +167,7 @@ export default function AuthModal({
       setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
       setIntroIndex(0);
       setPlan('free');
+      setAgreements({ age: false, terms: false, research: false });
     }
   }, [open, initialMode]);
 
@@ -319,6 +352,8 @@ export default function AuthModal({
                 ? INTRO_SLIDES[introIndex].title
                 : mode === 'signup' && signupStep === 'plan'
                 ? 'Choose your plan'
+                : mode === 'signup' && signupStep === 'policy'
+                ? 'Review & agree'
                 : mode === 'signup'
                 ? 'Create your account'
                 : 'Welcome back'}
@@ -330,6 +365,8 @@ export default function AuthModal({
                 ? INTRO_SLIDES[introIndex].body
                 : mode === 'signup' && signupStep === 'plan'
                 ? 'Pro tools are in beta — signing up now helps support development and locks in early access.'
+                : mode === 'signup' && signupStep === 'policy'
+                ? 'A quick, honest read before you create an account.'
                 : mode === 'signup'
                 ? 'Track verified picks, build slips, and unlock the full edge board.'
                 : 'Log in to pick up where you left off.'}
@@ -499,7 +536,7 @@ export default function AuthModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSignupStep('form')}
+                  onClick={() => setSignupStep('policy')}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-slate-950"
                   style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
                 >
@@ -508,14 +545,85 @@ export default function AuthModal({
                 </button>
               </div>
             </div>
+          ) : mode === 'signup' && signupStep === 'policy' ? (
+            /* ── Policy agreement ── */
+            <div className="px-6 pb-6">
+              <div
+                className="max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3"
+                style={{ background: FIELD, borderColor: 'rgba(255,255,255,0.08)' }}
+              >
+                {POLICY_SECTIONS.map((section) => (
+                  <div key={section.title}>
+                    <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: CYAN }}>{section.title}</p>
+                    <p className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#94a3b8' }}>{section.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 space-y-2.5">
+                {AGREEMENTS.map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
+                    style={{
+                      background: agreements[item.id] ? 'rgba(34,211,238,0.06)' : FIELD,
+                      borderColor: agreements[item.id] ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <span
+                      className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
+                      style={{
+                        borderColor: agreements[item.id] ? CYAN : 'rgba(255,255,255,0.2)',
+                        background: agreements[item.id] ? CYAN : 'transparent',
+                      }}
+                    >
+                      {agreements[item.id] && <Check className="w-3 h-3" style={{ color: '#0b1322' }} />}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={agreements[item.id]}
+                      onChange={() => setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                    />
+                    <span className="text-[12px] leading-5 text-slate-300">{item.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setSignupStep('plan')}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
+                  style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  disabled={!agreements.age || !agreements.terms || !agreements.research}
+                  onClick={() => setSignupStep('form')}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                  style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
+                >
+                  Agree & continue
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+              {!(agreements.age && agreements.terms && agreements.research) && (
+                <p className="mt-2 text-[11px] text-center" style={{ color: '#64748b' }}>
+                  Check all three boxes to continue.
+                </p>
+              )}
+            </div>
           ) : (
           <>
-          {/* Back to plan (signup only) */}
+          {/* Back to policy agreement (signup only) */}
           {mode === 'signup' && (
             <div className="px-6 -mt-1 mb-1">
               <button
                 type="button"
-                onClick={() => setSignupStep('plan')}
+                onClick={() => setSignupStep('policy')}
                 className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
