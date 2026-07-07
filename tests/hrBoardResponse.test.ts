@@ -12,4 +12,35 @@ describe('buildHrBoardApiPayload', () => {
 
     expect(payload.rows.map((row) => row.id)).toEqual(['a', 'b', 'c']);
   });
+
+  it('treats pipeline candidates as confirmed batting-order players', () => {
+    const payload = buildHrBoardApiPayload({
+      candidates: [
+        {
+          playerId: 123,
+          playerName: 'Confirmed Slugger',
+          team: 'NYY',
+          gamePk: 456,
+          hrScore: 91,
+          lineupStatus: 'confirmed',
+        },
+      ],
+      projectedCandidates: [
+        {
+          playerId: 789,
+          playerName: 'Preview Hitter',
+          team: 'BOS',
+          gamePk: 456,
+          hrScore: 72,
+          lineupStatus: 'projected_unconfirmed',
+        },
+      ],
+    });
+
+    expect(payload.confirmedCandidates).toHaveLength(1);
+    expect(payload.candidateBuckets.confirmed).toHaveLength(1);
+    expect(payload.counts.confirmedCandidates).toBe(1);
+    expect(payload.rows[0].playerName).toBe('Confirmed Slugger');
+    expect(payload.dataQuality).toBe('confirmed');
+  });
 });

@@ -1,5 +1,6 @@
 /** AI explanation / daily report / learning note routes (Gemini backend-only). */
 import type { Express, Request, Response } from "express";
+import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { generateAiChatResponse } from "../services/ai/chatService";
 import { generateAiImage } from "../services/ai/imageGenerationService";
@@ -71,21 +72,38 @@ export function registerAiRoutes(app: Express): void {
     })
   );
 
-  app.post("/api/ai/explain-pick", requireAuth, generationLimiter, async (req: Request, res: Response) => {
+  app.post("/api/ai/explain-pick", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
     const pick = req.body?.pick as PickCandidate;
-    if (!pick) return res.status(400).json({ error: "Missing pick" });
+    if (!pick) {
+      throw new AppError({
+        status: 400,
+        code: "validation_error",
+        message: "pick is required.",
+        details: [{ path: "pick", message: "Required." }],
+      });
+    }
     res.json(await explainPick(pick));
-  });
+  }));
 
-  app.post("/api/ai/daily-report", requireAuth, generationLimiter, async (req: Request, res: Response) => {
+  app.post("/api/ai/daily-report", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
     res.json(await getDailyReportNarrative(req.body?.date));
-  });
+  }));
 
-  app.post("/api/ai/learning-note", requireAuth, generationLimiter, async (req: Request, res: Response) => {
+  app.post("/api/ai/learning-note", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
     const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
-    if (!pickId || !result) return res.status(400).json({ error: "Missing pickId or result" });
+    if (!pickId || !result) {
+      throw new AppError({
+        status: 400,
+        code: "validation_error",
+        message: "pickId and result are required.",
+        details: [
+          ...(!pickId ? [{ path: "pickId", message: "Required." }] : []),
+          ...(!result ? [{ path: "result", message: "Required." }] : []),
+        ],
+      });
+    }
     res.json(await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened }));
-  });
+  }));
 
   app.post(
     "/api/ai/parlay-edge",

@@ -12,6 +12,8 @@
  *     persistent ledger is sport-aware too.
  */
 
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
 
 // Module-level cache: avoids redundant fetches across concurrent grade requests.
@@ -41,23 +43,25 @@ async function fetchMLBGameData(gamePk: string): Promise<GameData | null> {
 async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
   try {
     // Step 1: linescore → check isComplete (fast, no player stat data)
-    const lsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/linescore`, {
-      signal: AbortSignal.timeout(8_000),
-      headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
+    const ls = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/linescore`, {
+      cacheKey: `grading:linescore:${gamePk}`,
+      ttlMs: 2 * 60_000,
+      timeoutMs: 8_000,
+      retries: 1,
+      debugLabel: "sportGraders",
     });
-    if (!lsRes.ok) return null;
-    const ls = await lsRes.json();
     if (ls?.isComplete !== true) {
       return { final: false, raw: null };
     }
 
     // Step 2: boxscore for player batting stats (only for final games)
-    const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
+    const raw = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
+      cacheKey: `grading:boxscore:${gamePk}`,
+      ttlMs: 10 * 60_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: "sportGraders",
     });
-    if (!bsRes.ok) return null;
-    const raw = await bsRes.json();
     return { final: true, raw };
   } catch {
     return null;

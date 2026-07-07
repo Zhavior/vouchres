@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { HrBoardRepository } from "../../../repositories/HrBoardRepository";
 import { useVouchResource } from "./useVouchResource";
 
-const PREVIEW_LIMIT = 999;
+const PREVIEW_LIMIT = 350;
 const REFRESH_MS = import.meta.env.DEV ? 120_000 : 60_000;
 
 function todayISO() {

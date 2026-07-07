@@ -10,58 +10,18 @@ import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import {
+  optionalYmd as optionalDateQuery,
+  positiveInt as requiredPositiveIntParam,
+  requiredYmd as requiredDateParam,
+  upstreamUnavailable,
+  ymdOrDefault,
+} from "../lib/requestValidators";
 
 const scoresCache = new TTLCache<unknown>(45_000);
-const MLB_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function dateQueryOrToday(value: unknown, field = "date"): string {
-  if (value == null || value === "") return todayISO();
-  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must use YYYY-MM-DD format.`,
-    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
-  });
-}
-
-function requiredDateParam(value: unknown, field = "date"): string {
-  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must use YYYY-MM-DD format.`,
-    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
-  });
-}
-
-function optionalDateQuery(value: unknown): string | undefined {
-  if (value == null || value === "") return undefined;
-  return requiredDateParam(value, "date");
-}
-
-function requiredPositiveIntParam(value: unknown, field: string): number {
-  const raw = typeof value === "string" ? value.trim() : "";
-  if (/^\d+$/.test(raw)) {
-    const parsed = Number(raw);
-    if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
-  }
-
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must be a positive integer.`,
-    details: [{ path: field, message: "Expected a positive integer." }],
-  });
-}
-
-function upstreamUnavailable(message: string, cause: unknown): AppError {
-  return new AppError({
-    status: 503,
-    code: "external_service_error",
-    message,
-    cause,
-  });
+  return ymdOrDefault(value, todayISO(), field);
 }
 
 export function registerMatchupRoutes(app: Express): void {

@@ -1,5 +1,8 @@
 import { Router } from "express";
-import type { Response } from "express";
+import type { Request, Response } from "express";
+import { AppError } from "../errors/AppError";
+import { asyncHandler } from "../lib/asyncHandler";
+import { positiveInt, upstreamUnavailable } from "../lib/requestValidators";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
 import {
@@ -13,24 +16,27 @@ import {
 
 export const playerRegistryRoutes = Router();
 
-function sendError(res: Response, error: unknown) {
+function registryUnavailable(error: unknown): AppError {
   console.error("[playerRegistryRoutes]", error);
-  return res.status(503).json({
-    error: "player_registry_unavailable",
-    message: error instanceof Error ? error.message : "MLB player registry is unavailable.",
-    dataSource: "official_mlb",
-  });
+  return upstreamUnavailable("MLB player registry is unavailable.", error);
 }
 
-playerRegistryRoutes.get("/mlb/players/count", async (_req, res) => {
+function queryString(value: unknown, maxLength: number): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw == null) return "";
+  const text = String(raw).trim();
+  return text.slice(0, maxLength);
+}
+
+playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (_req: Request, res: Response) => {
   try {
     return res.json(await getPlayerCount());
   } catch (error) {
-    return sendError(res, error);
+    throw registryUnavailable(error);
   }
-});
+}));
 
-playerRegistryRoutes.get("/mlb/players/registry", async (_req, res) => {
+playerRegistryRoutes.get("/mlb/players/registry", asyncHandler(async (_req: Request, res: Response) => {
   try {
     const players = await getPlayerRegistry();
     return res.json({
@@ -40,11 +46,11 @@ playerRegistryRoutes.get("/mlb/players/registry", async (_req, res) => {
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendError(res, error);
+    throw registryUnavailable(error);
   }
-});
+}));
 
-playerRegistryRoutes.get("/mlb/players/active", async (_req, res) => {
+playerRegistryRoutes.get("/mlb/players/active", asyncHandler(async (_req: Request, res: Response) => {
   try {
     const players = await getActivePlayers();
     return res.json({
@@ -54,13 +60,13 @@ playerRegistryRoutes.get("/mlb/players/active", async (_req, res) => {
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendError(res, error);
+    throw registryUnavailable(error);
   }
-});
+}));
 
-playerRegistryRoutes.get("/mlb/players/search", async (req, res) => {
+playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request, res: Response) => {
   try {
-    const q = typeof req.query.q === "string" ? req.query.q : "";
+    const q = queryString(req.query.q, 80);
     const players = await searchPlayers(q);
     return res.json({
       query: q,
@@ -70,27 +76,30 @@ playerRegistryRoutes.get("/mlb/players/search", async (req, res) => {
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendError(res, error);
+    throw registryUnavailable(error);
   }
-});
+}));
 
-playerRegistryRoutes.get("/mlb/players/:playerId", async (req, res) => {
+playerRegistryRoutes.get("/mlb/players/:playerId", asyncHandler(async (req: Request, res: Response) => {
   try {
-    const player = await getPlayerById(req.params.playerId);
+    const playerId = positiveInt(req.params.playerId, "playerId");
+    const player = await getPlayerById(String(playerId));
     if (!player) {
-      return res.status(404).json({
-        error: "player_not_found",
-        playerId: req.params.playerId,
-        dataSource: "official_mlb",
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Player not found.",
+        details: { playerId, dataSource: "official_mlb" },
       });
     }
     return res.json({ player, dataSource: "official_mlb", updatedAt: new Date().toISOString() });
   } catch (error) {
-    return sendError(res, error);
+    if (error instanceof AppError) throw error;
+    throw registryUnavailable(error);
   }
-});
+}));
 
-playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, async (_req, res) => {
+playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, asyncHandler(async (_req: Request, res: Response) => {
   try {
     const result = await refreshPlayerRegistry();
     return res.json({
@@ -101,6 +110,6 @@ playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, gen
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendError(res, error);
+    throw registryUnavailable(error);
   }
-});
+}));

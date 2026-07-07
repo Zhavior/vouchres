@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { registerApiRoutes } from "./server/routes";
 import { corsMiddleware, helmetMiddleware } from "./server/middleware/cors";
 import { apiErrorHandler } from "./server/middleware/errorHandler";
+import { apiNotFoundHandler } from "./server/middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "./server/middleware/rateLimit";
 import { requestContext } from "./server/middleware/requestContext";
 
@@ -31,6 +32,8 @@ export async function createApp() {
   // VouchEdge intelligence backbone: MLB, agents, judges, AI, trust, results, skills.
   // Registered before the Vite/static catch-all so these API paths resolve first.
   registerApiRoutes(app);
+  app.use("/api", apiNotFoundHandler);
+  app.use("/api", apiErrorHandler);
 
   // Serve static assets with Vite dev server middleware compatibility
   if (process.env.NODE_ENV !== "production") {
@@ -67,10 +70,6 @@ export async function createApp() {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-
-// Final API error boundary.
-// Keep API failures JSON instead of Express default HTML error pages.
-app.use('/api', apiErrorHandler);
 
 return app;
 }

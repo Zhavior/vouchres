@@ -16,6 +16,7 @@ export interface HrBoardLike extends AnyRecord {
   safeLimit?: number;
   limit?: number;
   rows?: unknown;
+  candidates?: unknown;
   confirmedCandidates?: unknown;
   projectedCandidates?: unknown;
   allProjectedCandidates?: unknown;
@@ -126,8 +127,8 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
   const confirmedCandidates = dedupeAndSort(
     normalizePool(
       isRecord(input.candidateBuckets)
-        ? input.confirmedCandidates ?? input.candidateBuckets.confirmed
-        : input.confirmedCandidates
+        ? input.confirmedCandidates ?? input.candidates ?? input.candidateBuckets.confirmed
+        : input.confirmedCandidates ?? input.candidates
     )
   );
   const projectedCandidates = dedupeAndSort(

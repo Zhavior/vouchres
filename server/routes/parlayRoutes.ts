@@ -5,6 +5,8 @@ import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../middleware/auth
 import { generationLimiter, gradingLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
+import { boolQuery, boundedInt, optionalYmd } from "../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
 import { previewLiveHrParlayMatches } from "../services/grading/liveHrParlayService";
@@ -248,56 +250,38 @@ parlayRoutes.post(
    This mutates DB state, so it must never run from a GET/read request.
    ============================================================ */
 
-parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const repair = await repairLegacyParlayIdentityForSync({
-      dryRun: false,
-      limit: 100,
-      externalProvider: "live_hr_sync_repair",
-    });
-    const result = await applyLiveHrParlayMatches(date);
+parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
+  const date = optionalYmd(rawDate);
+  const repair = await repairLegacyParlayIdentityForSync({
+    dryRun: false,
+    limit: 100,
+    externalProvider: "live_hr_sync_repair",
+  });
+  const result = await applyLiveHrParlayMatches(date);
 
-    return res.json({
-      ok: true,
-      mode: "live_hr_sync",
-      date: date ?? null,
-      repair,
-      ...result,
-    });
-  } catch (err: any) {
-    console.error("[parlays/live-hr-sync] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "live_hr_sync_failed",
-      message: err?.message ?? "unknown live HR sync error",
-    });
-  }
-});
+  return res.json({
+    ok: true,
+    mode: "live_hr_sync",
+    date: date ?? null,
+    repair,
+    ...result,
+  });
+}));
 
-parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const matches = await previewLiveHrParlayMatches(date);
+parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
+  const date = optionalYmd(rawDate);
+  const matches = await previewLiveHrParlayMatches(date);
 
-    return res.json({
-      ok: true,
-      mode: "preview_only",
-      date: date ?? null,
-      matchCount: matches.length,
-      matches,
-    });
-  } catch (err: any) {
-    console.error("[parlays/live-hr-preview] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "live_hr_preview_failed",
-      message: err?.message ?? "unknown live HR preview error",
-    });
-  }
-});
+  return res.json({
+    ok: true,
+    mode: "preview_only",
+    date: date ?? null,
+    matchCount: matches.length,
+    matches,
+  });
+}));
 
 const isAuthorizedCronRequest = (req: Request) => {
   const cronSecret = process.env.CRON_SECRET;
@@ -310,121 +294,98 @@ const isAuthorizedCronRequest = (req: Request) => {
   return bearerToken === cronSecret || queryToken === cronSecret;
 };
 
-parlayRoutes.get("/cron/parlays/live-hr-sync", async (req: Request, res: Response) => {
+function assertCronAuthorized(req: Request): void {
   if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
+    throw new AppError({ status: 401, code: "invalid_token", message: "Unauthorized cron request." });
   }
+}
 
+parlayRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+
+  const date = optionalYmd(req.query.date);
+  const repair = await repairLegacyParlayIdentityForSync({
+    dryRun: false,
+    limit: 100,
+    externalProvider: "cron_live_hr_sync_repair",
+  });
+  const result = await applyLiveHrParlayMatches(date);
+
+  return res.json({
+    ok: true,
+    mode: "cron_live_hr_sync",
+    date: date ?? null,
+    repair,
+    ...result,
+    checkedAt: new Date().toISOString(),
+  });
+}));
+
+parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+
+  const days = boundedInt(req.query.days, "days", 2, 1, 7);
+  const result = await gradePendingPicks({ days });
+  const { graded, skipped, summary } = result;
+
+  const settled = graded.filter((row) => row.status !== "graded_error");
+  const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
+  const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+
+  return res.json({
+    ok: true,
+    mode: "cron_grade_due",
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    summary,
+    warnings: summary.warnings,
+    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
+    checkedAt: new Date().toISOString(),
+  });
+}));
+
+parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days;
+  const days = boundedInt(rawDays, "days", 2, 1, 7);
+  const result = await gradePendingPicks({ days });
+  const { graded, skipped, summary } = result;
+
+  const settled = graded.filter((row) => row.status !== "graded_error");
+  const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
+  const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+
+  console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
+
+  // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
   try {
-    const rawDate = req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const repair = await repairLegacyParlayIdentityForSync({
-      dryRun: false,
-      limit: 100,
-      externalProvider: "cron_live_hr_sync_repair",
-    });
-    const result = await applyLiveHrParlayMatches(date);
-
-    return res.json({
-      ok: true,
-      mode: "cron_live_hr_sync",
-      date: date ?? null,
-      repair,
-      ...result,
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[cron/parlays/live-hr-sync] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "cron_live_hr_sync_failed",
-      message: err?.message ?? "unknown cron live HR sync error",
-    });
-  }
-});
-
-parlayRoutes.get("/cron/parlays/grade-due", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
-  }
-
-  try {
-    const rawDays = req.query.days ?? 2;
-    const days = Math.min(Number(rawDays), 7);
-    const result = await gradePendingPicks({ days });
-    const { graded, skipped, summary } = result;
-
-    const settled = graded.filter((r) => r.status !== "graded_error");
-    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
-    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
-
-    return res.json({
-      ok: true,
-      mode: "cron_grade_due",
-      gradedParlays: settled.length,
-      gradedLegs: graded.length,
-      pendingLegs: pending.length,
-      summary,
-      warnings: summary.warnings,
-      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[cron/parlays/grade-due] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "cron_grade_due_failed",
-      message: err?.message ?? "unknown cron grading error",
-    });
-  }
-});
-
-parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days ?? 2;
-    const days = Math.min(Number(rawDays), 7);
-    const result = await gradePendingPicks({ days });
-    const { graded, skipped, summary } = result;
-
-    const settled = graded.filter((r) => r.status !== "graded_error");
-    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
-    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
-
-    console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
-
-    // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
-    try {
-      const logRows = [
-        ...settled.map((r) => ({ pick_id: r.pick_id, status: r.status, reason: "graded", source: "grade-due" })),
-        ...pending.map((r) => ({ pick_id: r.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
-        ...errors.map((r) => ({ pick_id: r.pick_id, status: "graded_error", reason: r.error ?? "error", source: "grade-due" })),
-      ];
-      if (logRows.length > 0) {
-        const supabaseAdmin = await getSupabaseAdmin();
-        const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
-        if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
-          console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
-        }
+    const logRows = [
+      ...settled.map((row) => ({ pick_id: row.pick_id, status: row.status, reason: "graded", source: "grade-due" })),
+      ...pending.map((row) => ({ pick_id: row.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
+      ...errors.map((row) => ({ pick_id: row.pick_id, status: "graded_error", reason: row.error ?? "error", source: "grade-due" })),
+    ];
+    if (logRows.length > 0) {
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
+      if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
+        console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
       }
-    } catch (logErr: any) {
-      // table missing or transient — never block grading on the audit log
-      console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
     }
-
-    return res.json({
-      gradedParlays: settled.length,
-      gradedLegs: graded.length,
-      pendingLegs: pending.length,
-      summary,
-      warnings: summary.warnings,
-      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[parlays/grade-due] failed", err?.message);
-    return res.status(500).json({ error: "grade_due_failed", message: err?.message });
+  } catch (logErr: any) {
+    // table missing or transient — never block grading on the audit log
+    console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
   }
-});
+
+  return res.json({
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    summary,
+    warnings: summary.warnings,
+    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 async function countRows(query: any): Promise<number> {
   const { count, error } = await query;
@@ -441,13 +402,9 @@ async function countRows(query: any): Promise<number> {
  * Nose scanner for the parlay grading architecture.
  * Counts weak/stale rows that can break exact-field grading.
  */
-parlayRoutes.get("/cron/parlays/integrity", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
-
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
+parlayRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+  const supabaseAdmin = await getSupabaseAdmin();
 
     const [
       missingEventKey,
@@ -492,24 +449,20 @@ parlayRoutes.get("/cron/parlays/integrity", async (req: Request, res: Response) 
       .filter(([key]) => key !== "pendingLegs")
       .reduce((sum, [, value]) => sum + Math.max(0, Number(value || 0)), 0);
 
-    return res.json({
-      ok: blockingIssueCount === 0,
-      scanner: "parlay_integrity_nose",
-      checkedAt: new Date().toISOString(),
-      issues,
-      cache: {
-        gradedLegResults: cachedResults,
-      },
-      advice:
-        blockingIssueCount === 0
-          ? "Parlay grading identity looks clean."
-          : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
-    });
-  } catch (err: any) {
-    console.error("[parlays/integrity] failed", err?.message);
-    return res.status(500).json({ error: "parlay_integrity_failed", message: err?.message });
-  }
-});
+  return res.json({
+    ok: blockingIssueCount === 0,
+    scanner: "parlay_integrity_nose",
+    checkedAt: new Date().toISOString(),
+    issues,
+    cache: {
+      gradedLegResults: cachedResults,
+    },
+    advice:
+      blockingIssueCount === 0
+        ? "Parlay grading identity looks clean."
+        : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
+  });
+}));
 
 /**
  * POST /api/parlays
@@ -689,117 +642,23 @@ async function repairLegacyParlayIdentityForSync(options: {
 }
 
 
-parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+parlayRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
 
-  const dryRun = String(req.query.dryRun ?? "true") !== "false";
-  const limit = Math.min(Math.max(Number(req.query.limit ?? 50), 1), 250);
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
+  const result = await repairLegacyParlayIdentityForSync({
+    dryRun,
+    limit,
+    externalProvider: "repair_identity",
+  });
 
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
-
-    const { data: rows, error } = await supabaseAdmin
-      .from("pick_legs")
-      .select("id,pick_id,leg_index,sport,game_id,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status,picks(event_id,metadata)")
-      .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null")
-      .limit(limit);
-
-    if (error) {
-      console.error("[parlays/repair-identity] fetch failed", error);
-      return res.status(500).json({
-        error: "repair_fetch_failed",
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      });
-    }
-
-    const repaired: any[] = [];
-    const skipped: any[] = [];
-
-    for (const row of rows ?? []) {
-      const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
-      const gameId = repairGameIdFromRow(row);
-      const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
-      const playerId = repairCleanKey(row.player_id || repairPlayerIdFromSelection(row.selection));
-      const marketCode = repairMarketCode(row);
-      const statTarget = repairStatTarget(row, marketCode);
-      const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
-      const comparatorKey = repairComparatorKey(comparator);
-
-      if (!gameId || !playerId || !marketCode || statTarget == null || !comparatorKey) {
-        skipped.push({
-          id: row.id,
-          pick_id: row.pick_id,
-          reason: "missing_required_identity",
-          hasGameId: Boolean(gameId),
-          hasPlayerId: Boolean(playerId),
-          marketCode,
-          statTarget,
-          comparator,
-        });
-        continue;
-      }
-
-      const eventKey = [sport, gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join("_");
-      const popularityKey = [sport, playerId, marketCode, statTarget, comparatorKey].join("_");
-
-      const patch = {
-        sport,
-        game_id: gameId,
-        team_id: teamId,
-        player_id: playerId,
-        market_code: marketCode,
-        stat_target: statTarget,
-        comparator,
-        event_key: eventKey,
-        popularity_key: popularityKey,
-        external_provider: row.external_provider || "repair_identity",
-      };
-
-      if (!dryRun) {
-        const { error: updateError } = await supabaseAdmin
-          .from("pick_legs")
-          .update(patch)
-          .eq("id", row.id);
-
-        if (updateError) {
-          skipped.push({
-            id: row.id,
-            pick_id: row.pick_id,
-            reason: "update_failed",
-            message: updateError.message,
-          });
-          continue;
-        }
-      }
-
-      repaired.push({
-        id: row.id,
-        pick_id: row.pick_id,
-        leg_index: row.leg_index,
-        patch,
-      });
-    }
-
-    return res.json({
-      ok: true,
-      dryRun,
-      scanned: rows?.length ?? 0,
-      repairedCount: repaired.length,
-      skippedCount: skipped.length,
-      repaired: repaired.slice(0, 20),
-      skipped: skipped.slice(0, 20),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.error("[parlays/repair-identity] failed", err);
-    return res.status(500).json({ error: "repair_identity_failed" });
-  }
-});
+  return res.json({
+    ok: true,
+    ...result,
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 
 function isLegacyManualEventId(value: unknown): boolean {
@@ -815,126 +674,119 @@ function isLegacyManualEventId(value: unknown): boolean {
  *
  * Real MLB numeric game IDs are left alone so they can grade when final.
  */
-parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+parlayRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
 
-  const dryRun = String(req.query.dryRun ?? "true") !== "false";
-  const limit = Math.min(Math.max(Number(req.query.limit ?? 25), 1), 100);
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
   const legacyReason = "Legacy pick saved before canonical grading identity existed; cannot be honestly graded.";
 
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
+  const supabaseAdmin = await getSupabaseAdmin();
 
-    const { data: picks, error } = await supabaseAdmin
-      .from("picks")
-      .select("id,event_id,status,explanation")
-      .eq("status", "pending")
-      .limit(limit);
+  const { data: picks, error } = await supabaseAdmin
+    .from("picks")
+    .select("id,event_id,status,explanation")
+    .eq("status", "pending")
+    .limit(limit);
 
-    if (error) {
-      console.error("[parlays/quarantine-legacy] fetch failed", error);
-      return res.status(500).json({
-        error: "quarantine_fetch_failed",
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
+  if (error) {
+    console.error("[parlays/quarantine-legacy] fetch failed", error);
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Failed to fetch legacy parlays for quarantine.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
+  }
+
+  const quarantined: any[] = [];
+  const skipped: any[] = [];
+
+  for (const pick of picks ?? []) {
+    if (!isLegacyManualEventId(pick.event_id)) {
+      skipped.push({
+        pick_id: pick.id,
+        event_id: pick.event_id,
+        reason: "not_legacy_manual_event_id",
       });
+      continue;
     }
 
-    const quarantined: any[] = [];
-    const skipped: any[] = [];
+    const pickPatch = {
+      status: "void",
+      explanation: [String(pick.explanation || "").trim(), legacyReason].filter(Boolean).join("\\n\\n"),
+      graded_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    for (const pick of picks ?? []) {
-      if (!isLegacyManualEventId(pick.event_id)) {
+    const legPatch = {
+      status: "void",
+      graded_at: new Date().toISOString(),
+    };
+
+    if (!dryRun) {
+      const { error: pickUpdateError } = await supabaseAdmin
+        .from("picks")
+        .update(pickPatch)
+        .eq("id", pick.id);
+
+      if (pickUpdateError) {
         skipped.push({
           pick_id: pick.id,
           event_id: pick.event_id,
-          reason: "not_legacy_manual_event_id",
+          reason: "pick_update_failed",
+          message: pickUpdateError.message,
         });
         continue;
       }
 
-      const pickPatch = {
-        status: "void",
-        explanation: [String(pick.explanation || "").trim(), legacyReason].filter(Boolean).join("\\n\\n"),
-        graded_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
+        .from("pick_legs")
+        .update(legPatch)
+        .eq("pick_id", pick.id)
+        .eq("status", "pending")
+        .select("id,pick_id,status,graded_at,event_id,game_id");
 
-      const legPatch = {
-        status: "void",
-        graded_at: new Date().toISOString(),
-      };
-
-      if (!dryRun) {
-        const { error: pickUpdateError } = await supabaseAdmin
-          .from("picks")
-          .update(pickPatch)
-          .eq("id", pick.id);
-
-        if (pickUpdateError) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "pick_update_failed",
-            message: pickUpdateError.message,
-          });
-          continue;
-        }
-
-        const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
-          .from("pick_legs")
-          .update(legPatch)
-          .eq("pick_id", pick.id)
-          .eq("status", "pending")
-          .select("id,pick_id,status,graded_at,event_id,game_id");
-
-        if (legUpdateError) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "leg_update_failed",
-            message: legUpdateError.message,
-          });
-          continue;
-        }
-
-        if (!updatedLegs || updatedLegs.length === 0) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "no_pending_child_legs_updated",
-          });
-          continue;
-        }
+      if (legUpdateError) {
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "leg_update_failed",
+          message: legUpdateError.message,
+        });
+        continue;
       }
 
-      quarantined.push({
-        pick_id: pick.id,
-        event_id: pick.event_id,
-        pickPatch,
-        legPatch,
-      });
+      if (!updatedLegs || updatedLegs.length === 0) {
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "no_pending_child_legs_updated",
+        });
+        continue;
+      }
     }
 
-    return res.json({
-      ok: true,
-      dryRun,
-      scanned: picks?.length ?? 0,
-      quarantinedCount: quarantined.length,
-      skippedCount: skipped.length,
-      quarantined: quarantined.slice(0, 20),
-      skipped: skipped.slice(0, 20),
-      checkedAt: new Date().toISOString(),
+    quarantined.push({
+      pick_id: pick.id,
+      event_id: pick.event_id,
+      pickPatch,
+      legPatch,
     });
-  } catch (err) {
-    console.error("[parlays/quarantine-legacy] failed", err);
-    return res.status(500).json({ error: "quarantine_legacy_failed" });
   }
-});
+
+  return res.json({
+    ok: true,
+    dryRun,
+    scanned: picks?.length ?? 0,
+    quarantinedCount: quarantined.length,
+    skippedCount: skipped.length,
+    quarantined: quarantined.slice(0, 20),
+    skipped: skipped.slice(0, 20),
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 /**
  * GET /api/parlays/:id
@@ -964,7 +816,7 @@ parlayRoutes.get(
  * GET /api/me/dashboard-summary
  * Small authenticated summary for The Island dashboard widgets.
  */
-parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const supabaseAdmin = await getSupabaseAdmin();
 
   const { data: picks, error } = await supabaseAdmin
@@ -976,7 +828,13 @@ parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest
 
   if (error) {
     console.error("[me/dashboard-summary] fetch failed", error);
-    return res.status(500).json({ error: "dashboard_summary_failed" });
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Dashboard summary unavailable.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
   }
 
   const rows = picks ?? [];
@@ -1026,11 +884,11 @@ parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest
     summary,
     recent: rows.slice(0, 8),
   });
-});
+}));
 
-parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit ?? 100), 200);
-  const offset = Number(req.query.offset ?? 0);
+parlayRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const limit = boundedInt(req.query.limit, "limit", 100, 1, 200);
+  const offset = boundedInt(req.query.offset, "offset", 0, 0, 100000);
   const status = typeof req.query.status === "string" ? req.query.status.toLowerCase() : undefined;
 
   const allowedStatuses = new Set(["pending", "won", "lost", "void", "push"]);
@@ -1051,7 +909,13 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
 
   if (error) {
     console.error("[me/ledger] picks fetch failed", error);
-    return res.status(500).json({ error: "ledger_fetch_failed" });
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Ledger unavailable.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
   }
 
   const pickIds = (picks ?? []).map((pick: any) => pick.id);
@@ -1067,7 +931,13 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
 
     if (legsError) {
       console.error("[me/ledger] legs fetch failed", legsError);
-      return res.status(500).json({ error: "ledger_legs_fetch_failed" });
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Ledger legs unavailable.",
+        details: { code: legsError.code, hint: legsError.hint },
+        cause: legsError,
+      });
     }
 
     legsByPickId = (legs ?? []).reduce((acc: Record<string, any[]>, leg: any) => {
@@ -1102,7 +972,7 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
     limit,
     offset,
   });
-});
+}));
 
 parlayRoutes.get(
   "/me/parlays",

@@ -6,67 +6,34 @@ import { headshotUrl } from "../services/mlb/mlbTypes";
 import { getLiveGames } from "../services/mlb/liveGamesService";
 import { TTL, TTLCache } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
-import { AppError } from "../errors/AppError";
+import { sportsFetchJson } from "../lib/sports/sportsHttpClient";
+import {
+  optionalYmd as optionalDateQuery,
+  positiveInt as requiredPositiveIntParam,
+  requiredYmd as requiredDateParam,
+  upstreamUnavailable,
+  ymdOrDefault,
+} from "../lib/requestValidators";
 
 const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const lineupCache = new TTLCache<any[]>(TTL.liveFeed, "mlb:lineups");
 
-const MLB_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 function dateQueryOrToday(value: unknown, field = "date"): string {
-  if (value == null || value === "") return todayISO();
-  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must use YYYY-MM-DD format.`,
-    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
-  });
-}
-
-function requiredDateParam(value: unknown, field = "date"): string {
-  if (typeof value === "string" && MLB_DATE_RE.test(value)) return value;
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must use YYYY-MM-DD format.`,
-    details: [{ path: field, message: "Expected YYYY-MM-DD." }],
-  });
-}
-
-function optionalDateQuery(value: unknown): string | undefined {
-  if (value == null || value === "") return undefined;
-  return requiredDateParam(value, "date");
-}
-
-function requiredPositiveIntParam(value: unknown, field: string): number {
-  const raw = typeof value === "string" ? value.trim() : "";
-  if (/^\d+$/.test(raw)) {
-    const parsed = Number(raw);
-    if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
-  }
-
-  throw new AppError({
-    status: 400,
-    code: "validation_error",
-    message: `${field} must be a positive integer.`,
-    details: [{ path: field, message: "Expected a positive integer." }],
-  });
+  return ymdOrDefault(value, todayISO(), field);
 }
 
 async function fetchMlb<T>(path: string): Promise<T> {
   const start = Date.now();
   console.log(`[mlbRoutes] MLB request ${path}`);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
-  try {
-    const res = await fetch(`${MLB_BASE}${path}`, { signal: controller.signal });
-    if (!res.ok) throw new Error(`MLB ${res.status}`);
-    console.log(`[mlbRoutes] MLB request complete ${path} ${Date.now() - start}ms`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  const data = await sportsFetchJson<T>(`${MLB_BASE}${path}`, {
+    cacheKey: `mlbRoutes:${path}`,
+    ttlMs: 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "mlbRoutes",
+  });
+  console.log(`[mlbRoutes] MLB request complete ${path} ${Date.now() - start}ms`);
+  return data;
 }
 
 function normalizeBat(value: unknown): "L" | "R" | "S" | "U" {
@@ -228,7 +195,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json(report);
     } catch (err: any) {
-      res.status(503).json({ error: "Daily report unavailable", message: err?.message, warnings: [err?.message ?? "Daily report unavailable"] });
+      throw upstreamUnavailable("Daily report unavailable.", err);
     } finally {
       console.log(`[endpoint] GET /api/mlb/reports/daily ${Date.now() - start}ms`);
     }
@@ -240,7 +207,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json({ report: report.vulnerablePitchers, warnings: report.warnings });
     } catch (err: any) {
-      res.status(503).json({ error: "Vulnerable pitchers unavailable", message: err?.message, warnings: [err?.message ?? "Vulnerable pitchers unavailable"] });
+      throw upstreamUnavailable("Vulnerable pitchers unavailable.", err);
     }
   }));
 
@@ -250,7 +217,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json({ targets: report.hrTargets, warnings: report.warnings });
     } catch (err: any) {
-      res.status(503).json({ error: "HR targets unavailable", message: err?.message, warnings: [err?.message ?? "HR targets unavailable"] });
+      throw upstreamUnavailable("HR targets unavailable.", err);
     }
   }));
 
@@ -260,7 +227,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json({ sneaky: report.sneakyHr, warnings: report.warnings });
     } catch (err: any) {
-      res.status(503).json({ error: "Sneaky HR unavailable", message: err?.message, warnings: [err?.message ?? "Sneaky HR unavailable"] });
+      throw upstreamUnavailable("Sneaky HR unavailable.", err);
     }
   }));
 
@@ -270,7 +237,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json({ ...report.rbi, warnings: report.warnings });
     } catch (err: any) {
-      res.status(503).json({ error: "RBI targets unavailable", message: err?.message, warnings: [err?.message ?? "RBI targets unavailable"] });
+      throw upstreamUnavailable("RBI targets unavailable.", err);
     }
   }));
 
@@ -280,7 +247,7 @@ export function registerMlbRoutes(app: Express): void {
       const report = await getSharedDailyReport(date);
       res.json({ environments: report.runEnvironments, warnings: report.warnings });
     } catch (err: any) {
-      res.status(503).json({ error: "Run environments unavailable", message: err?.message, warnings: [err?.message ?? "Run environments unavailable"] });
+      throw upstreamUnavailable("Run environments unavailable.", err);
     }
   }));
 }

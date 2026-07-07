@@ -294,8 +294,15 @@ export default function TheEdgeShell({
     localStorage.setItem('vouchedge_after_auth_mode', 'island');
     localStorage.setItem('vouchedge_signup_plan', plan);
     localStorage.setItem('vouchedge_policy_agreed_at', new Date().toISOString());
+
     setEdgeLayer('welcomeBack');
-    window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+
+    window.setTimeout(() => {
+      triggerEdgeIslandTransition();
+      onSectionChange('island');
+      window.dispatchEvent(new CustomEvent('vouchedge:navigate', { detail: { section: 'island' } }));
+      if (presentation === 'overlay') onClose?.();
+    }, 900);
   }
 
   function validateAccountForm() {
