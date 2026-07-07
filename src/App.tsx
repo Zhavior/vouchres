@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect, useMemo, useRef, useTransition } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
@@ -25,16 +25,15 @@ import { normalizePlayerId } from './lib/mlbHeadshot';
 import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from './lib/parlays/parlayBridge';
 import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
+import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
-import { VouchEdgeLoadingScreen } from "./components/loading";
-import { EdgePortalTransition } from "./components/transitions";
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
-const TheEdgeShell = lazy(() => import('./components/theEdge/TheEdgeShell'));
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
 const EdgeIslandPage = lazy(() => import('./pages/EdgeIslandPage'));
+const FrontPage = lazy(() => import('./pages/FrontPage'));
 const VouchBoard = lazy(() => import('./components/VouchBoard'));
 const ProfilePage = lazy(() => import('./components/ProfilePage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
@@ -143,18 +142,6 @@ function mapParlayToBackendPayload(parlay: Parlay) {
 
 const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
-const STICKY_PUBLIC_SECTIONS = new Set([
-  'welcome',
-  'feed',
-  'home',
-  'daily_players',
-  'live_games',
-  'hr_board',
-  'game_research',
-  'player_research',
-  'mlb_stats',
-]);
-
 const PUBLIC_SECTIONS = new Set([
   'welcome',
   'feed',
@@ -223,7 +210,7 @@ function requiresLogin(section: string) {
 
 
 function resolveDevSectionFromLocation() {
-  if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') return null;
 
   const pathname = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
@@ -239,6 +226,14 @@ function resolveDevSectionFromLocation() {
 
   if (target === 'daily-players' || target === '/daily-players') {
     return 'daily_players';
+  }
+
+  if (target === 'mlb-stat-hub' || target === '/mlb-stat-hub' || target === 'mlb-stats' || target === '/mlb-stats') {
+    return 'mlb_stats';
+  }
+
+  if (target === 'intel' || target === '/intel' || target === 'mlb-intelligence' || target === '/mlb-intelligence') {
+    return 'intel';
   }
 
   if (target === 'live-parlays' || target === '/live-parlays') {
@@ -385,19 +380,17 @@ export default function App() {
     if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
     return 'welcome';
   });
-  const [authStateVersion, setAuthStateVersion] = useState(0);
   const activeSectionRef = useRef(activeSection);
-  const routeSwitchTimerRef = useRef<number | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const gradingRef = useRef(false);
-  const [isGrading, setIsGrading] = useState(false);
-  const [gradingLastChecked, setGradingLastChecked] = useState<Date | null>(null);
+  const [, setIsGrading] = useState(false);
+  const [, setGradingLastChecked] = useState<Date | null>(null);
   const backendParlaySyncRef = useRef(false);
   const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
   const savedSlipsRef = useRef<Parlay[]>([]);
   const savedVouchesRef = useRef<Vouch[]>([]);
   const profileRef = useRef<CreatorProofProfile | null>(null);
-  const [isPendingRoute, startRouteTransition] = useTransition();
-  const [isRouteSwitching, setIsRouteSwitching] = useState(false);
+  const [isPendingRoute] = useTransition();
 
   // The Edge Island — quick-launch popup dock, opened from the floating
   // launcher button (mounted globally, under the notification bell).
@@ -407,8 +400,8 @@ export default function App() {
   // then rushes to 100% and unmounts itself via `hideBootLoader`.
   const [appReady, setAppReady] = useState(false);
   const [hideBootLoader, setHideBootLoader] = useState(false);
-  const [vouchEdgeLoadProgress, setVouchEdgeLoadProgress] = useState(8);
-  const [vouchEdgeLoadMessage, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
+  const [, setVouchEdgeLoadProgress] = useState(8);
+  const [, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
 
   const navigateSection = (section: string) => {
     if (PUBLIC_SECTIONS.has(section)) {
@@ -439,14 +432,16 @@ export default function App() {
     } catch {
       // ignore storage failures
     }
-    setAuthStateVersion((version) => version + 1);
     navigateSection('welcome');
   };
 
   const handleLogoutComplete = () => {
-    setAuthStateVersion((version) => version + 1);
-    saveActiveSection('welcome');
-    setActiveSection('welcome');
+    setLoggingOut(true);
+    window.setTimeout(() => {
+      saveActiveSection('welcome');
+      setActiveSection('welcome');
+      setLoggingOut(false);
+    }, 900);
   };
   
   useEffect(() => {
@@ -478,16 +473,6 @@ export default function App() {
   }, [activeSection]);
 
   useEffect(() => {
-    return () => {
-      if (routeSwitchTimerRef.current) {
-        window.clearTimeout(routeSwitchTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-
     const syncSectionFromLocation = () => {
       const locationSection = resolveDevSectionFromLocation();
       if (locationSection) {
@@ -512,18 +497,6 @@ export default function App() {
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
   const [liveGames, setLiveGames] = useState<any[]>([]);
   const canSeeThemeStore = canAccessThemeStore(profile);
-
-  // The Edge route mode:
-  // logged-out users see the premium public portal;
-  // logged-in/dev users see the personalized My Edge dashboard.
-  const isOpenEdgeDashboardMode = useMemo(
-    () =>
-      DEV_BYPASS_AUTH ||
-      Boolean(localStorage.getItem('vouchedge_auth_token')) ||
-      Boolean(localStorage.getItem('mlb_ai_auth_token')) ||
-      localStorage.getItem('vouchedge_after_auth_mode') === 'island',
-    [authStateVersion]
-  );
 
   useEffect(() => {
     if (activeSection === 'themestore' && !canSeeThemeStore) {
@@ -725,7 +698,7 @@ export default function App() {
     })();
 
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load backend vouches on startup if user is authenticated. Same merge
   // strategy as parlays above: backend rows are authoritative, local-only
@@ -767,30 +740,30 @@ export default function App() {
     })();
 
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync state modifications helper
-  const syncPosts = (newPosts: FeedPost[]) => {
+  function syncPosts(newPosts: FeedPost[]) {
     setPosts(newPosts);
     localStorage.setItem('vouchedge_posts', JSON.stringify(newPosts));
-  };
+  }
 
-  const syncSlips = (newSlips: Parlay[]) => {
+  function syncSlips(newSlips: Parlay[]) {
     savedSlipsRef.current = newSlips;
     setSavedSlips(newSlips);
     localStorage.setItem('vouchedge_slips', JSON.stringify(newSlips));
-  };
+  }
 
-  const syncVouches = (newVouches: Vouch[]) => {
+  function syncVouches(newVouches: Vouch[]) {
     setSavedVouches(newVouches);
     localStorage.setItem('vouchedge_vouches', JSON.stringify(newVouches));
-  };
+  }
 
-  const syncProfile = (newProfile: CreatorProofProfile) => {
+  function syncProfile(newProfile: CreatorProofProfile) {
     profileRef.current = newProfile;
     setProfile(newProfile);
     localStorage.setItem('vouchedge_profile', JSON.stringify(newProfile));
-  };
+  }
 
   const fetchBackendProfile = async (): Promise<BackendProfile | null> => {
     if (!isSupabaseConfigured) return null;
@@ -813,7 +786,7 @@ export default function App() {
     }
   };
 
-  const syncParlayToBackend = async (parlay: Parlay): Promise<Parlay> => {
+  const _syncParlayToBackend = async (parlay: Parlay): Promise<Parlay> => {
     if (!isAiBackendCandidate(parlay) || parlay.backendPickId) {
       return parlay;
     }
@@ -880,9 +853,17 @@ export default function App() {
 
   // Keep refs fresh for the mount-once lifecycle heartbeat (avoids stale closures
   // and prevents the interval from re-subscribing on every state change).
-  savedSlipsRef.current = savedSlips;
-  savedVouchesRef.current = savedVouches;
-  profileRef.current = profile;
+  useEffect(() => {
+    savedSlipsRef.current = savedSlips;
+  }, [savedSlips]);
+
+  useEffect(() => {
+    savedVouchesRef.current = savedVouches;
+  }, [savedVouches]);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   // Legacy AI parlay auto-sync is intentionally quarantined.
   // New save truth must flow through pushParlayToBackend() -> /api/me/parlays
@@ -945,12 +926,7 @@ export default function App() {
       const isLoss = res.status === 'LOST';
 
       if (isWin || isLoss) {
-        let additionalProfit = 0;
-        if (isWin) {
-          additionalProfit = res.profit ?? 0.0;
-        } else {
-          additionalProfit = -res.units;
-        }
+        const additionalProfit = isWin ? res.profit ?? 0.0 : -res.units;
 
         const updatedProfile: CreatorProofProfile = {
           ...profile,
@@ -1084,7 +1060,7 @@ export default function App() {
   };
 
   // Update saved parlay from Parlay Hub
-  const handleUpdateParlaySlip = (updatedParlay: Parlay) => {
+  const _handleUpdateParlaySlip = (updatedParlay: Parlay) => {
     const updated = savedSlips.map((slip) =>
       slip.id === updatedParlay.id ? { ...slip, ...updatedParlay } : slip
     );
@@ -1298,7 +1274,7 @@ export default function App() {
   };
 
   // Retry backend sync for a local-only or failed parlay.
-  const handleRetryParlaySync = async (parlayId: string) => {
+  const _handleRetryParlaySync = async (parlayId: string) => {
     const parlay = savedSlipsRef.current.find((p) => p.id === parlayId);
     if (!parlay) return;
     await pushParlayToBackend(parlay);
@@ -1381,7 +1357,7 @@ export default function App() {
   };
 
   // Manual generation (Live Parlays "Generate" button). Replaces today's slate.
-  const handleGenerateAiParlaysNow = async () => {
+  const _handleGenerateAiParlaysNow = async () => {
     if (gradingRef.current) return;
     const created = await generateAiParlays({ sport: 'mlb' });
     localStorage.setItem('vouchedge_ai_gen_date', new Date().toISOString().slice(0, 10));
@@ -1670,20 +1646,31 @@ export default function App() {
   const renderMainView = () => {
     switch (activeSection) {
       case 'welcome':
-        return (
-          <TheEdgeShell
-            mode={isOpenEdgeDashboardMode ? 'dashboard' : 'public'}
-            presentation="page"
-            activeSection={activeSection}
-            savedParlays={savedSlips}
-            profile={profile}
+        return hasRealAuthToken() ? (
+          <EdgeIslandPage
             onSectionChange={navigateSection}
+            savedSlips={savedSlips}
+            profile={profile}
+            isLoggedIn
+          />
+        ) : (
+          <FrontPage
+            onSectionChange={navigateSection}
+            savedSlips={savedSlips}
+            onAuthed={handleLoginSuccess}
           />
         );
       case 'today':
         return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
       case 'island':
-        return <EdgeIslandPage onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        return (
+          <EdgeIslandPage
+            onSectionChange={navigateSection}
+            savedSlips={savedSlips}
+            profile={profile}
+            isLoggedIn={hasRealAuthToken()}
+          />
+        );
       case 'feed':
         return (
           <HomeFeedPage
@@ -1921,7 +1908,7 @@ export default function App() {
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
       <VouchEdgeBootGate enabled={activeSection !== 'welcome' && hasRealAuthToken()}>
-        <div className="ve-motion-shell ve-theme-transition">
+        <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
         <div className="ve-motion-bg" aria-hidden="true">
           <div className="ve-motion-grid" />
           <div className="ve-motion-noise" />
@@ -1935,6 +1922,7 @@ export default function App() {
           {!hideBootLoader && (
             <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
           )}
+          {loggingOut && <GoodbyeScreen />}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
         {/* Desktop only — on mobile this is rendered inline inside each page's
             own compact header (see HomeFeedLayout.tsx) instead of floating
@@ -1958,7 +1946,7 @@ export default function App() {
           savedSlips={savedSlips}
           onAuthLoginSuccess={handleLoginSuccess}
           onAuthLogoutComplete={handleLogoutComplete}
-          isRouteSwitching={isRouteSwitching || isPendingRoute}
+          isRouteSwitching={isPendingRoute}
         >
           <Suspense
             fallback={
