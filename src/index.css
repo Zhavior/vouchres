@@ -30,7 +30,7 @@
 }
 
 body {
-  background-color: #0b0f19;
+  background-color: #050505;
   color: hsl(var(--ve-text-primary));
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   overflow-y: scroll;
@@ -1107,7 +1107,7 @@ html:not([data-ve-theme]) {
    ========================================================== */
 
 :root {
-  --ve-bg: 222 47% 7%;
+  --ve-bg: 0 0% 2%;
   --ve-bg-deep: 224 56% 4%;
   --ve-bg-panel: 222 42% 8%;
   --ve-surface: 220 40% 11%;
@@ -3739,7 +3739,9 @@ body,
   margin: 0 !important;
 }
 
-/* Mobile */
+/* Mobile — selectors must match the desktop rules' specificity
+   (#id.class #id) above, otherwise the hardcoded 680px/260px/320px
+   desktop widths win regardless of viewport width. */
 @media (max-width: 1180px) {
   #layout-inner-frame.ve-layout-feed,
   #layout-inner-frame.ve-layout-wide {
@@ -3752,10 +3754,13 @@ body,
     display: none !important;
   }
 
-  #layout-inner-frame #center-main-content-column,
-  #layout-inner-frame #inner-view-slot {
+  #layout-inner-frame.ve-layout-feed #center-main-content-column,
+  #layout-inner-frame.ve-layout-wide #center-main-content-column,
+  #layout-inner-frame.ve-layout-feed #inner-view-slot,
+  #layout-inner-frame.ve-layout-wide #inner-view-slot {
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
@@ -3957,23 +3962,6 @@ body,
   --ve-home-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
 }
 
-/* Full social shell background should feel like Dashboard */
-#layout-inner-frame.ve-layout-feed,
-#layout-inner-frame.ve-layout-wide {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.08), transparent 32%),
-    radial-gradient(circle at 84% 0%, rgba(59, 130, 246, 0.08), transparent 34%),
-    linear-gradient(180deg, #020617 0%, #030712 52%, #020617 100%);
-}
-
-/* Center feed surface */
-#layout-inner-frame.ve-layout-feed #center-main-content-column {
-  background:
-    linear-gradient(180deg, rgba(2, 6, 23, 0.35), rgba(2, 6, 23, 0.86));
-  border-left: 1px solid rgba(148, 163, 184, 0.10);
-  border-right: 1px solid rgba(148, 163, 184, 0.10);
-}
-
 /* Sticky feed top header, tabs, search bars, composer containers */
 #inner-view-slot :is(
   .feed-header,
@@ -4084,44 +4072,6 @@ body,
   box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.10), 0 12px 28px rgba(8, 47, 73, 0.22);
 }
 
-/* Inputs/search should feel same as dashboard */
-#inner-view-slot :is(input, textarea, select) {
-  background: rgba(2, 6, 23, 0.72) !important;
-  border: 1px solid rgba(148, 163, 184, 0.18) !important;
-  color: #f8fafc !important;
-  border-radius: 14px !important;
-}
-
-#inner-view-slot :is(input, textarea, select):focus {
-  outline: none !important;
-  border-color: rgba(45, 212, 191, 0.46) !important;
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10) !important;
-}
-
-/* Sidebar + right rail should match Dashboard surface */
-#layout-inner-frame .ve-edge-rail-left > *,
-#layout-inner-frame .ve-edge-rail-right > * {
-  background:
-    radial-gradient(circle at 22% 0%, rgba(45, 212, 191, 0.08), transparent 36%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96)) !important;
-  border-color: rgba(148, 163, 184, 0.12) !important;
-}
-
-/* Right rail cards */
-#layout-inner-frame .ve-edge-rail-right :is(
-  section,
-  article,
-  .card,
-  [class*="card"],
-  [class*="Card"],
-  [class*="panel"],
-  [class*="Panel"]
-) {
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.86)) !important;
-  border: 1px solid rgba(148, 163, 184, 0.13) !important;
-  border-radius: 20px !important;
-}
 
 /* Avatar treatment: cleaner premium ring */
 #inner-view-slot :is(img[alt*="avatar" i], .avatar, [class*="avatar"], [class*="Avatar"]) {

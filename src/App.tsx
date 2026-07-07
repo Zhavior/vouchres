@@ -53,7 +53,6 @@ const EpicThemeShowcase = lazy(() =>
 );
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
-const DailyHrWatchNewPage = lazy(() => import('./pages/DailyHrWatchNewPage'));
 const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
 const MlbStatHubPage = lazy(() => import('./features/mlb-stats/pages/MlbStatHubPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
@@ -151,7 +150,6 @@ const STICKY_PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
-  'daily_hr_watch_new',
   'game_research',
   'player_research',
   'mlb_stats',
@@ -164,7 +162,6 @@ const PUBLIC_SECTIONS = new Set([
   'daily_players',
   'live_games',
   'hr_board',
-  'daily_hr_watch_new',
   'game_research',
   'player_research',
   'top_cappers',
@@ -232,12 +229,12 @@ function resolveDevSectionFromLocation() {
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
   const target = hash || pathname;
 
-  if (target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new') {
-    return 'daily_hr_watch_new';
-  }
-
-  if (target === 'hr-board' || target === '/hr-board' || target === 'daily-hr-board' || target === '/daily-hr-board') {
-    return 'daily_hr_watch_new';
+  if (
+    target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
+    target === 'hr-board' || target === '/hr-board' ||
+    target === 'daily-hr-board' || target === '/daily-hr-board'
+  ) {
+    return 'hr_board';
   }
 
   if (target === 'daily-players' || target === '/daily-players') {
@@ -385,7 +382,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'daily_hr_watch_new';
+    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
     return 'welcome';
   });
   const [authStateVersion, setAuthStateVersion] = useState(0);
@@ -1732,14 +1729,11 @@ export default function App() {
       case 'intel':
         return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
 
+      // 'daily_hr_watch_new' was the legacy HR page's section id. Kept here
+      // (rather than removed outright) so any stale bookmark/localStorage
+      // value from before this merge still resolves to the real page
+      // instead of hitting the "View not found" fallback below.
       case 'daily_hr_watch_new':
-        return (
-          <DailyHrWatchNewPage
-            profile={profile}
-            onAddLegToParlay={handleAddLegFromResearch}
-          />
-        );
-
       case 'hr_board':
         return (
           <HomeRunIntelligencePage />
@@ -1942,11 +1936,17 @@ export default function App() {
             <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
           )}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
-        <AuthStatusBadge
-          hideGuest={activeSection === 'welcome'}
-          onLoginSuccess={handleLoginSuccess}
-          onLogoutComplete={handleLogoutComplete}
-        />
+        {/* Desktop only — on mobile this is rendered inline inside each page's
+            own compact header (see HomeFeedLayout.tsx) instead of floating
+            fixed over content, since a fixed corner badge collided with
+            whatever page content happened to scroll underneath it. */}
+        <div className="hidden md:block">
+          <AuthStatusBadge
+            hideGuest={activeSection === 'welcome'}
+            onLoginSuccess={handleLoginSuccess}
+            onLogoutComplete={handleLogoutComplete}
+          />
+        </div>
         <HomeFeedLayout
           activeSection={activeSection}
           onSectionChange={navigateSection}
@@ -1956,6 +1956,8 @@ export default function App() {
           onSaveVouch={handleSaveVouch}
           activeLegs={activeLegs}
           savedSlips={savedSlips}
+          onAuthLoginSuccess={handleLoginSuccess}
+          onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isRouteSwitching || isPendingRoute}
         >
           <Suspense
@@ -1971,17 +1973,22 @@ export default function App() {
         </HomeFeedLayout>
         <AppNotificationsHost onNavigate={navigateSection} />
 
-        {/* The Edge Island launcher — sits directly under the notification
-            bell (which lives at bottom-44/40 right-6/8 in AppNotificationsHost). */}
+        {/* The Edge Island launcher — third button in the stack: app
+            notifications bell sits at bottom-44/40, HR notifications bell
+            at bottom-28/24 (see HrNotifications.tsx). On mobile there's
+            also a fixed bottom nav bar (~60px), leaving too little room
+            for a third full-size button between the HR bell and the nav
+            bar — so this one renders smaller on mobile only (w-10/h-10 vs
+            w-12/h-12 on desktop) to fit without overlapping either. */}
         {activeSection !== 'welcome' && (
           <button
             type="button"
             onClick={() => setEdgeIslandOpen(true)}
             aria-label="Open The Edge Island"
             title="The Edge Island"
-            className="fixed bottom-28 md:bottom-24 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
+            className="fixed bottom-16 md:bottom-8 right-6 md:right-8 z-[60] w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
           >
-            <EdgeIslandIcon className="w-5 h-5 text-cyan-300" />
+            <EdgeIslandIcon className="w-4 h-4 md:w-5 md:h-5 text-cyan-300" />
           </button>
         )}
 

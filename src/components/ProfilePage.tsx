@@ -240,7 +240,7 @@ export default function ProfilePage({
               </div>
 
             <div className="p-6 pt-11 space-y-4">
-              <div className="flex justify-between items-start gap-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-black text-slate-100 tracking-tight">
@@ -256,14 +256,14 @@ export default function ProfilePage({
                   <p className="text-xs text-slate-400">@{profile.username}</p>
                   
                   {/* Dynamic Followers and Tailing count belt */}
-                  <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-400 font-medium font-mono">
-                    <div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-400 font-medium font-mono">
+                    <div className="whitespace-nowrap">
                       <strong className="text-slate-200">
                         {profile.subscriptionTier === 'SELLER_PRO' ? '241' : '38'}
                       </strong>{' '}
                       <span className="text-slate-500">followers</span>
                     </div>
-                    <div>
+                    <div className="whitespace-nowrap">
                       <strong className="text-slate-200 font-bold">
                         {profile.subscriptionTier === 'SELLER_PRO' ? '156' : '15'}
                       </strong>{' '}
@@ -271,7 +271,7 @@ export default function ProfilePage({
                         {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers (tails)' : 'subscribers'}
                       </span>
                     </div>
-                    <div>
+                    <div className="whitespace-nowrap">
                       <strong className="text-slate-200">{followingCount}</strong>{' '}
                       <span className="text-slate-500">following</span>
                     </div>
@@ -292,7 +292,7 @@ export default function ProfilePage({
 
                 {!isEditing ? (
                   <div className="flex items-center gap-2 shrink-0">
-                    <button 
+                    <button
                       onClick={() => setShowShareModal(true)}
                       className="px-3.5 py-1.5 bg-sky-950/50 hover:bg-sky-900/40 text-sky-400 hover:text-sky-300 rounded-xl text-xs font-extrabold border border-sky-800/40 flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
                       id="share-profile-btn"
@@ -429,9 +429,9 @@ export default function ProfilePage({
 
           {/* Your Previous Posts Feed list */}
           <div className="space-y-4 pt-2" id="user-archived-posts-section">
-            <div className="flex justify-between items-center px-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 px-1">
               <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0"></span>
                 My Shared Stakes & Ledger Posts ({userPosts.length})
               </h3>
               <span className="text-[10px] text-slate-500 font-mono font-bold">

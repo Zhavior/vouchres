@@ -2,11 +2,11 @@ import React from 'react';
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import FeedMobileNav from './FeedMobileNav';
-import CyberBackground from '../../components/CyberBackground';
 import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
 import { ShieldCheck, Sparkles, Bell } from 'lucide-react';
 import AisFeatureAgent from '../../components/AisFeatureAgent';
+import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 
@@ -21,6 +21,8 @@ interface HomeFeedLayoutProps {
   activeLegs?: Leg[];
   savedSlips?: Parlay[];
   isRouteSwitching?: boolean;
+  onAuthLoginSuccess?: () => void;
+  onAuthLogoutComplete?: () => void;
 }
 
 export default function HomeFeedLayout({
@@ -34,6 +36,8 @@ export default function HomeFeedLayout({
   activeLegs = [],
   savedSlips = [],
   isRouteSwitching = false,
+  onAuthLoginSuccess,
+  onAuthLogoutComplete,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
@@ -95,18 +99,15 @@ export default function HomeFeedLayout({
     : [];
 
   return (
-    <div 
+    <div
       className={`min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-[#0b0f19]'
-      }`} 
+        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-obsidian-900'
+      }`}
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-      
-      {/* Dynamic Animated Cyber Background Layer (only if not customized fully by profile theme) */}
-      {(!activeTheme || activeTheme.id === 'cyber-blue') && <CyberBackground />}
-      
+
       {/* Grid Overlay matching theme particles vibe */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && activeTheme.gridOverlay && (
         <div className={`absolute inset-0 pointer-events-none z-0 ${activeTheme.gridOverlay}`} />
@@ -192,10 +193,10 @@ export default function HomeFeedLayout({
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex-1 min-w-0 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-[hsl(var(--ve-border)/0.24)] pb-[74px] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex-1 min-w-0 bg-obsidian-900 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-white/10 pb-[74px] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
           {activeSection !== 'welcome' && (
-            <header className="md:hidden sticky top-0 bg-[hsl(var(--ve-bg-deep)/0.90)] backdrop-blur-md border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex items-center justify-between z-30 select-none">
+            <header className="md:hidden sticky top-0 bg-[hsl(var(--ve-bg-deep)/0.90)] backdrop-blur-md border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 z-30 select-none">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSectionChange('feed')}>
                 <div className="w-8 h-8 rounded-lg border border-[hsl(var(--ve-accent-cyan)/0.50)] bg-[hsl(var(--ve-accent-cyan)/0.12)] flex items-center justify-center text-[hsl(var(--ve-accent-cyan))] font-bold text-xs shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.20)]">
                   VE
@@ -205,8 +206,8 @@ export default function HomeFeedLayout({
                 </span>
               </div>
 
-              {/* Track Record compact view & PRO Upgrade + Notifications */}
-              <div className="flex items-center gap-1.5 font-mono text-[10px]">
+              {/* Track Record compact view & PRO Upgrade + Notifications + Auth */}
+              <div className="flex flex-wrap items-center justify-end gap-1.5 font-mono text-[10px]">
                 {/* Notification bell — mobile */}
                 <button
                   onClick={() => onSectionChange('notifications')}
@@ -229,13 +230,21 @@ export default function HomeFeedLayout({
                   <span>UPGRADE</span>
                 </div>
 
-                <div 
+                <div
                   onClick={() => onSectionChange('profile')}
                   className="flex items-center gap-1 bg-[hsl(var(--ve-bg-panel)/0.60)] border border-[hsl(var(--ve-border)/0.40)] px-2 py-1 rounded-full text-[hsl(var(--ve-success))] font-bold cursor-pointer"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>{profile.winRate.toFixed(1)}% WR</span>
                 </div>
+
+                {/* Login/guest state — rendered inline here (not as a fixed
+                    overlay) so it can't collide with page content below it. */}
+                <AuthStatusBadge
+                  inline
+                  onLoginSuccess={onAuthLoginSuccess}
+                  onLogoutComplete={onAuthLogoutComplete}
+                />
               </div>
             </header>
           )}

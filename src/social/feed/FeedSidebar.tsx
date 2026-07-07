@@ -259,7 +259,7 @@ export default function FeedSidebar({
         'relative hidden md:flex flex-col h-screen sticky top-0 font-z8',
         'w-[72px] xl:w-[280px]',
         'border-r border-white/10',
-        'bg-obsidian-900/60 px-2 xl:px-3.5 py-4',
+        'bg-obsidian-900 px-2 xl:px-3.5 py-4',
         'text-white',
         'justify-between select-none backdrop-blur-sm',
         'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
