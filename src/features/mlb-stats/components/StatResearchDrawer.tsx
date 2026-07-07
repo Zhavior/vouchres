@@ -5,12 +5,14 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import type { StatPlayerRow, StatType, StatTier } from '../types/statHubTypes';
+import type { StatPlayerRow, StatType, StatTier, StatScope } from '../types/statHubTypes';
 import { STAT_CONFIG } from '../engine/statHubConfig';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 
 interface Props {
   player:   StatPlayerRow | null;
   statType: StatType;
+  statScope: StatScope;
   open:     boolean;
   onClose:  () => void;
 }
@@ -23,9 +25,10 @@ const TIER_META: Record<StatTier, { icon: string; token: string }> = {
   fade:    { icon: '▼', token: '--ve-danger' },
 };
 
-export const StatResearchDrawer: React.FC<Props> = ({ player, statType, open, onClose }) => {
+export const StatResearchDrawer: React.FC<Props> = ({ player, statType, statScope, open, onClose }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const config    = STAT_CONFIG[statType];
+  const rangeLabel = statScope === 'season' ? 'Season' : 'Career';
 
   // Close on Escape
   useEffect(() => {
@@ -78,6 +81,7 @@ export const StatResearchDrawer: React.FC<Props> = ({ player, statType, open, on
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-5 border-b border-[hsl(var(--ve-border)/0.5)]">
           <div className="flex items-center gap-3">
+            <PlayerHeadshot name={player.playerName} playerId={player.playerId} headshotUrl={player.headshotUrl} size={58} />
             {/* Score badge */}
             <div
               className="flex-none w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-xl border-2"
@@ -239,15 +243,14 @@ export const StatResearchDrawer: React.FC<Props> = ({ player, statType, open, on
             </section>
           )}
 
-          {/* Season stats */}
-          <section aria-label="Season stats">
+          <section aria-label={`${rangeLabel} stats`}>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))] mb-3">
-              Season Stats
+              {rangeLabel} Stats
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-0.5 p-3 rounded-lg bg-[hsl(var(--ve-surface)/0.6)] border border-[hsl(var(--ve-border)/0.4)]">
                 <span className="text-[10px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wide">
-                  Season {config.shortLabel}
+                  {rangeLabel} {config.shortLabel}
                 </span>
                 <span className="text-xl font-extrabold text-[hsl(var(--ve-text-primary))]">
                   {player.seasonValue ?? '–'}

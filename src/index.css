@@ -1108,18 +1108,18 @@ html:not([data-ve-theme]) {
 
 :root {
   --ve-bg: 0 0% 2%;
-  --ve-bg-deep: 224 56% 4%;
-  --ve-bg-panel: 222 42% 8%;
-  --ve-surface: 220 40% 11%;
-  --ve-surface-raised: 218 35% 15%;
-  --ve-surface-elevated: 218 35% 15%;
-  --ve-border: 217 30% 20%;
-  --ve-border-subtle: 217 30% 18%;
-  --ve-border-strong: 216 30% 26%;
-  --ve-accent-cyan: 191 97% 60%;
-  --ve-accent-pink: 246 64% 68%;
-  --ve-accent-gold: 43 92% 62%;
-  --ve-shadow: 224 70% 2%;
+  --ve-bg-deep: 0 0% 1%;
+  --ve-bg-panel: 0 0% 4%;
+  --ve-surface: 0 0% 5%;
+  --ve-surface-raised: 0 0% 7%;
+  --ve-surface-elevated: 0 0% 10%;
+  --ve-border: 0 0% 100%;
+  --ve-border-subtle: 0 0% 100%;
+  --ve-border-strong: 156 100% 50%;
+  --ve-accent-cyan: 184 100% 50%;
+  --ve-accent-pink: 156 100% 50%;
+  --ve-accent-gold: 156 100% 50%;
+  --ve-shadow: 0 0% 0%;
   --ve-text: hsl(var(--ve-text-primary));
   --ve-muted: hsl(var(--ve-text-muted));
 }
@@ -1137,10 +1137,112 @@ body,
 
 body {
   margin: 0;
+  font-family: var(--font-z8);
 }
 
 #root {
   min-height: 100vh;
+  font-family: var(--font-z8);
+}
+
+/* ==========================================================
+   Z8 GLOBAL APP BRIDGE
+   Converts legacy VouchEdge screens to the Z8 Obsidian shell
+   without rewriting each route/component.
+   ========================================================== */
+
+html {
+  background: #050505;
+}
+
+.z8-app-shell {
+  --ve-bg-soft: #050505;
+  --ve-motion-bg: #050505;
+  --ve-accent: #00ff94;
+  --ve-accent-2: #00f0ff;
+  --ve-accent-glow: rgba(0, 255, 148, 0.16);
+  --theme-accent-color: #00ff94;
+  --theme-border-color: rgba(255, 255, 255, 0.10);
+  --theme-shadow-glow: rgba(0, 255, 148, 0.14);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(0, 255, 148, 0.10), transparent 34rem),
+    radial-gradient(circle at 82% 8%, rgba(0, 240, 255, 0.08), transparent 30rem),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 42%, #050505 100%);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-z8);
+}
+
+.z8-app-shell .bg-obsidian-900,
+.z8-app-shell [class*="bg-obsidian-900"],
+.z8-app-shell [class*="bg-slate-950"],
+.z8-app-shell [class*="bg-slate-900"],
+.z8-app-shell [class*="bg-[#020617]"],
+.z8-app-shell [class*="bg-black"] {
+  background-color: rgba(10, 10, 10, 0.62) !important;
+}
+
+.z8-app-shell .premium-card-bg,
+.z8-app-shell .ve-card-soft,
+.z8-app-shell .ve-card-elevated,
+.z8-app-shell [id^="panel-"],
+.z8-app-shell [class*="rounded-2xl"][class*="border"],
+.z8-app-shell [class*="rounded-3xl"][class*="border"] {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(10, 10, 10, 0.46) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.z8-app-shell button,
+.z8-app-shell a,
+.z8-app-shell input,
+.z8-app-shell select,
+.z8-app-shell textarea {
+  font-family: var(--font-z8);
+}
+
+.z8-app-shell input,
+.z8-app-shell select,
+.z8-app-shell textarea {
+  background-color: rgba(5, 5, 5, 0.62);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.z8-app-shell ::selection {
+  color: #050505;
+  background: #00ff94;
+}
+
+.z8-app-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.z8-app-shell ::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.z8-app-shell ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 255, 148, 0.58), rgba(0, 240, 255, 0.46));
+  border: 2px solid #050505;
+  border-radius: 999px;
+}
+
+.z8-app-shell .terminal-text,
+.z8-app-shell [class*="uppercase"][class*="tracking"] {
+  letter-spacing: 0.08em;
+}
+
+.z8-app-shell.ve-motion-shell {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(0, 255, 148, 0.14), transparent 34rem),
+    linear-gradient(180deg, #050505 0%, #050505 42%, #050505 100%);
 }
 
 #root > * {

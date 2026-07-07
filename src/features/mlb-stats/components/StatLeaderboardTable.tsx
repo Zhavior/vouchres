@@ -7,6 +7,7 @@
 import React from 'react';
 import type { StatPlayerRow, StatType, StatTier, StatSortField, StatSortDir } from '../types/statHubTypes';
 import { STAT_CONFIG } from '../engine/statHubConfig';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 
 interface Props {
   rows:      StatPlayerRow[];
@@ -41,6 +42,7 @@ function formatCell(key: string, row: StatPlayerRow, statType: StatType): React.
     case 'playerName':
       return (
         <div className="flex items-center gap-2">
+          <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={34} />
           <span className="font-semibold text-[hsl(var(--ve-text-primary))]">{row.playerName}</span>
           <span
             className="text-[9px] font-bold px-1 py-0.5 rounded hidden sm:inline-flex items-center gap-0.5"

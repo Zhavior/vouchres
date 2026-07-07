@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       'dist',
       'node_modules',
+      'vouchedge-terminal/**',
       '_code_backups',
       'coverage',
       '*.config.js',

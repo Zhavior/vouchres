@@ -9,6 +9,7 @@
 import React from 'react';
 import type { StatPlayerRow, StatTier, StatType } from '../types/statHubTypes';
 import { STAT_CONFIG } from '../engine/statHubConfig';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 
 interface Props {
   row:      StatPlayerRow;
@@ -67,19 +68,7 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
 
       {/* Player info row */}
       <div className="flex items-start gap-3">
-        {/* Score ring */}
-        <div
-          className="flex-none flex items-center justify-center w-12 h-12 rounded-full border-2 font-extrabold text-base"
-          style={{
-            borderColor: `hsl(var(${token}))`,
-            background:  `hsl(var(${token})/0.12)`,
-            color:       `hsl(var(${token}))`,
-          }}
-          aria-label={`Score: ${row.statScore}`}
-        >
-          {row.statScore}
-        </div>
-
+        <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={48} />
         <div className="flex-1 min-w-0">
           {/* Name + lineup status */}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -124,6 +113,19 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
               {row.confidence}% conf
             </span>
           </div>
+        </div>
+
+        {/* Score ring */}
+        <div
+          className="flex-none flex items-center justify-center w-12 h-12 rounded-full border-2 font-extrabold text-base"
+          style={{
+            borderColor: `hsl(var(${token}))`,
+            background:  `hsl(var(${token})/0.12)`,
+            color:       `hsl(var(${token}))`,
+          }}
+          aria-label={`Score: ${row.statScore}`}
+        >
+          {row.statScore}
         </div>
       </div>
 
