@@ -7,6 +7,7 @@ import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
+import { HrTreemap } from '../components/Treemap/HrTreemap';
 
 interface MiniStatChipProps {
   label: string;
@@ -177,10 +178,13 @@ const HomeRunIntelligencePage: React.FC = () => {
     setLastUpdated(new Date());
   }, [vm]);
 
-  // viewMode is managed by the ViewModel (persists across re-renders)
-  const viewMode = (vm.viewMode === 'spreadsheet' ? 'table' : vm.viewMode) as 'cards' | 'table';
-  const handleViewModeChange = (mode: 'cards' | 'table') => {
-    vm.setViewMode(mode === 'table' ? 'spreadsheet' : mode);
+  // 'cards' and 'treemap' both consume vm.buckets (cards data shape); only
+  // 'table' needs the ViewModel to switch its underlying fetch/shape.
+  const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>('cards');
+  const viewMode = localViewMode;
+  const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
+    setLocalViewMode(mode);
+    vm.setViewMode(mode === 'table' ? 'spreadsheet' : 'cards');
   };
 
   return (
@@ -298,6 +302,15 @@ const HomeRunIntelligencePage: React.FC = () => {
               vm.setSelectedPlayer(player);
               setIsProfileOpen(true);
             }}
+          />
+        ) : viewMode === 'treemap' ? (
+          <HrTreemap
+            buckets={vm.buckets}
+            onSelectPlayer={(player) => {
+              vm.setSelectedPlayer(player);
+              setIsProfileOpen(true);
+            }}
+            getHrResult={vm.getHrResult}
           />
         ) : (
           <HrBoard

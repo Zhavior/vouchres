@@ -31,6 +31,7 @@ import { Vouch, FeedPost, MLBPlayer } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import VouchStudioDarkroom from './VouchStudioDarkroom';
 import VouchCard from './vouch-system/VouchCard';
+import VouchPack from './vouchBoard/VouchPack';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -1221,7 +1222,9 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6" id="vouch-board-grid">
+            <div className="flex flex-col gap-6">
+              <VouchPack vouches={savedVouches} />
+              <div className="grid grid-cols-1 gap-6" id="vouch-board-grid">
               {savedVouches.map((v) => (
                 <VouchCard 
                   key={v.id}
@@ -1238,6 +1241,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   onPostCreated={onPostCreated}
                 />
               ))}
+              </div>
             </div>
           )}
         </div>

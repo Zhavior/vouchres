@@ -1,7 +1,7 @@
 import React from 'react';
-import { Flame, LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
 
-export type HrViewMode = 'cards' | 'table';
+export type HrViewMode = 'cards' | 'table' | 'treemap';
 
 export interface HrHeaderProps {
   mode: string;
@@ -178,6 +178,19 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
           >
             <Table2 className="h-3.5 w-3.5" />
             Table
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange('treemap')}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+              viewMode === 'treemap'
+                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            aria-pressed={viewMode === 'treemap'}
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            Map
           </button>
         </div>
 
