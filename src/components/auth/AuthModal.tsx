@@ -41,7 +41,7 @@ type AgreementKey = 'age' | 'terms' | 'research';
 const POLICY_SECTIONS = [
   {
     title: 'Age & jurisdiction',
-    body: 'You must be at least 21 years old and located in a jurisdiction where probability-based sports research is legal. VouchEdge does not verify your location beyond what you confirm here — you are responsible for knowing your local laws.',
+    body: 'You must meet the legal age in your jurisdiction (this varies — for example 18/19+ in most of Canada, 21+ in most regulated US states) and be located somewhere probability-based sports research is legal. VouchEdge does not verify your location beyond what you confirm here — you are responsible for knowing your local laws.',
   },
   {
     title: 'Research & entertainment only',
@@ -62,7 +62,7 @@ const POLICY_SECTIONS = [
 ] as const;
 
 const AGREEMENTS: Array<{ id: AgreementKey; label: string }> = [
-  { id: 'age', label: 'I am 21+ and in a jurisdiction where this is legal.' },
+  { id: 'age', label: 'I am of legal age in my jurisdiction and located somewhere this is legal.' },
   { id: 'terms', label: 'I’ve read and agree to the Terms of Service, Privacy Policy, and billing terms above.' },
   { id: 'research', label: 'I understand this is probability research for entertainment — not betting advice, with no guaranteed returns.' },
 ];
@@ -875,8 +875,8 @@ export default function AuthModal({
             </button>
             <p className="text-[10px] text-center leading-relaxed text-slate-600">
               By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
-              <span className="text-slate-400">Privacy Policy</span>. You must be 21+ and in a jurisdiction
-              where this is legal. Probability-based research for entertainment — not betting advice.
+              <span className="text-slate-400">Privacy Policy</span>. You must be of legal age in your jurisdiction
+              and located somewhere this is legal. Probability-based research for entertainment — not betting advice.
             </p>
           </div>
           </>

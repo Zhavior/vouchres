@@ -272,8 +272,8 @@ export default function WelcomeIntro({
           <span className="inline-flex items-center gap-2">Start researching <ArrowRight className="h-4 w-4" /></span>
         </button>
         <p className="mx-auto mt-6 max-w-md text-[10px] leading-5 text-white/25">
-          You must be 21+ and in a jurisdiction where this is legal. Probability-based research for
-          entertainment — not betting advice.
+          You must be of legal age in your jurisdiction and located somewhere this is legal. Probability-based
+          research for entertainment — not betting advice.
         </p>
       </motion.section>
     </div>
