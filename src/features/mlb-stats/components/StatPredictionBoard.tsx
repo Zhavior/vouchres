@@ -6,6 +6,7 @@
 import React from 'react';
 import type { StatPlayerRow, StatType, StatTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from '../engine/statHubConfig';
+import PlayerHeadshot from '../../../components/parlays/PlayerHeadshot';
 
 interface Props {
   rows:     StatPlayerRow[];
@@ -50,6 +51,8 @@ function MiniRow({
       <span className="text-[11px] font-mono text-[hsl(var(--ve-text-muted))] w-5 text-center shrink-0">
         {rank}
       </span>
+
+      <PlayerHeadshot name={row.playerName} playerId={row.playerId} headshotUrl={row.headshotUrl} size={34} />
 
       {/* Score */}
       <div

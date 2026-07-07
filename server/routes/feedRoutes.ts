@@ -1,10 +1,12 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { asyncHandler } from "../lib/asyncHandler";
+import { upstreamUnavailable } from "../lib/requestValidators";
 import { getFeedComposerOptions } from "../services/feed/composerOptionsService";
 
 export const feedRoutes = Router();
 
-feedRoutes.get("/feed/composer-options", async (req: Request, res: Response) => {
+feedRoutes.get("/feed/composer-options", asyncHandler(async (req: Request, res: Response) => {
   const start = Date.now();
   const sport = typeof req.query.sport === "string" ? req.query.sport : "MLB";
   const date = typeof req.query.date === "string" ? req.query.date : undefined;
@@ -21,21 +23,6 @@ feedRoutes.get("/feed/composer-options", async (req: Request, res: Response) => 
     return res.json(options);
   } catch (err: any) {
     console.error("[feedRoutes] composer-options failed", err?.message);
-    return res.status(503).json({
-      sport: "MLB",
-      date: date ?? new Date().toISOString().slice(0, 10),
-      games: [],
-      markets: [
-        { id: "HR", label: "Home Run" },
-        { id: "HIT", label: "Hit" },
-        { id: "RBI", label: "RBI" },
-        { id: "RUN", label: "Run" },
-        { id: "TB", label: "Total Bases" },
-        { id: "K", label: "Strikeouts" },
-        { id: "CUSTOM", label: "Custom Read" },
-      ],
-      warnings: [err?.message ?? "Composer options unavailable"],
-    });
+    throw upstreamUnavailable("Composer options unavailable.", err);
   }
-});
-
+}));

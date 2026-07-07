@@ -1,12 +1,25 @@
+import { useState } from 'react';
 import { motion } from '../../lib/motion';
-import { ArrowRight, Check, Lock, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
+import { ArrowRight, Check, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
 import { GradingDemo } from './GradingDemo';
+import { MermaidDiagram } from '../../lib/diagrams/MermaidDiagram';
+import { logoByTeamId } from '../../lib/teamLogos';
+
+const GRADING_FLOWCHART = `flowchart LR
+  A["🔒 Pick locks<br/>Timestamped & frozen at game start"] --> B["📡 Game plays out<br/>Tracked live from the official MLB feed"]
+  B --> C{"✅ Graded automatically<br/>Final score decides it"}
+  C -->|Hit| D["Won"]
+  C -->|Miss| E["Lost"]
+  D --> F["📖 Published to your ledger — same day"]
+  E --> F`;
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 interface SlateGame {
   away: string;
   home: string;
+  awayTeamId?: number | null;
+  homeTeamId?: number | null;
   time: string;
   live: boolean;
 }
@@ -31,11 +44,14 @@ const WORKSPACE_MODULES = [
   { title: 'Pro Labs', body: 'Move into deeper player, matchup, and graph research when data exists.', section: 'player_edge_lab', icon: TrendingUp },
 ] as const;
 
-const GRADING_STEPS = [
-  { icon: Lock, step: '1', title: 'Pick locks', body: 'Your pick is timestamped and frozen the moment the game starts. No edits after lock.' },
-  { icon: Radio, step: '2', title: 'Game plays out', body: 'We track the live box score from the official MLB feed while the game is in progress.' },
-  { icon: ShieldCheck, step: '3', title: 'Graded automatically', body: 'Final score decides won or lost. Published to your public ledger either way, same day.' },
-] as const;
+function TeamIcon({ teamId, abbr }: { teamId?: number | null; abbr: string }) {
+  const [errored, setErrored] = useState(false);
+  const src = logoByTeamId(teamId);
+  if (!src || errored) {
+    return <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[8px] font-black text-white/50">{abbr.slice(0, 2)}</span>;
+  }
+  return <img src={src} alt={abbr} className="h-5 w-5 shrink-0 object-contain" onError={() => setErrored(true)} />;
+}
 
 function fadeUp(delay = 0) {
   return {
@@ -68,19 +84,19 @@ export default function WelcomeIntro({
         <div>
           <div className="glass-panel glass-border inline-flex items-center gap-2 rounded-full px-3 py-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-vouch-emerald" />
-            <span className="terminal-text">MLB probability workspace</span>
+            <span className="terminal-text">No hype. Just research.</span>
           </div>
 
           <h1 className="mt-7 text-[2.75rem] font-black leading-[1.05] tracking-tight text-white sm:text-6xl">
-            Stop trusting cappers who{' '}
+            Every MLB pick,{' '}
             <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
-              delete their losses.
+              graded and published.
             </span>
           </h1>
 
           <p className="mt-6 max-w-lg text-lg leading-8 text-white/60">
-            VouchEdge grades every MLB pick to the final box score and publishes it — wins and losses both.
-            Research the slate, build your slip, keep the receipts.
+            VouchEdge grades every MLB pick to the final box score and publishes the result — wins and losses
+            both. Research the slate, build your slip, see the record.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -88,7 +104,7 @@ export default function WelcomeIntro({
               onClick={onStartTrial}
               className="rounded-xl bg-vouch-emerald px-7 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
             >
-              <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+              <span className="inline-flex items-center gap-2">Start researching <ArrowRight className="h-4 w-4" /></span>
             </button>
             <button onClick={onOpenDailyBoard} className="terminal-text transition hover:text-vouch-cyan">
               Open Daily Board
@@ -131,8 +147,10 @@ export default function WelcomeIntro({
               slate.map((g, i) => (
                 <div key={`${g.away}-${g.home}-${i}`} className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-2 font-mono text-sm font-bold text-white/90">
+                    <TeamIcon teamId={g.awayTeamId} abbr={g.away} />
                     <span className="w-10 truncate">{g.away}</span>
                     <span className="text-white/30">@</span>
+                    <TeamIcon teamId={g.homeTeamId} abbr={g.home} />
                     <span className="w-10 truncate">{g.home}</span>
                   </div>
                   {g.live ? (
@@ -170,13 +188,13 @@ export default function WelcomeIntro({
       {/* ── THE PROBLEM ── */}
       <motion.section {...fadeUp()} className="glass-panel glass-border mt-24 rounded-2xl p-8 text-center sm:p-12">
         <div className="mx-auto max-w-xl">
-          <div className="terminal-text text-rose-300">The problem</div>
+          <div className="terminal-text text-rose-300">Why we grade everything</div>
           <p className="mt-4 text-2xl font-bold leading-9 text-white">
-            Free capper accounts post a win, delete the loss, and screenshot their way to a fake track record.
+            Most pick trackers only show the wins. Ours publishes every graded result, losses included.
           </p>
           <p className="mt-4 text-sm leading-7 text-white/40">
-            There's no lock time, no box score check, no way to tell hype from a real edge. VouchEdge removes
-            the option to hide.
+            Every pick is timestamped before lock and checked against the official box score — no hand-picked
+            highlights, just the research and the record.
           </p>
         </div>
       </motion.section>
@@ -187,22 +205,8 @@ export default function WelcomeIntro({
           <div className="terminal-text text-vouch-cyan">How grading works</div>
           <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Three steps. No human can edit step three.</h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {GRADING_STEPS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.step} className="glass-panel glass-border rounded-2xl p-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-vouch-cyan/10 text-vouch-cyan">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="terminal-text">Step {item.step}</span>
-                </div>
-                <h3 className="mt-3 text-base font-bold text-white">{item.title}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-white/40">{item.body}</p>
-              </div>
-            );
-          })}
+        <div className="glass-panel glass-border overflow-x-auto rounded-2xl p-5">
+          <MermaidDiagram definition={GRADING_FLOWCHART} id="grading-flowchart" className="mx-auto min-w-[560px] max-w-full [&_svg]:mx-auto" />
         </div>
         <div className="mt-3">
           <GradingDemo />
@@ -263,17 +267,17 @@ export default function WelcomeIntro({
       {/* ── CLOSING CTA ── */}
       <motion.section {...fadeUp(0.2)} className="glass-panel glass-border mt-6 mb-16 rounded-2xl p-10 text-center sm:p-14">
         <Sparkles className="mx-auto h-6 w-6 text-vouch-emerald" />
-        <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Ready to keep receipts instead of excuses?</h2>
+        <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Start researching the slate.</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/40">Free to start. No card required.</p>
         <button
           onClick={onStartTrial}
           className="mt-7 rounded-xl bg-vouch-emerald px-8 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
         >
-          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+          <span className="inline-flex items-center gap-2">Start researching <ArrowRight className="h-4 w-4" /></span>
         </button>
         <p className="mx-auto mt-6 max-w-md text-[10px] leading-5 text-white/25">
-          You must be 21+ and in a jurisdiction where this is legal. Probability-based research for
-          entertainment — not betting advice.
+          You must be of legal age in your jurisdiction and located somewhere this is legal. Probability-based
+          research for entertainment — not betting advice.
         </p>
       </motion.section>
     </div>

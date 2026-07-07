@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
 import { createParlayGradedNotification } from "../notifications/notificationService";
 
@@ -275,16 +276,13 @@ async function resolveMlbGameFromSchedule(
 ): Promise<{ status: any; game_date: string | null } | null> {
   if (!expectedGameDate) return null;
 
-  const scheduleRes = await fetch(`${MLB_API}/v1/schedule?sportId=1&date=${expectedGameDate}`, {
-    signal: AbortSignal.timeout(10_000),
-    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+  const schedule = await sportsFetchJson<any>(`${MLB_API}/v1/schedule?sportId=1&date=${expectedGameDate}`, {
+    cacheKey: `grading:schedule:${expectedGameDate}`,
+    ttlMs: 10 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "gradingService",
   });
-
-  if (!scheduleRes.ok) {
-    throw new Error(`schedule fetch ${scheduleRes.status}`);
-  }
-
-  const schedule = await scheduleRes.json();
   const games = (schedule?.dates ?? []).flatMap((date: any) => date?.games ?? []);
   const game = games.find((g: any) => String(g?.gamePk ?? g?.game_id ?? "") === String(gamePk));
 
@@ -320,14 +318,13 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
     }
   } else {
     // Live feed fallback for rows without historical game_date.
-    const feedRes = await fetch(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+    const feed = await sportsFetchJson<any>(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
+      cacheKey: `grading:feed:${gamePk}`,
+      ttlMs: 2 * 60_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: "gradingService",
     });
-
-    if (!feedRes.ok) throw new Error(`feed fetch ${feedRes.status}`);
-
-    const feed = await feedRes.json();
     const status = feed?.gameData?.status || {};
 
     if (!isMlbFinalStatus(status)) {
@@ -342,12 +339,14 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
           : null;
   }
 
-  const bsRes = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
-    signal: AbortSignal.timeout(10_000),
-    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+  const boxscore = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
+    cacheKey: `grading:boxscore:${gamePk}`,
+    ttlMs: 10 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "gradingService",
   });
-  if (!bsRes.ok) throw new Error(`boxscore fetch ${bsRes.status}`);
-  return { boxscore: await bsRes.json(), game_date: gameDate ?? expectedGameDate ?? null };
+  return { boxscore, game_date: gameDate ?? expectedGameDate ?? null };
 }
 
 /**

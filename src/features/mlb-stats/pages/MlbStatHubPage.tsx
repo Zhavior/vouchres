@@ -13,7 +13,6 @@ import React, { Suspense } from 'react';
 import { StatHubHeader }       from '../components/StatHubHeader';
 import { StatCategoryGrid }    from '../components/StatCategoryGrid';
 import { StatLeaderboardTable } from '../components/StatLeaderboardTable';
-import { StatPredictionBoard } from '../components/StatPredictionBoard';
 import { StatResearchDrawer }  from '../components/StatResearchDrawer';
 import { useMlbStatHub }       from '../hooks/useMlbStatHub';
 import { STAT_CONFIG }         from '../engine/statHubConfig';
@@ -33,6 +32,12 @@ export default function MlbStatHubPage() {
   const hub     = useMlbStatHub();
   const config  = STAT_CONFIG[hub.filters.statType];
   const isPhase2 = config.phase === 2;
+  const rangeLabel = hub.filters.statScope === 'season'
+    ? `${hub.filters.date.slice(0, 4)} season`
+    : 'overall career';
+  const loadingRangeLabel = hub.filters.statScope === 'season'
+    ? 'selected-season'
+    : 'overall career';
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[hsl(var(--ve-bg))]">
@@ -41,12 +46,14 @@ export default function MlbStatHubPage() {
         <StatHubHeader
           activeStatType={hub.filters.statType}
           date={hub.filters.date}
+          statScope={hub.filters.statScope}
           search={hub.filters.search ?? ''}
           viewMode={hub.filters.viewMode}
           tierFilter={hub.filters.tierFilter}
           tierCounts={hub.tierCounts}
           onStatType={hub.setStatType}
           onDate={hub.setDate}
+          onStatScope={hub.setStatScope}
           onSearch={hub.setSearch}
           onViewMode={hub.setViewMode}
           onToggleTier={hub.toggleTier}
@@ -96,6 +103,29 @@ export default function MlbStatHubPage() {
         </div>
       )}
 
+      <div className={[
+        'shrink-0 mx-4 mt-3 sm:mx-6 lg:mx-8 px-4 py-2.5 rounded-xl flex items-center gap-3',
+        hub.error
+          ? 'bg-[hsl(var(--ve-danger)/0.10)] border border-[hsl(var(--ve-danger)/0.32)]'
+          : 'bg-[hsl(var(--ve-accent-cyan)/0.08)] border border-[hsl(var(--ve-accent-cyan)/0.24)]',
+      ].join(' ')}>
+        <span className={[
+          'text-xs font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide',
+          hub.error
+            ? 'text-[hsl(var(--ve-danger))] bg-[hsl(var(--ve-danger)/0.12)] border-[hsl(var(--ve-danger)/0.35)]'
+            : 'text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.12)] border-[hsl(var(--ve-accent-cyan)/0.30)]',
+        ].join(' ')}>
+          MLB API
+        </span>
+        <p className="text-xs text-[hsl(var(--ve-text-muted))]">
+          {hub.error
+            ? `${hub.error}. No mock Stat Hub rows are being shown.`
+            : hub.loading
+              ? `Loading today’s schedule, active rosters, and ${loadingRangeLabel} stats from MLB Stats API.`
+              : `${hub.allRows.length} real MLB API row${hub.allRows.length === 1 ? '' : 's'} loaded for ${config.label} (${rangeLabel}). Official lineups are not inferred.`}
+        </p>
+      </div>
+
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="px-4 py-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
@@ -109,6 +139,7 @@ export default function MlbStatHubPage() {
       <StatResearchDrawer
         player={hub.selectedPlayer}
         statType={hub.filters.statType}
+        statScope={hub.filters.statScope}
         open={hub.drawerOpen}
         onClose={hub.closeDrawer}
       />
@@ -120,6 +151,23 @@ export default function MlbStatHubPage() {
 
 function TabContent({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
   const { filters, rows, setSort, openDrawer } = hub;
+
+  if (hub.loading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (hub.error) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="max-w-lg rounded-xl border border-[hsl(var(--ve-danger)/0.30)] bg-[hsl(var(--ve-danger)/0.08)] p-5 text-center">
+          <h2 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">MLB Stat Hub unavailable</h2>
+          <p className="mt-2 text-xs leading-5 text-[hsl(var(--ve-text-muted))]">
+            {hub.error}. No mock rows are shown when the MLB API is unavailable.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   switch (filters.viewTab) {
     case 'today':
@@ -135,7 +183,6 @@ function TabContent({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
           />;
 
     case 'leaders':
-      // Leaders: sorted by season value descending
       return (
         <LeadersView hub={hub} />
       );
@@ -165,11 +212,12 @@ function TabContent({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
 function LeadersView({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
   const { filters, allRows, openDrawer, setSort } = hub;
   const bySeasonDesc = [...allRows].sort((a, b) => (b.seasonValue ?? 0) - (a.seasonValue ?? 0));
+  const rangeLabel = filters.statScope === 'season' ? 'Season' : 'Career';
 
   return (
     <div className="flex flex-col gap-6">
       <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-        Season leaders ranked by {STAT_CONFIG[filters.statType].label} total. Click any row to open full research.
+        {rangeLabel} leaders ranked by {STAT_CONFIG[filters.statType].label} total. Click any row to open full research.
       </p>
       <StatLeaderboardTable
         rows={bySeasonDesc}

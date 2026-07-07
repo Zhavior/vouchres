@@ -8,6 +8,7 @@ import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
+import LiveAtBatView from './live/LiveAtBatView';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -628,6 +629,11 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                 </button>
               ))}
             </div>
+
+            {/* Pitch-by-pitch sweat screen for the selected live game */}
+            {activeGame?.isLive && activeGame.gamePk != null && (
+              <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+            )}
 
             <div className="grid sm:grid-cols-2 gap-3">
               {shown.map((m) => (

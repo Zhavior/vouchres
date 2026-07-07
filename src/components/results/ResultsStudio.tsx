@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
 import ResultsLedgerSummary from "./ResultsLedgerSummary";
+import ResultsPartition from "./ResultsPartition";
 
 /**
  * ResultsStudio — Premium proof dashboard
@@ -120,29 +121,6 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
       }, 0) - lost
     ) * 10) / 10;
     return { won, lost, pending, voids, settled, winRate, total: allSlips.length, units };
-  }, [allSlips]);
-
-  // Parlay type breakdown
-  const breakdown = useMemo(() => {
-    const types = [
-      { label: "Singles", test: (s: any) => s.totalLegs === 1 },
-      { label: "Doubles", test: (s: any) => s.totalLegs === 2 },
-      { label: "Triples", test: (s: any) => s.totalLegs === 3 },
-      { label: "4+ Leg", test: (s: any) => s.totalLegs >= 4 },
-    ];
-    return types.map((t) => {
-      const typeSlips = allSlips.filter(t.test);
-      const won = typeSlips.filter((s) => s.status === "WON").length;
-      const lost = typeSlips.filter((s) => s.status === "LOST").length;
-      const settled = won + lost;
-      return {
-        label: t.label,
-        total: typeSlips.length,
-        won,
-        lost,
-        winRate: settled > 0 ? Math.round((won / settled) * 100) : 0,
-      };
-    });
   }, [allSlips]);
 
   const monthName = calendarMonth.toLocaleString("default", { month: "long", year: "numeric" });
@@ -382,26 +360,10 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
             {/* Ledger summary */}
             <ResultsLedgerSummary savedParlays={savedParlays} />
 
-            {/* Parlay type breakdown */}
+            {/* Parlay breakdown — result x leg-count, real saved-slip data */}
             <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Parlay Breakdown</div>
-              {allSlips.length === 0 ? (
-                <p className="text-[11px] text-slate-600">No data yet — build and save parlays to see breakdown.</p>
-              ) : (
-                <div className="space-y-2">
-                  {breakdown.map((b) => (
-                    <div key={b.label} className="flex items-center gap-3">
-                      <div className="w-16 text-[11px] text-slate-400 font-mono">{b.label}</div>
-                      <div className="flex-1 h-2 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${b.winRate}%`, background: b.winRate >= 50 ? "#34d399" : b.winRate > 0 ? "#fbbf24" : "#64748b" }} />
-                      </div>
-                      <div className="text-[10px] font-mono text-slate-500 w-20 text-right">
-                        {b.won}-{b.lost} {b.total > 0 && `(${b.winRate}%)`}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ResultsPartition slips={allSlips} />
               <p className="text-[9px] text-slate-700 mt-3">P/L unavailable — odds/stakes not fully tracked yet.</p>
             </div>
 

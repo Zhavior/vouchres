@@ -1,4 +1,5 @@
 import { TTLCache, limitConcurrency } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getScheduleByDate, getBoxscore, todayISO } from "../mlb/mlbClient";
 import { headshotUrl, type NormalizedGame } from "../mlb/mlbTypes";
 
@@ -90,9 +91,13 @@ function playerFromRoster(entry: any, teamId: string, teamAbbr: string): PlayerO
 async function getTeamRoster(teamId: string, teamAbbr: string): Promise<PlayerOption[]> {
   return rosterCache.getOrSet(`roster:${teamId}`, async () => {
     const url = `${BASE}/v1/teams/${teamId}/roster?rosterType=active&hydrate=person`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
-    if (!res.ok) throw new Error(`roster ${teamId} ${res.status}`);
-    const data = await res.json();
+    const data = await sportsFetchJson<any>(url, {
+      cacheKey: `feedComposer:roster:${teamId}`,
+      ttlMs: 5 * 60_000,
+      timeoutMs: 8_000,
+      retries: 1,
+      debugLabel: "feedComposer",
+    });
     const rows = Array.isArray(data?.roster) ? data.roster : [];
     return rows
       .map((entry: any) => playerFromRoster(entry, teamId, teamAbbr))
@@ -263,4 +268,3 @@ export function resetFeedComposerDiagnostics(): void {
 export function getFeedComposerDiagnostics() {
   return composerCache.getStats();
 }
-

@@ -4,12 +4,12 @@ import {
   AlertTriangle,
   Brain,
   Flame,
-  Lock,
   RefreshCw,
   ShieldCheck,
   Target,
   Zap,
 } from 'lucide-react';
+import PlayerHeadshot from './parlays/PlayerHeadshot';
 
 type Props = {
   profile?: any;
@@ -20,6 +20,8 @@ type Candidate = {
   playerId?: number | string;
   playerName?: string;
   name?: string;
+  headshotUrl?: string | null;
+  headshot?: string | null;
   team?: string;
   opponent?: string;
   opponentTeam?: string;
@@ -46,8 +48,11 @@ type IntelligenceReport = {
 
 type AiJudgePick = {
   rank: number;
+  playerId?: number | string | null;
   playerName: string;
   team: string;
+  headshotUrl?: string | null;
+  headshot?: string | null;
   opponent: string;
   opponentPitcherName?: string;
   venue?: string;
@@ -204,14 +209,17 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 hover:border-sky-400/30 transition">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-mono text-slate-500">#{rank}</p>
-          <h3 className="text-lg font-black text-white">{cleanName(c)}</h3>
-          <p className="text-xs text-slate-400">
-            {c.team ?? 'TBD'} vs {cleanOpponent(c)} · {cleanPitcher(c)}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <PlayerHeadshot name={cleanName(c)} playerId={c.playerId} headshotUrl={c.headshotUrl ?? c.headshot} size={54} />
+          <div className="min-w-0">
+            <p className="text-[10px] font-mono text-slate-500">#{rank}</p>
+            <h3 className="truncate text-lg font-black text-white">{cleanName(c)}</h3>
+            <p className="text-xs text-slate-400">
+              {c.team ?? 'TBD'} vs {cleanOpponent(c)} · {cleanPitcher(c)}
+            </p>
+          </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <p className="text-[10px] font-mono text-slate-500">HR edge</p>
           <p className="text-2xl font-black text-sky-300">{score}</p>
         </div>
@@ -331,8 +339,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
             <button
               type="button"
               onClick={() => {
-                void copyJudgeParlayLegs(judge, (message) => {
-                });
+                void copyJudgeParlayLegs(judge);
               }}
               disabled={eligibleLegs.length === 0}
               className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
@@ -352,19 +359,22 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
             picks.map((pick) => (
               <div key={`${judge.id}-${pick.rank}-${pick.playerName}`} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm font-black text-white">
-                      #{pick.rank} {pick.playerName}
-                      <span className="ml-2 text-xs font-normal text-slate-500">
-                        {pick.team} vs {pick.opponent}
-                      </span>
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {pick.market} · Agent Score {pick.agentScore} · HR Edge {pick.hrScore}
-                    </p>
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
-                    </p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <PlayerHeadshot name={pick.playerName} playerId={pick.playerId} headshotUrl={pick.headshotUrl ?? pick.headshot} size={42} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-white">
+                        #{pick.rank} {pick.playerName}
+                        <span className="ml-2 text-xs font-normal text-slate-500">
+                          {pick.team} vs {pick.opponent}
+                        </span>
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {pick.market} · Agent Score {pick.agentScore} · HR Edge {pick.hrScore}
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 sm:justify-end">
@@ -403,7 +413,6 @@ export default function MlbIntelligenceHub(_props: Props) {
   const [judgeBoard, setJudgeBoard] = useState<AiJudgeLeaderboard | null>(null);
   const [judgeLoading, setJudgeLoading] = useState(false);
   const [judgeError, setJudgeError] = useState<string | null>(null);
-  const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -448,19 +457,6 @@ export default function MlbIntelligenceHub(_props: Props) {
 
   const topTargets = useMemo(
     () => [...candidates].sort((a, b) => num(b.hrScore) - num(a.hrScore)).slice(0, 12),
-    [candidates]
-  );
-
-  const sneakyTargets = useMemo(
-    () =>
-      [...candidates]
-        .filter((c) => {
-          const tier = String(c.riskTier ?? c.confidenceTier ?? '').toLowerCase();
-          const score = num(c.hrScore);
-          return tier.includes('sneaky') || tier.includes('watch') || (score >= 50 && score < 70);
-        })
-        .sort((a, b) => num(b.hrScore) - num(a.hrScore))
-        .slice(0, 12),
     [candidates]
   );
 
@@ -662,7 +658,10 @@ export default function MlbIntelligenceHub(_props: Props) {
               <div className="mt-3 grid gap-2">
                 {p.rows.slice(0, 4).map((c, idx) => (
                   <div key={`${cleanName(c)}-${idx}`} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-black/20 p-3">
-                    <span className="text-sm font-bold text-slate-200">{cleanName(c)}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-200">
+                      <PlayerHeadshot name={cleanName(c)} playerId={c.playerId} headshotUrl={c.headshotUrl ?? c.headshot} size={32} />
+                      <span className="truncate">{cleanName(c)}</span>
+                    </span>
                     <span className="text-sm font-black text-sky-300">{num(c.hrScore)}</span>
                   </div>
                 ))}

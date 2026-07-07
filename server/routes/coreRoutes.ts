@@ -1,64 +1,32 @@
 import { Router } from "express";
 import type { Response } from "express";
+import { AppError } from "../errors/AppError";
+import { asyncHandler } from "../lib/asyncHandler";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
+import { validate } from "../middleware/validation";
 import { createPick, getLedger, gradePick } from "../services/persistence/pickService";
 import { joinWaitlist } from "../services/persistence/betaService";
+import { BetaSignupSchema, GradePickSchema, LegalConfirmSchema, type BetaSignupInput, type GradePickInput, type LegalConfirmInput } from "../validators/coreSchemas";
+import { CreatePickSchema, ListPicksQuerySchema, type CreatePickInput, type ListPicksQuery } from "../validators/pickSchemas";
 
 export const coreRoutes = Router();
-
-/**
- * POST /api/beta/signup
- * Public waitlist signup. Replaces the localStorage-only flow in PremiumSubPage.
- */
-function badRequest(res: Response, message = "invalid_request") {
-  return res.status(400).json({ error: message });
-}
-
-function isEmail(value: unknown): value is string {
-  return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function isNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-type CreatePickBody = {
-  market: string;
-  selection: string;
-  odds_decimal?: number;
-  stake_units?: number;
-  confidence?: number;
-  event_id?: string;
-  leg_type?: "single" | "parlay";
-  judge_quality?: number;
-  judge_risk?: number;
-  judge_bias?: number;
-  judge_trust?: number;
-  judge_verdict?: string;
-  explanation?: string;
-};
 
 coreRoutes.post(
   "/beta/signup",
   betaSignupLimiter,
-  async (req, res: Response) => {
-    const email = req.body?.email;
-    if (!isEmail(email)) return badRequest(res, "validation_error");
-    try {
-      const signup = await joinWaitlist(email);
-      return res.json({
-        ok: true,
-        state: signup.state,
-        message:
-          "You're on the waitlist. We'll email you when your invite is ready.",
-      });
-    } catch (err) {
-      console.error("[beta] signup failed", err);
-      return res.status(500).json({ error: "signup_failed" });
-    }
-  }
+  validate({ body: BetaSignupSchema }),
+  asyncHandler(async (req, res: Response) => {
+    const { email } = req.body as BetaSignupInput;
+    const signup = await joinWaitlist(email);
+    return res.json({
+      ok: true,
+      state: signup.state,
+      message:
+        "You're on the waitlist. We'll email you when your invite is ready.",
+    });
+  })
 );
 
 /**
@@ -69,11 +37,9 @@ coreRoutes.post(
 coreRoutes.post(
   "/legal/confirm",
   requireAuth,
-  async (req: AuthedRequest, res: Response) => {
-    const { age_confirmed, jurisdiction } = req.body ?? {};
-    if (age_confirmed !== true || typeof jurisdiction !== "string" || jurisdiction.length < 2 || jurisdiction.length > 10) {
-      return badRequest(res, "validation_error");
-    }
+  validate({ body: LegalConfirmSchema }),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { jurisdiction } = req.body as LegalConfirmInput;
     const supabaseAdmin = await getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("profiles")
@@ -84,9 +50,9 @@ coreRoutes.post(
       })
       .eq("id", req.user!.id);
 
-    if (error) return res.status(500).json({ error: "update_failed" });
+    if (error) throw error;
     return res.json({ ok: true });
-  }
+  })
 );
 
 /**
@@ -102,85 +68,70 @@ coreRoutes.post(
   requireLegalConfirmed,
   pickLimiter,
   requireTierOrQuota("gold", 3, "picks_per_day"),
-  async (req: AuthedRequest, res: Response) => {
-    try {
-      const body = req.body as CreatePickBody;
-      if (
-        typeof body?.market !== "string" ||
-        body.market.length < 1 ||
-        body.market.length > 64 ||
-        typeof body.selection !== "string" ||
-        body.selection.length < 1 ||
-        body.selection.length > 280 ||
-        (body.odds_decimal !== undefined && (!isNumber(body.odds_decimal) || body.odds_decimal <= 0 || body.odds_decimal > 1000)) ||
-        (body.stake_units !== undefined && (!isNumber(body.stake_units) || body.stake_units <= 0 || body.stake_units > 100)) ||
-        (body.confidence !== undefined && (!isNumber(body.confidence) || body.confidence < 0 || body.confidence > 100)) ||
-        (body.event_id !== undefined && (typeof body.event_id !== "string" || body.event_id.length > 64)) ||
-        (body.leg_type !== undefined && body.leg_type !== "single" && body.leg_type !== "parlay")
-      ) {
-        return badRequest(res, "validation_error");
-      }
-      const pick = await createPick({
-        user_id: req.user!.id,
-        capper_id: null,
-        leg_type: body.leg_type ?? "single",
-        sport: "mlb",
-        event_id: body.event_id ?? null,
-        market: body.market,
-        selection: body.selection,
-        odds_decimal: body.odds_decimal ?? null,
-        stake_units: body.stake_units ?? null,
-        confidence: body.confidence ?? null,
-        judge_quality: body.judge_quality ?? null,
-        judge_risk: body.judge_risk ?? null,
-        judge_bias: body.judge_bias ?? null,
-        judge_trust: body.judge_trust ?? null,
-        judge_verdict: body.judge_verdict ?? null,
-        explanation: body.explanation ?? null,
-        is_demo: false,
-      });
+  validate({ body: CreatePickSchema }),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const body = req.body as CreatePickInput;
+    const pick = await createPick({
+      user_id: req.user!.id,
+      capper_id: null,
+      leg_type: body.leg_type,
+      sport: "mlb",
+      event_id: body.event_id ?? null,
+      market: body.market,
+      selection: body.selection,
+      odds_decimal: body.odds_decimal ?? null,
+      stake_units: body.stake_units ?? null,
+      confidence: body.confidence ?? null,
+      judge_quality: body.judge_quality ?? null,
+      judge_risk: body.judge_risk ?? null,
+      judge_bias: body.judge_bias ?? null,
+      judge_trust: body.judge_trust ?? null,
+      judge_verdict: body.judge_verdict ?? null,
+      explanation: body.explanation ?? null,
+      is_demo: false,
+    });
 
-      // Increment quota for free users
-      const q = (req as any).__quota;
-      if (q) {
-        await incrementQuota(req.user!.id, q.key, q.day);
-      }
-
-      return res.status(201).json(pick);
-    } catch (err) {
-      console.error("[picks] create failed", err);
-      return res.status(500).json({ error: "create_failed" });
+    // Increment quota for free users after the canonical write succeeds.
+    const q = (req as any).__quota;
+    if (q) {
+      await incrementQuota(req.user!.id, q.key, q.day);
     }
-  }
+
+    return res.status(201).json(pick);
+  })
 );
 
 /**
  * GET /api/picks
  * Current user's pick ledger. Staff may query another user explicitly.
  */
-coreRoutes.get("/picks", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const limit = Number(req.query.limit ?? 50);
-  const offset = Number(req.query.offset ?? 0);
-  const requestedUserId = req.query.user_id as string | undefined;
-  const capperId = req.query.capper_id as string | undefined;
-  const userId = requestedUserId ?? (capperId && req.user!.profile.is_staff ? undefined : req.user!.id);
-  const status = req.query.status as "pending" | "won" | "lost" | "push" | "void" | undefined;
+coreRoutes.get(
+  "/picks",
+  requireAuth,
+  validate({ query: ListPicksQuerySchema }),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const query = req.query as unknown as ListPicksQuery;
+    const requestedUserId = query.user_id;
+    const capperId = query.capper_id;
+    const userId = requestedUserId ?? (capperId && req.user!.profile.is_staff ? undefined : req.user!.id);
 
-  if (requestedUserId && requestedUserId !== req.user!.id && !req.user!.profile.is_staff) {
-    return res.status(403).json({ error: "forbidden" });
-  }
-  if (capperId && !req.user!.profile.is_staff) {
-    return res.status(403).json({ error: "forbidden" });
-  }
+    if (requestedUserId && requestedUserId !== req.user!.id && !req.user!.profile.is_staff) {
+      throw new AppError({ status: 403, code: "forbidden", message: "You cannot read another user's pick ledger." });
+    }
+    if (capperId && !req.user!.profile.is_staff) {
+      throw new AppError({ status: 403, code: "forbidden", message: "Only staff can query capper ledgers directly." });
+    }
 
-  try {
-    const { picks, total } = await getLedger({ userId, capperId, status, limit, offset });
-    return res.json({ picks, total, limit, offset });
-  } catch (err) {
-    console.error("[picks] list failed", err);
-    return res.status(500).json({ error: "list_failed" });
-  }
-});
+    const { picks, total } = await getLedger({
+      userId,
+      capperId,
+      status: query.status,
+      limit: query.limit,
+      offset: query.offset,
+    });
+    return res.json({ picks, total, limit: query.limit, offset: query.offset });
+  })
+);
 
 /**
  * POST /api/admin/grade
@@ -193,32 +144,24 @@ coreRoutes.post(
   "/admin/grade",
   requireAuth,
   requireStaff,
-  async (req: AuthedRequest, res: Response) => {
-    const body = req.body as {
-      pick_id?: string;
-      status?: "won" | "lost" | "push" | "void" | "graded_error";
-      settled_units?: number | null;
-      learning_note?: string;
-    };
-    if (
-      typeof body?.pick_id !== "string" ||
-      !["won", "lost", "push", "void", "graded_error"].includes(String(body.status)) ||
-      (body.settled_units !== null && body.settled_units !== undefined && !isNumber(body.settled_units)) ||
-      (body.learning_note !== undefined && (typeof body.learning_note !== "string" || body.learning_note.length > 4000))
-    ) {
-      return badRequest(res, "validation_error");
-    }
-    try {
-      await gradePick({
-        pickId: body.pick_id,
-        status: body.status,
-        settledUnits: body.settled_units,
-        learningNote: body.learning_note,
+  validate({ body: GradePickSchema }),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const body = req.body as GradePickInput;
+    const graded = await gradePick({
+      pickId: body.pick_id,
+      status: body.status,
+      settledUnits: body.settled_units ?? null,
+      learningNote: body.learning_note,
+    });
+
+    if (!graded) {
+      throw new AppError({
+        status: 409,
+        code: "domain_state_error",
+        message: "Pick was not pending or does not exist; no grade was applied.",
       });
-      return res.json({ ok: true });
-    } catch (err) {
-      console.error("[admin] grade failed", err);
-      return res.status(500).json({ error: "grade_failed" });
     }
-  }
+
+    return res.json({ ok: true });
+  })
 );

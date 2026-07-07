@@ -1,4 +1,5 @@
 import { TTLCache, limitConcurrency } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { headshotUrl } from "./mlbTypes";
 
@@ -40,15 +41,13 @@ function normalizeThrow(code?: string): "L" | "R" | "U" {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`MLB StatsAPI ${res.status} for ${url}`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return sportsFetchJson<T>(url, {
+    cacheKey: `playerRegistry:${url}`,
+    ttlMs: 5 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "playerRegistry",
+  });
 }
 
 async function getMlbTeams(): Promise<MlbTeam[]> {

@@ -4,19 +4,21 @@
  */
 
 import React from 'react';
-import type { StatType, StatViewMode, StatTier } from '../types/statHubTypes';
+import type { StatType, StatViewMode, StatTier, StatScope } from '../types/statHubTypes';
 import { STAT_CONFIG, STAT_ORDER } from '../engine/statHubConfig';
 import { StatModeToggle } from './StatModeToggle';
 
 interface Props {
   activeStatType:  StatType;
   date:            string;
+  statScope:       StatScope;
   search:          string;
   viewMode:        StatViewMode;
   tierFilter:      StatTier[];
   tierCounts:      { elite: number; strong: number; watch: number; sleeper: number; total: number };
   onStatType:      (t: StatType) => void;
   onDate:          (d: string) => void;
+  onStatScope:     (s: StatScope) => void;
   onSearch:        (s: string) => void;
   onViewMode:      (m: StatViewMode) => void;
   onToggleTier:    (t: StatTier) => void;
@@ -35,8 +37,8 @@ const TIER_LABELS_DEFAULT: Record<StatTier, string> = {
 };
 
 export const StatHubHeader: React.FC<Props> = ({
-  activeStatType, date, search, viewMode, tierFilter, tierCounts,
-  onStatType, onDate, onSearch, onViewMode, onToggleTier,
+  activeStatType, date, statScope, search, viewMode, tierFilter, tierCounts,
+  onStatType, onDate, onStatScope, onSearch, onViewMode, onToggleTier,
 }) => {
   const config = STAT_CONFIG[activeStatType];
 
@@ -124,13 +126,37 @@ export const StatHubHeader: React.FC<Props> = ({
           value={date}
           onChange={e => onDate(e.target.value)}
           aria-label="Select date"
+          disabled={statScope === 'overall'}
           className={[
             'px-2.5 py-1.5 rounded-lg text-xs',
             'bg-[hsl(var(--ve-surface))] border border-[hsl(var(--ve-border)/0.6)]',
             'text-[hsl(var(--ve-text-primary))]',
+            statScope === 'overall' ? 'opacity-45 cursor-not-allowed' : '',
             'focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ve-accent-cyan)/0.5)]',
           ].join(' ')}
         />
+
+        <div role="group" aria-label="Stat range" className="flex rounded-lg border border-[hsl(var(--ve-border)/0.55)] bg-[hsl(var(--ve-surface)/0.55)] p-0.5">
+          {(['season', 'overall'] as StatScope[]).map(scope => {
+            const active = statScope === scope;
+            return (
+              <button
+                key={scope}
+                type="button"
+                onClick={() => onStatScope(scope)}
+                aria-pressed={active}
+                className={[
+                  'px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide transition-all',
+                  active
+                    ? 'bg-[hsl(var(--ve-accent-cyan)/0.18)] text-[hsl(var(--ve-accent-cyan))]'
+                    : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
+                ].join(' ')}
+              >
+                {scope === 'season' ? 'Season' : 'Overall'}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Tier filter badges */}
         <div role="group" aria-label="Filter by tier" className="flex gap-1 ml-auto">

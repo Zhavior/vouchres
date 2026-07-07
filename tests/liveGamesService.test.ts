@@ -1,0 +1,59 @@
+import { describe, expect, it } from "vitest";
+import { buildLiveGamesResponse } from "../server/services/mlb/liveGamesService";
+
+describe("buildLiveGamesResponse", () => {
+  it("normalizes official MLB schedule games without synthetic predictions", () => {
+    const response = buildLiveGamesResponse(
+      {
+        dates: [
+          {
+            games: [
+              {
+                gamePk: 777,
+                gameDate: "2026-07-07T23:05:00Z",
+                status: { detailedState: "In Progress" },
+                teams: {
+                  away: { team: { name: "Boston Red Sox" }, score: 4 },
+                  home: { team: { name: "New York Yankees" }, score: 2 },
+                },
+                venue: { name: "Yankee Stadium" },
+              },
+            ],
+          },
+        ],
+      },
+      "2026-07-07",
+      new Date("2026-07-07T12:00:00Z")
+    );
+
+    expect(response.isRealApi).toBe(true);
+    expect(response.dataQuality).toBe("official_mlb_schedule");
+    expect(response.games).toHaveLength(1);
+    expect(response.games[0]).toMatchObject({
+      id: "777",
+      awayTeam: "Boston Red Sox",
+      homeTeam: "New York Yankees",
+      awayScore: 4,
+      homeScore: 2,
+      predictionsAvailable: false,
+      predictionStatus: "unavailable",
+      predictionSource: "not_computed",
+    });
+    expect(response.games[0].predictions.winningPct.home).toBeNull();
+    expect(response.games[0].predictions.hrPct.away).toBeNull();
+  });
+
+  it("returns an honest empty official schedule instead of mock games", () => {
+    const response = buildLiveGamesResponse(
+      { dates: [{ games: [] }] },
+      "2026-12-25",
+      new Date("2026-12-25T12:00:00Z")
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.isRealApi).toBe(false);
+    expect(response.dataQuality).toBe("official_mlb_empty_schedule");
+    expect(response.games).toEqual([]);
+    expect(response.warnings.join(" ")).toContain("no mock games");
+  });
+});

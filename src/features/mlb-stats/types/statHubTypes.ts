@@ -122,10 +122,12 @@ export type StatViewTab = 'today' | 'leaders' | 'vs_team' | 'spreadsheet';
 export type StatViewMode = 'cards' | 'spreadsheet';
 export type StatSortField = 'score' | 'season' | 'edge' | 'name';
 export type StatSortDir = 'asc' | 'desc';
+export type StatScope = 'season' | 'overall';
 
 export interface StatHubFilters {
   statType:   StatType;
   date:       string;          // YYYY-MM-DD
+  statScope:  StatScope;       // season = selected season, overall = career
   team?:      string | null;
   search?:    string;
   viewTab:    StatViewTab;

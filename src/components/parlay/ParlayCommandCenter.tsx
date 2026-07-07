@@ -31,15 +31,21 @@ import React, {
 } from 'react';
 import {
   Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
-  ChevronUp, ChevronDown, X, Trash2, AlertTriangle, TrendingUp,
+  ChevronUp, ChevronDown, X, Trash2, AlertTriangle, TrendingUp, GitBranch,
 } from 'lucide-react';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
+import { ParlayTreeModal } from './tree/ParlayTreeModal';
 import { lazy, Suspense } from 'react';
+
+// Lazy: pulls in cytoscape (~300KB+), which must not join the main bundle —
+// ParlayCommandCenter itself is statically imported from App.tsx.
+const ParlayCorrelationGraph = lazy(() => import('./graph/ParlayCorrelationGraph'));
 import {
   normalizeParlayLeg,
   normalizeParlaySlip,
 } from '../../lib/parlays/parlayBridge';
 import type { CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
+import type { PublicParlaySlip } from '../../lib/parlayDisplay';
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
@@ -863,6 +869,7 @@ function MyParlaysPanel({
 }) {
   const savedSlips = useParlayCommandStore(selectSavedSlips);
   const announce   = useAnnounce();
+  const [treeSlip, setTreeSlip] = useState<PublicParlaySlip | null>(null);
 
   const liveSlips   = savedSlips.filter((s) => ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(s.status).toLowerCase()));
   const gradedSlips = savedSlips.filter((s) => ['won', 'lost', 'push', 'void', 'cancelled'].includes(String(s.status).toLowerCase()));
@@ -920,6 +927,16 @@ function MyParlaysPanel({
                 {legs.length > 3 && (
                   <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">+{legs.length - 3} more legs</p>
                 )}
+                {legs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setTreeSlip(slip)}
+                    className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--ve-border)/0.5)] py-1.5 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))] transition hover:border-cyan-500/40 hover:text-cyan-300"
+                  >
+                    <GitBranch className="h-3 w-3" />
+                    View Structure
+                  </button>
+                )}
               </article>
             );
           })}
@@ -930,8 +947,12 @@ function MyParlaysPanel({
 
   return (
     <div className="flex flex-col gap-6">
+      <Suspense fallback={null}>
+        <ParlayCorrelationGraph slips={savedSlips} />
+      </Suspense>
       <Section title="Live & Pending" slips={liveSlips} liveToken="--ve-accent-cyan" />
       <Section title="Graded Results" slips={gradedSlips} />
+      <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />
     </div>
   );
 }

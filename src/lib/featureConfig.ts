@@ -49,10 +49,8 @@ export interface FeatureLayout {
 export const ALL_FEATURES: FeatureConfig[] = [
 
   // Edge Island — ungrouped, renders first/headerless above "Daily".
-  // Routes to the `welcome` section: when authenticated, TheEdgeShell renders
-  // its real "The Island" dashboard (stats, quick jumps, pending picks, AI
-  // seat) instead of the public sell screen. This is the only nav entry
-  // point back to that dashboard once a user has navigated elsewhere.
+  // Routes to the `welcome` section, which now renders the Z8 morning command
+  // board with a logged-in dashboard mode and a public preview mode.
   { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
 
   // Daily — sport-scoped boards and slates
@@ -66,6 +64,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "live_game_lab", label: "Live Game Lab", icon: "Radio", enabled: true, order: 6, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "player_edge_lab", label: "Player Edge Lab", icon: "UserRoundSearch", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "team_matchup_lab", label: "Team Matchup Lab", icon: "Swords", enabled: true, order: 8, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "hitter_matchup_zones", label: "Hitter Matchup Zones", icon: "Grid3x3", enabled: true, order: 8.5, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "pro_graphs_lab", label: "Pro Graphs Lab", icon: "LineChart", enabled: true, order: 9, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 9.5, group: "Pro Labs" },
 
@@ -84,7 +83,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
-  { id: "premium", label: "PRO Premium Tiers", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "premium", label: "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];

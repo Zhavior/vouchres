@@ -23,10 +23,14 @@ export type { HrWatchRow } from '../../types/hrWatch';
 export type HrTruthStatus = 'official' | 'projected' | 'blocked' | string;
 export type HrRiskTier = 'elite' | 'strong' | 'watch' | 'sleeper' | 'fade' | string;
 
+/** 'hit' = real box score confirms a HR; 'no-hr' = day is graded final with no HR; null = unknown/inconclusive (e.g. mid-slate today). */
+export type HrCardResult = 'hit' | 'no-hr' | null;
+
 export interface HrPlayerCardProps {
   player: HrWatchRow;
   onClick?: (player: HrWatchRow) => void;
   onViewProfile?: (player: HrWatchRow) => void;
+  hrResult?: HrCardResult;
 }
 
 // ─── Tier system (matches your spec) ─────────────────────────────────────────
@@ -178,7 +182,7 @@ const ScoreRing: React.FC<{ score: number; hexColor: string }> = ({ score, hexCo
 
 // ─── Main card ────────────────────────────────────────────────────────────────
 
-export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onViewProfile }) => {
+export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onViewProfile, hrResult = null }) => {
   const [imgError, setImgError] = useState(false);
   const tier = getTier(player.hrScore);
   const badge = truthBadge(player.truthStatus);
@@ -262,12 +266,30 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
         </div>
       </div>
 
-      {/* Row 2: truth badge + rank */}
+      {/* Row 2: truth badge + HR result signal + rank */}
       <div className="flex items-center justify-between gap-2">
         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badge.className}`}>
           {badge.icon}
           {badge.label}
         </span>
+        {hrResult === 'hit' && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide"
+            style={{ borderColor: 'rgba(245,158,11,0.45)', background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}
+            title="Real box score confirms a home run this game"
+          >
+            💥 HR
+          </span>
+        )}
+        {hrResult === 'no-hr' && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            style={{ borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)' }}
+            title="Graded final — no home run"
+          >
+            No HR
+          </span>
+        )}
         {player.rank != null && (
           <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted)/0.60)]">
             #{player.rank}

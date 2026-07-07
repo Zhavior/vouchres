@@ -19,6 +19,7 @@ import {
 import { headshotUrl, type NormalizedPlayer, type NormalizedTeam } from "./mlbTypes";
 import { reportCache } from "./mlbCache";
 import { limitConcurrency } from "../../lib/cache";
+import { getStatcastBatterMap, type StatcastBatterQuality } from "./statcastClient";
 
 const MAX_BATTERS = 13;
 const STATS_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
@@ -48,6 +49,10 @@ export interface PitcherMatchupBatter {
   headshotUrl: string;
   recentForm: { games: number; hr: number; hits: number; atBats: number; strikeOuts: number } | null;
   vsPitcher: (BatterVsPitcher & { avgText: string | null; slgText: string | null; opsText: string | null }) | null;
+  /** Real season batting line. iso/obp are derived (slg-avg, ops-slg) — not separate API fields. */
+  seasonStats: { pa: number; avg: number; obp: number; slg: number; iso: number; ops: number; hr: number } | null;
+  /** Real Baseball Savant Statcast season quality. Null when the player is under Savant's PA threshold — never estimated. */
+  statcast: StatcastBatterQuality | null;
   tags: string[];
 }
 
@@ -250,6 +255,8 @@ export async function getPitcherMatchup(
         }
       }
 
+      const statcastMap = await getStatcastBatterMap().catch(() => ({} as Record<number, StatcastBatterQuality>));
+
       const projectedLineup = await limitConcurrency<PitcherMatchupBatter, typeof batters[number]>(
         batters,
         4,
@@ -280,6 +287,19 @@ export async function getPitcherMatchup(
               }
             : null;
 
+          const season = hitter?.season;
+          const seasonStats = season
+            ? {
+                pa: season.plateAppearances,
+                avg: season.avg,
+                obp: +(season.ops - season.slg).toFixed(3),
+                slg: season.slg,
+                iso: +(season.slg - season.avg).toFixed(3),
+                ops: season.ops,
+                hr: season.homeRuns,
+              }
+            : null;
+
           return {
             id: b.id,
             name: b.name,
@@ -289,6 +309,8 @@ export async function getPitcherMatchup(
             headshotUrl: headshotUrl(b.id),
             recentForm,
             vsPitcher,
+            seasonStats,
+            statcast: statcastMap[b.id] ?? null,
             tags: buildTags(bvpRaw, b.bats, throws),
           };
         }

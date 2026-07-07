@@ -2,21 +2,22 @@
  * useMlbStatHub — Primary hub state hook
  *
  * Manages: active stat type, date, filters, search, sort, view mode, tab
- * Production: swap getMockRows for real API fetch keyed on [statType, date]
+ * Data source: MLB Stats API schedule + active roster season stat hydration.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type {
   StatType, StatHubFilters, StatPlayerRow,
-  StatViewTab, StatViewMode, StatSortField, StatSortDir, StatTier,
+  StatViewTab, StatViewMode, StatSortField, StatSortDir, StatTier, StatScope,
 } from '../types/statHubTypes';
-import { getMockRows } from '../engine/mockStatData';
+import { fetchMlbStatHubRows } from '../engine/mlbStatsApiData';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
 const DEFAULT_FILTERS: StatHubFilters = {
   statType:   'hr',
   date:       TODAY,
+  statScope:  'season',
   team:       null,
   search:     '',
   viewTab:    'today',
@@ -46,12 +47,34 @@ export function useMlbStatHub() {
   const [filters, setFilters] = useState<StatHubFilters>(DEFAULT_FILTERS);
   const [selectedPlayer, setSelectedPlayer] = useState<StatPlayerRow | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [allRows, setAllRows] = useState<StatPlayerRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Data fetch — mock today; production: useSWR/useQuery
-  const allRows = useMemo(
-    () => getMockRows(filters.statType, filters.date),
-    [filters.statType, filters.date],
-  );
+  useEffect(() => {
+    let alive = true;
+
+    setLoading(true);
+    setError(null);
+
+    fetchMlbStatHubRows(filters.statType, filters.date, filters.statScope)
+      .then((nextRows) => {
+        if (!alive) return;
+        setAllRows(nextRows);
+      })
+      .catch((err) => {
+        if (!alive) return;
+        setAllRows([]);
+        setError(err instanceof Error ? err.message : 'MLB Stat Hub API unavailable');
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [filters.statType, filters.date, filters.statScope]);
 
   // Filtered + sorted rows
   const rows = useMemo(() => {
@@ -80,6 +103,7 @@ export function useMlbStatHub() {
   // Setters
   const setStatType  = useCallback((t: StatType)     => setFilters(f => ({ ...f, statType: t, tierFilter: [] })), []);
   const setDate      = useCallback((d: string)        => setFilters(f => ({ ...f, date: d })), []);
+  const setStatScope = useCallback((s: StatScope)     => setFilters(f => ({ ...f, statScope: s })), []);
   const setSearch    = useCallback((s: string)        => setFilters(f => ({ ...f, search: s })), []);
   const setTeam      = useCallback((t: string | null) => setFilters(f => ({ ...f, team: t })), []);
   const setViewTab   = useCallback((t: StatViewTab)   => setFilters(f => ({ ...f, viewTab: t })), []);
@@ -113,11 +137,14 @@ export function useMlbStatHub() {
     filters,
     rows,
     allRows,
+    loading,
+    error,
     tierCounts,
     selectedPlayer,
     drawerOpen,
     setStatType,
     setDate,
+    setStatScope,
     setSearch,
     setTeam,
     setViewTab,

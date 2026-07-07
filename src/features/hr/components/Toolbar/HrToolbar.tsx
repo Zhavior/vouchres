@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2 } from 'lucide-react';
+import { Search, X, Download, SlidersHorizontal, LayoutGrid, Table2, LayoutDashboard } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import type { HrRiskTier } from '../Cards/HrPlayerCard';
 
 export type HrSourceMode = 'confirmed' | 'preview' | 'all';
-export type HrViewMode = 'cards' | 'table';
+export type HrViewMode = 'cards' | 'table' | 'treemap';
 
 export interface HrTierFilter {
   key: HrRiskTier;
@@ -221,6 +221,20 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
           >
             <Table2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Table</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange('treemap')}
+            aria-pressed={viewMode === 'treemap'}
+            title="Treemap view"
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+              viewMode === 'treemap'
+                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Map</span>
           </button>
         </div>
 

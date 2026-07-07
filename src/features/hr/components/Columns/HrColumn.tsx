@@ -1,6 +1,6 @@
 import React from 'react';
 import type { HrWatchRow } from '../../types/hrWatch';
-import { HrPlayerCard } from '../Cards/HrPlayerCard';
+import { HrPlayerCard, type HrCardResult } from '../Cards/HrPlayerCard';
 
 interface HrColumnProps {
   title: string;
@@ -10,12 +10,13 @@ interface HrColumnProps {
   players: HrWatchRow[];
   onSelect: (player: HrWatchRow) => void;
   onViewProfile: (player: HrWatchRow) => void;
+  getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
-export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile }: HrColumnProps) => {
+export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile, getHrResult }: HrColumnProps) => {
   return (
-    <section className={`min-h-0 overflow-hidden rounded-2xl border ${borderClass} bg-[rgba(10,13,20,.88)]`}>
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-[#0A0D14]/95 px-3 py-2 backdrop-blur">
+    <section className={`min-h-0 overflow-hidden rounded-2xl border ${borderClass} bg-[hsl(var(--ve-bg-deep)/0.88)]`}>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-[hsl(var(--ve-bg-deep)/0.95)] px-3 py-2 backdrop-blur">
         <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${colorClass}`}>
           <span>{icon}</span>
           <span>{title}</span>
@@ -25,7 +26,13 @@ export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSele
 
       <div className="flex max-h-[calc(100vh-270px)] flex-col gap-2 overflow-y-auto p-2">
         {players.map((player) => (
-          <HrPlayerCard key={player.stableId} player={player} onClick={() => onSelect(player)} onViewProfile={onViewProfile} />
+          <HrPlayerCard
+            key={player.stableId}
+            player={player}
+            onClick={() => onSelect(player)}
+            onViewProfile={onViewProfile}
+            hrResult={getHrResult?.(player.playerId) ?? null}
+          />
         ))}
 
         {players.length === 0 && (

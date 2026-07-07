@@ -1,17 +1,33 @@
 import { Router } from "express";
-import { z } from "zod";
 import type { Request, Response } from "express";
 import { createHash } from "node:crypto";
-import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed } from "../middleware/auth";
-import { generationLimiter, gradingLimiter, pickLimiter } from "../middleware/rateLimit";
-import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
-import { assertUserOwnsResource } from "../middleware/ownership";
-import { createPick } from "../services/persistence/pickService";
+import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../middleware/auth";
+import { generationLimiter, gradingLimiter } from "../middleware/rateLimit";
+import { validate } from "../middleware/validation";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
+import { boolQuery, boundedInt, optionalYmd } from "../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
 import { previewLiveHrParlayMatches } from "../services/grading/liveHrParlayService";
 import { applyLiveHrParlayMatches } from "../services/grading/liveHrParlayWriteService";
 import { getFeedComposerOptions, type ComposerOptionsResponse, type PlayerOption } from "../services/feed/composerOptionsService";
+import {
+  getParlayHandler,
+  hideParlayHandler,
+  listLegacyParlaysHandler,
+  listMyParlaysHandler,
+  saveMeParlayHandler,
+  updateParlayHandler,
+} from "../controllers/parlayController";
+import {
+  ListParlaysQuerySchema,
+  ParlayIdParamsSchema,
+  GradeParlaySchema,
+  type GradeParlayInput,
+  SaveMeParlaySchema,
+  UpdateParlaySchema,
+} from "../validators/parlaySchemas";
 
 /**
  * Parlay routes — multi-leg pick creation with transactional integrity.
@@ -32,19 +48,6 @@ import { getFeedComposerOptions, type ComposerOptionsResponse, type PlayerOption
 export const parlayRoutes = Router();
 
 const AI_PARLAY_SOURCE = "ai_parlay_engine";
-const AI_MARKET_MAP: Record<string, string> = {
-  HR: "hr",
-  HOME_RUN: "hr",
-  "HOME RUN": "hr",
-  HIT: "hits",
-  HITS: "hits",
-  RBI: "rbi",
-  RUN: "run",
-  RUNS: "run",
-  TB: "tb",
-  "TOTAL BASES": "tb",
-};
-
 type AiParlayLegInput = {
   event_id?: string;
   eventId?: string;
@@ -67,24 +70,6 @@ type AiParlayLegInput = {
   externalProvider?: string | null;
 };
 
-type NormalizedAiLeg = {
-  event_id: string;
-  market: string;
-  market_code?: string | null;
-  selection: string;
-  odds_decimal: number | null;
-  player_id: string | number | null;
-  player_name?: string | null;
-  game_id?: string | null;
-  game_pk?: string | null;
-  team_id?: string | number | null;
-  stat_target?: string | number | null;
-  comparator?: string | null;
-  external_provider?: string | null;
-  event_key?: string | null;
-  popularity_key?: string | null;
-};
-
 function todayYmd(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -97,114 +82,6 @@ function ymdFromValue(value: unknown): string | null {
 
 function stableHash(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 24);
-}
-
-function normalizeAiMarket(value: unknown): { market: string; warning?: string } {
-  const raw = String(value ?? "").trim();
-  const key = raw.toUpperCase();
-  const mapped = AI_MARKET_MAP[key] ?? AI_MARKET_MAP[key.replace(/[^A-Z_ ]/g, "")];
-  if (mapped) return { market: mapped };
-  return { market: raw.toLowerCase() || "custom", warning: `unsupported market: ${raw || "missing"}` };
-}
-
-function decimalOddsFromAny(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "string" && /^[+-]?\d+$/.test(value.trim())) {
-    return americanToDecimal(Number(value));
-  }
-  const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  if (Math.abs(n) >= 100) return americanToDecimal(n);
-  return n > 1.01 ? Number(n.toFixed(3)) : null;
-}
-
-
-function ownershipWarning(result: { ok: true } | { ok: false; warning: string }): string {
-  return "warning" in result ? result.warning : "resource not found for authenticated user";
-}
-
-function normalizeAiLegs(rawLegs: unknown[]): { legs: NormalizedAiLeg[]; warnings: string[] } {
-  const warnings: string[] = [];
-  const legs = rawLegs.map((raw, index) => {
-    const leg = (raw ?? {}) as AiParlayLegInput;
-    const eventId = String(leg.event_id ?? leg.eventId ?? leg.gamePk ?? leg.gameId ?? "").slice(0, 64);
-    if (!eventId) warnings.push(`leg ${index + 1}: missing game/event id`);
-
-    const marketResult = normalizeAiMarket(leg.marketCode ?? leg.market);
-    if (marketResult.warning) warnings.push(`leg ${index + 1}: ${marketResult.warning}`);
-
-    const playerName = String(leg.playerName ?? "").trim();
-    const selection = String(leg.selection ?? (playerName ? `${playerName} 1+ HR` : "")).trim().slice(0, 280);
-    if (!selection) warnings.push(`leg ${index + 1}: missing player/selection`);
-
-    const odds = decimalOddsFromAny(leg.odds_decimal ?? leg.oddsDecimal ?? leg.odds);
-    if (odds === null) warnings.push(`leg ${index + 1}: missing odds`);
-
-    return {
-      event_id: eventId,
-      market: marketResult.market,
-      market_code: marketResult.market,
-      selection: selection || `AI parlay leg ${index + 1}`,
-      odds_decimal: odds,
-      player_id: normalizeBackendPlayerId(leg.playerId),
-      player_name: playerName || null,
-      game_id: eventId,
-      game_pk: eventId,
-      team_id: leg.teamId ?? null,
-      stat_target: leg.statTarget ?? null,
-      comparator: leg.comparator ?? null,
-      external_provider: leg.externalProvider ?? "vouchedge_ai",
-      event_key: eventId && marketResult.market
-        ? `MLB_${eventId}_${normalizeBackendPlayerId(leg.playerId) ?? "team"}_${marketResult.market}`
-        : null,
-      popularity_key: playerName && marketResult.market
-        ? `MLB_${playerName.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_${marketResult.market}`
-        : null,
-    };
-  });
-
-  return { legs, warnings };
-}
-
-function aiParlaySignature(userId: string, gameDate: string, legs: NormalizedAiLeg[]): string {
-  return stableHash({
-    userId,
-    gameDate,
-    legs: legs.map((leg) => ({
-      event_id: leg.event_id,
-      market: leg.market,
-      selection: leg.selection.toLowerCase(),
-      player_id: leg.player_id,
-    })),
-  });
-}
-
-function sourceFromPick(row: any): "AI" {
-  return "AI";
-}
-
-async function fetchParlayLegs(admin: any, pickId: string): Promise<any[]> {
-  const { data } = await admin
-    .from("pick_legs")
-    .select("*")
-    .eq("pick_id", pickId)
-    .order("leg_index", { ascending: true });
-  return data ?? [];
-}
-
-function formatAiSavedParlay(row: any, legs: any[], fallback: { title: string; riskTier: string; gameDate: string }) {
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    title: row.title ?? fallback.title,
-    legs,
-    riskTier: row.risk_tier ?? fallback.riskTier,
-    confidence: row.confidence ?? null,
-    source: sourceFromPick(row),
-    status: row.status ?? "pending",
-    created_at: row.created_at,
-    game_date: row.game_date ?? fallback.gameDate,
-  };
 }
 
 function isAiPickRow(row: any): boolean {
@@ -307,207 +184,19 @@ parlayRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, async 
 });
 
 /* ============================================================
-   POST /api/parlays/save
-   Authenticated AI parlay save endpoint. Uses picks + pick_legs so My
-   Parlays, Results ledger, grading, and notification hooks see one record.
-   ============================================================ */
-parlayRoutes.post("/parlays/save", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const start = Date.now();
-  const body = req.body ?? {};
-  const parlayBody = body.parlay ?? body;
-  const rawLegs = Array.isArray(parlayBody.legs) ? parlayBody.legs : [];
-  const warnings: string[] = [];
-
-  if (rawLegs.length < 2 || rawLegs.length > 8) {
-    return res.status(400).json({ error: "validation_error", warnings: ["AI parlay must include 2-8 legs."] });
-  }
-
-  const normalized = normalizeAiLegs(rawLegs);
-  warnings.push(...normalized.warnings);
-
-  const validLegs = normalized.legs.filter((leg) => leg.event_id && leg.selection);
-  if (validLegs.length < 2) {
-    return res.status(400).json({ error: "validation_error", warnings: [...new Set(warnings), "not enough valid legs to save"] });
-  }
-
-  const userId = req.user!.id;
-  const gameDate =
-    ymdFromValue(parlayBody.game_date) ??
-    ymdFromValue(parlayBody.gameDate) ??
-    ymdFromValue(rawLegs[0]?.gameStartTime) ??
-    todayYmd();
-  const title = String(parlayBody.title ?? `AI ${validLegs.length}-Leg Parlay`).slice(0, 200);
-  const riskTier = String(parlayBody.riskTier ?? parlayBody.risk_tier ?? "MEDIUM").slice(0, 40);
-  const confidence = Number.isFinite(Number(parlayBody.confidence)) ? Number(parlayBody.confidence) : null;
-  const signature = aiParlaySignature(userId, gameDate, validLegs);
-  const clientRef = `AI:${gameDate}:${signature}`;
-  const combinedOdds = validLegs.every((leg) => leg.odds_decimal != null)
-    ? Number(validLegs.reduce((product, leg) => product * Number(leg.odds_decimal), 1).toFixed(3))
-    : null;
-
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  try {
-    // Dedupe path when migration 0003 is applied.
-    try {
-      const { data: existing, error: existingError } = await supabaseAdmin
-        .from("picks")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("client_ref", clientRef)
-        .limit(1)
-        .maybeSingle();
-      if (existingError && !MISSING_COLUMN_CODES.has(existingError.code)) throw existingError;
-      if (existing) {
-        const legs = await fetchParlayLegs(supabaseAdmin, existing.id);
-        return res.json({
-          parlay: formatAiSavedParlay(existing, legs, { title, riskTier, gameDate }),
-          deduped: true,
-          warnings: [...new Set(warnings)],
-        });
-      }
-    } catch (err: any) {
-      if (!MISSING_COLUMN_CODES.has(err?.code)) {
-        console.warn("[parlays/save] client_ref dedupe failed; continuing", err?.message);
-      }
-    }
-
-    // Fallback dedupe that works even without client_ref/source columns.
-    const { data: maybeExisting } = await supabaseAdmin
-      .from("picks")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("leg_type", "parlay")
-      .ilike("explanation", `%aiSignature=${signature}%`)
-      .limit(1)
-      .maybeSingle();
-    if (maybeExisting) {
-      const legs = await fetchParlayLegs(supabaseAdmin, maybeExisting.id);
-      return res.json({
-        parlay: formatAiSavedParlay(maybeExisting, legs, { title, riskTier, gameDate }),
-        deduped: true,
-        warnings: [...new Set(warnings)],
-      });
-    }
-
-    const selectionSummary = validLegs.map((leg) => leg.selection).join(" | ").slice(0, 500);
-    const explanation = [
-      title,
-      "source=AI",
-      `aiSignature=${signature}`,
-      warnings.length ? `warnings=${[...new Set(warnings)].join("; ")}` : null,
-    ].filter(Boolean).join("\n");
-
-    const baseParent = {
-      user_id: userId,
-      capper_id: null,
-      leg_type: "parlay" as const,
-      sport: "mlb",
-      event_id: validLegs[0].event_id,
-      market: `${validLegs.length}-leg parlay`,
-      selection: selectionSummary || title,
-      odds_decimal: combinedOdds,
-      stake_units: Number.isFinite(Number(parlayBody.wagerAmount ?? parlayBody.stake_units)) ? Number(parlayBody.wagerAmount ?? parlayBody.stake_units) : 1,
-      confidence,
-      explanation,
-      is_demo: false,
-      status: "pending",
-    };
-
-    const withAll = {
-      ...baseParent,
-      source: "ai_pick",
-      client_ref: clientRef,
-      title,
-      risk_tier: riskTier,
-      game_date: gameDate,
-    };
-
-    let insert = await supabaseAdmin.from("picks").insert(withAll).select("*").single();
-    if (insert.error && MISSING_COLUMN_CODES.has(insert.error.code)) {
-      insert = await supabaseAdmin
-        .from("picks")
-        .insert({
-          ...baseParent,
-          source: "ai_pick",
-          client_ref: clientRef,
-          game_date: gameDate,
-        })
-        .select("*")
-        .single();
-    }
-    if (insert.error && MISSING_COLUMN_CODES.has(insert.error.code)) {
-      insert = await supabaseAdmin.from("picks").insert(baseParent).select("*").single();
-    }
-    if (insert.error || !insert.data) {
-      console.error("[parlays/save] parent insert failed", insert.error?.message);
-      return res.status(500).json({ error: "save_failed", warnings: [...new Set(warnings), insert.error?.message ?? "parent insert failed"] });
-    }
-
-    const parent = insert.data;
-    const legsToInsert = validLegs.map((leg, index) => ({
-      pick_id: parent.id,
-      leg_index: index,
-      event_id: leg.event_id,
-      market: leg.market,
-      selection: leg.selection,
-      odds_decimal: leg.odds_decimal,
-      player_id: leg.player_id,
-      status: "pending" as const,
-      game_date: gameDate,
-    }));
-
-    const legsInsert = await supabaseAdmin.from("pick_legs").insert(legsToInsert);
-    if (legsInsert.error) {
-      console.error("[parlays/save] legs insert failed, rolling back parent", legsInsert.error.message);
-      await supabaseAdmin.from("picks").delete().eq("id", parent.id);
-      return res.status(500).json({ error: "save_failed", warnings: [...new Set(warnings), legsInsert.error.message] });
-    }
-
-    const legs = await fetchParlayLegs(supabaseAdmin, parent.id);
-    console.log(`[parlays/save] saved ai parlay=${parent.id} legs=${legs.length} dedupe=${clientRef} ${Date.now() - start}ms`);
-    return res.status(201).json({
-      parlay: formatAiSavedParlay(parent, legs, { title, riskTier, gameDate }),
-      deduped: false,
-      warnings: [...new Set(warnings)],
-    });
-  } catch (err: any) {
-    console.error("[parlays/save] failed", err?.message);
-    return res.status(500).json({ error: "save_failed", warnings: [err?.message ?? "save failed"] });
-  }
-});
-
-/* ============================================================
    POST /api/parlays/grade  — stateless grading (no auth, no DB)
    Grades legs live against the sport's data feed (MLB now; NBA/NFL
    return 'pending' until their graders exist). Used by the client to
    settle locally-stored parlays and reflect outcomes in Results.
    Body: { legs: [{ sport, gamePk, market, selection, threshold?, oddsDecimal? }], stakeUnits? }
    ============================================================ */
-parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Response) => {
-  try {
-    const body = req.body ?? {};
-    const legs = body.legs;
-    const stakeUnits = typeof body.stakeUnits === "number" && body.stakeUnits > 0 ? body.stakeUnits : 1.0;
-
-    if (!Array.isArray(legs) || legs.length === 0 || legs.length > 12) {
-      return res.status(400).json({ error: "legs must be a 1–12 item array" });
-    }
-
-    const normalizedLegs: GradableLeg[] = legs.map((leg: any) => ({
-      ...leg,
-      sport: String(leg?.sport || "").trim().toLowerCase(),
-      gamePk: String(leg?.gamePk || "").trim(),
-      market: String(leg?.market || "").trim().toLowerCase(),
-      selection: String(leg?.selection || "").trim(),
-    }));
-
-    const valid = normalizedLegs.every(
-      (leg) => leg.sport && leg.gamePk && leg.market && leg.selection
-    );
-    if (!valid) {
-      return res.status(400).json({ error: "each leg needs sport, gamePk, market, selection" });
-    }
+parlayRoutes.post(
+  "/parlays/grade",
+  gradingLimiter,
+  validate({ body: GradeParlaySchema }),
+  asyncHandler(async (req: Request, res: Response) => {
+    const { legs, stakeUnits } = req.body as GradeParlayInput;
+    const normalizedLegs = legs as GradableLeg[];
 
     // Fetch each unique (sport+game) once.
     const gameCache = new Map<string, GameData | null>();
@@ -543,19 +232,16 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
     });
 
     const parlay = settleParlay(
-      gradedLegs.map((l) => ({ outcome: { status: l.status, actual: l.actual ?? undefined }, oddsDecimal: l.oddsDecimal ?? undefined })),
+      gradedLegs.map((leg) => ({
+        outcome: { status: leg.status, actual: leg.actual ?? undefined },
+        oddsDecimal: leg.oddsDecimal ?? undefined,
+      })),
       stakeUnits
     );
 
     return res.json({ legs: gradedLegs, parlay, gradedAt: new Date().toISOString() });
-  } catch (err: any) {
-    console.error("[parlays/grade] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      error: "grade_failed",
-      message: err?.message ?? "unknown grading error",
-    });
-  }
-});
+  })
+);
 
 /* ============================================================
    POST /api/parlays/grade-due  — DB-backed manual/worker auto-grader
@@ -564,56 +250,38 @@ parlayRoutes.post("/parlays/grade", gradingLimiter, async (req: Request, res: Re
    This mutates DB state, so it must never run from a GET/read request.
    ============================================================ */
 
-parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const repair = await repairLegacyParlayIdentityForSync({
-      dryRun: false,
-      limit: 100,
-      externalProvider: "live_hr_sync_repair",
-    });
-    const result = await applyLiveHrParlayMatches(date);
+parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
+  const date = optionalYmd(rawDate);
+  const repair = await repairLegacyParlayIdentityForSync({
+    dryRun: false,
+    limit: 100,
+    externalProvider: "live_hr_sync_repair",
+  });
+  const result = await applyLiveHrParlayMatches(date);
 
-    return res.json({
-      ok: true,
-      mode: "live_hr_sync",
-      date: date ?? null,
-      repair,
-      ...result,
-    });
-  } catch (err: any) {
-    console.error("[parlays/live-hr-sync] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "live_hr_sync_failed",
-      message: err?.message ?? "unknown live HR sync error",
-    });
-  }
-});
+  return res.json({
+    ok: true,
+    mode: "live_hr_sync",
+    date: date ?? null,
+    repair,
+    ...result,
+  });
+}));
 
-parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const matches = await previewLiveHrParlayMatches(date);
+parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
+  const date = optionalYmd(rawDate);
+  const matches = await previewLiveHrParlayMatches(date);
 
-    return res.json({
-      ok: true,
-      mode: "preview_only",
-      date: date ?? null,
-      matchCount: matches.length,
-      matches,
-    });
-  } catch (err: any) {
-    console.error("[parlays/live-hr-preview] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "live_hr_preview_failed",
-      message: err?.message ?? "unknown live HR preview error",
-    });
-  }
-});
+  return res.json({
+    ok: true,
+    mode: "preview_only",
+    date: date ?? null,
+    matchCount: matches.length,
+    matches,
+  });
+}));
 
 const isAuthorizedCronRequest = (req: Request) => {
   const cronSecret = process.env.CRON_SECRET;
@@ -626,121 +294,98 @@ const isAuthorizedCronRequest = (req: Request) => {
   return bearerToken === cronSecret || queryToken === cronSecret;
 };
 
-parlayRoutes.get("/cron/parlays/live-hr-sync", async (req: Request, res: Response) => {
+function assertCronAuthorized(req: Request): void {
   if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
+    throw new AppError({ status: 401, code: "invalid_token", message: "Unauthorized cron request." });
   }
+}
 
+parlayRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+
+  const date = optionalYmd(req.query.date);
+  const repair = await repairLegacyParlayIdentityForSync({
+    dryRun: false,
+    limit: 100,
+    externalProvider: "cron_live_hr_sync_repair",
+  });
+  const result = await applyLiveHrParlayMatches(date);
+
+  return res.json({
+    ok: true,
+    mode: "cron_live_hr_sync",
+    date: date ?? null,
+    repair,
+    ...result,
+    checkedAt: new Date().toISOString(),
+  });
+}));
+
+parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+
+  const days = boundedInt(req.query.days, "days", 2, 1, 7);
+  const result = await gradePendingPicks({ days });
+  const { graded, skipped, summary } = result;
+
+  const settled = graded.filter((row) => row.status !== "graded_error");
+  const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
+  const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+
+  return res.json({
+    ok: true,
+    mode: "cron_grade_due",
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    summary,
+    warnings: summary.warnings,
+    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
+    checkedAt: new Date().toISOString(),
+  });
+}));
+
+parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days;
+  const days = boundedInt(rawDays, "days", 2, 1, 7);
+  const result = await gradePendingPicks({ days });
+  const { graded, skipped, summary } = result;
+
+  const settled = graded.filter((row) => row.status !== "graded_error");
+  const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
+  const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+
+  console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
+
+  // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
   try {
-    const rawDate = req.query.date;
-    const date = typeof rawDate === "string" && rawDate.trim() ? rawDate.trim() : undefined;
-    const repair = await repairLegacyParlayIdentityForSync({
-      dryRun: false,
-      limit: 100,
-      externalProvider: "cron_live_hr_sync_repair",
-    });
-    const result = await applyLiveHrParlayMatches(date);
-
-    return res.json({
-      ok: true,
-      mode: "cron_live_hr_sync",
-      date: date ?? null,
-      repair,
-      ...result,
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[cron/parlays/live-hr-sync] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "cron_live_hr_sync_failed",
-      message: err?.message ?? "unknown cron live HR sync error",
-    });
-  }
-});
-
-parlayRoutes.get("/cron/parlays/grade-due", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ ok: false, error: "unauthorized_cron" });
-  }
-
-  try {
-    const rawDays = req.query.days ?? 2;
-    const days = Math.min(Number(rawDays), 7);
-    const result = await gradePendingPicks({ days });
-    const { graded, skipped, summary } = result;
-
-    const settled = graded.filter((r) => r.status !== "graded_error");
-    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
-    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
-
-    return res.json({
-      ok: true,
-      mode: "cron_grade_due",
-      gradedParlays: settled.length,
-      gradedLegs: graded.length,
-      pendingLegs: pending.length,
-      summary,
-      warnings: summary.warnings,
-      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[cron/parlays/grade-due] failed", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: "cron_grade_due_failed",
-      message: err?.message ?? "unknown cron grading error",
-    });
-  }
-});
-
-parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, async (req: AuthedRequest, res: Response) => {
-  try {
-    const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days ?? 2;
-    const days = Math.min(Number(rawDays), 7);
-    const result = await gradePendingPicks({ days });
-    const { graded, skipped, summary } = result;
-
-    const settled = graded.filter((r) => r.status !== "graded_error");
-    const pending = skipped.filter((r) => r.error?.includes("not final") || r.error?.includes("isComplete=false"));
-    const errors = skipped.filter((r) => !r.error?.includes("not final") && !r.error?.includes("isComplete=false"));
-
-    console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
-
-    // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
-    try {
-      const logRows = [
-        ...settled.map((r) => ({ pick_id: r.pick_id, status: r.status, reason: "graded", source: "grade-due" })),
-        ...pending.map((r) => ({ pick_id: r.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
-        ...errors.map((r) => ({ pick_id: r.pick_id, status: "graded_error", reason: r.error ?? "error", source: "grade-due" })),
-      ];
-      if (logRows.length > 0) {
-        const supabaseAdmin = await getSupabaseAdmin();
-        const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
-        if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
-          console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
-        }
+    const logRows = [
+      ...settled.map((row) => ({ pick_id: row.pick_id, status: row.status, reason: "graded", source: "grade-due" })),
+      ...pending.map((row) => ({ pick_id: row.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
+      ...errors.map((row) => ({ pick_id: row.pick_id, status: "graded_error", reason: row.error ?? "error", source: "grade-due" })),
+    ];
+    if (logRows.length > 0) {
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
+      if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
+        console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
       }
-    } catch (logErr: any) {
-      // table missing or transient — never block grading on the audit log
-      console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
     }
-
-    return res.json({
-      gradedParlays: settled.length,
-      gradedLegs: graded.length,
-      pendingLegs: pending.length,
-      summary,
-      warnings: summary.warnings,
-      errors: errors.map((e) => ({ pick_id: e.pick_id, error: e.error })),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    console.error("[parlays/grade-due] failed", err?.message);
-    return res.status(500).json({ error: "grade_due_failed", message: err?.message });
+  } catch (logErr: any) {
+    // table missing or transient — never block grading on the audit log
+    console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
   }
-});
+
+  return res.json({
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    summary,
+    warnings: summary.warnings,
+    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 async function countRows(query: any): Promise<number> {
   const { count, error } = await query;
@@ -757,13 +402,9 @@ async function countRows(query: any): Promise<number> {
  * Nose scanner for the parlay grading architecture.
  * Counts weak/stale rows that can break exact-field grading.
  */
-parlayRoutes.get("/cron/parlays/integrity", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
-
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
+parlayRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
+  const supabaseAdmin = await getSupabaseAdmin();
 
     const [
       missingEventKey,
@@ -808,90 +449,33 @@ parlayRoutes.get("/cron/parlays/integrity", async (req: Request, res: Response) 
       .filter(([key]) => key !== "pendingLegs")
       .reduce((sum, [, value]) => sum + Math.max(0, Number(value || 0)), 0);
 
-    return res.json({
-      ok: blockingIssueCount === 0,
-      scanner: "parlay_integrity_nose",
-      checkedAt: new Date().toISOString(),
-      issues,
-      cache: {
-        gradedLegResults: cachedResults,
-      },
-      advice:
-        blockingIssueCount === 0
-          ? "Parlay grading identity looks clean."
-          : "Some legs are missing exact grading identity. New saves should use /api/me/parlays only; old rows may need repair/backfill.",
-    });
-  } catch (err: any) {
-    console.error("[parlays/integrity] failed", err?.message);
-    return res.status(500).json({ error: "parlay_integrity_failed", message: err?.message });
-  }
-});
-
-type ParlayLegBody = {
-  event_id: string;
-  market: string;
-  selection: string;
-  odds_decimal: number;
-};
-
-type CreateParlayBody = {
-  legs: ParlayLegBody[];
-  stake_units?: number;
-  confidence?: number;
-  explanation?: string;
-  judge_quality?: number;
-  judge_risk?: number;
-  judge_bias?: number;
-  judge_trust?: number;
-  judge_verdict?: string;
-};
-
-function isNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function isValidLeg(leg: unknown): leg is ParlayLegBody {
-  const row = leg as ParlayLegBody;
-  return (
-    typeof row?.event_id === "string" &&
-    row.event_id.length <= 64 &&
-    typeof row.market === "string" &&
-    row.market.length >= 1 &&
-    row.market.length <= 64 &&
-    typeof row.selection === "string" &&
-    row.selection.length >= 1 &&
-    row.selection.length <= 280 &&
-    isNumber(row.odds_decimal) &&
-    row.odds_decimal > 0 &&
-    row.odds_decimal <= 1000
-  );
-}
-
-function isValidParlayBody(body: unknown): body is CreateParlayBody {
-  const row = body as CreateParlayBody;
-  return (
-    Array.isArray(row?.legs) &&
-    row.legs.length >= 2 &&
-    row.legs.length <= 8 &&
-    row.legs.every(isValidLeg) &&
-    (row.stake_units === undefined || (isNumber(row.stake_units) && row.stake_units > 0 && row.stake_units <= 100)) &&
-    (row.confidence === undefined || (isNumber(row.confidence) && row.confidence >= 0 && row.confidence <= 100)) &&
-    (row.explanation === undefined || (typeof row.explanation === "string" && row.explanation.length <= 4000))
-  );
-}
+  return res.json({
+    ok: blockingIssueCount === 0,
+    scanner: "parlay_integrity_nose",
+    checkedAt: new Date().toISOString(),
+    issues,
+    cache: {
+      gradedLegResults: cachedResults,
+    },
+    advice:
+      blockingIssueCount === 0
+        ? "Parlay grading identity looks clean."
+        : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
+  });
+}));
 
 /**
  * POST /api/parlays
  *
  * Legacy route disabled.
- * Canonical parlay saves must use POST /api/me/parlays so every leg persists
+ * Canonical parlay saves must use POST /api/parlays/save so every leg persists
  * the full grading identity: game_id, player_id, market_code, event_key,
  * stat_target, comparator, and external_provider.
  */
 parlayRoutes.post("/parlays", requireAuth, async (_req: AuthedRequest, res: Response) => {
   return res.status(410).json({
     error: "legacy_parlay_route_disabled",
-    message: "Use POST /api/me/parlays for canonical parlay saves.",
+    message: "Use POST /api/parlays/save for canonical parlay saves.",
   });
 });
 
@@ -1058,117 +642,23 @@ async function repairLegacyParlayIdentityForSync(options: {
 }
 
 
-parlayRoutes.post("/cron/parlays/repair-identity", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+parlayRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
 
-  const dryRun = String(req.query.dryRun ?? "true") !== "false";
-  const limit = Math.min(Math.max(Number(req.query.limit ?? 50), 1), 250);
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
+  const result = await repairLegacyParlayIdentityForSync({
+    dryRun,
+    limit,
+    externalProvider: "repair_identity",
+  });
 
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
-
-    const { data: rows, error } = await supabaseAdmin
-      .from("pick_legs")
-      .select("id,pick_id,leg_index,sport,game_id,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status,picks(event_id,metadata)")
-      .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null")
-      .limit(limit);
-
-    if (error) {
-      console.error("[parlays/repair-identity] fetch failed", error);
-      return res.status(500).json({
-        error: "repair_fetch_failed",
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      });
-    }
-
-    const repaired: any[] = [];
-    const skipped: any[] = [];
-
-    for (const row of rows ?? []) {
-      const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
-      const gameId = repairGameIdFromRow(row);
-      const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
-      const playerId = repairCleanKey(row.player_id || repairPlayerIdFromSelection(row.selection));
-      const marketCode = repairMarketCode(row);
-      const statTarget = repairStatTarget(row, marketCode);
-      const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
-      const comparatorKey = repairComparatorKey(comparator);
-
-      if (!gameId || !playerId || !marketCode || statTarget == null || !comparatorKey) {
-        skipped.push({
-          id: row.id,
-          pick_id: row.pick_id,
-          reason: "missing_required_identity",
-          hasGameId: Boolean(gameId),
-          hasPlayerId: Boolean(playerId),
-          marketCode,
-          statTarget,
-          comparator,
-        });
-        continue;
-      }
-
-      const eventKey = [sport, gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join("_");
-      const popularityKey = [sport, playerId, marketCode, statTarget, comparatorKey].join("_");
-
-      const patch = {
-        sport,
-        game_id: gameId,
-        team_id: teamId,
-        player_id: playerId,
-        market_code: marketCode,
-        stat_target: statTarget,
-        comparator,
-        event_key: eventKey,
-        popularity_key: popularityKey,
-        external_provider: row.external_provider || "repair_identity",
-      };
-
-      if (!dryRun) {
-        const { error: updateError } = await supabaseAdmin
-          .from("pick_legs")
-          .update(patch)
-          .eq("id", row.id);
-
-        if (updateError) {
-          skipped.push({
-            id: row.id,
-            pick_id: row.pick_id,
-            reason: "update_failed",
-            message: updateError.message,
-          });
-          continue;
-        }
-      }
-
-      repaired.push({
-        id: row.id,
-        pick_id: row.pick_id,
-        leg_index: row.leg_index,
-        patch,
-      });
-    }
-
-    return res.json({
-      ok: true,
-      dryRun,
-      scanned: rows?.length ?? 0,
-      repairedCount: repaired.length,
-      skippedCount: skipped.length,
-      repaired: repaired.slice(0, 20),
-      skipped: skipped.slice(0, 20),
-      checkedAt: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.error("[parlays/repair-identity] failed", err);
-    return res.status(500).json({ error: "repair_identity_failed" });
-  }
-});
+  return res.json({
+    ok: true,
+    ...result,
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 
 function isLegacyManualEventId(value: unknown): boolean {
@@ -1184,163 +674,130 @@ function isLegacyManualEventId(value: unknown): boolean {
  *
  * Real MLB numeric game IDs are left alone so they can grade when final.
  */
-parlayRoutes.post("/cron/parlays/quarantine-legacy", async (req: Request, res: Response) => {
-  if (!isAuthorizedCronRequest(req)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+parlayRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: Request, res: Response) => {
+  assertCronAuthorized(req);
 
-  const dryRun = String(req.query.dryRun ?? "true") !== "false";
-  const limit = Math.min(Math.max(Number(req.query.limit ?? 25), 1), 100);
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
   const legacyReason = "Legacy pick saved before canonical grading identity existed; cannot be honestly graded.";
 
-  try {
-    const supabaseAdmin = await getSupabaseAdmin();
+  const supabaseAdmin = await getSupabaseAdmin();
 
-    const { data: picks, error } = await supabaseAdmin
-      .from("picks")
-      .select("id,event_id,status,explanation")
-      .eq("status", "pending")
-      .limit(limit);
+  const { data: picks, error } = await supabaseAdmin
+    .from("picks")
+    .select("id,event_id,status,explanation")
+    .eq("status", "pending")
+    .limit(limit);
 
-    if (error) {
-      console.error("[parlays/quarantine-legacy] fetch failed", error);
-      return res.status(500).json({
-        error: "quarantine_fetch_failed",
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
+  if (error) {
+    console.error("[parlays/quarantine-legacy] fetch failed", error);
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Failed to fetch legacy parlays for quarantine.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
+  }
+
+  const quarantined: any[] = [];
+  const skipped: any[] = [];
+
+  for (const pick of picks ?? []) {
+    if (!isLegacyManualEventId(pick.event_id)) {
+      skipped.push({
+        pick_id: pick.id,
+        event_id: pick.event_id,
+        reason: "not_legacy_manual_event_id",
       });
+      continue;
     }
 
-    const quarantined: any[] = [];
-    const skipped: any[] = [];
+    const pickPatch = {
+      status: "void",
+      explanation: [String(pick.explanation || "").trim(), legacyReason].filter(Boolean).join("\\n\\n"),
+      graded_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    for (const pick of picks ?? []) {
-      if (!isLegacyManualEventId(pick.event_id)) {
+    const legPatch = {
+      status: "void",
+      graded_at: new Date().toISOString(),
+    };
+
+    if (!dryRun) {
+      const { error: pickUpdateError } = await supabaseAdmin
+        .from("picks")
+        .update(pickPatch)
+        .eq("id", pick.id);
+
+      if (pickUpdateError) {
         skipped.push({
           pick_id: pick.id,
           event_id: pick.event_id,
-          reason: "not_legacy_manual_event_id",
+          reason: "pick_update_failed",
+          message: pickUpdateError.message,
         });
         continue;
       }
 
-      const pickPatch = {
-        status: "void",
-        explanation: [String(pick.explanation || "").trim(), legacyReason].filter(Boolean).join("\\n\\n"),
-        graded_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
+        .from("pick_legs")
+        .update(legPatch)
+        .eq("pick_id", pick.id)
+        .eq("status", "pending")
+        .select("id,pick_id,status,graded_at,event_id,game_id");
 
-      const legPatch = {
-        status: "void",
-        graded_at: new Date().toISOString(),
-      };
-
-      if (!dryRun) {
-        const { error: pickUpdateError } = await supabaseAdmin
-          .from("picks")
-          .update(pickPatch)
-          .eq("id", pick.id);
-
-        if (pickUpdateError) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "pick_update_failed",
-            message: pickUpdateError.message,
-          });
-          continue;
-        }
-
-        const { data: updatedLegs, error: legUpdateError } = await supabaseAdmin
-          .from("pick_legs")
-          .update(legPatch)
-          .eq("pick_id", pick.id)
-          .eq("status", "pending")
-          .select("id,pick_id,status,graded_at,event_id,game_id");
-
-        if (legUpdateError) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "leg_update_failed",
-            message: legUpdateError.message,
-          });
-          continue;
-        }
-
-        if (!updatedLegs || updatedLegs.length === 0) {
-          skipped.push({
-            pick_id: pick.id,
-            event_id: pick.event_id,
-            reason: "no_pending_child_legs_updated",
-          });
-          continue;
-        }
+      if (legUpdateError) {
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "leg_update_failed",
+          message: legUpdateError.message,
+        });
+        continue;
       }
 
-      quarantined.push({
-        pick_id: pick.id,
-        event_id: pick.event_id,
-        pickPatch,
-        legPatch,
-      });
+      if (!updatedLegs || updatedLegs.length === 0) {
+        skipped.push({
+          pick_id: pick.id,
+          event_id: pick.event_id,
+          reason: "no_pending_child_legs_updated",
+        });
+        continue;
+      }
     }
 
-    return res.json({
-      ok: true,
-      dryRun,
-      scanned: picks?.length ?? 0,
-      quarantinedCount: quarantined.length,
-      skippedCount: skipped.length,
-      quarantined: quarantined.slice(0, 20),
-      skipped: skipped.slice(0, 20),
-      checkedAt: new Date().toISOString(),
+    quarantined.push({
+      pick_id: pick.id,
+      event_id: pick.event_id,
+      pickPatch,
+      legPatch,
     });
-  } catch (err) {
-    console.error("[parlays/quarantine-legacy] failed", err);
-    return res.status(500).json({ error: "quarantine_legacy_failed" });
   }
-});
+
+  return res.json({
+    ok: true,
+    dryRun,
+    scanned: picks?.length ?? 0,
+    quarantinedCount: quarantined.length,
+    skippedCount: skipped.length,
+    quarantined: quarantined.slice(0, 20),
+    skipped: skipped.slice(0, 20),
+    checkedAt: new Date().toISOString(),
+  });
+}));
 
 /**
  * GET /api/parlays/:id
  * Returns a parlay pick with all its legs.
  */
-parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { id } = req.params;
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
-  if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
-  }
-
-  const pickRes = await supabaseAdmin
-    .from("picks")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .single();
-
-  if (pickRes.error || !pickRes.data) {
-    return res.status(404).json({ error: "parlay_not_found" });
-  }
-
-  const legsRes = await supabaseAdmin
-    .from("pick_legs")
-    .select("*")
-    .eq("pick_id", id)
-    .order("leg_index", { ascending: true });
-
-  return res.json({
-    ...pickRes.data,
-    legs: legsRes.data ?? [],
-  });
-});
+parlayRoutes.get(
+  "/parlays/:id",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  getParlayHandler
+);
 
 /**
  * GET /api/parlays?user_id=X&limit=50&offset=0
@@ -1359,7 +816,7 @@ parlayRoutes.get("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Re
  * GET /api/me/dashboard-summary
  * Small authenticated summary for The Island dashboard widgets.
  */
-parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const supabaseAdmin = await getSupabaseAdmin();
 
   const { data: picks, error } = await supabaseAdmin
@@ -1371,7 +828,13 @@ parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest
 
   if (error) {
     console.error("[me/dashboard-summary] fetch failed", error);
-    return res.status(500).json({ error: "dashboard_summary_failed" });
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Dashboard summary unavailable.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
   }
 
   const rows = picks ?? [];
@@ -1421,11 +884,11 @@ parlayRoutes.get("/me/dashboard-summary", requireAuth, async (req: AuthedRequest
     summary,
     recent: rows.slice(0, 8),
   });
-});
+}));
 
-parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit ?? 100), 200);
-  const offset = Number(req.query.offset ?? 0);
+parlayRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const limit = boundedInt(req.query.limit, "limit", 100, 1, 200);
+  const offset = boundedInt(req.query.offset, "offset", 0, 0, 100000);
   const status = typeof req.query.status === "string" ? req.query.status.toLowerCase() : undefined;
 
   const allowedStatuses = new Set(["pending", "won", "lost", "void", "push"]);
@@ -1446,7 +909,13 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
 
   if (error) {
     console.error("[me/ledger] picks fetch failed", error);
-    return res.status(500).json({ error: "ledger_fetch_failed" });
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Ledger unavailable.",
+      details: { code: error.code, hint: error.hint },
+      cause: error,
+    });
   }
 
   const pickIds = (picks ?? []).map((pick: any) => pick.id);
@@ -1462,7 +931,13 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
 
     if (legsError) {
       console.error("[me/ledger] legs fetch failed", legsError);
-      return res.status(500).json({ error: "ledger_legs_fetch_failed" });
+      throw new AppError({
+        status: 503,
+        code: "external_service_error",
+        message: "Ledger legs unavailable.",
+        details: { code: legsError.code, hint: legsError.hint },
+        cause: legsError,
+      });
     }
 
     legsByPickId = (legs ?? []).reduce((acc: Record<string, any[]>, leg: any) => {
@@ -1497,539 +972,32 @@ parlayRoutes.get("/me/ledger", requireAuth, async (req: AuthedRequest, res: Resp
     limit,
     offset,
   });
-});
+}));
 
-parlayRoutes.get("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit ?? 50), 100);
-  const offset = Number(req.query.offset ?? 0);
+parlayRoutes.get(
+  "/me/parlays",
+  requireAuth,
+  validate({ query: ListParlaysQuerySchema }),
+  listMyParlaysHandler
+);
 
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data, count, error } = await supabaseAdmin
-    .from("picks")
-    .select("*", { count: "exact" })
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .is("user_hidden_at", null)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) return res.status(500).json({ error: "fetch_failed" });
-
-  // Join legs for each parlay
-  const picks = data ?? [];
-  let legsMap: Record<string, any[]> = {};
-  if (picks.length > 0) {
-    const pickIds = picks.map((p: any) => p.id);
-    const { data: legs } = await supabaseAdmin
-      .from("pick_legs")
-      .select("*")
-      .in("pick_id", pickIds)
-      .order("leg_index", { ascending: true });
-    for (const leg of legs ?? []) {
-      const pid = String(leg.pick_id);
-      if (!legsMap[pid]) legsMap[pid] = [];
-      legsMap[pid].push(leg);
-    }
-  }
-
-  const parlays = picks.map((p: any) => enrichParlayRow(p, legsMap[String(p.id)] ?? []));
-  return res.json({ parlays, total: count ?? 0, limit, offset });
-});
-
-function americanToDecimal(odds: number): number {
-  if (odds >= 100) return 1 + odds / 100;
-  if (odds <= -100) return 1 + 100 / Math.abs(odds);
-  return Math.max(1.01, odds); // already decimal
-}
-
-/**
- * Normalize a leg's odds to DECIMAL, or null when the price is unknown.
- * NEVER fabricates a price (no 1 / 1.01 placeholders). Accepts either an
- * American `odds` field (preferred) or a `odds_decimal` field.
- *   - American (|x| >= 100) → decimal
- *   - decimal that is clearly real (> 1.01) → kept
- *   - 0 / NaN / missing / tiny placeholder → null
- */
-function legOddsToDecimalOrNull(leg: any): number | null {
-  const raw =
-    typeof leg?.odds === "number" ? leg.odds
-    : typeof leg?.odds_decimal === "number" ? leg.odds_decimal
-    : null;
-  if (raw === null || !Number.isFinite(raw) || raw === 0) return null;
-  if (Math.abs(raw) >= 100) {
-    const d = raw > 0 ? 1 + raw / 100 : 1 + 100 / Math.abs(raw);
-    return Number(d.toFixed(3));
-  }
-  if (raw > 1.01) return Number(raw.toFixed(3));
-  return null;
-}
-
-/** Normalize an id-ish value to a positive numeric MLB id, or null.
- *  Accepts aliases: playerId, mlbPlayerId, player_id, mlb_player_id, personId, id.
- *  Keep this numeric because pick_legs.player_id is bigint in Supabase. */
-function normalizeBackendPlayerId(value: unknown): number | null {
-  if (value === null || value === undefined) return null;
-
-  if (typeof value === "number") {
-    return Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
-  }
-
-  const match = String(value).match(/\d{3,}/);
-  if (!match) return null;
-
-  const parsed = Number(match[0]);
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-/** Pull a player id from a leg object regardless of which alias the source used. */
-function legPlayerId(leg: any): number | null {
-  return normalizeBackendPlayerId(
-    leg?.playerId ?? leg?.mlbPlayerId ?? leg?.player_id ?? leg?.mlb_player_id ?? leg?.personId
-  );
-}
-
-/** Postgres "column does not exist" / schema-cache-miss codes for legacy parent-column fallback only. */
-const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
-/** Postgres "function does not exist" / PostgREST RPC-not-found codes. */
-const MISSING_FUNCTION_CODES = new Set(["42883", "PGRST202"]);
-
-const MAX_LEGS = 12;
-const VALID_SOURCES = new Set(["manual", "scanner", "ai_pick", "edge_island", "command_center"]);
-const NORMALIZED_STATUSES = new Set(["pending", "live", "won", "lost", "void", "partially_void"]);
-/** Map the app's normalized status onto the DB pick_status enum. */
-function toDbStatus(normalized: string): "pending" | "won" | "lost" | "void" | "push" {
-  switch (normalized) {
-    case "won": return "won";
-    case "lost": return "lost";
-    case "void": return "void";
-    case "partially_void": return "void";
-    // 'live' has no DB column — it is derived client-side; persist as pending.
-    case "live":
-    case "pending":
-    default: return "pending";
-  }
-}
-
-interface MeParlayValidation {
-  ok: boolean;
-  error?: string;
-  detail?: string;
-}
-
-const isFakeLegacyGeneratedId = (value: unknown): boolean => {
-  if (value == null) return false;
-  const text = String(value).trim().toLowerCase();
-  return text.startsWith("leg-") || text.startsWith("ai-leg-");
-};
-
-const MeParlayLegSchema = z
-  .object({
-    id: z.string().optional(),
-    event_id: z.union([z.string(), z.number()]).optional(),
-    eventId: z.union([z.string(), z.number()]).optional(),
-    game_id: z.union([z.string(), z.number()]).optional(),
-    gameId: z.union([z.string(), z.number()]).optional(),
-    gamePk: z.union([z.string(), z.number()]).optional(),
-    team_id: z.union([z.string(), z.number()]).optional(),
-    teamId: z.union([z.string(), z.number()]).optional(),
-    player_id: z.union([z.string(), z.number()]).nullable().optional(),
-    playerId: z.union([z.string(), z.number()]).nullable().optional(),
-    market: z.string().optional(),
-    market_code: z.string().optional(),
-    marketCode: z.string().optional(),
-    selection: z.string().optional(),
-    playerName: z.string().optional(),
-    odds: z.number().finite().optional(),
-    odds_decimal: z.number().finite().nullable().optional(),
-    oddsDecimal: z.number().finite().nullable().optional(),
-    stat_target: z.number().finite().nullable().optional(),
-    statTarget: z.number().finite().nullable().optional(),
-    comparator: z.string().optional(),
-    external_provider: z.string().optional(),
-    externalProvider: z.string().optional(),
-  })
-  .passthrough()
-  .superRefine((leg, ctx) => {
-    const odds = leg.odds ?? leg.odds_decimal ?? leg.oddsDecimal;
-    if (odds !== undefined && odds !== null && (!Number.isFinite(Number(odds)))) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Leg odds must be numeric." });
-    }
-
-    const identityCandidates = [
-      leg.event_id,
-      leg.eventId,
-      leg.game_id,
-      leg.gameId,
-      leg.gamePk,
-      leg.game_pk,
-      leg.game,
-    ];
-
-    if (identityCandidates.some(isFakeLegacyGeneratedId)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["event_id"],
-        message: "Fake generated leg IDs cannot be saved. Rebuild this parlay with canonical MLB game/player identity.",
-      });
-    }
-  });
-
-const MeParlayBodySchema = z
-  .object({
-    title: z.string().max(200).optional(),
-    mode: z.enum(["REAL", "PRACTICE"]).optional(),
-    source: z.enum(["manual", "scanner", "ai_pick", "edge_island"]).optional(),
-    status: z.enum(["pending", "live", "won", "lost", "void", "partially_void"]).optional(),
-    wagerAmount: z.number().finite().min(0).max(100000).optional(),
-    clientRef: z.string().max(200).optional(),
-    client_ref: z.string().max(200).optional(),
-    legs: z.array(MeParlayLegSchema).min(1, "At least 1 leg is required.").max(MAX_LEGS, `Max ${MAX_LEGS} legs.`),
-  })
-  .passthrough();
-
-/** Validate the POST /api/me/parlays body. Returns clean errors. */
-function validateMeParlayBody(body: any): MeParlayValidation {
-  const parsed = MeParlayBodySchema.safeParse(body);
-
-  if (parsed.success) {
-    return { ok: true };
-  }
-
-  const issue = parsed.error.issues[0];
-  const path = issue?.path?.length ? issue.path.join(".") : "body";
-
-  if (path === "legs" && issue?.code === "too_small") {
-    return { ok: false, error: "legs_required", detail: "At least 1 leg is required." };
-  }
-
-  if (path === "legs" && issue?.code === "too_big") {
-    return { ok: false, error: "too_many_legs", detail: `Max ${MAX_LEGS} legs.` };
-  }
-
-  if (path === "source") {
-    return { ok: false, error: "invalid_source", detail: `source must be one of ${[...VALID_SOURCES].join(", ")}.` };
-  }
-
-  if (path === "status") {
-    return { ok: false, error: "invalid_status", detail: `status must be one of ${[...NORMALIZED_STATUSES].join(", ")}.` };
-  }
-
-  if (path === "title") {
-    return { ok: false, error: "invalid_title", detail: "Title must be a string ≤ 200 chars." };
-  }
-
-  if (path === "wagerAmount") {
-    return { ok: false, error: "invalid_stake", detail: "Stake must be a non-negative number." };
-  }
-
-  if (path.includes("odds")) {
-    return { ok: false, error: "invalid_odds", detail: `${path} must be numeric.` };
-  }
-
-  return {
-    ok: false,
-    error: "invalid_body",
-    detail: issue?.message || "Invalid parlay payload.",
-  };
-}
-
-
-/**
- * POST /api/me/parlays
- * Auth-only save for user-built parlays (no legal gate, no quota).
- *
- * Safety:
- *   - Full input validation (clean 400s, never crashes).
- *   - Duplicate protection via client_ref (idempotency key = the frontend's
- *     local parlay id). Re-saving the same parlay returns the existing row.
- *   - Atomic parent+legs insert via create_parlay_with_legs RPC when present;
- *     otherwise a parent-insert + leg-insert with rollback (no orphan parents).
- *   - Canonical save path requires the migrated grading identity contract.
- */
-parlayRoutes.post("/me/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const body = req.body ?? {};
-  const userId = req.user!.id;
-
-  const v = validateMeParlayBody(body);
-  if (!v.ok) {
-    return res.status(400).json({ error: v.error, detail: v.detail });
-  }
-
-  const title = typeof body.title === "string" && body.title.trim() ? body.title.slice(0, 200) : "My Parlay";
-  const mode = body.mode === "REAL" ? "REAL" : "PRACTICE";
-  const rawLegs: any[] = body.legs;
-  const wagerAmount = typeof body.wagerAmount === "number" && body.wagerAmount > 0 ? body.wagerAmount : 1.0;
-  const aiGenerated = body.aiGenerated === true;
-  const source = VALID_SOURCES.has(String(body.source))
-    ? String(body.source)
-    : aiGenerated ? "ai_pick" : "manual";
-  const clientRef = typeof body.clientRef === "string" && body.clientRef
-    ? body.clientRef.slice(0, 128)
-    : (typeof body.id === "string" && body.id ? body.id.slice(0, 128) : null);
-  const dbStatus = toDbStatus(String(body.status ?? "pending").toLowerCase());
-
-  // Normalize each leg's odds to decimal-or-null. Combined odds are only
-  // computed when EVERY leg has a real price — otherwise the total is unknown
-  // (null), never fabricated from placeholders.
-  const legOdds: (number | null)[] = rawLegs.map((leg: any) => legOddsToDecimalOrNull(leg));
-  const allLegsPriced = legOdds.length > 0 && legOdds.every((o) => o !== null);
-  const combinedOdds: number | null = allLegsPriced
-    ? Number((legOdds as number[]).reduce((prod, d) => prod * d, 1).toFixed(3))
-    : null;
-
-  const selectionSummary = rawLegs
-    .map((l: any) => String(l.selection || l.market || "").slice(0, 60))
-    .filter(Boolean)
-    .join(" | ")
-    .slice(0, 500);
-
-  const parentEventId = String(rawLegs[0]?.gamePk || rawLegs[0]?.event_id || rawLegs[0]?.game || "manual").slice(0, 64);
-  const sport = String(body.sport || rawLegs[0]?.sport || "mlb").slice(0, 32);
-
-  const legsJson = rawLegs.map((leg: any, i: number) => {
-    const sportKey = String(leg.sport || sport || "mlb").trim().toLowerCase();
-    const gameId = String(leg.gameId || leg.game_id || leg.gamePk || leg.game_pk || leg.eventId || leg.event_id || leg.game || "manual").slice(0, 64);
-    const teamIdRaw = leg.teamId || leg.team_id || leg.team?.id || leg.teamCode || leg.teamAbbr || null;
-    const teamId = teamIdRaw == null ? null : String(teamIdRaw).trim().slice(0, 64) || null;
-    const playerId = legPlayerId(leg);
-
-    const rawMarketCode = String(leg.marketCode || leg.market_code || leg.market || "prop").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "PROP";
-    const marketCode =
-      rawMarketCode === "HR" || rawMarketCode === "HOMERUN" || rawMarketCode === "HOME_RUN"
-        ? "ANYTIME_HR"
-        : rawMarketCode;
-
-    const rawStatTarget = leg.statTarget ?? leg.stat_target ?? leg.target ?? leg.line ?? null;
-    const statTarget = Number.isFinite(Number(rawStatTarget))
-      ? Number(rawStatTarget)
-      : marketCode === "ANYTIME_HR"
-        ? 1
-        : null;
-
-    const comparator = String(
-      leg.comparator || leg.operator || leg.direction || (statTarget != null ? ">=" : "")
-    ).trim() || null;
-
-    const comparatorKey =
-      comparator === ">=" ? "GTE" :
-      comparator === "<=" ? "LTE" :
-      comparator === "=" ? "EQ" :
-      null;
-
-    const keySport = sportKey.toUpperCase().replace(/[^A-Z0-9_-]/g, "") || "MLB";
-    const keyGame = gameId.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-    const keyTeam = String(teamId || "TEAM").toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-    const keyPlayer = playerId ? String(playerId).toUpperCase().replace(/[^A-Z0-9_-]/g, "") : "";
-
-    const eventKey =
-      String(leg.eventKey || leg.event_key || "").trim() ||
-      (keyGame && keyPlayer && marketCode !== "UNKNOWN" && statTarget != null && comparatorKey
-        ? [keySport, keyGame, keyTeam, keyPlayer, marketCode, statTarget, comparatorKey].join("_")
-        : null);
-
-    const popularityKey =
-      String(leg.popularityKey || leg.popularity_key || "").trim() ||
-      (keyPlayer && marketCode !== "UNKNOWN" && statTarget != null && comparatorKey
-        ? [keySport, keyPlayer, marketCode, statTarget, comparatorKey].join("_")
-        : null);
-
-    return {
-      leg_index: i,
-      sport: sportKey,
-      event_id: gameId,
-      game_id: gameId,
-      team_id: teamId,
-      market: String(leg.market || leg.marketCode || "prop").slice(0, 64),
-      market_code: marketCode,
-      selection: String(leg.selection || "").slice(0, 280) || "—",
-      odds_decimal: legOdds[i], // decimal or null — never a placeholder
-      player_id: playerId, // alias-safe; null if unknown
-      event_key: eventKey,
-      popularity_key: popularityKey,
-      stat_target: statTarget,
-      comparator,
-      external_provider: leg.externalProvider || leg.external_provider || leg.provider || null,
-    };
-  });
-
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  const respond = (parlay: any, legsForResponse: any[], deduped = false) =>
-    res.status(deduped ? 200 : 201).json({
-      id: parlay.id,
-      ...parlay,
-      legs: legsForResponse,
-      combined_odds: combinedOdds, // decimal or null (unknown)
-      ai_generated: aiGenerated,
-      deduped,
-    });
-
-  // 0. Duplicate protection — if this client_ref already exists, return it.
-  if (clientRef) {
-    try {
-      const { data: existing } = await supabaseAdmin
-        .from("picks")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("client_ref", clientRef)
-        .limit(1)
-        .maybeSingle();
-      if (existing) {
-        const { data: legs } = await supabaseAdmin
-          .from("pick_legs").select("*").eq("pick_id", existing.id).order("leg_index", { ascending: true });
-        return respond(existing, legs ?? [], true);
-      }
-    } catch (err: any) {
-      // client_ref column missing (migration 0003 not applied) — skip dedup.
-      if (!MISSING_COLUMN_CODES.has(err?.code)) {
-        console.warn("[me/parlays] dedup lookup failed (continuing)", err?.code, err?.message);
-      }
-    }
-  }
-
-  // 1. Preferred path: atomic RPC.
-  try {
-    const { data: rpcPick, error: rpcError } = await supabaseAdmin.rpc("create_parlay_with_legs", {
-      p_user_id: userId,
-      p_sport: sport,
-      p_event_id: parentEventId,
-      p_market: `${rawLegs.length}-leg parlay`,
-      p_selection: selectionSummary || title,
-      p_odds_decimal: combinedOdds,
-      p_stake_units: wagerAmount,
-      p_confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
-      p_explanation: title,
-      p_is_demo: mode === "PRACTICE",
-      p_source: source,
-      p_client_ref: clientRef,
-      p_legs: legsJson,
-    });
-
-    if (!rpcError && rpcPick) {
-      const pick = Array.isArray(rpcPick) ? rpcPick[0] : rpcPick;
-      // RPC is the canonical save path: it must persist the full grading identity.
-      const { data: legs } = await supabaseAdmin
-        .from("pick_legs").select("*").eq("pick_id", pick.id).order("leg_index", { ascending: true });
-      return respond(pick, legs ?? []);
-    }
-    if (rpcError && !MISSING_FUNCTION_CODES.has(rpcError.code)) {
-      // Real RPC failure (not just "function missing") — surface it.
-      console.error("[me/parlays] RPC create failed", rpcError.code, rpcError.message);
-      return res.status(500).json({ error: "save_failed" });
-    }
-    // else: RPC not installed → fall through to manual path.
-  } catch (err: any) {
-    if (!MISSING_FUNCTION_CODES.has(err?.code)) {
-      console.error("[me/parlays] RPC threw", err?.code, err?.message);
-    }
-    // fall through to manual path
-  }
-
-  // 2. Fallback path: parent insert + legs insert with rollback.
-  try {
-    // Build parent payload; include source/client_ref only — strip on missing-col retry.
-    const buildParent = (withExtras: boolean) => ({
-      user_id: userId,
-      capper_id: null,
-      leg_type: "parlay" as const,
-      sport,
-      event_id: parentEventId,
-      market: `${rawLegs.length}-leg parlay`,
-      selection: selectionSummary || title,
-      odds_decimal: combinedOdds,
-      stake_units: wagerAmount,
-      confidence: typeof body.edgeScore === "number" ? body.edgeScore : null,
-      explanation: title,
-      is_demo: mode === "PRACTICE",
-      status: dbStatus,
-      ...(withExtras ? { source, client_ref: clientRef } : {}),
-    });
-
-    let parlay: any;
-    let insertRes = await supabaseAdmin.from("picks").insert(buildParent(true)).select("*").single();
-    if (insertRes.error && MISSING_COLUMN_CODES.has(insertRes.error.code)) {
-      // Migration 0003 not applied — retry without source/client_ref.
-      insertRes = await supabaseAdmin.from("picks").insert(buildParent(false)).select("*").single();
-    }
-    if (insertRes.error || !insertRes.data) {
-      console.error("[me/parlays] parent insert failed", insertRes.error?.code, insertRes.error?.message);
-      return res.status(500).json({ error: "save_failed" });
-    }
-    parlay = insertRes.data;
-
-    const legsToInsert = legsJson.map((l) => ({ ...l, pick_id: parlay.id, status: "pending" as const }));
-    const { data: insertedLegs, error: legsError } = await supabaseAdmin
-      .from("pick_legs")
-      .insert(legsToInsert)
-      .select("*");
-
-    if (legsError) {
-      // ROLLBACK: do not leave an orphan parent pick without legs.
-      console.error("[me/parlays] legs insert failed — rolling back parent", legsError.code, legsError.message);
-      await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
-      return res.status(500).json({ error: "parlay_creation_failed", detail: "Leg insert failed; parlay rolled back." });
-    }
-
-    if (!insertedLegs || insertedLegs.length !== legsToInsert.length) {
-      console.error("[me/parlays] legs insert count mismatch — rolling back parent", {
-        expected: legsToInsert.length,
-        actual: insertedLegs?.length ?? 0,
-      });
-      await supabaseAdmin.from("picks").delete().eq("id", parlay.id);
-      return res.status(500).json({
-        error: "parlay_creation_failed",
-        detail: "Leg insert count mismatch; parlay rolled back.",
-      });
-    }
-
-    const legs = [...insertedLegs].sort((a, b) => Number(a.leg_index ?? 0) - Number(b.leg_index ?? 0));
-    return respond(parlay, legs);
-  } catch (err: any) {
-    console.error("[me/parlays] save failed", err?.message);
-    return res.status(500).json({ error: "save_failed" });
-  }
-});
+parlayRoutes.post(
+  "/parlays/save",
+  requireAuth,
+  validate({ body: SaveMeParlaySchema }),
+  saveMeParlayHandler
+);
 
 /**
  * PATCH /api/parlays/:id
- * Update parlay title, status, or settled_units. Ownership enforced.
+ * User-editable parlay metadata only. Settlement status is server-graded only.
  */
-parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { id } = req.params;
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
-  if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
-  }
-
-  const allowed: Record<string, true> = { explanation: true, status: true, stake_units: true };
-  const updates: Record<string, unknown> = {};
-
-  if (typeof req.body.title === "string") updates.explanation = req.body.title.slice(0, 200);
-  if (["pending", "won", "lost", "void", "push"].includes(String(req.body.status || ""))) {
-    updates.status = req.body.status;
-  }
-  if (typeof req.body.stake_units === "number" && req.body.stake_units > 0) {
-    updates.stake_units = req.body.stake_units;
-  }
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ error: "no_valid_fields" });
-  }
-
-  updates.updated_at = new Date().toISOString();
-  const { data, error } = await supabaseAdmin
-    .from("picks")
-    .update(updates)
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .select()
-    .single();
-
-  if (error) return res.status(500).json({ error: "update_failed" });
-  return res.json(data);
-});
+parlayRoutes.patch(
+  "/parlays/:id",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema, body: UpdateParlaySchema }),
+  updateParlayHandler
+);
 
 /**
  * DELETE /api/parlays/:id
@@ -2041,71 +1009,20 @@ parlayRoutes.patch("/parlays/:id", requireAuth, async (req: AuthedRequest, res: 
  * Hiding preserves grading identity, saved parlay ID, Results Ledger truth,
  * live status, and official sportsbook outcome semantics.
  */
-parlayRoutes.delete("/parlays/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { id } = req.params;
-  const supabaseAdmin = await getSupabaseAdmin();
-
-  const ownership = await assertUserOwnsResource(req.user!.id, "parlay", id);
-  if (!ownership.ok) {
-    return res.status(404).json({ error: "parlay_not_found", warnings: [ownershipWarning(ownership)] });
-  }
-
-  const hiddenAt = new Date().toISOString();
-  const { data, error } = await supabaseAdmin
-    .from("picks")
-    .update({ user_hidden_at: hiddenAt, updated_at: hiddenAt })
-    .eq("id", id)
-    .eq("user_id", req.user!.id)
-    .eq("leg_type", "parlay")
-    .is("user_hidden_at", null)
-    .select("id,status,user_hidden_at,updated_at")
-    .maybeSingle();
-
-  if (error) {
-    console.error("[parlays] user hide failed", error.code, error.message);
-    return res.status(500).json({ error: "hide_failed" });
-  }
-
-  if (!data) {
-    return res.status(404).json({ error: "parlay_not_found_or_already_hidden" });
-  }
-
-  return res.json({
-    hidden: true,
-    id: data.id,
-    status: data.status,
-    user_hidden_at: data.user_hidden_at,
-    updated_at: data.updated_at,
-    truth_rule: "status_preserved_void_reserved_for_sportsbook_no_action",
-  });
-});
+parlayRoutes.delete(
+  "/parlays/:id",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  hideParlayHandler
+);
 
 /**
  * Legacy route kept for compatibility, but now protected.
  * If user_id is provided, it must match the logged-in user.
  */
-parlayRoutes.get("/parlays", requireAuth, async (req: AuthedRequest, res: Response) => {
-  const requestedUserId = req.query.user_id as string | undefined;
-  const userId = req.user!.id;
-
-  if (requestedUserId && requestedUserId !== userId) {
-    return res.status(403).json({ error: "forbidden" });
-  }
-
-  const limit = Math.min(Number(req.query.limit ?? 50), 100);
-  const offset = Number(req.query.offset ?? 0);
-
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data, count, error } = await supabaseAdmin
-    .from("picks")
-    .select("*", { count: "exact" })
-    .eq("user_id", userId)
-    .eq("leg_type", "parlay")
-    .is("user_hidden_at", null)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) return res.status(500).json({ error: "fetch_failed" });
-
-  return res.json({ parlays: data ?? [], total: count ?? 0, limit, offset });
-});
+parlayRoutes.get(
+  "/parlays",
+  requireAuth,
+  validate({ query: ListParlaysQuerySchema }),
+  listLegacyParlaysHandler
+);
