@@ -69,19 +69,19 @@ const PLAN_OPTIONS: Array<{
   {
     id: 'pro',
     label: 'Pro',
-    price: '$12.99/mo',
+    price: '$19.99/mo',
     icon: FlaskConical,
     tagline: 'Unlock every research lab.',
-    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'Verified badge', 'Signal graphs & confidence meters'],
+    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'Verified badge', 'Signal graphs & confidence meters', 'Locked-in beta price — won’t increase later'],
     beta: true,
   },
   {
     id: 'capper',
     label: 'Capper',
-    price: '$49.99/mo',
+    price: '$29.99/mo',
     icon: Coins,
     tagline: 'Sell picks, run your own club.',
-    perks: ['Everything in Pro', 'Paid storefront, 0% commission', 'Subscriber chat & clubs'],
+    perks: ['Everything in Pro', 'Paid storefront, 0% commission', 'Subscriber chat & clubs', 'Locked-in beta price — won’t increase later'],
     beta: true,
   },
 ];
@@ -484,7 +484,7 @@ export default function AuthModal({
 
               {(plan === 'pro' || plan === 'capper') && (
                 <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#fbbf24' }}>
-                  This tier is in beta — you're an early supporter. Pricing may change before general launch.
+                  This tier is in beta — you're an early supporter and lock in this price for as long as you stay subscribed.
                 </p>
               )}
 

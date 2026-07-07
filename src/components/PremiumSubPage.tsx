@@ -114,7 +114,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
           </span>
           <p className="text-sm font-bold text-slate-100 mt-1.5">Pro and Capper are in beta.</p>
           <p className="text-xs text-slate-400 leading-normal mt-0.5">
-            Signing up now helps support development and locks in early access — pricing may change before general launch.
+            Signing up now helps support development and locks in your price — $19.99 for Pro, $29.99 for Capper — for as long as you stay subscribed.
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             Plans
           </h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            <span className="text-sky-400 font-bold">Pro ($12.99)</span> unlocks every research lab. <span className="text-indigo-400 font-bold">Capper ($49.99)</span> adds pick selling and your own subscriber chat & clubs.
+            <span className="text-sky-400 font-bold">Pro ($19.99)</span> unlocks every research lab. <span className="text-indigo-400 font-bold">Capper ($29.99)</span> adds pick selling and your own subscriber chat & clubs. Both are locked-in beta prices.
           </p>
         </div>
 
@@ -210,11 +210,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <ShieldCheck className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-sky-400 font-sans">$12.99</span>
+                  <span className="text-2xl font-black text-sky-400 font-sans">$19.99</span>
                   <span className="text-slate-400 text-xs font-mono">/ Month</span>
                 </div>
                 <p className="text-[11px] text-slate-350 leading-relaxed pt-1">
-                  Unlock all Pro analytics labs, verification & advanced graphs. In beta — you're supporting early development.
+                  Unlock all Pro analytics labs, verification & advanced graphs. Locked-in beta price — won't increase later.
                 </p>
               </div>
 
@@ -280,11 +280,11 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <Coins className="w-4 h-4 text-indigo-400" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-indigo-400 font-sans">$49.99</span>
+                  <span className="text-2xl font-black text-indigo-400 font-sans">$29.99</span>
                   <span className="text-slate-400 text-xs font-mono">/ Month</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed pt-1">
-                  Everything in Pro, plus deep research, sell your picks, and your own subscriber chat & clubs. In beta — you're supporting early development.
+                  Everything in Pro, plus deep research, sell your picks, and your own subscriber chat & clubs. Locked-in beta price — won't increase later.
                 </p>
               </div>
 
