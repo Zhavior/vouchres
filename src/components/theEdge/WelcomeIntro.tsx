@@ -68,19 +68,19 @@ export default function WelcomeIntro({
         <div>
           <div className="glass-panel glass-border inline-flex items-center gap-2 rounded-full px-3 py-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-vouch-emerald" />
-            <span className="terminal-text">MLB probability workspace</span>
+            <span className="terminal-text">No hype. Just research.</span>
           </div>
 
           <h1 className="mt-7 text-[2.75rem] font-black leading-[1.05] tracking-tight text-white sm:text-6xl">
-            Stop trusting cappers who{' '}
+            Every MLB pick,{' '}
             <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
-              delete their losses.
+              graded and published.
             </span>
           </h1>
 
           <p className="mt-6 max-w-lg text-lg leading-8 text-white/60">
-            VouchEdge grades every MLB pick to the final box score and publishes it — wins and losses both.
-            Research the slate, build your slip, keep the receipts.
+            VouchEdge grades every MLB pick to the final box score and publishes the result — wins and losses
+            both. Research the slate, build your slip, see the record.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -88,7 +88,7 @@ export default function WelcomeIntro({
               onClick={onStartTrial}
               className="rounded-xl bg-vouch-emerald px-7 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
             >
-              <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+              <span className="inline-flex items-center gap-2">Start researching <ArrowRight className="h-4 w-4" /></span>
             </button>
             <button onClick={onOpenDailyBoard} className="terminal-text transition hover:text-vouch-cyan">
               Open Daily Board
@@ -170,13 +170,13 @@ export default function WelcomeIntro({
       {/* ── THE PROBLEM ── */}
       <motion.section {...fadeUp()} className="glass-panel glass-border mt-24 rounded-2xl p-8 text-center sm:p-12">
         <div className="mx-auto max-w-xl">
-          <div className="terminal-text text-rose-300">The problem</div>
+          <div className="terminal-text text-rose-300">Why we grade everything</div>
           <p className="mt-4 text-2xl font-bold leading-9 text-white">
-            Free capper accounts post a win, delete the loss, and screenshot their way to a fake track record.
+            Most pick trackers only show the wins. Ours publishes every graded result, losses included.
           </p>
           <p className="mt-4 text-sm leading-7 text-white/40">
-            There's no lock time, no box score check, no way to tell hype from a real edge. VouchEdge removes
-            the option to hide.
+            Every pick is timestamped before lock and checked against the official box score — no hand-picked
+            highlights, just the research and the record.
           </p>
         </div>
       </motion.section>
@@ -263,13 +263,13 @@ export default function WelcomeIntro({
       {/* ── CLOSING CTA ── */}
       <motion.section {...fadeUp(0.2)} className="glass-panel glass-border mt-6 mb-16 rounded-2xl p-10 text-center sm:p-14">
         <Sparkles className="mx-auto h-6 w-6 text-vouch-emerald" />
-        <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Ready to keep receipts instead of excuses?</h2>
+        <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">Start researching the slate.</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/40">Free to start. No card required.</p>
         <button
           onClick={onStartTrial}
           className="mt-7 rounded-xl bg-vouch-emerald px-8 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5"
         >
-          <span className="inline-flex items-center gap-2">Start free trial <ArrowRight className="h-4 w-4" /></span>
+          <span className="inline-flex items-center gap-2">Start researching <ArrowRight className="h-4 w-4" /></span>
         </button>
         <p className="mx-auto mt-6 max-w-md text-[10px] leading-5 text-white/25">
           You must be 21+ and in a jurisdiction where this is legal. Probability-based research for
