@@ -71,7 +71,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   const relativeTime = formatRelativeTime(lastUpdated);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-[#0A0D14] px-5 py-4">
+    <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-[hsl(var(--ve-bg-deep))] px-5 py-4">
       {/* Left: brand */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 ring-1 ring-amber-500/30">

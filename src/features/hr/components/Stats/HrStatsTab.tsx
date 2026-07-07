@@ -2,15 +2,17 @@
  * HrStatsTab — Pro Stats Panel
  *
  * Sections:
- *   1. Player Rank Card      — all 12-layer scores ranked vs league, with horizontal bar chart
- *   2. Batter vs. Pitcher    — career head-to-head history, PA/HR/AVG/SLG with sparkline-style dots
- *   3. vs. Team History      — last 5 games vs opponent team, HR / hits / exit velo
- *   4. Recent Form Strip     — last 10 games personal sparkline (AB/HR/xBA)
+ *   1. Player Rank Card      — all 12-layer scores ranked vs league, with horizontal bar chart (real, from the scoring engine)
+ *   2. Batter vs. Pitcher    — SIMULATED illustrative example, PA/HR/AVG/SLG with sparkline-style dots (real data not fetchable client-side yet)
+ *   3. vs. Team History      — SIMULATED illustrative example, last 5 games vs opponent team (real data not fetchable client-side yet)
+ *   4. Recent Form Strip     — SIMULATED illustrative example, last 10 games personal sparkline (real data not fetchable client-side yet)
  *
  * Design:
  *   - CSS tokens only (--ve-* vars)
  *   - Pure SVG for charts — zero external chart deps
  *   - Pro lock overlay on BvP and vs-Team (easy to strip when entitlements added)
+ *   - Sections 2-4 carry a visible "Simulated" badge (SectionHeader `simulated`
+ *     prop) since their data is a modeled example, not this player's real record.
  */
 
 import React, { useMemo } from 'react';
@@ -44,10 +46,16 @@ interface BvPLog {
   obp: number;
 }
 
-// ─── Mock data generators (replace with real Supabase calls) ───────────────
+// ─── Simulated data generators ──────────────────────────────────────────────
+// Real per-batter-vs-pitcher and per-game history isn't fetchable client-side
+// at reasonable cost from the MLB Stats API (same constraint documented in
+// src/lib/mlbDirect.ts). Until a real backend endpoint exists, these produce
+// a deterministic, clearly-labeled illustrative example — never presented as
+// this player's actual record. See the `simulated` badge on SectionHeader
+// above for where this shows up in the UI.
 
 function generateBvPLogs(playerName: string, pitcherName: string): BvPLog[] {
-  // Deterministic seed so same player always gets same fake history
+  // Deterministic seed so the same player always gets the same illustrative example
   const seed = (playerName + pitcherName).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const rng = (n: number) => ((seed * 9301 + 49297 + n * 6547) % 233280) / 233280;
   const seasons = ['2021', '2022', '2023', '2024', '2025'];
@@ -234,13 +242,24 @@ function getLayerRows(p: HrWatchRow): LayerRankRow[] {
 
 // ─── Section header ─────────────────────────────────────────────────────────
 
-const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
+const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string; simulated?: boolean }> = ({ icon, title, subtitle, simulated }) => (
   <div className="flex items-center gap-2 mb-3">
     <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'hsl(var(--ve-surface))' }}>
       {icon}
     </div>
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: 'hsl(var(--ve-text-primary))' }}>{title}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: 'hsl(var(--ve-text-primary))' }}>{title}</p>
+        {simulated && (
+          <span
+            className="rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em]"
+            style={{ background: 'hsl(var(--ve-accent-gold) / 0.14)', color: 'hsl(var(--ve-accent-gold))' }}
+            title="Illustrative — real head-to-head/per-game history isn't available yet, this is a modeled example, not this player's actual record"
+          >
+            Simulated
+          </span>
+        )}
+      </div>
       {subtitle && <p className="text-[10px]" style={{ color: 'hsl(var(--ve-text-muted))' }}>{subtitle}</p>}
     </div>
   </div>
@@ -410,6 +429,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
           icon={<Activity className="h-4 w-4" style={{ color: 'hsl(var(--ve-success))' }} />}
           title="Recent Form"
           subtitle={`Last ${recentLogs.length} games`}
+          simulated
         />
         <div
           className="rounded-xl p-4"
@@ -462,6 +482,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
           icon={<Target className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-pink))' }} />}
           title={`vs. ${player.pitcherName ?? 'Pitcher'}`}
           subtitle="Career head-to-head history"
+          simulated
         />
         {isPro ? (
           <div
@@ -556,6 +577,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
           icon={<Users className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-gold))' }} />}
           title={`vs. ${player.opponent}`}
           subtitle="Last 5 matchups vs this team"
+          simulated
         />
         {isPro ? (
           <div

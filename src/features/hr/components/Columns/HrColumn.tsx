@@ -14,8 +14,8 @@ interface HrColumnProps {
 
 export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile }: HrColumnProps) => {
   return (
-    <section className={`min-h-0 overflow-hidden rounded-2xl border ${borderClass} bg-[rgba(10,13,20,.88)]`}>
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-[#0A0D14]/95 px-3 py-2 backdrop-blur">
+    <section className={`min-h-0 overflow-hidden rounded-2xl border ${borderClass} bg-[hsl(var(--ve-bg-deep)/0.88)]`}>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-[hsl(var(--ve-bg-deep)/0.95)] px-3 py-2 backdrop-blur">
         <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${colorClass}`}>
           <span>{icon}</span>
           <span>{title}</span>

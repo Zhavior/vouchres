@@ -66,7 +66,12 @@ function tierConfig(score: number) {
   return             { label: 'FADE',    color: 'hsl(var(--ve-text-muted))', token: 've-text-muted',  icon: <Minus className="h-3.5 w-3.5" /> };
 }
 
-// ─── Data generators (replace with Supabase hooks) ────────────────────────────
+// ─── Simulated data generators ────────────────────────────────────────────────
+// Real per-batter-vs-pitcher and per-game history isn't fetchable client-side
+// at reasonable cost from the MLB Stats API (same constraint documented in
+// src/lib/mlbDirect.ts). These produce a deterministic, clearly-labeled
+// illustrative example — the "Simulated" badge on <Sec> marks every section
+// that uses them so it's never mistaken for this player's real record.
 
 interface GameLog { date: string; opponent: string; ab: number; hits: number; hrs: number; rbi: number; exitVelo: number | null; }
 interface BvPLog  { season: string; pa: number; hrs: number; avg: number; slg: number; obp: number; }
@@ -264,11 +269,22 @@ const EVBarChart: React.FC<{ logs: GameLog[]; h?: number }> = ({ logs, h = 100 }
 
 // ─── Sub-section header ────────────────────────────────────────────────────────
 
-const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string }> = ({ icon, title, sub }) => (
+const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simulated?: boolean }> = ({ icon, title, sub, simulated }) => (
   <div className="flex items-center gap-2.5 mb-4">
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: 'hsl(var(--ve-surface))' }}>{icon}</div>
     <div>
-      <p className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: 'hsl(var(--ve-text-primary))' }}>{title}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: 'hsl(var(--ve-text-primary))' }}>{title}</p>
+        {simulated && (
+          <span
+            className="rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em]"
+            style={{ background: 'hsl(var(--ve-accent-gold) / 0.14)', color: 'hsl(var(--ve-accent-gold))' }}
+            title="Illustrative — real head-to-head/per-game history isn't available yet, this is a modeled example, not this player's actual record"
+          >
+            Simulated
+          </span>
+        )}
+      </div>
       {sub && <p className="text-[10px]" style={{ color: 'hsl(var(--ve-text-muted))' }}>{sub}</p>}
     </div>
   </div>
@@ -411,12 +427,6 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 borderRight: 'none',
               }}
             >
-              {/* Glow blob */}
-              <div
-                className="pointer-events-none absolute -top-16 -left-16 h-64 w-64 rounded-full opacity-15 blur-3xl"
-                style={{ background: `hsl(${hue} 70% 55%)` }}
-              />
-
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
@@ -733,6 +743,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               icon={<Target className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-pink))' }} />}
               title={`vs ${player.pitcherName ?? 'Pitcher'}`}
               sub="Career head-to-head · AVG + SLG per season"
+              simulated
             />
 
             {/* Career summary chips */}
@@ -802,6 +813,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               icon={<Users className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-gold))' }} />}
               title={`vs ${player.opponent}`}
               sub="Last 5 matchups — exit velocity per game"
+              simulated
             />
 
             {/* Summary chips */}
@@ -854,6 +866,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               icon={<Activity className="h-4 w-4" style={{ color: 'hsl(var(--ve-success))' }} />}
               title="Recent Form"
               sub={`Last ${formLogs.length} games — exit velocity trend`}
+              simulated
             />
 
             {/* Summary chips */}
