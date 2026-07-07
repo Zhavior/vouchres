@@ -36,6 +36,10 @@ import {
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { ParlayTreeModal } from './tree/ParlayTreeModal';
 import { lazy, Suspense } from 'react';
+
+// Lazy: pulls in cytoscape (~300KB+), which must not join the main bundle —
+// ParlayCommandCenter itself is statically imported from App.tsx.
+const ParlayCorrelationGraph = lazy(() => import('./graph/ParlayCorrelationGraph'));
 import {
   normalizeParlayLeg,
   normalizeParlaySlip,
@@ -943,6 +947,9 @@ function MyParlaysPanel({
 
   return (
     <div className="flex flex-col gap-6">
+      <Suspense fallback={null}>
+        <ParlayCorrelationGraph slips={savedSlips} />
+      </Suspense>
       <Section title="Live & Pending" slips={liveSlips} liveToken="--ve-accent-cyan" />
       <Section title="Graded Results" slips={gradedSlips} />
       <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />

@@ -169,6 +169,27 @@ All commits verified line-by-line diffable to confirm zero content/feature loss 
 
 **Note on stray backup folders found on Desktop**: `Desktop/vouchres copy 2` and `Desktop/vouchres copy 3` contain real historical snapshots of this app (useful for comparing "was this ever different" questions); `Desktop/vouchres copy 4` is empty/junk (just a stray `node_modules`) despite its name. Don't assume a numbered copy folder has real content without checking first.
 
+- **Visualization pass — d3-hierarchy, Cytoscape.js, Mermaid** (user explicitly asked to add these tools to the site; a capability addition, not a bug fix)
+  Added three visualization libraries, each used for the layout shape it's actually good at — not layered on arbitrarily:
+  - **d3-hierarchy** (layout math only, rendered as plain React/SVG — see `src/lib/hierarchy/useHierarchyLayout.ts` for the shared `useTreemapLayout`/`usePackLayout`/`useTreeLayout`/`usePartitionLayout` hooks): HR Intelligence board gained a treemap "Map" view (`HrTreemap.tsx`, tiles sized by HR score); Parlay Command Center's saved slips gained a "View Structure" tree view (`ParlayTreeModal.tsx`); Vouch Board's saved-vouches tab gained a sport→market circle-packing chart (`VouchPack.tsx`); Results Studio's "Parlay Breakdown" panel became a status×leg-count icicle (`ResultsPartition.tsx`).
+  - **Cytoscape.js** (owns its own canvas/simulation — mounted imperatively via `src/lib/graph/CytoscapeGraph.tsx`, not math-only like d3): Home Feed's "Following" tab gained a real capper-network graph (`CapperNetworkGraph.tsx` — you + followed accounts, sized by real `vouchesCount`); Parlay Command Center's My Parlays panel gained a leg-correlation graph (`ParlayCorrelationGraph.tsx` — which players actually co-occur across a user's own saved slips).
+  - **Mermaid** (dynamically imported per-diagram via `src/lib/diagrams/MermaidDiagram.tsx` so its ~500KB never sits in the main bundle): the front page's "How Grading Works" section (`WelcomeIntro.tsx`) now renders a real flowchart (lock → live tracking → auto-grade branching to Won/Lost → published either way) instead of three static cards, themed to the Z8 emerald/cyan palette instead of Mermaid's default look.
+
+  All of these read real, already-loaded data (HR scores, saved slip legs, real vouch/follow data) — no invented stats, consistent with the project's truth rules. Empty-state paths were not skipped (verified: `HrTreemap`'s "no players" message, `VouchPack`/`ParlayCorrelationGraph`/`CapperNetworkGraph` all return `null`/a message rather than an empty canvas).
+
+  Internal architecture reference (Mermaid source, for docs — not rendered anywhere in-app):
+  ```mermaid
+  flowchart LR
+    A[Pick locks — timestamped at game start] --> B[Game plays out — tracked from official MLB feed]
+    B --> C{Graded automatically}
+    C -->|Hit| D[Won]
+    C -->|Miss| E[Lost]
+    D --> F[Published to ledger — same day, both outcomes visible]
+    E --> F
+  ```
+
+  **Known gap**: none of the Cytoscape/pack/partition views could be visually verified with populated real data live in-browser — every test session so far has been a guest account with zero saved slips/vouches/follows, so only the empty-state branches were confirmed. If a future session has real login credentials, spot-check that populated graphs actually render sensibly (node sizes, overlap, readability at the default `cose` layout).
+
 ## What's left (the rest of the site)
 
 Everything else in `src/` still uses the old `ve-*`/hardcoded-hex/`edge-*` visual language. Known large surfaces not yet touched (from earlier exploration this session — verify each still exists/is current before assuming):

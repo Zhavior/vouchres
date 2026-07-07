@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import FeedTabs from './FeedTabs';
 import FeedComposer from './FeedComposer';
 import FeedPostCard from './FeedPostCard';
 import AdBanner from '../../components/AdBanner';
+
+// Lazy: pulls in cytoscape (~300KB+) — keep it out of this already-lazy
+// page's initial chunk too, since HomeFeedPage itself can render before
+// the "Following" tab (where this graph lives) is ever opened.
+const CapperNetworkGraph = lazy(() => import('./CapperNetworkGraph'));
 import { FeedPost, Parlay, Vouch, CreatorProofProfile } from '../../types';
 import { 
   Search, 
@@ -405,6 +410,12 @@ export default function HomeFeedPage({
             if (onSectionChange) onSectionChange('premium');
           }}
         />
+
+        {activeTab === 'following' && followingList.length > 0 && (
+          <Suspense fallback={null}>
+            <CapperNetworkGraph posts={posts} followingList={followingList} />
+          </Suspense>
+        )}
 
         {/* Dynamic empty state — one shared card, three copy variants */}
         {activeTab === 'following' && followingList.length === 0 ? (
