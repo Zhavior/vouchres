@@ -12,6 +12,7 @@ import {
   pack as d3Pack,
   tree as d3Tree,
   cluster as d3Cluster,
+  partition as d3Partition,
   type HierarchyNode,
   type HierarchyRectangularNode,
   type HierarchyCircularNode,
@@ -60,6 +61,20 @@ export function usePackLayout<T extends HierarchyDatum>(
       .size([Math.max(1, width), Math.max(1, height)])
       .padding(padding)(root);
     return root as HierarchyCircularNode<T>;
+  }, [data, width, height, padding]);
+}
+
+/** Icicle-style layout: each depth occupies a fixed horizontal band, width proportional to value. */
+export function usePartitionLayout<T extends HierarchyDatum>(
+  data: T,
+  width: number,
+  height: number,
+  padding = 1,
+): HierarchyRectangularNode<T> {
+  return useMemo(() => {
+    const root = buildRoot(data);
+    d3Partition<T>().size([Math.max(1, width), Math.max(1, height)]).padding(padding)(root);
+    return root as HierarchyRectangularNode<T>;
   }, [data, width, height, padding]);
 }
 
