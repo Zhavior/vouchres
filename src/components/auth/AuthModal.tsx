@@ -139,14 +139,22 @@ export default function AuthModal({
     setBusy(true);
     try {
       if (mode === 'signup') {
-        const { error } = await signUpWithEmail({
+        const { data, error } = await signUpWithEmail({
           email: email.trim(),
           password,
           username: username.trim(),
           inviteCode: inviteCode.trim() || undefined,
         });
         if (error) { setError(friendlyError(error.message)); return; }
-        setEmailSent(true);
+        if (data?.session) {
+          // Email confirmation is disabled on this Supabase project — signUp
+          // already returned a live session, so the user is logged in right
+          // now. Route them straight in instead of showing a false
+          // "check your inbox" step for an email that isn't coming.
+          onAuthed?.();
+        } else {
+          setEmailSent(true);
+        }
       } else {
         const { error } = await signInWithEmail({ email: email.trim(), password });
         if (error) { setError(friendlyError(error.message)); return; }
