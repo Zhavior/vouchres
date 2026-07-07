@@ -8,6 +8,8 @@ import type { Parlay } from '../types';
 interface SlateGame {
   away: string;
   home: string;
+  awayTeamId: number | null;
+  homeTeamId: number | null;
   time: string;
   live: boolean;
 }
@@ -22,6 +24,8 @@ function mapSlateGames(payload: any): SlateGame[] {
   return (payload?.games ?? []).slice(0, 12).map((g: any) => ({
     away: g.awayTeam?.abbrev ?? g.awayTeam?.name ?? 'AWY',
     home: g.homeTeam?.abbrev ?? g.homeTeam?.name ?? 'HOM',
+    awayTeamId: g.awayTeam?.id ?? null,
+    homeTeamId: g.homeTeam?.id ?? null,
     time: g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '',
     live: /progress|live|in play/i.test(String(g.status ?? '')),
   }));

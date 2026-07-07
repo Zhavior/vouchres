@@ -1,12 +1,25 @@
+import { useState } from 'react';
 import { motion } from '../../lib/motion';
-import { ArrowRight, Check, Lock, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
+import { ArrowRight, Check, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
 import { GradingDemo } from './GradingDemo';
+import { MermaidDiagram } from '../../lib/diagrams/MermaidDiagram';
+import { logoByTeamId } from '../../lib/teamLogos';
+
+const GRADING_FLOWCHART = `flowchart LR
+  A["🔒 Pick locks<br/>Timestamped & frozen at game start"] --> B["📡 Game plays out<br/>Tracked live from the official MLB feed"]
+  B --> C{"✅ Graded automatically<br/>Final score decides it"}
+  C -->|Hit| D["Won"]
+  C -->|Miss| E["Lost"]
+  D --> F["📖 Published to your ledger — same day"]
+  E --> F`;
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 interface SlateGame {
   away: string;
   home: string;
+  awayTeamId?: number | null;
+  homeTeamId?: number | null;
   time: string;
   live: boolean;
 }
@@ -31,11 +44,14 @@ const WORKSPACE_MODULES = [
   { title: 'Pro Labs', body: 'Move into deeper player, matchup, and graph research when data exists.', section: 'player_edge_lab', icon: TrendingUp },
 ] as const;
 
-const GRADING_STEPS = [
-  { icon: Lock, step: '1', title: 'Pick locks', body: 'Your pick is timestamped and frozen the moment the game starts. No edits after lock.' },
-  { icon: Radio, step: '2', title: 'Game plays out', body: 'We track the live box score from the official MLB feed while the game is in progress.' },
-  { icon: ShieldCheck, step: '3', title: 'Graded automatically', body: 'Final score decides won or lost. Published to your public ledger either way, same day.' },
-] as const;
+function TeamIcon({ teamId, abbr }: { teamId?: number | null; abbr: string }) {
+  const [errored, setErrored] = useState(false);
+  const src = logoByTeamId(teamId);
+  if (!src || errored) {
+    return <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[8px] font-black text-white/50">{abbr.slice(0, 2)}</span>;
+  }
+  return <img src={src} alt={abbr} className="h-5 w-5 shrink-0 object-contain" onError={() => setErrored(true)} />;
+}
 
 function fadeUp(delay = 0) {
   return {
@@ -131,8 +147,10 @@ export default function WelcomeIntro({
               slate.map((g, i) => (
                 <div key={`${g.away}-${g.home}-${i}`} className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-2 font-mono text-sm font-bold text-white/90">
+                    <TeamIcon teamId={g.awayTeamId} abbr={g.away} />
                     <span className="w-10 truncate">{g.away}</span>
                     <span className="text-white/30">@</span>
+                    <TeamIcon teamId={g.homeTeamId} abbr={g.home} />
                     <span className="w-10 truncate">{g.home}</span>
                   </div>
                   {g.live ? (
@@ -187,22 +205,8 @@ export default function WelcomeIntro({
           <div className="terminal-text text-vouch-cyan">How grading works</div>
           <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Three steps. No human can edit step three.</h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {GRADING_STEPS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.step} className="glass-panel glass-border rounded-2xl p-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-vouch-cyan/10 text-vouch-cyan">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="terminal-text">Step {item.step}</span>
-                </div>
-                <h3 className="mt-3 text-base font-bold text-white">{item.title}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-white/40">{item.body}</p>
-              </div>
-            );
-          })}
+        <div className="glass-panel glass-border overflow-x-auto rounded-2xl p-5">
+          <MermaidDiagram definition={GRADING_FLOWCHART} id="grading-flowchart" className="mx-auto min-w-[560px] max-w-full [&_svg]:mx-auto" />
         </div>
         <div className="mt-3">
           <GradingDemo />
