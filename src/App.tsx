@@ -59,6 +59,7 @@ const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
 const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
 const PlayerEdgeLabPage = lazy(() => import('./pages/pro/PlayerEdgeLabPage'));
 const TeamMatchupLabPage = lazy(() => import('./pages/pro/TeamMatchupLabPage'));
+const HitterMatchupZonesPage = lazy(() => import('./pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('./pages/pro/ProGraphsLabPage'));
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
@@ -1762,6 +1763,12 @@ export default function App() {
         );
       case 'team_matchup_lab':
         return <TeamMatchupLabPage />;
+      case 'hitter_matchup_zones':
+        return (
+          <ProAccessGate profile={profile} featureName="Hitter Matchup Zones" onNavigatePremium={() => navigateSection('premium')}>
+            <HitterMatchupZonesPage />
+          </ProAccessGate>
+        );
       case 'pro_graphs_lab':
         return (
           <ProAccessGate profile={profile} featureName="Pro Graphs Lab" onNavigatePremium={() => navigateSection('premium')}>
