@@ -160,12 +160,17 @@ const PUBLIC_SECTIONS = new Set([
 
 function hasRealAuthToken() {
   try {
-    // Only trust Supabase's real auth storage.
-    // Do not trust old VouchEdge/demo/local fallback keys.
+    // Only trust Supabase's real auth storage — never old demo/local keys.
+    // Our client persists its session under the custom storageKey
+    // "vouchedge.auth" (see lib/supabaseClient.ts); sessions saved before
+    // that key existed live under Supabase's default "sb-<ref>-auth-token".
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key) continue;
-      if (!key.startsWith('sb-') || !key.includes('auth-token')) continue;
+      const isSupabaseSessionKey =
+        key === 'vouchedge.auth' ||
+        (key.startsWith('sb-') && key.includes('auth-token'));
+      if (!isSupabaseSessionKey) continue;
 
       const raw = localStorage.getItem(key);
       if (!raw) continue;
@@ -181,7 +186,9 @@ function hasRealAuthToken() {
           return true;
         }
       } catch {
-        return false;
+        // Malformed entry under this key — keep scanning the others
+        // instead of declaring the user logged out.
+        continue;
       }
     }
   } catch {
@@ -433,7 +440,7 @@ export default function App() {
     } catch {
       // ignore storage failures
     }
-    navigateSection('welcome');
+    navigateSection('island');
   };
 
   const handleLogoutComplete = () => {
