@@ -23,6 +23,10 @@ interface HomeFeedLayoutProps {
   isRouteSwitching?: boolean;
   onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
+  /** True only for the bare public front page (logged-out 'welcome') — hides
+   * the sidebar/header/right-rail app chrome. Logged-in users landing on
+   * 'welcome' (Edge Island) still get the normal app shell. */
+  isPublicFrontPage?: boolean;
 }
 
 export default function HomeFeedLayout({
@@ -38,6 +42,7 @@ export default function HomeFeedLayout({
   isRouteSwitching = false,
   onAuthLoginSuccess,
   onAuthLogoutComplete,
+  isPublicFrontPage = false,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
@@ -100,8 +105,8 @@ export default function HomeFeedLayout({
 
   return (
     <div
-      className={`min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-obsidian-900'
+      className={`z8-layout-root font-z8 min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
+        activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-obsidian-900 has-active-theme' : 'bg-obsidian-900'
       }`}
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
@@ -176,15 +181,15 @@ export default function HomeFeedLayout({
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
       <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
-        activeSection === 'welcome' ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
+        isPublicFrontPage ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
       }`} id="layout-inner-frame">
-        
+
         {/* Column 1: Left Sticky Sidebar (hidden on mobile, responsive xl width) */}
-        {activeSection !== 'welcome' && (
+        {!isPublicFrontPage && (
           <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
-            <FeedSidebar 
-              activeSection={activeSection} 
-              onSectionChange={onSectionChange} 
+            <FeedSidebar
+              activeSection={activeSection}
+              onSectionChange={onSectionChange}
               profile={profile}
               onOpenCmdK={() => setCmdKOpen(true)}
               unreadNotifications={unreadNotifications}
@@ -193,9 +198,9 @@ export default function HomeFeedLayout({
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex-1 min-w-0 bg-obsidian-900 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-white/10 pb-[74px] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex-1 min-w-0 bg-obsidian-900 font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'border-r border-white/10 pb-[74px] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
-          {activeSection !== 'welcome' && (
+          {!isPublicFrontPage && (
             <header className="md:hidden sticky top-0 bg-[hsl(var(--ve-bg-deep)/0.90)] backdrop-blur-md border-b border-[hsl(var(--ve-border)/0.30)] px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 z-30 select-none">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSectionChange('feed')}>
                 <div className="w-8 h-8 rounded-lg border border-[hsl(var(--ve-accent-cyan)/0.50)] bg-[hsl(var(--ve-accent-cyan)/0.12)] flex items-center justify-center text-[hsl(var(--ve-accent-cyan))] font-bold text-xs shadow-[0_0_10px_hsl(var(--ve-accent-cyan)/0.20)]">
@@ -270,7 +275,7 @@ export default function HomeFeedLayout({
       </div>
 
       {/* Persistent Bottom Mobile Nav */}
-      {activeSection !== 'welcome' && (
+      {!isPublicFrontPage && (
         <FeedMobileNav 
           activeSection={activeSection} 
           onSectionChange={onSectionChange} 

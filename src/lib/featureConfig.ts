@@ -49,10 +49,8 @@ export interface FeatureLayout {
 export const ALL_FEATURES: FeatureConfig[] = [
 
   // Edge Island — ungrouped, renders first/headerless above "Daily".
-  // Routes to the `welcome` section: when authenticated, TheEdgeShell renders
-  // its real "The Island" dashboard (stats, quick jumps, pending picks, AI
-  // seat) instead of the public sell screen. This is the only nav entry
-  // point back to that dashboard once a user has navigated elsewhere.
+  // Routes to the `welcome` section, which now renders the Z8 morning command
+  // board with a logged-in dashboard mode and a public preview mode.
   { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
 
   // Daily — sport-scoped boards and slates
@@ -84,7 +82,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 
   // Account
-  { id: "premium", label: "PRO Premium Tiers", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "premium", label: "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
   { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
   { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];

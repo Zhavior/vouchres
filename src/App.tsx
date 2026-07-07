@@ -1947,6 +1947,7 @@ export default function App() {
           onAuthLoginSuccess={handleLoginSuccess}
           onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isPendingRoute}
+          isPublicFrontPage={activeSection === 'welcome' && !hasRealAuthToken()}
         >
           <Suspense
             fallback={
