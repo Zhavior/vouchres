@@ -196,6 +196,9 @@ const HomeRunIntelligencePage: React.FC = () => {
           onRefresh={handleRefresh}
           isRefreshing={vm.loading}
           lastUpdated={lastUpdated}
+          date={vm.date}
+          isToday={vm.isToday}
+          onDateChange={vm.setDate}
         />
 
         {vm.autoSwitchedToPreview && (
@@ -307,6 +310,7 @@ const HomeRunIntelligencePage: React.FC = () => {
               vm.setSelectedPlayer(player);
               setIsProfileOpen(true);
             }}
+            getHrResult={vm.getHrResult}
           />
         )}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, LayoutGrid, Table2, RefreshCw } from 'lucide-react';
+import { Flame, LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export type HrViewMode = 'cards' | 'table';
 
@@ -10,7 +10,54 @@ export interface HrHeaderProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   lastUpdated?: Date | null;
+  date?: string;
+  isToday?: boolean;
+  onDateChange?: (date: string) => void;
 }
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isoAddDays(iso: string, delta: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
+const HrDateNav: React.FC<{ date: string; isToday: boolean; onChange: (date: string) => void }> = ({ date, isToday, onChange }) => (
+  <div className="flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] px-1.5 py-1">
+    <button
+      type="button"
+      onClick={() => onChange(isoAddDays(date, -1))}
+      aria-label="Previous day"
+      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition-colors duration-150 hover:bg-white/[0.06] hover:text-cyan-300"
+    >
+      <ChevronLeft className="h-3.5 w-3.5" />
+    </button>
+    <label className="relative flex cursor-pointer items-center gap-1.5 px-1.5">
+      <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+      <span className="text-xs font-bold tabular-nums text-zinc-200">{isToday ? 'Today' : date}</span>
+      <input
+        type="date"
+        value={date}
+        max={todayISO()}
+        onChange={(e) => e.target.value && onChange(e.target.value)}
+        className="absolute inset-0 cursor-pointer opacity-0"
+        aria-label="Pick a date"
+      />
+    </label>
+    <button
+      type="button"
+      onClick={() => onChange(isoAddDays(date, 1))}
+      disabled={isToday}
+      aria-label="Next day"
+      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition-colors duration-150 hover:bg-white/[0.06] hover:text-cyan-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+    >
+      <ChevronRight className="h-3.5 w-3.5" />
+    </button>
+  </div>
+);
 
 function formatRelativeTime(date: Date | null | undefined): string | null {
   if (!date) return null;
@@ -67,6 +114,9 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   onRefresh,
   isRefreshing = false,
   lastUpdated = null,
+  date,
+  isToday = true,
+  onDateChange,
 }) => {
   const relativeTime = formatRelativeTime(lastUpdated);
 
@@ -83,16 +133,20 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
             HOME RUN INTELLIGENCE
           </h1>
           <p className="truncate text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-            MLB &middot; TODAY &middot; {mode}
+            MLB &middot; {isToday ? 'TODAY' : date} &middot; {mode}
           </p>
         </div>
       </div>
 
-      {/* Center: live pulse */}
+      {/* Center: date nav + live pulse */}
       <div className="flex items-center gap-3">
-        <LivePulse active={!isRefreshing} />
-        {relativeTime && (
+        {date && onDateChange && <HrDateNav date={date} isToday={isToday} onChange={onDateChange} />}
+        <LivePulse active={!isRefreshing && isToday} />
+        {relativeTime && isToday && (
           <span className="hidden sm:inline text-[11px] font-medium text-zinc-500">{relativeTime}</span>
+        )}
+        {!isToday && (
+          <span className="hidden sm:inline text-[11px] font-medium text-zinc-500">Graded history</span>
         )}
       </div>
 

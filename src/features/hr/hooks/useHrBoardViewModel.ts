@@ -1,7 +1,14 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useDailyHrBoard } from './useDailyHrBoard';
+import { useHrResultsForDate } from './useHrResultsForDate';
 import { buildBoard, rowsForMode } from '../utils/normalizeHrWatch';
 import type { HrWatchMode, HrWatchRow } from '../types/hrWatch';
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export type HrResult = 'hit' | 'no-hr' | null;
 
 export interface HrBoardStats {
   total: number;
@@ -48,8 +55,26 @@ export function useHrBoardViewModel() {
     );
   };
 
-  const today = new Date().toISOString().slice(0, 10);
-  const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(today);
+  const [date, setDateState] = useState<string>(todayISO);
+  const isToday = date === todayISO();
+
+  const setDate = useCallback((next: string) => {
+    // Never let the calendar select a date beyond today — there's no real
+    // slate or results to show for a day that hasn't happened yet.
+    setDateState(next > todayISO() ? todayISO() : next);
+  }, []);
+
+  const { data: rawBoard, loading, error, refresh } = useDailyHrBoard(date);
+  const hrResults = useHrResultsForDate(date);
+
+  const getHrResult = useCallback((playerId: string | number | null): HrResult => {
+    if (playerId == null || hrResults.loading) return null;
+    const id = typeof playerId === 'string' ? Number(playerId) : playerId;
+    if (!Number.isFinite(id)) return null;
+    if (hrResults.hitByPlayerId.has(id)) return 'hit';
+    // Mid-slate today: a miss so far isn't a confirmed "no HR" yet.
+    return hrResults.isToday ? null : 'no-hr';
+  }, [hrResults]);
 
   const board = useMemo(() => rawBoard ? buildBoard(rawBoard as unknown) : null, [rawBoard]);
 
@@ -113,5 +138,6 @@ export function useHrBoardViewModel() {
     buckets, rows: filteredRows, stats, selectedPlayer, loading, error, mode, viewMode, search, selectedTiers, modeCounts,
     autoSwitchedToPreview,
     setMode, setViewMode, setSearch, setSelectedPlayer, onToggleTier, refresh,
+    date, setDate, isToday, getHrResult, hrResultsLoading: hrResults.loading,
   };
 }

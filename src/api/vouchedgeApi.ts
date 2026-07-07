@@ -131,6 +131,7 @@ export const vouchedgeApi = {
 
   // Live HR notification feed
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
+  hrFeedByDate: (date: string) => getJson<HrFeedResponse>(`/api/mlb/hr-feed/date/${date}`),
 
   // Live Games matchups
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
