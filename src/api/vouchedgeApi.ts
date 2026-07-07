@@ -16,6 +16,7 @@ import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
+import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
@@ -132,6 +133,9 @@ export const vouchedgeApi = {
   // Live HR notification feed
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
   hrFeedByDate: (date: string) => getJson<HrFeedResponse>(`/api/mlb/hr-feed/date/${date}`),
+
+  // Live at-bat pitch-by-pitch snapshot
+  liveAtBat: (gamePk: number) => getJson<LiveAtBatSnapshot>(`/api/mlb/live-at-bat/${gamePk}`),
 
   // Live Games matchups
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
