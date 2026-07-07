@@ -13,9 +13,14 @@ import {
   Sparkles,
   ShieldCheck,
   ArrowRight,
+  ArrowLeft,
   Wand2,
   Ticket,
   MailCheck,
+  FlaskConical,
+  Trophy,
+  Coins,
+  ClipboardCheck,
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -24,9 +29,62 @@ import {
   isSupabaseConfigured,
 } from '../../lib/supabaseClient';
 import { apiUrl } from '../../lib/apiBase';
+import { startStripeCheckout } from '../../lib/billingClient';
 
 type Mode = 'login' | 'signup';
 type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+type SignupPlan = 'free' | 'pro' | 'capper';
+type SignupStep = 'intro' | 'plan' | 'form';
+
+const INTRO_SLIDES = [
+  {
+    icon: ClipboardCheck,
+    title: 'Every pick graded, win or lose.',
+    body: 'Your picks lock before first pitch and get checked against the official box score — no hiding a bad night.',
+  },
+  {
+    icon: Trophy,
+    title: 'Build slips, follow cappers, track the record.',
+    body: 'Save parlays, follow research you trust, and see real win rates — not screenshots.',
+  },
+] as const;
+
+const PLAN_OPTIONS: Array<{
+  id: SignupPlan;
+  label: string;
+  price: string;
+  icon: typeof ShieldCheck;
+  tagline: string;
+  perks: string[];
+  beta?: boolean;
+}> = [
+  {
+    id: 'free',
+    label: 'Basic',
+    price: 'Free',
+    icon: ShieldCheck,
+    tagline: 'Track picks and build slips.',
+    perks: ['Up to 20 saved slips', 'Public ledger', 'Community feed'],
+  },
+  {
+    id: 'pro',
+    label: 'Pro',
+    price: '$12.99/mo',
+    icon: FlaskConical,
+    tagline: 'Unlock every research lab.',
+    perks: ['All Pro Labs (Live Game, Player Edge, Team Matchup, Graphs)', 'Verified badge', 'Signal graphs & confidence meters'],
+    beta: true,
+  },
+  {
+    id: 'capper',
+    label: 'Capper',
+    price: '$49.99/mo',
+    icon: Coins,
+    tagline: 'Sell picks, run your own club.',
+    perks: ['Everything in Pro', 'Paid storefront, 0% commission', 'Subscriber chat & clubs'],
+    beta: true,
+  },
+];
 
 interface AuthModalProps {
   open: boolean;
@@ -51,6 +109,10 @@ export default function AuthModal({
   onGuest,
 }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [signupStep, setSignupStep] = useState<SignupStep>('intro');
+  const [introIndex, setIntroIndex] = useState(0);
+  const [plan, setPlan] = useState<SignupPlan>('free');
+  const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -70,6 +132,9 @@ export default function AuthModal({
       setError(null);
       setNotice(null);
       setEmailSent(false);
+      setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
+      setIntroIndex(0);
+      setPlan('free');
     }
   }, [open, initialMode]);
 
@@ -151,6 +216,16 @@ export default function AuthModal({
           // already returned a live session, so the user is logged in right
           // now. Route them straight in instead of showing a false
           // "check your inbox" step for an email that isn't coming.
+          if (plan === 'pro' || plan === 'capper') {
+            setRedirectingToCheckout(true);
+            const result = await startStripeCheckout(plan === 'pro' ? 'gold' : 'seller_pro');
+            if (result.ok) {
+              window.location.href = result.url;
+              return;
+            }
+            setRedirectingToCheckout(false);
+            setNotice('Checkout is not active yet in this environment — continuing with a free account for now.');
+          }
           onAuthed?.();
         } else {
           setEmailSent(true);
@@ -238,11 +313,23 @@ export default function AuthModal({
             </div>
 
             <h2 className="text-xl font-black text-white tracking-tight">
-              {emailSent ? 'Check your inbox' : mode === 'signup' ? 'Create your account' : 'Welcome back'}
+              {emailSent
+                ? 'Check your inbox'
+                : mode === 'signup' && signupStep === 'intro'
+                ? INTRO_SLIDES[introIndex].title
+                : mode === 'signup' && signupStep === 'plan'
+                ? 'Choose your plan'
+                : mode === 'signup'
+                ? 'Create your account'
+                : 'Welcome back'}
             </h2>
             <p className="text-sm text-slate-400 mt-1">
               {emailSent
                 ? 'One more step to finish setting up your account.'
+                : mode === 'signup' && signupStep === 'intro'
+                ? INTRO_SLIDES[introIndex].body
+                : mode === 'signup' && signupStep === 'plan'
+                ? 'Pro tools are in beta — signing up now helps support development and locks in early access.'
                 : mode === 'signup'
                 ? 'Track verified picks, build slips, and unlock the full edge board.'
                 : 'Log in to pick up where you left off.'}
@@ -275,15 +362,174 @@ export default function AuthModal({
                 Back to sign in
               </button>
             </div>
+          ) : mode === 'signup' && signupStep === 'intro' ? (
+            /* ── Intro slides ── */
+            <div className="px-6 pb-6">
+              <div className="flex items-center justify-center gap-2 py-6">
+                {(() => {
+                  const Icon = INTRO_SLIDES[introIndex].icon;
+                  return (
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                      style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)' }}
+                    >
+                      <Icon className="w-8 h-8" style={{ color: CYAN }} />
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Slide dots */}
+              <div className="flex items-center justify-center gap-1.5 mb-5">
+                {INTRO_SLIDES.map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 rounded-full transition-all"
+                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? CYAN : 'rgba(255,255,255,0.15)' }}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {introIndex > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIntroIndex((i) => Math.max(0, i - 1))}
+                    className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
+                    style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (introIndex < INTRO_SLIDES.length - 1) setIntroIndex((i) => i + 1);
+                    else setSignupStep('plan');
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-slate-950"
+                  style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
+                >
+                  {introIndex < INTRO_SLIDES.length - 1 ? 'Next' : "Let's go"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSignupStep('plan')}
+                className="w-full mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          ) : mode === 'signup' && signupStep === 'plan' ? (
+            /* ── Plan selection ── */
+            <div className="px-6 pb-6">
+              <div className="space-y-2.5">
+                {PLAN_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = plan === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setPlan(opt.id)}
+                      className="w-full text-left rounded-xl border p-3.5 transition-colors"
+                      style={{
+                        background: selected ? 'rgba(34,211,238,0.08)' : FIELD,
+                        borderColor: selected ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: selected ? 'rgba(34,211,238,0.16)' : 'rgba(255,255,255,0.05)' }}
+                        >
+                          <Icon className="w-4 h-4" style={{ color: selected ? CYAN : '#94a3b8' }} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-black text-white">{opt.label}</span>
+                            <span className="text-xs font-bold" style={{ color: CYAN }}>{opt.price}</span>
+                            {opt.beta && (
+                              <span
+                                className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                                style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24' }}
+                              >
+                                Beta
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{opt.tagline}</p>
+                          <ul className="mt-1.5 space-y-0.5">
+                            {opt.perks.map((perk) => (
+                              <li key={perk} className="flex items-start gap-1.5 text-[10px] text-slate-500">
+                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? CYAN : '#64748b' }} />
+                                {perk}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div
+                          className="w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center"
+                          style={{ borderColor: selected ? CYAN : 'rgba(255,255,255,0.2)' }}
+                        >
+                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: CYAN }} />}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {(plan === 'pro' || plan === 'capper') && (
+                <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#fbbf24' }}>
+                  This tier is in beta — you're an early supporter. Pricing may change before general launch.
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setSignupStep('intro')}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
+                  style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSignupStep('form')}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-slate-950"
+                  style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           ) : (
           <>
+          {/* Back to plan (signup only) */}
+          {mode === 'signup' && (
+            <div className="px-6 -mt-1 mb-1">
+              <button
+                type="button"
+                onClick={() => setSignupStep('plan')}
+                className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                {PLAN_OPTIONS.find((p) => p.id === plan)?.label ?? 'Basic'} plan
+              </button>
+            </div>
+          )}
           {/* Tab switch */}
           <div className="px-6">
             <div className="grid grid-cols-2 gap-1 p-1 rounded-xl" style={{ background: FIELD }}>
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setMode(m); setError(null); setNotice(null); }}
+                  onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'intro' : 'form'); setIntroIndex(0); }}
                   className="relative py-2 text-sm font-bold rounded-lg transition-colors"
                   style={{ color: mode === m ? '#fff' : '#64748b' }}
                 >
@@ -472,15 +718,22 @@ export default function AuthModal({
             {/* Primary */}
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || redirectingToCheckout}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-slate-950 transition-all disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #22d3ee, #2563eb)', boxShadow: '0 8px 28px rgba(34,211,238,0.28)' }}
             >
-              {busy ? (
+              {redirectingToCheckout ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Redirecting to checkout...
+                </>
+              ) : busy ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  {mode === 'signup' ? 'Create account' : 'Log in'}
+                  {mode === 'signup'
+                    ? plan === 'free' ? 'Create account' : `Create account & continue to ${PLAN_OPTIONS.find((p) => p.id === plan)?.label}`
+                    : 'Log in'}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
