@@ -69,6 +69,10 @@ export const helmetMiddleware = helmet({
         "https://statsapi.mlb.com",
         "https://*.supabase.co",
         "https://api.stripe.com",
+        // Vite HMR websocket (dev only — separate port from Express)
+        ...(process.env.NODE_ENV !== "production"
+          ? ["ws://localhost:*", "ws://127.0.0.1:*"]
+          : []),
       ],
       frameSrc: ["https://js.stripe.com"],
     },

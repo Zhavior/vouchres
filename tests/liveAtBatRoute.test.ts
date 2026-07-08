@@ -83,6 +83,7 @@ describe("live at-bat API route", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
+      ok: true,
       success: true,
       data: snapshot,
       meta: {

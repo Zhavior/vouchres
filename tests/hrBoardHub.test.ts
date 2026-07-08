@@ -4,7 +4,14 @@ vi.mock("../server/services/mlb/hrPipeline", () => ({
   buildValidatedHrBoard: vi.fn(),
 }));
 
+vi.mock("../server/lib/upstashRedis", () => ({
+  isUpstashEnabled: vi.fn(() => false),
+  redisGetJson: vi.fn(),
+  redisSetJson: vi.fn(),
+}));
+
 import { buildValidatedHrBoard } from "../server/services/mlb/hrPipeline";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../server/lib/upstashRedis";
 import {
   expireValidatedHrBoardHubCacheForTests,
   getCachedValidatedHrBoard,
@@ -49,6 +56,7 @@ const sampleBoard = {
 describe("getCachedValidatedHrBoard last-good fallback", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    vi.mocked(isUpstashEnabled).mockReturnValue(false);
     resetValidatedHrBoardHubForTests();
   });
 
@@ -78,5 +86,28 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     vi.mocked(buildValidatedHrBoard).mockRejectedValueOnce(new Error("MLB Stats API down"));
 
     await expect(getCachedValidatedHrBoard()).rejects.toThrow("MLB Stats API down");
+  });
+
+  it("serves last-good validated board from Redis when local L1 is empty", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    vi.mocked(buildValidatedHrBoard)
+      .mockResolvedValueOnce(sampleBoard)
+      .mockRejectedValueOnce(new Error("MLB Stats API circuit open"));
+
+    await getCachedValidatedHrBoard();
+    expect(redisSetJson).toHaveBeenCalled();
+
+    resetValidatedHrBoardHubForTests();
+    expireValidatedHrBoardHubCacheForTests();
+
+    const storedAt = Date.now() - 5_000;
+    vi.mocked(redisGetJson).mockResolvedValueOnce({ board: sampleBoard, storedAt });
+
+    const fallback = await getCachedValidatedHrBoard();
+    expect(fallback.servedFromLastGood).toBe(true);
+    expect(fallback.lastGoodWarnings).toContain(
+      "Serving last good snapshot — upstream temporarily unavailable",
+    );
+    expect(redisGetJson).toHaveBeenCalled();
   });
 });

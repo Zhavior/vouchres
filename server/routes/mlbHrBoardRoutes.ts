@@ -111,6 +111,7 @@ export function registerHrBoardRoutes(app: Express): void {
     }
 
     res.json({
+      ok: true,
       success: true,
       data: snapshot,
       meta: buildApiMeta({
