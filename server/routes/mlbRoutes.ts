@@ -118,7 +118,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json(report);
+      res.json({ ok: true, ...report });
     } catch (err: any) {
       throw upstreamUnavailable("Daily report unavailable.", err);
     } finally {

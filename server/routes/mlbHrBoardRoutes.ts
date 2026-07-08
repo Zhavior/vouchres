@@ -80,6 +80,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-feed/today", asyncHandler(async (_req: Request, res: Response) => {
     const feed = await getTodayHomeRuns();
     res.json({
+      ok: true,
       count: feed.events.length,
       events: feed.events,
       generatedAt: new Date().toISOString(),

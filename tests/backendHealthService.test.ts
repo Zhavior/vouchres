@@ -126,6 +126,10 @@ describe("backend health report", () => {
     );
     expect(report.productionProof.items.length).toBeGreaterThanOrEqual(6);
     expect(report.config.every((check) => typeof check.requiredForProductionProof === "boolean")).toBe(true);
+
+    const fallback = report.productionProof.soakPending.find((item) => item.id === "upstream_fallback_coverage");
+    expect(fallback?.detail).toContain("Redis L2");
+    expect(fallback?.detail).toMatch(/HR board hub|HR feed|daily report|live at-bat|lineup board/);
   });
 
   it("marks productionProof.envReady when all proof env vars are present", () => {
