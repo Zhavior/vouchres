@@ -302,7 +302,7 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
   const intelligence: SportsIntelligenceResult = {
     playerId: String(context.person.id),
     score: statScore,
-    rank: 0,
+    rank: null,
     confidence,
     prediction: probability,
     metadata: {
@@ -413,5 +413,9 @@ export async function fetchMlbStatHubRows(statType: StatType, date: string, stat
   return rankByScore(rows.map((row) => ({
     ...row,
     seasonRank: rank.get(row.stableId) ?? null,
+    intelligence: {
+      ...row.intelligence,
+      rank: rank.get(row.stableId) ?? 0,
+    },
   })));
 }
