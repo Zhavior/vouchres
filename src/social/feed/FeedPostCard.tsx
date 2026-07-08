@@ -1059,6 +1059,6 @@ export default function FeedPostCard({
           </div>
         </div>
       )}
-    </article>
+    </VECard>
   );
 }
