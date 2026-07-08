@@ -9,22 +9,33 @@ import helmet from "helmet";
  * origins. Credentials are required so the Authorization header (and any
  * future cookies) can flow cross-origin.
  */
-const ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS ?? "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const DEFAULT_ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://vouchres.vercel.app",
+];
 
-if (ALLOWED_ORIGINS.length === 0 && process.env.NODE_ENV === "production") {
-  console.warn(
-    "[cors] CORS_ALLOWED_ORIGINS is empty in production. API will reject all cross-origin requests."
-  );
+const ALLOWED_ORIGINS = Array.from(
+  new Set([
+    ...DEFAULT_ALLOWED_ORIGINS,
+    ...(process.env.CORS_ALLOWED_ORIGINS ?? "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
+  ])
+);
+
+function isAllowedPreviewOrigin(origin: string): boolean {
+  return /^https:\/\/vouchres-[a-z0-9-]+-vouch-edge\.vercel\.app$/.test(origin);
 }
 
 export const corsMiddleware = cors({
   origin(origin, cb) {
     // Allow same-origin (no Origin header) — e.g. Render-served frontend
     if (!origin) return cb(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin) || isAllowedPreviewOrigin(origin)) {
+      return cb(null, true);
+    }
     cb(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
@@ -48,8 +59,11 @@ export const helmetMiddleware = helmet({
     directives: {
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"], // Tailwind v4 needs unsafe-inline
+      scriptSrc: process.env.NODE_ENV === "production"
+        ? ["'self'"]
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind v4 needs unsafe-inline
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
       connectSrc: [
         "'self'",
         "https://statsapi.mlb.com",

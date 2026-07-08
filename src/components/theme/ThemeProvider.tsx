@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../../theme/themeRegistry';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 interface ThemeContextType {
   currentAppTheme: VisualTheme;
@@ -82,12 +83,15 @@ interface ThemeProviderProps {
 export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProviderProps) {
   const [overrideThemeId, setOverrideThemeId] = useState<string | null>(null);
   
-  // Manage user credits in localStorage
+  // Manage user credits in localStorage.
+  // Initial allocation: 250 pts for Basic, 750 pts for Gold / Seller Pro.
   const [userCredits, setUserCreditsState] = useState<number>(() => {
     const cached = localStorage.getItem('vouchedge_theme_credits');
     if (cached) return parseInt(cached, 10);
-    localStorage.setItem('vouchedge_theme_credits', '1000');
-    return 1000;
+    const tier = profile.subscriptionTier;
+    const initial = (tier === 'GOLD' || tier === 'SELLER_PRO') ? 750 : 250;
+    localStorage.setItem('vouchedge_theme_credits', String(initial));
+    return initial;
   });
 
   const setUserCredits = (val: number) => {
@@ -162,9 +166,18 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
     // Supports Tailwind color names AND arbitrary hex tokens (e.g. text-[#00B7FF]),
     // so every premium theme glows in its own color instead of a yellow fallback.
     const { accent, glow } = resolveThemeAccent(activeTheme.accentText);
+    const borderColor = activeTheme.borderColor || 'rgba(6,182,212,0.2)';
+
     root.style.setProperty('--theme-accent-color', accent);
-    root.style.setProperty('--theme-border-color', activeTheme.borderColor || 'rgba(6,182,212,0.2)');
+    root.style.setProperty('--theme-border-color', borderColor);
     root.style.setProperty('--theme-glow-color', glow);
+
+    root.setAttribute('data-theme', activeTheme.id);
+    root.setAttribute('data-vouchedge-theme', activeTheme.id);
+    root.style.setProperty('--ve-accent', accent);
+    root.style.setProperty('--ve-accent-2', accent);
+    root.style.setProperty('--ve-accent-glow', glow);
+    root.style.setProperty('--ve-border-strong', borderColor);
   }, [activeTheme]);
 
   return (

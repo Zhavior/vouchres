@@ -1,5 +1,5 @@
 /** Daily MLB report narrative — Gemini-backed with deterministic fallback. */
-import { buildDailyReport } from "../intelligence/mlbIntelligenceEngine";
+import { getSharedDailyReport } from "../intelligence/mlbIntelligenceEngine";
 import { generateText } from "./geminiClient";
 import { TTL } from "../../lib/cache";
 import { SAFE_SYSTEM_INSTRUCTION, buildDailyReportPrompt } from "./aiPromptBuilder";
@@ -10,11 +10,11 @@ export interface DailyReportNarrative {
   gameCount: number;
   narrative: string;
   source: "live" | "cached" | "fallback" | "no-key";
-  data: Awaited<ReturnType<typeof buildDailyReport>>;
+  data: Awaited<ReturnType<typeof getSharedDailyReport>>;
 }
 
 export async function getDailyReportNarrative(date?: string): Promise<DailyReportNarrative> {
-  const data = await buildDailyReport(date);
+  const data = await getSharedDailyReport(date);
   const topVulnerable = data.vulnerablePitchers.slice(0, 3).map((p) => `${p.pitcherName} (${p.vulnerabilityScore})`);
   const topHr = data.hrTargets.slice(0, 3).map((t) => `${t.team} vs ${t.opposingPitcher} (${t.hrScore})`);
   const topRunEnv = data.runEnvironments.slice(0, 3).map((r) => `${r.matchup} (${r.runEnvironmentScore})`);

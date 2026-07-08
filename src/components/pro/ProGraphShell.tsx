@@ -1,5 +1,7 @@
 import React from 'react';
 import { BarChart3, Lock } from 'lucide-react';
+import { ACCENT, withAlpha } from '../../theme/colors';
+import { VECard } from '../ui/ve';
 
 export interface ProGraphShellProps {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -18,7 +20,7 @@ export const ProGraphShell: React.FC<ProGraphShellProps> = React.memo(function P
   title,
   description,
   subtitle,
-  accent = '#64748b',
+  accent = ACCENT.slate,
   right,
   footer,
   children,
@@ -27,44 +29,45 @@ export const ProGraphShell: React.FC<ProGraphShellProps> = React.memo(function P
   const helperText = subtitle ?? description;
 
   return (
-    <section
-      className={`relative overflow-hidden rounded-2xl border bg-slate-950/35 p-3 ${className}`}
-      style={{ borderColor: accent + '33' }}
+    <VECard
+      tone="soft"
+      className={`relative overflow-hidden rounded-2xl p-3 ${className}`}
+      style={{ borderColor: withAlpha(accent, 0.22) }}
     >
       <span
         className="absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}66, transparent)` }}
+        style={{ background: `linear-gradient(90deg, transparent, ${withAlpha(accent, 0.36)}, transparent)` }}
       />
 
       <div className="mb-3 flex items-end justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border"
-            style={{ borderColor: accent + '33', background: accent + '12' }}
+            style={{ borderColor: withAlpha(accent, 0.24), background: withAlpha(accent, 0.08) }}
           >
             <Icon className="h-3 w-3" style={{ color: accent }} />
           </span>
           <div className="min-w-0">
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">{title}</h4>
-            {helperText && <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">{helperText}</p>}
+            <h4 className="text-xs font-black uppercase tracking-wider text-[hsl(var(--ve-text-secondary))]">{title}</h4>
+            {helperText && <p className="mt-0.5 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">{helperText}</p>}
           </div>
         </div>
         {right}
       </div>
 
       {children ?? (
-        <div className="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-800/60 bg-slate-950/50">
-          <Lock className="h-4 w-4 text-slate-700" />
-          <p className="max-w-xs text-center text-[10px] leading-relaxed text-slate-600">
+        <div className="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel)/0.46)]">
+          <Lock className="h-4 w-4 text-[hsl(var(--ve-text-muted))]" />
+          <p className="max-w-xs text-center text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">
             Verified data feed required. No fake graph data shown.
           </p>
         </div>
       )}
 
       {footer && (
-        <p className="mt-3 font-mono text-[10px] leading-relaxed text-slate-500">{footer}</p>
+        <p className="mt-3 font-mono text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">{footer}</p>
       )}
-    </section>
+    </VECard>
   );
 });
 

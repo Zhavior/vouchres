@@ -1,27 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  RefreshCw, 
-  AlertTriangle, 
-  HelpCircle, 
-  Check, 
-  Info, 
-  Video, 
-  Volume2, 
-  DollarSign, 
-  Eye, 
-  MousePointerClick, 
-  Server, 
-  Activity, 
-  Maximize, 
-  Sparkles, 
-  ShieldCheck, 
-  Share2,
-  Tv
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Bell,
+  Check,
+  ChevronRight,
+  CreditCard,
+  Download,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Globe,
+  Loader,
+  Lock,
+  Mail,
+  RefreshCw,
+  Settings,
+  Shield,
+  Trash2,
+  User,
+  Zap,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
-import { PREMIUM_THEMES } from '../data/themesData';
-import { canAccessThemeStore } from '../lib/adminDevAccess';
+import { apiClient } from '../lib/apiClient';
+import { supabase } from '../lib/supabaseClient';
+import {
+  fetchBillingStatus,
+  openBillingPortal,
+  startStripeCheckout,
+  tierToSubscriptionTier,
+} from '../lib/billingClient';
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -31,875 +37,824 @@ interface SettingsPageProps {
     discord?: string;
     telegram?: string;
     twitch?: string;
-    themeAccent?: string;
     customTitle?: string;
   };
   onUpdateProfile: (updated: Partial<CreatorProofProfile>) => void;
 }
 
-export default function SettingsPage({ 
-  onResetDatabase, 
-  profileName, 
-  profile, 
-  onUpdateProfile 
+type SettingsTab = 'account' | 'billing' | 'notifications' | 'privacy';
+type AppTier = 'BASIC' | 'GOLD' | 'SELLER_PRO';
+
+const PLAN_COPY: Record<AppTier, { title: string; price: string; detail: string; badge?: string }> = {
+  BASIC: {
+    title: 'Free',
+    price: '$0',
+    detail: 'Core MLB research, saved slips, and account tools.',
+  },
+  GOLD: {
+    title: 'Gold',
+    price: '$12.99',
+    detail: 'Pro labs, advanced graphs, and verified profile perks.',
+    badge: 'Popular',
+  },
+  SELLER_PRO: {
+    title: 'Seller Pro',
+    price: '$49.99',
+    detail: 'Everything in Gold plus subscriber clubs and creator storefront.',
+    badge: 'Elite',
+  },
+};
+
+function formatDate(value?: string | null) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function normalizeTier(tier?: string | null): AppTier {
+  const t = String(tier ?? '').trim().toUpperCase();
+  if (t === 'GOLD') return 'GOLD';
+  if (t === 'SELLER_PRO' || t === 'SELLER PRO' || t === 'PRO') return 'SELLER_PRO';
+  return 'BASIC';
+}
+
+// Toggle switch component
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+        checked ? 'bg-blue-500' : 'bg-slate-700'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  );
+}
+
+// Section container
+function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-5">
+        <h2 className="text-sm font-semibold text-white">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Divider
+function Divider() {
+  return <hr className="my-8 border-slate-800" />;
+}
+
+// Row for preference toggles
+function PrefRow({
+  label,
+  detail,
+  children,
+}: {
+  label: string;
+  detail: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-8 py-3.5">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-slate-200">{label}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{detail}</p>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+export default function SettingsPage({
+  onResetDatabase,
+  profileName,
+  profile,
+  onUpdateProfile,
 }: SettingsPageProps) {
-  const [activeTab, setActiveTab] = useState<'profile-theme' | 'streaming' | 'admin-ads'>('profile-theme');
-
-  // --- Profile Customization / Theme / Socials states ---
-  const [displayName, setDisplayName] = useState(profile.displayName || '');
-  const [customTitle, setCustomTitle] = useState(profile.customTitle || 'Maestro Capper');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [displayName, setDisplayName] = useState(profile.displayName || profileName || '');
+  const [username, setUsername] = useState(profile.username || '');
+  const [customTitle, setCustomTitle] = useState(profile.customTitle || '');
   const [bio, setBio] = useState(profile.bio || '');
-  const [twitter, setTwitter] = useState(profile.twitter || 'vouchedge_pro');
-  const [discord, setDiscord] = useState(profile.discord || 'vouchedge-room');
-  const [telegram, setTelegram] = useState(profile.telegram || 'vouchedge_signals');
-  const [twitch, setTwitch] = useState(profile.twitch || 'vouchedge_live');
-  const [themeAccent, setThemeAccent] = useState(profile.themeAccent || 'cosmic');
-  const [activeTheme, setActiveTheme] = useState(profile.activeTheme || 'default');
-  const canSeeThemeStore = canAccessThemeStore(profile);
+  const [twitter, setTwitter] = useState(profile.twitter || '');
+  const [discord, setDiscord] = useState(profile.discord || '');
+  const [telegram, setTelegram] = useState(profile.telegram || '');
 
-  // --- Professional Livestreaming setting states ---
-  const [streamServer, setStreamServer] = useState(() => localStorage.getItem('vEdge_streamServer') || 'twitch');
-  const [streamKey, setStreamKey] = useState(() => localStorage.getItem('vEdge_streamKey') || 'live_sk_vouchedge_7bd288e34f89ac9920');
-  const [resolution, setResolution] = useState(() => localStorage.getItem('vEdge_resolution') || '1080p');
-  const [bitrate, setBitrate] = useState(() => localStorage.getItem('vEdge_bitrate') || '6000');
-  const [encoder, setEncoder] = useState(() => localStorage.getItem('vEdge_encoder') || 'nvenc');
-  const [noiseGate, setNoiseGate] = useState(() => Number(localStorage.getItem('vEdge_noiseGate')) || -45);
-  const [compressor, setCompressor] = useState(() => localStorage.getItem('vEdge_compressor') || 'medium');
-  const [latencyMode, setLatencyMode] = useState(() => localStorage.getItem('vEdge_latencyMode') || 'ultra');
-  const [enableOverlayWidgets, setEnableOverlayWidgets] = useState(() => localStorage.getItem('vEdge_enableOverlayWidgets') !== 'false');
+  const [emailAlerts, setEmailAlerts] = useState(() => localStorage.getItem('vouchedge_email_alerts') !== 'false');
+  const [pushAlerts, setPushAlerts] = useState(() => localStorage.getItem('vouchedge_push_alerts') !== 'false');
+  const [weeklySummary, setWeeklySummary] = useState(() => localStorage.getItem('vouchedge_weekly_summary') !== 'false');
+  const [profilePublic, setProfilePublic] = useState(() => localStorage.getItem('vouchedge_profile_public') !== 'false');
+  const [reduceMotion, setReduceMotion] = useState(Boolean(profile.reduceMotion));
 
-  // --- Admin Ad configuration & revenue dashboard states ---
-  const [activeAdSponsor, setActiveAdSponsor] = useState(() => localStorage.getItem('vEdge_adSponsor') || 'DraftKings');
-  const [adIntensity, setAdIntensity] = useState<'LOW' | 'MEDIUM' | 'HIGH'>(() => (localStorage.getItem('vEdge_adIntensity') as any) || 'MEDIUM');
-  const [cpmRate, setCpmRate] = useState(() => Number(localStorage.getItem('vEdge_cpmRate')) || 12.50);
-  const [isAdBlockActive, setIsAdBlockActive] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<AppTier | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [billingStatus, setBillingStatus] = useState<{
+    tier: 'free' | 'gold' | 'seller_pro';
+    status: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+  } | null>(null);
 
-  // Simulated metrics
-  const [simClicks, setSimClicks] = useState(0);
-  const [simViews, setSimViews] = useState(0);
-  const [simRevenue, setSimRevenue] = useState(0);
+  const [privacyLoading, setPrivacyLoading] = useState<string | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [billingPortalError, setBillingPortalError] = useState<string | null>(null);
 
-  // Load streaming params into localStorage
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  const activeTier = normalizeTier(profile.subscriptionTier);
+
+  const nav: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'account', label: 'Profile', icon: User },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy & Data', icon: Shield },
+  ];
+
+  const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   useEffect(() => {
-    localStorage.setItem('vEdge_streamServer', streamServer);
-    localStorage.setItem('vEdge_streamKey', streamKey);
-    localStorage.setItem('vEdge_resolution', resolution);
-    localStorage.setItem('vEdge_bitrate', bitrate);
-    localStorage.setItem('vEdge_encoder', encoder);
-    localStorage.setItem('vEdge_noiseGate', String(noiseGate));
-    localStorage.setItem('vEdge_compressor', compressor);
-    localStorage.setItem('vEdge_latencyMode', latencyMode);
-    localStorage.setItem('vEdge_enableOverlayWidgets', String(enableOverlayWidgets));
-  }, [streamServer, streamKey, resolution, bitrate, encoder, noiseGate, compressor, latencyMode, enableOverlayWidgets]);
+    localStorage.setItem('vouchedge_email_alerts', String(emailAlerts));
+    localStorage.setItem('vouchedge_push_alerts', String(pushAlerts));
+    localStorage.setItem('vouchedge_weekly_summary', String(weeklySummary));
+    localStorage.setItem('vouchedge_profile_public', String(profilePublic));
+  }, [emailAlerts, pushAlerts, weeklySummary, profilePublic]);
 
-  // Load ad settings into localStorage
   useEffect(() => {
-    localStorage.setItem('vEdge_adSponsor', activeAdSponsor);
-    localStorage.setItem('vEdge_adIntensity', adIntensity);
-    localStorage.setItem('vEdge_cpmRate', String(cpmRate));
-  }, [activeAdSponsor, adIntensity, cpmRate]);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') !== 'success') return;
+    refreshBilling('Payment complete — your plan is updating.');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('checkout');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    } catch { /* cosmetic */ }
+  }, []);
 
-  // Simulate dynamic traffic increments for revenue tracking
-  useEffect(() => {
-    // Generate initial realistic seed
-    const viewsMultiplier = adIntensity === 'HIGH' ? 1.6 : adIntensity === 'LOW' ? 0.7 : 1.1;
-    const clicksMultiplier = adIntensity === 'HIGH' ? 2.4 : adIntensity === 'LOW' ? 0.5 : 1.2;
-
-    const seedViews = Math.round(185400 * viewsMultiplier);
-    const seedClicks = Math.round(seedViews * 0.035 * clicksMultiplier); // 3.5% CTR avg
-    const seedRev = (seedViews / 1000) * cpmRate;
-
-    setSimViews(seedViews);
-    setSimClicks(seedClicks);
-    setSimRevenue(seedRev);
-
-    const interval = setInterval(() => {
-      setSimViews(prev => {
-        const increment = Math.floor(Math.random() * 85) + 15;
-        const clickIncrement = Math.round(increment * (0.02 + Math.random() * 0.035) * clicksMultiplier);
-        
-        setSimClicks(c => c + clickIncrement);
-        setSimRevenue(r => r + (increment / 1000) * cpmRate);
-        return prev + increment;
-      });
-    }, 3500);
-
-    return () => clearInterval(interval);
-  }, [adIntensity, cpmRate]);
+  const refreshBilling = async (message?: string) => {
+    setBillingLoading(true);
+    const status = await fetchBillingStatus();
+    setBillingLoading(false);
+    if (!status) {
+      showToast('Billing status unavailable — sign in and configure Stripe.', 'err');
+      return;
+    }
+    setBillingStatus(status);
+    const nextTier = tierToSubscriptionTier(status.tier);
+    onUpdateProfile({ subscriptionTier: nextTier, verified: nextTier !== 'BASIC' });
+    showToast(message ?? 'Billing status refreshed.');
+  };
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateProfile({
       displayName: displayName.trim(),
+      username: username.trim(),
       bio: bio.trim(),
+      reduceMotion,
       twitter: twitter.trim(),
       discord: discord.trim(),
       telegram: telegram.trim(),
-      twitch: twitch.trim(),
-      themeAccent: themeAccent,
       customTitle: customTitle.trim(),
-      activeTheme: activeTheme,
     } as any);
-    
-    // Notify application of profile setting update
-    const event = new CustomEvent('vouchedge-profile-meta-updated', {
-      detail: { themeAccent, twitter, discord, telegram, twitch, customTitle, activeTheme }
-    });
-    window.dispatchEvent(event);
-
-    alert("✨ PROFILE DETAILS & THEME STYLE SUCCESSFULLY UPDATED IN CLOUD DATABASE!");
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 2000);
+    showToast('Profile saved.');
   };
 
-  const handleResetClick = () => {
-    if (confirm("Are you sure you want to reset the local VouchEdge database? This will restore the preloaded verified posts and empty any currently unsaved local tickets.")) {
-      onResetDatabase();
-      alert("Database reset successful. Preloaded posts restored!");
+  const handleUpgrade = async (tier: AppTier) => {
+    if (tier === 'BASIC') { await handleManageBilling(); return; }
+    setCheckoutLoading(tier);
+    const result = await startStripeCheckout(tier === 'GOLD' ? 'gold' : 'seller_pro');
+    setCheckoutLoading(null);
+    if (result.ok) {
+      window.location.href = result.url;
+      return;
+    }
+
+    const checkoutError = "error" in result ? result.error : "Unknown checkout error";
+    showToast(`Checkout failed: ${checkoutError}`, 'err');
+  };
+
+  const handleManageBilling = async () => {
+    setBillingPortalError(null);
+    setPortalLoading(true);
+    const result = await openBillingPortal();
+    setPortalLoading(false);
+    if (result.ok) {
+      window.location.href = result.url;
+      return;
+    }
+
+    // Map known error codes to readable messages
+    const raw = "error" in result ? result.error ?? "" : "";
+    let msg: string;
+    if (raw === 'unauthorized' || raw.includes('unauthorized')) {
+      msg = 'You must be signed in to manage billing.';
+    } else if (raw.includes('portal_not_configured') || raw.includes('not_configured')) {
+      msg = 'Stripe Billing Portal is not set up yet. Activate it in your Stripe Dashboard → Settings → Billing → Customer portal.';
+    } else if (raw.includes('stripe_not_configured')) {
+      msg = 'Stripe is not configured on this server.';
+    } else {
+      msg = raw || 'Could not open the billing portal. Please try again.';
+    }
+    setBillingPortalError(msg);
+  };
+
+  const handleExportData = async () => {
+    setPrivacyLoading('export');
+    try {
+      const data = await apiClient.get('/api/privacy/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `vouchedge-export-${Date.now()}.json`; a.click();
+      URL.revokeObjectURL(url);
+      showToast('Data export downloaded.');
+    } catch (err: any) {
+      showToast(err?.message || 'Export unavailable — sign in first.', 'err');
+    } finally {
+      setPrivacyLoading(null);
     }
   };
 
-  // Quick helper to change subscription tier from settings to see ads change instantly
-  const handleUpgradeTier = (tier: 'BASIC' | 'GOLD' | 'SELLER_PRO') => {
-    onUpdateProfile({
-      subscriptionTier: tier
-    });
-    alert(`🎉 SUBSCRIPTION EMULATOR: Swapped to "${tier}" tier successfully.\n\n` + 
-      (tier === 'BASIC' ? 'Free user rules apply: Many Sponsor ads will be visible across the feed/streams.' :
-       tier === 'GOLD' ? 'Pro limits apply: Subtle Ads enabled. Sidebar banners hidden.' :
-       'Upper Sub level active: 100% ad-free experience. Advertisements completely suppressed.'));
+  const handleScheduleDeletion = async () => {
+    if (!window.confirm('Schedule account deletion? You have 30 days to cancel. Active subscriptions will be cancelled.')) return;
+    setPrivacyLoading('delete');
+    try {
+      const result = await apiClient.post<{ deletion_scheduled_at?: string; message?: string }>(
+        '/api/privacy/delete-account', { confirm: 'DELETE MY ACCOUNT' }
+      );
+      showToast(result.message || `Deletion scheduled for ${formatDate(result.deletion_scheduled_at)}.`, 'err');
+    } catch (err: any) {
+      showToast(err?.message || 'Unavailable — sign in first.', 'err');
+    } finally {
+      setPrivacyLoading(null);
+    }
   };
 
+  const handleResetClick = () => {
+    if (!window.confirm('Reset all local picks, slips, vouches, and profile data on this device?')) return;
+    onResetDatabase();
+    showToast('Local data reset.');
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+    setPasswordLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPasswordLoading(false);
+    if (error) {
+      setPasswordError(error.message);
+      return;
+    }
+    setNewPassword('');
+    setConfirmPassword('');
+    showToast('Password updated successfully.');
+  };
+
+  const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
+
   return (
-    <div className="p-4 md:p-6 max-w-[1100px] mx-auto min-h-screen bg-transparent space-y-6 text-left" id="settings-master-workstation">
-      
-      {/* Upper header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-850 pb-5" id="settings-view-header">
-        <div>
-          <h2 className="text-xl font-black text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-            <Settings className="w-5 h-5 text-indigo-400 animate-spin shrink-0" />
-            VouchEdge Suite Controls & Admin Center
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Configure social identities, tweak low-latency streaming encoders, and audit site ad revenue margins.
-          </p>
+    <div className="relative min-h-screen bg-[#0b0f19] text-slate-100">
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur ${
+          toast.type === 'ok'
+            ? 'border-slate-700 bg-slate-900 text-slate-100'
+            : 'border-red-500/40 bg-red-950/80 text-red-200'
+        }`}>
+          {toast.type === 'ok'
+            ? <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+            : <Zap className="h-4 w-4 shrink-0 text-red-400" />}
+          {toast.msg}
         </div>
+      )}
 
-        {/* Tab Selection */}
-        <div className="flex bg-slate-900/60 p-1 rounded-xl border border-slate-850 self-start text-xs font-semibold" id="settings-tab-dock">
-          <button
-            onClick={() => setActiveTab('profile-theme')}
-            className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${
-              activeTab === 'profile-theme'
-                ? 'bg-gradient-to-tr from-sky-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            My Edge profile
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('streaming')}
-            className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-              activeTab === 'streaming'
-                ? 'bg-gradient-to-tr from-sky-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Video className="w-3.5 h-3.5 text-rose-455" />
-            Stream Configs
-          </button>
-
-          <button
-            onClick={() => setActiveTab('admin-ads')}
-            className={`px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-              activeTab === 'admin-ads'
-                ? 'bg-gradient-to-tr from-amber-600 to-indigo-650 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-            Admin Ads & eCPM
-          </button>
+      {/* Page header */}
+      <div className="border-b border-slate-800 bg-[#0b0f19]/95 px-6 py-5">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+            <Settings className="h-3.5 w-3.5" />
+            Settings
+          </div>
+          <h1 className="mt-1 text-xl font-semibold text-white">Account settings</h1>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* LEFT COLUMN: ACTIVE SCREEN PANEL */}
-        <div className="lg:col-span-8">
-          
-          {/* PROFILE STYLE AND THEME CUSTOMIZER */}
-          {activeTab === 'profile-theme' && (
-            <div className="bg-[#121824] rounded-2xl border border-slate-850 p-6 space-y-6 animate-fade-in" id="settings-profile-theme-panel">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-widest font-mono">
-                  🎨 Profile Identity, Custom Themes, & Bio Toggles
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Customise your public bio branding assets and select theme colors applied to your shared cards.</p>
-              </div>
+      {/* Body */}
+      <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="flex gap-10">
 
-              <form onSubmit={handleProfileSave} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">Display Handle Style</label>
-                    <input 
-                      type="text" 
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full text-xs bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 outline-none text-slate-200 focus:border-indigo-500 font-semibold"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">Public Custom Title / Nickname</label>
-                    <input 
-                      type="text" 
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      placeholder="e.g. Master Prophet"
-                      className="w-full text-xs bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 outline-none text-slate-200 focus:border-indigo-500 font-semibold"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">Biographical Overview statement</label>
-                    <textarea 
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="w-full text-xs bg-[#0b0f19] border border-slate-800 rounded-xl px-3 py-2.5 outline-none text-slate-200 focus:border-indigo-500 h-16 resize-none font-medium"
-                      maxLength={180}
-                    />
-                  </div>
-                </div>
-
-                {/* THEME SELECTORS */}
-                <div className="space-y-2.5 pt-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider block">Select Profile Visual Palette</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setThemeAccent('cosmic')}
-                      className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                        themeAccent === 'cosmic' 
-                          ? 'bg-indigo-950/40 border-indigo-505 text-indigo-300 ring-2 ring-indigo-500/20' 
-                          : 'bg-[#0b0f19] border-slate-850 text-slate-450 hover:border-slate-700'
-                      }`}
-                    >
-                      <span className="text-xs font-bold block mb-1">🌌 Cosmic</span>
-                      <span className="text-[9px] font-mono block text-slate-500 leading-none">Indigo Canvas (Free)</span>
-                    </button>
-
-                    {profile.boughtThemes?.includes('cyberpunk') && (
-                      <button
-                        type="button"
-                        onClick={() => setThemeAccent('cyberpunk')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          themeAccent === 'cyberpunk' 
-                            ? 'bg-rose-950/40 border-rose-550 text-rose-300 ring-2 ring-rose-500/20' 
-                            : 'bg-[#0b0f19] border-slate-850 text-slate-450 hover:border-slate-705'
-                        }`}
-                      >
-                        <span className="text-xs font-bold block mb-1">⚡ Cyberpunk</span>
-                        <span className="text-[9px] font-mono block text-slate-500 leading-none">Teal & Pink</span>
-                      </button>
-                    )}
-
-                    {profile.boughtThemes?.includes('emerald') && (
-                      <button
-                        type="button"
-                        onClick={() => setThemeAccent('emerald')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          themeAccent === 'emerald' 
-                            ? 'bg-[#082f1d]/30 border-emerald-505 text-emerald-400 ring-2 ring-emerald-500/20' 
-                            : 'bg-[#0b0f19] border-slate-850 text-slate-450 hover:border-slate-705'
-                        }`}
-                      >
-                        <span className="text-xs font-bold block mb-1">🌿 Pitch Green</span>
-                        <span className="text-[9px] font-mono block text-slate-500 leading-none">Sports Turf</span>
-                      </button>
-                    )}
-
-                    {profile.boughtThemes?.includes('luxury') && (
-                      <button
-                        type="button"
-                        onClick={() => setThemeAccent('luxury')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          themeAccent === 'luxury' 
-                            ? 'bg-amber-950/40 border-amber-505 text-amber-300 ring-2 ring-amber-500/20' 
-                            : 'bg-[#0b0f19] border-slate-850 text-slate-450 hover:border-slate-705'
-                        }`}
-                      >
-                        <span className="text-xs font-bold block mb-1">👑 Luxury Gold</span>
-                        <span className="text-[9px] font-mono block text-slate-500 leading-none">Prestige Gold</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* PREMIUM THEMES YOU BOUGHT */}
-                <div className="space-y-3 pt-3" id="settings-bought-themes-container">
-                  <div className="flex items-center justify-between border-b border-slate-850 pb-1.5">
-                    <h4 className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">
-                      ✨ Equip Premium Themes (Only Owned Themes Visible)
-                    </h4>
-                    <span className="text-[9px] bg-slate-950 border border-slate-850 text-sky-400 font-bold px-2 py-0.5 rounded uppercase font-mono">
-                      Owned count: {profile.boughtThemes?.length || 0}
-                    </span>
-                  </div>
-
-                  {(() => {
-                    const ownedPremiumThemes = PREMIUM_THEMES.filter(theme => 
-                      profile.boughtThemes && profile.boughtThemes.includes(theme.id)
-                    );
-
-                    let customMintedThemes: any[] = [];
-                    try {
-                      const stored = localStorage.getItem('vouchedge_market_themes');
-                      if (stored) {
-                        const parsed = JSON.parse(stored);
-                        if (Array.isArray(parsed)) {
-                          customMintedThemes = parsed.filter((theme: any) => 
-                            profile.boughtThemes && profile.boughtThemes.includes(theme.id)
-                          );
-                        }
-                      }
-                    } catch (e) {}
-
-                    const allOwnedThemes = [
-                      {
-                        id: 'default',
-                        name: 'Standard Dark Sapphire',
-                        badge: '🧊 STANDARD',
-                        glowColor: 'from-sky-400 to-indigo-505',
-                        particleDemo: ['🧊', '✨'],
-                        description: 'The clean default premium layout with blue highlights and subtle cosmic neon matrices.',
-                      },
-                      ...ownedPremiumThemes,
-                      ...customMintedThemes
-                    ];
-
-                    return (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" id="settings-bought-themes-grid">
-                          {allOwnedThemes.map((thm) => {
-                            const isEquipped = activeTheme === thm.id;
-                            return (
-                              <div
-                                key={thm.id}
-                                onClick={() => setActiveTheme(thm.id)}
-                                className={`p-4 rounded-xl border relative transition-all duration-200 cursor-pointer flex flex-col justify-between text-left ${
-                                  isEquipped
-                                    ? 'bg-slate-900 border-indigo-500 shadow-lg shadow-indigo-500/10'
-                                    : 'bg-[#0b0f19]/60 border-slate-850 hover:border-slate-800'
-                                }`}
-                                id={`equip-bought-theme-${thm.id}`}
-                              >
-                                <div className="space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-black text-slate-100 flex items-center gap-1.5">
-                                      {thm.particleDemo?.slice(0, 2).join(' ')} {thm.name}
-                                    </span>
-                                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 font-mono border border-slate-850">
-                                      {thm.badge}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                                    {thm.description}
-                                  </p>
-                                </div>
-
-                                <div className="mt-4 flex items-center justify-between border-t border-slate-900/60 pt-2.5">
-                                  <div className="flex gap-1">
-                                    {thm.particleDemo?.map((p: string, idx: number) => (
-                                      <span key={idx} className="text-xs">{p}</span>
-                                    ))}
-                                  </div>
-                                  
-                                  {isEquipped ? (
-                                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1">
-                                      <Check className="w-3 h-3 text-indigo-400" />
-                                      Equipped
-                                    </span>
-                                  ) : (
-                                    <span className="text-[9px] font-extrabold text-slate-500 hover:text-slate-350 uppercase tracking-widest">
-                                      Equip Theme
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {(!profile.boughtThemes || profile.boughtThemes.length === 0) && (
-                          <div className="p-3.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl flex items-start gap-2.5 animate-pulse" id="no-bought-themes-notice">
-                            <Sparkles className="w-4 h-4 text-sky-400 mt-0.5 shrink-0" />
-                            <div className="text-[10px] text-slate-400 leading-normal font-medium">
-                              <span className="font-extrabold text-[#94a3b8] block mb-0.5">🎨 Theme Engine Active</span>
-                              {canSeeThemeStore
-                                ? "You have not unlocked premium themes yet. Theme Store is available in admin/dev mode for configuring premium visual identity."
-                                : "Your applied VouchEdge theme is active. Premium Theme Store controls are limited to admin/dev access during beta."}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* SOCIAL ACCOUNTS */}
-                <div className="space-y-3 pt-3">
-                  <h4 className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider border-b border-slate-850 pb-1.5">
-                    Connect Sports Social Handles
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-mono">Twitter/X handle</span>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-slate-500 font-mono text-xs select-none">@</span>
-                        <input 
-                          type="text" 
-                          value={twitter}
-                          onChange={(e) => setTwitter(e.target.value)}
-                          className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl pl-7 pr-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-mono">Discord Community Code</span>
-                      <input 
-                        type="text" 
-                        value={discord}
-                        onChange={(e) => setDiscord(e.target.value)}
-                        className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-mono">Telegram signals feed</span>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-slate-500 font-mono text-xs select-none">t.me/</span>
-                        <input 
-                          type="text" 
-                          value={telegram}
-                          onChange={(e) => setTelegram(e.target.value)}
-                          className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl pl-12 pr-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-slate-400 font-mono">Twitch/YouTube streaming</span>
-                      <input 
-                        type="text" 
-                        value={twitch}
-                        onChange={(e) => setTwitch(e.target.value)}
-                        className="w-full text-xs bg-[#0b0f19] text-white border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3">
-                  <button 
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase text-xs tracking-wider py-3.5 rounded-xl shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer text-center"
+          {/* ─── Left sidebar nav ─── */}
+          <nav className="w-48 shrink-0">
+            <ul className="space-y-0.5">
+              {nav.map(({ id, label, icon: Icon }) => (
+                <li key={id}>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+                      activeTab === id
+                        ? 'bg-slate-800 font-medium text-white'
+                        : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-200'
+                    }`}
                   >
-                    Save profile Visual Assets
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Plan badge */}
+            <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-3">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Current plan</p>
+              <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
+              <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+              {activeTier === 'BASIC' && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('billing')}
+                  className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-500 transition-colors"
+                >
+                  Upgrade <ChevronRight className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </nav>
+
+          {/* ─── Main content ─── */}
+          <div className="min-w-0 flex-1">
+
+            {/* ── ACCOUNT ── */}
+            {activeTab === 'account' && (
+              <>
+              <form onSubmit={handleProfileSave} className="space-y-8">
+
+                {/* Avatar + name */}
+                <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
+                  <div className="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-bold text-white">
+                      {initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{displayName || 'Display name'}</p>
+                      <p className="text-xs text-slate-500">@{username || 'username'}</p>
+                      <p className="mt-1 text-xs text-slate-600">{customTitle || 'No title set'}</p>
+                    </div>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                {/* Fields */}
+                <Section title="General" subtitle="Update your display name, username, and bio.">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-400">Display name</label>
+                        <input
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                          placeholder="Your name"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-400">Username</label>
+                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
+                          <span className="flex items-center pl-3 text-sm text-slate-600">@</span>
+                          <input
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white placeholder-slate-600 outline-none"
+                            placeholder="username"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Profile title</label>
+                      <input
+                        value={customTitle}
+                        onChange={(e) => setCustomTitle(e.target.value)}
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                        placeholder="e.g. MLB Researcher"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-400">Bio</label>
+                      <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        maxLength={180}
+                        rows={3}
+                        className="w-full resize-none rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                        placeholder="Short bio (max 180 chars)"
+                      />
+                      <p className="text-right text-[10px] text-slate-600">{bio.length}/180</p>
+                    </div>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                {/* Socials */}
+                <Section title="Social links" subtitle="Connect your public profiles and channels.">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {[
+                      { key: 'twitter', label: 'X (Twitter)', placeholder: '@handle', value: twitter, set: setTwitter },
+                      { key: 'discord', label: 'Discord', placeholder: 'server or username', value: discord, set: setDiscord },
+                      { key: 'telegram', label: 'Telegram', placeholder: '@channel', value: telegram, set: setTelegram },
+                    ].map(({ key, label, placeholder, value, set }) => (
+                      <div key={key} className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-400">{label}</label>
+                        <input
+                          value={value}
+                          onChange={(e) => set(e.target.value)}
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                          placeholder={placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+
+                <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-6">
+                  <button
+                    type="submit"
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                      profileSaved
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-blue-600 text-white hover:bg-blue-500'
+                    }`}
+                  >
+                    {profileSaved ? <Check className="h-4 w-4" /> : null}
+                    {profileSaved ? 'Saved' : 'Save changes'}
                   </button>
                 </div>
               </form>
-            </div>
-          )}
 
-          {/* COMPREHENSIVE STREAMING CONFIGURATIONS */}
-          {activeTab === 'streaming' && (
-            <div className="bg-[#121824] rounded-2xl border border-slate-850 p-6 space-y-6 animate-fade-in" id="settings-streaming-panel">
-              <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                    <Video className="w-5 h-5 text-rose-500" />
-                    Professional Twitch/OBS Streaming Settings
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Control ingest servers, video encoding bitrates, hardware audio filters, and widgets overlays.</p>
-                </div>
-                <span className="text-[10px] font-mono text-rose-450 bg-rose-955/35 border border-rose-900/30 px-2 py-0.5 rounded uppercase font-semibold">
-                  ENCODER: LIVE
-                </span>
-              </div>
+              {/* ── Security / Change Password (separate form so Enter doesn't submit profile) ── */}
+              <div className="mt-10 border-t border-slate-800 pt-8">
+                <Section
+                  title="Security"
+                  subtitle="Update your password. You must be signed in to change it."
+                >
+                  <form onSubmit={handleChangePassword} className="space-y-4" autoComplete="new-password">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-400">New password</label>
+                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
+                          <input
+                            type={showNewPw ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
+                            autoComplete="new-password"
+                            placeholder="Min. 8 characters"
+                            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-slate-600 outline-none"
+                          />
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => setShowNewPw((v) => !v)}
+                            className="flex items-center pr-3 text-slate-600 hover:text-slate-400 transition-colors"
+                            aria-label={showNewPw ? 'Hide password' : 'Show password'}
+                          >
+                            {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
-                
-                {/* Server selection */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Core Ingest Server Target</label>
-                  <select
-                    value={streamServer}
-                    onChange={(e) => setStreamServer(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-250 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-semibold"
-                  >
-                    <option value="twitch">Twitch Stream Ingest (rtmp://live.twitch.tv/app)</option>
-                    <option value="youtube">YouTube RTVS Live Ingest (rtmp://a.rtmp.youtube.com)</option>
-                    <option value="kick">Kick API Server Ingest (rtmps://stream.kick.com/app)</option>
-                    <option value="custom">Private Custom RTMP Node Engine...</option>
-                  </select>
-                </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-400">Confirm password</label>
+                        <div className="flex rounded-lg border border-slate-700 bg-slate-900 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
+                          <input
+                            type={showConfirmPw ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
+                            autoComplete="new-password"
+                            placeholder="Repeat new password"
+                            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-slate-600 outline-none"
+                          />
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => setShowConfirmPw((v) => !v)}
+                            className="flex items-center pr-3 text-slate-600 hover:text-slate-400 transition-colors"
+                            aria-label={showConfirmPw ? 'Hide password' : 'Show password'}
+                          >
+                            {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Secret Key */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Stream Key (Secured)</label>
-                  <input
-                    type="password"
-                    value={streamKey}
-                    onChange={(e) => setStreamKey(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-250 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
+                    {/* Strength hint */}
+                    {newPassword.length > 0 && newPassword.length < 8 && (
+                      <p className="text-xs text-amber-400">
+                        {8 - newPassword.length} more character{8 - newPassword.length !== 1 ? 's' : ''} needed
+                      </p>
+                    )}
 
-                {/* Resolution selections */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Webcam Output Resolution</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['720p', '1080p', '1440p'].map((r) => (
+                    {/* Inline error */}
+                    {passwordError && (
+                      <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2.5">
+                        <Lock className="h-3.5 w-3.5 shrink-0 text-red-400" />
+                        <p className="text-xs text-red-300">{passwordError}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end">
                       <button
-                        key={r}
-                        type="button"
-                        onClick={() => setResolution(r)}
-                        className={`py-2 rounded-lg border font-bold uppercase transition-all tracking-wide text-center ${
-                          resolution === r 
-                            ? 'bg-indigo-950/40 border-indigo-500 text-indigo-400 font-extrabold' 
-                            : 'bg-[#0b0f19] border-slate-850 text-slate-500'
-                        }`}
+                        type="submit"
+                        disabled={passwordLoading || newPassword.length < 8 || newPassword !== confirmPassword}
+                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 transition-all"
                       >
-                        {r}
+                        {passwordLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                        Update password
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bitrate selections */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono flex items-center justify-between">
-                    <span>Target Video Bitrate</span>
-                    <span className="text-[9px] text-indigo-400 font-mono">Requires high upload bandwidth</span>
-                  </label>
-                  <select
-                    value={bitrate}
-                    onChange={(e) => setBitrate(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-250 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-semibold"
-                  >
-                    <option value="3000">3,000 Kbps (720p Standard speed)</option>
-                    <option value="4500">4,500 Kbps (1080p Web default)</option>
-                    <option value="6000">6,000 Kbps (1080p Pro Twitch recommended)</option>
-                    <option value="8000">8,000 Kbps (1440p Extreme HD)</option>
-                  </select>
-                </div>
-
-                {/* Encoder */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Hardware Encoding Chipset</label>
-                  <select
-                    value={encoder}
-                    onChange={(e) => setEncoder(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-250 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-semibold font-mono"
-                  >
-                    <option value="nvenc">NVIDIA NVENC H264 Accelerated (GPU Core)</option>
-                    <option value="x264">Software x264 (Strict CPU cycle)</option>
-                    <option value="webrtc">WebRTC Direct Low-Latency Media stream</option>
-                  </select>
-                </div>
-
-                {/* Noise gate filters */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono flex items-center justify-between">
-                    <span>Obs Mic Noise Gate threshold</span>
-                    <span className="text-slate-500 text-[9px] font-mono">{noiseGate} dB</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="-60"
-                      max="-25"
-                      step="1"
-                      value={noiseGate}
-                      onChange={(e) => setNoiseGate(Number(e.target.value))}
-                      className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Low Latency modes */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider font-mono">Ingest Buffering Mode</label>
-                  <select
-                    value={latencyMode}
-                    onChange={(e) => setLatencyMode(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-250 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-mono uppercase font-bold"
-                  >
-                    <option value="ultra">Ultra-Low delay (0.5s Real-Time chat sync)</option>
-                    <option value="low">Low Latency (2.5s Sports sync)</option>
-                    <option value="normal">Normal latency (10s Buffered High-Resolution HD)</option>
-                  </select>
-                </div>
-
-                {/* Overlay widgets toggle */}
-                <div className="p-4 bg-[#0b0f19] border border-slate-850 rounded-xl text-left flex items-center justify-between col-span-1 md:col-span-2">
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-300">Display Active Parlay HUD inside Livestream Video</h5>
-                    <p className="text-[10px] text-slate-500 leading-normal mt-0.5">Let viewers immediately click, tail, and vouch your actual parlay ticket as an interactive overlay overlay.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={enableOverlayWidgets}
-                    onChange={(e) => setEnableOverlayWidgets(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-500"
-                  />
-                </div>
-
+                    </div>
+                  </form>
+                </Section>
               </div>
-              
-              <div className="p-3 bg-indigo-950/25 border border-indigo-900/30 rounded-xl flex items-center gap-2.5 text-[11px] text-indigo-400">
-                <Info className="w-4 h-4 shrink-0" />
-                <span>OBS & stream integrations are fully emulated. Saving these properties carries directly to the <strong>Live Streams 🔴</strong> Broadcaster Desk feed.</span>
-              </div>
-            </div>
-          )}
+              </>
+            )}
 
-          {/* ADMIN ADS MANAGEMENT & NET REVENUE HQ */}
-          {activeTab === 'admin-ads' && (
-            <div className="bg-[#121824] rounded-2xl border border-slate-850 p-6 space-y-6 animate-fade-in" id="settings-admin-ads-panel">
-              <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                    <DollarSign className="w-5 h-5 text-amber-500 animate-pulse" />
-                    Admin Ad-Revenue Hub & CPM Grids
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Configure target sponsor placements and analyze simulated impressions yield relative to user levels.</p>
-                </div>
-                <span className="text-[10px] font-mono text-emerald-450 bg-emerald-955/35 border border-emerald-900/40 px-2.5 py-0.5 rounded uppercase font-black animate-pulse">
-                  Ledger CPM Active
-                </span>
-              </div>
+            {/* ── BILLING ── */}
+            {activeTab === 'billing' && (
+              <div className="space-y-8">
 
-              {/* Dynamic Revenue Simulator Widget */}
-              <div className="bg-gradient-to-tr from-[#1b263b] via-[#121824] to-[#0d131f] border-2 border-slate-800 p-4.5 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 font-mono uppercase">
-                  <span>Simulated Platform Earnings</span>
-                  <span className="text-emerald-400">Syncing live clicks</span>
-                </div>
+                <Section title="Subscription" subtitle="Manage your plan and payment method.">
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-800 text-center relative overflow-hidden group">
-                    <Eye className="w-4 h-4 text-sky-400 absolute top-2 right-2 opacity-35" />
-                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono block">Impressions</span>
-                    <strong className="text-base text-slate-100 font-mono block mt-1">{simViews.toLocaleString()}</strong>
-                  </div>
-
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-890 text-center relative overflow-hidden group">
-                    <MousePointerClick className="w-4 h-4 text-teal-400 absolute top-2 right-2 opacity-35" />
-                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono block">Clicks</span>
-                    <strong className="text-base text-slate-100 font-mono block mt-1">{simClicks.toLocaleString()}</strong>
-                  </div>
-
-                  <div className="bg-[#0b0f19] p-3 rounded-xl border border-slate-890 text-center relative overflow-hidden group">
-                    <DollarSign className="w-4 h-4 text-emerald-400 absolute top-2 right-2 opacity-35" />
-                    <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono block">Ledger revenue</span>
-                    <strong className="text-base text-emerald-400 font-mono font-black block mt-1">${simRevenue.toFixed(2)}</strong>
-                  </div>
-                </div>
-
-                {/* Calculations info */}
-                <div className="text-[10px] text-slate-400 leading-normal font-medium flex justify-between items-center">
-                  <span>Current eCPM value: <strong>${cpmRate.toFixed(2)}</strong></span>
-                  <span>Estimated CTR: <strong>{((simClicks / simViews) * 100).toFixed(2)}%</strong> (From Free Users)</span>
-                </div>
-              </div>
-
-              {/* Admin Form options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                
-                {/* Sponsor selector */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider font-mono">Active Target Sponsor Campaign</label>
-                  <select
-                    value={activeAdSponsor}
-                    onChange={(e) => setActiveAdSponsor(e.target.value)}
-                    className="w-full text-xs bg-[#0b0f19] text-slate-200 border border-slate-805 rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 font-bold"
-                  >
-                    <option value="DraftKings">DraftKings Match Special ($5 bet to $200 bonuses)</option>
-                    <option value="FanDuel">FanDuel No-Sweat Multibets (Up to $1k insurance)</option>
-                    <option value="PrizePicks">PrizePicks 100x Multi-Pass (pitcher Ks selection)</option>
-                    <option value="VouchEdge Premium Upgrade">VouchEdge Premium Seller Pro (Self-Platform Ad)</option>
-                  </select>
-                </div>
-
-                {/* CPM slider */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider font-mono flex justify-between">
-                    <span>Target eCPM Rate</span>
-                    <span className="text-emerald-400 font-mono">${cpmRate.toFixed(2)} per 1k views</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="35"
-                    step="0.5"
-                    value={cpmRate}
-                    onChange={(e) => setCpmRate(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500 py-1"
-                  />
-                </div>
-
-                {/* Intensity selector */}
-                <div className="space-y-1.5 text-left md:col-span-2">
-                  <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider font-mono">Ad Intensity & frequency for free users</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'LOW', label: 'Low intensity', detail: 'Less ads' },
-                      { id: 'MEDIUM', label: 'Medium intensity', detail: 'Default layout' },
-                      { id: 'HIGH', label: 'High intensity', detail: 'Spam free feed!' }
-                    ].map((mode) => (
+                  {/* Current plan row */}
+                  <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+                        <Zap className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{PLAN_COPY[activeTier].title} plan</p>
+                        <p className="text-xs text-slate-500">
+                          {billingStatus ? `Renews ${formatDate(billingStatus.currentPeriodEnd)}` : PLAN_COPY[activeTier].price + (activeTier !== 'BASIC' ? '/month' : ' forever')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        activeTier === 'BASIC' ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/15 text-emerald-400'
+                      }`}>
+                        {activeTier === 'BASIC' ? 'Free' : 'Active'}
+                      </span>
                       <button
-                        key={mode.id}
                         type="button"
-                        onClick={() => setAdIntensity(mode.id as any)}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          adIntensity === mode.id 
-                            ? 'bg-amber-950/40 border-amber-500 text-amber-300 font-black' 
-                            : 'bg-[#0b0f19] border-slate-850 text-slate-500'
-                        }`}
+                        onClick={() => refreshBilling()}
+                        disabled={billingLoading}
+                        className="flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-400 hover:bg-slate-900 hover:text-slate-200 disabled:opacity-50 transition-colors"
                       >
-                        <span className="text-xs font-bold block mb-0.5">{mode.label}</span>
-                        <span className="text-[9px] font-mono block text-slate-500 leading-none">{mode.detail}</span>
+                        {billingLoading ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        Refresh
                       </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
 
+                  {/* Plan cards */}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {(Object.keys(PLAN_COPY) as AppTier[]).map((tier) => {
+                      const plan = PLAN_COPY[tier];
+                      const isActive = activeTier === tier;
+                      const isLoading = checkoutLoading === tier;
+                      return (
+                        <div
+                          key={tier}
+                          className={`relative rounded-xl border p-4 transition-colors ${
+                            isActive
+                              ? 'border-blue-500/50 bg-blue-500/5'
+                              : 'border-slate-800 bg-slate-900/30 hover:border-slate-700'
+                          }`}
+                        >
+                          {plan.badge && !isActive && (
+                            <span className="absolute right-3 top-3 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+                              {plan.badge}
+                            </span>
+                          )}
+                          {isActive && (
+                            <span className="absolute right-3 top-3 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                              Current
+                            </span>
+                          )}
+
+                          <p className="text-sm font-semibold text-white">{plan.title}</p>
+                          <p className="mt-1 text-2xl font-bold text-white">
+                            {plan.price}
+                            {tier !== 'BASIC' && <span className="text-sm font-normal text-slate-500">/mo</span>}
+                          </p>
+                          <p className="mt-2 text-xs leading-5 text-slate-500">{plan.detail}</p>
+
+                          <button
+                            type="button"
+                            disabled={isActive || isLoading}
+                            onClick={() => handleUpgrade(tier)}
+                            className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors ${
+                              isActive
+                                ? 'cursor-default bg-slate-800 text-slate-600'
+                                : tier === 'BASIC'
+                                  ? 'border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                                  : 'bg-blue-600 text-white hover:bg-blue-500'
+                            }`}
+                          >
+                            {isLoading && <Loader className="h-3 w-3 animate-spin" />}
+                            {isActive
+                              ? 'Your plan'
+                              : tier === 'BASIC'
+                                ? 'Downgrade'
+                                : activeTier !== 'BASIC'
+                                  ? `Switch to ${plan.title}`
+                                  : `Upgrade to ${plan.title}`}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Payment method" subtitle="Update your card, view invoices, or cancel your subscription.">
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={handleManageBilling}
+                      disabled={portalLoading}
+                      className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/50 px-4 py-2.5 text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors"
+                    >
+                      {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                      Manage billing
+                      <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
+                    </button>
+                    {billingPortalError && (
+                      <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-3">
+                        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-red-300">Billing portal unavailable</p>
+                          <p className="mt-0.5 text-xs text-red-400/80">{billingPortalError}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBillingPortalError(null)}
+                          className="ml-auto shrink-0 text-red-500/60 hover:text-red-400 transition-colors"
+                          aria-label="Dismiss"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </Section>
               </div>
+            )}
 
-              {/* Educational disclaimer on how ads map to subscriptions */}
-              <div className="p-4 bg-slate-950/50 border border-slate-900 rounded-xl space-y-2">
-                <span className="text-[10px] font-mono text-indigo-400 uppercase font-bold">Dynamic Subscription Mapping Matrix</span>
-                <div className="grid grid-cols-3 gap-2 text-[10.5px] text-slate-400 leading-relaxed font-mono font-medium">
-                  <div className="p-2 bg-slate-900 rounded">
-                    <strong className="text-slate-300 block mb-0.5">🎮 BASIC USER (FREE)</strong>
-                    <span>High Ad Frequency: Inline feed cards, top banner promos, sidebar blocks, and stream overlays active.</span>
+            {/* ── NOTIFICATIONS ── */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-8">
+                <Section title="Email" subtitle="Control which emails VouchEdge sends to you.">
+                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                    <PrefRow label="Account alerts" detail="Security and billing notifications.">
+                      <Toggle checked={emailAlerts} onChange={setEmailAlerts} />
+                    </PrefRow>
+                    <PrefRow label="Weekly recap" detail="A summary of your picks, results, and activity each week.">
+                      <Toggle checked={weeklySummary} onChange={setWeeklySummary} />
+                    </PrefRow>
                   </div>
-                  <div className="p-2 bg-slate-900 rounded">
-                    <strong className="text-slate-350 block mb-0.5">✨ GOLD USER (PRO)</strong>
-                    <span>Subtle Ad Frequency: Sidebar blocks suppressed. Banner ads shown only at top of feeds.</span>
+                </Section>
+
+                <Divider />
+
+                <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
+                  <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
+                    <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
+                      <Toggle checked={pushAlerts} onChange={setPushAlerts} />
+                    </PrefRow>
+                    <PrefRow label="Public profile" detail="Show your creator profile and stats on public leaderboards.">
+                      <Toggle checked={profilePublic} onChange={setProfilePublic} />
+                    </PrefRow>
+                    <PrefRow label="Reduce motion" detail="Lower animation intensity across the interface.">
+                      <Toggle
+                        checked={reduceMotion}
+                        onChange={(v) => {
+                          setReduceMotion(v);
+                          onUpdateProfile({ reduceMotion: v });
+                        }}
+                      />
+                    </PrefRow>
                   </div>
-                  <div className="p-2 bg-slate-900 rounded">
-                    <strong className="text-amber-400 block mb-0.5">💎 SELLER PRO (ELITE)</strong>
-                    <span>Zero Ads: 100% ad-free experience. Ads completely blocked and filtered.</span>
-                  </div>
-                </div>
+                </Section>
               </div>
-            </div>
-          )}
+            )}
 
+            {/* ── PRIVACY ── */}
+            {activeTab === 'privacy' && (
+              <div className="space-y-8">
+                <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+                    <div>
+                      <p className="text-sm font-medium text-white">Data export</p>
+                      <p className="text-xs text-slate-500">Download your picks, parlays, profile, and activity as JSON.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleExportData}
+                      disabled={privacyLoading === 'export'}
+                      className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                    >
+                      {privacyLoading === 'export' ? <Loader className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                      Export
+                    </button>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Local data" subtitle="Reset preview data stored on this device only.">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+                    <div>
+                      <p className="text-sm font-medium text-white">Reset local data</p>
+                      <p className="text-xs text-slate-500">Clears picks, slips, vouches, and profile previews on this browser.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetClick}
+                      className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Reset
+                    </button>
+                  </div>
+                </Section>
+
+                <Divider />
+
+                <Section title="Danger zone" subtitle="Irreversible actions for your account.">
+                  <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-5">
+                    <div className="flex items-start justify-between gap-6">
+                      <div>
+                        <p className="text-sm font-medium text-red-300">Delete account</p>
+                        <p className="mt-0.5 text-xs text-red-400/70">
+                          Schedules deletion with a 30-day grace period. Active subscriptions will be cancelled. This cannot be undone.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleScheduleDeletion}
+                        disabled={privacyLoading === 'delete'}
+                        className="shrink-0 flex items-center gap-2 rounded-lg border border-red-500/40 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                      >
+                        {privacyLoading === 'delete' ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        Delete account
+                      </button>
+                    </div>
+                  </div>
+                </Section>
+              </div>
+            )}
+
+          </div>
         </div>
-
-        {/* RIGHT COLUMN: TESTING CONTROLS & DATABASE CLEANUP */}
-        <div className="lg:col-span-4 space-y-5">
-          
-          {/* SUBSCRIPTION TESTING TRIGGER SWITCH */}
-          <div className="bg-[#121824] rounded-2xl border border-slate-850 p-5 space-y-4">
-            <h4 className="font-extrabold text-[#cbd5e1] text-xs uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              Upgrade subscription simulator
-            </h4>
-
-            <p className="text-[11px] text-slate-500 leading-normal">
-              Toggle subscription level instantly as the Admin to see how the platform adds/removes ads across pages in real-time.
-            </p>
-
-            <div className="space-y-2.5">
-              <button
-                onClick={() => handleUpgradeTier('BASIC')}
-                className={`w-full p-2.5 rounded-xl border text-xs font-bold font-mono transition-all text-left flex justify-between items-center cursor-pointer ${
-                  profile.subscriptionTier === 'BASIC' || !profile.subscriptionTier
-                    ? 'bg-[#0f172a] text-sky-400 border-sky-505/35 font-extrabold'
-                    : 'bg-[#0b0f19] text-slate-400 border-slate-850 hover:border-slate-700'
-                }`}
-              >
-                <span>🛡️ Free Tier (BASIC)</span>
-                {profile.subscriptionTier === 'BASIC' || !profile.subscriptionTier ? (
-                  <span className="text-[9px] font-bold text-sky-450 uppercase animate-pulse">Many Ads Placed</span>
-                ) : (
-                  <span className="text-[9px] text-slate-500">Upgrade</span>
-                )}
-              </button>
-
-              <button
-                onClick={() => handleUpgradeTier('GOLD')}
-                className={`w-full p-2.5 rounded-xl border text-xs font-bold font-mono transition-all text-left flex justify-between items-center cursor-pointer ${
-                  profile.subscriptionTier === 'GOLD'
-                    ? 'bg-amber-950/20 text-amber-400 border-amber-950/40 font-extrabold'
-                    : 'bg-[#0b0f19] text-slate-400 border-slate-850 hover:border-slate-700'
-                }`}
-              >
-                <span>✨ Pro Tier (VEDGE GOLD)</span>
-                {profile.subscriptionTier === 'GOLD' ? (
-                  <span className="text-[9px] font-bold text-amber-400 uppercase animate-pulse">Subtle Ads Shown</span>
-                ) : (
-                  <span className="text-[9px] text-slate-505">Upgrade</span>
-                )}
-              </button>
-
-              <button
-                onClick={() => handleUpgradeTier('SELLER_PRO')}
-                className={`w-full p-2.5 rounded-xl border text-xs font-bold font-mono transition-all text-left flex justify-between items-center cursor-pointer ${
-                  profile.subscriptionTier === 'SELLER_PRO'
-                    ? 'bg-[#082f1d]/20 text-emerald-450 border-emerald-950/40 font-extrabold'
-                    : 'bg-[#0b0f19] text-slate-400 border-slate-850 hover:border-slate-700'
-                }`}
-              >
-                <span>💎 Elite Tier (SELLER PRO)</span>
-                {profile.subscriptionTier === 'SELLER_PRO' ? (
-                  <span className="text-[9px] font-bold text-emerald-400 uppercase">Blocked (Ad-Free)</span>
-                ) : (
-                  <span className="text-[9px] text-slate-500">Upgrade</span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* ACTIVE UTILITIES */}
-          <div className="bg-[#121824] rounded-2xl border border-slate-850 p-5 space-y-4" id="database-utilities">
-            <h4 className="font-extrabold text-[#cbd5e1] text-xs uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <RefreshCw className="w-4 h-4 text-rose-455 animate-spin" />
-              Dev Database Options
-            </h4>
-
-            <div className="space-y-4" id="reset-feed-tool-inside-settings">
-              <p className="text-[11px] text-slate-500 leading-normal">
-                Clicking this restores VouchEdge database records to core baseline stats (ideal for clean ledger testing).
-              </p>
-
-              <button
-                onClick={handleResetClick}
-                className="w-full py-2.5 bg-rose-955/20 text-rose-405 hover:bg-rose-950/50 transition-colors rounded-xl border border-rose-900 border-dashed text-xs font-bold flex items-center justify-center gap-1.5 focus:ring-2 focus:ring-rose-500/20 active:scale-95"
-                id="reset-db-btn-inside-settings"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Reset Verified Database</span>
-              </button>
-            </div>
-          </div>
-
-          {/* ACCREDITED AUDIT FOOTNOTE */}
-          <div className="p-4 bg-slate-900/30 rounded-2xl border border-slate-850/60 text-[10.5px] text-slate-450 leading-relaxed font-semibold">
-            🛡️ <strong>Ledger Assurance Notice</strong>: Dynamic earnings metrics, clicks tracking, and CPM scales represent verified sandbox simulations. Ads are bound with precise React props to the profile object context.
-          </div>
-
-        </div>
-
       </div>
-
     </div>
   );
 }

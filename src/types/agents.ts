@@ -1,5 +1,6 @@
 /** Frontend contract for AI capper + judge agents. */
 import type { JudgeVerdict } from "./judging";
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 export interface CapperAgent {
   id: string;

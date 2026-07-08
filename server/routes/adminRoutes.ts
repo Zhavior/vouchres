@@ -129,6 +129,8 @@ adminRoutes.post(
       return res.json({
         graded: result.graded.length,
         skipped: result.skipped.length,
+        summary: result.summary,
+        warnings: result.summary.warnings,
         details: result,
       });
     } catch (err: any) {

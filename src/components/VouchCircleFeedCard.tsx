@@ -11,6 +11,7 @@ import {
   Shield 
 } from 'lucide-react';
 import { FeedPost } from '../types';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface VouchCircleFeedCardProps {
   post: FeedPost;

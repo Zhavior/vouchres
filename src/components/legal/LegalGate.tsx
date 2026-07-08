@@ -3,7 +3,10 @@ import { useAuth } from "../../lib/useAuth";
 
 /**
  * LegalGate — shown after signup, before any pick-related action.
- * User must confirm 21+ age and select their jurisdiction.
+ * User must confirm they meet the legal age in their jurisdiction and
+ * select that jurisdiction (age of majority for gambling/research varies
+ * by state/province — e.g. 18/19 in most of Canada, 21 in most US states
+ * with regulated sports betting — so we don't hardcode a single number).
  *
  * This is a client-side UX layer. The server enforces via
  * requireLegalConfirmed middleware — a user who somehow skips this UI
@@ -40,7 +43,7 @@ export function LegalGate() {
     setError(null);
 
     if (!ageConfirmed) {
-      setError("You must confirm you are 21 or older.");
+      setError("You must confirm you meet the legal age in your jurisdiction.");
       return;
     }
     if (!jurisdiction) {
@@ -80,7 +83,7 @@ export function LegalGate() {
               onChange={(e) => setAgeConfirmed(e.target.checked)}
             />
             <span>
-              I confirm that I am <strong>21 years of age or older</strong>.
+              I confirm that I am <strong>at least the legal age in my jurisdiction</strong> (e.g. 18/19+ in most of Canada, 21+ in most regulated US states).
             </span>
           </label>
 

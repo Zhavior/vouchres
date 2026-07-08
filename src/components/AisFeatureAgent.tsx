@@ -20,7 +20,7 @@ import {
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from '../lib/motion';
 import { CreatorProofProfile, Parlay } from '../types';
 import { canAccessThemeStore } from '../lib/adminDevAccess';
 
@@ -374,7 +374,7 @@ Your feedback message has been delivered to **${target}** via our verified SMTP 
   };
 
   return (
-    <div className="fixed bottom-6 right-6 md:right-8 z-50 font-sans" id="ai-feature-agent-root">
+    <div className="fixed bottom-6 left-6 md:left-8 z-50 font-sans" id="ai-feature-agent-root">
       
       {/* Mini floating button indicator */}
       {!isOpen && (
@@ -389,7 +389,7 @@ Your feedback message has been delivered to **${target}** via our verified SMTP 
             <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-400"></span>
           </span>
           {/* tooltip */}
-          <div className="absolute right-16 bg-slate-900 border border-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 select-none pointer-events-none shadow-xl">
+          <div className="absolute left-16 bg-slate-900 border border-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 select-none pointer-events-none shadow-xl">
             🤖 Ask VouchEdge AI Agent
           </div>
         </button>

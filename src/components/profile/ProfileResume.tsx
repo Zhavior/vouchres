@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, ShieldCheck } from 'lucide-react';
 import type { Parlay } from '../../types';
 import { ScorePill, RiskBadge, StatusBadge } from '../ui/primitives';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 /** Sports-betting "resume" strip from real saved parlays + profile win rate. */
 export default function ProfileResume({ savedParlays = [], winRate }: { savedParlays?: Parlay[]; winRate?: number }) {

@@ -22,5 +22,25 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "src",
+    "server",
+    "shared",
+    "supabase",
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "_code_backups",
+    "_code_backups/**",
+    "src/social/feed/_reference",
+    "src/social/feed/_reference/**"
+  ]
 }

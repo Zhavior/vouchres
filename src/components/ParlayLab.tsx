@@ -22,11 +22,11 @@ import {
 } from 'lucide-react';
 import { Parlay, Leg, MLBPlayer, Vouch, FeedPost, CreatorProofProfile } from '../types';
 import RiskTierVisualization from './RiskTierVisualization';
-import ResultsPage from './ResultsPage';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 import ParlaySlipSummary, { BuilderMode } from './parlay/ParlaySlipSummary';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface ParlayLabProps {
   onSaveParlay: (parlay: Parlay) => void;
@@ -38,7 +38,7 @@ interface ParlayLabProps {
   onSaveVouch?: (vouch: Vouch) => void;
   posts?: FeedPost[];
   profile?: CreatorProofProfile;
-  initialTab?: 'builder' | 'results';
+  initialTab?: 'builder' | 'results'; // legacy accepted; Results now routes to the dedicated page
 }
 
 export default function ParlayLab({ 
@@ -53,12 +53,14 @@ export default function ParlayLab({
   profile,
   initialTab = 'builder'
 }: ParlayLabProps) {
-  // Navigation & interaction states
-  const [workMode, setWorkMode] = useState<'builder' | 'results'>(initialTab);
-  
+  // ParlayLab is builder-only. Verified Results live on the dedicated Results page.
+  const workMode: 'builder' = 'builder';
+
   React.useEffect(() => {
-    setWorkMode(initialTab);
-  }, [initialTab]);
+    if (initialTab === 'results') {
+      onSectionChange('results');
+    }
+  }, [initialTab, onSectionChange]);
 
   const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -446,7 +448,7 @@ export default function ParlayLab({
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen bg-slate-950/20 backdrop-blur-md text-slate-100 font-sans border border-slate-900/40 rounded-3xl" id="parlay-lab-view">
+    <div className="ve-page-shell ve-panel ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen text-slate-100 font-sans" id="parlay-lab-view">
       
       {/* Title & Hubtown style subline */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/25 backdrop-blur-sm p-4 rounded-3xl border border-slate-900/50">
@@ -482,53 +484,29 @@ export default function ParlayLab({
       {/* Embedded Portfolio risk metrics */}
       <RiskTierVisualization savedParlays={savedParlays} />
 
-      {/* Premium Tab Selector for Fusing the Views */}
-      <div className="flex bg-[#0f1524]/90 p-1 rounded-2xl border border-slate-900 shadow-xl" id="parlay-fuse-tabs">
-        <button
-          type="button"
-          onClick={() => setWorkMode('builder')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black transition-all ${
-            workMode === 'builder'
-              ? 'bg-[#1e293b] text-sky-400 border border-slate-800 shadow-md ring-1 ring-sky-500/10'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
+      {/* Builder + single source-of-truth Results navigation */}
+      <div className="flex flex-col sm:flex-row gap-3 bg-[#0f1524]/90 p-1 rounded-2xl border border-slate-900 shadow-xl" id="parlay-fuse-tabs">
+        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-[#1e293b] text-sky-400 border border-slate-800 shadow-md ring-1 ring-sky-500/10">
           <Sliders className="w-4 h-4 text-sky-450" />
           <span>🔬 PARLAY SLIP CONSTRUCTOR</span>
-        </button>
+        </div>
 
         <button
           type="button"
-          onClick={() => setWorkMode('results')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black transition-all ${
-            workMode === 'results'
-              ? 'bg-[#1e293b] text-emerald-400 border border-slate-800 shadow-md ring-1 ring-emerald-500/10'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
+          onClick={() => onSectionChange('results')}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black transition-all text-emerald-300 hover:text-emerald-100 hover:bg-emerald-500/10 border border-emerald-500/20"
         >
           <Award className="w-4 h-4 text-emerald-400" />
-          <span>🏆 PREMIUM AI RESULTS & WORKSTATION LEDGER</span>
+          <span>🏆 VIEW VERIFIED RESULTS</span>
         </button>
       </div>
 
       {/* Main Grid: Left is catalog/Console, Right is Slip builder */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* LEFT / CENTER: Player list catalog OR Fused Results view */}
+        {/* LEFT / CENTER: Player list catalog */}
         <div className="lg:col-span-7 space-y-6">
-          {workMode === 'results' ? (
-            <div className="bg-[#0b0f19]/30 rounded-3xl border border-slate-900/40 p-1">
-              <ResultsPage
-                posts={posts}
-                profile={profile}
-                savedParlays={savedParlays}
-                onTailParlay={(tailLegs) => {
-                  setLegs(tailLegs);
-                }}
-              />
-            </div>
-          ) : (
-            <>
+          <>
           
           {/* Filters Toolbar */}
           <div className="bg-slate-900/25 backdrop-blur-sm p-4 rounded-3xl border border-slate-900/50 space-y-3.5">
@@ -813,7 +791,6 @@ export default function ParlayLab({
             })}
           </div>
           </>
-          )}
 
         </div>
 

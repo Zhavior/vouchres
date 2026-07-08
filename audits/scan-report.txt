@@ -1,0 +1,276 @@
+=== 1) Biggest source files ===
+   67923 total
+    2985 src/components/VouchBoard.tsx
+    1962 src/components/VouchStudioDarkroom.tsx
+    1918 src/components/PlayerResearchConsole.tsx
+    1609 src/components/LiveStreams.tsx
+    1583 src/components/AisLandingPage.tsx
+    1552 src/components/SmartAiEngine.tsx
+    1355 src/components/ResultsPage.tsx
+    1279 src/App.tsx
+    1246 src/components/ParlayLab.tsx
+    1221 server/services/mlb/hrPipeline.ts
+    1214 src/theme/themeRegistry.ts
+    1145 src/components/SubscriberHub.tsx
+    1063 src/social/feed/FeedPostCard.tsx
+    1010 src/components/ThemeStore.tsx
+     997 src/components/PlayerResearchHub.tsx
+     955 src/components/theEdge/TheEdgeShell.tsx
+     937 src/social/feed/FeedComposer.tsx
+     923 src/pages/DailyPlayersPage.tsx
+     854 src/components/ParlayStudio.tsx
+     852 src/components/SettingsPage.tsx
+     791 src/components/VouchCircleFeedCard.tsx
+     765 src/components/vouch-system/VouchCard.tsx
+     739 src/components/MlbIntelligenceHub.tsx
+     734 src/components/hr-board/HrPlayerDrawer.tsx
+     697 src/components/NotificationCenter.tsx
+     696 src/components/AisFeatureAgent.tsx
+     688 src/components/WelcomePortal.tsx
+     672 src/components/Leaderboard.tsx
+     670 src/components/LiveGames.tsx
+     650 src/components/LiveGamesPro.tsx
+     639 src/data/playerData.ts
+     633 src/components/ProfilePage.tsx
+     591 src/components/edgePortal/EdgePortal.tsx
+     587 src/components/PokemonPlayerCard.tsx
+     566 src/components/admin/AdminDashboard.tsx
+     539 src/lib/mlbDirect.ts
+     531 src/components/auth/AuthModal.tsx
+     512 server/routes/parlayRoutes.ts
+     505 src/pages/DailyHrBoardPage.tsx
+
+=== 2) Heavy imports ===
+src/App.tsx:32:import { Crown, Home, X } from 'lucide-react';
+src/social/feed/FeedMobileNav.tsx:2:import { Home, Sliders, ClipboardCheck, BarChart3, User, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, Edit3, ShoppingBag, MessageSquare, Activity, Flame, LayoutDashboard, Bell } from 'lucide-react';
+src/social/feed/FeedTabs.tsx:2:import { SlidersHorizontal, Trophy, Layers } from 'lucide-react';
+src/social/feed/ParlayFeedPostCard.tsx:2:import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+src/social/feed/FeedSidebar.tsx:2:import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell } from 'lucide-react';
+src/social/feed/FeedPostCard.tsx:24:} from 'lucide-react';
+src/social/feed/HotMarketsPanel.tsx:2:import { Sparkles, Clock, AlertCircle } from 'lucide-react';
+src/social/feed/HomeFeedLayout.tsx:7:import { Sliders, ShieldCheck, Sparkles } from 'lucide-react';
+src/social/feed/FeedRightRail.tsx:2:import { AlertCircle, Calendar } from 'lucide-react';
+src/social/feed/HomeFeedPage.tsx:7:import { Search, Crown, Zap, Users, MessageSquare } from 'lucide-react';
+src/social/feed/ProofBuildersPanel.tsx:2:import { Award, ShieldAlert, ArrowUpRight } from 'lucide-react';
+src/social/feed/ResearchNotePostCard.tsx:2:import { FileText, Tag, BarChart2 } from 'lucide-react';
+src/social/feed/TrendingVouchesPanel.tsx:2:import { Flame, Check, Plus } from 'lucide-react';
+src/social/feed/FeedComposer.tsx:20:} from 'lucide-react';
+src/components/intel/PitcherProfileDrawer.tsx:2:import { X, Activity, AlertTriangle, Crown, Lock, Target, ShieldAlert, TrendingUp } from 'lucide-react';
+src/components/PlayerResearchHub.tsx:4:import { motion, AnimatePresence } from "framer-motion";
+src/components/PlayerResearchHub.tsx:9:} from "lucide-react";
+src/components/Leaderboard.tsx:20:} from 'lucide-react';
+src/components/LiveStreams.tsx:32:} from 'lucide-react';
+src/components/PlayerResearchConsole.tsx:17:} from 'recharts';
+src/components/PlayerResearchConsole.tsx:41:} from 'lucide-react';
+src/components/VouchBoard.tsx:29:} from 'lucide-react';
+src/components/VouchBoard.tsx:49:} from 'recharts';
+src/components/NotificationCenter.tsx:24:} from 'lucide-react';
+src/components/vouch-system/VouchCard.tsx:25:} from 'lucide-react';
+src/components/ParlayStudio.tsx:2:import { motion, AnimatePresence } from "framer-motion";
+src/components/ParlayStudio.tsx:8:} from "lucide-react";
+src/components/pro/GameSignalPanel.tsx:12:import { MapPin, CloudSun, Users } from 'lucide-react';
+src/components/pro/ProPageHeader.tsx:2:import { ShieldCheck } from 'lucide-react';
+src/components/pro/PlayerSignalPanel.tsx:13:import { Flame, AlertTriangle, MapPin } from 'lucide-react';
+src/components/pro/ProAccessGate.tsx:2:import { Lock, Zap, Star, Crown, MessageSquare, Store, Microscope } from 'lucide-react';
+src/components/pro/ProGraphShell.tsx:2:import { BarChart3, Lock } from 'lucide-react';
+src/components/pro/SignalGraph.tsx:19:import { Lock } from 'lucide-react';
+src/components/pro/HrSignalGraphs.tsx:11:import { BarChart3, Activity, Zap, Gauge, Lock } from 'lucide-react';
+src/components/pro/ProLockedCard.tsx:2:import { Lock } from 'lucide-react';
+src/components/pro/VerifiedDataNotice.tsx:2:import { CloudOff, Database, Lock, ShieldCheck } from 'lucide-react';
+src/components/TodayDashboard.tsx:2:import { Flame, Sliders, Users, Tv, BarChart3, ArrowRight, Activity, CloudSun, AlertTriangle, ClipboardList } from 'lucide-react';
+src/components/SettingsPage.tsx:21:} from 'lucide-react';
+src/components/WelcomePortal.tsx:1:import { AnimatePresence, motion } from 'framer-motion';
+src/components/WelcomePortal.tsx:19:} from 'lucide-react';
+src/components/PremiumSubPage.tsx:17:} from 'lucide-react';
+src/components/ProfilePage.tsx:2:import { User, Shield, ShieldCheck, Mail, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share } from 'lucide-react';
+src/components/auth/AuthModal.tsx:19:} from 'lucide-react';
+src/components/auth/AuthStatusBadge.tsx:2:import { LogIn, LogOut, ShieldCheck, UserCircle } from 'lucide-react';
+src/components/hr-board/HrTierView.tsx:2:import { Flame, Plus, ChevronRight } from 'lucide-react';
+src/components/hr-board/HrBoardTable.tsx:2:import { MapPin, CloudSun, Flame } from 'lucide-react';
+src/components/hr-board/HrPlayerDrawer.tsx:2:import { X, Flame, AlertTriangle, Gavel, ShieldCheck, TrendingUp, MapPin, Lock, BarChart3, Share2, Copy } from 'lucide-react';
+src/components/hr-board/HrBoardFilters.tsx:2:import { Search, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
+src/components/hr-board/HrBoardRow.tsx:2:import { ChevronRight, Flame } from 'lucide-react';
+src/components/AisLandingPage.tsx:33:} from 'lucide-react';
+src/components/MlbIntelligenceHub.tsx:12:} from 'lucide-react';
+src/components/CustomizePage.tsx:7:} from "lucide-react";
+src/components/AdBanner.tsx:2:import { Sparkles, ShieldCheck, Heart, TrendingUp, X, Award, Percent } from 'lucide-react';
+src/components/PokemonPlayerCard.tsx:13:} from 'recharts';
+src/components/PokemonPlayerCard.tsx:23:} from 'lucide-react';
+src/components/edgePortal/EdgePortal.tsx:1:import { AnimatePresence, motion } from 'framer-motion';
+src/components/edgePortal/EdgePortal.tsx:18:} from 'lucide-react';
+src/components/edgePortal/edgePortalRegistry.ts:15:} from 'lucide-react';
+src/components/vouchedge/OnboardingSlideshow.tsx:2:import { motion, AnimatePresence } from "framer-motion";
+src/components/vouchedge/OnboardingSlideshow.tsx:6:} from "lucide-react";
+src/components/vouchedge/FeatureCard3D.tsx:2:import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+src/components/vouchedge/FeatureCard3D.tsx:3:import { ArrowUpRight } from "lucide-react";
+src/components/vouchedge/EpicThemeShowcase.tsx:22:} from "lucide-react";
+src/components/SubscriberHub.tsx:23:} from 'lucide-react';
+src/components/results/ResultsLedgerSummary.tsx:2:import { BarChart3, Info } from 'lucide-react';
+src/components/results/ResultsStudio.tsx:2:import { motion, AnimatePresence } from "framer-motion";
+src/components/results/ResultsStudio.tsx:7:} from "lucide-react";
+src/components/ResultsPage.tsx:24:} from 'lucide-react';
+src/components/profile/ProfileAvatarBorder.tsx:3:import { CheckCircle2, Flame, Trophy, Sparkles, Shield, Star, Award } from 'lucide-react';
+src/components/profile/VouchShareCard.tsx:2:import { Share, Twitter, Copy, Check, Calendar, ArrowUpRight, Zap, Target } from 'lucide-react';
+src/components/profile/ProfileResume.tsx:2:import { Trophy, ShieldCheck } from 'lucide-react';
+src/components/profile/ProfileShareCard.tsx:2:import { Share, Twitter, Copy, Check, ExternalLink, ShieldCheck, Sparkles, Trophy } from 'lucide-react';
+src/components/CyberBackground.tsx:2:import { Settings, Play, Pause, Zap, Grid, EyeOff, Sparkles } from 'lucide-react';
+src/components/LiveGamesPro.tsx:4:} from 'lucide-react';
+src/components/SmartAiEngine.tsx:29:} from 'lucide-react';
+src/components/ParlayLab.tsx:22:} from 'lucide-react';
+src/components/theEdge/EdgeValueDeck.tsx:12:} from 'lucide-react';
+src/components/theEdge/EdgeSignatureDeck.tsx:13:} from 'lucide-react';
+src/components/theEdge/EdgeIslandCommandCenter.tsx:1:import { Bell, Crown, FlaskConical, Gauge, Map, Radio, ScrollText, Shield, Sparkles, Target, Trophy, UserCircle } from "lucide-react";
+src/components/theEdge/TheEdgeShell.tsx:1:import { AnimatePresence, motion } from 'framer-motion';
+src/components/theEdge/TheEdgeShell.tsx:4:import { ArrowRight, Bell, Bot, Check, CreditCard, Crown, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
+src/components/theEdge/EdgeCodeWelcome.tsx:11:} from 'lucide-react';
+src/components/theEdge/TheEdgeOverlay.tsx:1:import { AnimatePresence, motion } from 'framer-motion';
+src/components/theEdge/TheEdgeOverlay.tsx:2:import { Home, Sparkles } from 'lucide-react';
+src/components/VouchStudioDarkroom.tsx:20:} from 'lucide-react';
+src/components/ThemeStore.tsx:23:} from 'lucide-react';
+src/components/VouchScan.tsx:3:import { ScanLine, Upload, Plus, X, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
+src/components/RiskTierVisualization.tsx:14:} from 'recharts';
+src/components/RiskTierVisualization.tsx:15:import { Trophy, ShieldAlert, BarChart3, AlertTriangle, TrendingUp } from 'lucide-react';
+src/components/LiveGames.tsx:21:} from 'lucide-react';
+src/components/parlay/ParlaySlipSummary.tsx:2:import { ShieldCheck, Gavel, Share2, Save, Sparkles, AlertTriangle, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+src/components/notifications/NotificationsPage.tsx:2:import { Bell, CheckCircle2, Info, Lock, Sparkles, Trash2, Trophy, X } from 'lucide-react';
+src/components/notifications/AppNotificationsHost.tsx:2:import { Bell, X, Sparkles, Lock, Trophy, Info, CheckCircle2 } from 'lucide-react';
+src/components/notifications/HrNotifications.tsx:2:import { Bell, X, AlertTriangle } from 'lucide-react';
+src/components/VouchCircleFeedCard.tsx:12:} from 'lucide-react';
+src/components/AisFeatureAgent.tsx:22:} from 'lucide-react';
+src/lib/supabaseClient.ts:1:import { createClient, SupabaseClient } from "@supabase/supabase-js";
+src/pages/pro/TeamMatchupLabPage.tsx:1:import { Activity, BarChart3, Clock, Shield } from 'lucide-react';
+src/pages/pro/PlayerEdgeLabPage.tsx:2:import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
+src/pages/DailyHrBoardPage.tsx:2:import { Flame, RefreshCw, AlertTriangle } from 'lucide-react';
+src/pages/LiveGameLabPage.tsx:2:import { Activity, AlertTriangle, Search } from 'lucide-react';
+src/pages/LiveParlaysPage.tsx:12:} from 'lucide-react';
+server/middleware/auth.ts:2:import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+server/routes/billingRoutes.ts:3:import Stripe from "stripe";
+server/services/billing/stripeService.ts:1:import Stripe from "stripe";
+
+=== 3) Startup / eager MLB fetches ===
+server/routes/mlbRoutes.ts:11:  const timer = setTimeout(() => controller.abort(), 10000);
+server/routes/mlbHrBoardRoutes.ts:75:          setTimeout(() => reject(new Error("Deep board timed out after 20s")), 20000)
+server/routes/playerRegistryRoutes.ts:12:} from "../services/mlb/playerRegistryService";
+server/routes/playerRegistryRoutes.ts:14:export const playerRegistryRoutes = Router();
+server/routes/playerRegistryRoutes.ts:17:  console.error("[playerRegistryRoutes]", error);
+server/routes/playerRegistryRoutes.ts:25:playerRegistryRoutes.get("/mlb/players/count", async (_req, res) => {
+server/routes/playerRegistryRoutes.ts:33:playerRegistryRoutes.get("/mlb/players/registry", async (_req, res) => {
+server/routes/playerRegistryRoutes.ts:47:playerRegistryRoutes.get("/mlb/players/active", async (_req, res) => {
+server/routes/playerRegistryRoutes.ts:61:playerRegistryRoutes.get("/mlb/players/search", async (req, res) => {
+server/routes/playerRegistryRoutes.ts:77:playerRegistryRoutes.get("/mlb/players/:playerId", async (req, res) => {
+server/routes/playerRegistryRoutes.ts:93:playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, async (_req, res) => {
+server/routes/index.ts:11:import { playerRegistryRoutes } from "./playerRegistryRoutes";
+server/routes/index.ts:36:  app.use("/api", playerRegistryRoutes);
+server/routes/index.ts:67:        playerRegistry: true,
+server/services/intelligence/mlbIntelligenceEngine.ts:60:    console.log(`[sharedReport] CACHE HIT for ${date}`);
+server/services/intelligence/mlbIntelligenceEngine.ts:67:    console.log(`[sharedReport] IN-FLIGHT REUSED for ${date}`);
+server/services/intelligence/mlbIntelligenceEngine.ts:72:  console.log(`[sharedReport] CACHE MISS for ${date} — starting new build`);
+server/services/intelligence/mlbIntelligenceEngine.ts:74:  const buildPromise = buildDailyReportInternal(date)
+server/services/intelligence/mlbIntelligenceEngine.ts:78:      console.log(`[sharedReport] BUILD COMPLETE for ${date} — cached for ${REPORT_TTL / 1000}s`);
+server/services/intelligence/mlbIntelligenceEngine.ts:83:      console.error(`[sharedReport] BUILD FAILED for ${date}:`, err.message);
+server/services/intelligence/mlbIntelligenceEngine.ts:99:async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
+server/services/intelligence/mlbIntelligenceEngine.ts:182:export async function buildDailyReport(date = todayISO()): Promise<DailyMlbReport> {
+server/services/ai/dailyReportService.ts:2:import { buildDailyReport } from "../intelligence/mlbIntelligenceEngine";
+server/services/ai/dailyReportService.ts:5:import { SAFE_SYSTEM_INSTRUCTION, buildDailyReportPrompt } from "./aiPromptBuilder";
+server/services/ai/dailyReportService.ts:13:  data: Awaited<ReturnType<typeof buildDailyReport>>;
+server/services/ai/dailyReportService.ts:17:  const data = await buildDailyReport(date);
+server/services/ai/dailyReportService.ts:27:    prompt: buildDailyReportPrompt({ date: data.date, gameCount: data.gameCount, topVulnerable, topHr, topRunEnv }),
+server/services/ai/aiPromptBuilder.ts:21:export function buildDailyReportPrompt(summary: {
+server/services/ai/geminiClient.ts:19:    const t = setTimeout(() => reject(new Error("Gemini timeout")), ms);
+server/services/mlb/teamRosterClient.ts:43:        console.warn(`[teamRosterClient] people verification ${res.status} for batch starting at ${i}`);
+server/services/mlb/teamRosterClient.ts:58:      console.warn(`[teamRosterClient] people verification error:`, (err as Error).message);
+server/services/mlb/teamRosterClient.ts:149:    console.log(`[teamRosterClient] cache hit for key=${cacheKey.slice(0, 40)}`);
+server/services/mlb/teamRosterClient.ts:173:            `[teamRosterClient] Missing official metadata for team IDs: ${missingTeamIds.join(", ")}`
+server/services/mlb/teamRosterClient.ts:177:        console.log(`[teamRosterClient] Fetching rosters for ${teams.length} official teams (today's slate only)`);
+server/services/mlb/teamRosterClient.ts:181:        console.log(`[teamRosterClient] Fetching rosters for all ${teams.length} teams`);
+server/services/mlb/teamRosterClient.ts:184:      console.log(`[teamRosterClient] cache miss — fetching rosters for ${teams.length} teams (max 3 concurrent)`);
+server/services/mlb/teamRosterClient.ts:186:        console.log(`[teamRosterClient] starting roster fetch for team ${team.id} (${team.abbreviation})`);
+server/services/mlb/teamRosterClient.ts:191:          console.error(`[teamRosterClient] roster fetch failed for team ${team.id}:`, (err as Error).message);
+server/services/mlb/teamRosterClient.ts:200:      console.error("[teamRosterClient] getActiveHittersByTeam failed:", (err as Error).message);
+server/services/mlb/gameMatchupService.ts:8:import { getActiveHittersByTeam } from "./teamRosterClient";
+server/services/mlb/hrPipeline.ts:22:import { getActiveHittersByTeam } from "./teamRosterClient";
+server/services/mlb/dailyHrBoardService.ts:5: *   - Rosters: verified via currentTeam.id double-check (teamRosterClient)
+server/services/mlb/dailyHrBoardService.ts:16:import { getActiveHittersByTeam } from "./teamRosterClient";
+server/services/mlb/mlbClient.ts:18:  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+server/services/mlb/playerRegistryService.ts:2:import { getActiveHittersByTeam } from "./teamRosterClient";
+server/services/mlb/playerRegistryService.ts:41:  const timeout = setTimeout(() => controller.abort(), 10_000);
+server/services/mlb/playerRegistryService.ts:89:  console.log(`[playerRegistry] building registry for ${teams.length} teams (max 3 concurrent, active+40Man)`);
+server/services/mlb/playerRegistryService.ts:104:        console.warn(`[playerRegistry] roster fetch failed for team ${team.id} (${rosterType}):`, (err as Error).message);
+src/App.tsx:437:    const interval = setInterval(fetchGames, 20000); // Poll every 20s
+src/App.tsx:962:    const warmup = window.setTimeout(tick, 1500); // let initial state hydrate
+src/App.tsx:963:    const id = window.setInterval(tick, 60_000);
+src/social/feed/FeedPostCard.tsx:163:    setTimeout(() => setToastMessage(''), 2500);
+src/social/feed/HomeFeedPage.tsx:66:    setTimeout(() => setToastMsg(''), 2500);
+src/components/PlayerResearchHub.tsx:224:    const timer = window.setTimeout(runBackendSearch, 250);
+src/components/PlayerResearchHub.tsx:272:    setTimeout(() => {
+src/components/LiveStreams.tsx:225:    setTimeout(() => {
+src/components/LiveStreams.tsx:240:      setTimeout(() => {
+src/components/LiveStreams.tsx:278:      setTimeout(() => {
+src/components/LiveStreams.tsx:305:    const interval = setInterval(() => {
+src/components/LiveStreams.tsx:322:      interval = setInterval(() => {
+src/components/LiveStreams.tsx:341:    const interval = setInterval(() => {
+src/components/LiveStreams.tsx:359:    const interval = setInterval(() => {
+src/components/LiveStreams.tsx:417:      setTimeout(() => {
+src/components/LiveStreams.tsx:425:      setTimeout(() => {
+src/components/PlayerResearchConsole.tsx:126:    setTimeout(() => {
+src/components/VouchBoard.tsx:399:    setTimeout(() => {
+src/components/VouchBoard.tsx:437:    setTimeout(() => {
+src/components/VouchBoard.tsx:554:      setTimeout(() => {
+src/components/NotificationCenter.tsx:157:    setTimeout(() => {
+src/components/vouch-system/VouchCard.tsx:136:    setTimeout(() => setToastMsg(''), 2000);
+src/components/ParlayStudio.tsx:92:    setTimeout(() => setToast(null), 2500);
+src/components/ParlayStudio.tsx:169:    setTimeout(() => {
+src/components/SettingsPage.tsx:196:    setTimeout(() => setToast(null), 3000);
+src/components/SettingsPage.tsx:244:    setTimeout(() => setProfileSaved(false), 2000);
+src/components/WelcomePortal.tsx:111:    window.setTimeout(() => {
+src/components/WelcomePortal.tsx:121:    window.setTimeout(() => {
+src/components/PremiumSubPage.tsx:81:    setTimeout(() => {
+src/components/auth/AuthModal.tsx:64:  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+src/components/auth/AuthModal.tsx:90:    debounceRef.current = setTimeout(async () => {
+src/components/hr-board/HrPlayerDrawer.tsx:243:    window.setTimeout(() => setShareStatus(null), 2200);
+src/components/hr-board/HrPlayerDrawer.tsx:272:      window.setTimeout(() => setShareStatus(null), 1800);
+src/components/hr-board/HrPlayerDrawer.tsx:275:      window.setTimeout(() => setShareStatus(null), 1800);
+src/components/AisLandingPage.tsx:573:    const interval = setInterval(() => {
+src/components/AisLandingPage.tsx:577:    const secondsInterval = setInterval(() => {
+src/components/AisLandingPage.tsx:1000:    setTimeout(() => {
+src/components/MlbIntelligenceHub.tsx:336:                  window.setTimeout(() => setCopyMessage(null), 2500);
+src/components/CustomizePage.tsx:48:    setTimeout(() => setToast(null), 2500);
+src/components/edgePortal/EdgePortal.tsx:104:    window.setTimeout(() => setThemeMorphing(false), 650);
+src/components/edgePortal/EdgePortal.tsx:118:    window.setTimeout(() => closeRef.current?.focus(), 40);
+src/components/vouchedge/EpicThemeShowcase.tsx:119:    window.setTimeout(() => setToast(null), 2600);
+src/components/SubscriberHub.tsx:300:      setTimeout(() => {
+src/components/ResultsPage.tsx:468:    setTimeout(() => {
+src/components/ResultsPage.tsx:667:    setTimeout(() => {
+src/components/profile/VouchShareCard.tsx:42:    setTimeout(() => setCopied(false), 2000);
+src/components/profile/VouchShareCard.tsx:48:    setTimeout(() => setCopiedDraft(false), 2000);
+src/components/profile/ProfileShareCard.tsx:32:    setTimeout(() => setCopied(false), 2000);
+src/components/profile/ProfileShareCard.tsx:38:    setTimeout(() => setCopiedDraft(false), 2000);
+src/components/LiveGamesPro.tsx:48:    const id = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+src/components/LiveGamesPro.tsx:437:  useEffect(() => { load(); const id = setInterval(load, REFRESH_MS); return () => clearInterval(id); }, [load]);
+src/components/LiveGamesPro.tsx:441:    const id = setInterval(loadScores, 45_000);
+src/components/SmartAiEngine.tsx:546:    const interval = setInterval(() => {
+src/components/SmartAiEngine.tsx:1153:                            setTimeout(() => element.classList.remove('ring-2', 'ring-sky-500'), 2500);
+src/components/theEdge/TheEdgeShell.tsx:208:      const t = window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+src/components/theEdge/TheEdgeShell.tsx:280:    window.setTimeout(() => setEdgeLayer('dashboard'), 900);
+src/components/ThemeStore.tsx:91:    setTimeout(() => {
+src/components/LiveGames.tsx:183:    const interval = setInterval(() => {
+src/components/notifications/AppNotificationsHost.tsx:43:        window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n.id)), 7000);
+src/components/notifications/HrNotifications.tsx:99:        window.setTimeout(() => setToasts([]), 8000);
+src/components/notifications/HrNotifications.tsx:111:    const id = setInterval(poll, POLL_MS);
+src/components/AisFeatureAgent.tsx:100:        setTimeout(() => {
+src/components/AisFeatureAgent.tsx:136:    setTimeout(() => {
+src/components/AisFeatureAgent.tsx:343:    setTimeout(() => {
+src/api/safeApiClient.ts:20:  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+src/pages/DailyHrBoardPage.tsx:125:    const id = setInterval(load, REFRESH_MS);
+
+=== 4) Supabase/Stripe env usage ===
+server/middleware/auth.ts:14:    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+server/middleware/auth.ts:15:    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+server/middleware/auth.ts:19:        "Server Supabase admin client requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+server/routes/billingRoutes.ts:188:const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+server/services/billing/stripeService.ts:13:export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
+server/services/billing/stripeService.ts:19:  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+src/lib/supabaseClient.ts:9:const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
+src/lib/supabaseClient.ts:21:    "[supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set. Auth will not work."
+
+=== 5) TypeScript/build check ===

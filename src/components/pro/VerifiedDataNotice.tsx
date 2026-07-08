@@ -1,5 +1,7 @@
 import React from 'react';
 import { CloudOff, Database, Lock, ShieldCheck } from 'lucide-react';
+import { ACCENT, withAlpha } from '../../theme/colors';
+import { VECard } from '../ui/ve';
 
 export type VerifiedDataNoticeVariant =
   | 'locked'
@@ -21,25 +23,25 @@ const VARIANT_CONFIG: Record<
 > = {
   locked: {
     icon: Lock,
-    color: '#38bdf8',
+    color: ACCENT.matchup,
     defaultTitle: 'Locked',
     defaultDetail: 'Verified data feed required.',
   },
   'feed-required': {
     icon: CloudOff,
-    color: '#fbbf24',
+    color: ACCENT.gold,
     defaultTitle: 'Verified data feed required',
     defaultDetail: 'Connect a verified data feed to populate this section.',
   },
   'no-data': {
     icon: Database,
-    color: '#64748b',
+    color: ACCENT.slate,
     defaultTitle: 'No verified data available',
     defaultDetail: 'This field is not present in the current payload.',
   },
   'coming-soon': {
     icon: ShieldCheck,
-    color: '#34d399',
+    color: ACCENT.emerald,
     defaultTitle: 'Coming soon',
     defaultDetail: 'This module is under development. No data is being faked.',
   },
@@ -56,13 +58,14 @@ export const VerifiedDataNotice: React.FC<VerifiedDataNoticeProps> = React.memo(
   const Icon = config.icon;
 
   return (
-    <div
-      className={`flex items-start gap-2.5 rounded-xl border p-3 ${className}`}
-      style={{ borderColor: config.color + '33', background: config.color + '0a' }}
+    <VECard
+      tone="soft"
+      className={`flex items-start gap-2.5 rounded-xl p-3 ${className}`}
+      style={{ borderColor: withAlpha(config.color, 0.22), background: withAlpha(config.color, 0.04) }}
     >
       <span
         className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border"
-        style={{ borderColor: config.color + '40', background: config.color + '12' }}
+        style={{ borderColor: withAlpha(config.color, 0.28), background: withAlpha(config.color, 0.08) }}
       >
         <Icon className="h-3.5 w-3.5" style={{ color: config.color }} />
       </span>
@@ -70,11 +73,11 @@ export const VerifiedDataNotice: React.FC<VerifiedDataNoticeProps> = React.memo(
         <p className="text-[11px] font-black uppercase tracking-wider" style={{ color: config.color }}>
           {title ?? config.defaultTitle}
         </p>
-        <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">
+        <p className="mt-0.5 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">
           {detail ?? message ?? config.defaultDetail}
         </p>
       </div>
-    </div>
+    </VECard>
   );
 });
 

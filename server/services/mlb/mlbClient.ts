@@ -5,24 +5,58 @@
 import { scheduleCache, gameFeedCache } from "./mlbCache";
 import { normalizeGame } from "./mlbNormalizer";
 import { NormalizedGame, NormalizedPitcher, headshotUrl } from "./mlbTypes";
+import {
+  isUpstashEnabled,
+  redisDel,
+  redisGetJson,
+  redisSet,
+  redisSetJson,
+  sleep,
+} from "../../lib/upstashRedis";
+
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
+let mlbRequestCount = 0;
 
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+export function todayISO(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    return now.toISOString().slice(0, 10);
+  }
+
+  return `${year}-${month}-${day}`;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`MLB API ${res.status} for ${url}`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  return sportsFetchJson<T>(url, {
+    cacheKey: `mlb:${url}`,
+    ttlMs: 30_000,
+    staleIfErrorMs: 2 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "mlbClient",
+  });
+}
+
+export function getMlbRequestCount(): number {
+  return mlbRequestCount;
+}
+
+export function resetMlbRequestCount(): void {
+  mlbRequestCount = 0;
 }
 
 /** Schedule for a date (YYYY-MM-DD), normalized. Falls back to [] on failure. */
@@ -30,8 +64,9 @@ export async function getScheduleByDate(date: string): Promise<NormalizedGame[]>
   return scheduleCache.getOrSet(`schedule:${date}`, async () => {
     const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
     try {
-      const data = await fetchJson<any>(url);
-      const games: any[] = data?.dates?.[0]?.games ?? [];
+      const data = await fetchJson<unknown>(url);
+      const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
+      for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
       return games.map(normalizeGame);
     } catch (err) {
       console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);
@@ -55,10 +90,66 @@ export async function getProbablePitchers(date: string): Promise<NormalizedPitch
   return out;
 }
 
+const gameFeedInflight = new Map<number, Promise<any | null>>();
+
 /** Live feed for a game. Returns raw feed (large); cached briefly. */
 export async function getGameFeed(gamePk: number): Promise<any | null> {
-  return gameFeedCache.getOrSet(`feed:${gamePk}`, async () => {
+  const localKey = `feed:${gamePk}`;
+  const redisKey = `mlb:game:live:${gamePk}`;
+  const lockKey = `lock:mlb:game:live:${gamePk}`;
+  const feedTtlSeconds = Number(process.env.MLB_LIVE_FEED_REDIS_TTL_SECONDS ?? 45);
+  const lockTtlSeconds = Number(process.env.MLB_LIVE_FEED_LOCK_TTL_SECONDS ?? 10);
+
+  const existingInflight = gameFeedInflight.get(gamePk);
+  if (existingInflight) {
+    console.log(`[MLB_CACHE] local inflight hit gamePk=${gamePk}`);
+    return existingInflight;
+  }
+
+  const promise = gameFeedCache.getOrSet(localKey, async () => {
     const url = `${BASE}/v1.1/game/${gamePk}/feed/live`;
+
+    if (isUpstashEnabled()) {
+      try {
+        const cached = await redisGetJson<any>(redisKey);
+        if (cached) {
+          console.log(`[MLB_CACHE] redis hit gamePk=${gamePk}`);
+          return cached;
+        }
+
+        const lockValue = `${process.pid}:${Date.now()}`;
+        const gotLock = await redisSet(lockKey, lockValue, {
+          nx: true,
+          exSeconds: lockTtlSeconds,
+        });
+
+        if (gotLock) {
+          try {
+            console.log(`[MLB_CACHE] redis miss lock-acquired gamePk=${gamePk}`);
+            const fresh = await fetchJson<any>(url);
+            await redisSetJson(redisKey, fresh, feedTtlSeconds);
+            return fresh;
+          } finally {
+            await redisDel(lockKey).catch(() => {});
+          }
+        }
+
+        console.log(`[MLB_CACHE] redis wait-for-lock gamePk=${gamePk}`);
+        for (let i = 0; i < 3; i += 1) {
+          await sleep(250);
+          const polled = await redisGetJson<any>(redisKey);
+          if (polled) {
+            console.log(`[MLB_CACHE] redis hit-after-wait gamePk=${gamePk}`);
+            return polled;
+          }
+        }
+
+        console.log(`[MLB_CACHE] redis lock-timeout fallback gamePk=${gamePk}`);
+      } catch (err) {
+        console.warn("[MLB_CACHE] redis fallback:", (err as Error).message);
+      }
+    }
+
     try {
       return await fetchJson<any>(url);
     } catch (err) {
@@ -66,6 +157,13 @@ export async function getGameFeed(gamePk: number): Promise<any | null> {
       return null;
     }
   }) as Promise<any | null>;
+
+  gameFeedInflight.set(gamePk, promise);
+  try {
+    return await promise;
+  } finally {
+    gameFeedInflight.delete(gamePk);
+  }
 }
 
 export async function getLinescore(gamePk: number): Promise<any | null> {

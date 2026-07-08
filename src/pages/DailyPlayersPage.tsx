@@ -1,330 +1,1668 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Users, RefreshCw, AlertTriangle, ChevronDown, ChevronUp, Search } from 'lucide-react';
-import { safeJsonFetch } from '../api/safeApiClient';
+import { useEffect, useMemo, useState } from 'react';
+import { bootDataStore } from '../lib/boot/bootDataStore';
 
-interface DailyPlayer {
-  playerId: number;
-  playerName: string;
-  position: string;
-  battingOrder: number;
-  bats: string;
-  team: string;
-  teamId: number;
-  teamAbbrev: string;
-  headshot: string;
-}
-
-interface DailyPitcher {
-  id: number;
-  name: string;
-  throws: string;
-  headshot: string;
-}
-
-interface DailyGame {
-  gamePk: number;
-  gameDate: string;
-  status: string;
-  venue: string;
-  awayTeam: { id: number; name: string; abbrev: string };
-  homeTeam: { id: number; name: string; abbrev: string };
-  awayPitcher: DailyPitcher | null;
-  homePitcher: DailyPitcher | null;
-  awayLineup: DailyPlayer[];
-  homeLineup: DailyPlayer[];
-  lineupConfirmed: boolean;
-  totalPlayers: number;
-}
-
-interface LineupResponse {
-  ok: boolean;
-  date: string;
-  games: DailyGame[];
-  totalGames: number;
-  totalPlayers: number;
-  source: string;
-  updatedAt: string;
-  error?: string;
-}
-
-const POSITION_ORDER: Record<string, number> = {
-  C: 1, '1B': 2, '2B': 3, '3B': 4, SS: 5, LF: 6, CF: 7, RF: 8,
-  DH: 9, OF: 10, IF: 11, P: 12, RP: 13, SP: 14,
+type Pitcher = {
+  id?: number | string;
+  name?: string;
+  fullName?: string;
+  throws?: string;
+  hand?: string;
 };
 
-function positionColor(pos: string) {
-  if (['SP', 'RP', 'P'].includes(pos)) return 'text-amber-400';
-  if (['C'].includes(pos)) return 'text-cyan-400';
-  if (['1B', '2B', '3B', 'SS'].includes(pos)) return 'text-emerald-400';
-  if (['LF', 'CF', 'RF', 'OF'].includes(pos)) return 'text-violet-400';
-  if (pos === 'DH') return 'text-orange-400';
-  return 'text-slate-400';
+type Player = {
+  playerId?: number | string;
+  id?: number | string;
+  playerName?: string;
+  name?: string;
+  team?: string;
+  opponent?: string;
+  position?: string;
+  bats?: string;
+  throws?: string;
+  battingOrder?: number | string;
+  source?: string;
+  confidence?: number;
+  headshot?: string;
+};
+
+type Game = {
+  gamePk?: number | string;
+  id?: number | string;
+  awayTeam?: string;
+  homeTeam?: string;
+  away?: string;
+  home?: string;
+  gameTime?: string;
+  startTime?: string;
+  venue?: string;
+  status?: string;
+  lineupConfirmed?: boolean;
+  awayPitcher?: Pitcher | null;
+  homePitcher?: Pitcher | null;
+  awayLineup?: Player[];
+  homeLineup?: Player[];
+  players?: Player[];
+  totalPlayers?: number;
+};
+
+type DailyBoardResponse = {
+  ok?: boolean;
+  date?: string;
+  games?: Game[];
+  totalGames?: number;
+  totalPlayers?: number;
+  source?: string;
+  updatedAt?: string;
+};
+
+interface DailyPlayersPageProps {
+  onAddLegToParlay?: (player: any, prop: any) => void;
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
-function GameCard({ game, search }: { game: DailyGame; search: string }) {
-  const [expanded, setExpanded] = useState(true);
+function safeText(value: any, fallback = 'TBD'): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
 
-  const filterPlayers = (players: DailyPlayer[]) => {
-    if (!search) return players;
-    const q = search.toLowerCase();
-    return players.filter(
-      p => p.playerName.toLowerCase().includes(q) || p.position.toLowerCase().includes(q)
+  if (typeof value === 'object') {
+    return (
+      value.fullName ||
+      value.name ||
+      value.displayName ||
+      value.abbrev ||
+      value.abbreviation ||
+      value.code ||
+      fallback
     );
+  }
+
+  return fallback;
+}
+
+function playerName(player: Player) {
+  return safeText(player.playerName || player.name, 'Unknown Player');
+}
+
+function pitcherName(pitcher?: Pitcher | null) {
+  if (!pitcher) return 'TBD';
+  return safeText(pitcher.name || pitcher.fullName, 'TBD');
+}
+
+function teamName(value?: any) {
+  return safeText(value, 'TBD');
+}
+
+function getGamePlayers(game: Game): Player[] {
+  const away = Array.isArray(game.awayLineup) ? game.awayLineup : [];
+  const home = Array.isArray(game.homeLineup) ? game.homeLineup : [];
+
+  // Backend sends clean split lineups. Some fallback paths also include
+  // `players` as a combined copy, so only use it when split lineups are empty.
+  if (away.length || home.length) {
+    return [...away, ...home];
+  }
+
+  return Array.isArray(game.players) ? game.players : [];
+}
+
+function normalizeResponse(raw: any): DailyBoardResponse {
+  const data = raw?.payload || raw?.data || raw || {};
+  const games = Array.isArray(data.games) ? data.games : [];
+
+  return {
+    ok: data.ok ?? raw?.ok ?? true,
+    date: data.date || todayISO(),
+    games,
+    totalGames: data.totalGames ?? games.length,
+    totalPlayers:
+      data.totalPlayers ??
+      games.reduce((sum: number, game: Game) => sum + getGamePlayers(game).length, 0),
+    source: data.source || 'daily-player-board',
+    updatedAt: data.updatedAt || new Date().toISOString(),
   };
+}
 
-  const awayFiltered = filterPlayers(game.awayLineup);
-  const homeFiltered = filterPlayers(game.homeLineup);
-  const noResults = search && awayFiltered.length === 0 && homeFiltered.length === 0;
+function dataQuality(game: Game) {
+  const total = getGamePlayers(game).length;
+  if (game.lineupConfirmed && total > 0) return 'CONFIRMED';
+  if (total > 0) return 'PROJECTED';
+  if (game.awayPitcher || game.homePitcher) return 'PITCHERS';
+  return 'GAME SHELL';
+}
 
-  if (noResults) return null;
+function qualityClass(label: string) {
+  if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (label === 'PROJECTED') return 'border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
+  if (label === 'PITCHERS') return 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
+  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.28)] text-[hsl(var(--ve-text-secondary))]';
+}
 
-  const isLive = game.status.toLowerCase().includes('progress') || game.status.toLowerCase().includes('inning');
-  const isFinal = game.status.toLowerCase() === 'final';
-  const statusColor = isLive ? 'text-emerald-400' : isFinal ? 'text-slate-500' : 'text-cyan-300';
+function positionClass(pos?: string) {
+  const p = String(pos || '').toUpperCase();
+  if (p === 'P') return 'text-[hsl(var(--ve-accent-cyan))]';
+  if (['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-[hsl(var(--ve-text-secondary))]';
+  return 'text-[hsl(var(--ve-text-muted))]';
+}
+
+function playerHeadshot(player: Player): string | null {
+  const id = player.playerId || player.id;
+  if (!id) return null;
+
+  // MLBAM image pattern. Good lightweight fallback for player cards.
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${id}/headshot/67/current`;
+}
+
+function teamLogoUrl(team: any): string | null {
+  const id = team?.id || team?.teamId || team?.mlbId;
+  if (!id) return null;
+  return `https://www.mlbstatic.com/team-logos/${id}.svg`;
+}
+
+function gameTeamId(game: Game, side: 'away' | 'home'): string | number | undefined {
+  const anyGame: any = game;
+  return (
+    anyGame?.[`${side}TeamId`] ||
+    anyGame?.teams?.[side]?.team?.id ||
+    anyGame?.[side]?.id ||
+    undefined
+  );
+}
+
+function formatGameTime(value?: string) {
+  if (!value) return 'Time TBD';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function matchupStatus(game: Game) {
+  const total = getGamePlayers(game).length;
+  if (game.lineupConfirmed && total >= 16) return 'Lineups confirmed';
+  if (total > 0) return 'Projected hitters';
+  if (game.awayPitcher || game.homePitcher) return 'Pitchers posted';
+  return 'Game shell';
+}
+
+function matchupStatusClass(status: string) {
+  if (status === 'Lineups confirmed') return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200';
+  if (status === 'Projected hitters') return 'border-[hsl(var(--ve-accent-gold)/0.25)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
+  if (status === 'Pitchers posted') return 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
+  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-secondary))]';
+}
+
+function scrollToGame(gamePk?: string | number) {
+  if (!gamePk) return;
+  const element = document.getElementById(`daily-game-${gamePk}`);
+  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; name: string; align?: 'left' | 'right' }) {
+  const src = id ? `https://www.mlbstatic.com/team-logos/${id}.svg` : null;
 
   return (
-    <div className="rounded-2xl border border-slate-800/70 bg-slate-950/40 overflow-hidden">
-      {/* Game header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-900/40 transition-colors"
-      >
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-base font-black text-slate-100">
-              {game.awayTeam.abbrev} <span className="text-slate-500">@</span> {game.homeTeam.abbrev}
-            </span>
-            <span className={`text-xs font-semibold ${statusColor}`}>{game.status}</span>
-            {game.lineupConfirmed && (
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300">
-                Lineup Posted
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span>{game.venue}</span>
-            {game.awayPitcher && <span>{game.awayTeam.abbrev}: {game.awayPitcher.name} ({game.awayPitcher.throws}HP)</span>}
-            {game.homePitcher && <span>{game.homeTeam.abbrev}: {game.homePitcher.name} ({game.homePitcher.throws}HP)</span>}
-          </div>
+    <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
+      {align === 'left' && (
+        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-slate-500">{game.totalPlayers} players</span>
-          {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+      )}
+
+      <div className={`min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
+        <div className="truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">{name}</div>
+        <div className="text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
+          {align === 'right' ? 'Home' : 'Away'}
         </div>
-      </button>
+      </div>
 
-      {expanded && (
-        <div className="grid gap-0 sm:grid-cols-2 border-t border-slate-800/50">
-          {[
-            { team: game.awayTeam, players: awayFiltered, pitcher: game.awayPitcher },
-            { team: game.homeTeam, players: homeFiltered, pitcher: game.homePitcher },
-          ].map(({ team, players, pitcher }) => (
-            <div key={team.id} className="border-b sm:border-b-0 sm:border-r border-slate-800/50 last:border-0">
-              {/* Team header */}
-              <div className="px-4 py-2 bg-slate-900/30 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-300">{team.name}</span>
-                {pitcher && (
-                  <span className="text-[10px] text-amber-400 font-semibold">
-                    SP: {pitcher.name} ({pitcher.throws})
-                  </span>
-                )}
-              </div>
-
-              {players.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-slate-600">
-                  {search ? 'No matching players' : 'Lineup not yet posted'}
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-800/30">
-                  {players.map((player) => (
-                    <div key={player.playerId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-900/20 transition-colors">
-                      <span className="w-5 text-right text-[10px] font-mono font-bold text-slate-600 flex-shrink-0">
-                        {player.battingOrder || '—'}
-                      </span>
-                      <img
-                        src={player.headshot}
-                        alt={player.playerName}
-                        loading="lazy"
-                        className="h-7 w-7 rounded-lg border border-slate-700/60 bg-slate-900 object-cover flex-shrink-0"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      <span className="flex-1 min-w-0 text-sm font-semibold text-slate-200 truncate">
-                        {player.playerName}
-                      </span>
-                      <span className={`text-xs font-black flex-shrink-0 w-8 text-right ${positionColor(player.position)}`}>
-                        {player.position}
-                      </span>
-                      <span className="text-[10px] text-slate-600 flex-shrink-0">
-                        {player.bats}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+      {align === 'right' && (
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
+          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
       )}
     </div>
   );
 }
 
-interface DailyPlayersPageProps {
-  onAddLegToParlay?: (player: any, prop: any) => void;
+
+function DailyPlayersSkeleton() {
+  return (
+    <div className="space-y-5">
+      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.78),hsl(var(--ve-bg-panel)/0.92),hsl(var(--ve-accent-cyan)/0.10))] p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.20)] backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-accent-cyan)/0.20)]" />
+            <div className="mt-4 h-9 w-72 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+            <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+          </div>
+          <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-[hsl(var(--ve-accent-cyan)/0.10)] md:block" />
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] p-4">
+              <div className="h-3 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+              <div className="mt-3 h-7 w-16 animate-pulse rounded-xl bg-[hsl(var(--ve-surface-raised)/0.70)]" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <div className="h-4 w-44 animate-pulse rounded-full bg-[hsl(var(--ve-accent-cyan)/0.20)]" />
+            <div className="mt-2 h-3 w-64 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+          </div>
+          <div className="hidden h-7 w-20 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] sm:block" />
+        </div>
+
+        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+          {[0, 1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="min-w-[310px] rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4"
+            >
+              <div className="mb-4 flex justify-between">
+                <div className="h-6 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="h-4 w-16 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
+                  <div>
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className="mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                  </div>
+                </div>
+                <div className="h-7 w-7 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="flex items-center justify-end gap-2">
+                  <div>
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                    <div className="ml-auto mt-2 h-3 w-12 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                  </div>
+                  <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3">
+                <div className="h-3 w-full animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {[0, 1].map((game) => (
+        <section
+          key={game}
+          className="overflow-hidden rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
+        >
+          <div className="border-b border-[hsl(var(--ve-border)/0.30)] bg-[linear-gradient(90deg,hsl(var(--ve-surface-raised)/0.46),hsl(var(--ve-bg-panel)/0.82))] p-4">
+            <div className="h-5 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
+              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div className="h-12 w-20 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+              <div className="h-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 p-4 lg:grid-cols-2">
+            {[0, 1].map((side) => (
+              <div key={side} className="rounded-3xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface)/0.66)] p-3">
+                <div className="mb-3 h-12 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.44)]" />
+                <div className="grid gap-2">
+                  {[0, 1, 2, 3].map((player) => (
+                    <div key={player} className="flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3">
+                      <div className="h-16 w-16 animate-pulse rounded-2xl bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                      <div className="flex-1">
+                        <div className="h-4 w-40 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                        <div className="mt-2 h-3 w-28 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                        <div className="mt-3 h-5 w-32 animate-pulse rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+
+
+function TeamVsTeamShowcase({ games }: { games: any[] }) {
+  const getTeam = (game: any, side: "away" | "home") => {
+    const raw =
+      side === "away"
+        ? game?.awayTeam || game?.away || game?.teams?.away?.team
+        : game?.homeTeam || game?.home || game?.teams?.home?.team;
+
+    if (!raw) return { name: "TBD", abbr: "TBD", logo: "" };
+    if (typeof raw === "string") return { name: raw, abbr: raw.slice(0, 3).toUpperCase(), logo: "" };
+
+    return {
+      name: raw.name || raw.teamName || raw.shortName || raw.abbreviation || "TBD",
+      abbr: raw.abbreviation || raw.teamName || raw.shortName || raw.name?.slice(0, 3)?.toUpperCase() || "TBD",
+      logo: raw.logo || raw.logoUrl || raw.teamLogo || raw.image || "",
+    };
+  };
+
+  const getTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const getPitcher = (game: any, side: "away" | "home") => {
+    const value =
+      side === "away"
+        ? game?.awayPitcher || game?.away_sp || game?.probablePitchers?.away || game?.teams?.away?.probablePitcher
+        : game?.homePitcher || game?.home_sp || game?.probablePitchers?.home || game?.teams?.home?.probablePitcher;
+
+    if (!value) return "Projected SP";
+    if (typeof value === "string") return value;
+    return value.fullName || value.name || "Projected SP";
+  };
+
+  const visibleGames = games.slice(0, 18);
+  const loopingGames = visibleGames.length > 0 ? [...visibleGames, ...visibleGames] : [];
+
+  return (
+    <section className="daily-team-showcase" aria-label="Team versus team slideshow">
+      <div className="daily-team-shortcuts" aria-label="Team shortcuts">
+        {loopingGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <a className="daily-team-shortcut" href={`#daily-game-${index}`} key={`shortcut-${game?.gamePk || game?.game_id || game?.id || index}`}>
+              <span>{away.abbr}</span>
+              <b>vs</b>
+              <span>{home.abbr}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <div className="daily-team-showcase-track">
+        {visibleGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <article className="daily-team-slide" id={`daily-game-${index % Math.max(visibleGames.length, 1)}`} key={`slide-${index}-${game?.gamePk || game?.game_id || game?.id || "game"}`}>
+              <div className="daily-team-slide-top">
+                <span>Game {index + 1}</span>
+                <strong>{getTime(game)}</strong>
+              </div>
+
+              <div className="daily-team-versus">
+                <div className="daily-team-side">
+                  <div className="daily-team-logo">
+                    {away.logo ? <img src={away.logo} alt="" /> : <span>{away.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{away.name}</h3>
+                  <p>SP: {getPitcher(game, "away")}</p>
+                </div>
+
+                <div className="daily-team-vs-pill">VS</div>
+
+                <div className="daily-team-side daily-team-side-right">
+                  <div className="daily-team-logo">
+                    {home.logo ? <img src={home.logo} alt="" /> : <span>{home.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{home.name}</h3>
+                  <p>SP: {getPitcher(game, "home")}</p>
+                </div>
+              </div>
+
+              <div className="daily-team-slide-footer">
+                <span>Projected matchup</span>
+                <span>Scroll for next team →</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function LiveTeamsStrip({ games }: { games: any[] }) {
+  const getTeamName = (team: any) => {
+    if (!team) return "TBD";
+    if (typeof team === "string") return team;
+    return team.name || team.teamName || team.abbreviation || team.shortName || "TBD";
+  };
+
+  const getGameTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const marqueeGames = games.length > 0 ? [...games, ...games] : [];
+
+  return (
+    <section className="daily-live-teams-strip" aria-label="Live teams today">
+      <div className="daily-live-teams-header">
+        <div>
+          <p className="daily-live-eyebrow">Today’s slate</p>
+          <h2>Live Teams</h2>
+        </div>
+        <p>{games.length} games loaded</p>
+      </div>
+
+      <div className="daily-live-teams-scroller" aria-live="off">
+        <div className="daily-live-teams-track">
+        {marqueeGames.map((game: any, index: number) => {
+          const away = getTeamName(game?.awayTeam || game?.away || game?.teams?.away?.team);
+          const home = getTeamName(game?.homeTeam || game?.home || game?.teams?.home?.team);
+
+          return (
+            <article className="daily-live-team-card" key={game?.gamePk || game?.game_id || game?.id || index}>
+              <div className="daily-live-status">
+                <span>MLB</span>
+                <strong>{getGameTime(game)}</strong>
+              </div>
+
+              <div className="daily-live-matchup">
+                <span>{away}</span>
+                <b>@</b>
+                <span>{home}</span>
+              </div>
+
+              <div className="daily-live-card-footer">
+                <span>Open matchup</span>
+                <span>Research board →</span>
+              </div>
+            </article>
+          );
+        })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+function MatchupRail({ games }: { games: Game[] }) {
+  if (!games.length) return null;
+
+  return (
+    <section className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.74)] p-4 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-accent-cyan))]">
+            Today’s Matchups
+          </div>
+          <div className="mt-1 text-xs text-[hsl(var(--ve-text-muted))]">
+            Side-scroll board updates with the day’s MLB slate.
+          </div>
+        </div>
+
+        <div className="hidden rounded-full border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-3 py-1 text-xs font-bold text-[hsl(var(--ve-text-muted))] sm:block">
+          Scroll →
+        </div>
+      </div>
+
+      <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
+        {games.map((game, index) => {
+          const awayTeam = teamName(game.awayTeam || (game as any).away);
+          const homeTeam = teamName(game.homeTeam || (game as any).home);
+          const awayId = gameTeamId(game, 'away');
+          const homeId = gameTeamId(game, 'home');
+          const status = matchupStatus(game);
+
+          return (
+            <button
+              key={`${game.gamePk || game.id || index}-rail`}
+              type="button"
+              onClick={() => scrollToGame(game.gamePk || game.id)}
+              className="min-w-[310px] snap-start rounded-3xl border border-[hsl(var(--ve-border)/0.28)] bg-[linear-gradient(135deg,hsl(var(--ve-surface-raised)/0.42),hsl(var(--ve-bg-panel)/0.82),hsl(var(--ve-accent-cyan)/0.08))] p-4 text-left shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] transition hover:-translate-y-0.5 hover:border-[hsl(var(--ve-accent-cyan)/0.40)] hover:shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
+                  {status}
+                </span>
+                <span className="text-[11px] font-bold text-[hsl(var(--ve-text-muted))]">
+                  {formatGameTime(game.gameTime || game.startTime)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <TeamLogoBadge id={awayId} name={awayTeam} />
+                <div className="rounded-full border border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-2 py-1 text-[10px] font-black text-[hsl(var(--ve-text-muted))]">
+                  @
+                </div>
+                <TeamLogoBadge id={homeId} name={homeTeam} align="right" />
+              </div>
+
+              <div className="mt-4 grid gap-2 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.28)] p-3 text-[11px]">
+                <div className="flex justify-between gap-3">
+                  <span className="text-[hsl(var(--ve-text-muted))]">Away SP</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-accent-cyan))]">{pitcherName(game.awayPitcher)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[hsl(var(--ve-text-muted))]">Home SP</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-accent-cyan))]">{pitcherName(game.homePitcher)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[hsl(var(--ve-text-muted))]">Venue</span>
+                  <span className="truncate font-bold text-[hsl(var(--ve-text-secondary))]">{game.venue || 'TBD'}</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function orderNumber(player: Player): number {
+  const raw = String(player.battingOrder || '').replace(/\D/g, '');
+  const num = Number(raw);
+  return Number.isFinite(num) && num > 0 ? num : 999;
+}
+
+function sortLineup(players: Player[]): Player[] {
+  return [...players].sort((a, b) => {
+    const orderDiff = orderNumber(a) - orderNumber(b);
+    if (orderDiff !== 0) return orderDiff;
+    return playerName(a).localeCompare(playerName(b));
+  });
+}
+
+
+function TeamInitialIcon({ name }: { name: string }) {
+  const safe = name || "TBD";
+  const words = safe.split(/\s+/).filter(Boolean);
+  const initials =
+    words.length >= 2
+      ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+      : safe.slice(0, 2).toUpperCase();
+
+  return (
+    <span className="daily-team-initial-icon" aria-hidden="true">
+      {initials}
+    </span>
+  );
+}
+
+
+function handednessLabel(hand?: string | null): string {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase();
+  if (normalized === "L") return "Left";
+  if (normalized === "R") return "Right";
+  if (normalized === "S") return "Switch";
+  return "Unknown";
+}
+
+function handednessClass(hand?: string | null): string {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase();
+
+  if (normalized === "L") {
+    return "border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))]";
+  }
+
+  if (normalized === "R") {
+    return "border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.12)] text-[hsl(var(--ve-accent-gold))]";
+  }
+
+  if (normalized === "S") {
+    return "border-[hsl(var(--ve-accent-purple)/0.34)] bg-[hsl(var(--ve-accent-purple)/0.12)] text-[hsl(var(--ve-accent-purple))]";
+  }
+
+  return "border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)] text-[hsl(var(--ve-text-muted))]";
+}
+
+function HandednessBadge({ hand, prefix = "Bats" }: { hand?: string | null; prefix?: string }) {
+  const normalized = String(hand || "").slice(0, 1).toUpperCase() || "U";
+  const label = handednessLabel(normalized);
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${handednessClass(normalized)}`}
+      title={`${prefix} ${label}`}
+      aria-label={`${prefix} ${label}`}
+    >
+      <span className="text-[9px] font-bold opacity-75">{prefix}</span>
+      <span>{normalized}</span>
+    </span>
+  );
+}
+
+
+function PlayerCard({ player, index }: { player: Player; index: number }) {
+  const headshot = playerHeadshot(player);
+  const isProjected = String(player.source || '').toLowerCase().includes('projected');
+  const order = orderNumber(player) === 999 ? index + 1 : orderNumber(player);
+
+  return (
+    <div className="group flex gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.42)] p-3 shadow-lg shadow-[hsl(var(--ve-shadow)/0.14)] transition hover:border-[hsl(var(--ve-accent-cyan)/0.40)] hover:bg-[hsl(var(--ve-surface-raised)/0.58)]">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)]">
+        {headshot ? (
+          <img
+            src={headshot}
+            alt={playerName(player)}
+            className="h-full w-full object-cover object-top"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-lg font-black text-[hsl(var(--ve-text-muted))]">
+            {playerName(player).slice(0, 1)}
+          </div>
+        )}
+
+        <div className="absolute bottom-1 left-1 rounded-full bg-[hsl(var(--ve-bg-deep)/0.72)] px-1.5 py-0.5 text-[10px] font-black text-[hsl(var(--ve-text-primary))] backdrop-blur-sm">
+          #{order}
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-sm font-black text-white">
+              {playerName(player)}
+            </div>
+            <div className="mt-0.5 text-[11px] font-semibold text-[hsl(var(--ve-text-muted))]">
+              {teamName(player.team)} vs {teamName(player.opponent)}
+            </div>
+          </div>
+
+          <span className={`rounded-full bg-[hsl(var(--ve-surface-raised)/0.52)] px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
+            {player.position || '—'}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+          {player.bats && <HandednessBadge hand={player.bats} prefix="Bats" />}
+
+          <span
+            className={`rounded-full border px-2 py-1 font-bold ${
+              isProjected
+                ? 'border-[hsl(var(--ve-accent-gold)/0.25)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]'
+                : 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
+            }`}
+          >
+            {isProjected ? 'Projected' : 'Confirmed'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function getPlayerImage(player: Player) {
+  const raw = player as any;
+  return (
+    raw.headshotUrl ||
+    raw.headshot ||
+    raw.imageUrl ||
+    raw.image ||
+    raw.photoUrl ||
+    raw.mlbHeadshotUrl ||
+    ""
+  );
+}
+
+function CompactRosterColumn({
+  team,
+  opponent,
+  players,
+}: {
+  team: string;
+  opponent: string;
+  players: Player[];
+}) {
+  const roster = sortLineup(players).slice(0, 9);
+
+  return (
+    <section className="dp-roster-column">
+      <header className="dp-roster-head">
+        <TeamInitialIcon name={team} />
+        <div>
+          <h3>{team}</h3>
+          <p>{roster.length}/9 hitters loaded</p>
+        </div>
+      </header>
+
+      <div className="dp-roster-list">
+        {roster.map((player, index) => {
+          const name = playerName(player);
+          const img = getPlayerImage(player);
+          const isProjected = player.source === "projected";
+
+          return (
+            <article className="dp-player-row" key={`${player.playerId || player.id || name}-${index}`}>
+              <span className="dp-slot">{index + 1}</span>
+
+              <span className="dp-avatar">
+                {img ? (
+                  <img
+                    src={img}
+                    alt=""
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                ) : (
+                  name.slice(0, 2).toUpperCase()
+                )}
+              </span>
+
+              <span className="dp-player-main">
+                <strong>{name}</strong>
+                <em>
+                  {player.position || "BAT"}
+                  {player.bats ? ` · ${player.bats}` : ""}
+                </em>
+              </span>
+
+              <span className={isProjected ? "dp-status is-projected" : "dp-status"}>
+                {isProjected ? "Proj" : "Live"}
+              </span>
+            </article>
+          );
+        })}
+
+        {Array.from({ length: Math.max(0, 9 - roster.length) }).map((_, index) => (
+          <article className="dp-player-row is-empty" key={`empty-${team}-${index}`}>
+            <span className="dp-slot">–</span>
+            <span className="dp-avatar">–</span>
+            <span className="dp-player-main">
+              <strong>Lineup pending</strong>
+              <em>{opponent}</em>
+            </span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GameCard({ game }: { game: any; search?: string }) {
+  const awayTeam = teamName(game.awayTeam || game.away);
+  const homeTeam = teamName(game.homeTeam || game.home);
+  const allPlayers = getGamePlayers(game);
+
+  let awayPlayers = allPlayers.filter((player) => teamName(player.team) === awayTeam);
+  let homePlayers = allPlayers.filter((player) => teamName(player.team) === homeTeam);
+
+  if (!awayPlayers.length || !homePlayers.length) {
+    awayPlayers = allPlayers.slice(0, 9);
+    homePlayers = allPlayers.slice(9, 18);
+  }
+
+  return (
+    <section className="dp-game-card">
+      <header className="dp-game-head">
+        <div className="dp-team-title">
+          <TeamInitialIcon name={awayTeam} />
+          <div>
+            <h2>{awayTeam}</h2>
+            <p>Away lineup</p>
+          </div>
+        </div>
+
+        <div className="dp-vs">
+          <span>Matchup</span>
+          <strong>VS</strong>
+        </div>
+
+        <div className="dp-team-title is-right">
+          <div>
+            <h2>{homeTeam}</h2>
+            <p>Home lineup</p>
+          </div>
+          <TeamInitialIcon name={homeTeam} />
+        </div>
+      </header>
+
+      <div className="dp-roster-grid">
+        <CompactRosterColumn team={awayTeam} opponent={homeTeam} players={awayPlayers} />
+        <CompactRosterColumn team={homeTeam} opponent={awayTeam} players={homePlayers} />
+      </div>
+    </section>
+  );
+}
+
+async function fetchProjectedHitters(
+  teamId: number | string,
+  teamName: string,
+  opponent: string
+): Promise<Player[]> {
+  try {
+    const rosterUrl = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=active`;
+    const response = await fetch(rosterUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const roster = Array.isArray(data?.roster) ? data.roster : [];
+
+    const hitters = roster
+      .filter((item: any) => {
+        const pos = item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '';
+        return pos && pos !== 'P';
+      })
+      .slice(0, 9);
+
+    const ids = hitters.map((item: any) => item?.person?.id).filter(Boolean);
+    const handById = new Map<number, string>();
+
+    if (ids.length) {
+      try {
+        const peopleUrl = `https://statsapi.mlb.com/api/v1/people?personIds=${ids.join(",")}`;
+        const peopleResponse = await fetch(peopleUrl, { headers: { accept: 'application/json' } });
+        if (peopleResponse.ok) {
+          const peopleData = await peopleResponse.json();
+          for (const person of peopleData?.people || []) {
+            const code = String(person?.batSide?.code || '').trim().slice(0, 1).toUpperCase();
+            if (person?.id && ['L', 'R', 'S'].includes(code)) {
+              handById.set(Number(person.id), code);
+            }
+          }
+        }
+      } catch {
+        // Keep projected roster usable even if handedness enrichment fails.
+      }
+    }
+
+    return hitters.map((item: any, index: number) => {
+      const playerId = item?.person?.id;
+      return {
+        playerId,
+        playerName: item?.person?.fullName || item?.person?.name || 'Unknown Player',
+        team: teamName,
+        opponent,
+        position: item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '—',
+        bats: handById.get(Number(playerId)),
+        throws: undefined,
+        battingOrder: index + 1,
+        source: 'PROJECTED_active_roster_until_lineup_posts',
+        confidence: 0.4,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
+  const date = todayISO();
+  const scheduleUrl =
+    `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher,team,venue`;
+
+  const response = await fetch(scheduleUrl, { headers: { accept: 'application/json' } });
+
+  if (!response.ok) {
+    throw new Error(`MLB direct schedule failed: ${response.status}`);
+  }
+
+  const schedule = await response.json();
+  const rawGames = schedule?.dates?.flatMap((d: any) => d?.games || []) || [];
+
+  const games: Game[] = await Promise.all(
+    rawGames.map(async (game: any) => {
+      const awayTeam = game?.teams?.away?.team?.name || 'Away';
+      const homeTeam = game?.teams?.home?.team?.name || 'Home';
+
+      const awayPitcherRaw = game?.teams?.away?.probablePitcher;
+      const homePitcherRaw = game?.teams?.home?.probablePitcher;
+
+      const awayLineup = game?.teams?.away?.team?.id
+        ? await fetchProjectedHitters(game.teams.away.team.id, awayTeam, homeTeam)
+        : [];
+
+      const homeLineup = game?.teams?.home?.team?.id
+        ? await fetchProjectedHitters(game.teams.home.team.id, homeTeam, awayTeam)
+        : [];
+
+      const players = [...awayLineup, ...homeLineup];
+
+      return {
+        gamePk: game?.gamePk,
+        awayTeam,
+        homeTeam,
+        awayTeamId: game?.teams?.away?.team?.id,
+        homeTeamId: game?.teams?.home?.team?.id,
+        gameTime: game?.gameDate || '',
+        venue: game?.venue?.name || '',
+        status: game?.status?.detailedState || game?.status?.abstractGameState || 'Scheduled',
+        awayPitcher: awayPitcherRaw
+          ? {
+              id: awayPitcherRaw.id,
+              name: awayPitcherRaw.fullName || awayPitcherRaw.name || 'TBD',
+              throws: awayPitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        homePitcher: homePitcherRaw
+          ? {
+              id: homePitcherRaw.id,
+              name: homePitcherRaw.fullName || homePitcherRaw.name || 'TBD',
+              throws: homePitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        lineupConfirmed: false,
+        awayLineup,
+        homeLineup,
+        players,
+        totalPlayers: players.length,
+      };
+    })
+  );
+
+  const totalPlayers = games.reduce((sum, game) => sum + getGamePlayers(game).length, 0);
+
+  return {
+    ok: true,
+    date,
+    games,
+    totalGames: games.length,
+    totalPlayers,
+    source: 'direct_mlb_statsapi_projected_hitters',
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+
+
+
+function getTeamLabel(team: any): string {
+  if (!team) return "Team TBD";
+
+  if (typeof team === "string") {
+    return team.trim() || "Team TBD";
+  }
+
+  const raw =
+    team.name ||
+    team.teamName ||
+    team.clubName ||
+    team.fullName ||
+    team.displayName ||
+    team.shortName ||
+    team.abbreviation ||
+    team.abbrev ||
+    team.teamAbbr ||
+    team.code ||
+    "Team TBD";
+
+  return String(raw).trim() || "Team TBD";
+}
+
+function getSafeArray(value: any): any[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function getTeamAbbrSafe(team: any): string {
+  if (!team) return "TBD";
+  if (typeof team === "string") {
+    const parts = team.trim().split(/\s+/);
+    return parts.length >= 2 ? parts.map((part) => part[0]).join("").slice(0, 3).toUpperCase() : team.slice(0, 3).toUpperCase();
+  }
+
+  const raw =
+    team.abbreviation ||
+    team.abbrev ||
+    team.teamAbbr ||
+    team.code ||
+    team.fileCode ||
+    team.shortName ||
+    team.name ||
+    team.teamName ||
+    "TBD";
+
+  const value = String(raw).trim();
+  if (value.length <= 4) return value.toUpperCase();
+
+  const words = value.split(/\s+/).filter(Boolean);
+  return words.length >= 2 ? words.map((word) => word[0]).join("").slice(0, 3).toUpperCase() : value.slice(0, 3).toUpperCase();
+}
+
+
+function getTeamIdSafe(team: any): string {
+  const raw =
+    team?.id ||
+    team?.teamId ||
+    team?.team_id ||
+    team?.mlbId ||
+    team?.mlb_id ||
+    team?.sportRadarId ||
+    "";
+
+  return raw ? String(raw).trim() : "";
+}
+
+function getDailyPlayerIdSafe(player: any): string {
+  const raw =
+    player?.id ||
+    player?.playerId ||
+    player?.player_id ||
+    player?.mlbId ||
+    player?.mlb_id ||
+    player?.person?.id ||
+    player?.personId ||
+    "";
+
+  return raw ? String(raw).trim() : "";
+}
+
+function getDailyPlayerHeadshotUrl(player: any): string {
+  const direct =
+    player?.headshot ||
+    player?.headshotUrl ||
+    player?.image ||
+    player?.imageUrl ||
+    player?.playerImage ||
+    player?.photo ||
+    "";
+
+  if (direct) return String(direct);
+
+  const id = getDailyPlayerIdSafe(player);
+  if (!id) return "";
+
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
+}
+
+function getTeamLogoUrl(team: any): string {
+  const direct =
+    team?.logo ||
+    team?.logoUrl ||
+    team?.image ||
+    team?.imageUrl ||
+    team?.teamLogo ||
+    "";
+
+  if (direct) return String(direct);
+
+  const id = getTeamIdSafe(team);
+  if (!id) return "";
+
+  return `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${id}.svg`;
+}
+
+function getMlbPlayerUrl(player: any): string {
+  const id = getDailyPlayerIdSafe(player);
+  return id ? `https://www.mlb.com/player/${id}` : "";
+}
+
+
+function getDailyPlayersForSide(game: any, side: "away" | "home"): any[] {
+  const team = side === "away" ? game?.awayTeam : game?.homeTeam;
+
+  const candidates = [
+    game?.[`${side}Players`],
+    game?.[`${side}Lineup`],
+    game?.[`${side}Hitters`],
+    game?.[`${side}Starters`],
+    game?.[side]?.players,
+    game?.[side]?.lineup,
+    game?.[side]?.hitters,
+    game?.teams?.[side]?.players,
+    game?.teams?.[side]?.lineup,
+    game?.lineups?.[side],
+    team?.players,
+    team?.lineup,
+    team?.hitters,
+    team?.starters,
+  ];
+
+  const firstArray = candidates.find((candidate) => Array.isArray(candidate));
+  return getSafeArray(firstArray)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const ao = Number(a?.battingOrder ?? a?.batting_order ?? a?.order ?? a?.lineupSpot ?? a?.spot ?? 99);
+      const bo = Number(b?.battingOrder ?? b?.batting_order ?? b?.order ?? b?.lineupSpot ?? b?.spot ?? 99);
+      return ao - bo;
+    })
+    .slice(0, 9);
+}
+
+function getDailyPlayerName(player: any): string {
+  return String(
+    player?.fullName ||
+      player?.name ||
+      player?.playerName ||
+      player?.displayName ||
+      player?.person?.fullName ||
+      player?.person?.name ||
+      "Player TBD"
+  );
+}
+
+function getDailyPlayerInitials(player: any): string {
+  const name = getDailyPlayerName(player);
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getDailyPlayerPosition(player: any): string {
+  return String(
+    player?.position ||
+      player?.primaryPosition?.abbreviation ||
+      player?.primaryPosition?.name ||
+      player?.pos ||
+      player?.fieldPosition ||
+      "UTIL"
+  );
+}
+
+function getDailyPlayerHand(player: any): string {
+  const raw =
+    player?.bats ||
+    player?.batSide?.code ||
+    player?.batSide?.description ||
+    player?.batSide?.name ||
+    player?.batHand ||
+    player?.hand ||
+    "";
+
+  const value = String(raw).trim().slice(0, 1).toUpperCase();
+  return ["L", "R", "S"].includes(value) ? value : "—";
+}
+
+function getDailyPlayerOrder(player: any, index: number): string {
+  return String(player?.battingOrder ?? player?.batting_order ?? player?.order ?? player?.lineupSpot ?? player?.spot ?? index + 1);
+}
+
+function getDailyStatus(game: any): string {
+  const raw = String(game?.lineupStatus || game?.status || game?.gameStatus || "").toLowerCase();
+  if (raw.includes("confirm") || raw.includes("final")) return "Confirmed";
+  if (raw.includes("pending") || raw.includes("preview")) return "Pending";
+  if (raw.includes("project")) return "Projected";
+
+  const awayCount = getDailyPlayersForSide(game, "away").length;
+  const homeCount = getDailyPlayersForSide(game, "home").length;
+  if (awayCount >= 9 && homeCount >= 9) return "Projected";
+  return "Pending";
+}
+
+function DailyTeamIcon({ team }: { team: any }) {
+  const name = getTeamLabel(team);
+  const logoUrl = getTeamLogoUrl(team);
+
+  return (
+    <span className="daily-team-icon daily-team-logo-pro" aria-hidden="true">
+      {logoUrl ? (
+        <>
+          <img
+            src={logoUrl}
+            alt=""
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+              event.currentTarget.parentElement?.classList.add("daily-logo-failed");
+            }}
+          />
+          <span className="daily-team-fallback-logo">
+            <TeamInitialIcon name={name} />
+          </span>
+        </>
+      ) : (
+        <TeamInitialIcon name={name} />
+      )}
+    </span>
+  );
+}
+
+function DailyStarterRow({ player, index, teamAbbr, search }: { player: any; index: number; teamAbbr: string; search: string }) {
+  const name = getDailyPlayerName(player);
+  const position = getDailyPlayerPosition(player);
+  const hand = getDailyPlayerHand(player);
+  const order = getDailyPlayerOrder(player, index);
+  const playerImage = getDailyPlayerHeadshotUrl(player);
+  const playerUrl = getMlbPlayerUrl(player);
+  const query = search.trim().toLowerCase();
+  const isMatch =
+    query.length > 0 &&
+    `${name} ${position} ${hand} ${teamAbbr}`.toLowerCase().includes(query);
+
+  return (
+    <button
+      type="button"
+      className={`daily-player-row-pro daily-player-click-card ${isMatch ? "is-search-match" : ""}`}
+      onClick={() => {
+        if (playerUrl) window.open(playerUrl, "_blank", "noopener,noreferrer");
+      }}
+      aria-label={playerUrl ? `Open ${name} MLB profile` : `${name} starter card`}
+    >
+      <div className="daily-batting-order-pro">{order}</div>
+
+      <div className="daily-player-avatar-pro">
+        {playerImage ? (
+          <>
+            <img
+              src={playerImage}
+              alt={name}
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                event.currentTarget.parentElement?.classList.add("daily-headshot-failed");
+              }}
+            />
+            <span className="daily-player-fallback-avatar">{getDailyPlayerInitials(player)}</span>
+          </>
+        ) : (
+          <span>{getDailyPlayerInitials(player)}</span>
+        )}
+      </div>
+
+      <div className="daily-player-main-pro">
+        <strong>{name}</strong>
+        <span className="daily-player-meta-pro">
+          <span>{teamAbbr}</span>
+          <span>·</span>
+          <span>{position || "UTIL"}</span>
+          <span>·</span>
+          <HandednessBadge hand={hand} prefix="Bats" />
+        </span>
+      </div>
+
+      <div className="daily-player-status-stack">
+        <span className="daily-player-status-pro">Live</span>
+        <small>View</small>
+      </div>
+    </button>
+  );
+}
+
+function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "home"; search: string }) {
+  const team = side === "away" ? game?.awayTeam : game?.homeTeam;
+  const teamName = getTeamLabel(team);
+  const teamAbbr = getTeamAbbrSafe(team);
+  const players = getDailyPlayersForSide(game, side);
+  const sideLabel = side === "away" ? "Away starters" : "Home starters";
+
+  return (
+    <section className="daily-roster-panel-pro">
+      <div className="daily-roster-panel-head-pro">
+        <div className="daily-roster-title-pro">
+          <DailyTeamIcon team={team} />
+          <div>
+            <strong>{teamName}</strong>
+            <span>{sideLabel}</span>
+          </div>
+        </div>
+
+        <div className="daily-starter-count-pro">{players.length}/9</div>
+      </div>
+
+      {players.length > 0 ? (
+        <div className="daily-starters-list-pro">
+          {players.map((player, index) => (
+            <DailyStarterRow
+              key={`${side}-${player?.id || player?.playerId || player?.mlbId || getDailyPlayerName(player)}-${index}`}
+              player={player}
+              index={index}
+              teamAbbr={teamAbbr}
+              search={search}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="daily-lineup-pending-pro">
+          <strong>Lineup pending</strong>
+          <span>Starters will appear here once MLB data is available.</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DailyMatchupTheater({
+  games,
+  selectedGame,
+  selectedGameIndex,
+  setSelectedGameIndex,
+  goToPreviousGame,
+  goToNextGame,
+  search,
+}: {
+  games: any[];
+  selectedGame: any;
+  selectedGameIndex: number;
+  setSelectedGameIndex: (index: number) => void;
+  goToPreviousGame: () => void;
+  goToNextGame: () => void;
+  search: string;
+}) {
+  if (!selectedGame) return null;
+
+  const away = selectedGame.awayTeam;
+  const home = selectedGame.homeTeam;
+  const awayName = getTeamLabel(away);
+  const homeName = getTeamLabel(home);
+  const awayAbbr = getTeamAbbrSafe(away);
+  const homeAbbr = getTeamAbbrSafe(home);
+  const awayPlayers = getDailyPlayersForSide(selectedGame, "away");
+  const homePlayers = getDailyPlayersForSide(selectedGame, "home");
+  const status = getDailyStatus(selectedGame);
+
+  return (
+    <section
+      className="daily-theater-pro"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") goToPreviousGame();
+        if (event.key === "ArrowRight") goToNextGame();
+      }}
+    >
+      <div className="daily-theater-topbar-pro">
+        <button type="button" onClick={goToPreviousGame} className="daily-nav-arrow-pro" aria-label="Previous matchup">
+          ←
+        </button>
+
+        <div className="daily-matchup-count-pro">
+          <span>Matchup</span>
+          <strong>{selectedGameIndex + 1} / {games.length}</strong>
+        </div>
+
+        <div className="daily-shortcut-rail-pro" aria-label="Matchup shortcuts">
+          {games.map((game, index) => {
+            const chipAway = game.awayTeam;
+            const chipHome = game.homeTeam;
+            const isActive = index === selectedGameIndex;
+
+            return (
+              <button
+                type="button"
+                key={`daily-chip-${game?.gamePk || game?.game_id || game?.id || index}`}
+                className={`daily-matchup-chip-pro ${isActive ? "is-active" : ""}`}
+                onClick={() => setSelectedGameIndex(index)}
+                aria-label={`Open ${getTeamLabel(chipAway)} versus ${getTeamLabel(chipHome)}`}
+              >
+                <DailyTeamIcon team={chipAway} />
+                <span className="daily-chip-copy-pro">
+                  <strong>{getTeamAbbrSafe(chipAway)}</strong>
+                  <em>vs</em>
+                  <strong>{getTeamAbbrSafe(chipHome)}</strong>
+                </span>
+                <DailyTeamIcon team={chipHome} />
+                <small>{getDailyStatus(game)}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        <button type="button" onClick={goToNextGame} className="daily-nav-arrow-pro" aria-label="Next matchup">
+          →
+        </button>
+      </div>
+
+      <article className="daily-matchup-card-pro">
+        <header className="daily-faceoff-header-pro">
+          <div className="daily-faceoff-team-pro">
+            <DailyTeamIcon team={away} />
+            <div>
+              <span>Away</span>
+              <strong>{awayName}</strong>
+              <small>{awayPlayers.length}/9 starters loaded</small>
+            </div>
+          </div>
+
+          <div className="daily-vs-stack-pro">
+            <span>{status}</span>
+            <strong>{awayAbbr} VS {homeAbbr}</strong>
+          </div>
+
+          <div className="daily-faceoff-team-pro is-home">
+            <div>
+              <span>Home</span>
+              <strong>{homeName}</strong>
+              <small>{homePlayers.length}/9 starters loaded</small>
+            </div>
+            <DailyTeamIcon team={home} />
+          </div>
+        </header>
+
+        <div className="daily-rosters-grid-pro">
+          <DailyRosterPanel game={selectedGame} side="away" search={search} />
+          <DailyRosterPanel game={selectedGame} side="home" search={search} />
+        </div>
+      </article>
+    </section>
+  );
+}
+
+
+function getBootDailyPlayersBoard(): DailyBoardResponse | null {
+  const bootBoard = bootDataStore.get<DailyBoardResponse>("dailyPlayers");
+  if (bootBoard?.games?.length) return bootBoard;
+
+  const bootLineup = bootDataStore.get<DailyBoardResponse>("lineupToday");
+  if (bootLineup?.games?.length) return bootLineup;
+
+  return null;
 }
 
 export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
-  const [data, setData] = useState<LineupResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'confirmed' | 'unconfirmed'>('all');
+  const bootBoard = getBootDailyPlayersBoard();
 
-  const fetchLineups = async () => {
-    setLoading(true);
-    const result = await safeJsonFetch<LineupResponse>('/api/mlb/lineup/today', {
-      fallbackData: { ok: false, date: todayISO(), games: [], totalGames: 0, totalPlayers: 0, source: 'fallback', updatedAt: new Date().toISOString() },
-      timeoutMs: 14000,
-    });
-    if (result.ok) {
-      setData(result.data);
-      setError(null);
-    } else {
-      setError(result.error || 'Could not load lineup data');
-      setData(result.data);
+  const [data, setData] = useState<DailyBoardResponse | null>(() => bootBoard);
+  const [loading, setLoading] = useState(() => !bootBoard);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'confirmed' | 'pending' | 'pitchers'>('all');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [selectedGameIndex, setSelectedGameIndex] = useState(0);
+
+  async function fetchBoard(options: { background?: boolean } = {}) {
+    if (!options.background) setLoading(true);
+    setError(null);
+
+    let finalData: DailyBoardResponse | null = null;
+    let finalError = '';
+
+    try {
+      finalData = await fetchDirectMlbScheduleBoard();
+    } catch (directErr: any) {
+      finalError = directErr?.message || String(directErr);
     }
+
+    if (!finalData) {
+      try {
+        finalData = await fetchDirectMlbScheduleBoard();
+        finalError = '';
+      } catch (directErr: any) {
+        finalData = {
+          ok: false,
+          date: todayISO(),
+          games: [],
+          totalGames: 0,
+          totalPlayers: 0,
+          source: 'empty-fallback',
+          updatedAt: new Date().toISOString(),
+        };
+        setError(finalError || directErr?.message || 'Could not load Daily Player Board.');
+      }
+    }
+
+    setData(finalData);
     setLastUpdated(new Date());
     setLoading(false);
-  };
+  }
 
-  useEffect(() => { fetchLineups(); }, []);
+  useEffect(() => {
+    fetchBoard({ background: Boolean(bootBoard) });
+  }, []);
 
-  const filteredGames = useMemo(() => {
-    if (!data?.games) return [];
-    return data.games.filter(g => {
-      if (filter === 'confirmed') return g.lineupConfirmed;
-      if (filter === 'unconfirmed') return !g.lineupConfirmed;
+  const games = useMemo(() => {
+    const list = data?.games || [];
+
+    return list.filter((game) => {
+      const quality = dataQuality(game);
+      if (filter === 'confirmed') return quality === 'CONFIRMED';
+      if (filter === 'pending') return quality !== 'CONFIRMED';
+      if (filter === 'pitchers') return Boolean(game.awayPitcher || game.homePitcher);
       return true;
     });
   }, [data?.games, filter]);
 
-  const date = todayISO();
+  const totalPlayers = useMemo(
+    () => (data?.games || []).reduce((sum, game) => sum + getGamePlayers(game).length, 0),
+    [data?.games]
+  );
+
+  useEffect(() => {
+    if (selectedGameIndex > Math.max(games.length - 1, 0)) {
+      setSelectedGameIndex(0);
+    }
+  }, [games.length, selectedGameIndex]);
+
+  const getTeamLabel = (team: any) => {
+    if (!team) return "TBD";
+    if (typeof team === "string") return team;
+    return team.name || team.teamName || team.shortName || team.abbreviation || "TBD";
+  };
+
+  const selectedGame = games[selectedGameIndex] || null;
+
+  const goToPreviousGame = () => {
+    if (!games.length) return;
+    setSelectedGameIndex((current) => (current - 1 + games.length) % games.length);
+  };
+
+  const goToNextGame = () => {
+    if (!games.length) return;
+    setSelectedGameIndex((current) => (current + 1) % games.length);
+  };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
-      <div className="mx-auto max-w-7xl space-y-5">
+    <main className="ve-page-shell min-h-screen px-3 py-4 sm:px-4 lg:py-5">
+      <div className="mx-0 max-w-none space-y-4">
+        <header className="ve-premium-panel overflow-hidden rounded-2xl p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
+                  Daily Player Board
+                </span>
+                <span className="ve-chip px-2.5 py-1">{data?.date || todayISO()}</span>
+              </div>
 
-        {/* Header */}
-        <div className="flex flex-col gap-4 rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-                Daily Roster
-              </span>
-              <span className="text-xs text-slate-500">{date}</span>
-            </div>
-            <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-white">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-400/10">
-                <Users className="h-4 w-4 text-cyan-300" />
-              </span>
-              Daily Players
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-              All players confirmed or projected in today's MLB games. Lineups update as teams post them. Batting orders, positions, and pitchers from the official MLB Stats API.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-right text-xs">
-            <div className="font-black text-slate-200">
-              {loading ? 'Loading...' : `${data?.totalGames ?? 0} games · ${data?.totalPlayers ?? 0} players`}
-            </div>
-            {lastUpdated && (
-              <div className="mt-1 text-slate-500">Updated {lastUpdated.toLocaleTimeString()}</div>
-            )}
-          </div>
-        </div>
+              <h1 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">
+                Today’s MLB Starting Lineups
+              </h1>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search player or position..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-900 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(['all', 'confirmed', 'unconfirmed'] as const).map(f => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className={`rounded-xl border px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-colors ${
-                  filter === f
-                    ? 'border-cyan-400/40 bg-cyan-400/15 text-cyan-200'
-                    : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                {f === 'all' ? 'All Games' : f === 'confirmed' ? 'Lineup Posted' : 'Pending'}
-              </button>
-            ))}
+              <p className="mt-1.5 max-w-3xl text-xs leading-5 text-[hsl(var(--ve-text-muted))] sm:text-sm">
+                Actual posted MLB starting hitters from both teams when lineups are available.
+              </p>
+            </div>
+
             <button
               type="button"
-              onClick={fetchLineups}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2.5 text-xs font-black text-slate-400 transition-colors hover:border-slate-700 disabled:opacity-50"
+              onClick={() => fetchBoard()}
+              className="ve-btn-primary w-full px-4 py-2.5 text-xs uppercase tracking-wide sm:w-auto"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              Refresh Board
             </button>
           </div>
-        </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
-            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-            {error}. Showing available data below.
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
+              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
+            </div>
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Players Starting</div>
+              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
+            </div>
+            <div className="ve-stat-card rounded-xl px-3 py-2.5">
+              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Last Updated</div>
+              <div className="mt-0.5 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
+                {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
+              </div>
+            </div>
           </div>
-        )}
+        </header>
 
-        {/* Loading skeleton */}
-        {loading && (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 animate-pulse rounded-2xl border border-slate-800/50 bg-slate-900/30" />
+        <section className="ve-premium-panel flex flex-col gap-3 rounded-2xl p-3 md:flex-row md:items-center md:justify-between">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search player, team, position..."
+            className="w-full rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-3.5 py-2.5 text-sm text-[hsl(var(--ve-text-primary))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)] md:max-w-md"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setFilter(item)}
+                className={`rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
+                  filter === item
+                    ? 'border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
+                    : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]'
+                }`}
+              >
+                {item}
+              </button>
             ))}
           </div>
+        </section>
+
+        {loading && (
+          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center text-[hsl(var(--ve-text-muted))] shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
+            Loading Daily Player Board...
+          </div>
         )}
 
-        {/* Game cards */}
-        {!loading && (
-          <div className="space-y-4">
-            {filteredGames.length === 0 ? (
-              <div className="rounded-2xl border border-slate-800/50 bg-slate-950/40 p-10 text-center">
-                <Users className="mx-auto h-8 w-8 text-slate-700" />
-                <p className="mt-3 text-sm text-slate-500">
-                  {data?.totalGames === 0
-                    ? 'No games scheduled today or lineup data is unavailable.'
-                    : 'No games match your current filter.'}
-                </p>
-              </div>
-            ) : (
-              filteredGames.map(game => (
-                <React.Fragment key={game.gamePk}>
-                  <GameCard game={game} search={search} />
-                </React.Fragment>
-              ))
-            )}
+        {!loading && error && (
+          <div className="rounded-3xl border border-red-400/20 bg-red-950/20 p-5 text-sm text-red-200">
+            {error}
           </div>
+        )}
+
+        {!loading && games.length === 0 && (
+          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
+            <div className="text-lg font-black text-[hsl(var(--ve-text-primary))]">No games found for this filter.</div>
+            <div className="mt-2 text-sm text-[hsl(var(--ve-text-muted))]">
+              Try All or Refresh Board. If it still shows empty, the backend endpoint is not returning today’s MLB schedule.
+            </div>
+          </div>
+        )}
+
+        {false && !loading && games.length > 0 && <TeamVsTeamShowcase games={games} />}
+
+        {!loading && games.length > 0 && (
+          <DailyMatchupTheater
+            games={games}
+            selectedGame={selectedGame}
+            selectedGameIndex={selectedGameIndex}
+            setSelectedGameIndex={setSelectedGameIndex}
+            goToPreviousGame={goToPreviousGame}
+            goToNextGame={goToNextGame}
+            search={search}
+          />
         )}
       </div>
     </main>

@@ -64,7 +64,16 @@ export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ legs, stakeUnits: p.wagerAmount ?? 1 }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      let detail = "";
+      try {
+        detail = await res.text();
+      } catch {
+        detail = "";
+      }
+      console.warn("[parlayGrading] grade request failed", res.status, detail);
+      return null;
+    }
     return (await res.json()) as GradeResponse;
   } catch {
     return null;

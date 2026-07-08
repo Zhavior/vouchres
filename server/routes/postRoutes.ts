@@ -111,6 +111,7 @@ postRoutes.get("/feed/discover", async (_req, res: Response) => {
 const CreatePostSchema = z.object({
   body: z.string().min(1).max(4000),
   pick_id: z.string().uuid().optional(),
+  vouch_id: z.string().uuid().optional(),
 });
 
 /**
@@ -125,7 +126,7 @@ postRoutes.post(
   requireAuth,
   validate({ body: CreatePostSchema }),
   async (req: AuthedRequest, res: Response) => {
-    const { body: postBody, pick_id } = req.body as z.infer<typeof CreatePostSchema>;
+    const { body: postBody, pick_id, vouch_id } = req.body as z.infer<typeof CreatePostSchema>;
 
     // If pick_id is provided, verify ownership
     if (pick_id) {
@@ -139,12 +140,25 @@ postRoutes.post(
       }
     }
 
+    // If vouch_id is provided, verify ownership
+    if (vouch_id) {
+      const { data: vouch } = await supabaseAdmin
+        .from("vouches")
+        .select("user_id")
+        .eq("id", vouch_id)
+        .single();
+      if (!vouch || vouch.user_id !== (req as any).user!.id) {
+        return res.status(403).json({ error: "vouch_not_owned" });
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from("posts")
       .insert({
         author_id: (req as any).user!.id,
         body: postBody,
         pick_id: pick_id ?? null,
+        vouch_id: vouch_id ?? null,
         is_demo: false,
       })
       .select(`

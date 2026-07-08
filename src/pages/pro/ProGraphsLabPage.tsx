@@ -14,8 +14,8 @@ export default function ProGraphsLabPage() {
   const playerPayload = useMemo(() => buildPlayerPayload(topRow), [topRow]);
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
-      <div className="mx-auto max-w-7xl space-y-5">
+    <main className="ve-page-shell min-h-screen px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
+      <div className="mx-auto max-w-7xl space-y-4">
         <ProPageHeader
           title="Pro Graphs Lab"
           subtitle="A visual analytics lab for players, teams, pitchers, HR pressure, run pressure, and trend signals."
@@ -38,7 +38,7 @@ export default function ProGraphsLabPage() {
           />
         )}
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-3">
           <ProLockedCard
             title="Player Trend Graphs"
             description="Player-level HR, hits, RBI, runs, and power trend graphs require verified feeds."
@@ -53,7 +53,7 @@ export default function ProGraphsLabPage() {
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <ProGraphShell
             title="Player Signal Comparison"
             description="Uses HrSignalGraphs when a verified HR board row is available."

@@ -11,7 +11,7 @@ export const INITIAL_PROFILE: CreatorProofProfile = {
   wonPicks: 0,
   unitsTracked: 0,
   unitsNetProfit: 0,
-  subscriptionTier: 'BASIC',
+  subscriptionTier: 'SELLER_PRO',
 };
 
 // HOT_MARKETS removed — HotMarketsPanel now fetches real today's games from MLB Stats API.

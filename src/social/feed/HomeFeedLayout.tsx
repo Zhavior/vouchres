@@ -1,11 +1,12 @@
 import React from 'react';
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
-import FeedMobileNav from './FeedMobileNav';
-import CyberBackground from '../../components/CyberBackground';
+import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
+import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
-import { Sliders, ShieldCheck, Sparkles } from 'lucide-react';
+import { Sparkles, Bell } from 'lucide-react';
 import AisFeatureAgent from '../../components/AisFeatureAgent';
+import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 
@@ -20,6 +21,12 @@ interface HomeFeedLayoutProps {
   activeLegs?: Leg[];
   savedSlips?: Parlay[];
   isRouteSwitching?: boolean;
+  onAuthLoginSuccess?: () => void;
+  onAuthLogoutComplete?: () => void;
+  /** True only for the bare public front page (logged-out 'welcome') — hides
+   * the sidebar/header/right-rail app chrome. Logged-in users landing on
+   * 'welcome' (Edge Island) still get the normal app shell. */
+  isPublicFrontPage?: boolean;
 }
 
 export default function HomeFeedLayout({
@@ -33,9 +40,42 @@ export default function HomeFeedLayout({
   activeLegs = [],
   savedSlips = [],
   isRouteSwitching = false,
+  onAuthLoginSuccess,
+  onAuthLogoutComplete,
+  isPublicFrontPage = false,
 }: HomeFeedLayoutProps) {
   
   const { activeTheme, reduceMotion } = useTheme();
+  const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
+  const [cmdKOpen, setCmdKOpen] = React.useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  // Placeholder: wire to real notification store when available
+  const unreadNotifications = 0;
+  const previousSectionRef = React.useRef(activeSection);
+
+  React.useEffect(() => {
+    if (previousSectionRef.current === activeSection) return;
+
+    setEdgeTransitioning(true);
+    const timer = window.setTimeout(() => {
+      setEdgeTransitioning(false);
+      previousSectionRef.current = activeSection;
+    }, reduceMotion ? 0 : 360);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSection, reduceMotion]);
+
+  // Global Cmd+K / Ctrl+K shortcut
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdKOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const getThemeVars = (theme: VisualTheme) => {
     return {
@@ -65,17 +105,15 @@ export default function HomeFeedLayout({
     : [];
 
   return (
-    <div 
-      className={`min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? `${activeTheme.pageBg} has-active-theme` : 'bg-[#0b0f19]'
-      }`} 
+    <div
+      className={`z8-layout-root font-z8 min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
+        activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-obsidian-900 has-active-theme' : 'bg-obsidian-900'
+      }`}
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
+      data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-      
-      {/* Dynamic Animated Cyber Background Layer (only if not customized fully by profile theme) */}
-      {(!activeTheme || activeTheme.id === 'cyber-blue') && <CyberBackground />}
-      
+
       {/* Grid Overlay matching theme particles vibe */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && activeTheme.gridOverlay && (
         <div className={`absolute inset-0 pointer-events-none z-0 ${activeTheme.gridOverlay}`} />
@@ -95,15 +133,20 @@ export default function HomeFeedLayout({
             {Array.from({ length: 42 }).map((_, i) => {
               const animDuration = `${0.5 + (i % 8) * 0.12}s`;
               const animDelay = `-${(i % 5) * 0.18}s`;
+              const barColor = i % 4 === 0 ? 'hsl(var(--ve-accent-cyan))' : i % 3 === 0 ? 'hsl(var(--ve-accent-pink))' : 'hsl(var(--ve-accent-gold))';
               return (
                 <div 
                   key={i} 
-                  className="w-1.5 rounded-t-md bg-gradient-to-t from-fuchsia-500 via-purple-500 to-cyan-400 border-t border-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.6)]"
+                  className="w-1.5 rounded-t-md origin-bottom"
                   style={{
-                    animation: `equalizer-pulse ${animDuration} ease-in-out infinite alternate`,
+                    background: barColor,
+                    animationName: 'equalizer-pulse',
+                    animationDuration: animDuration,
                     animationDelay: animDelay,
-                    height: '20px'
-                  } as React.CSSProperties}
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'ease-in-out',
+                    height: '16px',
+                  }}
                 />
               );
             })}
@@ -111,7 +154,7 @@ export default function HomeFeedLayout({
         </>
       )}
 
-      {/* Explosive Ambient Drifting floating particles of the equipped theme */}
+      {/* Drifting theme particles */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
           {driftingParticles.map((p, idx) => (
@@ -138,91 +181,105 @@ export default function HomeFeedLayout({
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
-      <div className={`flex w-full min-h-screen relative transition-all duration-300 z-10 ${
-        activeSection === 'welcome' ? 'max-w-none' : activeSection === 'feed' ? 'max-w-[1300px]' : 'max-w-[1580px]'
+      <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
+        isPublicFrontPage ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
       }`} id="layout-inner-frame">
-        
+
         {/* Column 1: Left Sticky Sidebar (hidden on mobile, responsive xl width) */}
-        {activeSection !== 'welcome' && (
-          <FeedSidebar 
-            activeSection={activeSection} 
-            onSectionChange={onSectionChange} 
-            profile={profile} 
-          />
+        {!isPublicFrontPage && (
+          <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+            <FeedSidebar
+              activeSection={activeSection}
+              onSectionChange={onSectionChange}
+              profile={profile}
+              onOpenCmdK={() => setCmdKOpen(true)}
+              unreadNotifications={unreadNotifications}
+            />
+          </div>
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex-1 min-w-0 ${activeSection === 'welcome' ? 'pb-0 border-none' : 'border-r border-slate-900 pb-[74px] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex-1 min-w-0 bg-obsidian-900 font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'border-r border-white/10 pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
-          {activeSection !== 'welcome' && (
-            <header className="md:hidden sticky top-0 bg-[#0b0f19]/90 backdrop-blur-md border-b border-slate-850 px-4 py-3 flex items-center justify-between z-30 select-none">
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSectionChange('feed')}>
-                <div className="w-8 h-8 rounded-lg bg-amber-955/40 border border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-bold text-xs shadow-[0_0_10px_rgba(255,232,31,0.2)]">
-                  ★
-                </div>
-                <span className="text-sm font-black text-white starwars-font-crawl tracking-wider">
-                  VOUCH<span className="text-[#FFE81F] starwars-font-solid font-black">EDGE</span>
-                </span>
+          {!isPublicFrontPage && (
+            <header className="md:hidden sticky top-0 bg-obsidian-900/90 backdrop-blur-md glass-border border-b px-3 py-2.5 flex items-center justify-between gap-2 z-30 select-none font-z8">
+              {/* Profile avatar (corner) — ring color = real subscription tier;
+                  tapping it opens the X-style navigation drawer. */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <TierAvatar
+                  profile={profile}
+                  size={36}
+                  onClick={() => setMobileDrawerOpen(true)}
+                  ariaLabel="Open navigation menu"
+                />
+                <button type="button" onClick={() => onSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
+                  VOUCH<span className="text-vouch-cyan">EDGE</span>
+                </button>
               </div>
 
-              {/* Track Record compact view & PRO Upgrade */}
-              <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                <div 
-                  onClick={() => onSectionChange('premium')}
-                  className="flex items-center gap-1 bg-gradient-to-r from-sky-500/20 to-indigo-500/20 border border-sky-500/30 px-2.5 py-1 rounded-full text-sky-400 font-bold cursor-pointer active:scale-95 transition-all animate-pulse"
+              <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
+                <button
+                  onClick={() => onSectionChange('notifications')}
+                  className="relative flex items-center justify-center w-8 h-8 rounded-full glass-panel glass-border text-white/50 active:text-white transition-all"
+                  aria-label="Notifications"
                 >
-                  <Sparkles className="w-3 h-3 text-sky-400" />
-                  <span>UPGRADE</span>
-                </div>
+                  <Bell className="w-3.5 h-3.5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-vouch-emerald text-[7px] font-black text-black">
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </span>
+                  )}
+                </button>
 
-                <div 
-                  onClick={() => onSectionChange('profile')}
-                  className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-full text-emerald-400 font-bold cursor-pointer"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>{profile.winRate.toFixed(1)}% WR</span>
-                </div>
+                {profile.subscriptionTier !== 'SELLER_PRO' && (
+                  <button
+                    onClick={() => onSectionChange('premium')}
+                    className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>UPGRADE</span>
+                  </button>
+                )}
+
+                {/* Login/guest state — rendered inline here (not as a fixed
+                    overlay) so it can't collide with page content below it. */}
+                <AuthStatusBadge
+                  inline
+                  onLoginSuccess={onAuthLoginSuccess}
+                  onLogoutComplete={onAuthLogoutComplete}
+                />
               </div>
             </header>
           )}
 
           {/* Render Active Page Content */}
-          <div className="relative min-h-screen w-full" id="inner-view-slot">
-            {isRouteSwitching && (
-              <div className="pointer-events-none absolute inset-x-4 top-4 z-50 rounded-2xl border border-cyan-300/20 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
-                  <div>
-                    <div className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Loading VouchEdge screen</div>
-                    <div className="text-xs text-slate-500">Keeping the app active while the next lab mounts.</div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className={`min-h-screen transition-opacity duration-150 ${isRouteSwitching ? 'opacity-60' : 'opacity-100'}`}>
-              {children}
-            </div>
+          <div className="w-full h-full" id="inner-view-slot">
+            {children}
           </div>
         </main>
 
         {/* Column 3: Right Sticky Rail (hidden on mobile, and only rendered on central feed for optimal focus) */}
         {activeSection === 'feed' && (
-          <FeedRightRail 
-            posts={posts} 
-            profile={profile} 
-            savedVouchIds={savedVouchIds} 
-            onSaveVouch={onSaveVouch} 
-          />
+          <div className={`ve-edge-rail ve-edge-rail-right ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+            <FeedRightRail 
+              posts={posts} 
+              profile={profile} 
+              savedVouchIds={savedVouchIds} 
+              onSaveVouch={onSaveVouch} 
+            />
+          </div>
         )}
         
       </div>
 
-      {/* Persistent Bottom Mobile Nav */}
-      {activeSection !== 'welcome' && (
-        <FeedMobileNav 
-          activeSection={activeSection} 
-          onSectionChange={onSectionChange} 
+      {/* X-style mobile navigation drawer (replaces the old bottom nav bar) */}
+      {!isPublicFrontPage && (
+        <MobileProfileDrawer
+          open={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
           profile={profile}
+          activeSection={activeSection}
+          onSectionChange={onSectionChange}
         />
       )}
 
@@ -230,10 +287,17 @@ export default function HomeFeedLayout({
       <AisFeatureAgent 
         profile={profile} 
         savedSlips={savedSlips} 
-        activeLegs={activeLegs} 
-        activeThemeId={profile.activeTheme} 
-        onSectionChange={onSectionChange} 
+        activeLegs={activeLegs}
+        onSectionChange={onSectionChange}
       />
+
+      {/* Command Palette (Cmd+K) */}
+      <CmdKPalette
+        open={cmdKOpen}
+        onClose={() => setCmdKOpen(false)}
+        onNavigate={onSectionChange}
+      />
+
     </div>
   );
 }

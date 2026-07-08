@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { apiUrl } from '../lib/apiBase';
-import { 
-  Sparkles, 
-  ShoppingBag, 
-  CheckCircle, 
-  Shield, 
-  Flame, 
-  Star, 
-  Award, 
-  Zap, 
-  Heart, 
-  RefreshCw, 
-  DollarSign, 
-  User, 
-  Layout, 
-  Eye, 
-  BadgeCheck, 
+import {
+  Sparkles,
+  ShoppingBag,
+  CheckCircle,
+  Shield,
+  Flame,
+  Star,
+  Award,
+  Zap,
+  Heart,
+  RefreshCw,
+  DollarSign,
+  Lock,
+  User,
+  Layout,
+  Eye,
+  BadgeCheck,
   Grid,
   Laptop,
   Video
@@ -24,6 +25,7 @@ import { CreatorProofProfile } from '../types';
 import { useTheme } from './theme/ThemeProvider';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface ThemeStoreProps {
   profile: CreatorProofProfile;
@@ -295,12 +297,13 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             <DollarSign className="w-5 h-5 text-amber-500" />
             <span>{userCredits.toLocaleString()} pts</span>
           </div>
-          <button
-            onClick={handleClaimCredits}
-            className="w-full mt-1.5 py-1.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black text-[10px] rounded-lg tracking-wider uppercase shadow-md transition-all hover:scale-105"
+          <div
+            title="Theme pts are allocated by your plan tier — 250 pts (Basic) or 750 pts (Gold / Seller Pro)"
+            className="w-full mt-1.5 py-1.5 px-3 flex items-center justify-center gap-1.5 bg-slate-800/60 border border-slate-700/60 text-slate-500 font-black text-[10px] rounded-lg tracking-wider uppercase cursor-not-allowed select-none"
           >
-            Claim Free +500 pts
-          </button>
+            <Lock className="w-3 h-3 shrink-0" />
+            Theme Pts Locked
+          </div>
         </div>
       </div>
 
@@ -407,49 +410,64 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     <div 
                       key={theme.id}
                       onClick={() => setPreviewThemeId(theme.id)}
-                      className={`p-4 bg-[#121824]/30 rounded-2xl border flex flex-col justify-between gap-4 cursor-pointer hover:border-slate-600 transition-all ${
-                        previewThemeId === theme.id 
-                          ? 'border-indigo-500/80 shadow-[0_0_15px_rgba(99,102,241,0.1)]' 
-                          : 'border-slate-850'
+                      className={`group relative overflow-hidden p-5 rounded-3xl border flex flex-col justify-between gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
+                        isAppTheme || isProfileTheme
+                          ? 'bg-cyan-950/20 border-cyan-400/40 shadow-[0_0_28px_rgba(34,211,238,0.12)]'
+                          : previewThemeId === theme.id 
+                            ? 'bg-indigo-950/20 border-indigo-400/60 shadow-[0_0_20px_rgba(99,102,241,0.16)]' 
+                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-slate-600'
                       }`}
                     >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[9px] font-black uppercase font-mono px-2 py-0.5 bg-slate-900 rounded border border-slate-800 text-slate-300">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {(isAppTheme || isProfileTheme) && (
+                        <div className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-cyan-300/20 blur-3xl" />
+                      )}
+
+                      <div className="relative z-10 space-y-4">
+                        <div className="flex justify-between items-center gap-3">
+                          <span className="text-[9px] font-black uppercase font-mono px-2.5 py-1 bg-black/30 rounded-full border border-white/10 text-slate-200">
                             {theme.category}
                           </span>
-                          <span className={`text-[9px] font-black font-mono px-1.5 py-0.2 rounded ${
-                            theme.rarity === 'legendary' ? 'text-yellow-400 bg-yellow-950/40 border border-yellow-900' :
-                            theme.rarity === 'epic' ? 'text-purple-400 bg-purple-950/40 border border-purple-900' :
-                            'text-slate-400 bg-slate-950'
+                          <span className={`text-[9px] font-black font-mono px-2.5 py-1 rounded-full border ${
+                            theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
+                            theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
+                            'text-slate-300 bg-slate-800/70 border-slate-600/40'
                           }`}>
                             {theme.rarity}
                           </span>
                         </div>
 
                         <div>
-                          <h4 className="font-extrabold text-slate-200 text-xs flex items-center gap-1.5">
+                          <h4 className="font-black text-slate-100 text-sm flex flex-wrap items-center gap-1.5">
                             {theme.name}
-                            {isAppTheme && <span className="text-[8px] bg-sky-950 text-sky-400 px-1 py-0.2 rounded font-black font-mono">APP ACTIVE</span>}
-                            {isProfileTheme && <span className="text-[8px] bg-purple-950 text-purple-400 px-1 py-0.2 rounded font-black font-mono">PROFILE ACTIVE</span>}
+                            {isAppTheme && <span className="text-[8px] bg-sky-400/15 border border-sky-300/25 text-sky-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT APP</span>}
+                            {isProfileTheme && <span className="text-[8px] bg-purple-400/15 border border-purple-300/25 text-purple-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT PROFILE</span>}
                           </h4>
-                          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-semibold">
+                          <p className="text-[11px] text-slate-300/85 mt-1.5 leading-relaxed font-semibold line-clamp-2">
                             {theme.description}
                           </p>
                         </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-inner">
+                          <div className="grid grid-cols-3 gap-2">
+                            <span className="h-7 rounded-xl bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-7 rounded-xl bg-cyan-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-7 rounded-xl bg-fuchsia-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative z-10 grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => {
                             setAppTheme(theme.id);
                             triggerSuccess(`✨ "${theme.name}" equipped globally as your personal App Theme!`);
                           }}
                           disabled={isAppTheme}
-                          className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg border text-center transition-all ${
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
                             isAppTheme 
-                              ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white'
+                              ? 'bg-sky-400/15 border-sky-300/25 text-sky-200 cursor-not-allowed' 
+                              : 'bg-white text-slate-950 border-white/80 hover:bg-slate-100 hover:scale-[1.02]'
                           }`}
                         >
                           {isAppTheme ? 'App Active' : 'Set as App'}
@@ -460,10 +478,10 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                             triggerSuccess(`🔮 "${theme.name}" equipped publicly as your Profile Theme!`);
                           }}
                           disabled={isProfileTheme}
-                          className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg border text-center transition-all ${
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
                             isProfileTheme 
-                              ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                              : 'bg-purple-950 border-purple-900/50 text-purple-400 hover:bg-purple-900 hover:text-white'
+                              ? 'bg-purple-400/15 border-purple-300/25 text-purple-200 cursor-not-allowed' 
+                              : 'bg-purple-500/15 border-purple-300/25 text-purple-200 hover:bg-purple-500/25 hover:text-white hover:scale-[1.02]'
                           }`}
                         >
                           {isProfileTheme ? 'Profile Active' : 'Set as Profile'}
@@ -490,25 +508,39 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     <div 
                       key={border.id}
                       onClick={() => setPreviewBorderId(border.id)}
-                      className={`p-4 bg-[#121824]/30 rounded-2xl border flex items-center justify-between gap-4 cursor-pointer hover:border-slate-600 transition-all ${
-                        previewBorderId === border.id 
-                          ? 'border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
-                          : 'border-slate-850'
+                      className={`group relative overflow-hidden p-4 rounded-3xl border flex items-center justify-between gap-4 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 ${
+                        isActive
+                          ? 'bg-emerald-950/20 border-emerald-400/45 shadow-[0_0_24px_rgba(16,185,129,0.13)]'
+                          : previewBorderId === border.id 
+                            ? 'bg-emerald-950/10 border-emerald-400/55 shadow-[0_0_18px_rgba(16,185,129,0.11)]' 
+                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-emerald-400/30'
                       }`}
                     >
-                      <div className="flex gap-3 items-center min-w-0">
-                        <ProfileAvatarBorder 
-                          borderId={border.id} 
-                          displayName="Initials" 
-                          initials="PRO" 
-                          size="md" 
-                        />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-emerald-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {isActive && (
+                        <div className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald-300/20 blur-3xl" />
+                      )}
+
+                      <div className="relative z-10 flex gap-3.5 items-center min-w-0">
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-1.5 shadow-inner">
+                          <ProfileAvatarBorder 
+                            borderId={border.id} 
+                            displayName="Initials" 
+                            initials="PRO" 
+                            size="md" 
+                          />
+                        </div>
+
                         <div className="min-w-0">
-                          <h4 className="font-extrabold text-slate-200 text-xs truncate flex items-center gap-1">
+                          <h4 className="font-black text-slate-100 text-xs truncate flex items-center gap-1.5">
                             {border.name}
-                            {isActive && <span className="text-[8px] bg-emerald-950 text-emerald-400 px-1 py-0.2 rounded font-black font-mono">EQUIPPED</span>}
+                            {isActive && (
+                              <span className="text-[8px] bg-emerald-400/15 border border-emerald-300/25 text-emerald-200 px-2 py-0.5 rounded-full font-black font-mono">
+                                EQUIPPED
+                              </span>
+                            )}
                           </h4>
-                          <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                          <p className="text-[10px] text-slate-300/80 mt-1 leading-snug line-clamp-2">
                             {border.description}
                           </p>
                         </div>
@@ -521,10 +553,10 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           triggerSuccess(`🛡️ Profile picture frame changed successfully to "${border.name}"!`);
                         }}
                         disabled={isActive}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg border text-center shrink-0 transition-all ${
+                        className={`relative z-10 px-4 py-2 text-[9px] font-black uppercase tracking-wider rounded-xl border text-center shrink-0 transition-all ${
                           isActive 
-                            ? 'bg-slate-950/50 border-slate-900 text-slate-600 cursor-not-allowed' 
-                            : 'bg-slate-900 border-slate-800 text-emerald-400 hover:bg-slate-850'
+                            ? 'bg-emerald-400/15 border-emerald-300/25 text-emerald-200 cursor-not-allowed' 
+                            : 'bg-white text-slate-950 border-white/80 hover:bg-slate-100 hover:scale-105 active:scale-95'
                         }`}
                       >
                         {isActive ? 'Active' : 'Equip'}
@@ -540,18 +572,26 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           {/* RIGHT COLUMN: PREVIEW OF CURRENT SELECTIONS */}
           <div className="lg:col-span-4 space-y-6">
             
-            <div className="bg-[#121824]/40 rounded-2xl border border-slate-850 p-5 space-y-5 shadow-xl sticky top-4">
+            <div className="group relative overflow-hidden bg-[#121824]/45 backdrop-blur-xl rounded-3xl border border-slate-800/80 p-5 space-y-5 shadow-2xl sticky top-4">
               
-              <div className="border-b border-slate-850 pb-3">
-                <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-cyan-400" />
-                  Visual Identity Preview
-                </h3>
-                <p className="text-[10px] text-slate-500 font-semibold mt-0.5">See how your cards, borders, and typography appear.</p>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-80" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
+
+              <div className="relative z-10 border-b border-white/10 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-black text-slate-100 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                    <Eye className="w-4 h-4 text-cyan-300" />
+                    Visual Identity Preview
+                  </h3>
+                  <span className="text-[8px] font-black font-mono uppercase rounded-full border border-cyan-300/25 bg-cyan-400/10 text-cyan-200 px-2 py-1">
+                    Live Look
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-semibold mt-1">See how your cards, borders, and typography appear.</p>
               </div>
 
               {/* LIVE DEMO BLOCK COMPILING SELECTS */}
-              <div className={`p-4 rounded-2xl border ${selectedPreviewTheme.cardStyle} space-y-4`} id="preview-sandbox-card">
+              <div className={`relative z-10 p-4 rounded-3xl border ${selectedPreviewTheme.cardStyle} space-y-4 shadow-xl`} id="preview-sandbox-card">
                 
                 {/* Header Row */}
                 <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400 font-mono">
@@ -607,7 +647,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
               </div>
 
               {/* Status details of the preview theme */}
-              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-900 text-xs text-slate-400 space-y-2.5">
+              <div className="relative z-10 bg-black/30 p-3.5 rounded-2xl border border-white/10 text-xs text-slate-400 space-y-2.5 shadow-inner">
                 <span className="text-[9.5px] font-mono font-black text-indigo-400 uppercase tracking-wider block">PREVIEW DETAILS:</span>
                 <div className="space-y-1 text-[11px]">
                   <div className="flex justify-between text-slate-500">
@@ -670,41 +710,60 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={theme.id}
-                    className="bg-[#121824]/20 backdrop-blur-md rounded-2xl border border-slate-850 flex flex-col justify-between overflow-hidden shadow-2xl transition-all hover:border-slate-700"
+                    className="group relative bg-[#121824]/30 backdrop-blur-xl rounded-3xl border border-slate-800/80 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
                   >
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-cyan-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
+
                     {/* Theme header with tags */}
-                    <div className="p-4 bg-slate-950/60 border-b border-slate-900 flex justify-between items-center text-[10px] uppercase font-bold text-slate-400 font-mono select-none">
-                      <span>{theme.category}</span>
-                      <span className={`font-black px-1.5 py-0.2 rounded ${
-                        theme.rarity === 'legendary' ? 'text-yellow-400 bg-yellow-950/40' :
-                        theme.rarity === 'epic' ? 'text-purple-400 bg-purple-950/40' :
-                        'text-slate-400 bg-slate-900'
+                    <div className="relative z-10 p-4 bg-slate-950/55 border-b border-white/10 flex justify-between items-center text-[10px] uppercase font-bold text-slate-300 font-mono select-none">
+                      <span className="rounded-full bg-black/30 border border-white/10 px-2.5 py-1">{theme.category}</span>
+                      <span className={`font-black px-2.5 py-1 rounded-full border ${
+                        theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
+                        theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
+                        'text-slate-300 bg-slate-800/70 border-slate-600/40'
                       }`}>
                         {theme.rarity}
                       </span>
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col justify-between gap-4 text-left">
-                      <div className="space-y-1">
-                        <h4 className="font-extrabold text-slate-200 text-sm flex justify-between items-center">
-                          <span>{theme.name}</span>
-                          <span className="text-[10px] text-indigo-400 font-black">{theme.badge}</span>
+                    <div className="relative z-10 p-5 flex-1 flex flex-col justify-between gap-5 text-left">
+                      <div className="space-y-3">
+                        <h4 className="font-black text-slate-100 text-base flex justify-between items-start gap-3">
+                          <span className="leading-tight">{theme.name}</span>
+                          <span className="shrink-0 text-[10px] text-cyan-300 font-black rounded-full bg-cyan-950/45 border border-cyan-400/20 px-2 py-1">
+                            {theme.badge}
+                          </span>
                         </h4>
-                        <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
+
+                        <p className="text-[11px] text-slate-300/85 leading-relaxed font-semibold line-clamp-2">
                           {theme.description}
                         </p>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-inner">
+                          <div className="grid grid-cols-3 gap-2">
+                            <span className="h-8 rounded-xl bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-8 rounded-xl bg-cyan-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                            <span className="h-8 rounded-xl bg-fuchsia-400/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]" />
+                          </div>
+                          <div className="mt-3 grid grid-cols-3 gap-2">
+                            <span className="h-1.5 rounded-full bg-white/35" />
+                            <span className="h-1.5 rounded-full bg-white/20" />
+                            <span className="h-1.5 rounded-full bg-white/10" />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Buy Slot */}
-                      <div className="pt-2 border-t border-slate-850/40 flex items-center justify-between">
-                        <div className="flex items-center text-amber-400 font-mono font-black text-xs gap-1">
-                          <DollarSign className="w-4 h-4 text-amber-500" />
+                      <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+                        <div className="flex items-center text-amber-300 font-mono font-black text-xs gap-1.5 rounded-full bg-black/30 border border-white/10 px-3 py-2">
+                          <DollarSign className="w-4 h-4 text-amber-400" />
                           <span>{theme.cost} pts</span>
                         </div>
 
                         <button
                           onClick={() => handleBuyTheme(theme)}
-                          className="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-[10px] font-black rounded-lg uppercase shadow-md transition-all hover:scale-105"
+                          className="px-4 py-2.5 bg-white text-slate-950 hover:bg-slate-100 text-[10px] font-black rounded-xl uppercase shadow-xl transition-all hover:scale-105 active:scale-95"
                         >
                           Unlock theme
                         </button>

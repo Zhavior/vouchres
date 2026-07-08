@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import FeedTabs from './FeedTabs';
 import FeedComposer from './FeedComposer';
 import FeedPostCard from './FeedPostCard';
 import AdBanner from '../../components/AdBanner';
+
+// Lazy: pulls in cytoscape (~300KB+) — keep it out of this already-lazy
+// page's initial chunk too, since HomeFeedPage itself can render before
+// the "Following" tab (where this graph lives) is ever opened.
+const CapperNetworkGraph = lazy(() => import('./CapperNetworkGraph'));
 import { FeedPost, Parlay, Vouch, CreatorProofProfile } from '../../types';
 import { 
   Search, 
@@ -14,11 +19,26 @@ import {
   TrendingUp, 
   Zap, 
   ShieldCheck, 
-  Activity, 
-  Crown, 
-  Award, 
-  CheckCircle2 
+  Activity,
+  Crown,
+  Award,
+  CheckCircle2,
+  Users,
 } from 'lucide-react';
+
+function FeedEmptyState({ id, icon, title, body }: { id: string; icon: React.ReactNode; title: string; body: React.ReactNode }) {
+  return (
+    <div className="glass-panel glass-border p-10 text-center rounded-3xl flex flex-col items-center justify-center gap-3.5" id={id}>
+      <div className="w-11 h-11 rounded-full bg-vouch-emerald/10 text-vouch-emerald flex items-center justify-center">
+        {icon}
+      </div>
+      <div className="text-center">
+        <h3 className="font-bold text-xs text-white uppercase tracking-widest">{title}</h3>
+        <p className="text-[11px] text-white/40 mt-1.5 max-w-sm mx-auto leading-relaxed">{body}</p>
+      </div>
+    </div>
+  );
+}
 
 interface HomeFeedPageProps {
   posts: FeedPost[];
@@ -85,6 +105,60 @@ export default function HomeFeedPage({
     };
   }, []);
 
+  const FEED_BATCH_SIZE = 8;
+  const feedSentinelRef = React.useRef<HTMLDivElement | null>(null);
+  const [visiblePostCount, setVisiblePostCount] = React.useState(FEED_BATCH_SIZE);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = React.useState(false);
+
+  const getPostAlgorithmScore = (post: FeedPost, index: number) => {
+    const createdAt = new Date(post.timestamp).getTime();
+    const ageHours = Number.isFinite(createdAt)
+      ? Math.max(0, (Date.now() - createdAt) / 36e5)
+      : 72;
+
+    const recencyScore = Math.max(0, 120 - ageHours * 4);
+    const vouchScore = Math.min(40, (post.vouchesCount || 0) * 8);
+    const commentScore = Math.min(22, (post.commentsCount || 0) * 4);
+    const verifiedScore = post.isVerified ? 26 : 0;
+    const sourceScore =
+      post.sourceBadge === 'AI Pick'
+        ? 18
+        : post.sourceBadge === 'Partner Slips'
+          ? 14
+          : 0;
+
+    const sportScore =
+      selectedSport !== 'ALL' && post.sportBadge?.toUpperCase() === selectedSport.toUpperCase()
+        ? 20
+        : post.sportBadge?.toUpperCase() === 'MLB'
+          ? 8
+          : 0;
+
+    const postTypeScore =
+      post.postType === 'RESULT'
+        ? 16
+        : post.postType === 'PARLAY'
+          ? 12
+          : post.postType === 'VOUCH'
+            ? 9
+            : 4;
+
+    const followingScore = followingList.includes(post.username) ? 18 : 0;
+    const smallRandomizer = Math.max(0, 8 - index * 0.05);
+
+    return (
+      recencyScore +
+      vouchScore +
+      commentScore +
+      verifiedScore +
+      sourceScore +
+      sportScore +
+      postTypeScore +
+      followingScore +
+      smallRandomizer
+    );
+  };
+
   // Handle Filtering based on Active Tab
   const getFilteredPosts = () => {
     let list = [...posts];
@@ -147,34 +221,96 @@ export default function HomeFeedPage({
   const filteredPosts = getFilteredPosts();
 
   // Sorting: user created posts appear first (descending timestamp or index)
-  // Let's sort ISO timestamps descending
+  // For You becomes algorithmic; other tabs stay closer to chronological.
   const sortedPosts = [...filteredPosts].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
+  const algorithmPosts =
+    activeTab === 'for-you'
+      ? [...sortedPosts].sort((a, b) => getPostAlgorithmScore(b, 0) - getPostAlgorithmScore(a, 0))
+      : sortedPosts;
+
+  const visiblePosts = algorithmPosts.slice(0, visiblePostCount);
+  const hasMorePosts = visiblePostCount < algorithmPosts.length;
+
+  React.useEffect(() => {
+    setVisiblePostCount(FEED_BATCH_SIZE);
+  }, [activeTab, selectedSport, selectedPostType, searchQuery, proOnlyMode, posts.length]);
+
+  React.useEffect(() => {
+    const node = feedSentinelRef.current;
+    if (!node || !hasMorePosts || isLoadingMorePosts) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (!first?.isIntersecting) return;
+
+        setIsLoadingMorePosts(true);
+        window.setTimeout(() => {
+          setVisiblePostCount((count) => Math.min(count + FEED_BATCH_SIZE, algorithmPosts.length));
+          setIsLoadingMorePosts(false);
+        }, 220);
+      },
+      {
+        root: null,
+        rootMargin: '720px 0px 900px 0px',
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMorePosts, isLoadingMorePosts, algorithmPosts.length]);
+
+  const totalStreamPosts = posts.length;
+  const verifiedStreamPosts = posts.filter((post) => post.isVerified || post.sourceBadge === 'AI Pick' || post.sourceBadge === 'Partner Slips').length;
+  const parlayStreamPosts = posts.filter((post) => post.postType === 'PARLAY').length;
+  const resultStreamPosts = posts.filter((post) => post.postType === 'RESULT').length;
+  const currentStreamLabel = activeTab
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+
+  // Hand off to the real App-level handler (builds the post from the actual
+  // signed-in profile and persists via syncPosts -> localStorage), then jump
+  // to "For You" so the new post is immediately visible.
+  const handleComposerPostCreated = React.useCallback(
+    (postData: Partial<FeedPost>) => {
+      onPostCreated(postData);
+      setActiveTab('for-you');
+    },
+    [onPostCreated]
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-transparent select-none" id="home-feed-page-wrapper">
-      
+    <div className="flex flex-col min-h-screen bg-transparent select-none font-z8" id="home-feed-page-wrapper">
+
       {/* Toast Notification System */}
       {toastMsg && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0b1329] border-2 border-amber-500/80 text-amber-300 px-4 py-2.5 rounded-full text-xs font-bold font-mono shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-2 animate-bounce">
-          <Zap className="w-4 h-4 text-amber-500 animate-pulse" />
+        <div className="glass-panel glass-border fixed top-5 left-1/2 -translate-x-1/2 z-50 text-vouch-emerald px-4 py-2.5 rounded-full text-xs font-bold flex items-center gap-2">
+          <Zap className="w-4 h-4 text-vouch-emerald animate-pulse" />
           <span>{toastMsg}</span>
         </div>
       )}
 
       {/* Search Input and Feed Title bar */}
-      <div className="p-4 border-b border-slate-900/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#0b0f19]/80 backdrop-blur-md sticky top-0 md:top-0 z-20">
+      <div className="glass-panel glass-border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-0 z-20">
         <div className="flex flex-col">
-          <h1 className="text-lg md:text-xl font-black text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
-            Vouch<span className="text-sky-400">Edge</span> Home Feed
+          <h1 className="text-lg md:text-xl font-black text-white flex items-center gap-1.5 uppercase tracking-wide">
+            Home Feed
             {proOnlyMode && (
-              <span className="text-[9px] bg-amber-950 text-amber-400 border border-amber-700/60 font-black px-2 py-0.5 rounded-full tracking-wider animate-pulse ml-1.5 flex items-center gap-1">
+              <span className="terminal-text bg-vouch-emerald/10 text-vouch-emerald px-2 py-0.5 rounded-full ml-1.5 flex items-center gap-1">
                 <Crown className="w-2.5 h-2.5" /> PRO STREAM
               </span>
             )}
           </h1>
-          <p className="text-[10px] text-slate-400 mt-0.5">
+          <p className="text-[10px] text-white/40 mt-0.5">
             Follow live parlay proof, verified slips, and community sentiment metrics.
           </p>
         </div>
@@ -187,10 +323,10 @@ export default function HomeFeedPage({
               placeholder="Search picks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs bg-[#121824]/60 backdrop-blur-sm text-slate-100 border border-slate-850/50 pl-8 pr-3 py-1.5 rounded-xl focus:border-sky-500/80 outline-none transition-all font-medium placeholder-slate-500"
+              className="w-full text-xs bg-white/[0.02] text-white border border-white/10 pl-8 pr-3 py-1.5 rounded-xl focus:border-vouch-cyan/30 outline-none transition-all font-medium placeholder:text-white/30"
               id="search-input-field-id"
             />
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-white/30 absolute left-2.5 top-2.5" />
           </div>
 
           {/* Premium Sharp PRO Switcher Button */}
@@ -198,17 +334,16 @@ export default function HomeFeedPage({
             type="button"
             onClick={() => {
               setProOnlyMode(!proOnlyMode);
-              triggerToast(proOnlyMode ? "🔓 Switched to All Community Stream" : "🌟 Premium Sharp Pro Stream Activated");
+              triggerToast(proOnlyMode ? 'Switched to all-community stream' : 'Pro stream activated — verified only');
             }}
-            className={`py-1.5 px-3.5 rounded-xl text-xs font-black tracking-wide flex items-center gap-1.5 shadow-md border transition-all shrink-0 active:scale-95 ${
-              proOnlyMode
-                ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
-            }`}
+            className={[
+              'py-1.5 px-3.5 rounded-xl text-xs font-black tracking-wide flex items-center gap-1.5 transition-all shrink-0',
+              proOnlyMode ? 'bg-vouch-emerald text-black' : 'bg-white/[0.03] text-white/40 hover:text-white',
+            ].join(' ')}
             title="Toggle to view only verified sharp professionals with over 3+ vouches"
           >
-            <Crown className={`w-3.5 h-3.5 ${proOnlyMode ? 'animate-bounce text-yellow-200' : ''}`} />
-            <span className="font-mono text-[10px]">PRO MODE</span>
+            <Crown className="w-3.5 h-3.5" />
+            <span className="text-[10px]">PRO MODE</span>
           </button>
         </div>
       </div>
@@ -225,183 +360,91 @@ export default function HomeFeedPage({
 
       {/* Main Stream Area */}
       <div className="p-4 md:p-6 space-y-6 max-w-[680px] w-full mx-auto" id="feed-stream-outer">
-        
-        {/* VIP Sharp Live Statistics Grid Header */}
-        <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-850/60 shadow-xl space-y-3.5 text-center" id="vip-live-sharp-stats-grid">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-900">
-            <span className="font-mono font-black text-[10px] uppercase tracking-widest text-sky-400 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
-              Real-time Premium Indicators
-            </span>
-            <span className="font-mono text-[9px] font-black text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-              Live Feed Audit
-            </span>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="bg-[#090d16] p-2.5 rounded-xl border border-slate-900 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-slate-500 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
-                <Trophy className="w-3 h-3 text-amber-500" /> AVG PRO ROI
-              </span>
-              <span className="text-sm font-black text-emerald-400 mt-1 font-mono tracking-wide">+14.2%</span>
-            </div>
-
-            <div className="bg-[#090d16] p-2.5 rounded-xl border border-slate-900 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-slate-500 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-sky-400" /> WIN RATIO
-              </span>
-              <span className="text-sm font-black text-sky-400 mt-1 font-mono tracking-wide">68.4%</span>
-            </div>
-
-            <div className="bg-[#090d16] p-2.5 rounded-xl border border-slate-900 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-slate-500 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
-                <Crown className="w-3 h-3 text-amber-400" /> PRO BACKERS
-              </span>
-              <span className="text-sm font-black text-amber-400 mt-1 font-mono tracking-wide">4,825</span>
-            </div>
-
-            <div className="bg-[#090d16] p-2.5 rounded-xl border border-slate-900 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-slate-500 font-bold uppercase font-mono tracking-wider flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-indigo-400" /> ACTIVE LUCK
-              </span>
-              <span className="text-sm font-black text-indigo-400 mt-1 font-mono tracking-wide">HOT🔥</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Sharp Picks Daily Cheat Sheet / Quick Slip Integrator */}
-        <div className="bg-[#0b0f19] p-4 rounded-2xl border border-amber-500/20 shadow-2xl space-y-3 relative overflow-hidden" id="sharp-cheat-sheet-props">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/5 to-transparent pointer-events-none" />
-          
-          <div className="flex justify-between items-center pb-1.5 border-b border-slate-850">
-            <span className="font-extrabold text-[10px] text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              VIP Daily Sharp Cheat Sheet
-            </span>
-            <span className="text-[9px] text-slate-500 font-mono">Tap target to back prop</span>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            {/* Prop 1 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-slate-950/60 border border-slate-850 hover:border-amber-500/30 rounded-xl transition-all gap-2">
-              <div className="space-y-0.5 text-left">
-                <span className="font-bold text-slate-100 flex items-center gap-1.5">
-                  Shohei Ohtani
-                  <span className="text-[9px] bg-slate-900 border border-slate-800 text-sky-400 px-1.5 py-0.2 rounded font-mono">MLB</span>
-                </span>
-                <p className="text-[10px] text-slate-400">Over 1.5 Hits (+120) • backed by 28 Sharp Experts</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => triggerToast("🎯 Backed Shohei Ohtani Over 1.5 Hits! Saved to your session context.")}
-                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 rounded-lg text-[10px] font-black uppercase transition-all shrink-0 font-mono tracking-wide"
-              >
-                + Back Prop
-              </button>
-            </div>
-
-            {/* Prop 2 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-slate-950/60 border border-slate-850 hover:border-amber-500/30 rounded-xl transition-all gap-2">
-              <div className="space-y-0.5 text-left">
-                <span className="font-bold text-slate-100 flex items-center gap-1.5">
-                  Paul Skenes
-                  <span className="text-[9px] bg-slate-900 border border-slate-800 text-sky-400 px-1.5 py-0.2 rounded font-mono">MLB</span>
-                </span>
-                <p className="text-[10px] text-slate-400">Over 7.5 Strikeouts (-115) • Sabermetric Matchup Matchup</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => triggerToast("🎯 Backed Paul Skenes Over 7.5 Ks! Saved to your session context.")}
-                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 rounded-lg text-[10px] font-black uppercase transition-all shrink-0 font-mono tracking-wide"
-              >
-                + Back Prop
-              </button>
-            </div>
-
-            {/* Prop 3 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-slate-950/60 border border-slate-850 hover:border-amber-500/30 rounded-xl transition-all gap-2">
-              <div className="space-y-0.5 text-left">
-                <span className="font-bold text-slate-100 flex items-center gap-1.5">
-                  Aaron Judge
-                  <span className="text-[9px] bg-slate-900 border border-slate-800 text-sky-400 px-1.5 py-0.2 rounded font-mono">MLB</span>
-                </span>
-                <p className="text-[10px] text-slate-400">To Hit Home Run (+240) • Yankee Stadium Wind Favor</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => triggerToast("🎯 Backed Aaron Judge Home Run (+240)! Saved to your session context.")}
-                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 hover:border-amber-400 rounded-lg text-[10px] font-black uppercase transition-all shrink-0 font-mono tracking-wide"
-              >
-                + Back Prop
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Composer section */}
-        <FeedComposer 
-          onPostCreated={onPostCreated} 
-          savedSlips={savedSlips} 
-          profileName={profileName} 
+        {/* Composer first — Twitter/X style, always the top action */}
+        <FeedComposer
+          onPostCreated={handleComposerPostCreated}
+          savedSlips={savedSlips}
+          profileName={profileName || 'VouchEdge Creator'}
         />
 
-        {/* Premium Ledger audit panel */}
-        <div className="p-3.5 bg-slate-950/40 rounded-xl border border-slate-850 text-[11px] text-slate-400 leading-normal flex items-start gap-2.5">
-          <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400 animate-pulse" />
-          <div>
-            <span className="font-extrabold text-[10px] text-emerald-400 uppercase tracking-widest block font-mono">
-              VEdge Ledger Integrity Verified
-            </span>
-            <p className="mt-0.5">
-              Browsing the <strong>VouchEdge Premium Ledger Channel</strong>. Real-time community metrics are cryptographically timestamped and matched locally.
-            </p>
-          </div>
-        </div>
+        <section className="glass-panel glass-border rounded-3xl p-5" aria-label="VouchEdge social stream summary">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <span className="terminal-text text-vouch-cyan">Community Feed</span>
+              <h2 className="text-lg font-black text-white mt-1">VouchEdge Social Stream</h2>
+              <p className="text-xs text-white/40 mt-1 max-w-md">Real posts, verified vouches, saved slips, creator updates, and public pick history in one timeline.</p>
+            </div>
 
-        {/* Dynamic Ad Support depending on Subscription Tier */}
-        <AdBanner 
-          bannerType="feed-top" 
-          subscriptionTier={profile?.subscriptionTier || 'BASIC'} 
-          activeSponsor={activeAdSponsor} 
+            <div className="shrink-0 text-right">
+              <span className="terminal-text text-white/30 block">Viewing</span>
+              <strong className="text-sm font-bold text-vouch-emerald">{currentStreamLabel}</strong>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
+              <span className="block text-[10px] text-white/30">Total Posts</span>
+              <strong className="text-lg font-black text-white">{totalStreamPosts}</strong>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
+              <span className="block text-[10px] text-white/30">Verified</span>
+              <strong className="text-lg font-black text-vouch-emerald">{verifiedStreamPosts}</strong>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
+              <span className="block text-[10px] text-white/30">Parlays</span>
+              <strong className="text-lg font-black text-vouch-cyan">{parlayStreamPosts}</strong>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
+              <span className="block text-[10px] text-white/30">Results</span>
+              <strong className="text-lg font-black text-white">{resultStreamPosts}</strong>
+            </div>
+          </div>
+        </section>
+
+        <AdBanner
+          bannerType="feed-top"
+          subscriptionTier={profile?.subscriptionTier || 'BASIC'}
+          activeSponsor={activeAdSponsor}
           onUpgrade={() => {
             if (onSectionChange) onSectionChange('premium');
           }}
         />
 
-        {/* Dynamic empty state */}
+        {activeTab === 'following' && followingList.length > 0 && (
+          <Suspense fallback={null}>
+            <CapperNetworkGraph posts={posts} followingList={followingList} />
+          </Suspense>
+        )}
+
+        {/* Dynamic empty state — one shared card, three copy variants */}
         {activeTab === 'following' && followingList.length === 0 ? (
-          <div 
-            className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3.5"
+          <FeedEmptyState
             id="empty-following-placeholder-slate"
-          >
-            <div className="w-12 h-12 bg-indigo-950/40 rounded-full flex items-center justify-center border border-indigo-900/30 text-xl">
-              🔑
-            </div>
-            <div className="text-center">
-              <h3 className="font-bold text-xs text-slate-300 uppercase tracking-widest">Not tailing anyone yet!</h3>
-              <p className="text-[11px] text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-                Go to the <strong>"For You"</strong> feed tab, find verified sports partners, and click <strong>"Follow"</strong> or <strong>"Tail"</strong> to populate your private subscribed ledger deck right here.
-              </p>
-            </div>
-          </div>
-        ) : sortedPosts.length === 0 ? (
-          <div 
-            className="p-10 text-center bg-[#121824] rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3.5"
+            icon={<Users className="w-6 h-6" />}
+            title="Not tailing anyone yet"
+            body={<>Go to the <strong className="text-white/70">"For You"</strong> feed tab, find verified sports partners, and click <strong className="text-white/70">"Follow"</strong> or <strong className="text-white/70">"Tail"</strong> to populate your private subscribed ledger deck right here.</>}
+          />
+        ) : algorithmPosts.length === 0 && posts.length === 0 ? (
+          /* Genuinely no posts anywhere yet (no filter/search at play) */
+          <FeedEmptyState
             id="empty-feed-placeholder-slate"
-          >
-            <AlertTriangle className="w-8 h-8 text-slate-500 animate-pulse" />
-            <div className="text-center">
-              <h3 className="font-bold text-sm text-slate-300 uppercase">No Matches Found</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                No active VouchEdge plays match your "{activeTab}" filter or search query. Create a post above to populate the feed!
-              </p>
-            </div>
-          </div>
+            icon={<AlertTriangle className="w-6 h-6" />}
+            title="No posts yet"
+            body="Be the first to post a pick, vouch, parlay, result, or research note."
+          />
+        ) : algorithmPosts.length === 0 ? (
+          /* Posts exist, but the current filter/search/tab matches none of them */
+          <FeedEmptyState
+            id="empty-feed-placeholder-slate"
+            icon={<AlertTriangle className="w-6 h-6" />}
+            title="No matches found"
+            body={`No active VouchEdge plays match your "${activeTab}" filter or search query. Create a post above to populate the feed!`}
+          />
         ) : (
           /* List of Posts */
           <div className="space-y-4" id="posts-feed-stream-container">
-            {sortedPosts.map((post) => (
+            {visiblePosts.map((post) => (
               <FeedPostCard
                 key={post.id}
                 post={post}
@@ -416,6 +459,27 @@ export default function HomeFeedPage({
             ))}
           </div>
         )}
+        {/* Infinite Scroll Loader */}
+        <div ref={feedSentinelRef} className="h-px" aria-hidden="true" />
+
+        {/* The dedicated empty-state card above already covers the zero-posts
+            case, so this loader only needs to handle the non-empty states —
+            avoids showing "No posts yet" twice on the same screen. */}
+        {algorithmPosts.length > 0 && (
+          <div className="flex items-center justify-center gap-2 py-3 text-[11px] text-white/30">
+            {isLoadingMorePosts ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-pulse" />
+                <strong className="text-white/50">Loading more vouches...</strong>
+              </>
+            ) : hasMorePosts ? (
+              <span>Keep scrolling for more picks, slips, and results.</span>
+            ) : (
+              <span>You're caught up for this stream.</span>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   );

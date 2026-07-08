@@ -1,15 +1,16 @@
 import type { HrEligibleHitter, HrPitcherStats } from "./hrEngineTypes";
+import { sportsFetchJson } from "../../../lib/sports/sportsHttpClient";
 
 const MLB_API = "https://statsapi.mlb.com/api/v1";
 
 async function fetchJson(url: string) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`MLB fetch failed ${response.status}: ${url}`);
-  }
-
-  return response.json();
+  return sportsFetchJson<any>(url, {
+    cacheKey: `mlb:hr-engine:pitcher-stats:${url}`,
+    ttlMs: 15 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "hrEnginePitcherStats",
+  });
 }
 
 function toNumber(value: unknown, fallback = 0) {

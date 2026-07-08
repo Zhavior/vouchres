@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "motion/react";
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "../../lib/motion";
 import {
   Sparkles,
   Check,
@@ -23,6 +23,7 @@ import {
 import { THEME_REGISTRY, type VisualTheme } from "../../theme/themeRegistry";
 import { useTheme } from "../theme/ThemeProvider";
 import { ThemeParticleRouter } from "./ParticleFields";
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function extractHex(cls: string): string {

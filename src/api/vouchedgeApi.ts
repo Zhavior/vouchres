@@ -16,7 +16,8 @@ import type { TrustScore, VerifiedRecord } from "../types/trust";
 import type { PickRecord, LearningNote } from "../types/results";
 import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
-import type { MatchupsResponse, GameMatchup } from "../types/matchup";
+import type { LiveAtBatSnapshot } from "../types/liveAtBat";
+import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
 
@@ -51,6 +52,22 @@ async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promis
   }
 }
 
+function normalizeDailyReport(raw: any): DailyMlbReport {
+  const source = raw?.payload ?? raw?.report ?? raw?.data ?? raw ?? {};
+
+  return {
+    ...source,
+    date: source.date ?? raw?.date ?? new Date().toISOString().slice(0, 10),
+    gameCount: source.gameCount ?? source.games?.length ?? raw?.gameCount ?? 0,
+    dataQuality: source.dataQuality ?? raw?.dataQuality ?? raw?.status ?? "limited",
+    games: source.games ?? [],
+    vulnerablePitchers: source.vulnerablePitchers ?? [],
+    hrTargets: source.hrTargets ?? [],
+    sneakyHr: source.sneakyHr ?? [],
+    runEnvironments: source.runEnvironments ?? [],
+  } as DailyMlbReport;
+}
+
 async function hrBoardTodayWithDevFallback(previewLimit?: number): Promise<HrBoardResponse> {
   const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
   const localPath = `/api/mlb/hr-board/today${query}`;
@@ -80,11 +97,13 @@ export const vouchedgeApi = {
   // MLB
   todayGames: () => getJson<{ date: string; games: ApiGame[] }>("/api/mlb/games/today"),
   gamesByDate: (date: string) => getJson<{ date: string; games: ApiGame[] }>(`/api/mlb/games/date/${date}`),
-  dailyReport: (date?: string) =>
-    withFallback(
-      () => getJson<DailyMlbReport>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
+  dailyReport: async (date?: string) => {
+    const raw = await withFallback<any>(
+      () => getJson<any>(`/api/mlb/reports/daily${date ? `?date=${date}` : ""}`),
       () => dailyReportDirect(date)
-    ),
+    );
+    return normalizeDailyReport(raw);
+  },
   vulnerablePitchers: () => getJson<{ report: VulnerablePitcher[] }>("/api/mlb/reports/vulnerable-pitchers"),
   hrTargets: () => getJson<{ targets: HrTarget[] }>("/api/mlb/reports/hr-targets"),
   sneakyHr: () => getJson<{ sneaky: SneakyHrTarget[] }>("/api/mlb/reports/sneaky-hr"),
@@ -113,10 +132,35 @@ export const vouchedgeApi = {
 
   // Live HR notification feed
   hrFeedToday: () => getJson<HrFeedResponse>("/api/mlb/hr-feed/today"),
+  hrFeedByDate: (date: string) => getJson<HrFeedResponse>(`/api/mlb/hr-feed/date/${date}`),
+
+  // Live at-bat pitch-by-pitch snapshot
+  liveAtBat: (gamePk: number) => getJson<LiveAtBatSnapshot>(`/api/mlb/live-at-bat/${gamePk}`),
 
   // Live Games matchups
+  liveGames: () => getJson<{
+    success: boolean;
+    date: string;
+    games: Array<{
+      id: string;
+      homeTeam: string;
+      awayTeam: string;
+      homeScore: number | null;
+      awayScore: number | null;
+      status: string;
+      venue: string | null;
+      gameDate: string | null;
+      isLive?: boolean;
+      isFinal?: boolean;
+      predictionsAvailable?: boolean;
+      warnings?: string[];
+    }>;
+    warnings?: string[];
+    updatedAt: string;
+  }>("/api/mlb/live"),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
+  scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),
 
   // Daily HR Board
   hrBoardToday: (previewLimit?: number) => hrBoardTodayWithDevFallback(previewLimit),

@@ -10,7 +10,7 @@
 import React from 'react';
 import { BarChart3, Activity, Zap, Gauge, Lock } from 'lucide-react';
 import type { NormalizedPlayerPayload } from '../../adapters/normalized';
-import { ACCENT } from '../../theme/colors';
+import { ACCENT, withAlpha } from '../../theme/colors';
 import { ProGraphShell } from './ProGraphShell';
 import { ProSignalBar } from './ProSignalBar';
 import { ProLockedCard } from './ProLockedCard';
@@ -48,7 +48,7 @@ const EdgeScoreBreakdown: React.FC<{ payload: NormalizedPlayerPayload }> = React
       subtitle="HR Engine Pro v2 live payload"
       accent={ACCENT.final}
       right={
-        <span className="rounded-full border border-orange-400/25 bg-orange-400/10 px-2 py-0.5 font-mono text-[10px] font-black text-orange-200">
+        <span className="rounded-full border border-[hsl(var(--ve-accent-gold)/0.28)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-gold))]">
           HR {fmtInt(player.hrEdge)}
         </span>
       }
@@ -61,7 +61,7 @@ const EdgeScoreBreakdown: React.FC<{ payload: NormalizedPlayerPayload }> = React
         <ProSignalBar label="Recent Form" value={b.recentForm ?? null} color={ACCENT.form} />
         <ProSignalBar label="Lineup Confidence" value={b.lineupConfidence ?? null} color={ACCENT.lineup} />
         <ProSignalBar label="Risk Penalty" value={b.riskPenalty ?? null} color={ACCENT.risk} />
-        <div className="my-2 h-px bg-gradient-to-r from-transparent via-slate-700/60 to-transparent" />
+        <div className="my-2 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-border)/0.55),transparent)]" />
         <ProSignalBar label="Final Score" value={b.finalScore ?? player.hrEdge ?? null} color={ACCENT.final} />
       </div>
     </ProGraphShell>
@@ -93,7 +93,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
       subtitle={`Last ${f.gamesChecked ?? 0} games · live from HR Engine`}
       accent={ACCENT.form}
       right={
-        <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-400/10 px-2 py-0.5 font-mono text-[10px] font-black text-fuchsia-200">
+        <span className="rounded-full border border-[hsl(var(--ve-accent-pink)/0.28)] bg-[hsl(var(--ve-accent-pink)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-pink))]">
           PWR {fmtInt(f.recentPowerScore)}
         </span>
       }
@@ -101,7 +101,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
     >
       <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
         <StatChip label="G" value={fmtInt(f.gamesChecked)} color={ACCENT.form} />
-        <StatChip label="AB" value={fmtInt(f.atBats)} color="#94a3b8" />
+        <StatChip label="AB" value={fmtInt(f.atBats)} color="hsl(var(--ve-text-muted))" />
         <StatChip label="H" value={fmtInt(f.hits)} color={ACCENT.matchup} />
         <StatChip label="HR" value={fmtInt(f.homeRuns)} color={ACCENT.power} />
         <StatChip label="XBH" value={fmtInt(f.extraBaseHits)} color={ACCENT.lineup} />
@@ -112,7 +112,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
         <ProSignalBar label="Extra-Base Hits" value={f.extraBaseHits ?? null} max={15} color={ACCENT.lineup} />
         <ProSignalBar label="Total Bases" value={f.totalBases ?? null} max={60} color={ACCENT.power} />
         <ProSignalBar label="Recent HR Rate" value={f.recentHrRate ?? null} max={0.2} color={ACCENT.power} />
-        <div className="my-2 h-px bg-gradient-to-r from-transparent via-slate-700/60 to-transparent" />
+        <div className="my-2 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-border)/0.55),transparent)]" />
         <ProSignalBar label="Recent Power Score" value={f.recentPowerScore ?? null} color={ACCENT.form} />
       </div>
     </ProGraphShell>
@@ -146,7 +146,7 @@ const MatchupSignalMeter: React.FC<{ payload: NormalizedPlayerPayload }> = React
       subtitle="Pitcher / Park / Weather composite"
       accent={ACCENT.matchup}
       right={
-        <span className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-2 py-0.5 font-mono text-[10px] font-black text-cyan-200">
+        <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-cyan))]">
           P.VULN {fmtInt(m.pitcherVulnerability)}
         </span>
       }
@@ -181,7 +181,7 @@ const DataConfidencePanel: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
   const { player, scoreBreakdown: b } = payload;
   const isPreview = player.lineupStatus === 'projected_unconfirmed';
   const isConfirmed = player.lineupStatus === 'confirmed';
-  const statusColor = isConfirmed ? ACCENT.emerald : isPreview ? '#fbbf24' : '#94a3b8';
+  const statusColor = isConfirmed ? ACCENT.emerald : isPreview ? ACCENT.gold : 'hsl(var(--ve-text-muted))';
   const statusLabel = isConfirmed ? 'Confirmed' : isPreview ? 'Preview' : 'Projected';
 
   return (
@@ -193,7 +193,7 @@ const DataConfidencePanel: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
       right={
         <span
           className="rounded-full border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider"
-          style={{ color: statusColor, borderColor: statusColor + '44', background: statusColor + '14' }}
+          style={{ color: statusColor, borderColor: withAlpha(statusColor, 0.28), background: withAlpha(statusColor, 0.08) }}
         >
           {statusLabel}
         </span>
@@ -241,9 +241,9 @@ const LockedFutureGraphs: React.FC = React.memo(function LockedFutureGraphs() {
       icon={Lock}
       title="Locked Future Graphs"
       subtitle="Pro research modules — no data fabricated"
-      accent="#64748b"
+      accent={ACCENT.slate}
       right={
-        <span className="rounded-full border border-slate-700/60 bg-slate-950/60 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider text-slate-400">
+        <span className="rounded-full border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel)/0.46)] px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">
           {FUTURE_GRAPHS.length} locked
         </span>
       }

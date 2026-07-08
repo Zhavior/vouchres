@@ -12,7 +12,62 @@
  *     persistent ledger is sport-aware too.
  */
 
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { isMlbFinalStatusText } from "../mlb/gameStatus";
+
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
+
+// Module-level cache: avoids redundant fetches across concurrent grade requests.
+// Final games cached 10 min; non-final cached 2 min (will re-check soon).
+const _gameStore = new Map<string, { data: GameData; expiresAt: number }>();
+const _gameInFlight = new Map<string, Promise<GameData | null>>();
+
+async function fetchMLBGameData(gamePk: string): Promise<GameData | null> {
+  const cached = _gameStore.get(gamePk);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let p = _gameInFlight.get(gamePk);
+  if (!p) {
+    p = _doFetchMLBGame(gamePk).then((data) => {
+      if (data) {
+        const ttl = data.final ? 10 * 60 * 1000 : 2 * 60 * 1000;
+        _gameStore.set(gamePk, { data, expiresAt: Date.now() + ttl });
+      }
+      _gameInFlight.delete(gamePk);
+      return data;
+    });
+    _gameInFlight.set(gamePk, p);
+  }
+  return p;
+}
+
+async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
+  try {
+    // Step 1: linescore → check isComplete (fast, no player stat data)
+    const ls = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/linescore`, {
+      cacheKey: `grading:linescore:${gamePk}`,
+      ttlMs: 2 * 60_000,
+      timeoutMs: 8_000,
+      retries: 1,
+      debugLabel: "sportGraders",
+    });
+    if (ls?.isComplete !== true && !isMlbFinalStatusText(ls?.status)) {
+      return { final: false, raw: null };
+    }
+
+    // Step 2: boxscore for player batting stats (only for final games)
+    const raw = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
+      cacheKey: `grading:boxscore:${gamePk}`,
+      ttlMs: 10 * 60_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: "sportGraders",
+    });
+    return { final: true, raw };
+  } catch {
+    return null;
+  }
+}
 
 export type LegStatus = "won" | "lost" | "push" | "pending" | "error";
 
@@ -101,23 +156,7 @@ const mlbGrader: SportGrader = {
   supportedMarkets: Object.keys(MLB_MARKETS),
 
   async fetchGame(gamePk: string): Promise<GameData | null> {
-    try {
-      const res = await fetch(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
-        signal: AbortSignal.timeout(10_000),
-        headers: { "User-Agent": "VouchEdge/1.0 (grading)" },
-      });
-      if (!res.ok) return null;
-      const raw = await res.json();
-      const state = raw?.info?.state ?? raw?.status?.state ?? "unknown";
-      // Boxscore endpoint doesn't always carry a clean state; treat presence of
-      // batting stats as a proxy when state is unknown.
-      const looksFinal =
-        state === "final" ||
-        Boolean(raw?.teams?.home?.players && raw?.teams?.away?.players);
-      return { final: looksFinal, raw };
-    } catch {
-      return null;
-    }
+    return fetchMLBGameData(gamePk);
   },
 
   evaluateLeg(leg: GradableLeg, game: GameData): LegOutcome {
@@ -157,14 +196,21 @@ function comingSoonGrader(sport: string): SportGrader {
   };
 }
 
-export const sportGraders: Record<string, SportGrader> = {
+/**
+ * Supported sports. Mirror of the client `SportId` (src/sports/registry.ts).
+ * Adding an id here forces a matching entry in `sportGraders` (won't compile
+ * until you provide one) — the compile-time guarantee for new-sport completeness.
+ */
+export type SportId = "mlb" | "nba" | "nfl";
+
+export const sportGraders: Record<SportId, SportGrader> = {
   mlb: mlbGrader,
   nba: comingSoonGrader("nba"),
   nfl: comingSoonGrader("nfl"),
 };
 
 export function getGrader(sport: string): SportGrader {
-  return sportGraders[sport?.toLowerCase()] ?? comingSoonGrader(sport || "unknown");
+  return sportGraders[(sport?.toLowerCase() as SportId)] ?? comingSoonGrader(sport || "unknown");
 }
 
 /* ============================================================

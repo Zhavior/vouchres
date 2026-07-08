@@ -7,7 +7,7 @@
  *   - "Parlays locked → moved to Live Parlays"
  */
 
-export type NotifKind = 'ai' | 'lock' | 'result' | 'info';
+export type NotifKind = 'ai' | 'lock' | 'result' | 'success' | 'info';
 
 export interface AppNotification {
   id: string;

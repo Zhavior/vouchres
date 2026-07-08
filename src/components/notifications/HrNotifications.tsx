@@ -4,7 +4,7 @@ import { vouchedgeApi } from '../../api/vouchedgeApi';
 import type { HrEvent } from '../../types/notifications';
 import type { Parlay } from '../../types';
 
-const POLL_MS = 60_000;
+const POLL_MS = import.meta.env.DEV ? 120_000 : 60_000;
 const LS_ENABLED = 'vouchedge_hr_notify';
 const LS_ONLY_PARLAYS = 'vouchedge_hr_only_parlays';
 

@@ -1,5 +1,8 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
+import { createParlayGradedNotification } from "../notifications/notificationService";
+import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
 
 /**
  * Grading service — resolves pick outcomes by fetching results from the
@@ -22,6 +25,45 @@ export interface GradeResult {
   settled_units: number | null;
   learning_note?: string;
   error?: string;
+  game_date?: string | null;
+  warnings?: string[];
+  leg_results?: Array<{
+    leg_index: number;
+    status: "won" | "lost" | "push";
+    note?: string;
+  }>;
+}
+
+export interface GradeRunSummary {
+  total_pending: number;
+  total_graded: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  voids: number;
+  warnings: string[];
+}
+
+export interface GradeRunResult {
+  graded: GradeResult[];
+  skipped: GradeResult[];
+  summary: GradeRunSummary;
+}
+
+interface FinalGameData {
+  boxscore: any;
+  game_date: string | null;
+}
+
+
+function isLikelyMlbGamePk(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  const text = String(value).trim();
+
+  // MLB gamePk values are numeric. Legacy/local placeholders like
+  // "leg-...", "ai-leg-...", "manual", or empty strings should never hit
+  // the MLB linescore/boxscore endpoints.
+  return /^\d{5,10}$/.test(text);
 }
 
 /**
@@ -42,7 +84,7 @@ export interface GradeResult {
 export async function gradePendingPicks(opts: {
   days?: number;
   dryRun?: boolean;
-} = {}): Promise<{ graded: GradeResult[]; skipped: GradeResult[] }> {
+} = {}): Promise<GradeRunResult> {
   const supabaseAdmin = await getSupabaseAdmin();
   const days = opts.days ?? 3;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -50,7 +92,7 @@ export async function gradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at")
+    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -63,7 +105,7 @@ export async function gradePendingPicks(opts: {
   }
 
   if (!pending || pending.length === 0) {
-    return { graded: [], skipped: [] };
+    return { graded: [], skipped: [], summary: summarizeGradeRun([], [], 0) };
   }
 
   // 2. Group by event_id
@@ -79,9 +121,24 @@ export async function gradePendingPicks(opts: {
 
   // 3. Process each event
   for (const [eventId, picks] of byEvent) {
-    let boxscore: any;
+    if (!isLikelyMlbGamePk(eventId)) {
+      const message = `legacy/manual event id skipped (${eventId})`;
+      console.log(`[grading] skipping event ${eventId}: ${message}`);
+      for (const pick of picks) {
+        skipped.push({
+          pick_id: pick.id,
+          status: "graded_error",
+          settled_units: null,
+          error: message,
+          warnings: [message],
+        });
+      }
+      continue;
+    }
+
+    let gameData: FinalGameData;
     try {
-      boxscore = await fetchBoxscore(eventId);
+      gameData = await fetchBoxscore(eventId, String(picks[0]?.game_date ?? picks[0]?.created_at ?? '').slice(0, 10) || null);
     } catch (err: any) {
       // Game not final yet, or fetch failed — skip all picks for this event
       console.log(`[grading] skipping event ${eventId}: ${err.message}`);
@@ -91,6 +148,7 @@ export async function gradePendingPicks(opts: {
           status: "graded_error",
           settled_units: null,
           error: err.message,
+          warnings: [`Game data missing for event ${eventId}: ${err.message}`],
         });
       }
       continue;
@@ -99,7 +157,14 @@ export async function gradePendingPicks(opts: {
     // 4. Evaluate each pick
     for (const pick of picks) {
       try {
-        const result = await evaluatePick(pick, boxscore);
+        const result = await evaluatePick(pick, gameData.boxscore);
+        result.game_date = gameData.game_date ?? String(pick.created_at ?? "").slice(0, 10) ?? null;
+        if (!gameData.game_date) {
+          result.warnings = [
+            ...(result.warnings ?? []),
+            "MLB linescore did not include game_date; using pick created_at date as fallback.",
+          ];
+        }
 
         if (result.status === "graded_error") {
           skipped.push({ ...result, pick_id: pick.id });
@@ -107,12 +172,64 @@ export async function gradePendingPicks(opts: {
         }
 
         if (!opts.dryRun) {
-          await gradePick({
-            pickId: pick.id,
-            status: result.status,
-            settledUnits: result.settled_units,
-            learningNote: result.learning_note,
-          });
+          let atomicSettlementSucceeded = false;
+
+          if (pick.leg_type === "parlay" && result.leg_results?.length) {
+            const atomicSettlement = await settleParlayPacketAtomically(pick.id, result);
+
+            if (atomicSettlement.ok) {
+              atomicSettlementSucceeded = true;
+            } else if (atomicSettlement.warning) {
+              result.warnings = [...(result.warnings ?? []), atomicSettlement.warning];
+            }
+          }
+
+          if (!atomicSettlementSucceeded) {
+            const changed = await gradePick({
+              pickId: pick.id,
+              status: result.status,
+              settledUnits: result.settled_units,
+              learningNote: result.learning_note,
+              gameDate: result.game_date,
+            });
+            if (!changed) {
+              skipped.push({
+                pick_id: pick.id,
+                status: "graded_error",
+                settled_units: null,
+                error: "already_graded_or_missing",
+                warnings: ["Pick was no longer pending when grading attempted."],
+              });
+              continue;
+            }
+
+            if (result.leg_results?.length) {
+              const appliedLegGrades = await applyParlayLegGrades(pick.id, result.leg_results, result.game_date);
+              const failedLegGrades = appliedLegGrades.filter((leg) => !leg.updated);
+              if (failedLegGrades.length) {
+                result.warnings = [
+                  ...(result.warnings ?? []),
+                  ...failedLegGrades.map(
+                    (leg) => leg.warning ?? `Leg ${leg.leg_index} was not updated during grading.`
+                  ),
+                ];
+              }
+            }
+          }
+          if (pick.leg_type === "parlay" && pick.user_id) {
+            const legResults = result.leg_results ?? [];
+            const notify = await createParlayGradedNotification({
+              userId: String(pick.user_id),
+              parlayId: pick.id,
+              status: result.status,
+              legCount: legResults.length || 1,
+              wins: legResults.filter((leg) => leg.status === "won").length || (result.status === "won" ? 1 : 0),
+              losses: legResults.filter((leg) => leg.status === "lost").length || (result.status === "lost" ? 1 : 0),
+              pushes: legResults.filter((leg) => leg.status === "push").length || (result.status === "push" ? 1 : 0),
+              voids: result.status === "void" ? 1 : 0,
+            });
+            result.warnings = [...(result.warnings ?? []), ...notify.warnings];
+          }
         }
 
         graded.push({ ...result, pick_id: pick.id });
@@ -132,32 +249,86 @@ export async function gradePendingPicks(opts: {
     `[grading] done: ${graded.length} graded, ${skipped.length} skipped (of ${pending.length} pending)`
   );
 
-  return { graded, skipped };
+  return { graded, skipped, summary: summarizeGradeRun(graded, skipped, pending.length) };
+}
+
+async function resolveMlbGameFromSchedule(
+  gamePk: string,
+  expectedGameDate?: string | null
+): Promise<{ status: any; game_date: string | null } | null> {
+  if (!expectedGameDate) return null;
+
+  const schedule = await sportsFetchJson<any>(`${MLB_API}/v1/schedule?sportId=1&date=${expectedGameDate}`, {
+    cacheKey: `grading:schedule:${expectedGameDate}`,
+    ttlMs: 10 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "gradingService",
+  });
+  const games = (schedule?.dates ?? []).flatMap((date: any) => date?.games ?? []);
+  const game = games.find((g: any) => String(g?.gamePk ?? g?.game_id ?? "") === String(gamePk));
+
+  if (!game) {
+    throw new Error(`game ${gamePk} not found on schedule date ${expectedGameDate}`);
+  }
+
+  return {
+    status: game?.status || {},
+    game_date:
+      typeof game?.officialDate === "string"
+        ? game.officialDate
+        : typeof game?.gameDate === "string"
+          ? String(game.gameDate).slice(0, 10)
+          : expectedGameDate,
+  };
 }
 
 /**
  * Fetch the boxscore for a game. Throws if the game is not yet final.
+ * Uses schedule-by-date first when available so repaired legacy parlays grade against
+ * the historical game date instead of only the live feed status.
  */
-async function fetchBoxscore(gamePk: string): Promise<any> {
-  const url = `${MLB_API}/v1/game/${gamePk}/boxscore`;
-  const res = await fetch(url, {
-    signal: AbortSignal.timeout(10_000),
-    headers: { "User-Agent": "VouchEdge/1.0 (grading service)" },
+async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): Promise<FinalGameData> {
+  let gameDate: string | null = null;
+
+  const scheduledGame = await resolveMlbGameFromSchedule(gamePk, expectedGameDate);
+
+  if (scheduledGame) {
+    gameDate = scheduledGame.game_date;
+    if (!isMlbFinalStatusText(scheduledGame.status)) {
+      throw new Error(`game not final from schedule date ${expectedGameDate} (${formatMlbStatus(scheduledGame.status)})`);
+    }
+  } else {
+    // Live feed fallback for rows without historical game_date.
+    const feed = await sportsFetchJson<any>(`${MLB_API}/v1.1/game/${gamePk}/feed/live`, {
+      cacheKey: `grading:feed:${gamePk}`,
+      ttlMs: 2 * 60_000,
+      timeoutMs: 10_000,
+      retries: 1,
+      debugLabel: "gradingService",
+    });
+    const status = feed?.gameData?.status || {};
+
+    if (!isMlbFinalStatusText(status)) {
+      throw new Error(`game not final (${formatMlbStatus(status)})`);
+    }
+
+    gameDate =
+      typeof feed?.gameData?.datetime?.officialDate === "string"
+        ? feed.gameData.datetime.officialDate
+        : typeof feed?.gameData?.datetime?.originalDate === "string"
+          ? feed.gameData.datetime.originalDate
+          : null;
+  }
+
+  const boxscore = await sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
+    cacheKey: `grading:boxscore:${gamePk}`,
+    ttlMs: 10 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "gradingService",
   });
-
-  if (!res.ok) {
-    throw new Error(`boxscore fetch ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  // Verify game is final
-  const gameState = data?.info?.state ?? data?.status?.state ?? "unknown";
-  if (gameState !== "final") {
-    throw new Error(`game not final (state=${gameState})`);
-  }
-
-  return data;
+  return { boxscore, game_date: gameDate ?? expectedGameDate ?? null };
 }
 
 /**
@@ -221,7 +392,7 @@ async function evaluatePick(
     return settlePick(pick, playerRuns >= 1);
   }
 
-  if (market === "parlay") {
+  if (pick.leg_type === "parlay" || market.includes("parlay")) {
     // Parlays: load the legs from pick_legs, grade each leg individually.
     // - Any leg LOST → parlay LOST
     // - All legs WON → parlay WON, payout = stake * product(odds)
@@ -252,14 +423,17 @@ async function gradeParlayPick(
     selection: string;
     odds_decimal: number | null;
     stake_units: number | null;
+    event_id?: string | null;
   },
   boxscore: any
 ): Promise<GradeResult> {
   const supabaseAdmin = await getSupabaseAdmin();
-  // 1. Load legs
+
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")
-    .select("leg_index, market, selection, event_id, odds_decimal")
+    .select(
+      "leg_index, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal"
+    )
     .eq("pick_id", pick.id)
     .order("leg_index", { ascending: true });
 
@@ -272,103 +446,93 @@ async function gradeParlayPick(
     };
   }
 
-  // 2. Group legs by event_id — fetch each unique boxscore once
-  const eventIds = [...new Set(legs.map((l: any) => l.event_id).filter(Boolean))] as string[];
   const boxscoreCache = new Map<string, any>();
+  const legResults: Array<{
+    leg_index: number;
+    status: "won" | "lost" | "push";
+    odds: number;
+    note?: string;
+  }> = [];
 
-  for (const eventId of eventIds) {
-    try {
-      // If this leg's event matches the parlay's parent event, reuse the boxscore
-      if (eventId === (pick as any).event_id?.toString()) {
-        boxscoreCache.set(eventId, boxscore);
-        continue;
-      }
-      const legBoxscore = await fetchBoxscore(eventId);
-      boxscoreCache.set(eventId, legBoxscore);
-    } catch (err: any) {
-      // Any leg's game not final → can't grade parlay yet
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_event_not_final:${eventId}: ${err.message}`,
-      };
+  for (const leg of legs as any[]) {
+    const rawGamePk = String(leg.game_id || leg.event_id || "").trim();
+
+    if (!isLikelyMlbGamePk(rawGamePk)) {
+      legResults.push({
+        leg_index: Number(leg.leg_index),
+        status: "push",
+        odds: Number(leg.odds_decimal ?? 1),
+        note: `Skipped legacy/manual leg with invalid game id: ${rawGamePk || "missing"}`,
+      });
+      continue;
     }
-  }
 
-  // 3. Evaluate each leg
-  const legResults: Array<{ status: "won" | "lost" | "push"; odds: number }> = [];
+    let legBoxscore = boxscoreCache.get(rawGamePk);
 
-  for (const leg of legs) {
-    const legBoxscore = leg.event_id ? boxscoreCache.get(leg.event_id as string) : boxscore;
     if (!legBoxscore) {
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_no_boxscore:${leg.leg_index}`,
-      };
+      try {
+        if (rawGamePk === String((pick as any).event_id || "")) {
+          legBoxscore = boxscore;
+        } else {
+          legBoxscore = await fetchBoxscore(rawGamePk, String(leg.game_date ?? (pick as any).game_date ?? '').slice(0, 10) || null);
+        }
+        boxscoreCache.set(rawGamePk, legBoxscore);
+      } catch (err: any) {
+        return {
+          pick_id: pick.id,
+          status: "graded_error",
+          settled_units: null,
+          error: `parlay_leg_event_not_ready:${rawGamePk}: ${err?.message || "boxscore unavailable"}`,
+          warnings: [`Parlay leg ${leg.leg_index} game ${rawGamePk} is not ready/final yet.`],
+        };
+      }
     }
 
-    // Reuse the single-pick evaluation logic for this leg
-    const legResult = await evaluatePick(
-      {
-        id: pick.id,
-        market: leg.market,
-        selection: leg.selection,
-        odds_decimal: leg.odds_decimal ?? null,
-        stake_units: 1.0, // not used for individual leg eval
-        leg_type: "single",
-      },
-      legBoxscore
-    );
-
-    if (legResult.status === "graded_error") {
-      return {
-        pick_id: pick.id,
-        status: "graded_error",
-        settled_units: null,
-        error: `parlay_leg_${leg.leg_index}_error: ${legResult.error}`,
-      };
-    }
+    const gradedLeg = await gradeParlayLegWithCache(supabaseAdmin, leg, legBoxscore);
 
     legResults.push({
-      status: legResult.status as "won" | "lost" | "push",
-      odds: leg.odds_decimal ?? 2.0,
+      leg_index: Number(leg.leg_index),
+      status: gradedLeg.status,
+      odds: Number(leg.odds_decimal ?? 2.0),
+      note: gradedLeg.note,
     });
   }
 
-  // 4. Combine leg results into parlay outcome
-  const stake = pick.stake_units ?? 1.0;
+  const stake = Number(pick.stake_units ?? 1.0);
 
-  // Any leg LOST → parlay LOST
+  if (legResults.length === 0) {
+    return {
+      pick_id: pick.id,
+      status: "graded_error",
+      settled_units: null,
+      error: "parlay_no_gradable_legs",
+    };
+  }
+
   if (legResults.some((r) => r.status === "lost")) {
     return {
       pick_id: pick.id,
       status: "lost",
       settled_units: -Number(stake.toFixed(2)),
-      learning_note: `Parlay lost: ${legResults.filter(r => r.status === "lost").length} leg(s) lost.`,
+      learning_note: `Parlay lost: ${legResults.filter((r) => r.status === "lost").length} leg(s) lost.`,
+      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
-  // Filter out pushes — they reduce the effective parlay size
   const wonLegs = legResults.filter((r) => r.status === "won");
   const pushLegs = legResults.filter((r) => r.status === "push");
 
-  // All legs pushed → refund stake
   if (wonLegs.length === 0) {
     return {
       pick_id: pick.id,
       status: "push",
       settled_units: 0.0,
-      learning_note: `Parlay pushed: all ${pushLegs.length} leg(s) pushed.`,
+      learning_note: `Parlay pushed/skipped: no losing legs and no winning legs were gradable.`,
+      leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
     };
   }
 
-  // All remaining legs won → parlay won
-  // Payout = stake * product(wonLegs.odds)
-  // (Standard parlay math: pushes reduce leg count but don't lose)
-  const combinedOdds = wonLegs.reduce((product, leg) => product * leg.odds, 1);
+  const combinedOdds = wonLegs.reduce((product, leg) => product * Number(leg.odds || 1), 1);
   const payout = Number((stake * (combinedOdds - 1)).toFixed(2));
 
   return {
@@ -377,8 +541,383 @@ async function gradeParlayPick(
     settled_units: payout,
     learning_note:
       pushLegs.length > 0
-        ? `Parlay won with ${pushLegs.length} push(es). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
+        ? `Parlay won with ${pushLegs.length} push/skipped leg(s). Effective ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`
         : `Parlay won. ${wonLegs.length}-leg parlay at combined odds ${combinedOdds.toFixed(2)}.`,
+    leg_results: legResults.map(({ leg_index, status, note }) => ({ leg_index, status, note })),
+  };
+}
+
+async function gradeParlayLegWithCache(
+  supabaseAdmin: any,
+  leg: any,
+  boxscore: any
+): Promise<{ status: "won" | "lost" | "push"; note: string }> {
+  const eventKey = String(leg.event_key || "").trim();
+
+  if (eventKey) {
+    const { data: cached, error: cacheReadError } = await supabaseAdmin
+      .from("graded_leg_results")
+      .select("status, note")
+      .eq("event_key", eventKey)
+      .maybeSingle();
+
+    if (!cacheReadError && cached?.status) {
+      return {
+        status: cached.status as "won" | "lost" | "push",
+        note: cached.note ? `Cached result: ${cached.note}` : "Cached graded leg result.",
+      };
+    }
+  }
+
+  const graded = gradeExactParlayLeg(leg, boxscore);
+
+  if (eventKey) {
+    const marketCode = normalizeMarketCode(leg.market_code || leg.market);
+    const target = Number(leg.stat_target ?? defaultTargetForMarket(marketCode));
+    const playerStats = findPlayerStatsForLeg(boxscore, leg);
+    const actualValue = playerStats ? getActualStatForMarket(playerStats, marketCode) : null;
+
+    const { error: cacheWriteError } = await supabaseAdmin
+      .from("graded_leg_results")
+      .upsert(
+        {
+          event_key: eventKey,
+          sport: String(leg.sport || "mlb").toLowerCase(),
+          game_id: leg.game_id || leg.event_id || null,
+          player_id: leg.player_id || null,
+          market_code: marketCode || null,
+          stat_target: Number.isFinite(target) ? target : null,
+          comparator: leg.comparator || ">=",
+          actual_value: actualValue,
+          status: graded.status,
+          note: graded.note,
+          source_provider: leg.external_provider || "mlb_statsapi",
+          graded_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "event_key" }
+      );
+
+    if (cacheWriteError) {
+      console.warn("[grading] graded_leg_results upsert failed", cacheWriteError.code, cacheWriteError.message);
+    }
+  }
+
+  return graded;
+}
+
+function gradeExactParlayLeg(
+  leg: any,
+  boxscore: any
+): { status: "won" | "lost" | "push"; note: string } {
+  const marketCode = normalizeMarketCode(leg.market_code || leg.market);
+  const target = Number(leg.stat_target ?? defaultTargetForMarket(marketCode));
+  const comparator = String(leg.comparator || ">=").trim();
+
+  const playerStats = findPlayerStatsForLeg(boxscore, leg);
+
+  if (!playerStats) {
+    return {
+      status: "push",
+      note: `Could not match player for leg ${leg.leg_index} by player_id or selection fallback.`,
+    };
+  }
+
+  const actual = getActualStatForMarket(playerStats, marketCode);
+
+  if (actual === null) {
+    return {
+      status: "push",
+      note: `Market ${marketCode || "UNKNOWN"} is not gradable from current boxscore stats.`,
+    };
+  }
+
+  const won = compareStat(actual, target, comparator);
+
+  return {
+    status: won ? "won" : "lost",
+    note: `${marketCode} graded ${actual} ${comparator} ${target} for ${playerStats.name || "matched player"}.`,
+  };
+}
+
+function normalizeMarketCode(value: unknown): string {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function defaultTargetForMarket(marketCode: string): number {
+  if (marketCode === "HITS_2_PLUS") return 2;
+  if (marketCode === "HITS_3_PLUS") return 3;
+  return 1;
+}
+
+function compareStat(actual: number, target: number, comparator: string): boolean {
+  if (comparator === ">" || comparator === "gt") return actual > target;
+  if (comparator === "<" || comparator === "lt") return actual < target;
+  if (comparator === "<=" || comparator === "lte") return actual <= target;
+  if (comparator === "=" || comparator === "==" || comparator === "eq") return actual === target;
+  return actual >= target;
+}
+
+function getActualStatForMarket(playerStats: any, marketCode: string): number | null {
+  const batting = playerStats?.stats?.batting || playerStats?.batting || {};
+
+  switch (marketCode) {
+    case "HR":
+    case "HOME_RUN":
+    case "HOME_RUNS":
+    case "ANYTIME_HR":
+      return Number(batting.homeRuns ?? 0);
+
+    case "HIT":
+    case "HITS":
+      return Number(batting.hits ?? 0);
+
+    case "HITS_2_PLUS":
+      return Number(batting.hits ?? 0);
+
+    case "HITS_3_PLUS":
+      return Number(batting.hits ?? 0);
+
+    case "RBI":
+    case "RBIS":
+      return Number(batting.rbi ?? batting.rbis ?? 0);
+
+    case "RUN":
+    case "RUNS":
+      return Number(batting.runs ?? 0);
+
+    case "WALK":
+    case "WALKS":
+    case "BB":
+      return Number(batting.baseOnBalls ?? batting.walks ?? 0);
+
+    case "STOLEN_BASE":
+    case "STOLEN_BASES":
+    case "SB":
+      return Number(batting.stolenBases ?? 0);
+
+    case "TOTAL_BASES":
+    case "TB":
+      return Number(batting.totalBases ?? 0);
+
+    case "SINGLE":
+    case "SINGLES":
+      return Number(batting.singles ?? Math.max(0, Number(batting.hits ?? 0) - Number(batting.doubles ?? 0) - Number(batting.triples ?? 0) - Number(batting.homeRuns ?? 0)));
+
+    case "DOUBLE":
+    case "DOUBLES":
+      return Number(batting.doubles ?? 0);
+
+    case "TRIPLE":
+    case "TRIPLES":
+      return Number(batting.triples ?? 0);
+
+    default:
+      return null;
+  }
+}
+
+function findPlayerStatsForLeg(boxscore: any, leg: any): any | null {
+  const teams = [boxscore?.teams?.away?.players, boxscore?.teams?.home?.players].filter(Boolean);
+
+  if (leg.player_id) {
+    const playerKey = `ID${leg.player_id}`;
+    for (const players of teams) {
+      if (players?.[playerKey]) {
+        return players[playerKey];
+      }
+    }
+  }
+
+  const wantedName = extractPlayerName(String(leg.selection || ""), String(leg.market || ""));
+  if (!wantedName) return null;
+
+  for (const players of teams) {
+    for (const player of Object.values(players || {}) as any[]) {
+      const fullName = String(player?.person?.fullName || player?.name || "").toLowerCase();
+      if (fullName && fullName.includes(wantedName.toLowerCase())) {
+        return player;
+      }
+    }
+  }
+
+  return null;
+}
+
+
+type AtomicParlaySettlementResult = {
+  ok: boolean;
+  reason?: string;
+  pick_id?: string;
+  status?: string;
+  updated_leg_count?: number;
+  audit_id?: string;
+};
+
+async function settleParlayPacketAtomically(
+  pickId: string,
+  result: GradeResult
+): Promise<{ ok: boolean; warning?: string; proof?: AtomicParlaySettlementResult }> {
+  if (!result.leg_results?.length) {
+    return { ok: false, warning: "No leg_results supplied for atomic parlay settlement." };
+  }
+
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const p_leg_results = result.leg_results.map((leg) => ({
+    leg_index: leg.leg_index,
+    status: leg.status,
+  }));
+
+  const p_proof = {
+    source: "gradingService.ts",
+    settled_at: new Date().toISOString(),
+    game_date: result.game_date ?? null,
+    warnings: result.warnings ?? [],
+  };
+
+  const { data, error } = await supabaseAdmin.rpc("settle_parlay_packet", {
+    p_pick_id: pickId,
+    p_status: result.status,
+    p_settled_units: result.settled_units ?? null,
+    p_learning_note: result.learning_note ?? null,
+    p_game_date: result.game_date ?? null,
+    p_leg_results,
+    p_proof,
+  });
+
+  if (error) {
+    const missingRpc =
+      error.code === "42883" ||
+      error.code === "PGRST202" ||
+      /settle_parlay_packet/i.test(error.message ?? "");
+
+    return {
+      ok: false,
+      warning: missingRpc
+        ? `Atomic settlement RPC is not available yet; falling back to legacy proof updates. ${error.message}`
+        : `Atomic settlement RPC failed; falling back to legacy proof updates. ${error.message}`,
+    };
+  }
+
+  const proof = data as AtomicParlaySettlementResult;
+
+  if (!proof?.ok) {
+    return {
+      ok: false,
+      warning: `Atomic settlement RPC declined settlement: ${proof?.reason ?? "unknown_reason"}`,
+      proof,
+    };
+  }
+
+  return { ok: true, proof };
+}
+
+type AppliedParlayLegGrade = {
+  leg_index: number;
+  status: string;
+  updated: boolean;
+  updatedRows: unknown[];
+  warning?: string;
+};
+
+async function applyParlayLegGrades(
+  pickId: string,
+  legResults: NonNullable<GradeResult["leg_results"]>,
+  gameDate?: string | null
+): Promise<AppliedParlayLegGrade[]> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const gradedAt = new Date().toISOString();
+  const applied: AppliedParlayLegGrade[] = [];
+
+  for (const leg of legResults) {
+    const buildUpdate = (includeGameDate: boolean) => ({
+      status: leg.status,
+      graded_at: gradedAt,
+      ...(includeGameDate && gameDate ? { game_date: gameDate } : {}),
+    });
+
+    let result = await supabaseAdmin
+      .from("pick_legs")
+      .update(buildUpdate(true))
+      .eq("pick_id", pickId)
+      .eq("leg_index", leg.leg_index)
+      .eq("status", "pending")
+      .select("id,pick_id,leg_index,status,graded_at,game_date");
+
+    if (result.error && ["42703", "PGRST204"].includes(result.error.code)) {
+      result = await supabaseAdmin
+        .from("pick_legs")
+        .update(buildUpdate(false))
+        .eq("pick_id", pickId)
+        .eq("leg_index", leg.leg_index)
+        .eq("status", "pending")
+        .select("id,pick_id,leg_index,status,graded_at");
+    }
+
+    if (result.error) {
+      const warning = `[grading] leg update failed pick=${pickId} leg=${leg.leg_index}: ${result.error.message}`;
+      console.warn(warning);
+      applied.push({
+        leg_index: leg.leg_index,
+        status: leg.status,
+        updated: false,
+        updatedRows: [],
+        warning,
+      });
+      continue;
+    }
+
+    const updatedRows = result.data ?? [];
+    if (updatedRows.length === 0) {
+      const warning = `[grading] no pending leg updated pick=${pickId} leg=${leg.leg_index}`;
+      console.warn(warning);
+      applied.push({
+        leg_index: leg.leg_index,
+        status: leg.status,
+        updated: false,
+        updatedRows,
+        warning,
+      });
+      continue;
+    }
+
+    applied.push({
+      leg_index: leg.leg_index,
+      status: leg.status,
+      updated: true,
+      updatedRows,
+    });
+  }
+
+  return applied;
+}
+
+export function summarizeGradeRun(
+  graded: GradeResult[],
+  skipped: GradeResult[],
+  initialPending: number
+): GradeRunSummary {
+  const wins = graded.filter((r) => r.status === "won").length;
+  const losses = graded.filter((r) => r.status === "lost").length;
+  const pushes = graded.filter((r) => r.status === "push").length;
+  const voids = graded.filter((r) => r.status === "void").length;
+  const warnings = [
+    ...graded.flatMap((r) => r.warnings ?? []),
+    ...skipped.flatMap((r) => r.warnings ?? []),
+    ...(skipped.map((r) => r.error).filter(Boolean) as string[]),
+  ];
+  return {
+    total_pending: Math.max(0, initialPending - graded.length),
+    total_graded: graded.length,
+    wins,
+    losses,
+    pushes,
+    voids,
+    warnings: [...new Set(warnings)],
   };
 }
 

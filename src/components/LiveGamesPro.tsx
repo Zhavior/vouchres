@@ -3,23 +3,20 @@ import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
-import type { GameMatchup, HrWatch } from '../types/matchup';
+import type { GameMatchup, HrWatch, LiveScore } from '../types/matchup';
 import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
+import { parseAmericanOdds } from '../lib/odds';
+import LiveAtBatView from './live/LiveAtBatView';
+import PlayerHeadshot from './parlays/PlayerHeadshot';
 
 interface Props {
   onSectionChange: (section: string) => void;
-  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
+  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
 
 const REFRESH_MS = 3 * 60_000;
-
-function americanToDecimal(am: string): number {
-  const n = parseInt(am, 10);
-  if (isNaN(n)) return 2.0;
-  return n > 0 ? 1 + n / 100 : 1 + 100 / Math.abs(n);
-}
 function vulnColor(v: number): string {
   if (v >= 70) return '#f87171';
   if (v >= 55) return '#fbbf24';
@@ -29,6 +26,8 @@ function gradeColor(g: string): string {
   return g === 'A+' || g === 'A' ? '#34d399' : g === 'B' ? '#22d3ee' : g === 'C' ? '#fbbf24' : '#f87171';
 }
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
+
+type LiveGameApiCard = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>['games'][number];
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? value as Record<string, unknown> : {};
@@ -43,6 +42,19 @@ function num(value: unknown, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function isLiveStatus(status: unknown): boolean {
+  const value = String(status ?? '').toLowerCase();
+  return (
+    /progress|live|in play|warmup|delayed/i.test(value) ||
+    /\b(top|bottom|middle|end)\s+\d/.test(value) ||
+    /\b\d+(st|nd|rd|th)\s+inning\b/.test(value)
+  );
+}
+
+function isFinalStatus(status: unknown): boolean {
+  return /final|game over|completed/i.test(String(status ?? ''));
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const id = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
@@ -53,6 +65,98 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
       window.clearTimeout(id);
       reject(error);
     });
+  });
+}
+
+function teamAbbr(name: string): string {
+  const logo = logoByTeamName(name);
+  if (logo) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    return parts.length > 1 ? parts.map((part) => part[0]).join('').slice(0, 4).toUpperCase() : name.slice(0, 4).toUpperCase();
+  }
+  return name.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 4).toUpperCase() || 'TBD';
+}
+
+function matchupFromLiveGame(game: LiveGameApiCard): GameMatchup {
+  const status = text(game.status, 'Scheduled');
+  const live = typeof game.isLive === 'boolean' ? game.isLive : isLiveStatus(status);
+  const final = typeof game.isFinal === 'boolean' ? game.isFinal : isFinalStatus(status);
+  const awayName = text(game.awayTeam, 'Away Team');
+  const homeName = text(game.homeTeam, 'Home Team');
+  const awayAbbr = teamAbbr(awayName);
+  const homeAbbr = teamAbbr(homeName);
+
+  return {
+    gamePk: num(game.id, 0),
+    status,
+    isLive: live,
+    isFinal: final,
+    gameTime: text(game.gameDate, ''),
+    venue: text(game.venue, 'Venue pending'),
+    away: {
+      teamId: 0,
+      name: awayName,
+      abbreviation: awayAbbr,
+      logo: logoByTeamName(awayName) ?? '',
+      record: null,
+      seasonWinPct: 0,
+      probablePitcher: null,
+    },
+    home: {
+      teamId: 0,
+      name: homeName,
+      abbreviation: homeAbbr,
+      logo: logoByTeamName(homeName) ?? '',
+      record: null,
+      seasonWinPct: 0,
+      probablePitcher: null,
+    },
+    score: {
+      away: num(game.awayScore, 0),
+      home: num(game.homeScore, 0),
+    },
+    winProbability: { away: 0, home: 0 },
+    winProbModel: ['Official MLB schedule is connected. Projection probabilities are pending a backed model.'],
+    runEnvironment: null,
+    topHrWatch: [],
+    keyFactors: ['Official MLB live schedule row. No synthetic projections added.'],
+    whatToWatch: live ? ['Game is live according to MLB schedule status.'] : ['Game is not live yet according to MLB schedule status.'],
+    aiVerdict: game.predictionsAvailable
+      ? 'Projection model connected.'
+      : 'Official live game card is available. Projection probabilities require a backed model before they will be shown.',
+    dataQuality: 'limited',
+  };
+}
+
+function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
+  const byGame = new Map<string, GameMatchup>();
+  base.forEach((game) => byGame.set(String(game.gamePk), game));
+
+  enrichments.forEach((rich) => {
+    const key = String(rich.gamePk);
+    const existing = byGame.get(key);
+    if (!existing) {
+      byGame.set(key, rich);
+      return;
+    }
+
+    byGame.set(key, {
+      ...rich,
+      status: existing.status || rich.status,
+      isLive: existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status),
+      isFinal: existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status),
+      score: existing.score ?? rich.score,
+      gameTime: existing.gameTime || rich.gameTime,
+      venue: rich.venue || existing.venue,
+      away: { ...rich.away, logo: rich.away.logo || existing.away.logo },
+      home: { ...rich.home, logo: rich.home.logo || existing.home.logo },
+    });
+  });
+
+  return Array.from(byGame.values()).sort((a, b) => {
+    const liveDelta = Number(b.isLive) - Number(a.isLive);
+    if (liveDelta) return liveDelta;
+    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
   });
 }
 
@@ -75,11 +179,15 @@ function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
 }
 
 function buildMatchupsFromHrBoard(board: HrBoardResponse): GameMatchup[] {
-  const sourceRows = Array.isArray(board.candidates) && board.candidates.length > 0
-    ? board.candidates
-    : Array.isArray(board.projectedCandidates)
-      ? board.projectedCandidates
-      : [];
+  const sourceRows = Array.isArray(board.rows) && board.rows.length > 0
+    ? board.rows
+    : Array.isArray(board.confirmedCandidates) && board.confirmedCandidates.length > 0
+      ? board.confirmedCandidates
+      : Array.isArray(board.projectedCandidates) && board.projectedCandidates.length > 0
+        ? board.projectedCandidates
+        : Array.isArray(board.allProjectedCandidates)
+          ? board.allProjectedCandidates
+          : [];
   const groups = new Map<string, Record<string, unknown>[]>();
 
   sourceRows.forEach((raw) => {
@@ -184,7 +292,9 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
               <TeamLogo src={t.logo} alt={t.name} />
               <div className="min-w-0">
                 <p className={`text-sm font-black truncate ${fav ? 'text-slate-100' : 'text-slate-300'}`}>{t.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">{t.record ? `${t.record.wins}-${t.record.losses}` : '—'} · {safePct(pct)} win</p>
+                <p className="text-[10px] text-slate-500 font-mono">
+                  {(m.isLive || m.isFinal) ? (m.isFinal ? 'Final score' : 'Live score') : (t.record ? `${t.record.wins}-${t.record.losses}` : 'Scheduled')}
+                </p>
               </div>
             </div>
             <span className="text-xl font-mono font-black text-white">{(m.isLive || m.isFinal) ? score : ''}</span>
@@ -213,7 +323,7 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
           <span className="text-[9px] text-slate-500 font-mono uppercase mr-1">HR Watch</span>
           {topHrWatch.slice(0, 3).map((w) => (
             <span key={w.playerId} className="flex items-center gap-1">
-              <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-5 h-5 rounded-full object-cover bg-slate-900 border border-slate-700" />
+              <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={20} />
               <span className="text-[10px] text-slate-300 truncate max-w-[70px]">{w.playerName.split(' ').slice(-1)[0]}</span>
               <span className="text-[9px] font-mono font-bold" style={{ color: gradeColor(w.grade) }}>{w.hrEdge}</span>
             </span>
@@ -250,17 +360,30 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
         </div>
 
         <div className="p-4 space-y-5">
-          {/* Win probability */}
-          <Section icon={Activity} title="Win probability (model)">
-            <div className="flex items-center justify-between text-sm font-black mb-1.5">
-              <span className={!homeFav ? 'text-sky-400' : 'text-slate-300'}>{m.away.abbreviation} {safePct(winProbability.away)}</span>
-              <span className={homeFav ? 'text-sky-400' : 'text-slate-300'}>{safePct(winProbability.home)} {m.home.abbreviation}</span>
+          {/* Scoreboard */}
+          <Section icon={Activity} title="Game scoreboard">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
+                <p className="text-[10px] text-slate-500 font-mono">{m.away.abbreviation}</p>
+                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.away ?? 0) : '-'}</p>
+                <p className="text-[10px] text-slate-500">{m.away.name}</p>
+              </div>
+              <div className="rounded-xl bg-slate-900/70 border border-slate-800 p-3">
+                <p className="text-[10px] text-slate-500 font-mono">{m.home.abbreviation}</p>
+                <p className="text-3xl font-black font-mono text-white">{(m.isLive || m.isFinal) ? (m.score?.home ?? 0) : '-'}</p>
+                <p className="text-[10px] text-slate-500">{m.home.name}</p>
+              </div>
             </div>
-            <div className="h-2 rounded-full overflow-hidden bg-slate-800 flex mb-2">
-              <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
-              <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
+
+            <div className="rounded-xl bg-slate-950/50 border border-slate-800 p-3">
+              <p className="text-[10px] text-slate-500 font-mono uppercase">Status</p>
+              <p className="text-sm font-black text-slate-200">
+                {m.isFinal ? 'Final' : m.isLive ? 'Live now' : (m.status ?? 'Scheduled')}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Model win lean is still available below as research context, but score comes first on Live Games.
+              </p>
             </div>
-            <ul className="space-y-0.5">{(m.winProbModel ?? []).map((r, i) => <li key={i} className="text-[11px] text-slate-400">• {r}</li>)}</ul>
           </Section>
 
           {/* Pitcher matchups */}
@@ -298,7 +421,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
             <div className="space-y-2">
               {topHrWatch.map((w) => (
                 <div key={w.playerId} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
-                  <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
+                  <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={36} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-100 truncate flex items-center gap-1.5">
                       {w.playerName}
@@ -328,57 +451,100 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
             <p className="text-xs text-slate-300 leading-relaxed">{m.aiVerdict}</p>
           </div>
 
-          <p className="text-[10px] text-slate-600 text-center">Probability-based research for entertainment — not betting advice. Lineups/weather are projected placeholders.</p>
+          <p className="text-[10px] text-slate-600 text-center">Live game research for entertainment — not betting advice. Some lineups/weather may be projected until official feeds confirm.</p>
         </div>
       </div>
     </div>
   );
 }
 
+/** Merge live scores into matchup list by gamePk. */
+function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
+  if (!scores.length) return matchups;
+  const map = new Map(scores.map((s) => [String(s.gamePk), s]));
+  return matchups.map((m) => {
+    const s = map.get(String(m.gamePk));
+    if (!s) return m;
+    return {
+      ...m,
+      score: s.score,
+      isLive: s.isLive || isLiveStatus(s.status),
+      isFinal: s.isFinal || isFinalStatus(s.status),
+      status: s.status,
+    };
+  });
+}
+
 export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Props) {
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
+  const [liveScores, setLiveScores] = useState<LiveScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
   const [selected, setSelected] = useState<GameMatchup | null>(null);
-  const [sourceNote, setSourceNote] = useState('Loading live projection context...');
+  const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
+  const [sourceNote, setSourceNote] = useState('Loading live games...');
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setSourceNote('Loading fast HR board preview...');
+    setSourceNote('Loading live games...');
+
+    const scoresPromise = vouchedgeApi.scoresToday().catch(() => null);
+    const officialPromise = withTimeout(vouchedgeApi.liveGames(), 6000, 'Official live schedule').catch(() => null);
 
     let fastLoaded = false;
+    let officialBase: GameMatchup[] = [];
+    const official = await officialPromise;
+    if (official?.games?.length) {
+      officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
+      if (officialBase.length > 0) {
+        fastLoaded = true;
+        setMatchups(officialBase);
+        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
+        setLoading(false);
+      }
+    }
+
+    const scoreResult = await scoresPromise;
+    if (Array.isArray(scoreResult?.scores)) {
+      setLiveScores(scoreResult.scores);
+      if (officialBase.length > 0) {
+        officialBase = applyScores(officialBase, scoreResult.scores);
+        setMatchups(officialBase);
+      }
+    }
+
     try {
       const board = await withTimeout(vouchedgeApi.hrBoardToday(50), 7000, 'HR board preview');
       const fastMatchups = buildMatchupsFromHrBoard(board);
       if (fastMatchups.length > 0) {
         fastLoaded = true;
-        setMatchups(fastMatchups);
-        setSourceNote('Fast preview loaded from verified HR board. Enriching matchup model...');
+        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, fastMatchups) : fastMatchups);
+        setSourceNote('Live games loaded. Enriching game context...');
         setLoading(false);
       }
     } catch {
-      setSourceNote('Fast preview unavailable. Trying matchup model...');
+      setSourceNote('Live games preview unavailable. Trying matchup model...');
     }
 
     try {
       const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
       const next = Array.isArray(res.matchups) ? res.matchups : [];
       if (next.length > 0) {
-        setMatchups(next);
+        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, next) : next);
         setError(null);
-        setSourceNote('Full matchup model loaded.');
+        setSourceNote('Live game model loaded.');
       } else if (!fastLoaded) {
-        setError('No live projection data available. No fake games shown.');
-        setSourceNote('No verified live projection rows returned.');
+        setError('No live game data available. No fake games shown.');
+        setSourceNote('No verified live game rows returned.');
       }
     } catch {
       if (fastLoaded) {
         setError(null);
-        setSourceNote('Full matchup model is slow/unavailable. Showing verified HR-board preview.');
+        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
       } else {
-        setError('Live projections unavailable right now. No fake games shown.');
+        setError('Live games unavailable right now. No fake games shown.');
         setMatchups([]);
         setSourceNote('Backend unavailable.');
       }
@@ -387,16 +553,42 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     }
   }, []);
 
-  useEffect(() => { load(); const id = setInterval(load, REFRESH_MS); return () => clearInterval(id); }, [load]);
+  useEffect(() => {
+    load();
 
-  const liveCount = matchups.filter((m) => m.isLive).length;
-  const shown = liveOnly ? matchups.filter((m) => m.isLive) : matchups;
+    const id = window.setInterval(() => {
+      load();
+    }, REFRESH_MS);
+
+    return () => window.clearInterval(id);
+  }, [load]);
+
+  // Always overlay the latest scores from the fast scores endpoint.
+  const scoredMatchups = applyScores(matchups, liveScores);
+  const liveCount = scoredMatchups.filter((m) => m.isLive).length;
+  const shown = liveOnly ? scoredMatchups.filter((m) => m.isLive) : scoredMatchups;
+
+  const preferredGame =
+    shown.find((m) => m.isLive) ??
+    shown.find((m) => String(m.status ?? '').toLowerCase().includes('scheduled')) ??
+    shown[0] ??
+    null;
+
+  const activeGame =
+    shown.find((m) => String(m.gamePk) === String(activeGamePk)) ??
+    preferredGame;
+
+  useEffect(() => {
+    if (!activeGamePk && preferredGame?.gamePk) {
+      setActiveGamePk(preferredGame.gamePk);
+    }
+  }, [activeGamePk, preferredGame?.gamePk]);
 
   const addLeg = (w: HrWatch) => {
     onAddLegToParlay({ name: w.playerName, team: w.team } as MLBPlayer, {
       id: `hrwatch-${w.playerId}`,
       market: 'Anytime HR',
-      odds: americanToDecimal(w.impliedOdds),
+      odds: parseAmericanOdds(w.impliedOdds),
       spec: `${w.playerName} Anytime HR`,
     });
   };
@@ -407,8 +599,8 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-sky-950/30 via-[#0b1120] to-[#0b1120] p-5 mb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Projections</h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-md">Fast MLB game cards with verified HR watch first, then deeper matchup model when available. No fake win, RBI, run, or hit data.</p>
+            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Games Center</h1>
+            <p className="text-xs text-slate-400 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
             <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-cyan-300">{sourceNote}</p>
           </div>
           <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-500/50 transition-colors">
@@ -431,10 +623,149 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
       {!error && matchups.length > 0 && (
         shown.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">No live games right now. Switch to “All games”.</div>
+          <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">No active live games right now. Switch to “All games”.</div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {shown.map((m) => <GameCard key={m.gamePk} m={m} onOpen={() => setSelected(m)} />)}
+          <div className="space-y-4">
+            {activeGame && (
+              <div className="relative overflow-hidden rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/40 p-5 shadow-2xl">
+                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-sky-500/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                <div className="relative flex items-center justify-between gap-3 mb-5">
+                  <div>
+                    <p className="text-[10px] font-black font-mono uppercase tracking-[0.28em] text-sky-300">
+                      Live Games Center
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {activeGame.venue ?? 'Venue TBD'} · {activeGame.status ?? 'Game status unavailable'}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-full px-3 py-1 text-[10px] font-black font-mono uppercase tracking-wider border ${
+                    activeGame.isFinal
+                      ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
+                      : activeGame.isLive
+                        ? 'bg-red-500/10 border-red-400/40 text-red-300'
+                        : 'bg-slate-800/80 border-slate-600 text-slate-300'
+                  }`}>
+                    {activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live' : 'Scheduled'}
+                  </div>
+                </div>
+
+                <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border border-slate-700/70 bg-black/25 p-4">
+                  <div className="text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={34} />
+                      <div>
+                        <p className="text-xs text-slate-400 font-mono">AWAY</p>
+                        <p className="text-lg font-black text-white">{activeGame.away.abbreviation}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{activeGame.away.name}</p>
+                  </div>
+
+                  <div className="text-center px-2">
+                    <div className="flex items-center gap-3 justify-center">
+                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
+                      </span>
+                      <span className="text-slate-600 text-2xl font-black">–</span>
+                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                        {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono uppercase mt-2">
+                      {activeGame.isFinal ? 'Final score' : activeGame.isLive ? 'Live score' : 'Pregame'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-2 mb-2">
+                      <div>
+                        <p className="text-xs text-slate-400 font-mono">HOME</p>
+                        <p className="text-lg font-black text-white">{activeGame.home.abbreviation}</p>
+                      </div>
+                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={34} />
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{activeGame.home.name}</p>
+                  </div>
+                </div>
+
+                <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">Game state</p>
+                    <p className="text-sm font-black text-slate-100">{activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live now' : 'Scheduled'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
+                    <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                    <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
+                    <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelected(activeGame)}
+                    className="rounded-2xl bg-sky-500/15 border border-sky-500/40 p-3 text-left hover:bg-sky-500/25 transition"
+                  >
+                    <p className="text-[10px] text-sky-300 font-mono uppercase">Details</p>
+                    <p className="text-sm font-black text-sky-100">Open game room</p>
+                  </button>
+                </div>
+
+                <div className="relative mt-4 grid sm:grid-cols-3 gap-2">
+                  {[
+                    'Stolen Base Tracker',
+                    'RBI Opportunity Meter',
+                    'Live Parlay Impact'
+                  ].map((label) => (
+                    <div key={label} className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3">
+                      <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300">🔒 Pro</p>
+                      <p className="text-xs font-bold text-slate-200 mt-1">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {shown.map((m) => (
+                <button
+                  key={m.gamePk}
+                  onClick={() => setActiveGamePk(m.gamePk)}
+                  className={`min-w-[180px] text-left rounded-xl border p-3 transition-all ${
+                    String(activeGame?.gamePk) === String(m.gamePk)
+                      ? 'bg-sky-500/15 border-sky-500/50'
+                      : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
+                  }`}
+                >
+                  <p className="text-[10px] font-mono text-slate-500">{m.isLive ? 'LIVE' : (m.status ?? 'GAME')}</p>
+                  <p className="text-sm font-black text-slate-100">{m.away.abbreviation} @ {m.home.abbreviation}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{m.venue ?? 'Venue TBD'}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Pitch-by-pitch sweat screen for the selected live game */}
+            {activeGame?.isLive && activeGame.gamePk != null && (
+              <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {shown.map((m) => (
+                <GameCard
+                  key={m.gamePk}
+                  m={m}
+                  onOpen={() => {
+                    setActiveGamePk(m.gamePk);
+                    setSelected(m);
+                  }}
+                />
+              ))}
+            </div>
           </div>
         )
       )}

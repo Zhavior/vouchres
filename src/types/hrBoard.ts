@@ -94,8 +94,25 @@ export interface HrBoardResponse {
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
   disclaimer: string;
   games?: HrBoardGame[];
+  /** Effective rows for the current mode — confirmed if any exist, else falls back to preview. */
+  rows?: Array<Record<string, unknown>>;
   candidates?: Array<Record<string, unknown>>;
+  confirmedCandidates?: Array<Record<string, unknown>>;
   projectedCandidates?: Array<Record<string, unknown>>;
+  allProjectedCandidates?: Array<Record<string, unknown>>;
+  candidateBuckets?: {
+    confirmed?: Array<Record<string, unknown>>;
+    projected?: Array<Record<string, unknown>>;
+    allProjected?: Array<Record<string, unknown>>;
+    blocked?: Array<Record<string, unknown>>;
+  };
+  counts?: {
+    rows?: number;
+    confirmedCandidates?: number;
+    projectedCandidates?: number;
+    allProjectedCandidates?: number;
+    totalCandidates?: number;
+  };
   previewMeta?: {
     previewLimit: number;
     eligiblePreviewPoolCount: number;

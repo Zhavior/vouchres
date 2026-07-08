@@ -1,7 +1,7 @@
 export interface VisualTheme {
   id: string;
   name: string;
-  category: 'Core' | 'Sport' | 'Flex' | 'Retro' | 'Premium' | 'Trust' | 'Seasonal' | 'Minimal';
+  category: 'Core' | 'Sport' | 'Flex' | 'Retro' | 'Premium' | 'Trust' | 'Seasonal' | 'Minimal' | 'VouchEdge';
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'verified' | 'founder' | 'seasonal';
   description: string;
   
@@ -55,6 +55,42 @@ export interface ProfileBorder {
 }
 
 export const THEME_REGISTRY: VisualTheme[] = [
+  {
+    id: 'storm-radar',
+    name: 'Storm Radar',
+    category: 'VouchEdge',
+    rarity: 'legendary',
+    description: 'Dark radar glass with electric cyan, violet storm glow, and sharper contrast. Built for live matchup scanning and premium research sessions.',
+    background: 'bg-[#020617]',
+    backgroundPattern: 'radar',
+    cardStyle: 'bg-[#07111f]/92 border-cyan-300/45 shadow-[0_0_34px_rgba(103,232,249,0.18)] backdrop-blur-xl',
+    borderStyle: 'border-cyan-300/45',
+    glowStyle: 'shadow-cyan-300/20',
+    buttonStyle: 'bg-gradient-to-r from-cyan-300 to-violet-400 hover:from-cyan-200 hover:to-fuchsia-300 text-slate-950 font-black',
+    badgeStyle: 'bg-cyan-400/10 text-cyan-200 border-cyan-300/35',
+    sidebarStyle: 'bg-[#020617]/90 border-r border-cyan-300/16',
+    vouchCardStyle: 'bg-[#07111f]/95 border-cyan-300/45 shadow-[0_0_16px_rgba(103,232,249,0.14)]',
+    parlayCardStyle: 'bg-[#07111f]/95 border-cyan-300/45',
+    resultCardStyle: 'bg-[#06101e]/95 border-cyan-300/28',
+    profileBorderStyle: 'border-cyan-300',
+    animationStyle: 'transition-all duration-300',
+    shareCardStyle: 'from-[#082f49] via-[#111827] to-[#020617]',
+    unlockCondition: 'Free — included with the VouchEdge theme foundation',
+    isPremium: false,
+    isEarned: false,
+    isSeasonal: false,
+    cost: 0,
+    badge: '🌩️ RADAR',
+    avatarAnimationClass: 'border-cyan-300 shadow-md shadow-cyan-300/45',
+    particleDemo: ['🌩️', '📡', '⚡', '🔵'],
+    fontFamily: 'font-sans',
+    coverBg: 'from-cyan-300/25 via-violet-400/20 to-fuchsia-400/15',
+    customAIPhrase: '🌩️ STORM RADAR • LIVE EDGE SIGNALS ONLINE',
+    pageBg: 'bg-[#020617]',
+    gridOverlay: 'opacity-15 bg-[radial-gradient(#67e8f9_1px,transparent_1px)] [background-size:22px_22px]',
+    borderColor: 'border-cyan-300/30',
+    accentText: 'text-cyan-200'
+  },
   {
     id: 'vouchedge-prime',
     name: 'VouchEdge Prime',

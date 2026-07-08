@@ -1,4 +1,6 @@
 import type { HrSlateGame } from "./hrEngineTypes";
+import { sportsFetchJson } from "../../../lib/sports/sportsHttpClient";
+import { todayISO as mlbTodayISO } from "../mlbClient";
 
 const MLB_SCHEDULE_URL = "https://statsapi.mlb.com/api/v1/schedule";
 
@@ -36,7 +38,7 @@ const TEAM_ABBR: Record<string, string> = {
 };
 
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return mlbTodayISO();
 }
 
 export function teamAbbr(name: string, fallback?: string | null) {
@@ -45,13 +47,13 @@ export function teamAbbr(name: string, fallback?: string | null) {
 }
 
 async function fetchJson(url: string) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`MLB fetch failed ${response.status}: ${url}`);
-  }
-
-  return response.json();
+  return sportsFetchJson<any>(url, {
+    cacheKey: `mlb:hr-engine:slate:${url}`,
+    ttlMs: 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "hrEngineSlate",
+  });
 }
 
 export async function getTodaySlate(date = todayISO()): Promise<HrSlateGame[]> {

@@ -1,4 +1,5 @@
 import { MLBPlayer } from '../types';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 const originalPlayers: MLBPlayer[] = [
   {

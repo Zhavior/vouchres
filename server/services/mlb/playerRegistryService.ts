@@ -1,10 +1,14 @@
-import { TTLCache } from "../../lib/cache";
+import { TTLCache, limitConcurrency } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { headshotUrl } from "./mlbTypes";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const REGISTRY_TTL_MS = 20 * 60_000;
 const registryCache = new TTLCache<PlayerRegistryEntry[]>(REGISTRY_TTL_MS);
+let registryWarmupInFlight = false;
+let lastKnownRegistryCount = 0;
+let lastRegistryUpdatedAt = new Date(0).toISOString();
 
 export interface PlayerRegistryEntry {
   playerId: number;
@@ -37,15 +41,13 @@ function normalizeThrow(code?: string): "L" | "R" | "U" {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`MLB StatsAPI ${res.status} for ${url}`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return sportsFetchJson<T>(url, {
+    cacheKey: `playerRegistry:${url}`,
+    ttlMs: 5 * 60_000,
+    timeoutMs: 10_000,
+    retries: 1,
+    debugLabel: "playerRegistry",
+  });
 }
 
 async function getMlbTeams(): Promise<MlbTeam[]> {
@@ -86,41 +88,66 @@ async function getTeamRoster(team: MlbTeam, rosterType: "active" | "40Man"): Pro
 
 async function buildRegistry(): Promise<PlayerRegistryEntry[]> {
   const teams = await getMlbTeams();
-  const rows = await Promise.allSettled(
-    teams.flatMap((team) => [
-      getTeamRoster(team, "active"),
-      getTeamRoster(team, "40Man"),
-    ])
-  );
+  console.log(`[playerRegistry] building registry for ${teams.length} teams (max 3 concurrent, active+40Man)`);
 
   const byPlayer = new Map<number, PlayerRegistryEntry>();
-  for (const result of rows) {
-    if (result.status !== "fulfilled") {
-      console.warn("[playerRegistry] roster fetch failed:", result.reason);
-      continue;
-    }
-    for (const player of result.value) {
-      const existing = byPlayer.get(player.playerId);
-      if (!existing || existing.rosterType !== "active") {
-        byPlayer.set(player.playerId, player);
+
+  await limitConcurrency(teams, 3, async (team) => {
+    for (const rosterType of ["active", "40Man"] as const) {
+      try {
+        const players = await getTeamRoster(team, rosterType);
+        for (const player of players) {
+          const existing = byPlayer.get(player.playerId);
+          if (!existing || existing.rosterType !== "active") {
+            byPlayer.set(player.playerId, player);
+          }
+        }
+      } catch (err) {
+        console.warn(`[playerRegistry] roster fetch failed for team ${team.id} (${rosterType}):`, (err as Error).message);
       }
     }
-  }
+  });
 
-  return [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName));
+  const players = [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName));
+  lastKnownRegistryCount = players.length;
+  lastRegistryUpdatedAt = new Date().toISOString();
+  return players;
 }
 
 export async function getPlayerRegistry(forceRefresh = false): Promise<PlayerRegistryEntry[]> {
   if (forceRefresh) registryCache.delete("registry");
-  return registryCache.getOrSet("registry", buildRegistry);
+  const players = await registryCache.getOrSet("registry", buildRegistry);
+  lastKnownRegistryCount = players.length;
+  lastRegistryUpdatedAt = new Date().toISOString();
+  return players;
 }
 
-export async function getPlayerCount(): Promise<{ count: number; updatedAt: string; source: string }> {
-  const players = await getPlayerRegistry();
+export function warmPlayerRegistryInBackground(): void {
+  if (registryWarmupInFlight) return;
+
+  registryWarmupInFlight = true;
+  setImmediate(() => {
+    getPlayerRegistry()
+      .catch((error) => {
+        console.warn(
+          "[playerRegistry] background warmup failed:",
+          error instanceof Error ? error.message : error
+        );
+      })
+      .finally(() => {
+        registryWarmupInFlight = false;
+      });
+  });
+}
+
+export async function getPlayerCount(): Promise<{ count: number; updatedAt: string; source: string; warming: boolean }> {
+  warmPlayerRegistryInBackground();
+
   return {
-    count: players.length,
-    updatedAt: new Date().toISOString(),
+    count: lastKnownRegistryCount,
+    updatedAt: lastRegistryUpdatedAt,
     source: "official_mlb",
+    warming: registryWarmupInFlight,
   };
 }
 
