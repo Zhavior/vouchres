@@ -2,6 +2,7 @@ import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor }
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
 import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction } from '../../../kernel';
+import type { SportsIntelligenceResult } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -298,6 +299,18 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
   const probability = modelProbability(statType, statScore);
   const impliedProbability = Math.round(clamp(probability - 0.035, 0.04, 0.82) * 1000) / 1000;
   const edgePct = Math.round((probability - impliedProbability) * 1000) / 10;
+  const intelligence: SportsIntelligenceResult = {
+    playerId: String(context.person.id),
+    score: statScore,
+    rank: 0,
+    confidence,
+    prediction: probability,
+    metadata: {
+      statType,
+      seasonValue,
+    },
+  };
+
 
   return {
     stableId: `${statScope}:${season}:${statType}:${context.gamePk}:${context.person.id}:${context.team.id}`,
@@ -312,6 +325,7 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
     lineupSpot: statType === 'pitcher_k' ? null : lineupIndex + 1,
     lineupStatus: context.lineupStatus,
     statScore,
+    intelligence,
     tier: assignTier(statScore, config.thresholds),
     confidence,
     drivers,
