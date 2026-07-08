@@ -46,6 +46,10 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
     .slice(0, 3);
 
   const edgePositive = (row.edgePct ?? 0) > 0;
+  const intelligenceScore = row.intelligence?.score ?? row.statScore;
+  const intelligenceConfidence = row.intelligence?.confidence ?? row.confidence;
+  const intelligencePrediction = row.intelligence?.prediction ?? row.dfsProjection;
+
 
   return (
     <button
@@ -57,7 +61,7 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
         'transition-all duration-[var(--ve-duration-fast)]',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]',
       ].join(' ')}
-      aria-label={`${row.playerName}, score ${row.statScore}, tier ${tierLabel}`}
+      aria-label={`${row.playerName}, score ${intelligenceScore}, tier ${tierLabel}`}
     >
       {/* Mock data badge */}
       {row.sourceMode === 'mock' && (
@@ -110,7 +114,7 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
               {tierLabel}
             </span>
             <span className="text-[10px] text-[hsl(var(--ve-text-muted))]">
-              {row.confidence}% conf
+              {intelligenceConfidence}% conf
             </span>
           </div>
         </div>
@@ -123,9 +127,9 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
             background:  `hsl(var(${token})/0.12)`,
             color:       `hsl(var(${token}))`,
           }}
-          aria-label={`Score: ${row.statScore}`}
+          aria-label={`Score: ${intelligenceScore}`}
         >
-          {row.statScore}
+          {intelligenceScore}
         </div>
       </div>
 
@@ -190,7 +194,7 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
           <div className="flex flex-col items-end">
             <span className="text-[9px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wide">DFS Proj</span>
             <span className="text-xs font-bold text-[hsl(var(--ve-accent-gold))]">
-              {row.dfsProjection}
+              {intelligencePrediction}
             </span>
           </div>
         )}
