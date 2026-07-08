@@ -61,27 +61,27 @@ export default function HotMarketsPanel({ onQuickVouch, savedVouchIds }: HotMark
   }, []);
 
   return (
-    <div className="bg-[#121824] rounded-xl border border-slate-850 p-4" id="hot-markets-card">
+    <div className="glass-panel glass-border font-z8 rounded-2xl p-4" id="hot-markets-card">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-5 h-5 text-sky-400" />
-        <h3 className="font-bold text-slate-100 text-sm tracking-wide uppercase">Today's MLB Games</h3>
+        <Sparkles className="w-4 h-4 text-vouch-cyan" />
+        <h3 className="terminal-text text-white/70">Today's MLB Games</h3>
       </div>
 
       {loading && (
         <div className="space-y-2">
-          {[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-lg bg-slate-800/40 animate-pulse" />)}
+          {[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-lg bg-white/[0.03] animate-pulse" />)}
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-slate-400 p-3 bg-slate-800/30 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-white/40 p-3 bg-white/[0.02] rounded-lg">
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           Schedule unavailable — check back soon.
         </div>
       )}
 
       {!loading && !error && games.length === 0 && (
-        <p className="text-xs text-slate-500 text-center py-4">No games scheduled today.</p>
+        <p className="text-xs text-white/30 text-center py-4">No games scheduled today.</p>
       )}
 
       <div className="space-y-2">
@@ -112,39 +112,38 @@ export default function HotMarketsPanel({ onQuickVouch, savedVouchIds }: HotMark
           };
 
           return (
-            <div key={m.gamePk} className="p-3 bg-[#0b0f19] rounded-lg border border-slate-800 text-xs space-y-1.5" id={`hot-market-${m.gamePk}`}>
+            <div key={m.gamePk} className="p-3 bg-white/[0.02] rounded-lg border border-white/10 text-xs space-y-1.5" id={`hot-market-${m.gamePk}`}>
               <div className="flex items-center justify-between gap-1">
-                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${
-                  isLive  ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                  isFinal ? 'bg-slate-700 text-slate-400' : 'bg-slate-800 text-slate-300'
-                }`}>
-                  {isLive ? '🔴 Live' : isFinal ? 'Final' : 'MLB'}
+                <span className={[
+                  'terminal-text px-1.5 py-0.5 rounded',
+                  isLive ? 'bg-rose-400/10 text-rose-400' : isFinal ? 'bg-white/[0.04] text-white/40' : 'bg-vouch-emerald/10 text-vouch-emerald',
+                ].join(' ')}>
+                  {isLive ? 'Live' : isFinal ? 'Final' : 'MLB'}
                 </span>
-                <span className="text-slate-500 text-[10px] font-mono flex items-center gap-1">
+                <span className="text-white/30 text-[10px] flex items-center gap-1">
                   <Clock className="w-2.5 h-2.5" />{m.startTime}
                 </span>
               </div>
 
-              <p className="font-semibold text-slate-200 truncate">{m.game}</p>
+              <p className="font-semibold text-white truncate">{m.game}</p>
 
               {(m.awayPitcher || m.homePitcher) ? (
-                <div className="text-[10px] text-slate-400 space-y-0.5">
-                  {m.awayPitcher && <div><span className="text-slate-500">{m.awayAbbr}:</span> {m.awayPitcher}</div>}
-                  {m.homePitcher && <div><span className="text-slate-500">{m.homeAbbr}:</span> {m.homePitcher}</div>}
+                <div className="text-[10px] text-white/40 space-y-0.5">
+                  {m.awayPitcher && <div><span className="text-white/25">{m.awayAbbr}:</span> {m.awayPitcher}</div>}
+                  {m.homePitcher && <div><span className="text-white/25">{m.homeAbbr}:</span> {m.homePitcher}</div>}
                 </div>
               ) : (
-                <p className="text-[10px] text-slate-600 italic">Probables not yet posted</p>
+                <p className="text-[10px] text-white/25 italic">Probables not yet posted</p>
               )}
 
               <button
                 onClick={handleVouch}
-                className={`w-full mt-1 py-1 rounded text-[10px] font-bold transition-all ${
-                  isSaved
-                    ? 'bg-emerald-950/40 border border-emerald-800 text-emerald-400'
-                    : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-sky-700 hover:text-sky-400'
-                }`}
+                className={[
+                  'w-full mt-1 py-1 rounded text-[10px] font-bold transition-all',
+                  isSaved ? 'bg-vouch-emerald/10 text-vouch-emerald' : 'bg-white/[0.03] text-white/40 hover:text-vouch-cyan',
+                ].join(' ')}
               >
-                {isSaved ? '✓ Added to Research' : '+ Add to Research'}
+                {isSaved ? 'Added to Research' : '+ Add to Research'}
               </button>
             </div>
           );
@@ -152,7 +151,7 @@ export default function HotMarketsPanel({ onQuickVouch, savedVouchIds }: HotMark
       </div>
 
       {!loading && !error && games.length > 0 && (
-        <p className="text-[9px] text-slate-600 mt-2 text-center">Live from MLB Stats API · Odds unavailable</p>
+        <p className="text-[9px] text-white/25 mt-2 text-center">Live from MLB Stats API · Odds unavailable</p>
       )}
     </div>
   );

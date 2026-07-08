@@ -1,142 +1,323 @@
-import React, { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
-  Settings, Eye, EyeOff, ChevronUp, ChevronDown, RotateCcw,
-  LayoutDashboard, Home, Trophy, Tv, Sliders, Cpu, Activity,
-  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Award, Sparkles,
-  MessageSquare, ShoppingBag, User, Lock, Zap, Check,
+  BarChart3,
+  Bell,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Home,
+  LayoutDashboard,
+  Lock,
+  Palette,
+  RefreshCcw,
+  Settings,
+  Sparkles,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react";
-import { CreatorProofProfile } from "../types";
+
 import {
-  FeatureLayout, ViewMode, loadFeatureLayout, saveFeatureLayout,
-  toggleFeature, moveFeature, setViewMode, resetLayout, getDefaultLayout,
+  type FeatureConfig,
+  type FeatureLayout,
+  loadFeatureLayout,
+  moveFeature,
+  resetLayout,
+  saveFeatureLayout,
+  setViewMode,
+  toggleFeature,
 } from "../lib/featureConfig";
+import { canAccessThemeStore } from "../lib/adminDevAccess";
+import type { CreatorProofProfile } from "../types";
+import { VEBadge, VEButton, VECard } from "./ui/ve";
 
-/* ============================================================================
-   CustomizePage — modular feature management
-   ----------------------------------------------------------------------------
-   Users can:
-     - Toggle Beginner / Pro mode (changes data density globally)
-     - Toggle features on/off (hide from sidebar)
-     - Reorder features (up/down buttons)
-     - Reset to defaults
-   ============================================================================ */
-
-interface Props {
-  profile: CreatorProofProfile;
-  onUpdateProfile: (updates: Partial<CreatorProofProfile>) => void;
+type CustomizePageProps = {
+  profile?: CreatorProofProfile | null;
+  onUpdateProfile?: (updated: Partial<CreatorProofProfile>) => void;
   onSectionChange: (section: string) => void;
-}
-
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Trophy, LayoutDashboard, Home, Award, Tv, Sliders, Cpu, Activity,
-  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles,
-  MessageSquare, ShoppingBag, User, Settings,
 };
 
-export default function CustomizePage({ profile, onUpdateProfile, onSectionChange }: Props) {
+type FeatureId = FeatureConfig["id"];
+
+type FeatureMeta = {
+  id: FeatureId;
+  label: string;
+  description: string;
+  icon: typeof Home;
+};
+
+const FEATURE_META: Record<FeatureId, FeatureMeta> = {
+  dashboard: {
+    id: "dashboard",
+    label: "Home Dashboard",
+    description: "Main command center and daily overview.",
+    icon: Home,
+  },
+  dailyPlayers: {
+    id: "dailyPlayers",
+    label: "Daily Players",
+    description: "Today’s MLB player board and research cards.",
+    icon: LayoutDashboard,
+  },
+  hr_board: {
+    id: "hr_board",
+    label: "Home Run Intelligence",
+    description: "Home run board, power spots, and matchup context.",
+    icon: BarChart3,
+  },
+  dailyHrBoard: {
+    id: "dailyHrBoard",
+    label: "HR Board",
+    description: "Home run board, power spots, and matchup context.",
+    icon: BarChart3,
+  },
+  aiPicks: {
+    id: "aiPicks",
+    label: "AI Picks",
+    description: "Smart AI player and parlay ideas.",
+    icon: Sparkles,
+  },
+  parlays: {
+    id: "parlays",
+    label: "Parlay Hub",
+    description: "Manual builder, saved slips, and parlay command tools.",
+    icon: Trophy,
+  },
+  results: {
+    id: "results",
+    label: "Results Ledger",
+    description: "Proof, grading history, and win-rate truth.",
+    icon: Check,
+  },
+  vouchBoard: {
+    id: "vouchBoard",
+    label: "VouchBoard",
+    description: "Community proof, posts, and creator signals.",
+    icon: Users,
+  },
+  notifications: {
+    id: "notifications",
+    label: "Notifications",
+    description: "Alerts for saves, locks, grades, and account updates.",
+    icon: Bell,
+  },
+  themeStore: {
+    id: "themeStore",
+    label: "Theme Store",
+    description: "Premium visual customization and profile styling.",
+    icon: Palette,
+  },
+  settings: {
+    id: "settings",
+    label: "Settings",
+    description: "Account, billing, privacy, and app controls.",
+    icon: Settings,
+  },
+};
+
+const proPreview = [
+  "Judge scores (0-100) on every pick",
+  "Full whatCouldGoWrong list",
+  "Missing data warnings",
+  "Safer alternative suggestions",
+  "4-judge panel breakdown",
+  "Data confidence scores",
+  "Advanced metrics (barrel%, exit velo, xwOBA)",
+  "Raw API data + debug panels",
+];
+
+const beginnerPreview = [
+  "Risk pill (Safe/Balanced/Risky/Sneaky/Lotto)",
+  "Confidence level (High/Med/Low)",
+  "One-line reason per pick",
+  "Clean stat tiles (AVG/HR/RBI/OPS)",
+  "Simple game log timeline",
+  "No judge internals or debug data",
+  "Larger touch targets",
+  "Clearer visual hierarchy",
+];
+
+export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) {
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [toast, setToast] = useState<string | null>(null);
 
-  // Sync profile's view mode with layout
-  useEffect(() => {
-    saveFeatureLayout(layout);
-  }, [layout]);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
+  const showToast = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 2200);
   };
 
-  const handleToggle = (featureId: string) => {
-    setLayout((prev) => {
-      const next = toggleFeature(prev, featureId);
-      showToast(toggleFeature(prev, featureId).features.find((f) => f.id === featureId)?.enabled ? "Feature shown" : "Feature hidden");
-      return next;
-    });
+  const visibleFeatures = useMemo(
+    () =>
+      layout.features
+        .filter((feature) => feature.enabled)
+        .sort((a, b) => a.order - b.order),
+    [layout.features],
+  );
+
+  const sortedFeatures = useMemo(
+    () => [...layout.features].sort((a, b) => a.order - b.order),
+    [layout.features],
+  );
+
+  const handleToggle = (id: FeatureId) => {
+    const next = toggleFeature(layout, id);
+    setLayout(next);
+    saveFeatureLayout(next);
+    showToast("Layout updated");
   };
 
-  const handleMove = (featureId: string, direction: "up" | "down") => {
-    setLayout((prev) => moveFeature(prev, featureId, direction));
+  const handleMove = (id: FeatureId, direction: "up" | "down") => {
+    const next = moveFeature(layout, id, direction);
+    setLayout(next);
+    saveFeatureLayout(next);
+    showToast("Order updated");
   };
 
-  const handleModeChange = (mode: ViewMode) => {
-    setLayout((prev) => {
-      const next = setViewMode(prev, mode);
-      showToast(`${mode === "pro" ? "Pro" : "Beginner"} mode active`);
-      return next;
-    });
+  const handleModeChange = (mode: FeatureLayout["mode"]) => {
+    const next = setViewMode(layout, mode);
+    setLayout(next);
+    saveFeatureLayout(next);
+    showToast(`${mode === "pro" ? "Pro" : "Beginner"} mode enabled`);
   };
 
   const handleReset = () => {
-    const def = resetLayout();
-    setLayout(def);
-    showToast("Reset to defaults");
+    const next = resetLayout();
+    setLayout(next);
+    showToast("Layout reset");
   };
 
-  const sortedFeatures = [...layout.features].sort((a, b) => a.order - b.order);
+  const canUseThemes = canAccessThemeStore(profile);
+  const previewItems = layout.mode === "pro" ? proPreview : beginnerPreview;
 
   return (
-    <div className="min-h-screen pb-12" style={{ background: "#040810", color: "#e2e8f0" }}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
-            <LayoutDashboard className="w-5 h-5 text-slate-950" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Customize Layout</h1>
-            <p className="text-xs text-slate-500">Toggle features, reorder sidebar, switch modes</p>
-          </div>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="rounded-2xl p-5 mb-4" style={{ background: "rgba(15,23,42,0.5)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center justify-between mb-3">
+    <div className="ve-page-shell min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <VECard tone="elevated" className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="text-sm font-bold text-white">View Mode</div>
-              <div className="text-[11px] text-slate-500">
-                {layout.mode === "pro"
-                  ? "Pro: Full data — judge scores, risk warnings, advanced metrics, debug info"
-                  : "Beginner: Clean views — risk pills, confidence levels, one-line reasons"}
-              </div>
+              <VEBadge tone="info" className="gap-2">
+                <Sparkles className="h-3.5 w-3.5" />
+                Native Layout Studio
+              </VEBadge>
+
+              <h1 className="mt-4 text-3xl font-black tracking-[-0.05em] text-white sm:text-4xl">
+                Customize VouchEdge
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                Choose how your command center behaves. Keep the product brain, but control the visible tools,
+                order, and research depth.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <VEButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<RefreshCcw className="h-4 w-4" />}
+                onClick={handleReset}
+              >
+                Reset
+              </VEButton>
+
+              <VEButton
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onSectionChange("settings")}
+              >
+                Back to Settings
+              </VEButton>
             </div>
           </div>
-          <div className="flex p-0.5 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            {([
-              { id: "beginner" as ViewMode, label: "Beginner", icon: Eye },
-              { id: "pro" as ViewMode, label: "Pro", icon: Zap },
-            ]).map((m) => (
+        </VECard>
+
+        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <VECard className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <VEBadge tone="neutral">Research mode</VEBadge>
+                <h2 className="mt-3 text-xl font-black text-white">Choose your UI depth</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-400">
+                  Beginner mode keeps the app clean. Pro mode exposes more model confidence and research context.
+                </p>
+              </div>
+              <Zap className="h-5 w-5 text-cyan-300" />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
               <button
-                key={m.id}
-                onClick={() => handleModeChange(m.id)}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                  layout.mode === m.id ? "text-slate-950" : "text-slate-500 hover:text-slate-300"
+                type="button"
+                onClick={() => handleModeChange("beginner")}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  layout.mode === "beginner"
+                    ? "border-cyan-300/40 bg-cyan-300/10"
+                    : "border-slate-800 bg-slate-950/45 hover:border-slate-600"
                 }`}
-                style={layout.mode === m.id ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
               >
-                <m.icon className="w-3.5 h-3.5" />
-                {m.label}
+                <div className="text-sm font-black text-white">Beginner</div>
+                <div className="mt-1 text-xs leading-5 text-slate-500">Cleaner cards, simpler labels.</div>
               </button>
-            ))}
-          </div>
+
+              <button
+                type="button"
+                onClick={() => handleModeChange("pro")}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  layout.mode === "pro"
+                    ? "border-emerald-300/40 bg-emerald-300/10"
+                    : "border-slate-800 bg-slate-950/45 hover:border-slate-600"
+                }`}
+              >
+                <div className="text-sm font-black text-white">Pro</div>
+                <div className="mt-1 text-xs leading-5 text-slate-500">More detail, judge context, warnings.</div>
+              </button>
+            </div>
+
+            <div className="mt-5">
+              <VEBadge tone={canUseThemes ? "success" : "warning"}>
+                {canUseThemes ? "Theme Store unlocked" : "Theme Store locked"}
+              </VEBadge>
+            </div>
+          </VECard>
+
+          <VECard className="p-5">
+            <VEBadge tone="info">Visible tools</VEBadge>
+            <h2 className="mt-3 text-xl font-black text-white">
+              {visibleFeatures.length} tools active
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-400">
+              These are the tools currently visible in your app shell.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {visibleFeatures.map((feature) => {
+                const meta = FEATURE_META[feature.id];
+                return (
+                  <VEBadge key={feature.id} tone="neutral">
+                    {meta?.label ?? feature.id}
+                  </VEBadge>
+                );
+              })}
+            </div>
+          </VECard>
         </div>
 
-        {/* Feature List */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center justify-between p-4 border-b border-white/5">
-            <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Sidebar Features ({sortedFeatures.filter((f) => f.enabled).length} visible)</div>
-            <button
-              onClick={handleReset}
-              className="text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md text-slate-400 hover:text-white transition-colors flex items-center gap-1"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-            >
-              <RotateCcw className="w-3 h-3" /> Reset
-            </button>
+        <VECard className="p-5">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <VEBadge tone="neutral">Sidebar order</VEBadge>
+              <h2 className="mt-3 text-xl font-black text-white">Reorder and toggle features</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-400">
+                Locked tools stay visible because they protect navigation and customer trust.
+              </p>
+            </div>
           </div>
 
-          <div className="divide-y divide-white/3">
+          <div className="mt-5 divide-y divide-slate-800/70">
             {sortedFeatures.map((feature, index) => {
-              const Icon = ICON_MAP[feature.icon] || Settings;
+              const meta = FEATURE_META[feature.id];
+              const Icon = meta?.icon ?? LayoutDashboard;
               const isFirst = index === 0;
               const isLast = index === sortedFeatures.length - 1;
               const prevLocked = index > 0 && sortedFeatures[index - 1].locked;
@@ -145,52 +326,64 @@ export default function CustomizePage({ profile, onUpdateProfile, onSectionChang
               return (
                 <div
                   key={feature.id}
-                  className={`flex items-center gap-3 p-3 transition-all ${!feature.enabled ? "opacity-40" : ""}`}
+                  className={`flex items-center gap-3 py-3 transition ${!feature.enabled ? "opacity-45" : ""}`}
                 >
-                  {/* Reorder buttons */}
-                  <div className="flex flex-col gap-0.5 shrink-0">
+                  <div className="flex shrink-0 flex-col gap-1">
                     <button
+                      type="button"
                       onClick={() => handleMove(feature.id, "up")}
                       disabled={isFirst || (feature.locked && prevLocked)}
-                      className="text-slate-600 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      className="rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-slate-500 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-25"
+                      aria-label={`Move ${meta?.label ?? feature.id} up`}
                     >
-                      <ChevronUp className="w-3.5 h-3.5" />
+                      <ChevronUp className="h-3.5 w-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleMove(feature.id, "down")}
                       disabled={isLast || (feature.locked && nextLocked)}
-                      className="text-slate-600 hover:text-cyan-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      className="rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-slate-500 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-25"
+                      aria-label={`Move ${meta?.label ?? feature.id} down`}
                     >
-                      <ChevronDown className="w-3.5 h-3.5" />
+                      <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  {/* Icon */}
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: feature.enabled ? "rgba(34,211,238,0.1)" : "rgba(255,255,255,0.02)" }}>
-                    <Icon className={`w-4 h-4 ${feature.enabled ? "text-cyan-400" : "text-slate-600"}`} />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/10 text-cyan-300">
+                    <Icon className="h-4 w-4" />
                   </div>
 
-                  {/* Label */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-white truncate">{feature.label}</div>
-                    {feature.locked && (
-                      <div className="flex items-center gap-1 text-[9px] text-slate-600">
-                        <Lock className="w-2.5 h-2.5" /> Always visible
-                      </div>
-                    )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-black text-white">
+                        {meta?.label ?? feature.id}
+                      </span>
+                      {feature.locked && (
+                        <VEBadge tone="neutral" className="gap-1">
+                          <Lock className="h-2.5 w-2.5" />
+                          Always visible
+                        </VEBadge>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      {meta?.description ?? "Custom VouchEdge feature."}
+                    </p>
                   </div>
 
-                  {/* Toggle */}
                   <button
+                    type="button"
                     onClick={() => !feature.locked && handleToggle(feature.id)}
                     disabled={feature.locked}
-                    className={`relative w-10 h-5 rounded-full transition-all shrink-0 ${
-                      feature.enabled ? "bg-cyan-500/30" : "bg-slate-700/50"
-                    } ${feature.locked ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`relative h-6 w-11 shrink-0 rounded-full border transition ${
+                      feature.enabled
+                        ? "border-cyan-300/40 bg-cyan-400/25"
+                        : "border-slate-700 bg-slate-800/50"
+                    } ${feature.locked ? "cursor-not-allowed opacity-30" : "cursor-pointer"}`}
+                    aria-label={`Toggle ${meta?.label ?? feature.id}`}
                   >
-                    <div
-                      className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${
-                        feature.enabled ? "left-5 bg-cyan-400" : "left-0.5 bg-slate-500"
+                    <span
+                      className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition ${
+                        feature.enabled ? "left-5.5 bg-cyan-300" : "left-0.5 bg-slate-500"
                       }`}
                     />
                   </button>
@@ -198,54 +391,31 @@ export default function CustomizePage({ profile, onUpdateProfile, onSectionChang
               );
             })}
           </div>
-        </div>
+        </VECard>
 
-        {/* Pro mode preview */}
-        <div className="mt-4 rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">What changes in {layout.mode === "pro" ? "Pro" : "Beginner"} mode?</div>
-          <div className="grid sm:grid-cols-2 gap-2">
-            {(layout.mode === "pro" ? [
-              "Judge scores (0-100) on every pick",
-              "Full whatCouldGoWrong list",
-              "Missing data warnings",
-              "Safer alternative suggestions",
-              "4-judge panel breakdown",
-              "Data confidence scores",
-              "Advanced metrics (barrel%, exit velo, xwOBA)",
-              "Raw API data + debug panels",
-            ] : [
-              "Risk pill (Safe/Balanced/Risky/Sneaky/Lotto)",
-              "Confidence level (High/Med/Low)",
-              "One-line reason per pick",
-              "Clean stat tiles (AVG/HR/RBI/OPS)",
-              "Simple game log timeline",
-              "No judge internals or debug data",
-              "Larger touch targets",
-              "Clearer visual hierarchy",
-            ]).map((item, i) => (
-              <div key={i} className="flex items-start gap-2 text-[11px] text-slate-400">
-                <Check className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" />
+        <VECard tone="soft" className="p-5">
+          <VEBadge tone={layout.mode === "pro" ? "success" : "info"}>
+            {layout.mode === "pro" ? "Pro mode preview" : "Beginner mode preview"}
+          </VEBadge>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {previewItems.map((item) => (
+              <div key={item} className="flex items-start gap-2 text-xs leading-5 text-slate-400">
+                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
                 {item}
               </div>
             ))}
           </div>
-        </div>
+        </VECard>
 
-        {/* Back button */}
-        <button
-          onClick={() => onSectionChange("settings")}
-          className="mt-4 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          ← Back to Settings
-        </button>
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-cyan-300/30 bg-slate-950/95 px-4 py-2.5 text-xs font-black text-white shadow-2xl shadow-black/30">
+            {toast}
+          </div>
+        )}
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-xs font-bold text-white" style={{ background: "rgba(15,23,42,0.95)", border: "1px solid rgba(34,211,238,0.3)" }}>
-          {toast}
-        </div>
-      )}
     </div>
   );
 }
+
+export default CustomizePage;

@@ -4,7 +4,7 @@ import { vouchedgeApi } from '../../api/vouchedgeApi';
 import type { HrEvent } from '../../types/notifications';
 import type { Parlay } from '../../types';
 
-const POLL_MS = 60_000;
+const POLL_MS = import.meta.env.DEV ? 120_000 : 60_000;
 const LS_ENABLED = 'vouchedge_hr_notify';
 const LS_ONLY_PARLAYS = 'vouchedge_hr_only_parlays';
 
@@ -17,14 +17,46 @@ function lsBool(key: string, def: boolean): boolean {
   }
 }
 
+/** Name suffixes that should be ignored when deriving a player's surname. */
+const NAME_SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv', 'v']);
+
+/** Lowercase, strip accents/punctuation, collapse whitespace. */
+function normalizeName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip diacritics (José → jose, Acuña → acuna)
+    .replace(/[.\-']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Real surname, ignoring trailing suffixes (Acuña Jr. → "acuna", not "jr"). */
+function surnameOf(fullName: string): string {
+  const tokens = normalizeName(fullName).split(' ').filter(Boolean);
+  while (tokens.length > 1 && NAME_SUFFIXES.has(tokens[tokens.length - 1])) {
+    tokens.pop();
+  }
+  return tokens[tokens.length - 1] || '';
+}
+
 /** True if the HR's hitter appears in any saved parlay leg. */
 function matchesParlay(ev: HrEvent, slips: Parlay[]): boolean {
-  const full = ev.playerName.toLowerCase();
-  const last = full.split(' ').slice(-1)[0];
+  const full = normalizeName(ev.playerName);
+  const surname = surnameOf(ev.playerName);
+  const surnameRe =
+    surname.length > 2
+      ? new RegExp(`\\b${surname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`)
+      : null;
+
   return slips.some((s) =>
     (s.legs || []).some((l) => {
-      const sel = (l.selection || '').toLowerCase();
-      return sel.includes(full) || (last.length > 2 && sel.includes(last));
+      const sel = normalizeName(l.selection || '');
+      if (!sel) return false;
+      if (full && sel.includes(full)) return true;
+      // Word-boundary surname match avoids "soto" matching inside other words
+      // and prevents suffix tokens from matching everything.
+      return surnameRe ? surnameRe.test(sel) : false;
     })
   );
 }
@@ -99,9 +131,9 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
         ))}
       </div>
 
-      {/* Bell button */}
+      {/* Bell button — stacked directly above the AI support FAB (which sits at bottom-6 right-6/8) */}
       <button onClick={openPanel}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[100] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-orange-500/60 transition-colors"
+        className="fixed bottom-28 md:bottom-24 right-6 md:right-8 z-[60] w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl hover:border-orange-500/60 transition-colors"
         aria-label="Home run notifications">
         <Bell className="w-5 h-5 text-orange-400" />
         {enabled && unread > 0 && (
@@ -131,7 +163,16 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
               {!enabled ? (
                 <Empty icon={<Bell className="w-5 h-5" />} text="HR notifications are off. Turn them on above." />
               ) : events.length === 0 ? (
-                <Empty icon={<AlertTriangle className="w-5 h-5" />} text={onlyParlays ? 'No HRs from your parlay players yet today.' : 'No home runs yet today — check back during games.'} />
+                <Empty
+                  icon={<AlertTriangle className="w-5 h-5" />}
+                  text={
+                    onlyParlays
+                      ? savedSlips.length === 0
+                        ? 'You have no saved parlays yet. Build one to use this filter.'
+                        : 'No HRs from your parlay players yet today.'
+                      : 'No home runs yet today — check back during games.'
+                  }
+                />
               ) : (
                 events.map((e) => (
                   <div key={e.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">

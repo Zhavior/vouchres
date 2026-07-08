@@ -10,7 +10,12 @@
  * Default config has all features enabled in the original order.
  */
 
+import type { SportId } from "../sports/registry";
+
 export type ViewMode = "beginner" | "pro";
+
+/** Sidebar section a feature belongs to. Undefined = ungrouped (top). */
+export type FeatureGroup = "Daily" | "Pro Labs" | "Build & Track" | "Social" | "Account";
 
 export interface FeatureConfig {
   id: string;
@@ -20,7 +25,18 @@ export interface FeatureConfig {
   order: number;
   /** Features that can't be disabled (core app navigation) */
   locked?: boolean;
+  /** Features hidden from regular users while still available to admin/dev operators. */
+  access?: "public" | "admin_dev";
+  /** Sidebar section header this feature renders under. */
+  group?: FeatureGroup;
+  /**
+   * Sports this feature applies to. Omit for sport-agnostic features (always shown).
+   * When set, the feature only appears when the active sport is in the list.
+   */
+  sports?: SportId[];
 }
+
+const ALL_SPORTS: SportId[] = ["mlb", "nba", "nfl"];
 
 export interface FeatureLayout {
   mode: ViewMode;
@@ -31,25 +47,45 @@ export interface FeatureLayout {
 /* ============ All features (master list) ============ */
 
 export const ALL_FEATURES: FeatureConfig[] = [
-  { id: "welcome", label: "Welcome Portal", icon: "Trophy", enabled: true, order: 0, locked: true },
-  { id: "today", label: "Today", icon: "LayoutDashboard", enabled: true, order: 1 },
-  { id: "feed", label: "Home Feed", icon: "Home", enabled: true, order: 2 },
-  { id: "leaderboard", label: "Top Cappers", icon: "Award", enabled: true, order: 3 },
-  { id: "live_games", label: "Live Projections", icon: "Tv", enabled: true, order: 4 },
-  { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 5 },
-  { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: true, order: 6 },
-  { id: "intel", label: "MLB Intelligence", icon: "Activity", enabled: true, order: 7 },
-  { id: "hr_board", label: "Daily HR Board", icon: "Flame", enabled: true, order: 8 },
-  { id: "vouchscan", label: "VouchScan", icon: "ScanLine", enabled: true, order: 9 },
-  { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 10 },
-  { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 11 },
-  { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 12 },
-  { id: "premium", label: "PRO Premium Tiers", icon: "Sparkles", enabled: true, order: 13 },
-  { id: "subscriber_hub", label: "Subscriber Clubs", icon: "MessageSquare", enabled: true, order: 14 },
-  { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 15 },
-  { id: "epic_themes", label: "Epic Themes", icon: "Sparkles", enabled: true, order: 16 },
-  { id: "profile", label: "Profile", icon: "User", enabled: true, order: 17, locked: true },
-  { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 18, locked: true },
+
+  // Edge Island — ungrouped, renders first/headerless above "Daily".
+  // Routes to the `welcome` section, which now renders the Z8 morning command
+  // board with a logged-in dashboard mode and a public preview mode.
+  { id: "welcome", label: "Edge Island", icon: "LayoutDashboard", enabled: true, order: 1, locked: true },
+
+  // Daily — sport-scoped boards and slates
+  { id: "hr_board", label: "Home Run Intelligence", icon: "Flame", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "mlb_stats", label: "MLB Stat Hub", icon: "BarChart3", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS, locked: false },
+  { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS },
+  { id: "live_games", label: "Live Projections", icon: "Tv", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS },
+
+  // Pro Labs — sport-scoped analytics
+  { id: "intel", label: "AI Edge Lab", icon: "Activity", enabled: true, order: 5, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "live_game_lab", label: "Live Game Lab", icon: "Radio", enabled: true, order: 6, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "player_edge_lab", label: "Player Edge Lab", icon: "UserRoundSearch", enabled: true, order: 7, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "team_matchup_lab", label: "Team Matchup Lab", icon: "Swords", enabled: true, order: 8, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "hitter_matchup_zones", label: "Hitter Matchup Zones", icon: "Grid3x3", enabled: true, order: 8.5, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "pro_graphs_lab", label: "Pro Graphs Lab", icon: "LineChart", enabled: true, order: 9, group: "Pro Labs", sports: ALL_SPORTS },
+  { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 9.5, group: "Pro Labs" },
+
+  // Build & Track
+  { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: false, order: 10, group: "Build & Track" },
+  { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track" },
+  { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 11, group: "Build & Track" },
+  { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
+  { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track" },
+  { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
+  { id: "notifications", label: "Notifications", icon: "Bell", enabled: true, order: 14.5, group: "Build & Track" },
+
+  // Social
+  { id: "feed", label: "Home", icon: "Home", enabled: true, order: 15, group: "Social" },
+  { id: "leaderboard", label: "Top Cappers", icon: "Trophy", enabled: true, order: 16, group: "Social" },
+  { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
+
+  // Account
+  { id: "premium", label: "Upgrade", icon: "Sparkles", enabled: true, order: 18, group: "Account" },
+  { id: "themestore", label: "Theme Store", icon: "ShoppingBag", enabled: true, order: 19, group: "Account", access: "admin_dev" },
+  { id: "settings", label: "Settings", icon: "Settings", enabled: true, order: 22, group: "Account", locked: true },
 ];
 
 const STORAGE_KEY = "vouchedge_feature_layout";
@@ -75,12 +111,16 @@ export function loadFeatureLayout(): FeatureLayout {
 
     const parsed = JSON.parse(stored) as FeatureLayout;
 
-    // Merge: any new features in ALL_FEATURES that aren't in the stored config get added
-    const storedIds = new Set(parsed.features.map((f) => f.id));
-    const missing = ALL_FEATURES.filter((f) => !storedIds.has(f.id));
-    if (missing.length > 0) {
-      parsed.features = [...parsed.features, ...missing];
-    }
+    // Reconcile against ALL_FEATURES (the source of truth):
+    //  - labels, icons, group, sports, order, access, locked come from code
+    //  - the user's `enabled` toggle is preserved
+    //  - features removed from ALL_FEATURES (e.g. VouchScan) are dropped
+    const storedById = new Map(parsed.features.map((f) => [f.id, f]));
+    parsed.features = ALL_FEATURES.map((def) => {
+      const prev = storedById.get(def.id);
+      const enabled = def.locked ? true : def.id === "ai_engine" ? false : prev ? prev.enabled : def.enabled;
+      return { ...def, enabled };
+    });
 
     return parsed;
   } catch {
@@ -99,10 +139,28 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 /* ============ Helpers ============ */
 
 /** Returns only enabled features, sorted by order — for sidebar rendering */
-export function getEnabledFeatures(layout: FeatureLayout): FeatureConfig[] {
+const SIDEBAR_HIDDEN_FEATURES = ['feed', 'profile', 'settings', 'ai_engine', 'build'];
+
+export function getEnabledFeatures(
+  layout: FeatureLayout,
+  options: { canAccessThemeStore?: boolean; activeSport?: SportId } = {},
+): FeatureConfig[] {
   return layout.features
+    .filter((f) => f.id !== 'ai_engine')
     .filter((f) => f.enabled)
+    .filter((f) => f.access !== 'admin_dev' || options.canAccessThemeStore)
+    // Sport-scoped features only show when the active sport is in their list.
+    // Sport-agnostic features (no `sports`) always show.
+    .filter((f) => !f.sports || !options.activeSport || f.sports.includes(options.activeSport))
     .sort((a, b) => a.order - b.order);
+}
+
+export function getSidebarFeatures(
+  layout: FeatureLayout,
+  options: { canAccessThemeStore?: boolean; activeSport?: SportId; excludedFeatureIds?: string[] } = {},
+): FeatureConfig[] {
+  const excluded = [...SIDEBAR_HIDDEN_FEATURES, ...(options.excludedFeatureIds ?? [])];
+  return getEnabledFeatures(layout, options).filter((feature) => !excluded.includes(feature.id));
 }
 
 /** Toggle a feature on/off */

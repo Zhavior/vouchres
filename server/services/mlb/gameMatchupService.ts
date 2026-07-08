@@ -6,13 +6,15 @@
  */
 import { getScheduleByDate, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
-import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
+import { getHitterStats, getPitcherStats, HitterStats, PitcherRecentGame, PitcherSeasonStats } from "./statsClient";
 import { reportCache } from "./mlbCache";
 import { NormalizedGame, NormalizedTeam, NormalizedPitcher, NormalizedPlayer, DataQuality } from "./mlbTypes";
+import { getParkFactor } from "./parkFactors";
 import { buildPitcherVulnerability } from "../intelligence/pitcherVulnerabilityEngine";
 import { scoreRunEnvironment, RunEnvironment } from "../intelligence/runEnvironmentEngine";
 import { buildHitterRow, HrBoardRow } from "../intelligence/hrEdgeEngine";
 import { clamp } from "../intelligence/scoring";
+import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
 
 const LINEUP_SIZE = 9;
 
@@ -60,8 +62,259 @@ export interface GameMatchup {
   dataQuality: DataQuality;
 }
 
+export type MatchupMatrixLabel = "STRONG PLAY" | "LEAN OVER" | "NEUTRAL" | "AVOID";
+
+export interface MatchupMatrixRow {
+  pitcherId: number | null;
+  pitcherName: string;
+  team: string;
+  opponent: string;
+  gameId: number;
+  gameTime: string;
+  pitcherHand: "L" | "R" | "U";
+  score: number | null;
+  label: MatchupMatrixLabel;
+  metrics: {
+    k9: number | null;
+    kPerGame: number | null;
+    era: number | null;
+    whip: number | null;
+    ip: number | null;
+    gs: number | null;
+    whiffPct: number | null;
+    kPct: number | null;
+    xera: number | null;
+    oppKPct: number | null;
+    opponentVsHand: string | null;
+    parkFactor: number | null;
+    weather: string | null;
+  };
+  dataQuality: {
+    probablePitcher: "official" | "projected" | "unknown";
+    statcast: "available" | "missing";
+    weather: "available" | "missing";
+  };
+  confidence: "High" | "Medium" | "Low";
+  scoring: {
+    pitcherStrikeoutSkill: number | null;
+    opponentStrikeoutWeakness: number | null;
+    workloadSafety: number | null;
+    runPreventionControl: number | null;
+    recentForm: number | null;
+    context: number | null;
+    availableWeight: number;
+  };
+}
+
+export interface MatchupMatrixResponse {
+  date: string;
+  generatedAt: string;
+  rows: MatchupMatrixRow[];
+  mode?: "live" | "enriched";
+}
+
 function teamLogo(teamId: number): string {
   return `https://www.mlbstatic.com/team-logos/${teamId}.svg`;
+}
+
+function roundMetric(value: number | null | undefined, places = 1): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  const factor = 10 ** places;
+  return Math.round(value * factor) / factor;
+}
+
+function normalizeHigher(value: number | null | undefined, low: number, high: number): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  return clamp(((value - low) / (high - low)) * 100, 0, 100);
+}
+
+function normalizeLower(value: number | null | undefined, best: number, worst: number): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  return clamp(((worst - value) / (worst - best)) * 100, 0, 100);
+}
+
+function averageAvailable(values: Array<number | null | undefined>): number | null {
+  const available = values.filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v));
+  if (available.length === 0) return null;
+  return available.reduce((sum, value) => sum + value, 0) / available.length;
+}
+
+function matrixLabel(score: number | null): MatchupMatrixLabel {
+  if (score === null) return "NEUTRAL";
+  if (score >= 76) return "STRONG PLAY";
+  if (score >= 62) return "LEAN OVER";
+  if (score < 45) return "AVOID";
+  return "NEUTRAL";
+}
+
+function weatherText(game: NormalizedGame): string | null {
+  if (!game.weather) return null;
+  const parts = [
+    game.weather.condition,
+    typeof game.weather.tempF === "number" ? `${game.weather.tempF}F` : null,
+    typeof game.weather.windMph === "number" ? `${game.weather.windMph} mph${game.weather.windDir ? ` ${game.weather.windDir}` : ""}` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+function recentFormScore(recentGames: PitcherRecentGame[]): number | null {
+  if (recentGames.length === 0) return null;
+  const avgKs = recentGames.reduce((sum, game) => sum + game.strikeOuts, 0) / recentGames.length;
+  const avgIp = recentGames.reduce((sum, game) => sum + game.inningsPitched, 0) / recentGames.length;
+  return averageAvailable([
+    normalizeHigher(avgKs, 2, 8),
+    normalizeHigher(avgIp, 3, 6.5),
+  ]);
+}
+
+function buildMatrixRow(
+  game: NormalizedGame,
+  pitcher: NormalizedPitcher | null,
+  team: NormalizedTeam,
+  opponent: NormalizedTeam,
+  pitcherStats: PitcherSeasonStats | null,
+  recentGames: PitcherRecentGame[],
+  runEnv: RunEnvironment | undefined
+): MatchupMatrixRow {
+  const starts = pitcherStats?.gamesStarted ?? null;
+  const gamesPitched = pitcherStats?.gamesPitched ?? null;
+  const innings = pitcherStats?.inningsPitched ?? null;
+  const strikeOuts = pitcherStats?.strikeOuts ?? null;
+  const k9 = innings && innings > 0 && strikeOuts !== null ? (strikeOuts / innings) * 9 : null;
+  const kPerGameBase = starts && starts > 0 ? starts : gamesPitched && gamesPitched > 0 ? gamesPitched : null;
+  const kPerGame = kPerGameBase && strikeOuts !== null ? strikeOuts / kPerGameBase : null;
+  const ipPerStart = starts && starts > 0 && innings !== null ? innings / starts : null;
+  const park = getParkFactor(game.venue);
+  const weather = weatherText(game);
+
+  const pitcherStrikeoutSkill = averageAvailable([
+    normalizeHigher(k9, 5.5, 12),
+    normalizeHigher(kPerGame, 2.5, 8.5),
+  ]);
+  const opponentStrikeoutWeakness = null;
+  const workloadSafety = averageAvailable([
+    normalizeHigher(ipPerStart, 3.5, 6.5),
+    normalizeHigher(starts, 1, 12),
+  ]);
+  const walkRatePer9 = innings && innings > 0 && pitcherStats ? (pitcherStats.baseOnBalls / innings) * 9 : null;
+  const runPreventionControl = averageAvailable([
+    normalizeLower(pitcherStats?.era ?? null, 2.25, 6),
+    normalizeLower(pitcherStats?.whip ?? null, 0.9, 1.6),
+    normalizeLower(walkRatePer9, 1.5, 4.5),
+  ]);
+  const recentForm = recentFormScore(recentGames);
+  const context = runEnv ? normalizeLower(runEnv.runEnvironmentScore, 20, 85) : null;
+
+  const weighted = [
+    { value: pitcherStrikeoutSkill, weight: 0.3 },
+    { value: opponentStrikeoutWeakness, weight: 0.25 },
+    { value: workloadSafety, weight: 0.15 },
+    { value: runPreventionControl, weight: 0.15 },
+    { value: recentForm, weight: 0.1 },
+    { value: context, weight: 0.05 },
+  ];
+  const availableWeight = weighted.reduce((sum, item) => sum + (item.value === null ? 0 : item.weight), 0);
+  const score = availableWeight > 0
+    ? weighted.reduce((sum, item) => sum + (item.value === null ? 0 : item.value * item.weight), 0) / availableWeight
+    : null;
+
+  const availableWeightRounded = roundMetric(availableWeight, 2) ?? 0;
+  const confidence: MatchupMatrixRow["confidence"] =
+    availableWeight >= 0.75 ? "High" : availableWeight >= 0.5 ? "Medium" : "Low";
+
+  return {
+    pitcherId: pitcher?.pitcherId ?? null,
+    pitcherName: pitcher?.pitcherName ?? "Probable pitcher TBD",
+    team: team.abbreviation || team.name,
+    opponent: opponent.abbreviation || opponent.name,
+    gameId: game.gamePk,
+    gameTime: game.gameDate,
+    pitcherHand: pitcher?.throws ?? "U",
+    score: roundMetric(score, 0),
+    label: matrixLabel(score),
+    metrics: {
+      k9: roundMetric(k9, 1),
+      kPerGame: roundMetric(kPerGame, 1),
+      era: roundMetric(pitcherStats?.era ?? null, 2),
+      whip: roundMetric(pitcherStats?.whip ?? null, 2),
+      ip: roundMetric(innings, 1),
+      gs: starts,
+      whiffPct: null,
+      kPct: null,
+      xera: null,
+      oppKPct: null,
+      opponentVsHand: null,
+      parkFactor: park.source === "table" ? park.factor : null,
+      weather,
+    },
+    dataQuality: {
+      probablePitcher: pitcher ? "official" : "unknown",
+      statcast: "missing",
+      weather: weather ? "available" : "missing",
+    },
+    confidence,
+    scoring: {
+      pitcherStrikeoutSkill: roundMetric(pitcherStrikeoutSkill, 0),
+      opponentStrikeoutWeakness,
+      workloadSafety: roundMetric(workloadSafety, 0),
+      runPreventionControl: roundMetric(runPreventionControl, 0),
+      recentForm: roundMetric(recentForm, 0),
+      context: roundMetric(context, 0),
+      availableWeight: availableWeightRounded,
+    },
+  };
+}
+
+function buildLiveMatrixRow(
+  game: NormalizedGame,
+  pitcher: NormalizedPitcher | null,
+  team: NormalizedTeam,
+  opponent: NormalizedTeam
+): MatchupMatrixRow {
+  const park = getParkFactor(game.venue);
+  const weather = weatherText(game);
+
+  return {
+    pitcherId: pitcher?.pitcherId ?? null,
+    pitcherName: pitcher?.pitcherName ?? "Probable pitcher TBD",
+    team: team.abbreviation || team.name,
+    opponent: opponent.abbreviation || opponent.name,
+    gameId: game.gamePk,
+    gameTime: game.gameDate,
+    pitcherHand: pitcher?.throws ?? "U",
+    score: null,
+    label: "NEUTRAL",
+    metrics: {
+      k9: null,
+      kPerGame: null,
+      era: null,
+      whip: null,
+      ip: null,
+      gs: null,
+      whiffPct: null,
+      kPct: null,
+      xera: null,
+      oppKPct: null,
+      opponentVsHand: null,
+      parkFactor: park.source === "table" ? park.factor : null,
+      weather,
+    },
+    dataQuality: {
+      probablePitcher: pitcher ? "official" : "unknown",
+      statcast: "missing",
+      weather: weather ? "available" : "missing",
+    },
+    confidence: "Low",
+    scoring: {
+      pitcherStrikeoutSkill: null,
+      opponentStrikeoutWeakness: null,
+      workloadSafety: null,
+      runPreventionControl: null,
+      recentForm: null,
+      context: null,
+      availableWeight: 0,
+    },
+  };
 }
 
 function seasonWinPct(team: NormalizedTeam): number {
@@ -141,8 +394,8 @@ function buildMatchup(
   const away = matchupTeam(game.awayTeam, game.probablePitchers.away, game.homeTeam.name, game.venue, awayPStats);
   const home = matchupTeam(game.homeTeam, game.probablePitchers.home, game.awayTeam.name, game.venue, homePStats);
   const status = game.status;
-  const isLive = /progress|live|in play|warmup/i.test(status);
-  const isFinal = /final|game over/i.test(status);
+  const isLive = isMlbLiveStatus(status);
+  const isFinal = isMlbFinalStatusText(status);
 
   // ---- Win probability (log5 + home field + starting pitcher) ----
   const pHome = seasonWinPct(game.homeTeam);
@@ -222,7 +475,10 @@ function buildMatchup(
 
 export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]> {
   return reportCache.getOrSet(`matchups_v2:${date}`, async () => {
-    const [games, hittersByTeam] = await Promise.all([getScheduleByDate(date), getActiveHittersByTeam()]);
+    const games = await getScheduleByDate(date);
+    const todayTeamIds = [...new Set(games.flatMap((g) => [g.awayTeam.teamId, g.homeTeam.teamId]))];
+    console.log(`[matchupService] fetching hitters for ${todayTeamIds.length} teams in today's slate`);
+    const hittersByTeam = await getActiveHittersByTeam(todayTeamIds);
 
     // Collect all pitcher and hitter IDs
     const pitcherIds = new Set<number>();
@@ -262,4 +518,72 @@ export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]>
 export async function getGameMatchup(gamePk: number, date = todayISO()): Promise<GameMatchup | null> {
   const all = await getGameMatchups(date);
   return all.find((m) => m.gamePk === gamePk) ?? null;
+}
+
+export async function getLiveMatchupMatrix(date = todayISO()): Promise<MatchupMatrixResponse> {
+  const games = await getScheduleByDate(date);
+  const rows: MatchupMatrixRow[] = [];
+
+  for (const game of games) {
+    rows.push(buildLiveMatrixRow(game, game.probablePitchers.away, game.awayTeam, game.homeTeam));
+    rows.push(buildLiveMatrixRow(game, game.probablePitchers.home, game.homeTeam, game.awayTeam));
+  }
+
+  return { date, generatedAt: new Date().toISOString(), rows, mode: "live" };
+}
+
+export async function getMatchupMatrix(date = todayISO()): Promise<MatchupMatrixResponse> {
+  return reportCache.getOrSet(`matchup_matrix_v1:${date}`, async () => {
+    const games = await getScheduleByDate(date);
+    const pitcherIds = new Set<number>();
+    for (const game of games) {
+      if (game.probablePitchers.away?.pitcherId) pitcherIds.add(game.probablePitchers.away.pitcherId);
+      if (game.probablePitchers.home?.pitcherId) pitcherIds.add(game.probablePitchers.home.pitcherId);
+    }
+
+    const pitcherResults = await Promise.allSettled(
+      [...pitcherIds].map(async (id) => ({ id, stats: await getPitcherStats(id) }))
+    );
+    const pitcherStatsMap = new Map<number, PitcherSeasonStats | null>();
+    const recentGamesMap = new Map<number, PitcherRecentGame[]>();
+    for (const result of pitcherResults) {
+      if (result.status !== "fulfilled") continue;
+      pitcherStatsMap.set(result.value.id, result.value.stats.season);
+      recentGamesMap.set(result.value.id, result.value.stats.recentGames);
+    }
+
+    const runEnvs = scoreRunEnvironment(games, pitcherStatsMap);
+    const runByPk = new Map(runEnvs.map((runEnv) => [runEnv.gamePk, runEnv]));
+    const rows: MatchupMatrixRow[] = [];
+
+    for (const game of games) {
+      const awayPitcher = game.probablePitchers.away;
+      const homePitcher = game.probablePitchers.home;
+      rows.push(
+        buildMatrixRow(
+          game,
+          awayPitcher,
+          game.awayTeam,
+          game.homeTeam,
+          awayPitcher ? pitcherStatsMap.get(awayPitcher.pitcherId) ?? null : null,
+          awayPitcher ? recentGamesMap.get(awayPitcher.pitcherId) ?? [] : [],
+          runByPk.get(game.gamePk)
+        )
+      );
+      rows.push(
+        buildMatrixRow(
+          game,
+          homePitcher,
+          game.homeTeam,
+          game.awayTeam,
+          homePitcher ? pitcherStatsMap.get(homePitcher.pitcherId) ?? null : null,
+          homePitcher ? recentGamesMap.get(homePitcher.pitcherId) ?? [] : [],
+          runByPk.get(game.gamePk)
+        )
+      );
+    }
+
+    rows.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+    return { date, generatedAt: new Date().toISOString(), rows, mode: "enriched" };
+  }, 4 * 60_000) as Promise<MatchupMatrixResponse>;
 }

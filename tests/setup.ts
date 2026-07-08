@@ -12,11 +12,12 @@
  *   - NEVER run these tests against a project with real user data.
  */
 
-import { beforeAll, beforeEach, afterAll } from "vitest";
+import { beforeAll, afterAll } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL_TEST ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY_TEST ?? "";
+const TEST_DB_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.warn(
@@ -25,9 +26,13 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   );
 }
 
-export const testDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+export const testDb = createClient(
+  TEST_DB_CONFIGURED ? SUPABASE_URL : "http://127.0.0.1:54321",
+  TEST_DB_CONFIGURED ? SUPABASE_SERVICE_KEY : "test-service-role-key",
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }
+);
 
 /**
  * Wipe all user-generated rows from the test DB.
@@ -36,7 +41,7 @@ export const testDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
  * Call this in beforeEach() of every test file.
  */
 export async function resetTestDb(): Promise<void> {
-  if (!SUPABASE_URL) return; // skip in CI without test DB
+  if (!TEST_DB_CONFIGURED) return; // skip in CI without test DB
 
   // Order matters: child tables first
   await Promise.all([
@@ -182,7 +187,7 @@ export function mockResponse() {
 // Global setup / teardown
 beforeAll(async () => {
   // Verify test DB is reachable
-  if (SUPABASE_URL) {
+  if (TEST_DB_CONFIGURED) {
     const { error } = await testDb.from("cappers").select("id").limit(1);
     if (error) {
       console.error("[test-setup] cannot reach test DB:", error.message);

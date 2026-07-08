@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "../../lib/motion";
 import {
   ArrowRight, ArrowLeft, X, Check, Sparkles, Lock,
   ShieldCheck, TrendingUp, Cpu, Users, Palette,

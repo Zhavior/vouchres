@@ -152,7 +152,7 @@ async function migratePosts(): Promise<MigrationResult> {
 }
 
 /**
- * Migrate vouchedge_slips → /api/parlays POST
+ * Migrate vouchedge_slips → /api/me/parlays POST
  * Slip = parlay in the old terminology.
  */
 async function migrateSlips(): Promise<MigrationResult> {
@@ -182,7 +182,7 @@ async function migrateSlips(): Promise<MigrationResult> {
 
         if (legs.length < 2) continue; // not a real parlay
 
-        await apiClient.post("/api/parlays", {
+        await apiClient.post("/api/me/parlays", {
           legs,
           stake_units: slip.stake ?? 1.0,
           explanation: slip.notes ?? undefined,

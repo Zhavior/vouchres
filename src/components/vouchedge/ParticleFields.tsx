@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 interface ParticleProps {
   count?: number;

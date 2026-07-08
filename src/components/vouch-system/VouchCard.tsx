@@ -24,6 +24,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Vouch, Parlay, CreatorProofProfile, FeedPost } from '../../types';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 interface VouchCardProps {
   key?: any;
@@ -167,24 +168,42 @@ export default function VouchCard({
     }
   };
 
+  // Only meaningful once the vouch is actually saved server-side (Pass 2) and
+  // public — otherwise there's no stable id for X/Slack/iMessage to unfurl.
+  const getPermalink = (): string | null => {
+    if (!vouch.backendVouchId || vouch.visibility === 'private') return null;
+    return `${window.location.origin}/v/${vouch.backendVouchId}`;
+  };
+
   const generateXShareIntent = () => {
     const text = `🔥 VERIFIED PROOF VOUCH 🔥\n\n📌 Pick: ${vouch.playerOrTeam ? `${vouch.playerOrTeam} — ` : ''}${vouch.market}\n📊 Game: ${vouch.gameName}\n📈 Odds: ${vouch.odds}\n\n🤖 AI Confidence: ${aiConfidence}%\n✍️ My Confidence: ${capperConfidence}%\n\n🛡️ Verified Pre-Lock via VouchEdge.ai\n\n⚠️ Probability-based. No guarantees. #sportsbetting #proof`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    const permalink = getPermalink();
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}${permalink ? `&url=${encodeURIComponent(permalink)}` : ''}`;
     window.open(url, '_blank');
   };
 
+  const handleCopyShareLink = () => {
+    const permalink = getPermalink();
+    if (!permalink) {
+      triggerToast('⚠️ Save this vouch to your account first to get a shareable link.');
+      return;
+    }
+    navigator.clipboard.writeText(permalink);
+    triggerToast('🔗 Share link copied!');
+  };
+
   // Helper for rendering a confidence gauge or sparkline
-  const renderConfidenceMeter = (val: number | null, colorClass: string, glowClass: string) => {
+  const renderConfidenceMeter = (val: number | null, textClass: string, barClass: string, glowClass: string) => {
     if (val === null) return null;
     return (
       <div className="w-full space-y-1">
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-450 font-bold uppercase">
+        <div className="flex justify-between items-center text-[10px] font-mono text-[hsl(var(--ve-text-muted))] font-bold uppercase">
           <span>Meter Density</span>
-          <span className={`${colorClass} font-black`}>{val}%</span>
+          <span className={`${textClass} font-black`}>{val}%</span>
         </div>
-        <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+        <div className="h-2 w-full bg-[hsl(var(--ve-surface-raised)/0.42)] rounded-full overflow-hidden border border-[hsl(var(--ve-border)/0.30)] p-0.5">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${colorClass} ${glowClass}`}
+            className={`h-full rounded-full transition-all duration-500 ${barClass} ${glowClass}`}
             style={{ width: `${val}%` }}
           />
         </div>
@@ -194,15 +213,15 @@ export default function VouchCard({
 
   const renderTrustScoreRing = (score: number) => {
     return (
-      <div className="relative flex items-center justify-center w-11 h-11 shrink-0 bg-slate-900/50 rounded-full border border-slate-800">
+      <div className="relative flex items-center justify-center w-11 h-11 shrink-0 bg-[hsl(var(--ve-surface-raised)/0.42)] rounded-full border border-[hsl(var(--ve-border)/0.30)]">
         <svg className="w-10 h-10 transform -rotate-90">
-          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-slate-850" strokeWidth="2.5" fill="transparent" />
-          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-cyan-500" strokeWidth="2.5" fill="transparent"
+          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-[hsl(var(--ve-border)/0.45)]" strokeWidth="2.5" fill="transparent" />
+          <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-[hsl(var(--ve-accent-cyan))]" strokeWidth="2.5" fill="transparent"
             strokeDasharray={2 * Math.PI * 16}
             strokeDashoffset={(2 * Math.PI * 16) * (1 - score / 1000)}
           />
         </svg>
-        <span className="absolute text-[10px] font-mono font-black text-cyan-400">{score}</span>
+        <span className="absolute text-[10px] font-mono font-black text-[hsl(var(--ve-accent-cyan))]">{score}</span>
       </div>
     );
   };
@@ -211,7 +230,7 @@ export default function VouchCard({
   const isAligned = Math.abs(aiConfidence - capperConfidence) <= 12;
   const cardTheme = vouch.cardTheme || 'cyber';
 
-  let themeBgAndBorder = 'bg-[#0d1424] border-cyan-900/40 hover:border-cyan-500/20 shadow-lg shadow-black/40 text-slate-200 p-5';
+  let themeBgAndBorder = 'bg-[hsl(var(--ve-surface)/0.84)] border-[hsl(var(--ve-border)/0.34)] hover:border-[hsl(var(--ve-accent-cyan)/0.32)] shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] text-[hsl(var(--ve-text-secondary))] p-4';
   let glowColor1 = 'bg-cyan-500/5';
   let glowColor2 = 'bg-indigo-500/5';
   let avatarBorder = 'border-cyan-400/80 shadow-[0_0_10px_rgba(34,211,238,0.4)]';
@@ -252,8 +271,8 @@ export default function VouchCard({
       case 'cyber':
       default:
         themeBgAndBorder = isProfile 
-          ? 'bg-[#0a0f1d] border-slate-850 p-4 hover:border-slate-800 text-slate-200'
-          : 'bg-[#0d1424] border-cyan-900/40 p-5 shadow-lg shadow-black/40 hover:border-cyan-500/20 text-slate-200';
+          ? 'bg-[hsl(var(--ve-surface)/0.78)] border-[hsl(var(--ve-border)/0.32)] p-4 hover:border-[hsl(var(--ve-border)/0.50)] text-[hsl(var(--ve-text-secondary))]'
+          : 'bg-[linear-gradient(135deg,hsl(var(--ve-surface)/0.88),hsl(var(--ve-surface-raised)/0.58),hsl(var(--ve-accent-cyan)/0.06))] border-[hsl(var(--ve-border)/0.34)] p-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] hover:border-[hsl(var(--ve-accent-cyan)/0.32)] text-[hsl(var(--ve-text-secondary))]';
         break;
     }
   }
@@ -278,42 +297,42 @@ export default function VouchCard({
 
       {/* TOAST PANEL */}
       {toastMsg && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#050b14] border border-cyan-500/50 px-3.5 py-1.5 rounded-full text-[10px] font-bold text-cyan-400 font-mono tracking-wider shadow-2xl animate-bounce">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[hsl(var(--ve-bg-deep)/0.94)] border border-[hsl(var(--ve-accent-cyan)/0.50)] px-3.5 py-1.5 rounded-full text-[10px] font-bold text-[hsl(var(--ve-accent-cyan))] font-mono tracking-wider shadow-2xl animate-bounce">
           {toastMsg}
         </div>
       )}
 
       {/* TOP HEADER BLOCK: Poster Bio + Verifications + Trust Score */}
-      <div className="flex items-start justify-between gap-3 border-b border-slate-800/60 pb-3">
+      <div className="flex items-start justify-between gap-3 border-b border-[hsl(var(--ve-border)/0.28)] pb-3">
         <div className="flex gap-3">
           {/* Avatar with customized premium neon glowing borders */}
           <div className="relative shrink-0">
-            <div className={`w-10 h-10 rounded-full bg-slate-800 border-2 ${avatarBorder} font-bold text-slate-300 flex items-center justify-center text-sm`}>
+            <div className={`w-9 h-9 rounded-full bg-[hsl(var(--ve-surface-raised)/0.58)] border ${avatarBorder} font-bold text-[hsl(var(--ve-text-secondary))] flex items-center justify-center text-sm`}>
               {profile?.displayName?.split(' ').map((n: any) => n[0]).join('') || 'C'}
             </div>
-            <span className="absolute -bottom-1 -right-1 bg-cyan-500 text-slate-950 text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-slate-950 font-mono">
+            <span className="absolute -bottom-1 -right-1 bg-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-bg-deep))] text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[hsl(var(--ve-bg-deep))] font-mono">
               ★
             </span>
           </div>
 
           <div className="text-left">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-slate-100 hover:underline cursor-pointer text-sm leading-none">
+              <span className="font-extrabold text-[hsl(var(--ve-text-primary))] hover:underline cursor-pointer text-sm leading-none">
                 {profile?.displayName || 'Alpha Capper'}
               </span>
-              <span className="text-slate-500 text-xs">@{profile?.username || 'alphacapper'}</span>
+              <span className="text-[hsl(var(--ve-text-muted))] text-xs">@{profile?.username || 'alphacapper'}</span>
             </div>
             
             {/* Creator Badge Stack */}
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-[8px] bg-cyan-950/80 font-black text-cyan-400 px-1.5 py-0.5 rounded uppercase border border-cyan-800/40 flex items-center gap-0.5">
-                <Sparkles className="w-2.5 h-2.5 fill-cyan-400" /> PRO CAPPER
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className="flex items-center gap-0.5 rounded-md border border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] px-1.5 py-0.5 text-[8px] font-black uppercase text-[hsl(var(--ve-accent-gold))]">
+                <Sparkles className="w-2.5 h-2.5 fill-[hsl(var(--ve-accent-gold))]" /> PRO CAPPER
               </span>
-              <span className="text-[8px] bg-slate-900 font-bold text-slate-400 px-1.5 py-0.5 rounded font-mono">
+              <span className="rounded-md bg-[hsl(var(--ve-surface-raised)/0.46)] px-1.5 py-0.5 font-mono text-[8px] font-bold text-[hsl(var(--ve-text-muted))]">
                 TS: {profile?.trustScore || 845}
               </span>
               {riskTier && (
-                <span className="text-[8px] bg-[#1a0f05] text-amber-500 border border-amber-900/30 px-1.5 py-0.5 rounded font-extrabold">
+                <span className="rounded border border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] px-1.5 py-0.5 text-[8px] font-extrabold text-[hsl(var(--ve-accent-gold))]">
                   {riskTier} RISK
                 </span>
               )}
@@ -324,36 +343,36 @@ export default function VouchCard({
         {/* Lock Status & Timestamp */}
         <div className="text-right flex flex-col items-end gap-1 shrink-0">
           {isLocked ? (
-            <span className="text-[9px] bg-slate-900 text-slate-400 border border-slate-800 px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1">
-              <Lock className="w-2.5 h-2.5 text-slate-500" /> Posted Pre-Lock
+            <span className="text-[9px] bg-[hsl(var(--ve-surface-raised)/0.46)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.30)] px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5 text-[hsl(var(--ve-text-muted))]" /> Posted Pre-Lock
             </span>
           ) : (
             <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-900/40 px-2 py-0.5 rounded font-bold uppercase tracking-wide flex items-center gap-1 animate-pulse">
               <Unlock className="w-2.5 h-2.5" /> Locks in 1h 45m
             </span>
           )}
-          <span className="text-[8px] text-slate-550 font-mono font-bold uppercase">{lockTimeText}</span>
+          <span className="text-[8px] text-[hsl(var(--ve-text-muted))] font-mono font-bold uppercase">{lockTimeText}</span>
         </div>
       </div>
 
       {/* CORE CONTENT BLOCK: PICK DETAILS + ODDS */}
-      <div className="py-4 text-left space-y-3.5">
+      <div className="space-y-3 py-3.5 text-left">
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-1.5 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] bg-slate-850 text-slate-300 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider font-mono border border-slate-800">
+              <span className="rounded-md border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.40)] px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-[hsl(var(--ve-text-secondary))]">
                 {vouch.sport}
               </span>
-              <span className="text-[9px] text-slate-500 font-bold uppercase">Game Market Verified</span>
+              <span className="text-[9px] font-bold uppercase text-[hsl(var(--ve-text-muted))]">Game Market Verified</span>
             </div>
 
-            <h4 className="text-base font-black text-slate-100 tracking-tight leading-snug">
+            <h4 className="text-base font-black tracking-tight leading-snug text-[hsl(var(--ve-text-primary))] sm:text-lg">
               {vouch.playerOrTeam ? `${vouch.playerOrTeam} ` : ''}
               {vouch.selection ? `${vouch.selection} ` : ''}
               {vouch.line ? `(${vouch.line}) ` : ''}
               {!vouch.selection && !vouch.line && vouch.market}
             </h4>
-            <p className="text-slate-400 text-xs font-semibold">{vouch.gameName}</p>
+            <p className="text-xs font-semibold text-[hsl(var(--ve-text-muted))]">{vouch.gameName}</p>
           </div>
 
           {/* Odds Badge */}
@@ -361,7 +380,7 @@ export default function VouchCard({
             <span className={`text-sm font-mono font-extrabold px-3 py-1 rounded-lg ${oddsBadgeColor}`}>
               {vouch.odds}
             </span>
-            <span className="text-[8px] text-slate-500 font-mono font-black mt-1.5 uppercase">Verified odds</span>
+            <span className="mt-1.5 font-mono text-[8px] font-black uppercase text-[hsl(var(--ve-text-muted))]">Verified odds</span>
           </div>
         </div>
 
@@ -369,18 +388,18 @@ export default function VouchCard({
         {vouch.parlay && (
           <div className="my-2.5 p-3.5 bg-slate-950/60 rounded-xl border border-slate-850/80 relative space-y-2.5 overflow-hidden">
             {/* Visual connector line background */}
-            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-cyan-500/60 via-indigo-500/50 to-purple-500/20" />
+            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-[hsl(var(--ve-accent-cyan)/0.42)]" />
             
             <div className="flex justify-between items-center pb-1.5 border-b border-slate-900">
               <span className="text-[9px] font-mono text-slate-450 uppercase tracking-widest font-extrabold">Parlay Slip Legs</span>
-              <span className="text-[9px] font-mono text-purple-450 bg-purple-950/40 px-1.5 py-0.2 rounded border border-purple-900/30 font-bold uppercase">Weaker leg: Underdogs</span>
+              <span className="rounded border border-[hsl(var(--ve-accent-pink)/0.28)] bg-[hsl(var(--ve-accent-pink)/0.10)] px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase text-[hsl(var(--ve-accent-pink))]">Weaker leg: Underdogs</span>
             </div>
 
             <div className="space-y-3 relative z-10 pl-6">
               {vouch.parlay.legs.map((leg, legIdx) => (
                 <div key={leg.id} className="relative flex items-start justify-between gap-3 text-xs">
                   {/* Glowing Node Indicator */}
-                  <span className="absolute -left-[23px] top-1.5 w-2 h-2 rounded-full bg-cyan-400 border border-slate-950 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                  <span className="absolute -left-[23px] top-1.5 w-2 h-2 rounded-full border border-[hsl(var(--ve-bg-deep))] bg-[hsl(var(--ve-accent-cyan))] shadow-[0_0_8px_hsl(var(--ve-accent-cyan)/0.40)]" />
 
                   <div className="text-left space-y-0.5">
                     <div className="flex items-center gap-1.5">
@@ -392,7 +411,7 @@ export default function VouchCard({
                   </div>
 
                   <div className="text-right flex flex-col items-end">
-                    <span className="font-mono text-cyan-450 font-bold bg-cyan-950/30 px-1.5 rounded">x{leg.odds}</span>
+                    <span className="rounded bg-[hsl(var(--ve-accent-cyan)/0.10)] px-1.5 font-mono font-bold text-[hsl(var(--ve-accent-cyan))]">x{leg.odds}</span>
                     <span className={`text-[8px] font-bold uppercase ${leg.status === 'WON' ? 'text-emerald-400' : 'text-slate-500'}`}>
                       ● {leg.status}
                     </span>
@@ -442,25 +461,25 @@ export default function VouchCard({
 
         {/* COMPREHENSIVE SIDE-BY-SIDE CONFIDENCE MEASUREMENT */}
         {!isXPreview && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-slate-950/40 rounded-xl border border-slate-850/60 text-xs">
+          <div className="grid grid-cols-1 gap-3 rounded-xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-surface-raised)/0.26)] p-3 text-xs md:grid-cols-2">
             {/* AI Model Score */}
             <div className="space-y-1 text-left">
-              <span className="text-[10px] text-purple-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] text-[hsl(var(--ve-accent-pink))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" /> AI Engine Confidence
               </span>
-              {renderConfidenceMeter(aiConfidence, 'bg-purple-500', 'shadow-[0_0_8px_rgba(168,85,247,0.5)]')}
+              {renderConfidenceMeter(aiConfidence, 'text-[hsl(var(--ve-accent-pink))]', 'bg-[hsl(var(--ve-accent-pink))]', 'shadow-[0_0_8px_hsl(var(--ve-accent-pink)/0.28)]')}
             </div>
 
             {/* Capper Personal Score */}
             <div className="space-y-1 text-left">
-              <span className="text-[10px] text-cyan-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] text-[hsl(var(--ve-accent-cyan))] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" /> My Handled Confidence
               </span>
-              {renderConfidenceMeter(capperConfidence, 'bg-cyan-500', 'shadow-[0_0_8px_rgba(6,182,212,0.5)]')}
+              {renderConfidenceMeter(capperConfidence, 'text-[hsl(var(--ve-accent-cyan))]', 'bg-[hsl(var(--ve-accent-cyan))]', 'shadow-[0_0_8px_hsl(var(--ve-accent-cyan)/0.28)]')}
             </div>
 
             {/* Side-by-side gap alerts or alignment indicators */}
-            <div className="col-span-1 md:col-span-2 pt-2 border-t border-slate-900 flex items-center justify-between flex-wrap gap-2 text-[10px]">
+            <div className="col-span-1 flex flex-wrap items-center justify-between gap-2 border-t border-[hsl(var(--ve-border)/0.24)] pt-2 text-[10px] md:col-span-2">
               <div className="flex items-center gap-1.5">
                 {hasGap ? (
                   <span className="bg-rose-950 text-rose-400 font-extrabold px-2 py-0.5 rounded border border-rose-900 flex items-center gap-1 uppercase tracking-wide">
@@ -471,11 +490,11 @@ export default function VouchCard({
                     <Check className="w-3 h-3" /> MODEL ALIGNED
                   </span>
                 ) : (
-                  <span className="bg-purple-950 text-purple-400 font-extrabold px-2 py-0.5 rounded border border-purple-900/40 flex items-center gap-1 uppercase tracking-wide">
+                  <span className="flex items-center gap-1 rounded border border-[hsl(var(--ve-accent-pink)/0.32)] bg-[hsl(var(--ve-accent-pink)/0.10)] px-2 py-0.5 font-extrabold uppercase tracking-wide text-[hsl(var(--ve-accent-pink))]">
                     <Sparkles className="w-3 h-3" /> AI MODEL SUPPORTED
                   </span>
                 )}
-                <span className="text-slate-500 font-mono font-medium">
+                <span className="text-[hsl(var(--ve-text-muted))] font-mono font-medium">
                   {hasGap 
                     ? "Capper is far more aggressive than model parameters suggest." 
                     : "Excellent agreement between computer projection & capper analysis."}
@@ -487,8 +506,8 @@ export default function VouchCard({
 
         {/* WRITTEN TRUST ANALYSIS / NOTE */}
         {vouch.userNote && !isXPreview && (
-          <div className="p-3 bg-slate-900/35 rounded-xl border border-slate-800/40 text-xs text-slate-350 leading-relaxed flex gap-2">
-            <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+          <div className="p-3 bg-[hsl(var(--ve-surface-raised)/0.30)] rounded-xl border border-[hsl(var(--ve-border)/0.24)] text-xs text-[hsl(var(--ve-text-secondary))] leading-relaxed flex gap-2">
+            <Info className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))] flex-shrink-0 mt-0.5" />
             <p className="italic font-medium">
               "{vouch.userNote}"
             </p>
@@ -518,48 +537,48 @@ export default function VouchCard({
       </div>
 
       {/* FOOTER METADATA: PLATFORM VOUCHES / TAILS / SCREENSHOT WATERMARK */}
-      <div className="flex items-center justify-between border-t border-slate-800/60 pt-3 mt-1.5 text-xs">
-        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500 font-bold">
+      <div className="mt-1.5 flex items-center justify-between border-t border-[hsl(var(--ve-border)/0.28)] pt-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] font-bold text-[hsl(var(--ve-text-muted))]">
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping" />
+            <span className="w-1.5 h-1.5 bg-[hsl(var(--ve-accent-cyan))] rounded-full animate-ping" />
             {vouchCount} PLATFORM VOUCHES
           </span>
           <span className="flex items-center gap-1 uppercase">
-            🚀 {tailCount} LIVE TAILS
+            {tailCount} LIVE TAILS
           </span>
         </div>
 
         {/* Watermark badge designed for screenshotting to X */}
-        <div className="hidden sm:flex items-center gap-1 opacity-45 bg-[#050b14] px-2 py-0.5 border border-slate-850 rounded text-[8px] font-mono font-extrabold text-cyan-400 tracking-wider">
+        <div className="hidden sm:flex items-center gap-1 opacity-45 bg-[hsl(var(--ve-bg-deep)/0.86)] px-2 py-0.5 border border-[hsl(var(--ve-border)/0.32)] rounded text-[8px] font-mono font-extrabold text-[hsl(var(--ve-accent-cyan))] tracking-wider">
           <span>VEdge Certified Proof</span>
         </div>
       </div>
 
       {/* INTERACTIVE ACTIONS BAR */}
       {!isXPreview && (
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-800/40">
-          <div className="flex items-center gap-1.5">
+        <div className="mt-3 flex flex-col gap-2 border-t border-[hsl(var(--ve-border)/0.24)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
             {/* Vouch Button */}
             <button
               onClick={handleVouchClick}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
                 localVouched
-                  ? 'bg-amber-950/40 border-amber-800/80 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-gold)/0.16)] border-[hsl(var(--ve-accent-gold)/0.46)] text-[hsl(var(--ve-accent-gold))] shadow-[0_0_12px_hsl(var(--ve-accent-gold)/0.22)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`vouch-action-btn-${vouch.id}`}
             >
-              <Zap className={`w-3.5 h-3.5 ${localVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 ${localVouched ? 'fill-[hsl(var(--ve-accent-gold))] text-[hsl(var(--ve-accent-gold))]' : ''}`} />
               <span>Vouch</span>
             </button>
 
             {/* Tail Button */}
             <button
               onClick={handleTailClick}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
                 localTailed
-                  ? 'bg-cyan-950/40 border-cyan-800 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-cyan)/0.16)] border-[hsl(var(--ve-accent-cyan)/0.44)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_12px_hsl(var(--ve-accent-cyan)/0.22)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`tail-action-btn-${vouch.id}`}
             >
@@ -570,10 +589,10 @@ export default function VouchCard({
             {/* Save to Board Button */}
             <button
               onClick={handleSaveClick}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs border ${
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
                 isSaved
-                  ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-emerald-400/14 border-emerald-400/42 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.20)]'
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               id={`save-board-btn-${vouch.id}`}
             >
@@ -582,14 +601,14 @@ export default function VouchCard({
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 sm:justify-end">
             {/* Explainer / Model Breakdown trigger button */}
             <button
               onClick={() => setShowExplanation(!showExplanation)}
               className={`p-2 rounded-lg font-bold transition-all text-xs border ${
                 showExplanation 
-                  ? 'bg-indigo-950/30 border-indigo-800 text-indigo-400' 
-                  : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-250'
+                  ? 'bg-[hsl(var(--ve-accent-pink)/0.12)] border-[hsl(var(--ve-accent-pink)/0.34)] text-[hsl(var(--ve-accent-pink))]' 
+                  : 'bg-[hsl(var(--ve-surface-raised)/0.42)] border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-border)/0.48)] hover:text-[hsl(var(--ve-text-secondary))]'
               }`}
               title="Explain Probability Parameters"
               id={`explain-btn-${vouch.id}`}
@@ -600,10 +619,10 @@ export default function VouchCard({
             {/* Share to X Button */}
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-lg font-bold transition-all text-xs hover:scale-103 active:scale-97 cursor-pointer shadow-md shadow-sky-550/10"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.86)] text-[hsl(var(--ve-bg-deep))] rounded-lg font-bold transition-all text-xs hover:scale-103 active:scale-97 cursor-pointer shadow-md shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
               id={`share-x-btn-${vouch.id}`}
             >
-              <Twitter className="w-3.5 h-3.5 fill-slate-950" />
+              <Twitter className="w-3.5 h-3.5 fill-[hsl(var(--ve-bg-deep))]" />
               <span>Share</span>
             </button>
           </div>
@@ -612,25 +631,25 @@ export default function VouchCard({
 
       {/* EXPANDABLE MODEL-EXPLANATION DRAWER */}
       {showExplanation && (
-        <div className="mt-3.5 p-3.5 bg-slate-950/80 rounded-xl border border-slate-850 text-xs text-left space-y-2 animate-slide-up">
-          <h5 className="font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+        <div className="mt-3.5 p-3.5 bg-[hsl(var(--ve-surface)/0.76)] rounded-xl border border-[hsl(var(--ve-border)/0.30)] text-xs text-left space-y-2 animate-slide-up backdrop-blur-xl">
+          <h5 className="font-extrabold text-[hsl(var(--ve-accent-pink))] uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" /> AI Model-Supported Backtesting Metrics
           </h5>
-          <p className="text-slate-350 leading-relaxed font-semibold">
-            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market{aiConfidence !== null ? <> at a <strong className="text-cyan-400">{aiConfidence}% frequency</strong></> : ''} over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
+          <p className="text-[hsl(var(--ve-text-secondary))] leading-relaxed font-semibold">
+            Based on the model parameters, players on {vouch.sport} with similar matchups have covered this market{aiConfidence !== null ? <> at a <strong className="text-[hsl(var(--ve-accent-cyan))]">{aiConfidence}% frequency</strong></> : ''} over the last 45 games. Team defensive rating decreases projected points by 4.2%, and rest advantages align high projection thresholds.
           </p>
           <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono pt-1">
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Kelly Criterion</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Kelly Criterion</span>
               <span className="text-emerald-400 font-extrabold">2.4% yield</span>
             </div>
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Simulated EV</span>
-              <span className="text-cyan-400 font-extrabold">+6.8% EV</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Simulated EV</span>
+              <span className="text-[hsl(var(--ve-accent-cyan))] font-extrabold">+6.8% EV</span>
             </div>
-            <div className="bg-slate-900 p-1.5 rounded border border-slate-850">
-              <span className="text-slate-500 block">Sample size</span>
-              <span className="text-slate-300 font-extrabold">12.8k sims</span>
+            <div className="bg-[hsl(var(--ve-surface-raised)/0.42)] p-1.5 rounded border border-[hsl(var(--ve-border)/0.30)]">
+              <span className="text-[hsl(var(--ve-text-muted))] block">Sample size</span>
+              <span className="text-[hsl(var(--ve-text-secondary))] font-extrabold">12.8k sims</span>
             </div>
           </div>
         </div>
@@ -743,17 +762,26 @@ export default function VouchCard({
                   ].filter(l => l !== undefined).join('\n'));
                   triggerToast('📋 Copied tweet caption!');
                 }}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-slate-800"
+                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.46)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-secondary))] font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-[hsl(var(--ve-border)/0.32)]"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Copy Caption</span>
               </button>
-              
+
+              <button
+                onClick={handleCopyShareLink}
+                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.46)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-secondary))] font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-[hsl(var(--ve-border)/0.32)]"
+                title="Copy a link that shows a rich preview card on X, Slack, and iMessage"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Copy Share Link</span>
+              </button>
+
               <button
                 onClick={generateXShareIntent}
-                className="px-5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02]"
+                className="px-5 py-2 bg-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.86)] text-[hsl(var(--ve-bg-deep))] font-black rounded-xl text-xs flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.16)]"
               >
-                <Twitter className="w-3.5 h-3.5 fill-slate-950" />
+                <Twitter className="w-3.5 h-3.5 fill-[hsl(var(--ve-bg-deep))]" />
                 <span>Publish to X</span>
               </button>
             </div>

@@ -21,6 +21,7 @@ import {
 import { MLBPlayer, Vouch } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getPlayerSpotlightMetrics } from '../utils/spotlightMath';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 export interface CustomPlayerSelection {
   player: MLBPlayer;

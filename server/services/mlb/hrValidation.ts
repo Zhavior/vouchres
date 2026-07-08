@@ -85,10 +85,25 @@ export interface ScoredHrCandidate {
   opponentPitcherName: string;
   opponentPitcher: string;
   opponentPitcherId: number;
+  /** Real probable-pitcher hand from the MLB schedule feed. null = not yet posted/unknown — never guessed. */
+  opponentPitcherHand: "L" | "R" | null;
+  /** Real batter side from the MLB roster feed. null = unknown — never guessed. */
+  batSide: "L" | "R" | "S" | null;
   lineupStatus: LineupStatus;
   injuryStatus: InjuryStatus;
   hrScore: number;
+  estimatedHrProbability?: number;
+  confidenceTier?: "elite" | "strong" | "watchlist" | "thin" | "avoid";
   dataConfidence: number;
+  scoreBreakdown?: {
+    hitterPower: number;
+    pitcherVulnerability: number;
+    parkContext: number;
+    lineupVolume: number;
+    handednessEdge: number;
+    recentForm: number;
+    penalties: number;
+  };
   riskTier: "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid";
   status: HrCandidateStatus;
   reasons: string[];
@@ -97,6 +112,14 @@ export interface ScoredHrCandidate {
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
   lastUpdated: string;
   dataSource: string;
+  // Optional contextual fields attached by the pipeline for downstream display.
+  venue?: string;
+  parkFactor?: number;
+  parkSource?: string;
+  hrMultiplier?: number;
+  weatherBoost?: number;
+  weatherSource?: string;
+  battingOrder?: number | null;
 }
 
 /* ============ Game context for validation ============ */

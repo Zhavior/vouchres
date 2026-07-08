@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { Trophy, ShieldAlert, BarChart3, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Parlay } from '../types';
+import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface RiskTierVisualizationProps {
   savedParlays: Parlay[];

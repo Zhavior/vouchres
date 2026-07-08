@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck, Gavel, Share2, Save, Sparkles, AlertTriangle, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import type { Leg } from '../../types';
 import { Button, RiskBadge, ScorePill } from '../ui/primitives';
+import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 export type BuilderMode = 'safe' | 'balanced' | 'moonshot';
 

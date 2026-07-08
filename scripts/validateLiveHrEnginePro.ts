@@ -1,6 +1,5 @@
 const TODAY_URL = "https://vouchres.vercel.app/api/mlb/hr-board/today?previewLimit=50";
-const DEFAULT_PRO_V2_URL =
-  "https://vouchres-git-hr-engine-pro-v2-vouch-edge.vercel.app/api/mlb/hr-board/pro-v2?previewLimit=50";
+const DEFAULT_PRO_V2_URL = "https://vouchres.vercel.app/api/mlb/hr-board/pro-v2?previewLimit=50";
 const PRO_V2_URL = process.env.PRO_V2_URL || DEFAULT_PRO_V2_URL;
 
 const BAD_PAIRINGS = new Set([

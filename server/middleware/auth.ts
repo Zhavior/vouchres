@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { AppError } from "../errors/AppError";
 
 /**
  * Supabase service-role client — used for privileged operations
@@ -9,19 +10,42 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 let supabaseAdminClient: SupabaseClient | null = null;
 
-export async function getSupabaseAdmin(): Promise<SupabaseClient> {
-  if (supabaseAdminClient) return supabaseAdminClient;
+function initSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdminClient) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const { createClient } = await import("@supabase/supabase-js");
-  supabaseAdminClient = createClient(
-    process.env.SUPABASE_URL ?? "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    {
-      auth: { persistSession: false, autoRefreshToken: false },
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error(
+        "Server Supabase admin client requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+      );
     }
-  );
+
+    supabaseAdminClient = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+  }
   return supabaseAdminClient;
 }
+
+export async function getSupabaseAdmin(): Promise<SupabaseClient> {
+  return initSupabaseAdmin();
+}
+
+/**
+ * Synchronous service-role client. Lazily initialized on first property access
+ * so importing modules can use `supabaseAdmin.from(...)` directly without await.
+ * (Compatibility shim for the many route handlers written against a sync client.)
+ */
+export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = initSupabaseAdmin();
+    const value = Reflect.get(client as object, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 /**
  * Auth middleware — verifies the Supabase JWT from the Authorization header
@@ -54,54 +78,99 @@ export async function requireAuth(
   res: Response,
   next: NextFunction
 ) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "missing_token" });
-  }
-
-  const token = header.slice(7);
-
-  // Verify the JWT via Supabase auth admin API
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) {
-    return res.status(401).json({ error: "invalid_token" });
-  }
-
-  // Load profile from public.profiles (bypasses RLS via service role)
-  const { data: profile, error: pErr } = await supabaseAdmin
-    .from("profiles")
-    .select(`
-      id, username, tier, is_banned, is_staff, is_demo,
-      age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
-      deletion_scheduled_at
-    `)
-    .eq("id", data.user.id)
-    .single();
-
-  if (pErr || !profile) {
-    return res.status(403).json({ error: "profile_missing" });
-  }
-
-  if (profile.is_banned) {
-    // Distinguish "banned by moderator" from "scheduled for deletion"
-    if (profile.deletion_scheduled_at) {
-      return res.status(403).json({
-        error: "account_scheduled_for_deletion",
-        deletion_scheduled_at: profile.deletion_scheduled_at,
-        message: "Your account is scheduled for deletion. Visit Settings to cancel.",
-      });
+  try {
+    const header = req.headers.authorization;
+    if (!header?.startsWith("Bearer ")) {
+      console.warn(`[auth] rejected unauthenticated request ${req.method} ${req.originalUrl}`);
+      return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
     }
-    return res.status(403).json({ error: "banned" });
+
+    const token = header.slice(7);
+
+    // Verify the JWT via Supabase auth admin API
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data.user) {
+      console.warn(`[auth] rejected invalid token ${req.method} ${req.originalUrl}`);
+      return next(new AppError({ status: 401, code: "invalid_token", message: "Authentication token is invalid." }));
+    }
+
+    const PROFILE_COLUMNS = `
+    id, username, tier, is_banned, is_staff, is_demo,
+    age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
+    deletion_scheduled_at
+  `;
+
+    // Load profile from public.profiles (bypasses RLS via service role)
+    let { data: profile, error: pErr } = await supabaseAdmin
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+  // Lazy provisioning: if the auth user has no profile row yet (the
+  // handle_new_user trigger is missing or didn't run for this account),
+  // create a minimal one now so a valid logged-in user is never locked out.
+  // Idempotent — a concurrent insert just falls back to a re-select.
+    if (!pErr && !profile) {
+      const shortId = data.user.id.replace(/-/g, "").slice(0, 12);
+      const username = `user_${shortId}`; // 17 chars, within the 3–24 constraint
+      const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
+
+      const { data: created, error: cErr } = await supabaseAdmin
+        .from("profiles")
+        .insert({ id: data.user.id, username, display_name: displayName })
+        .select(PROFILE_COLUMNS)
+        .single();
+
+      if (created) {
+        profile = created;
+      } else if (cErr) {
+        // Likely a race (unique violation) — the row now exists; re-read it.
+        const reread = await supabaseAdmin
+          .from("profiles")
+          .select(PROFILE_COLUMNS)
+          .eq("id", data.user.id)
+          .maybeSingle();
+        profile = reread.data ?? null;
+        pErr = reread.error ?? cErr;
+      }
+    }
+
+    if (pErr || !profile) {
+      console.warn(`[auth] rejected request without profile user=${data.user.id} ${req.method} ${req.originalUrl}`);
+      return next(new AppError({ status: 403, code: "forbidden", message: "Profile is missing." }));
+    }
+
+    if (profile.is_banned) {
+      // Distinguish "banned by moderator" from "scheduled for deletion"
+      if (profile.deletion_scheduled_at) {
+        return next(new AppError({
+          status: 403,
+          code: "forbidden",
+          message: "Your account is scheduled for deletion. Visit Settings to cancel.",
+          details: { deletion_scheduled_at: profile.deletion_scheduled_at },
+        }));
+      }
+      return next(new AppError({ status: 403, code: "forbidden", message: "Account is banned." }));
+    }
+
+    req.user = {
+      id: data.user.id,
+      email: data.user.email,
+      profile,
+    };
+
+    next();
+  } catch (error) {
+    next(new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Authentication check failed.",
+      expose: false,
+      cause: error,
+    }));
   }
-
-  req.user = {
-    id: data.user.id,
-    email: data.user.email,
-    profile,
-  };
-
-  next();
 }
 
 /**
@@ -142,7 +211,8 @@ export async function optionalAuth(
  */
 export function requireStaff(req: AuthedRequest, res: Response, next: NextFunction) {
   if (!req.user?.profile.is_staff) {
-    return res.status(403).json({ error: "staff_only" });
+    console.warn(`[auth] rejected non-staff request user=${req.user?.id ?? "unknown"} ${req.method} ${req.originalUrl}`);
+    return next(new AppError({ status: 403, code: "forbidden", message: "Staff access is required." }));
   }
   next();
 }
@@ -157,12 +227,12 @@ export function requireLegalConfirmed(
   next: NextFunction
 ) {
   const p = req.user?.profile;
-  if (!p) return res.status(401).json({ error: "missing_token" });
+  if (!p) return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
   if (!p.age_confirmed_at) {
-    return res.status(403).json({ error: "age_confirmation_required" });
+    return next(new AppError({ status: 403, code: "forbidden", message: "Age confirmation is required." }));
   }
   if (!p.jurisdiction_confirmed_at || !p.jurisdiction) {
-    return res.status(403).json({ error: "jurisdiction_required" });
+    return next(new AppError({ status: 403, code: "forbidden", message: "Jurisdiction confirmation is required." }));
   }
   // Block jurisdictions where sports betting is illegal (US list, update as law changes)
   const blockedJurisdictions = [
@@ -179,7 +249,7 @@ export function requireLegalConfirmed(
   // your actual legal exposure. Outside the US, geofence by IP at the edge
   // (Cloudflare / Vercel middleware) before requests reach this layer.
   if (blockedJurisdictions.includes(p.jurisdiction)) {
-    return res.status(403).json({ error: "jurisdiction_blocked" });
+    return next(new AppError({ status: 403, code: "forbidden", message: "This jurisdiction is blocked." }));
   }
   next();
 }

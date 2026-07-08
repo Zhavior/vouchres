@@ -1,142 +1,465 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Sliders, ClipboardCheck, BarChart3, User, Settings, Shield, Edit3, Sparkles, Compass, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag, MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Eye, Zap, Palette } from 'lucide-react';
+/**
+ * FeedSidebar — Z8 Obsidian rebuild
+ *
+ * Design rules:
+ *  - Z8 tokens only: glass-panel/glass-border, vouch-emerald (primary), vouch-cyan (secondary)
+ *  - No per-group rainbow colors — every group and nav item shares the same two-accent system
+ *  - Collapsible group sections (open by default, user preference persisted in localStorage)
+ *  - Sport pill switcher (MLB / NBA / NFL) at top
+ *  - BEGINNER/PRO toggle removed → lives in Settings
+ *  - Notifications removed from sidebar → header bell icon
+ *  - Cmd+K hint at top for power users
+ *  - All 18+ features preserved, just 2-level hierarchy
+ */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
+  Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
+  MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
+  Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
+  ChevronDown, Command, ChevronRight,
+} from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
-import { loadFeatureLayout, getEnabledFeatures, saveFeatureLayout, setViewMode, FeatureLayout } from '../../lib/featureConfig';
+import {
+  ALL_FEATURES, getSidebarFeatures, loadFeatureLayout, saveFeatureLayout,
+  setViewMode, FeatureLayout,
+} from '../../lib/featureConfig';
+import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const SIDEBAR_GROUPS = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
+
+/**
+ * Groups that are collapsed by default.
+ * User overrides are persisted to localStorage so the state survives refreshes.
+ */
+const DEFAULT_COLLAPSED: Record<string, boolean> = {
+  'Account': false,
+  'Social': false,
+};
+
+const COLLAPSED_KEY = 've-sidebar-collapsed';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Trophy, LayoutDashboard, Home, Award, Tv, Sliders, Cpu, Activity,
-  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles,
-  MessageSquare, ShoppingBag, User, Settings,
+  Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
+  Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
+  ShoppingBag, User, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
 };
+
+/** Group → Z8 accent class used for the group header label colour. Disciplined two-accent system: emerald for proof/action groups, cyan for everything else. */
+const GROUP_ACCENT: Record<string, string> = {
+  Daily: 'text-vouch-emerald',
+  'Pro Labs': 'text-vouch-cyan',
+  'Build & Track': 'text-vouch-emerald',
+  Social: 'text-vouch-cyan',
+  Account: 'text-white/40',
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function loadCollapsedState(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY);
+    if (raw) return { ...DEFAULT_COLLAPSED, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...DEFAULT_COLLAPSED };
+}
+
+function saveCollapsedState(state: Record<string, boolean>) {
+  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface NavItemProps {
+  id: string;
+  label: string;
+  icon: string;
+  isActive: boolean;
+  onClick: () => void;
+  badge?: React.ReactNode;
+}
+
+function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
+  const IconComponent = ICON_MAP[icon] || Settings;
+
+  return (
+    <button
+      key={id}
+      onClick={onClick}
+      id={`sidebar-link-${id}`}
+      aria-current={isActive ? 'page' : undefined}
+      className={[
+        'glass-panel glass-border font-z8 group relative w-full flex items-center justify-center xl:justify-start gap-3',
+        'pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl text-sm transition-all outline-none',
+        isActive ? 'text-white font-black' : 'text-white/50 hover:text-white',
+      ].join(' ')}
+    >
+      <span
+        className={[
+          'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-all',
+          isActive ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'bg-vouch-emerald/10 text-vouch-emerald/70 group-hover:text-vouch-emerald',
+        ].join(' ')}
+      >
+        <IconComponent className="h-3.5 w-3.5" />
+      </span>
+      <span className="relative z-10 hidden xl:block truncate text-[13px] font-semibold leading-none">
+        {label}
+      </span>
+      {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
+    </button>
+  );
+}
+
+interface SidebarGroupProps {
+  group: string;
+  items: Array<{ id: string; label: string; icon: string }>;
+  activeSection: string;
+  onSectionChange: (id: string) => void;
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed, onToggle }: SidebarGroupProps) {
+  const accentClass = GROUP_ACCENT[group] || 'text-white/40';
+  const hasActive = items.some(i => i.id === activeSection);
+
+  return (
+    <div className={['glass-panel glass-border font-z8 rounded-[1.4rem] transition-all', hasActive ? 'border-vouch-emerald/20' : ''].join(' ')}>
+      {/* Group header */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-[1.4rem] text-[10px] font-black uppercase tracking-[0.28em] transition-colors hover:bg-white/[0.03] outline-none"
+        aria-expanded={!collapsed}
+      >
+        <span className={['hidden xl:block', accentClass].join(' ')}>
+          {group}
+        </span>
+        {/* Collapsed icon-only indicator */}
+        <span className="xl:hidden flex items-center justify-center w-5 h-5 rounded-full bg-white/[0.04] border border-white/10">
+          <span className={['block w-1.5 h-1.5 rounded-full bg-current', accentClass].join(' ')} />
+        </span>
+        <span className="hidden xl:flex items-center gap-1.5">
+          <span className="text-[9px] text-white/30">
+            {items.length}
+          </span>
+          <ChevronDown
+            className={[
+              'h-3 w-3 text-white/40 transition-transform',
+              collapsed ? '-rotate-90' : 'rotate-0',
+            ].join(' ')}
+          />
+        </span>
+      </button>
+
+      {/* Items */}
+      <div
+        className={[
+          'overflow-hidden transition-all duration-300',
+          collapsed ? 'max-h-0 opacity-0' : 'max-h-[1200px] opacity-100',
+        ].join(' ')}
+        aria-hidden={collapsed}
+      >
+        <div className="px-2 pb-2.5 space-y-1">
+          {items.map(f => (
+            <NavItem
+              key={f.id}
+              id={f.id}
+              label={f.label}
+              icon={f.icon}
+              isActive={activeSection === f.id}
+              onClick={() => onSectionChange(f.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 interface FeedSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   profile: CreatorProofProfile;
+  onOpenCmdK?: () => void;
+  unreadNotifications?: number;
 }
 
-export default function FeedSidebar({ activeSection, onSectionChange, profile }: FeedSidebarProps) {
+export default function FeedSidebar({
+  activeSection,
+  onSectionChange,
+  profile,
+  onOpenCmdK,
+  unreadNotifications = 0,
+}: FeedSidebarProps) {
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
+  const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
 
-  // Reload layout when profile changes (e.g. after CustomizePage saves)
-  useEffect(() => {
-    setLayout(loadFeatureLayout());
-  }, [activeSection]);
+  // Reload layout when section changes (e.g. after CustomizePage saves)
+  useEffect(() => { setLayout(loadFeatureLayout()); }, [activeSection]);
 
-  // Build menu items from the feature config
-  const enabledFeatures = getEnabledFeatures(layout);
-  const menuItems = enabledFeatures.map((f) => ({
-    id: f.id,
-    label: f.label,
-    icon: ICON_MAP[f.icon] || Settings,
-  }));
+  // Sync active sport from anywhere in the app
+  useEffect(() => onSportChange(setActiveSportState), []);
 
-  const toggleMode = () => {
-    const newMode = layout.mode === "beginner" ? "pro" : "beginner";
-    const next = setViewMode(layout, newMode);
-    setLayout(next);
-    saveFeatureLayout(next);
+  const handleSportClick = (id: SportId) => {
+    setActiveSport(id);
+    setActiveSportState(id);
   };
 
-  return (
-    <aside className="hidden md:flex flex-col h-screen sticky top-0 px-2 xl:px-4 py-6 border-r border-[#1e293b]/70 w-[70px] xl:w-[260px] text-slate-100 justify-between select-none bg-[#090d16]/95 backdrop-blur-xl z-40 flex-shrink-0 overflow-y-auto scrollbar-none">
-      <div className="space-y-6">
-        {/* VouchEdge BRAND Logo with Epic Cinematic Star Wars crawler styling and Trust Badge */}
-        <div 
-          onClick={() => onSectionChange('feed')}
-          className="flex items-center gap-2.5 px-1 relative group cursor-pointer"
-          id="brand-logo-id"
-        >
-          <div className="w-11 h-11 rounded-2xl bg-amber-950/40 border-2 border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-extrabold text-sm shadow-[0_0_15px_rgba(255,232,31,0.25)] shrink-0 select-none transform group-hover:rotate-12 transition-transform duration-300">
-            ★
-          </div>
-          <span className="hidden xl:inline starwars-font-crawl text-xl tracking-wider select-none leading-none nav-link3d-crawl hover:scale-[1.03] transition-all">
-            VOUCH<span className="text-[#FFE81F] starwars-font-solid">EDGE</span>
-          </span>
-        </div>
+  const toggleGroup = useCallback((group: string) => {
+    setCollapsed(prev => {
+      const next = { ...prev, [group]: !prev[group] };
+      saveCollapsedState(next);
+      return next;
+    });
+  }, []);
 
-        {/* Navigation Items */}
-        <nav className="space-y-1.5" id="sidebar-nav-container">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            const isActive = activeSection === item.id;
+  const sidebarFeatures = useMemo(() => {
+    const items = getSidebarFeatures(layout, {
+      canAccessThemeStore: canAccessThemeStore(profile),
+      activeSport,
+    });
+    // Always include HR board
+    if (!items.some(f => f.id === 'hr_board')) {
+      const hr = ALL_FEATURES.find(f => f.id === 'hr_board');
+      if (hr) items.push(hr);
+    }
+    // Always include MLB Stat Hub
+    if (!items.some(f => f.id === 'mlb_stats')) {
+      const mlb = ALL_FEATURES.find(f => f.id === 'mlb_stats');
+      if (mlb) items.push(mlb);
+    }
+    return items
+      // Notifications live in the header — exclude from sidebar
+      .filter(f => f.id !== 'notifications')
+      // BEGINNER/PRO toggle lives in Settings — exclude from sidebar
+      .sort((a, b) => a.order - b.order);
+  }, [layout, profile, activeSport]);
+
+  const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
+  const grouped = useMemo(
+    () =>
+      SIDEBAR_GROUPS.map(group => ({
+        group,
+        items: sidebarFeatures.filter(f => f.group === group),
+      })).filter(s => s.items.length > 0),
+    [sidebarFeatures],
+  );
+
+  return (
+    <aside
+      className={[
+        'relative hidden md:flex flex-col h-screen sticky top-0 font-z8',
+        'w-[72px] xl:w-[280px]',
+        'border-r border-white/10',
+        'bg-obsidian-900 px-2 xl:px-3.5 py-4',
+        'text-white',
+        'justify-between select-none backdrop-blur-sm',
+        'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
+      ].join(' ')}
+    >
+      {/* ── Top section ───────────────────────────────────────────── */}
+      <div className="relative z-10 space-y-4 flex-1">
+
+        {/* Brand logo */}
+        <button
+          onClick={() => onSectionChange('feed')}
+          className="glass-panel glass-border group relative w-full flex items-center gap-3 rounded-2xl p-2.5 cursor-pointer transition-all"
+          id="brand-logo-id"
+          aria-label="Go to Home Feed"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
+            <span className="text-[13px] font-black tracking-tight">VE</span>
+          </div>
+          <div className="hidden xl:block min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-[15px] font-black tracking-tight text-white">
+                VouchEdge
+              </span>
+              <span className="terminal-text rounded-full bg-vouch-emerald/10 px-2 py-0.5 text-vouch-emerald">
+                Live
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-[11px] font-medium text-white/40">
+              MLB Intelligence Command
+            </p>
+          </div>
+        </button>
+
+        {/* Cmd+K hint — desktop only */}
+        <button
+          onClick={onOpenCmdK}
+          className="glass-panel glass-border hidden xl:flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] text-white/40 transition-all hover:text-white"
+          aria-label="Open command palette (⌘K)"
+        >
+          <Search className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1 text-left">Quick search…</span>
+          <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40">
+            <Command className="h-2.5 w-2.5" />K
+          </span>
+        </button>
+
+        {/* Sport Switcher pills */}
+        <div
+          className="glass-panel glass-border flex flex-col xl:flex-row gap-1 rounded-2xl p-1.5"
+          id="sidebar-sport-switcher"
+          role="group"
+          aria-label="Sport selector"
+        >
+          {SPORT_LIST.map(sport => {
+            const isActive = activeSport === sport.id;
             return (
               <button
-                key={item.id}
-                onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-200 outline-none ${
+                key={sport.id}
+                onClick={() => handleSportClick(sport.id)}
+                disabled={!sport.enabled}
+                title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
+                id={`sidebar-sport-${sport.id}`}
+                className={[
+                  'flex-1 flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-black transition-all',
                   isActive
-                    ? 'bg-sky-950/40 text-sky-400 border border-sky-800/40 font-semibold'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900 border border-transparent'
-                }`}
-                id={`sidebar-link-${item.id}`}
+                    ? 'bg-vouch-emerald/10 text-vouch-emerald'
+                    : sport.enabled
+                      ? 'text-white/40 hover:text-white hover:bg-white/[0.04]'
+                      : 'text-white/25 cursor-not-allowed opacity-70',
+                ].join(' ')}
               >
-                <IconComponent className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
-                <span className="hidden xl:inline truncate">{item.label}</span>
+                <span className="text-sm leading-none">{sport.emoji}</span>
+                <span className="hidden xl:inline">{sport.label}</span>
+                {!sport.enabled && (
+                  <span className="terminal-text hidden xl:inline-flex items-center rounded-full bg-white/[0.04] px-1.5 py-0.5 text-white/30">
+                    Soon
+                  </span>
+                )}
               </button>
             );
           })}
-        </nav>
+        </div>
 
-        {/* Primary CTA: Build Parlay */}
-        <div className="px-2 pt-2">
+        {/* Navigation */}
+        <nav className="space-y-2.5" id="sidebar-nav-container" aria-label="Main navigation">
+          {/* Ungrouped (Edge Island, etc.) */}
+          {ungrouped.length > 0 && (
+            <div className="space-y-1">
+              {ungrouped.map(f => (
+                <NavItem
+                  key={f.id}
+                  id={f.id}
+                  label={f.label}
+                  icon={f.icon}
+                  isActive={activeSection === f.id}
+                  onClick={() => onSectionChange(f.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Grouped sections */}
+          {grouped.map(({ group, items }) => (
+            <SidebarGroup
+              key={group}
+              group={group}
+              items={items}
+              activeSection={activeSection}
+              onSectionChange={onSectionChange}
+              collapsed={!!collapsed[group]}
+              onToggle={() => toggleGroup(group)}
+            />
+          ))}
+        </nav>
+      </div>
+
+      {/* ── Bottom section ────────────────────────────────────────── */}
+      <div className="relative z-10 mt-4 space-y-2.5">
+        {/* Sync status pill — desktop only */}
+        <div className="glass-panel glass-border hidden xl:flex items-center justify-between gap-2 rounded-2xl px-3.5 py-2.5">
+          <div>
+            <p className="terminal-text text-white/40">
+              Sync
+            </p>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-white/40">
+              Live data connected
+            </p>
+          </div>
+          <span className="terminal-text inline-flex shrink-0 items-center gap-1 rounded-full bg-vouch-emerald/10 px-2 py-0.5 text-vouch-emerald">
+            <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-pulse" />
+            Online
+          </span>
+        </div>
+
+        {/* Quick-action row: Customize + Settings */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5">
           <button
-            onClick={() => onSectionChange('build')}
-            className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-slate-100 font-semibold py-3 px-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] text-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-sky-500/20"
-            id="sidebar-cta-build-parlay"
+            onClick={() => onSectionChange('customize')}
+            className={[
+              'glass-panel glass-border flex items-center justify-center xl:justify-start gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all',
+              activeSection === 'customize'
+                ? 'text-vouch-emerald bg-vouch-emerald/10'
+                : 'text-white/40 hover:text-white',
+            ].join(' ')}
+            aria-label="Customize layout"
           >
-            <Sliders className="w-4 h-4" />
-            <span className="hidden xl:inline font-bold">Build Parlay</span>
+            <Palette className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xl:inline">Customize</span>
+          </button>
+          <button
+            onClick={() => onSectionChange('settings')}
+            className={[
+              'glass-panel glass-border flex items-center justify-center xl:justify-start gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all',
+              activeSection === 'settings'
+                ? 'text-vouch-cyan bg-vouch-cyan/10'
+                : 'text-white/40 hover:text-white',
+            ].join(' ')}
+            aria-label="Settings"
+          >
+            <Settings className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden xl:inline">Settings</span>
           </button>
         </div>
-      </div>
 
-      {/* Mini Profile Footer */}
-      <div 
-        onClick={() => onSectionChange('profile')}
-        className="flex items-center gap-3.5 p-2 rounded-xl hover:bg-slate-900 cursor-pointer transition-colors border border-transparent hover:border-slate-800"
-        id="sidebar-profile-footer"
-      >
-        <ProfileAvatarBorder 
-          borderId={profile.profileBorderId}
-          displayName={profile.displayName}
-          initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
-          size="md"
-          winRate={profile.winRate}
-          isVerified={profile.verified}
-        />
-        <div className="hidden xl:block min-w-0 flex-1 ml-0.5">
-          <div className="flex items-center gap-1">
-            <h4 className="font-semibold text-slate-200 text-xs truncate leading-none">{profile.displayName}</h4>
-            {profile.verified && <Shield className="w-3 h-3 text-emerald-400 fill-emerald-400" />}
+        {/* Profile card */}
+        <button
+          onClick={() => onSectionChange('profile')}
+          className="glass-panel glass-border w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all"
+          id="sidebar-profile-footer"
+          aria-label={`View profile of ${profile.displayName}`}
+        >
+          <ProfileAvatarBorder
+            borderId={profile.profileBorderId}
+            displayName={profile.displayName}
+            initials={profile.displayName.split(' ').map(n => n[0]).join('')}
+            size="md"
+            winRate={profile.winRate}
+            isVerified={profile.verified}
+          />
+          <div className="hidden xl:block min-w-0 flex-1">
+            <div className="flex items-center gap-1">
+              <h4 className="font-semibold text-sm text-white truncate leading-none">
+                {profile.displayName}
+              </h4>
+              {profile.verified && (
+                <Shield className="h-3 w-3 shrink-0 text-vouch-emerald fill-vouch-emerald/85" />
+              )}
+            </div>
+            <p className="mt-0.5 text-[11px] text-white/40 truncate">
+              {profile.winRate != null
+                ? `${Math.round(profile.winRate * 100)}% win rate`
+                : 'View profile'}
+            </p>
           </div>
-          <p className="text-slate-400 text-[10px] truncate leading-none mt-0.5">@{profile.username}</p>
-        </div>
-      </div>
-
-      {/* Mode toggle + Customize link */}
-      <div className="space-y-2 pt-2">
-        <button
-          onClick={toggleMode}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border"
-          style={{
-            background: layout.mode === "pro" ? "rgba(34,211,238,0.08)" : "rgba(255,255,255,0.02)",
-            borderColor: layout.mode === "pro" ? "rgba(34,211,238,0.3)" : "rgba(255,255,255,0.06)",
-            color: layout.mode === "pro" ? "#22d3ee" : "#64748b",
-          }}
-        >
-          {layout.mode === "pro" ? <Zap className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-          <span className="hidden xl:inline">{layout.mode === "pro" ? "Pro Mode" : "Beginner"}</span>
-          <span className="hidden xl:inline ml-auto text-[8px] opacity-50">click to switch</span>
-        </button>
-        <button
-          onClick={() => onSectionChange("customize")}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
-          style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
-        >
-          <Palette className="w-3 h-3" />
-          <span className="hidden xl:inline">Customize Layout</span>
+          {/* Notification badge on avatar when collapsed */}
+          {unreadNotifications > 0 && (
+            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-vouch-cyan text-[8px] font-black text-black">
+              {unreadNotifications > 9 ? '9+' : unreadNotifications}
+            </span>
+          )}
         </button>
       </div>
     </aside>

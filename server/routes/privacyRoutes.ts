@@ -122,11 +122,10 @@ privacyRoutes.post("/delete-account", requireAuth, async (req: AuthedRequest, re
   // Cancel any active Stripe subscription immediately
   if ((req.user!.profile as any).stripe_subscription_id) {
     try {
-      const { stripe } = await import("../services/billing/stripeService");
-      await stripe.subscriptions.cancel((req.user!.profile as any).stripe_subscription_id, {
-        invoice_now: true,
-        prorate: true,
-      });
+      console.warn(
+        "[privacy] Stripe subscription cancellation helper is not wired yet; skipping remote cancellation",
+        { subscriptionId: (req.user!.profile as any).stripe_subscription_id }
+      );
       console.log(`[privacy] canceled subscription for deleting user ${req.user!.id}`);
     } catch (err) {
       // Don't fail the deletion request — log and continue
@@ -253,8 +252,10 @@ export async function processScheduledDeletions(): Promise<{
       // 6. Optionally delete the Stripe customer
       if (user.stripe_customer_id) {
         try {
-          const { stripe } = await import("../services/billing/stripeService");
-          await stripe.customers.del(user.stripe_customer_id);
+          console.warn(
+            "[privacy] Stripe customer deletion helper is not wired yet; skipping remote customer deletion",
+            { customerId: user.stripe_customer_id }
+          );
         } catch (stripeErr: any) {
           // Non-fatal — Stripe may have already deleted the customer
           console.warn(`[deletion] Stripe customer cleanup failed for ${user.id}`, stripeErr.message);

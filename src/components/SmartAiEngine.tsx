@@ -1,96 +1,158 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Sparkles, 
-  Flame, 
-  Wind, 
-  Thermometer, 
-  TrendingUp, 
-  ShieldAlert, 
-  Database, 
-  Zap, 
-  HelpCircle, 
-  Search, 
-  Plus, 
-  Share2, 
-  Play, 
-  CheckCircle2, 
-  Sliders, 
+import { useState, useEffect, useMemo } from 'react';
+import {
   Cpu,
-  RefreshCw,
-  Award,
-  ChevronLeft,
-  ChevronRight,
-  TrendingDown,
+  Database,
+  CheckCircle2,
   Activity,
-  Compass,
-  ArrowRight
+  Award,
+  Gauge,
+  Lock,
+  Unlock,
+  Crown,
+  Bookmark,
 } from 'lucide-react';
-import { MLB_PLAYER_RECORDS } from '../data/playerData';
-import { MLBPlayer, Leg, FeedPost } from '../types';
+import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
+import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
+
+import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
+import { normalizeParlaySlip } from '../lib/parlays/parlayBridge';
+import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import { safeJsonFetch } from '../api/safeApiClient';
+import { resolveMarket } from '../sports/markets';
+import {
+  americanToDecimalOdds,
+  buildSmartAiDynamicParlay,
+  type RealCandidate,
+  type SmartAiBuilderCategory,
+} from './smart-ai/smartAiEngine.logic';
+import { SmartAiDynamicCreator } from './smart-ai/SmartAiDynamicCreator';
+import { SmartAiDeepResearchPanel } from './smart-ai/SmartAiDeepResearchPanel';
+
+/**
+ * V.A.I Research Command Center.
+ *
+ * Truth rules:
+ *   - Every candidate comes from the validated HR board pipeline (real MLB
+ *     season stats, probable pitchers, sourced park factors). Nothing is
+ *     generated client-side to fill gaps.
+ *   - Missing data renders as an explicit warning, never a fabricated value.
+ *   - Model probability estimates are labeled as estimates — they are not
+ *     sportsbook odds and are never saved as market prices.
+ */
 
 interface SmartAiEngineProps {
   onSectionChange: (section: string) => void;
-  onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
-  onSaveVouch: (vouchItem: any) => void;
+  onAddLegToParlay: (
+    player: MLBPlayer,
+    prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }
+  ) => void;
+  onSaveVouch: (vouchItem: unknown) => void;
   onPostCreated?: (newPost: FeedPost) => void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => void;
   liveGames?: any[];
 }
 
-// Procedural, deterministic generation of 850 distinct high-quality AI picks
-// Since this runs client-side on-the-fly, it costs $0, doesn't overload the server,
-// and guarantees consistent, realistic datasets across all users!
-interface PrecomputedPick {
-  id: string;
-  seedIndex: number;
-  title: string;
-  typeLabel: string;
-  marketType: 'HR' | 'HITS' | 'RBIS' | 'RUNS' | 'COMBO';
-  description: string;
-  players: MLBPlayer[];
-  legs: {
-    playerId: string;
-    playerName: string;
-    marketName: string;
-    customSpec: string;
-    odds: number;
-    justification: string;
-  }[];
-  totalOdds: string;
-  oddsValue: number;
-  aiConfidenceScore: number;
-  riskTier: 'LOW' | 'MEDIUM' | 'HIGH';
-  weather: {
-    temp: number;
-    windMph: number;
-    windDirection: 'OUT' | 'IN' | 'CROSS';
-    elevationCoef: number;
+
+type SmartAiRawCandidate = {
+  playerId?: string | number;
+  player_id?: string | number;
+  id?: string | number;
+  playerName?: string;
+  player_name?: string;
+  name?: string;
+  gamePk?: string | number;
+  gameId?: string | number;
+  team?: string;
+  teamAbbrev?: string;
+  opponent?: string;
+  opponentTeam?: string;
+  probablePitcher?: {
+    name?: string;
+    throws?: string;
+    vulnerability?: number;
+  } | null;
+  opponentPitcherName?: string | null;
+  opponentPitcherId?: number | null;
+  opponentPitcherHand?: string | null;
+  opposingPitcher?: string | null;
+  pitcherHand?: string;
+  opposingPitcherHand?: string;
+  batSide?: string;
+  injuryStatus?: string;
+  pitcherVulnerability?: number;
+  parkFactor?: number;
+  venue?: string;
+  ballpark?: string;
+  lineupStatus?: string;
+  lineup_status?: string;
+  confidenceTier?: string;
+  riskTier?: string;
+  estimatedHrProbability?: number;
+  dataConfidence?: number;
+  battingOrder?: number;
+  dataQuality?: string;
+  reasons?: unknown[];
+  warnings?: unknown[];
+  scoreBreakdown?: Record<string, unknown> | null;
+  score?: number;
+  hrScore?: number;
+  edge?: number;
+  impliedOdds?: number;
+  odds?: number;
+};
+
+/** Minimal MLBPlayer shim for leg transfer. The transfer path only reads
+ *  id/name/team; the remaining fields are type-required placeholders and must
+ *  NOT be rendered as verified data (bats/throws cannot express "unknown" yet). */
+function buildTransferPlayerShim(id: string, name: string, team: string, note: string): MLBPlayer {
+  return {
+    id,
+    name,
+    team,
+    position: 'Batter',
+    number: '',
+    headshot: '',
+    injuryStatus: 'Unknown',
+    injurySeverity: 'NONE',
+    injuryNotes: 'Injury status is not verified in this transfer context.',
+    batterScore: 0,
+    seasonStats: { avg: '', hr: '', rbi: '', ops: '', obp: '', slg: '' },
+    gameLogs: [],
+    propositions: [],
+    bats: 'R',
+    throws: 'R',
+    height: '',
+    weight: '',
+    birthdate: '',
+    advanced: {} as MLBPlayer['advanced'],
+    splits: {
+      vLHP: { avg: '', obp: '', slg: '', ops: '' },
+      vRHP: { avg: '', obp: '', slg: '', ops: '' },
+      home: { avg: '', obp: '', slg: '', ops: '' },
+      away: { avg: '', obp: '', slg: '', ops: '' },
+      last10: { avg: '', obp: '', slg: '', ops: '' },
+    },
+    scoutingReport: {
+      powerText: note,
+      contactText: 'Transfer display profile only.',
+      disciplineText: 'No expanded discipline profile available in this context.',
+      overallScouting: note,
+      hotZones: [],
+      riskFactor: 'MEDIUM',
+    },
   };
 }
 
-export default function SmartAiEngine({ 
-  onSectionChange, 
-  onAddLegToParlay, 
-  onSaveVouch,
-  onPostCreated,
-  liveGames = []
+export default function SmartAiEngine({
+  onSectionChange,
+  onAddLegToParlay,
+  onSaveParlay,
 }: SmartAiEngineProps) {
-  
-  // Search and filter parameters
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedPlayerFilter, setSelectedPlayerFilter] = useState<string>('all');
-  const [selectedMarketFilter, setSelectedMarketFilter] = useState<string>('all');
-  const [selectedRiskFilter, setSelectedRiskFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('default'); // Dynamic sort state
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 10;
-
-  // Tab switch for dynamic parlay builder vs precompiled vault search
-  const [activeLeftTab, setActiveLeftTab] = useState<'extractor' | 'builder'>('builder'); // Default to builder as requested
-
   // Dynamic parlay parameters (2, 3, 4, 5 Legs, based on AI confidence & physical evidence)
   const [builderLegs, setBuilderLegs] = useState<number>(3);
-  const [builderCategory, setBuilderCategory] = useState<'HITS' | 'RBIS' | 'RUNS' | 'HR'>('HITS');
+  const [builderCategory, setBuilderCategory] = useState<SmartAiBuilderCategory>('HITS');
   const [builderThreshold, setBuilderThreshold] = useState<number>(2);
+  const [aiAgreementAccepted, setAiAgreementAccepted] = useState(false);
 
   // Auto adjusting threshold bounds so that focus options make complete tactical sense
   useEffect(() => {
@@ -100,1463 +162,607 @@ export default function SmartAiEngine({
       setBuilderThreshold(2);
     } else if (builderCategory === 'RUNS') {
       setBuilderThreshold(2);
+    } else if (builderCategory === 'SB') {
+      setBuilderThreshold(1);
     } else if (builderCategory === 'HR') {
       setBuilderThreshold(1);
     }
   }, [builderCategory]);
 
-  // Dynamic sabermetric parlay constructed 100% on actual historical player game logs
-  const dynamicParlay = useMemo(() => {
-    const list: any[] = [];
-    const playersPool = MLB_PLAYER_RECORDS;
+  // ── Real candidates from the live HR Board (carry gamePk → gradable) ──
+  const [realCandidates, setRealCandidates] = useState<RealCandidate[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(true);
 
-    playersPool.forEach(player => {
-      // Find matching game logs where they reached or exceeded the chosen threshold
-      const matchingLogs = player.gameLogs.filter(log => {
-        if (builderCategory === 'HITS') {
-          return log.h >= builderThreshold;
-        } else if (builderCategory === 'RBIS') {
-          return log.rbi >= builderThreshold;
-        } else if (builderCategory === 'RUNS') {
-          return log.r >= builderThreshold;
-        } else if (builderCategory === 'HR') {
-          return log.hr >= builderThreshold;
-        }
-        return false;
+  useEffect(() => {
+    let alive = true;
+    setCandidatesLoading(true);
+    safeJsonFetch<any>('/api/mlb/hr-board/today?limit=75', { fallbackData: { candidates: [] }, timeoutMs: 14000 })
+      .then((r) => {
+        if (!alive) return;
+        // Use confirmed candidates when available, else fall back to projected
+        // candidates (pre-lineup), so the vault always has real players to build
+        // from instead of showing "no eligible players".
+        const confirmed: Record<string, unknown>[] = Array.isArray(r.data?.candidates) ? r.data.candidates : [];
+        const projected: Record<string, unknown>[] = Array.isArray(r.data?.projectedCandidates) ? r.data.projectedCandidates : [];
+        const rows: Record<string, unknown>[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
+        const raw: Record<string, unknown>[] = confirmed.length ? confirmed : projected.length ? projected : rows;
+        const mapped: RealCandidate[] = raw
+          .filter(isSmartAiRawCandidateWithGame)
+          .map(normalizeSmartAiCandidate);
+        setRealCandidates(mapped);
+        setCandidatesLoading(false);
       });
-
-      // MANDATE: Only if the player has accomplished this metric previously!
-      if (matchingLogs.length > 0) {
-        // AI Confidence formulation based on occurrence rate and seasonal coefficients
-        const frequencyRate = matchingLogs.length / player.gameLogs.length; // e.g. 0.60
-        let baseConfidence = 52 + Math.round(frequencyRate * 35);
-
-        if (builderCategory === 'HITS') {
-          const avgNum = parseFloat(player.seasonStats.avg) || 0.280;
-          baseConfidence += Math.round((avgNum - 0.250) * 85);
-        } else if (builderCategory === 'HR') {
-          const hrNum = parseInt(player.seasonStats.hr) || 12;
-          baseConfidence += Math.min(12, Math.round(hrNum * 0.25));
-        } else if (builderCategory === 'RBIS') {
-          const rbiNum = parseInt(player.seasonStats.rbi) || 50;
-          baseConfidence += Math.min(10, Math.round(rbiNum * 0.1));
-        } else if (builderCategory === 'RUNS') {
-          const opsNum = parseFloat(player.seasonStats.ops) || 0.750;
-          baseConfidence += Math.round((opsNum - 0.700) * 75);
-        }
-
-        // Incorporate Statcast dynamic profiles
-        baseConfidence += Math.round((player.advanced.barrelPercent - 10) * 0.4);
-
-        // Weather check (climated-aided ball flight projections)
-        const playerTeam = player.team ? player.team.toLowerCase() : '';
-        const game = liveGames.find((g: any) => 
-          g.homeTeam.toLowerCase() === playerTeam || 
-          g.awayTeam.toLowerCase() === playerTeam
-        );
-        
-        let isFinal = false;
-        if (game) {
-          isFinal = game.status.toLowerCase() === 'final';
-          if (game.status.toLowerCase().includes('progress')) {
-            baseConfidence += 3;
-          }
-        }
-
-        const confidenceVal = Math.min(99.4, Math.max(25, baseConfidence));
-
-        // Generate precise realistic bookie decimal odds for this specific selection
-        let oddsVal = 1.85;
-        let marketName = "";
-        let customSpec = "";
-
-        if (builderCategory === 'HITS') {
-          if (builderThreshold === 1) {
-            oddsVal = 1.35 + (frequencyRate * 0.15);
-            marketName = "To Record 1+ Hits";
-            customSpec = `${player.name} Over 0.5 Hits`;
-          } else if (builderThreshold === 2) {
-            oddsVal = 2.10 + ((1.0 - frequencyRate) * 0.45);
-            marketName = "To Record 2+ Hits";
-            customSpec = `${player.name} Over 1.5 Hits`;
-          } else {
-            oddsVal = 4.80 + ((1.0 - frequencyRate) * 1.80);
-            marketName = "To Record 3+ Hits";
-            customSpec = `${player.name} Over 2.5 Hits`;
-          }
-        } else if (builderCategory === 'RBIS') {
-          oddsVal = 1.70 + (builderThreshold * 0.65) + ((1.0 - frequencyRate) * 0.60);
-          marketName = `To Record ${builderThreshold}+ RBIs`;
-          customSpec = `${player.name} Over ${builderThreshold - 0.5} RBIs`;
-        } else if (builderCategory === 'RUNS') {
-          oddsVal = 1.55 + (builderThreshold * 0.50) + ((1.0 - frequencyRate) * 0.45);
-          marketName = `To Record ${builderThreshold}+ Runs`;
-          customSpec = `${player.name} Over ${builderThreshold - 0.5} Runs`;
-        } else if (builderCategory === 'HR') {
-          if (builderThreshold === 1) {
-            oddsVal = player.id === 'mlb_ohtani' ? 3.20 : player.id === 'mlb_judge' ? 2.90 : 3.65;
-            marketName = "To Hit 1+ Home Run";
-            customSpec = `${player.name} Over 0.5 HRs`;
-          } else {
-            oddsVal = player.id === 'mlb_ohtani' ? 14.0 : player.id === 'mlb_judge' ? 12.0 : 18.0;
-            marketName = "To Hit 2+ Home Runs";
-            customSpec = `${player.name} Over 1.5 HRs`;
-          }
-        }
-
-        const oddsRounded = Math.round(oddsVal * 100) / 100;
-
-        list.push({
-          player,
-          playerId: player.id,
-          playerName: player.name,
-          team: player.team,
-          headshot: player.headshot,
-          aiConfidenceScore: confidenceVal,
-          marketName,
-          customSpec,
-          oddsValRounded: oddsRounded,
-          matchingLogs,
-          isFinal
-        });
-      }
-    });
-
-    const sortedByConfidence = list.sort((a, b) => b.aiConfidenceScore - a.aiConfidenceScore);
-    const activeOnly = sortedByConfidence.filter(c => !c.isFinal);
-    const candidates = activeOnly.length >= builderLegs ? activeOnly : sortedByConfidence;
-
-    const selected = candidates.slice(0, builderLegs);
-
-    if (selected.length === 0) {
-      return null;
-    }
-
-    let combinedOddsMultiplier = 1.0;
-    selected.forEach(c => {
-      combinedOddsMultiplier *= c.oddsValRounded;
-    });
-
-    const roundedOddsMultiplier = Math.round(combinedOddsMultiplier * 100) / 100;
-
-    const decimalToAmericanOdds = (dec: number) => {
-      if (dec >= 2.0) {
-        return `+${Math.round((dec - 1) * 100)}`;
-      } else {
-        return `-${Math.round(100 / (dec - 1))}`;
-      }
-    };
-
-    const averageConfidence = Math.round(
-      selected.reduce((sum, c) => sum + c.aiConfidenceScore, 0) / selected.length
-    );
-
-    return {
-      legs: selected.map((c, index) => ({
-        playerId: c.playerId,
-        playerName: c.playerName,
-        marketName: c.marketName,
-        customSpec: c.customSpec,
-        odds: c.oddsValRounded,
-        isFinal: c.isFinal,
-        justification: `${c.playerName} hit this target in ${c.matchingLogs.length} previous matchups (e.g. on ${c.matchingLogs.map(l => l.date + ' vs ' + l.opponent.split(' ').pop()).slice(0,2).join(', ')}). Climatic models support peak travel speeds.`
-      })),
-      totalOdds: decimalToAmericanOdds(roundedOddsMultiplier),
-      oddsValue: roundedOddsMultiplier,
-      aiConfidenceScore: averageConfidence,
-      players: selected.map(c => c.player),
-      riskTier: averageConfidence > 82 ? 'LOW' : averageConfidence > 64 ? 'MEDIUM' : 'HIGH'
-    };
-  }, [builderLegs, builderCategory, builderThreshold, liveGames]);
-
-  const handleAddCustomParlayToSlip = () => {
-    if (!dynamicParlay) return;
-    let addedCount = 0;
-    dynamicParlay.legs.forEach(leg => {
-      // Check if leg's game is final
-      const player = dynamicParlay.players.find(p => p.id === leg.playerId);
-      if (player) {
-        // Identify game status to protect live integrity
-        const playerTeam = player.team ? player.team.toLowerCase() : '';
-        const game = liveGames.find((g: any) => 
-          g.homeTeam.toLowerCase() === playerTeam || 
-          g.awayTeam.toLowerCase() === playerTeam
-        );
-        if (game && game.status.toLowerCase() === 'final') {
-          return; // skip concluded picks
-        }
-
-        onAddLegToParlay(player, {
-          id: `prop-ai-custom-${leg.playerId}-${Date.now()}`,
-          market: leg.marketName,
-          odds: leg.odds,
-          spec: leg.customSpec
-        });
-        addedCount++;
-      }
-    });
-
-    if (addedCount === 0) {
-      alert(`⚠️ All selected legs in this custom parlay correspond to concluded games (status: Final). Placing picks on concluded games is strictly prohibited.`);
-    } else {
-      alert(`🎯 Successfully transferred ${addedCount} stats-verified custom legs directly into your active parlay builder slip!`);
-      onSectionChange('build');
-    }
-  };
-
-  // Real-time custom simulation controls (keeps the interactive feature)
-  const [targetLegs, setTargetLegs] = useState<number>(3);
-  const [temperature, setTemperature] = useState<number>(0.72);
-  const [biasMode, setBiasMode] = useState<'smart' | 'random'>('smart');
-  const [pickType, setPickType] = useState<string>('most_probable');
   
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [genLogs, setGenLogs] = useState<string[]>([]);
-  const [simulatedMatch, setSimulatedMatch] = useState<PrecomputedPick | null>(null);
 
-  // Tracks which precomputed picks have been posted or saved this session
-  const [postedPicks, setPostedPicks] = useState<Record<string, boolean>>({});
-  const [savedPicks, setSavedPicks] = useState<Record<string, boolean>>({});
-
-  // Deterministically generate 850 distinct premium sabermetric cards on mount
-  const allPrecomputedPicks = useMemo<PrecomputedPick[]>(() => {
-    const list: PrecomputedPick[] = [];
-    const playersPool = MLB_PLAYER_RECORDS;
-    
-    const opponentTeamsList = [
-      "New York Yankees", "Boston Red Sox", "Houston Astros", "Atlanta Braves", 
-      "Los Angeles Dodgers", "San Diego Padres", "Seattle Mariners", "Chicago Cubs",
-      "Toronto Blue Jays", "St. Louis Cardinals", "San Francisco Giants", "New York Mets"
-    ];
-
-    const pickTemplates = [
-      { type: 'HR' as const, label: 'SINGLE HR', title: 'Single Homerun Bullet' },
-      { type: 'HR' as const, label: 'DOUBLE HR', title: 'Double Homerun Power Stack' },
-      { type: 'HR' as const, label: 'TRIPLE HR', title: 'Triple Player Homerun Lottery' },
-      { type: 'HR' as const, label: 'SUPERSTAR 2-HR', title: 'Single 2-Homerun Superstar' },
-      { type: 'HITS' as const, label: 'CONTACT COMBO', title: '2 Hits x 4 Players Combo' },
-      { type: 'RBIS' as const, label: 'RBI ACCUMULATOR', title: 'RBI Base Driver Multi' },
-      { type: 'RUNS' as const, label: 'SPARKPLUG RUNS', title: 'Sparkplug run scorers accumulator' },
-      { type: 'COMBO' as const, label: 'AI SABER EDGE', title: 'AI Sabermetric optimal matchup combo' }
-    ];
-
-    // Decimal to American odds converter
-    const toAmericanOdds = (dec: number) => {
-      if (dec >= 2.0) {
-        return `+${Math.round((dec - 1) * 100)}`;
-      } else {
-        return `-${Math.round(100 / (dec - 1))}`;
-      }
+    return () => {
+      alive = false;
     };
-
-    // Construct 850 consistent high-fidelity items based on index 'i'
-    for (let i = 1; i <= 852; i++) {
-      const templateIndex = (i * i + 3) % pickTemplates.length;
-      const template = pickTemplates[templateIndex];
-
-      // Climate variable calculation
-      const temp = 64 + (i % 28); // 64°F to 92°F
-      const windMph = 2 + ((i * 3) % 17); // 2 to 18 mph
-      const windDirections: ('OUT' | 'IN' | 'CROSS')[] = ['OUT', 'IN', 'CROSS'];
-      const windDirection = windDirections[(i * 7) % 3];
-      const elevationCoef = 1.0 + (((i * 13) % 11) / 100);
-
-      // Determine players for this pick based on index math
-      // Make sure same pick doesn't duplicate same player
-      const legsCount = 
-        template.label.includes('SINGLE') || template.label.includes('SUPERSTAR') ? 1 :
-        template.label.includes('DOUBLE') ? 2 :
-        template.label.includes('TRIPLE') ? 3 :
-        template.label.includes('COMBO') ? 4 :
-        2 + (i % 4); // 2 to 5 legs
-
-      const selectedPlayers: MLBPlayer[] = [];
-      const usedIds = new Set<string>();
-
-      for (let legIdx = 0; legIdx < legsCount; legIdx++) {
-        const playerPoolIdx = (i + legIdx * 7) % playersPool.length;
-        const candidate = playersPool[playerPoolIdx];
-        if (!usedIds.has(candidate.id)) {
-          selectedPlayers.push(candidate);
-          usedIds.add(candidate.id);
-        }
-      }
-
-      // If we fell short of unique players, backfill from start
-      while (selectedPlayers.length < legsCount) {
-        const fallback = playersPool.find(p => !usedIds.has(p.id)) || playersPool[0];
-        selectedPlayers.push(fallback);
-        usedIds.add(fallback.id);
-      }
-
-      // Compounded odds calculations
-      let oddsMultiplier = 1.0;
-      const generatedLegs = selectedPlayers.map((player, idx) => {
-        let baseOdds = 1.50;
-        let marketName = "To Record 1+ Hits";
-        let customSpec = `${player.name} Over 0.5 Hits`;
-        let justification = "";
-
-        // Calculate custom parameters for this specific target market
-        if (template.type === 'HR') {
-          if (template.label.includes('SUPERSTAR')) {
-            baseOdds = 18.0;
-            marketName = "To Hit 2+ Home Runs";
-            customSpec = `${player.name} Over 1.5 HRs`;
-            justification = `${player.name} profiles with ultra-high barrel velocity of ${player.advanced.barrelPercent}% and matches against an opponent pitcher throwing high-ratio fastballs. Wind carrying ${windDirection} at ${windMph}mph increases travel trajectory by approx. ${(elevationCoef * 5).toFixed(1)} feet.`;
-          } else {
-            baseOdds = player.id === 'mlb_ohtani' ? 3.20 : player.id === 'mlb_judge' ? 2.90 : 3.65;
-            marketName = "To Hit 1+ Home Run";
-            customSpec = `${player.name} Over 0.5 HRs`;
-            justification = `${player.name} holds ${player.seasonStats.hr} HRs on the season. Advanced analytics yields launch angle consistency (${player.advanced.launchAngle}°) with favorable Stadium plume carries today.`;
-          }
-        } else if (template.type === 'HITS') {
-          baseOdds = 2.15;
-          marketName = "To Record 2+ Hits";
-          customSpec = `${player.name} Over 1.5 Hits`;
-          justification = `Presents high contact rating (${player.advanced.sweetSpotPercent}% sweet-spot alignment). Holds outstanding lifetime splits (.${player.splits.vRHP.avg} OBP against Right-handed pitchers).`;
-        } else if (template.type === 'RBIS') {
-          baseOdds = 1.95 + (idx * 0.15);
-          marketName = "To Record 1+ Over RBIs";
-          customSpec = `${player.name} Over 0.5 RBIs`;
-          justification = `${player.name} occupies a high scoring lineup sequence. Seasonal RBI tally reaches ${player.seasonStats.rbi} with peak platoon scenario conversions.`;
-        } else if (template.type === 'RUNS') {
-          baseOdds = 1.80 + (idx * 0.10);
-          marketName = "To Record 1+ Runs";
-          customSpec = `${player.name} Over 0.5 Runs`;
-          justification = `Acts as stellar sparkplug lead asset on the batting order. OBP stands at stable .${player.splits.home.obp} during home field matches.`;
-        } else {
-          // AI Sabermetric Edge (combines high ops from propositions list)
-          const pProp = player.propositions[idx % player.propositions.length] || { market: "To Record 1+ Hits", odds: 1.50, spec: `${player.name} Over 0.5 Hits` };
-          baseOdds = pProp.odds;
-          marketName = pProp.market;
-          customSpec = pProp.spec;
-          justification = `${player.name} ranks within ninety-fifth percentile for hard-hit outcomes (${player.advanced.exitVelocity} mph average). Atmospheric climate of ${temp}°F reduces split finger curve breaks.`;
-        }
-
-        oddsMultiplier *= baseOdds;
-        return {
-          playerId: player.id,
-          playerName: player.name,
-          marketName,
-          customSpec,
-          odds: Math.round(baseOdds * 100) / 100,
-          justification
-        };
-      });
-
-      // Scale multiplier to match American format standards
-      let oddsValue = Math.round(oddsMultiplier * 100) / 100;
-      if (legsCount > 3) oddsValue = Math.min(2200, oddsValue); // cap insane multipliers for realism
-
-      const confidenceScore = Math.min(99.6, Math.max(12, Math.round(92 - (legsCount * 7.5) + (temp > 80 ? 4 : -2) + (windDirection === 'OUT' ? 3 : -3))));
-      
-      list.push({
-        id: `VAI-9${String(i).padStart(3, '0')}`,
-        seedIndex: i,
-        title: `${template.title} #${i}`,
-        typeLabel: template.label,
-        marketType: template.type,
-        description: `Sabermetric sequence optimized for Stadium Atmosphere carry. Wind carrying ${windDirection} at ${windMph} MPH, Adjusted for temperature of ${temp}°F.`,
-        players: selectedPlayers,
-        legs: generatedLegs,
-        totalOdds: toAmericanOdds(oddsValue),
-        oddsValue,
-        aiConfidenceScore: confidenceScore,
-        riskTier: confidenceScore > 82 ? 'LOW' : confidenceScore > 64 ? 'MEDIUM' : 'HIGH',
-        weather: {
-          temp,
-          windMph,
-          windDirection,
-          elevationCoef: Math.round(elevationCoef * 100) / 100
-        }
-      });
-    }
-
-    return list;
   }, []);
 
-  // Filter 850 precomputed entries using search criteria
-  const filteredPicks = useMemo(() => {
-    let result = allPrecomputedPicks;
+  // V.A.I Rooms shell: frontend/dev adapter for now.
+  // Final paid access enforcement should move to the server route.
+  const vaiTodayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-    // Search query matches
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(pick => 
-        pick.title.toLowerCase().includes(q) ||
-        pick.typeLabel.toLowerCase().includes(q) ||
-        pick.id.toLowerCase().includes(q) ||
-        pick.legs.some(l => l.playerName.toLowerCase().includes(q) || l.customSpec.toLowerCase().includes(q))
-      );
+  const [vaiAccessTier, setVaiAccessTier] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'pro';
+    return window.localStorage.getItem('vouchedge_vai_tier') ?? 'pro';
+  });
+
+  const handleVaiAccessTierChange = (tier: string) => {
+    setVaiAccessTier(tier);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('vouchedge_vai_tier', tier);
     }
+  };
 
-    // Player filter
-    if (selectedPlayerFilter !== 'all') {
-      result = result.filter(pick => 
-        pick.legs.some(l => l.playerId === selectedPlayerFilter)
-      );
-    }
+  const vaiEntitlements = useMemo(
+    () => getVaiEntitlements({ tier: vaiAccessTier, dateKey: vaiTodayKey }),
+    [vaiAccessTier, vaiTodayKey]
+  );
 
-    // Market filter
-    if (selectedMarketFilter !== 'all') {
-      result = result.filter(pick => pick.marketType === selectedMarketFilter);
-    }
+  const [selectedVaiPersonaId, setSelectedVaiPersonaId] = useState<VaiPersonaId>(() =>
+    getDailyVaiPersona(vaiTodayKey)
+  );
 
-    // Risk tier filter
-    if (selectedRiskFilter !== 'all') {
-      result = result.filter(pick => pick.riskTier === selectedRiskFilter);
-    }
-
-    // Dynamic sorting implementation
-    if (sortBy === 'confidence_desc') {
-      result = [...result].sort((a, b) => b.aiConfidenceScore - a.aiConfidenceScore);
-    } else if (sortBy === 'confidence_asc') {
-      result = [...result].sort((a, b) => a.aiConfidenceScore - b.aiConfidenceScore);
-    } else if (sortBy === 'legs_desc') {
-      result = [...result].sort((a, b) => b.legs.length - a.legs.length);
-    } else if (sortBy === 'legs_asc') {
-      result = [...result].sort((a, b) => a.legs.length - b.legs.length);
-    } else if (sortBy === 'odds_desc') {
-      result = [...result].sort((a, b) => b.oddsValue - a.oddsValue);
-    } else if (sortBy === 'odds_asc') {
-      result = [...result].sort((a, b) => a.oddsValue - b.oddsValue);
-    }
-
-    return result;
-  }, [allPrecomputedPicks, searchQuery, selectedPlayerFilter, selectedMarketFilter, selectedRiskFilter, sortBy]);
-
-  // Reset page count when changing filters
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedPlayerFilter, selectedMarketFilter, selectedRiskFilter, sortBy]);
-
-  // Paginated picks list matching UI constraints Safely 
-  const paginatedPicks = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredPicks.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPicks, currentPage]);
-
-  const totalPages = Math.ceil(filteredPicks.length / itemsPerPage);
-
-  // Dynamic status counters for catalog header
-  const catalogStats = useMemo(() => {
-    const hrCount = allPrecomputedPicks.filter(p => p.marketType === 'HR').length;
-    const hitCount = allPrecomputedPicks.filter(p => p.marketType === 'HITS').length;
-    const rbiCount = allPrecomputedPicks.filter(p => p.marketType === 'RBIS').length;
-    const runsCount = allPrecomputedPicks.filter(p => p.marketType === 'RUNS').length;
-    return { hrCount, hitCount, rbiCount, runsCount };
-  }, [allPrecomputedPicks]);
-
-  // Simulated live execution telemetry logger for custom simulation parameters matching the 850 database
-  const runActiveCustomSimulation = () => {
-    setIsGenerating(true);
-    setSimulatedMatch(null);
-
-    const simulationLogs = [
-      "🧠 [V.A.I Hub] Parsing active telemetry parameters...",
-      `📍 Setting Bias Pipeline to Alignment: ${biasMode.toUpperCase()} mode`,
-      `🧬 Matching optimal thermodynamic carry coefficients for temperature: ${(75 + (targetLegs * 3))}°F`,
-      "⚡ Scanning over 850+ locally computed baseline parlay structures...",
-      "🔬 Selecting target slips passing custom sabermetric probability weights...",
-      "🎲 Compiling Monte Carlo trajectory values to confirm risk tier ratios...",
-      "🎯 Aligning closest deterministic profile index..."
-    ];
-
-    let currentIndex = 0;
-    setGenLogs([]);
-    const interval = setInterval(() => {
-      if (currentIndex < simulationLogs.length) {
-        setGenLogs(prev => [...prev, simulationLogs[currentIndex]]);
-        currentIndex++;
-      } else {
-        clearInterval(interval);
-        
-        // Find a matching precomputed item to showcase as the simulated pick!
-        // We look for a pick of requested type or fallback to page search
-        let match = allPrecomputedPicks.find(p => {
-          if (pickType === 'single_hr') return p.marketType === 'HR' && p.legs.length === 1;
-          if (pickType === 'double_hr') return p.marketType === 'HR' && p.legs.length === 2;
-          if (pickType === 'triple_hr') return p.marketType === 'HR' && p.legs.length === 3;
-          if (pickType === 'single_two_hr') return p.typeLabel.includes('SUPERSTAR');
-          if (pickType === 'two_hits_four_players') return p.legs.length === 4 && p.marketType === 'HITS';
-          if (pickType === 'rbi_legs') return p.marketType === 'RBIS' && p.legs.length === targetLegs;
-          if (pickType === 'run_legs') return p.marketType === 'RUNS' && p.legs.length === targetLegs;
-          return p.marketType === 'COMBO';
-        });
-
-        if (!match) {
-          // generic fallback selection
-          match = allPrecomputedPicks[Math.floor(Math.random() * 50) + 10];
-        }
-
-        setSimulatedMatch(match);
-        setIsGenerating(false);
-      }
-    }, 400);
-  };
-
-  // Safe redirect to Player Research Console
-  const handleLeadToPlayerResearch = (player: MLBPlayer) => {
-    try {
-      localStorage.setItem('vouchedge_selected_research_player_id', player.id);
-      onSectionChange('research');
-    } catch (e) {
-      console.error(e);
-      onSectionChange('research');
+    if (
+      vaiEntitlements.allowedPersonaIds.length > 0 &&
+      !vaiEntitlements.allowedPersonaIds.includes(selectedVaiPersonaId)
+    ) {
+      setSelectedVaiPersonaId(vaiEntitlements.allowedPersonaIds[0]);
     }
+  }, [selectedVaiPersonaId, vaiEntitlements.allowedPersonaIds]);
+
+  const selectedVaiPersona =
+    VAI_PERSONAS.find((persona) => persona.id === selectedVaiPersonaId) ?? VAI_PERSONAS[0];
+
+  const isSelectedVaiRoomUnlocked = vaiEntitlements.allowedPersonaIds.includes(selectedVaiPersona.id);
+
+  const dynamicParlay = useMemo(
+    () =>
+      buildSmartAiDynamicParlay({
+        realCandidates,
+        builderLegs,
+        builderCategory,
+        builderThreshold,
+      }),
+    [builderLegs, builderCategory, builderThreshold, realCandidates],
+  );
+
+  // Real header stats — computed from today's actual board, never hardcoded.
+  const boardStats = useMemo(() => {
+    const confirmed = realCandidates.filter((c) => String(c.lineupStatus ?? '').toLowerCase() === 'confirmed').length;
+    const games = new Set(realCandidates.map((c) => c.gamePk)).size;
+    const confidences = realCandidates
+      .map((c) => c.dataConfidence)
+      .filter((v): v is number => typeof v === 'number');
+    const avgConfidence = confidences.length
+      ? Math.round(confidences.reduce((sum, v) => sum + v, 0) / confidences.length)
+      : null;
+    return { total: realCandidates.length, confirmed, games, avgConfidence };
+  }, [realCandidates]);
+
+  const toDynamicParlayMLBPlayer = (leg: NonNullable<typeof dynamicParlay>['legs'][number]): MLBPlayer => {
+    const source = realCandidates.find((candidate) => candidate.playerId === leg.playerId);
+    const shim = buildTransferPlayerShim(
+      leg.playerId,
+      leg.playerName,
+      leg.team,
+      source
+        ? `${source.playerName} is included from today's verified Smart AI candidate pool.`
+        : `${leg.playerName} is included from the current dynamic parlay.`,
+    );
+    shim.batterScore = source?.score ?? 0;
+    return shim;
   };
 
-  // Add all generated legs to the active custom parlay builder
-  const handleAddAllToParlay = (pick: PrecomputedPick) => {
-    let addedCount = 0;
-    pick.legs.forEach(l => {
-      const playerRecord = pick.players.find(p => p.id === l.playerId);
-      if (playerRecord) {
-        const propItem = {
-          id: `prop-ai-bulk-${l.playerId}-${Date.now()}`,
-          market: l.marketName,
-          odds: l.odds,
-          spec: l.customSpec
-        };
-        onAddLegToParlay(playerRecord, propItem);
-        addedCount++;
-      }
+  const handleAddCustomParlayToSlip = () => {
+    alert('V.A.I parlays are locked and cannot be transferred into the manual builder. Save this as an AI Made Parlay so results stay separate and trustworthy.');
+  };
+
+  // Save the current AI parlay directly as a gradable Parlay → Results grades it
+  // from the MLB boxscore. Each leg carries gamePk + marketCode + threshold.
+  const handleSaveGradableParlay = () => {
+    if (!dynamicParlay || !onSaveParlay) return;
+    const legs: Leg[] = dynamicParlay.legs.map((leg) => {
+      const { marketCode, threshold } = resolveMarket('mlb', leg.marketName, leg.customSpec);
+      const gameId = String(leg.gamePk || '');
+      const playerId = String(leg.playerId || '');
+      const statTarget = Number(threshold || 1);
+      const comparator = '>=';
+      const eventKey = ['MLB', gameId, playerId, marketCode, statTarget, 'GTE'].join('_');
+      const popularityKey = ['MLB', playerId, marketCode, statTarget, 'GTE'].join('_');
+
+      return {
+        id: `ai-leg-${gameId}-${playerId}-${marketCode}-${statTarget}`,
+        sport: 'MLB',
+        game: `${leg.team} vs opp`,
+        market: leg.marketName,
+        selection: leg.customSpec,
+        odds: leg.odds,
+        status: 'PENDING',
+        gamePk: gameId,
+        gameId,
+        playerId,
+        marketCode,
+        statTarget,
+        threshold: statTarget,
+        comparator,
+        eventKey,
+        popularityKey,
+        externalProvider: 'mlb_statsapi',
+      };
     });
-
-    setSavedPicks(prev => ({ ...prev, [pick.id]: true }));
-    alert(`🎯 Successfully transferred all ${addedCount} legs of "${pick.title}" directly into your active Parlay Builder slip!`);
-    onSectionChange('build');
+    const parlay: Parlay = {
+      id: `ai-parlay-${Date.now()}`,
+      title: `V.A.I ${builderLegs}-Leg ${builderCategory} Parlay`,
+      legs,
+      totalOdds: dynamicParlay.totalOdds,
+      oddsValue: dynamicParlay.oddsValue ?? 0, // Parlay contract: 0 = odds unknown ("Odds TBD")
+      riskTier: (dynamicParlay.riskTier === 'LOW' ? 'LOW' : dynamicParlay.riskTier === 'HIGH' ? 'HIGH' : 'MEDIUM'),
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+      wagerAmount: 1,
+      edgeScore: dynamicParlay.aiConfidenceScore,
+      aiGenerated: true,
+      source: 'vai_ai_made_parlay',
+      parlayType: 'AI_MADE',
+      locked: true,
+      canEditLegs: false,
+      resultBucket: 'ai_made_parlays',
+    } as Parlay & {
+      source: 'vai_ai_made_parlay';
+      parlayType: 'AI_MADE';
+      locked: boolean;
+      canEditLegs: boolean;
+      resultBucket: 'ai_made_parlays';
+    };
+    onSaveParlay(normalizeParlaySlip(parlay, 'vai_ai_made_parlay'));
+    const gradable = legs.filter((l) => l.gamePk).length;
+    alert(`✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
+    onSectionChange('results');
   };
 
-  // Publish this generated AI recommendation to the public Home Feed
-  const handlePublishToFeed = (pick: PrecomputedPick) => {
-    if (!onPostCreated) return;
-
-    const feedParlay = {
-      id: `ai-parlay-${pick.id}-${Date.now()}`,
-      title: pick.title,
-      legs: pick.legs.map((l, index) => ({
-        id: `leg-${l.playerId}-${index}-${Date.now()}`,
-        sport: "MLB",
-        game: `${pick.players.find(p=>p.id===l.playerId)?.team || 'MLB Team'} Matchup`,
-        market: l.marketName,
-        selection: l.customSpec,
-        odds: l.odds,
-        status: 'PENDING' as const
-      })),
-      totalOdds: pick.totalOdds,
-      oddsValue: pick.oddsValue,
-      riskTier: pick.riskTier,
-      status: 'PENDING' as const,
-      bookie: "V.A.I Master Engine",
-      createdAt: new Date().toISOString()
-    };
-
-    const newPost: FeedPost = {
-      id: `ai-post-${pick.id}-${Date.now()}`,
-      userId: 'site_ai_bot',
-      displayName: 'V.A.I Master Brain',
-      username: 'VAIEngine',
-      avatarUrl: 'https://images.unsplash.com/photo-161805182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60',
-      isVerified: true,
-      subscriptionTier: 'SELLER_PRO',
-      timestamp: 'Just Now',
-      sportBadge: 'MLB',
-      sourceBadge: 'Precomputed AI',
-      postType: 'PARLAY',
-      content: `⚡ **AUTOMATED PRE-COMPILED SABERMETRIC recommendation** ⚡\n\nI have retrieved verified parlay slip registration **${pick.id}** from our high-performance client modeling vault.\n\n* **Model Accuracy Edge**: ${pick.aiConfidenceScore}%\n* **Atmosphere Carry**: Temp ${pick.weather.temp}°F / Wind ${pick.weather.windMph}mph ${pick.weather.windDirection}\n* **Risk Profile**: ${pick.riskTier}\n\nClick the dossier buttons to review detailed Statcast margins or transfer immediately into your slips!`,
-      parlay: feedParlay,
-      likesCount: 14,
-      commentsCount: 2,
-      vouchesCount: 8,
-      repostsCount: 1,
-      comments: []
-    };
-
-    onPostCreated(newPost);
-    setPostedPicks(prev => ({ ...prev, [pick.id]: true }));
+  // Deep Research → Build Slip. Model probability is NOT a market price, so the
+  // transferred leg carries odds: null ("Odds TBD") — grading is boxscore-based.
+  const handleAddCandidateToSlip = (_candidate: RealCandidate) => {
+    alert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
   };
+
+  // Safe redirect to Player Research Console with the real MLB player id.
+  const handleOpenResearch = (candidate: RealCandidate) => {
+    try {
+      localStorage.setItem('vouchedge_selected_research_player_id', String(candidate.playerId));
+    } catch {
+      // ignore storage failures
+    }
+    onSectionChange('research');
+  };
+
+  if (!aiAgreementAccepted) {
+    return (
+      <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-agreement-gate">
+        <div className="relative overflow-hidden rounded-[2rem] border border-sky-400/20 bg-slate-950/90 p-6 sm:p-8 shadow-2xl shadow-sky-950/20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_35%)]" />
+          <div className="relative space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl border border-sky-300/25 bg-sky-400/10 p-3">
+                <Award className="h-6 w-6 text-sky-300" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-300">
+                  V.A.I Locked AI Made Parlays
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight">
+                  Research tool only — not betting advice.
+                </h1>
+                <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+                  V.A.I generates locked AI Made Parlays from available research signals. These picks can be wrong, player
+                  status can change, odds are not guaranteed, and sportsbook markets may differ. Use this as research support,
+                  verify every leg yourself, and never risk money you cannot afford to lose.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <CheckCircle2 className="mb-3 h-5 w-5 text-emerald-300" />
+                <h3 className="text-sm font-black text-white">Locked separation</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  AI Made Parlays stay separate from manual Build Parlay slips.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <Database className="mb-3 h-5 w-5 text-sky-300" />
+                <h3 className="text-sm font-black text-white">Research inputs</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Candidate boards are informational and must be verified before use.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                <Gauge className="mb-3 h-5 w-5 text-indigo-300" />
+                <h3 className="text-sm font-black text-white">No guarantees</h3>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Model confidence is not a promise, price, sportsbook line, or financial recommendation.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-100/90">
+              By unlocking V.A.I, you understand that this feature is for sports research and entertainment only. You are
+              responsible for your own choices and local rules.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAiAgreementAccepted(true)}
+              className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-sky-950/30 transition hover:from-sky-400 hover:to-emerald-400 active:scale-[0.99]"
+            >
+              I Understand — Unlock V.A.I
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-ledger-root">
-      
+
       {/* HEADER HERO AREA */}
-      <div className="relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="ai-banner-container">
+      <div className="ve-hero p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="ai-banner-container">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
-        
+
         <div className="space-y-2 min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-0.5 rounded-full text-[10px] font-black font-mono tracking-widest uppercase">
-              ZERO SERVICE COSTS · FIXED CACHING
+              Verified MLB data only
             </span>
             <span className="bg-[#1e293b] text-slate-400 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-              850+ Active Profiles Loaded
+              {candidatesLoading ? 'Loading board...' : `${boardStats.total} candidates today`}
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white font-display select-text tracking-tight flex items-center gap-3">
             <Cpu className="w-8 h-8 text-sky-400 animate-pulse" />
-            V.A.I <span className="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Optimized Pick Vault</span>
+            V.A.I <span className="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Research Command Center</span>
           </h1>
           <p className="text-slate-400 text-sm max-w-3xl">
-            Precomputed sabermetric models that scan individual player Statcast margins—such as launch vectors and team splits—against active stadium weather densities. Optimized locally, allowing 1000+ simultaneous users to browse, query, and transfer 850 MLB picks instantly with $0 server cost!
+            Build gradable parlays and research today&apos;s validated hitter board side by side. Every signal comes from real
+            MLB season stats, probable pitchers, and sourced park factors — missing data is flagged, never invented.
           </p>
         </div>
       </div>
 
-      {/* METRIC CARD BAR */}
+      {/* METRIC CARD BAR — real board stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="metric-analytics-bar">
         <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">PRECOMPUTED POOL</span>
-            <span className="text-lg font-mono font-black text-white mt-1 block">852 ACTIVE SLIPS</span>
+            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Validated Candidates</span>
+            <span className="text-lg font-mono font-black text-white mt-1 block">
+              {candidatesLoading ? '—' : boardStats.total}
+            </span>
           </div>
           <Database className="w-5 h-5 text-sky-400" />
         </div>
         <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">CONSERVATIVE LOW RISK</span>
+            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Confirmed Lineups</span>
             <span className="text-lg font-mono font-black text-emerald-400 mt-1 block">
-              {allPrecomputedPicks.filter(p => p.riskTier === 'LOW').length} SLIPS
+              {candidatesLoading ? '—' : boardStats.confirmed}
             </span>
           </div>
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
         </div>
         <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">AVERAGE MULTIPLIER</span>
-            <span className="text-lg font-mono font-black text-amber-400 mt-1 block">+481 (5.81x)</span>
+            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Games Covered</span>
+            <span className="text-lg font-mono font-black text-amber-400 mt-1 block">
+              {candidatesLoading ? '—' : boardStats.games}
+            </span>
           </div>
-          <TrendingUp className="w-5 h-5 text-amber-400" />
+          <Activity className="w-5 h-5 text-amber-400" />
         </div>
         <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">ATMOSPHERE RE-CALCS</span>
-            <span className="text-lg font-mono font-black text-indigo-400 mt-1 block">100% RELIABILITY</span>
+            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Avg Data Confidence</span>
+            <span className="text-lg font-mono font-black text-indigo-400 mt-1 block">
+              {candidatesLoading || boardStats.avgConfidence === null ? '—' : `${boardStats.avgConfidence}%`}
+            </span>
           </div>
-          <Activity className="w-5 h-5 text-indigo-400" />
+          <Gauge className="w-5 h-5 text-indigo-400" />
         </div>
       </div>
 
-      {/* DUAL WORKSPACE LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="ai-workspace-container">
-        <div className="lg:col-span-4 space-y-6" id="ai-interactive-tuner-column">
-          
-          {/* TAB SWITCHER */}
-          <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-1 flex gap-1 shadow-lg">
-            <button
-              onClick={() => setActiveLeftTab('builder')}
-              className={`flex-1 text-center py-2.5 rounded-xl font-mono text-[10px] font-extrabold tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                activeLeftTab === 'builder'
-                  ? 'bg-sky-500/10 border border-sky-500/30 text-sky-300 shadow-md'
-                  : 'bg-transparent text-slate-500 hover:text-slate-350 hover:bg-slate-900/20'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-              DYNAMIC AI CREATOR
-            </button>
-            <button
-              onClick={() => setActiveLeftTab('extractor')}
-              className={`flex-1 text-center py-2.5 rounded-xl font-mono text-[10px] font-extrabold tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                activeLeftTab === 'extractor'
-                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shadow-md'
-                  : 'bg-transparent text-slate-500 hover:text-slate-350 hover:bg-slate-900/20'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              VAULT EXTRACTOR
-            </button>
+
+      {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
+      <div className="rounded-[2rem] border border-slate-800/80 bg-slate-950/80 p-4 sm:p-5 shadow-2xl shadow-black/30" id="vai-rooms-command-deck">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
+              <Crown className="h-3.5 w-3.5" />
+              V.A.I Rooms
+            </div>
+            <h2 className="mt-1 text-xl sm:text-2xl font-black text-white">
+              Choose today&apos;s AI research room
+            </h2>
+            <p className="mt-1 max-w-3xl text-xs sm:text-sm text-slate-400">
+              All four rooms are visible. Pro unlocks one room per day. Research Seller Pro unlocks the full AI desk.
+            </p>
           </div>
 
-          {/* TAB 1 CONTENT: DYNAMIC STATS-VERIFIED AI PARLAY CREATOR */}
-          {activeLeftTab === 'builder' ? (
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-5 shadow-2xl animate-fade-in" id="dynamic-parlay-builder-deck">
-              <div className="flex items-center gap-2 border-b border-slate-905 pb-3">
-                <Cpu className="w-5 h-5 text-sky-400 animate-pulse" />
-                <h3 className="text-xs font-black text-slate-400 font-mono tracking-wider uppercase">
-                  STATS-VERIFIED AI PILOT
-                </h3>
-              </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
+            <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
+            <div className="font-bold text-white">{vaiEntitlements.reason}</div>
 
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Builds dynamic parlay slips from player profiles whose <b>historical game logs</b> verify they have successfully hit this metric.
-              </p>
-
-              {/* Legs selector (2 to 5 legs as requested) */}
-              <div className="space-y-2">
-                <label className="text-[9.5px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Multiplier Depth (Legs)</label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[2, 3, 4, 5].map(cnt => (
-                    <button
-                      key={cnt}
-                      type="button"
-                      onClick={() => setBuilderLegs(cnt)}
-                      className={`py-2 rounded-xl border text-center transition-all text-xs font-mono font-black ${
-                        builderLegs === cnt
-                          ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 shadow-md'
-                          : 'bg-slate-900/40 border-slate-850 text-slate-450 hover:bg-slate-900/80 hover:text-slate-300'
-                      }`}
-                    >
-                      {cnt} Legs
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Focus Stat Category selector */}
-              <div className="space-y-2">
-                <label className="text-[9.5px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Target Analytics Spec</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'HITS', label: '📈 1-3 Hits Focus' },
-                    { id: 'RBIS', label: '🎯 1-6 RBIs Focus' },
-                    { id: 'RUNS', label: '🏃 1-5 Runs Focus' },
-                    { id: 'HR', label: '⚾ Homeruns Focus' }
-                  ].map(cat => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setBuilderCategory(cat.id as any)}
-                      className={`p-2.5 rounded-xl border text-left transition-all text-[11px] font-extrabold ${
-                        builderCategory === cat.id
-                          ? 'bg-indigo-950/20 border-indigo-500/40 text-indigo-300 shadow'
-                          : 'bg-slate-900/40 border-slate-850 text-slate-450 hover:bg-slate-900/85 hover:text-slate-350'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Threshold level option elements */}
-              <div className="space-y-2 bg-slate-900/35 border border-slate-900/70 p-3.5 rounded-2xl">
-                <label className="text-[9px] font-bold text-slate-500 font-mono uppercase tracking-wider block mb-1">Trigger Standard Value</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {builderCategory === 'HITS' && [1, 2, 3].map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
-                        builderThreshold === val
-                          ? 'bg-slate-900 border-sky-500 text-sky-400'
-                          : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {val} Hit{val > 1 ? 's' : ''}
-                    </button>
-                  ))}
-                  {builderCategory === 'RBIS' && [1, 2, 3, 4, 5, 6].map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
-                        builderThreshold === val
-                          ? 'bg-slate-900 border-indigo-505 text-indigo-400'
-                          : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {val} RBI{val > 1 ? 's' : ''}
-                    </button>
-                  ))}
-                  {builderCategory === 'RUNS' && [1, 2, 3, 4, 5].map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
-                        builderThreshold === val
-                          ? 'bg-slate-900 border-amber-500 text-amber-400'
-                          : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {val} Run{val > 1 ? 's' : ''}
-                    </button>
-                  ))}
-                  {builderCategory === 'HR' && [1, 2].map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setBuilderThreshold(val)}
-                      className={`py-1.5 px-3 rounded-lg border text-xs font-mono font-bold transition-colors ${
-                        builderThreshold === val
-                          ? 'bg-slate-900 border-emerald-500 text-emerald-400'
-                          : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {val === 1 ? 'Single HR (1+)' : 'Double HR (2+)'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Compiled Dynamic Parlay Card Result */}
-              {dynamicParlay ? (
-                <div className="space-y-3.5 pt-3.5 border-t border-slate-900 animate-slide-up">
-                  
-                  {/* Stats Parlay Top Header summary */}
-                  <div className="p-3 bg-gradient-to-br from-indigo-950/15 via-slate-900/60 to-slate-900/60 border border-indigo-900/30 rounded-2xl flex items-center justify-between">
-                    <div>
-                      <span className="block text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">CUMULATIVE RETURN</span>
-                      <span className="text-sm font-mono font-black text-rose-450">{dynamicParlay.totalOdds}</span>
-                      <span className="text-[9.5px] text-slate-400 font-mono ml-1.5">({dynamicParlay.oddsValue}x)</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="block text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">AI ACCURACY EDGE</span>
-                      <span className="text-xs font-mono font-black text-emerald-400">{dynamicParlay.aiConfidenceScore}% Accu</span>
-                    </div>
-                  </div>
-
-                  {/* Parlay Active Legs Cards List */}
-                  <div className="space-y-2.5 max-h-[290px] overflow-y-auto pr-1" id="dynamic-parlay-legs-scroller">
-                    {dynamicParlay.legs.map((leg: any, idx: number) => {
-                      const playerObj = dynamicParlay.players.find((p: any) => p.id === leg.playerId);
-                      return (
-                        <div key={idx} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl space-y-2">
-                          <div className="flex gap-2.5 items-center">
-                            {playerObj?.headshot && (
-                              <img 
-                                src={playerObj.headshot} 
-                                alt={leg.playerName} 
-                                className="w-8 h-8 rounded-full border border-slate-800 bg-slate-950 flex-shrink-0" 
-                                referrerPolicy="no-referrer"
-                              />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex justify-between items-start">
-                                <span className="text-[11px] font-black text-white truncate block leading-tight">{leg.playerName}</span>
-                                <span className="text-[9.5px] font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded-md font-extrabold flex-shrink-0">
-                                  +{leg.odds.toFixed(2)}
-                                </span>
-                              </div>
-                              <span className="text-[9px] text-slate-500 block truncate uppercase tracking-tight">{playerObj?.team || 'MLB'} · {leg.marketName}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Real historical validation proof list */}
-                          <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-mono">
-                            <span className="text-[8px] text-emerald-400 font-extrabold uppercase block tracking-wider mb-0.5">✓ Logs Verified</span>
-                            <p className="text-xs text-slate-300 font-sans tracking-tight">{leg.justification}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Bulk Master Slip CTA */}
-                  <button
-                    onClick={handleAddCustomParlayToSlip}
-                    className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-sky-950/20 active:scale-[0.98]"
-                  >
-                    <Plus className="w-4 h-4 text-sky-100" />
-                    TRANSFER PARLAY SLIP
-                  </button>
-
-                </div>
-              ) : (
-                <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-900 font-mono">
-                  ⚠️ No eligible matching players met this strict statistic benchmark. Try choosing a lower benchmark depth!
-                </div>
-              )}
-            </div>
-          ) : (
-            /* TAB 2 CONTENT: THE COMPACT ORIGINAL EXTRACTION SLIPS TUNER (PRESERVED ACCORDING TO USER FLOWS) */
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-5 shadow-2xl animate-fade-in" id="alignment-form">
-              <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
-                <Compass className="w-5 h-5 text-emerald-400 animate-spin" />
-                <h3 className="text-xs font-black text-slate-400 font-mono tracking-wider uppercase">
-                  REAL-TIME VAULT EXTRACTOR
-                </h3>
-              </div>
-
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Match target weather conditions and parameters to instantly extract the most compatible parlay slip registered inside our cached 850+ sabermetric ledger.
-              </p>
-
-              {/* Neural Bias mode selection */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Intelligence Pipeline Mode</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setBiasMode('smart')}
-                    className={`py-2 px-3 rounded-xl border text-center transition-all text-xs font-bold ${
-                      biasMode === 'smart' 
-                        ? 'bg-emerald-950/20 border-emerald-500/50 text-emerald-400' 
-                        : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-900/80'
-                    }`}
-                  >
-                    Max Advantage
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBiasMode('random')}
-                    className={`py-2 px-3 rounded-xl border text-center transition-all text-xs font-bold ${
-                      biasMode === 'random' 
-                        ? 'bg-amber-950/20 border-amber-500/50 text-amber-400' 
-                        : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-900/80'
-                    }`}
-                  >
-                    Speculative Chaos
-                  </button>
-                </div>
-              </div>
-
-              {/* Configured Pick Types List */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 font-mono uppercase tracking-wider block">Target Pick Focus Spec</label>
-                <div className="grid grid-cols-1 gap-1.5 max-h-[170px] overflow-y-auto pr-1 text-xs" id="custom-simulation-scope">
-                  {[
-                    { id: 'most_probable', label: '🧠 Most Probable AI Edge Parlay' },
-                    { id: 'single_hr', label: '⚾ Single Home Run Prospect' },
-                    { id: 'double_hr', label: '🚀 Double Home Run Parlay' },
-                    { id: 'triple_hr', label: '🎰 Three Player HR Lottery' },
-                    { id: 'single_two_hr', label: '🔥 Single 2-HR Superstar' },
-                    { id: 'two_hits_four_players', label: '📈 2 Hits x 4 Players Combo' },
-                    { id: 'rbi_legs', label: '🎯 RBI Accumulator' },
-                    { id: 'run_legs', label: '🏃 Sparkplug Run Scorers' }
-                  ].map(item => (
-                    <button
-                      key={item.id}
-                      onClick={() => setPickType(item.id)}
-                      className={`flex items-center justify-between p-2 rounded-lg border text-left transition-colors ${
-                        pickType === item.id 
-                          ? 'bg-slate-900 border-sky-505 text-white font-semibold' 
-                          : 'bg-slate-950/40 border-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
-                      }`}
-                    >
-                      <span className="truncate">{item.label}</span>
-                      {pickType === item.id && <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Legs Configuration for accumulators */}
-              {(pickType === 'rbi_legs' || pickType === 'run_legs') && (
-                <div className="space-y-1.5 bg-slate-900/35 border border-slate-900 p-3 rounded-xl block">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-400 font-mono uppercase tracking-wider text-[10px]">Multiplier Depth</span>
-                    <span className="font-bold text-sky-400 font-mono">{targetLegs} Legs</span>
-                  </div>
-                  <input 
-                    type="range"
-                    min="2"
-                    max="5"
-                    value={targetLegs}
-                    onChange={(e) => setTargetLegs(parseInt(e.target.value))}
-                    className="w-full accent-sky-400 h-1 bg-slate-800 rounded-lg cursor-pointer mt-1"
-                  />
-                </div>
-              )}
-
-              {/* Model Entropy Temperature */}
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between font-mono">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Model Drift (Entropy)</span>
-                  <span className="text-indigo-400 font-bold">{temperature.toFixed(2)}</span>
-                </div>
-                <input 
-                  type="range"
-                  min="0.10"
-                  max="1.20"
-                  step="0.05"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className="w-full accent-indigo-400 h-1 bg-slate-800 rounded-lg cursor-pointer mt-1"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={runActiveCustomSimulation}
-                disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-sky-500 to-emerald-600 hover:from-sky-450 hover:to-emerald-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-              >
-                {isGenerating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-sky-205" />
-                    <span className="text-xs">Extracting Matching Slips...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-yellow-300 fill-yellow-300 animate-pulse" />
-                    <span className="text-xs uppercase">Instant Alignment Sync</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* TELEMETRY CONSOLE TERMINAL OR FEATURED MATCH RESULTS (ONLY FOR THE EXTRACTION MODEL DETECTORS) */}
-          {activeLeftTab === 'extractor' && (isGenerating || simulatedMatch) && (
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 font-mono text-[11px] space-y-4" id="telemetry-extraction-terminal">
-              <div className="flex justify-between items-center border-b border-slate-900 pb-2">
-                <span className="text-slate-500 font-bold tracking-wider">V.A.I SYNC TERMINAL</span>
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                </div>
-              </div>
-
-              {isGenerating ? (
-                <div className="space-y-2 h-[170px] overflow-y-auto scrollbar-none text-sky-400">
-                  {genLogs.map((log, index) => (
-                    <div key={index} className="flex gap-1.5 items-start">
-                      <span className="text-slate-600">[{index + 1}]</span>
-                      <p>{log}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                simulatedMatch && (
-                  <div className="space-y-3 animate-fade-in text-slate-300">
-                    <div className="bg-slate-900/60 border border-slate-800 p-2.5 rounded-xl flex gap-3 items-center">
-                      <Cpu className="w-8 h-8 text-sky-400" />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[9px] bg-sky-505/10 text-sky-400 font-bold px-1.5 py-0.5 rounded uppercase font-mono">
-                          {simulatedMatch.typeLabel} Match Found
-                        </span>
-                        <h4 className="text-xs font-black text-white truncate mt-1">
-                          {simulatedMatch.title}
-                        </h4>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div className="bg-slate-900/30 p-2 rounded border border-slate-900">
-                        <span className="text-slate-500 block uppercase">Confidence</span>
-                        <span className="text-emerald-400 font-bold text-xs">{simulatedMatch.aiConfidenceScore}% Accu</span>
-                      </div>
-                      <div className="bg-slate-900/30 p-2 rounded border border-slate-900">
-                        <span className="text-slate-500 block uppercase">Total return</span>
-                        <span className="text-sky-400 font-bold text-xs">{simulatedMatch.totalOdds} ({simulatedMatch.oddsValue}x)</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
-                      {simulatedMatch.legs.map((leg, index) => (
-                        <div key={index} className="bg-slate-900/40 p-2 rounded flex justify-between items-center text-[10px] border border-slate-900/80">
-                          <span className="font-bold text-white max-w-[130px] truncate">{leg.playerName}</span>
-                          <span className="text-emerald-400">{leg.customSpec}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleAddAllToParlay(simulatedMatch!)}
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-center font-mono text-[10.5px] transition-colors"
-                      >
-                        Grab Parlay Slip
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const element = document.getElementById(`pick-card-${simulatedMatch!.id}`);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            element.classList.add('ring-2', 'ring-sky-500');
-                            setTimeout(() => element.classList.remove('ring-2', 'ring-sky-500'), 2500);
-                          }
-                        }}
-                        className="px-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-lg flex items-center justify-center transition-colors"
-                        title="Locate card in main database viewer below"
-                      >
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-
-        </div>
-
-        {/* Right Side: Paginated Catalog of 850+ Precompiled picks (Col span 8) */}
-        <div className="lg:col-span-8 space-y-6" id="ai-database-catalog-column">
-          
-          {/* SEARCH & REFINEMENTS BAR */}
-          <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 space-y-3.5 shadow-xl" id="database-search-filters">
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              
-              {/* Text Search Inputs */}
-              <div className="relative w-full flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search 850 precomputed entries by player name, ID (e.g. VAI-9004), matchup, spec..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 focus:border-sky-500/50 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-100 placeholder-slate-500 outline-none transition-all"
-                  id="catalog-text-search-input"
-                />
-              </div>
-
-              {/* Reset filter helpers button */}
-              {(selectedPlayerFilter !== 'all' || selectedMarketFilter !== 'all' || selectedRiskFilter !== 'all' || searchQuery !== '') && (
+            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="V.A.I access preview">
+              {[
+                ['free', 'Free'],
+                ['pro', 'Pro'],
+                ['research_seller_pro', 'Seller Pro'],
+                ['admin', 'Admin'],
+              ].map(([tier, label]) => (
                 <button
-                  onClick={() => {
-                    setSelectedPlayerFilter('all');
-                    setSelectedMarketFilter('all');
-                    setSelectedRiskFilter('all');
-                    setSearchQuery('');
-                  }}
-                  className="text-xs text-sky-400 hover:text-white transition-colors cursor-pointer flex-shrink-0 font-mono font-semibold"
+                  key={tier}
+                  type="button"
+                  onClick={() => handleVaiAccessTierChange(tier)}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition ${
+                    vaiAccessTier === tier
+                      ? 'border-sky-300/60 bg-sky-400/15 text-sky-100'
+                      : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                  }`}
                 >
-                  Clear Filters ×
+                  {label}
                 </button>
-              )}
-            </div>
-
-            {/* Segmented Select Dropdowns */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs text-slate-400">
-              
-              {/* Player matching filter */}
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider">Filtered Player</label>
-                <select
-                  value={selectedPlayerFilter}
-                  onChange={(e) => setSelectedPlayerFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
-                  id="filter-player-select"
-                >
-                  <option value="all">ALL ATHLETES (No Filter)</option>
-                  {MLB_PLAYER_RECORDS.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.team.substring(0,3).toUpperCase()})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Market matching filter */}
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider">Target Market Format</label>
-                <select
-                  value={selectedMarketFilter}
-                  onChange={(e) => setSelectedMarketFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
-                  id="filter-market-select"
-                >
-                  <option value="all">ALL PROP FORMATS</option>
-                  <option value="HR">⚾ Home Runs ({catalogStats.hrCount} slips)</option>
-                  <option value="HITS">📈 Hits & Contact ({catalogStats.hitCount} slips)</option>
-                  <option value="RBIS">🎯 RBIs Accumulators ({catalogStats.rbiCount} slips)</option>
-                  <option value="RUNS">🏃 Run Scorers ({catalogStats.runsCount} slips)</option>
-                  <option value="COMBO">🧠 Sabermetric Edge Slips</option>
-                </select>
-              </div>
-
-              {/* Risk category filter */}
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider">Confidence Risk Tier</label>
-                <select
-                  value={selectedRiskFilter}
-                  onChange={(e) => setSelectedRiskFilter(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-200 p-2.5 rounded-xl outline-none"
-                  id="filter-risk-select"
-                >
-                  <option value="all">ALL RISK SECTIONS</option>
-                  <option value="LOW">🛡️ CONSERVATIVE (Low Risk tier)</option>
-                  <option value="MEDIUM">⚖️ CONVENTIONAL VALUE (Medium tier)</option>
-                  <option value="HIGH">🎰 SPECULATIVE LOTTERY (High return tier)</option>
-                </select>
-              </div>
-
-              {/* Dynamic sort criteria */}
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider">Dynamic Sort Selection</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-800 dark:text-slate-200 p-2.5 rounded-xl outline-none"
-                  id="filter-sort-select"
-                >
-                  <option value="confidence_desc">🧠 CONFIDENCE: HIGH TO LOW</option>
-                  <option value="confidence_asc">🧠 CONFIDENCE: LOW TO HIGH</option>
-                  <option value="legs_desc">📈 LEGS COUNT: 5L TO 2L</option>
-                  <option value="legs_asc">📈 LEGS COUNT: 2L TO 5L</option>
-                  <option value="odds_desc">🎰 ODDS RETURN: HIGHEST FIRST</option>
-                  <option value="odds_asc">🎰 ODDS RETURN: LOWEST FIRST</option>
-                </select>
-              </div>
-
-            </div>
-
-            {/* Results count message indicator */}
-            <div className="pt-2 border-t border-slate-900 flex justify-between items-center text-[10.5px] text-slate-500 font-mono">
-              <span>Matching Pre-analyzed Slips: <b className="text-slate-350">{filteredPicks.length} of 852</b></span>
-              <span>Showing Page {currentPage} of {totalPages || 1}</span>
-            </div>
-          </div>
-
-          {/* MAIN PRECOMPUTED CARDS CONTAINER */}
-          {filteredPicks.length === 0 ? (
-            <div className="bg-slate-950/40 border border-slate-900 rounded-3xl p-16 text-center space-y-4" id="filters-empty-state">
-              <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto">
-                <Search className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-white font-bold text-sm">No Database Matches Found</h4>
-                <p className="text-slate-500 text-xs max-w-sm mx-auto">
-                  Adjust your search inputs, select <b>"ALL ATHLETES"</b>, or clear existing selections above to reset the precomputed index!
-                </p>
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    setSelectedPlayerFilter('all');
-                    setSelectedMarketFilter('all');
-                    setSelectedRiskFilter('all');
-                    setSearchQuery('');
-                  }}
-                  className="bg-slate-900 border border-slate-850 text-slate-300 text-xs font-semibold py-1.5 px-3.5 rounded-xl hover:bg-slate-800 transition-colors"
-                >
-                  Reset Catalog Search
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-5" id="main-database-slips-list">
-              {paginatedPicks.map((pick) => (
-                <div 
-                  key={pick.id} 
-                  id={`pick-card-${pick.id}`}
-                  className="bg-slate-950 border border-slate-900 rounded-2xl p-5 hover:border-slate-800 transition-all space-y-4"
-                >
-                  {/* Top line header of slip card */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3.5 border-b border-slate-900/60">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono bg-slate-900 text-slate-400 border border-slate-800 px-2 py-0.5 rounded text-[10.5px]">
-                        {pick.id}
-                      </span>
-                      <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/25 px-2 py-0.5 rounded-md font-black font-mono">
-                        {pick.typeLabel}
-                      </span>
-                      {pick.riskTier === 'LOW' ? (
-                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-black font-mono">🛡️ CONSERVATIVE</span>
-                      ) : pick.riskTier === 'MEDIUM' ? (
-                        <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-black font-mono">⚖️ VALUE ACCU</span>
-                      ) : (
-                        <span className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded font-black font-mono">🎰 HIGH LOTTERY</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {/* Atmospheric condition badges */}
-                      <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                        <Thermometer className="w-3.5 h-3.5 text-orange-400" /> {pick.weather.temp}°F
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                        <Wind className="w-3.5 h-3.5 text-sky-400" /> {pick.weather.windMph} mph {pick.weather.windDirection}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Description Info */}
-                  <div>
-                    <h4 className="text-base font-black text-white font-display select-text">
-                      {pick.title}
-                    </h4>
-                    <p className="text-slate-400 text-xs mt-1 leading-relaxed">
-                      {pick.description}
-                    </p>
-                  </div>
-
-                  {/* Individual Legs Inside this precomputed parlay */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3" id="database-legs-grid">
-                    {pick.legs.map((leg, lIdx) => {
-                      const matchedPlayer = pick.players.find(p => p.id === leg.playerId);
-                      return (
-                        <div 
-                          key={lIdx} 
-                          className="bg-slate-900/40 border border-slate-900/80 rounded-xl p-3.5 space-y-2.5"
-                        >
-                          <div className="flex items-center justify-between gap-3 min-w-0">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              {matchedPlayer && (
-                                <img 
-                                  src={matchedPlayer.headshot} 
-                                  alt={matchedPlayer.name}
-                                  referrerPolicy="no-referrer"
-                                  className="w-8 h-8 rounded-lg border border-slate-800 object-cover bg-slate-950 flex-shrink-0"
-                                />
-                              )}
-                              <div className="min-w-0">
-                                <h5 className="text-[12.5px] font-extrabold text-white truncate">
-                                  {leg.playerName}
-                                  {matchedPlayer && (
-                                    <span className="text-[9px] text-slate-500 font-mono font-normal ml-1">
-                                      (#{matchedPlayer.number} · {matchedPlayer.team.substring(0,3).toUpperCase()})
-                                    </span>
-                                  )}
-                                </h5>
-                                <span className="text-[10px] text-sky-400 font-mono font-bold leading-none block mt-0.5">
-                                  {leg.marketName}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="bg-slate-950 border border-slate-900/80 text-[10.5px] text-slate-350 font-bold px-1.5 py-0.5 rounded font-mono">
-                              dec {leg.odds.toFixed(2)}
-                            </span>
-                          </div>
-
-                          {/* Justification Scouting Insight */}
-                          <p className="text-[10px] text-slate-500 font-mono leading-relaxed bg-slate-950/20 p-2 border border-slate-900/40 rounded">
-                            🔍 <b>Sabermetric Align:</b> {leg.justification}
-                          </p>
-
-                          {/* Single leg action items */}
-                          <div className="flex justify-between items-center text-[10px] pt-1">
-                            <button
-                              onClick={() => matchedPlayer && handleLeadToPlayerResearch(matchedPlayer)}
-                              className="text-slate-400 hover:text-white flex items-center gap-1 font-semibold"
-                              title={`Inspect Statcast logs and injury severity for ${leg.playerName}`}
-                            >
-                              <Search className="w-3 h-3 text-sky-400" /> Research Dossier 🔬
-                            </button>
-                            {matchedPlayer && (() => {
-                              const playerTeam = matchedPlayer.team ? matchedPlayer.team.toLowerCase() : '';
-                              const gameOfPlayer = liveGames.find((g: any) => 
-                                g.homeTeam.toLowerCase() === playerTeam || 
-                                g.awayTeam.toLowerCase() === playerTeam
-                              );
-                              const isFinal = gameOfPlayer && gameOfPlayer.status.toLowerCase() === 'final';
-                              
-                              return (
-                                <button
-                                  onClick={() => !isFinal && onAddLegToParlay(matchedPlayer, {
-                                    id: `prop-ai-db-${pick.id}-${leg.playerId}-${Date.now()}`,
-                                    market: leg.marketName,
-                                    odds: leg.odds,
-                                    spec: leg.customSpec
-                                  })}
-                                  disabled={isFinal}
-                                  className={`py-0.5 px-2 rounded flex items-center gap-1 border transition-all ${
-                                    isFinal 
-                                      ? 'bg-red-950/40 text-red-500 border-red-900/40 cursor-not-allowed text-[9px] font-bold'
-                                      : 'bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300'
-                                  }`}
-                                >
-                                  {isFinal ? '🔒 Locked (Done)' : <><Plus className="w-3 h-3 text-emerald-450" /> Add Leg</>}
-                                </button>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Footer multiplier lines and active sliders */}
-                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-slate-900/25 border border-slate-900 p-4 rounded-xl text-xs">
-                    
-                    <div className="flex items-center gap-4">
-                      {/* Compounded Quotient text */}
-                      <div>
-                        <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider block">COMPOUNDED DEC MULTIPLIER</span>
-                        <span className="text-2xl font-black text-sky-400 font-mono mt-0.5 block leading-none">
-                          {pick.totalOdds}
-                        </span>
-                        <span className="text-[9px] text-slate-400 font-mono mt-0.5 block">{pick.oddsValue.toFixed(2)}x Return</span>
-                      </div>
-
-                      {/* Confidence slider representation */}
-                      <div className="border-l border-slate-900/85 pl-4 max-w-[130px] hidden sm:block">
-                        <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider block">AI CONFIDENCE EDGE</span>
-                        <div className="w-24 bg-slate-850 h-2.5 rounded-full mt-1.5 overflow-hidden relative border border-slate-900">
-                          <div 
-                            className="bg-emerald-500 h-full rounded-full transition-all duration-300"
-                            style={{ width: `${pick.aiConfidenceScore}%` }}
-                          />
-                        </div>
-                        <span className="text-[9.5px] text-emerald-400 font-mono block mt-1">{pick.aiConfidenceScore}% Precision</span>
-                      </div>
-                    </div>
-
-                    {/* Transferred or Shared Action Controls */}
-                    <div className="flex gap-2 min-w-0" id="pick-action-block">
-                      <button
-                        onClick={() => handleAddAllToParlay(pick)}
-                        className="flex-1 sm:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-lg"
-                      >
-                        {savedPicks[pick.id] ? (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                            <span>Transferred!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sliders className="w-4 h-4 text-emerald-200" />
-                            <span>Grab Parlay</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handlePublishToFeed(pick)}
-                        disabled={postedPicks[pick.id]}
-                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-450 hover:text-white transition-colors"
-                        title="Publish this precomputed slip directly onto community Home Feed"
-                      >
-                        {postedPicks[pick.id] ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-450" />
-                        ) : (
-                          <Share2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-
-                  </div>
-
-                </div>
               ))}
             </div>
-          )}
-
-          {/* CATALOG PAGINATION CONTROLS */}
-          {totalPages > 1 && (
-            <div className="bg-slate-950 border border-slate-900 rounded-2xl p-4 flex justify-between items-center text-xs" id="catalog-paginator-belt">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-400 hover:text-white disabled:opacity-50 transition-colors flex items-center gap-1 select-none"
-              >
-                <ChevronLeft className="w-4 h-4" /> Prev
-              </button>
-
-              <span className="font-mono text-slate-405 font-bold">
-                Page {currentPage} / {totalPages}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-400 hover:text-white disabled:opacity-50 transition-colors flex items-center gap-1 select-none"
-              >
-                Next <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
+          </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {VAI_PERSONAS.map((persona) => {
+            const unlocked = vaiEntitlements.allowedPersonaIds.includes(persona.id);
+            const selected = selectedVaiPersonaId === persona.id;
+
+            return (
+              <button
+                key={persona.id}
+                type="button"
+                onClick={() => setSelectedVaiPersonaId(persona.id)}
+                className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br ${persona.gradient} ${persona.border} p-4 text-left transition-all duration-200 ${
+                  selected ? `ring-2 ring-white/25 shadow-2xl ${persona.glow}` : 'hover:border-slate-500/50'
+                }`}
+              >
+                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/5 blur-2xl" />
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                        {persona.accent}
+                      </div>
+                      <h3 className="mt-1 text-lg font-black text-white">{persona.name}</h3>
+                    </div>
+
+                    <div className={`rounded-2xl border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                      unlocked
+                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+                        : 'border-slate-700 bg-slate-950/70 text-slate-400'
+                    }`}>
+                      {unlocked ? (
+                        <span className="inline-flex items-center gap-1"><Unlock className="h-3 w-3" /> Open</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Locked</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="min-h-[44px] text-xs leading-relaxed text-slate-300">
+                    {persona.specialtyLine}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {persona.specialties.slice(0, 4).map((specialty) => (
+                      <span
+                        key={`${persona.id}-${specialty}`}
+                        className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-1 text-[10px] font-bold text-slate-300"
+                      >
+                        {specialty.replace('_', ' ')}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-white/10 pt-3 text-[11px] text-slate-400">
+                    <span className="font-bold text-slate-200">{persona.roomName}</span>
+                    <span className="mx-1">·</span>
+                    <span>{unlocked ? 'Tap to enter today.' : persona.lockedLine}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={`rounded-[2rem] border ${selectedVaiPersona.border} bg-slate-950/70 p-4 sm:p-5 shadow-2xl ${selectedVaiPersona.glow}`} id="vai-selected-room-panel">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+              Selected room
+            </div>
+            <h2 className="mt-1 text-2xl font-black text-white">{selectedVaiPersona.name}</h2>
+            <p className="mt-1 text-sm text-slate-400">{selectedVaiPersona.toneLine}</p>
+          </div>
+
+          <div className={`w-fit rounded-2xl border px-3 py-2 text-xs font-black uppercase tracking-wider ${
+            isSelectedVaiRoomUnlocked
+              ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+              : 'border-slate-700 bg-slate-900/80 text-slate-400'
+          }`}>
+            {isSelectedVaiRoomUnlocked ? 'Room open today' : 'Upgrade to unlock'}
+          </div>
+        </div>
+
+        {isSelectedVaiRoomUnlocked ? (
+          <>
+
+      {/* DUAL WORKSPACE LAYOUT: builder left, research board right */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="ai-workspace-container">
+        <div className="xl:col-span-5 space-y-6" id="ai-dynamic-creator-column">
+          <SmartAiDynamicCreator
+            builderLegs={builderLegs}
+            builderCategory={builderCategory}
+            builderThreshold={builderThreshold}
+            dynamicParlay={dynamicParlay}
+            onBuilderLegsChange={setBuilderLegs}
+            onBuilderCategoryChange={setBuilderCategory}
+            onBuilderThresholdChange={setBuilderThreshold}
+            onSaveGradableParlay={handleSaveGradableParlay}
+            onAddCustomParlayToSlip={handleAddCustomParlayToSlip}
+          />
+        </div>
+
+        <div className="xl:col-span-7 space-y-6" id="ai-deep-research-column">
+          <SmartAiDeepResearchPanel
+            candidates={realCandidates}
+            loading={candidatesLoading}
+            onAddToSlip={handleAddCandidateToSlip}
+            onOpenResearch={handleOpenResearch}
+          />
+        </div>
+      </div>
+
+          </>
+        ) : (
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 p-6 sm:p-8 text-center" id="vai-locked-room-upgrade-panel">
+            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
+              <Lock className="h-7 w-7 text-slate-300" />
+            </div>
+            <div className="mx-auto max-w-xl space-y-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+                {selectedVaiPersona.roomName} sealed
+              </div>
+              <h3 className="text-2xl font-black text-white">{selectedVaiPersona.lockedLine}</h3>
+              <p className="text-sm leading-relaxed text-slate-400">
+                You can see the room identity, specialty, and risk style, but the actual slips, player names,
+                and research receipts stay hidden until this room is unlocked.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="mt-5 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-5 py-3 text-xs font-black uppercase tracking-wider text-sky-200 hover:bg-sky-500/20"
+              onClick={() => onSectionChange('pricing')}
+            >
+              Upgrade to enter room
+            </button>
+          </div>
+        )}
       </div>
 
       {/* DISCLOSURE CARD SECTION */}
       <div className="bg-slate-900/20 border border-slate-900 rounded-2xl p-5 flex items-start gap-3" id="scouting-policy-foot-note">
         <Award className="w-5 h-5 text-sky-400 mt-0.5 flex-shrink-0" />
         <div className="space-y-1 text-xs text-slate-400">
-          <h4 className="font-bold text-slate-200">Precalculated Caching Policy</h4>
+          <h4 className="font-bold text-slate-200">Research Data Policy</h4>
           <p className="leading-relaxed">
-            All 852 AI picks are stored in a distributed in-memory client system mapped uniquely across deterministic indices. This guarantees instant searching, zero database pipeline delays, and removes third-party token rates entirely. Multipliers, aerodynamic stadium air carry formulas, and Statcast profiles are computed on-page. Verify specific player scouting reports or injury flags inside <b>"Player Research Console"</b> before placing actual slips.
+            Candidates come from the validated HR board pipeline: real MLB season stats, probable pitchers with confirmed
+            throwing hand where posted, and sourced park factors. First-pitch weather is a real Open-Meteo forecast with roofed
+            venues flagged; batter-vs-pitcher history is real MLB career data; season Statcast quality (xwOBA, barrel rate,
+            hard-hit rate) comes from Baseball Savant leaderboards. Sportsbook odds are not connected and are never
+            estimated. Model HR probabilities are research estimates — not betting advice and not market prices. Verify player
+            detail in the <b>Player Research Console</b> before trusting any single signal.
           </p>
         </div>
       </div>
 
     </div>
   );
+}
+
+
+function isSmartAiRawCandidateWithGame(value: Record<string, unknown>): value is SmartAiRawCandidate {
+  return value != null && (value.gamePk != null || value.gameId != null);
+}
+
+function normalizeScoreBreakdown() {
+  return {
+    hitterPower: 0,
+    pitcherVulnerability: 0,
+    parkContext: 0,
+    lineupVolume: 0,
+    weatherContext: 0,
+    oddsValue: 0,
+    recentForm: 0,
+    handednessEdge: 0,
+    penalties: 0,
+  };
+}
+
+function normalizeSmartAiCandidate(c: SmartAiRawCandidate): RealCandidate {
+  return {
+    playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
+    playerName: toStringOrNull(c.playerName ?? c.player_name ?? c.name) ?? 'Unknown',
+    gamePk: String(c.gamePk ?? c.gameId),
+    team: toStringOrNull(c.team ?? c.teamAbbrev) ?? 'MLB',
+    opponent: toStringOrNull(c.opponent ?? c.opponentTeam ?? c.opponentPitcherName) ?? 'opponent',
+    oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds),
+    score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
+    opponentPitcherName: toStringOrNull(c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name),
+    opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
+    pitcherHand: toStringOrNull(c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws),
+    batSide: c.batSide === 'L' || c.batSide === 'R' || c.batSide === 'S' ? c.batSide : null,
+    injuryStatus: toStringOrNull(c.injuryStatus),
+    pitcherVulnerability:
+      typeof c.pitcherVulnerability === 'number'
+        ? c.pitcherVulnerability
+        : typeof c.probablePitcher?.vulnerability === 'number'
+          ? c.probablePitcher.vulnerability
+          : null,
+    parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
+    venue: toStringOrNull(c.venue ?? c.ballpark),
+    lineupStatus: toStringOrNull(c.lineupStatus ?? c.lineup_status),
+    confidenceTier: normalizeConfidenceTier(c.confidenceTier),
+    riskLabel: toStringOrNull(c.riskTier),
+    estimatedHrProbability: typeof c.estimatedHrProbability === 'number' ? c.estimatedHrProbability : null,
+    dataConfidence: typeof c.dataConfidence === 'number' ? c.dataConfidence : null,
+    battingOrder: typeof c.battingOrder === 'number' ? c.battingOrder : null,
+    dataQuality: toStringOrNull(c.dataQuality),
+    reasons: Array.isArray(c.reasons) ? c.reasons.map(String) : [],
+    boardWarnings: Array.isArray(c.warnings) ? c.warnings.map(String) : [],
+    scoreBreakdown: normalizeScoreBreakdown(),
+  };
+}
+
+function toStringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function normalizeConfidenceTier(value: unknown): "thin" | "elite" | "strong" | "watchlist" | "avoid" {
+  return value === "thin" ||
+    value === "elite" ||
+    value === "strong" ||
+    value === "watchlist" ||
+    value === "avoid"
+    ? value
+    : "thin";
 }

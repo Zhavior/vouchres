@@ -25,6 +25,9 @@ import {
 import { FeedPost, Leg, MLBPlayer, CreatorProofProfile, Parlay } from '../types';
 import ResultsLedgerSummary from './results/ResultsLedgerSummary';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
+import { isGuestMode } from '../lib/authDisplay';
+import { apiClient } from "../lib/apiClient";
+import { buildSaveParlayPayload, isImportableLiveLeg, normalizeLocalSlip } from "../lib/parlays/parlayBridge";
 
 interface ResultsPageProps {
   posts: FeedPost[];
@@ -55,6 +58,37 @@ export interface AIParlayPick {
     status: 'PENDING' | 'WON' | 'LOST';
     resultDetail?: string;
   }[];
+}
+
+
+interface BackendLedgerPick {
+  id: string;
+  title?: string | null;
+  status?: string | null;
+  leg_type?: string | null;
+  created_at?: string | null;
+  stake?: number | null;
+  payout?: number | null;
+  odds?: number | null;
+  legs?: unknown[];
+  is_parlay?: boolean;
+}
+
+interface BackendLedgerResponse {
+  ledger: BackendLedgerPick[];
+  summary: {
+    total: number;
+    pending: number;
+    won: number;
+    lost: number;
+    void: number;
+    push: number;
+    parlays: number;
+    singles: number;
+  };
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 const INITIAL_AI_PARLAYS: AIParlayPick[] = [
@@ -304,6 +338,7 @@ const INITIAL_AI_PARLAYS: AIParlayPick[] = [
 ];
 
 export default function ResultsPage({ posts, profile, onTailParlay, savedParlays = [] }: ResultsPageProps) {
+  const guestPreviewMode = isGuestMode();
   // Navigation tabs: 'ai_model' (VAI AI Picks) vs 'community' (verified ledger) vs 'personal' (My Outcomes)
   const [activeSubTab, setActiveSubTab] = useState<'ai_model' | 'community' | 'personal'>('ai_model');
 
@@ -313,6 +348,32 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
   const [aiTotalPicksCount, setAiTotalPicksCount] = useState<number>(142);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [visualToast, setVisualToast] = useState<string | null>(null);
+  const [backendLedger, setBackendLedger] = useState<BackendLedgerResponse | null>(null);
+
+  const loadBackendLedger = async () => {
+    // Safe read-only compatibility reload for legacy action buttons.
+    // Does not mutate grading truth or live-parlay identity.
+    setBackendLedgerLoading(true);
+    setBackendLedgerError(null);
+
+    try {
+      const response = await apiClient.get("/api/me/results-ledger");
+      setBackendLedger(response as BackendLedgerResponse);
+    } catch (err: any) {
+      setBackendLedgerError(err?.message || "Could not reload backend ledger.");
+    } finally {
+      setBackendLedgerLoading(false);
+    }
+  };
+  const [ledgerNotice, setLedgerNotice] = useState<string | null>(null);
+
+  const triggerNotification = (message: string) => {
+    setLedgerNotice(message);
+    window.setTimeout(() => setLedgerNotice(null), 3500);
+  };
+
+  const [backendLedgerLoading, setBackendLedgerLoading] = useState(false);
+  const [backendLedgerError, setBackendLedgerError] = useState<string | null>(null);
 
   // Calendar timeline
   const [selectedDateYMD, setSelectedDateYMD] = useState<string | null>(null);
@@ -338,53 +399,58 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
     return days;
   };
 
-  // Sync with localStorage
   useEffect(() => {
-    const cachedPicks = localStorage.getItem('vai_ai_parlay_picks_history');
-    const cachedWinRate = localStorage.getItem('vai_ai_win_rate_level');
-    const cachedTotalCount = localStorage.getItem('vai_ai_total_picks_count');
+    let cancelled = false;
 
-    if (cachedPicks) {
-      const parsed = JSON.parse(cachedPicks);
-      if (parsed.length < INITIAL_AI_PARLAYS.length) {
-        setAiParlays(INITIAL_AI_PARLAYS);
-        localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(INITIAL_AI_PARLAYS));
-      } else {
-        setAiParlays(parsed);
+    async function loadBackendLedger() {
+      try {
+        setBackendLedgerLoading(true);
+        setBackendLedgerError(null);
+
+        const payload = await apiClient.get("/api/me/parlays");
+
+        if (!cancelled) {
+          const rawPicks = Array.isArray(payload)
+            ? payload
+            : Array.isArray((payload as any)?.parlays)
+              ? (payload as any).parlays
+              : Array.isArray((payload as any)?.picks)
+                ? (payload as any).picks
+                : Array.isArray((payload as any)?.data)
+                  ? (payload as any).data
+                  : [];
+
+          const picks = uniqueByParlayParentId(rawPicks);
+
+          setBackendLedger({ picks } as any);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setBackendLedgerError(error instanceof Error ? error.message : "Parlay request failed");
+          setBackendLedger({ picks: [] } as any);
+        }
+      } finally {
+        if (!cancelled) {
+          setBackendLedgerLoading(false);
+        }
       }
-    } else {
-      setAiParlays(INITIAL_AI_PARLAYS);
-      localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(INITIAL_AI_PARLAYS));
     }
 
-    if (cachedWinRate) {
-      setAiWinRate(parseFloat(cachedWinRate));
-    } else {
-      localStorage.setItem('vai_ai_win_rate_level', '61.4');
-    }
+    loadBackendLedger();
 
-    if (cachedTotalCount) {
-      setAiTotalPicksCount(parseInt(cachedTotalCount, 10));
-    } else {
-      localStorage.setItem('vai_ai_total_picks_count', '142');
-    }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const triggerNotification = (msg: string) => {
-    setVisualToast(msg);
-    setTimeout(() => {
-      setVisualToast(null);
-    }, 3500);
-  };
 
-  const decimalToAmericanNotation = (decimal: number) => {
-    if (decimal <= 1.01) return "+100";
-    if (decimal >= 2.0) {
-      return `+${Math.round((decimal - 1) * 100)}`;
-    } else {
-      return `${Math.round(-100 / (decimal - 1))}`;
-    }
-  };
+  // Customer-safe Results: localStorage is draft/import cache only, never account truth.
+  // Account results must come from the backend/Supabase loader.
+  useEffect(() => {
+    setAiParlays([]);
+    setAiWinRate(0);
+    setAiTotalPicksCount(0);
+  }, []);
 
   // Settle lists
   const results = posts
@@ -399,9 +465,97 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
       vouch: p.vouch
     }));
 
-  const filteredAiParlays = selectedDateYMD
-    ? aiParlays.filter((p) => getLocalYMD(p.createdAt) === selectedDateYMD)
-    : aiParlays;
+
+
+  const getParlayParentId = (parlay: any) =>
+    String(
+      parlay?.id ||
+      parlay?.pick_id ||
+      parlay?.backendPickId ||
+      parlay?.pick?.id ||
+      parlay?.parentPickId ||
+      ""
+    ).trim();
+
+  const uniqueByParlayParentId = <T extends any>(items: T[]): T[] => {
+    const seen = new Set<string>();
+    const unique: T[] = [];
+
+    for (const item of items) {
+      const parentId = getParlayParentId(item);
+      const fallbackId = String((item as any)?.clientRef || (item as any)?.event_key || (item as any)?.eventKey || "");
+      const key = parentId || fallbackId;
+
+      if (!key || seen.has(key)) continue;
+
+      seen.add(key);
+      unique.push(item);
+    }
+
+    return unique;
+  };
+
+  
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const compactPublicTicketId = (id?: string | number | null): string => {
+  const raw = String(id ?? "").trim();
+  if (!raw) return "VOUCH";
+  return `VOUCH-${raw.replace(/[^a-z0-9]/gi, "").slice(-6).toUpperCase()}`;
+};
+
+const getFallbackHeadshot = (name?: string | null): string =>
+  `https://ui-avatars.com/api/?background=0f172a&color=94a3b8&name=${encodeURIComponent(cleanCustomerText(name) || "Player")}`;
+
+const getFriendlyParlayTitle = (parlay: any) => {
+    const rawTitle = String(parlay?.title ?? "").trim();
+    const rawMarket = String(parlay?.market ?? "").trim();
+    const rawSource = String(parlay?.source ?? "").trim().toLowerCase();
+
+    const candidate = rawTitle || rawMarket;
+
+    const isTechnical =
+      !candidate ||
+      candidate.includes("clientRef=") ||
+      candidate.includes("source=") ||
+      candidate.includes("backend-ai-") ||
+      candidate.length > 80;
+
+    if (!isTechnical) return candidate;
+
+    if (rawSource.includes("local_import")) return "Imported HR Parlay";
+    if (rawSource.includes("manual")) return "My Saved Parlay";
+    if (rawSource.includes("ai") || rawSource.includes("vai")) return "V.A.I Smart Picks Parlay";
+
+    return "My Parlay";
+  };
+
+  const getFriendlyOddsDisplay = (parlay: any, oddsValue: number) => {
+    const rawDisplay = String(parlay?.oddsDisplay ?? parlay?.odds_display ?? "").trim();
+
+    if (rawDisplay && rawDisplay !== "0" && rawDisplay !== "0x") {
+      return rawDisplay;
+    }
+
+    if (Number.isFinite(oddsValue) && oddsValue > 0) {
+      return `${oddsValue.toFixed(2)}x`;
+    }
+
+    return "Pending odds";
+  };
+
+  const filteredAiParlays = uniqueByParlayParentId(
+    selectedDateYMD
+      ? aiParlays.filter((p) => getLocalYMD(p.createdAt) === selectedDateYMD)
+      : aiParlays
+  );
 
   const filteredCommunityResults = selectedDateYMD
     ? results.filter((r) => getLocalYMD(r.timestamp) === selectedDateYMD)
@@ -538,111 +692,159 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
     }
   };
 
-  const handleGradeParlay = (id: string, status: 'WON' | 'LOST') => {
-    setAiParlays(currentPicks => {
-      const updated = currentPicks.map(p => {
-        if (p.id === id) {
-          const updatedLegs = p.legs.map(leg => ({
-            ...leg,
-            status: status,
-            resultDetail: status === 'WON' ? 'Concluded (WIN)' : 'Missed Line (LOSS)'
-          }));
-          return { ...p, status, legs: updatedLegs };
-        }
-        return p;
-      });
-      localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(updated));
-
-      const gradedCount = updated.filter(p => p.status === 'WON' || p.status === 'LOST').length;
-      const wonCount = updated.filter(p => p.status === 'WON').length;
-      const computedWinRate = gradedCount > 0 ? parseFloat(((wonCount / gradedCount) * 100).toFixed(1)) : 61.4;
-      setAiWinRate(computedWinRate);
-      setAiTotalPicksCount(142 + updated.length - INITIAL_AI_PARLAYS.length);
-      localStorage.setItem('vai_ai_win_rate_level', computedWinRate.toString());
-      localStorage.setItem('vai_ai_total_picks_count', (142 + updated.length - INITIAL_AI_PARLAYS.length).toString());
-
-      return updated;
-    });
-    triggerNotification(`🏆 Graded parlay ${id} as ${status}! All system accuracy states synced.`);
+  const handleGradeParlay = (_id: string, _status: 'WON' | 'LOST') => {
+    triggerNotification("⚠️ Manual grading is disabled. Results now grade from verified backend data.");
   };
 
-  // Synchronous elegant analytics reload (replaces mock larping terminal)
   const handleReloadSabermetricFeeds = () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-
-    setTimeout(() => {
-      // Regenerate fresh projections based on real player list
-      setAiParlays(currentPicks => {
-        const playersPool = MLB_PLAYER_RECORDS;
-        const nextSeed = currentPicks.length + 1;
-
-        const p1 = playersPool[nextSeed % playersPool.length];
-        const p2 = playersPool[(nextSeed + 3) % playersPool.length];
-
-        const prop1 = p1.propositions[0] || { market: 'To Record 1+ Hits', odds: 1.45, spec: `${p1.name} Over 0.5 Hits` };
-        const prop2 = p2.propositions[p2.propositions.length - 1] || { market: 'To Record 1+ Runs', odds: 1.85, spec: `${p2.name} Over 0.5 Runs` };
-
-        const combinedOdds = parseFloat((prop1.odds * prop2.odds).toFixed(2));
-        const team1Short = p1.team.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
-        const team2Short = p2.team.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
-
-        const premiumPick: AIParlayPick = {
-          id: `VAI-PARLAY-${5300 + nextSeed}`,
-          title: `Sabermetric Contact Matrix Stack #${5300 + nextSeed}`,
-          createdAt: new Date().toISOString(),
-          gameStartTime: 'Upcoming, 7:10 PM (LOCKED · Verified Pre-Game)',
-          status: 'UPCOMING',
-          bookie: 'DraftKings',
-          wager: 100,
-          payout: Math.round(100 * combinedOdds),
-          oddsValue: combinedOdds,
-          oddsDisplay: decimalToAmericanNotation(combinedOdds),
-          confidence: Math.round(88 + (nextSeed % 10)),
-          legs: [
-            {
-              playerName: p1.name,
-              team: team1Short,
-              headshot: p1.headshot,
-              marketName: prop1.market,
-              spec: prop1.spec,
-              odds: prop1.odds,
-              status: 'PENDING'
-            },
-            {
-              playerName: p2.name,
-              team: team2Short,
-              headshot: p2.headshot,
-              marketName: prop2.market,
-              spec: prop2.spec,
-              odds: prop2.odds,
-              status: 'PENDING'
-            }
-          ]
-        };
-
-        const updatedArray = [premiumPick, ...currentPicks];
-        localStorage.setItem('vai_ai_parlay_picks_history', JSON.stringify(updatedArray));
-        return updatedArray;
-      });
-
-      setIsRefreshing(false);
-      triggerNotification("⚡ Sabermetric calculations complete. Fresh high-confidence parlay ticket generated.");
-    }, 950);
+    triggerNotification("⚠️ Demo parlay generation is disabled. Build or import a real account parlay instead.");
   };
 
   const handleResetAISystem = () => {
-    localStorage.removeItem('vai_ai_parlay_picks_history');
-    localStorage.removeItem('vai_ai_win_rate_level');
-    localStorage.removeItem('vai_ai_total_picks_count');
-    setAiParlays(INITIAL_AI_PARLAYS);
-    setAiWinRate(61.4);
-    setAiTotalPicksCount(142);
-    triggerNotification("♻️ System default baseline performance datasets restored successfully.");
+    setAiParlays([]);
+    setAiWinRate(0);
+    setAiTotalPicksCount(0);
+    triggerNotification("✅ Local demo results cleared. Account results remain database-backed.");
   };
+
+
+  const handleSyncLiveHrResults = async () => {
+    try {
+      const result = await apiClient.post("/api/parlays/live-hr-sync", {});
+      console.log("[live-hr-sync]", result);
+
+      const updatedLegs = Number((result as any)?.updatedLegs ?? 0);
+      const checked = Number((result as any)?.checked ?? 0);
+      const repairedCount = Number((result as any)?.repair?.repairedCount ?? 0);
+
+      triggerNotification(
+        updatedLegs > 0
+          ? `✅ Live HR sync updated ${updatedLegs} leg(s). Repaired ${repairedCount} legacy leg(s).`
+          : `✅ Live HR sync checked ${checked} match(es). Repaired ${repairedCount} legacy leg(s).`
+      );
+
+      await loadBackendLedger();
+    } catch (err: any) {
+      console.error("[live-hr-sync] failed", err);
+      triggerNotification(`⚠️ Live HR sync failed: ${err?.message || "unknown error"}`);
+    }
+  };
+
+
+
+  const handleImportLocalParlays = async () => {
+    try {
+      const raw = localStorage.getItem("vouchedge_slips");
+      const localSlips = raw ? JSON.parse(raw) : [];
+
+      if (!Array.isArray(localSlips) || localSlips.length === 0) {
+        triggerNotification("No local parlays found to import.");
+        return;
+      }
+
+      let imported = 0;
+      let skipped = 0;
+      const updatedLocalSlips = [...localSlips];
+
+      for (let index = 0; index < localSlips.length; index += 1) {
+        const localSlip = localSlips[index];
+
+        if (!localSlip || localSlip.backendPickId) {
+          skipped += 1;
+          continue;
+        }
+
+        const canonicalSlip = normalizeLocalSlip(localSlip);
+        const importableLegs = canonicalSlip.legs.filter(isImportableLiveLeg);
+
+        if (importableLegs.length === 0) {
+          skipped += 1;
+          continue;
+        }
+
+        const payload = buildSaveParlayPayload({
+          ...canonicalSlip,
+          legs: importableLegs,
+          source: "local_import",
+          metadata: {
+            ...(canonicalSlip.metadata || {}),
+            importedFrom: "vouchedge_slips",
+          },
+        });
+
+        const saved = await apiClient.post("/api/me/parlays", payload);
+
+        const backendPickId =
+          (saved as any)?.pick?.id ||
+          (saved as any)?.pickId ||
+          (saved as any)?.id ||
+          (saved as any)?.data?.id ||
+          localSlip.backendPickId ||
+          null;
+
+        updatedLocalSlips[index] = {
+          ...localSlip,
+          backendPickId,
+          backendSyncState: backendPickId ? "synced" : "unknown",
+          backendSyncedAt: new Date().toISOString(),
+        };
+
+        imported += 1;
+      }
+
+      localStorage.setItem("vouchedge_slips", JSON.stringify(updatedLocalSlips));
+      triggerNotification(`✅ Imported ${imported} local parlay(s). Skipped ${skipped}.`);
+      await loadBackendLedger();
+    } catch (err: any) {
+      console.error("[import-local-parlays] failed", err);
+      triggerNotification(`⚠️ Import failed: ${err?.message || "unknown error"}`);
+    }
+  };
+
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen bg-transparent" id="results-analytics-view">
+
+      <section className="mb-4 rounded-3xl border border-cyan-300/20 bg-slate-950/70 p-4 shadow-lg shadow-black/20">
+        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              Backend Ledger
+            </div>
+            <h3 className="mt-1 text-xl font-black text-white">
+              Results are now connected to account parlays
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">
+              {backendLedgerLoading
+                ? 'Loading your saved picks and parlays from the backend...'
+                : backendLedgerError
+                  ? backendLedgerError
+                  : backendLedger
+                    ? `${Object.values(backendLedger).find(Array.isArray)?.length ?? 0} saved parlay${(Object.values(backendLedger).find(Array.isArray)?.length ?? 0) === 1 ? "" : "s"} loaded from your account.`
+                    : 'Account parlay results waiting for login.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+              <div className="text-lg font-black text-white">{backendLedger?.summary.pending ?? 0}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500">Pending</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+              <div className="text-lg font-black text-emerald-300">{backendLedger?.summary.won ?? 0}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500">Won</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+              <div className="text-lg font-black text-red-300">{backendLedger?.summary.lost ?? 0}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500">Lost</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+              <div className="text-lg font-black text-cyan-300">{backendLedger?.summary.parlays ?? 0}</div>
+              <div className="text-[10px] font-black uppercase text-slate-500">Parlays</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <ResultsLedgerSummary savedParlays={savedParlays} />
 
@@ -667,6 +869,20 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleImportLocalParlays}
+            className="px-3 py-1.5 bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-emerald-900/80"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-emerald-300" />
+            <span>IMPORT LOCAL PARLAYS</span>
+          </button>
+          <button
+            onClick={handleSyncLiveHrResults}
+            className="px-3 py-1.5 bg-cyan-950/70 border border-cyan-400/30 text-cyan-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-cyan-900/80"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
+            <span>SYNC LIVE HR RESULTS</span>
+          </button>
           {activeSubTab === 'ai_model' && (
             <button
               onClick={handleReloadSabermetricFeeds}
@@ -774,6 +990,43 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
           {getCalendarDays().map((dateItem, idx) => {
             const ymd = getLocalYMD(dateItem);
             const stats = getDateStats(ymd);
+
+            const aiForDate = aiParlays.filter((pick) => {
+              const rawDate =
+                (pick as any).timestamp ||
+                (pick as any).createdAt ||
+                (pick as any).created_at ||
+                (pick as any).date ||
+                (pick as any).gameDate ||
+                (pick as any).game_date;
+
+              if (!rawDate) return false;
+
+              try {
+                return getLocalYMD(new Date(rawDate)) === ymd;
+              } catch {
+                return false;
+              }
+            });
+
+            const settledAiForDate = aiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return ["won", "win", "lost", "loss"].includes(status);
+            });
+
+            const aiWinsForDate = settledAiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return status === "won" || status === "win";
+            }).length;
+
+            const aiLossesForDate = settledAiForDate.filter((pick) => {
+              const status = String((pick as any).status || (pick as any).result || "").toLowerCase();
+              return status === "lost" || status === "loss";
+            }).length;
+
+            const aiWinRateForDate =
+              settledAiForDate.length > 0 ? (aiWinsForDate / settledAiForDate.length) * 100 : null;
+
             const isSelected = selectedDateYMD === ymd;
             const dayName = dateItem.toLocaleDateString(undefined, { weekday: 'short' });
             const dayNum = dateItem.getDate();
@@ -781,7 +1034,13 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
             let statusText = "No Plays";
             let subColor = "text-slate-500";
             
-            if (stats.winRate !== null) {
+            if (aiWinRateForDate !== null) {
+              statusText = `AI ${aiWinRateForDate.toFixed(0)}%`;
+              subColor = aiWinRateForDate >= 50 ? "text-cyan-300" : "text-rose-500";
+            } else if (aiForDate.length > 0) {
+              statusText = `AI ${aiForDate.length} pending`;
+              subColor = "text-cyan-400 animate-pulse";
+            } else if (stats.winRate !== null) {
               statusText = `${stats.winRate.toFixed(0)}% WR`;
               subColor = stats.winRate >= 50 ? "text-emerald-400" : "text-rose-500";
             } else if (stats.hasUpcoming) {
@@ -900,7 +1159,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                           ? 'border-sky-900/60 shadow-lg shadow-sky-500/5' 
                           : isWon 
                           ? 'border-emerald-950/80 bg-gradient-to-b from-[#0d131f] to-[#041916]' 
-                          : 'border-slate-900 opacity-80'
+                          : 'border-rose-950/70 bg-gradient-to-b from-[#0d131f] via-[#1a0b12] to-[#10070b] shadow-lg shadow-rose-950/10'
                       }`}
                     >
                       
@@ -908,12 +1167,12 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5 font-mono text-[9.5px]">
                             <span className="bg-slate-900 px-1.5 py-0.5 border border-slate-800 rounded text-slate-400">
-                              {pick.id}
+                              {compactPublicTicketId(pick.id)}
                             </span>
                             <span className="text-sky-400 font-bold uppercase">{pick.bookie}</span>
                           </div>
                           <h4 className="text-xs font-bold text-slate-100 font-mono mt-1.5">
-                            {pick.title}
+                            {cleanCustomerText(pick.title) || "VouchEdge Parlay"}
                           </h4>
                         </div>
 
@@ -926,53 +1185,89 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                             WON ✓
                           </span>
                         ) : (
-                          <span className="text-[9.5px] bg-slate-900 text-slate-500 font-bold border border-slate-850 rounded px-2 py-0.5 font-mono leading-none">
-                            LOST
+                          <span className="text-[9.5px] bg-rose-950/60 text-rose-300 font-black border border-rose-900 rounded px-2 py-1 font-mono leading-none">
+                            LOST ✕
                           </span>
                         )}
                       </div>
 
                       {/* Legs list */}
                       <div className="space-y-2">
-                        {pick.legs.map((leg, lIdx) => (
-                          <div key={lIdx} className="bg-slate-950/60 border border-slate-900/60 rounded-xl p-2.5 flex items-center justify-between gap-3 text-[10px] font-mono">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <img 
-                                src={leg.headshot} 
-                                alt={leg.playerName} 
-                                referrerPolicy="no-referrer"
-                                className="w-7 h-7 rounded-md object-cover bg-slate-900 border border-slate-800 flex-shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <h5 className="font-bold text-slate-200 truncate">
-                                  {leg.playerName} <span className="text-[8px] text-slate-500 font-bold">({leg.team})</span>
-                                </h5>
-                                <span className="text-[9px] text-slate-400 truncate block mt-0.5">
-                                  {leg.spec}
+                        {pick.legs.map((leg, lIdx) => {
+                          const legWon = leg.status === 'WON';
+                          const legLost = leg.status === 'LOST';
+                          const playerName = cleanCustomerText(leg.playerName) || "Unknown Player";
+                          const spec = cleanCustomerText(leg.spec) || "Player prop";
+                          const team = cleanCustomerText(leg.team) || "MLB";
+                          const fallbackHeadshot = getFallbackHeadshot(playerName);
+
+                          return (
+                            <div
+                              key={lIdx}
+                              className={`rounded-xl p-2.5 flex items-center justify-between gap-3 text-[10px] font-mono border transition-all ${
+                                legWon
+                                  ? 'bg-emerald-950/20 border-emerald-900/50'
+                                  : legLost
+                                  ? 'bg-rose-950/20 border-rose-900/50'
+                                  : 'bg-slate-950/60 border-slate-900/60'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`relative rounded-lg p-[1px] flex-shrink-0 ${
+                                  legWon ? 'bg-emerald-500/60' : legLost ? 'bg-rose-500/60' : 'bg-slate-800'
+                                }`}>
+                                  <img
+                                    src={leg.headshot || fallbackHeadshot}
+                                    alt={`${playerName} headshot`}
+                                    referrerPolicy="no-referrer"
+                                    onError={(event) => {
+                                      event.currentTarget.onerror = null;
+                                      event.currentTarget.src = fallbackHeadshot;
+                                    }}
+                                    className="w-8 h-8 rounded-lg object-cover bg-slate-900 border border-slate-950 flex-shrink-0"
+                                  />
+                                  <span className={`absolute -right-1 -bottom-1 w-4 h-4 rounded-full border border-slate-950 flex items-center justify-center text-[9px] font-black ${
+                                    legWon
+                                      ? 'bg-emerald-500 text-slate-950'
+                                      : legLost
+                                      ? 'bg-rose-500 text-white'
+                                      : 'bg-slate-700 text-slate-300'
+                                  }`}>
+                                    {legWon ? '✓' : legLost ? '×' : '•'}
+                                  </span>
+                                </div>
+
+                                <div className="min-w-0">
+                                  <h5 className="font-black text-slate-100 truncate">
+                                    {playerName} <span className="text-[8px] text-slate-500 font-bold">({team})</span>
+                                  </h5>
+                                  <span className="text-[9px] text-slate-400 truncate block mt-0.5">
+                                    {spec}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="text-right flex-shrink-0">
+                                <span className="text-[9.5px] font-bold text-slate-300">
+                                  dec {Number(leg.odds || 1).toFixed(2)}
                                 </span>
+                                {legWon ? (
+                                  <span className="text-[8px] text-emerald-300 font-black block uppercase">✓ HIT</span>
+                                ) : legLost ? (
+                                  <span className="text-[8px] text-rose-300 font-black block uppercase">✕ Miss</span>
+                                ) : (
+                                  <span className="text-[8px] text-slate-500 font-bold block uppercase">Pending</span>
+                                )}
                               </div>
                             </div>
-
-                            <div className="text-right flex-shrink-0">
-                              <span className="text-[9.5px] font-bold text-slate-300">
-                                dec {leg.odds.toFixed(2)}
-                              </span>
-                              {leg.status === 'WON' ? (
-                                <span className="text-[8px] text-emerald-400 font-bold block">✓ HIT</span>
-                              ) : leg.status === 'LOST' ? (
-                                <span className="text-[8px] text-rose-500 font-bold block">MISS</span>
-                              ) : (
-                                <span className="text-[8px] text-slate-500 block">PENDING</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Odds metrics */}
                       <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-900/40 grid grid-cols-2 gap-3 items-center">
                         <div>
-                          <span className="text-[8px] text-slate-500 font-mono block">ACCUMULATION ODDS</span>
+                          <span className="text-[8px] text-slate-500 font-mono block">PRACTICE MULTIPLIER</span>
                           <strong className="text-sm font-black font-mono text-emerald-400">{pick.oddsDisplay}</strong>
                           <span className="text-[8px] text-slate-500 font-mono ml-1">({pick.oddsValue.toFixed(2)}x)</span>
                         </div>
@@ -980,21 +1275,21 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         <div className="text-right font-mono">
                           {isWon ? (
                             <div>
-                              <span className="text-[8px] text-emerald-500 block">PROFIT UNITS</span>
+                              <span className="text-[8px] text-emerald-500 block">PRACTICE UNITS</span>
                               <span className="text-xs font-black text-emerald-400">
                                 +${(pick.wager * pick.oddsValue).toFixed(0)} (+{(pick.oddsValue - 1).toFixed(1)}U)
                               </span>
                             </div>
                           ) : isLost ? (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">OUTCOME LOSS</span>
+                              <span className="text-[8px] text-slate-500 block">PRACTICE RESULT</span>
                               <span className="text-xs font-black text-rose-500">
                                 -${pick.wager.toFixed(0)} (-1.00U)
                               </span>
                             </div>
                           ) : (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">EST. PAYOUT</span>
+                              <span className="text-[8px] text-slate-500 block">EST. PRACTICE SCORE</span>
                               <span className="text-xs font-bold text-slate-300">
                                 ${pick.payout.toFixed(0)} @ 100
                               </span>
@@ -1012,7 +1307,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                             className="flex-1 py-1.5 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-[10px] font-black rounded-xl text-slate-300 hover:text-emerald-400 transition-all flex items-center justify-center gap-1.5"
                           >
                             <Plus className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>TAIL SPORTS CARDS</span>
+                            <span>TAIL PARLAY</span>
                           </button>
 
                           <div className="py-1.5 px-2 bg-slate-950 text-[10px] rounded-xl border border-slate-900 font-bold text-slate-400">
@@ -1021,24 +1316,8 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
                         </div>
 
                         {isUpcoming && (
-                          <div className="flex gap-2 px-2.5 py-1.5 bg-slate-950/80 rounded-xl border border-dashed border-slate-800/80 justify-between items-center text-[9px]">
-                            <span className="font-bold text-slate-500">GRADE ASSIST:</span>
-                            <div className="flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleGradeParlay(pick.id, 'WON')}
-                                className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-900 text-emerald-400 rounded transition-all"
-                              >
-                                WIN
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleGradeParlay(pick.id, 'LOST')}
-                                className="px-2 py-0.5 bg-rose-950/80 border border-rose-900 text-rose-400 rounded transition-all"
-                              >
-                                LOSS
-                              </button>
-                            </div>
+                          <div className="px-2.5 py-1.5 bg-slate-950/80 rounded-xl border border-dashed border-slate-800/80 text-[9px] font-bold text-slate-500">
+                            VERIFIED GRADING PENDING OFFICIAL RESULT SYNC
                           </div>
                         )}
                       </div>
@@ -1059,7 +1338,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Settled Picks</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Settled Parlays</span>
               <span className="font-mono text-xl font-black text-slate-100 block mt-1">{totalCount}</span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
@@ -1069,20 +1348,20 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
               </span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Units Net Winnings</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Net Practice Units</span>
               <span className={`font-mono text-xl font-black block mt-1 ${totalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {totalUnitsProfit >= 0 ? '+' : ''}{totalUnitsProfit.toFixed(2)}U
               </span>
             </div>
             <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Verified Win-Rate</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Verified Hit Rate</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{realWinRate.toFixed(1)}%</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-slate-350 uppercase tracking-widest font-mono pl-1">
-              COMMUNITY SETTLED TICKET TIMELINE ({filteredCommunityResults.length})
+              COMMUNITY VERIFIED PARLAY TIMELINE ({filteredCommunityResults.length})
             </h3>
 
             {filteredCommunityResults.length === 0 ? (

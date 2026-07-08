@@ -1,15 +1,16 @@
 import type { HrEligibleHitter, HrSlateGame } from "./hrEngineTypes";
+import { sportsFetchJson } from "../../../lib/sports/sportsHttpClient";
 
 const MLB_API = "https://statsapi.mlb.com/api/v1";
 
 async function fetchJson(url: string) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`MLB fetch failed ${response.status}: ${url}`);
-  }
-
-  return response.json();
+  return sportsFetchJson<any>(url, {
+    cacheKey: `hrEngine:${url}`,
+    ttlMs: 5 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "hrEngine",
+  });
 }
 
 function isHitter(positionType: string, positionName: string) {

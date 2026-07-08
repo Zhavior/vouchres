@@ -19,6 +19,7 @@ import { buildVulnerablePitcherReport, VulnerablePitcherProfile } from "./pitche
 import { rankHrTargets, findSneakyHrTargets, HrTarget, SneakyHrTarget } from "./hrEngine";
 import { rankRbiTargets, RbiEnvironmentReport } from "./rbiEnvironmentEngine";
 import { scoreRunEnvironment, RunEnvironment } from "./runEnvironmentEngine";
+import { TTL, limitConcurrency } from "../../lib/cache";
 
 export interface DailyMlbReport {
   date: string;
@@ -32,6 +33,7 @@ export interface DailyMlbReport {
   dataQuality: "full" | "partial" | "limited";
   generatedAt: string;
   disclaimer: string;
+  warnings: string[];
 }
 
 const DISCLAIMER =
@@ -48,50 +50,67 @@ const DISCLAIMER =
    future callers get an instant cache hit.
    ===================================================================== */
 
-const inFlightReports = new Map<string, Promise<DailyMlbReport>>();
-const REPORT_TTL = 5 * 60_000; // 5 minutes
+const reportBuildStats = {
+  started: 0,
+  completed: 0,
+  failed: 0,
+};
 
 export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbReport> {
   const cacheKey = `dailyReport:${date}`;
-
-  // 1. Check cache — if fresh, return immediately (no API calls)
-  const cached = reportCache.get(cacheKey) as DailyMlbReport | undefined;
-  if (cached) {
-    console.log(`[sharedReport] CACHE HIT for ${date}`);
-    return cached;
-  }
-
-  // 2. Check in-flight — if another caller is already building, await their Promise
-  const inFlight = inFlightReports.get(cacheKey);
-  if (inFlight) {
-    console.log(`[sharedReport] IN-FLIGHT REUSED for ${date}`);
-    return inFlight;
-  }
-
-  // 3. Cache miss + no in-flight — start a new build
-  console.log(`[sharedReport] CACHE MISS for ${date} — starting new build`);
-
-  const buildPromise = buildDailyReportInternal(date)
-    .then((report) => {
-      // Store in cache for future callers
-      reportCache.set(cacheKey, report, REPORT_TTL);
-      console.log(`[sharedReport] BUILD COMPLETE for ${date} — cached for ${REPORT_TTL / 1000}s`);
+  return reportCache.getOrSet(cacheKey, async () => {
+    reportBuildStats.started++;
+    console.log(`[sharedReport] build start for ${date}`);
+    try {
+      const report = await buildDailyReportInternal(date);
+      reportBuildStats.completed++;
+      console.log(`[sharedReport] build complete for ${date}`);
       return report;
-    })
-    .catch((err) => {
-      // If the build fails, clear the in-flight marker so a future call can retry
-      console.error(`[sharedReport] BUILD FAILED for ${date}:`, err.message);
-      throw err;
-    })
-    .finally(() => {
-      // Always clear the in-flight marker (whether success or failure)
-      inFlightReports.delete(cacheKey);
-    });
+    } catch (err) {
+      reportBuildStats.failed++;
+      console.error(`[sharedReport] build failed for ${date}:`, (err as Error).message);
+      return buildEmptyReport(date, [`Daily report build failed: ${(err as Error).message}`]);
+    }
+  }, TTL.dailyReport) as Promise<DailyMlbReport>;
+}
 
-  // Store the in-flight Promise so concurrent callers can await it
-  inFlightReports.set(cacheKey, buildPromise);
+export function clearDailyReportCache(date?: string): void {
+  if (date) {
+    reportCache.delete(`dailyReport:${date}`);
+    return;
+  }
+  reportCache.clear();
+}
 
-  return buildPromise;
+export function resetDailyReportDiagnostics(): void {
+  reportBuildStats.started = 0;
+  reportBuildStats.completed = 0;
+  reportBuildStats.failed = 0;
+  reportCache.resetStats();
+}
+
+export function getDailyReportDiagnostics() {
+  return {
+    builds: { ...reportBuildStats },
+    cache: reportCache.getStats(),
+  };
+}
+
+function buildEmptyReport(date: string, warnings: string[]): DailyMlbReport {
+  return {
+    date,
+    gameCount: 0,
+    games: [],
+    vulnerablePitchers: [],
+    hrTargets: [],
+    sneakyHr: [],
+    rbi: { targets: [], summary: warnings[0] ?? "Daily report unavailable" } as any,
+    runEnvironments: [],
+    dataQuality: "limited",
+    generatedAt: new Date().toISOString(),
+    disclaimer: DISCLAIMER,
+    warnings,
+  };
 }
 
 /* ============ Internal build (only called by getSharedDailyReport) ============ */
@@ -99,6 +118,7 @@ export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbR
 async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
   const startTime = Date.now();
   const memBefore = process.memoryUsage().heapUsed;
+  const warnings: string[] = [];
 
   const games = await getScheduleByDate(date);
 
@@ -116,6 +136,7 @@ async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
       dataQuality: "limited",
       generatedAt: new Date().toISOString(),
       disclaimer: DISCLAIMER,
+      warnings: [],
     };
   }
 
@@ -129,28 +150,53 @@ async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
   console.log(`[mlbIntelligenceEngine] ${games.length} games, ${pitcherIds.size} probable pitchers — fetching stats...`);
 
   // Fetch all pitcher season stats in parallel
-  const pitcherStatsList = await Promise.allSettled(
-    [...pitcherIds].map(async (id) => ({ id, stats: await getPitcherStats(id) }))
-  );
+  const pitcherStatsList = await limitConcurrency([...pitcherIds], 6, async (id) => {
+    try {
+      return { status: "fulfilled" as const, value: { id, stats: await getPitcherStats(id) } };
+    } catch (reason) {
+      return { status: "rejected" as const, reason };
+    }
+  });
   const pitcherStatsMap = new Map<number, PitcherSeasonStats | null>();
   let pitcherStatCalls = 0;
   for (const r of pitcherStatsList) {
     if (r.status === "fulfilled") {
       pitcherStatsMap.set(r.value.id, r.value.stats.season);
       pitcherStatCalls++;
+    } else {
+      warnings.push(`Pitcher stats unavailable: ${r.reason?.message ?? "unknown error"}`);
     }
+  }
+  if (pitcherStatCalls < pitcherIds.size) {
+    warnings.push(`Pitcher stats partial: ${pitcherStatCalls}/${pitcherIds.size} loaded`);
   }
 
   console.log(`[mlbIntelligenceEngine] Pitcher stats: ${pitcherStatCalls}/${pitcherIds.size} fetched successfully`);
 
   // Run all engines with real stats
-  const [vulnerablePitchers, hrTargets, sneakyHr, rbi] = await Promise.all([
+  const [vulnerableResult, hrResult, sneakyResult, rbiResult] = await Promise.allSettled([
     buildVulnerablePitcherReport(games, pitcherStatsMap),
     rankHrTargets(games, pitcherStatsMap),
     findSneakyHrTargets(games, pitcherStatsMap),
     rankRbiTargets(games, pitcherStatsMap),
-  ]);
-  const runEnvironments = scoreRunEnvironment(games, pitcherStatsMap);
+  ] as const);
+
+  const vulnerablePitchers = vulnerableResult.status === "fulfilled" ? vulnerableResult.value : [];
+  const hrTargets = hrResult.status === "fulfilled" ? hrResult.value : [];
+  const sneakyHr = sneakyResult.status === "fulfilled" ? sneakyResult.value : [];
+  const rbi = rbiResult.status === "fulfilled" ? rbiResult.value : ({ targets: [], summary: "RBI engine unavailable" } as any);
+
+  if (vulnerableResult.status === "rejected") warnings.push(`Vulnerable pitcher report unavailable: ${vulnerableResult.reason?.message ?? "unknown error"}`);
+  if (hrResult.status === "rejected") warnings.push(`HR target report unavailable: ${hrResult.reason?.message ?? "unknown error"}`);
+  if (sneakyResult.status === "rejected") warnings.push(`Sneaky HR report unavailable: ${sneakyResult.reason?.message ?? "unknown error"}`);
+  if (rbiResult.status === "rejected") warnings.push(`RBI report unavailable: ${rbiResult.reason?.message ?? "unknown error"}`);
+
+  let runEnvironments: RunEnvironment[] = [];
+  try {
+    runEnvironments = scoreRunEnvironment(games, pitcherStatsMap);
+  } catch (err) {
+    warnings.push(`Run environment report unavailable: ${(err as Error).message}`);
+  }
 
   const hasStats = pitcherStatsMap.size > 0;
   const memAfter = process.memoryUsage().heapUsed;
@@ -171,9 +217,10 @@ async function buildDailyReportInternal(date: string): Promise<DailyMlbReport> {
     sneakyHr,
     rbi,
     runEnvironments,
-    dataQuality: games.length && hasStats ? "partial" : "limited",
+    dataQuality: games.length && hasStats && warnings.length === 0 ? "full" : games.length && hasStats ? "partial" : "limited",
     generatedAt: new Date().toISOString(),
     disclaimer: DISCLAIMER,
+    warnings,
   };
 }
 

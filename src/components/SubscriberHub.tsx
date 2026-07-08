@@ -23,6 +23,35 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile, Parlay, Vouch } from '../types';
 import { decimalToAmerican } from '../utils/oddsHelper';
+import { getFounderPointsLabel } from "../lib/founderAccess";
+
+
+const cleanCustomerText = (value?: string | number | null): string =>
+  String(value ?? "")
+    .replace(/\|\|meta:.*$/i, "")
+    .replace(/\\n/g, " ")
+    .replace(/source=manual_builder\s*/gi, "")
+    .replace(/source=manual\s*/gi, "")
+    .replace(/clientRef=[^\s]+/gi, "")
+    .replace(/\bleg-\d+-[a-z0-9-]+\b/gi, "")
+    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getPublicParlayTitle = (title?: string | number | null): string =>
+  cleanCustomerText(title) || "VouchEdge Premium Slip";
+
+const getPublicLegSelection = (selection?: string | number | null): string =>
+  cleanCustomerText(selection) || "Player prop";
+
+const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
+  const cleaned = cleanCustomerText(game);
+  if (!cleaned) return false;
+  if (/^leg-/i.test(cleaned)) return false;
+  if (/^[a-f0-9-]{12,}$/i.test(cleaned)) return false;
+  return true;
+};
+
 
 interface SubscriberHubProps {
   profile: CreatorProofProfile;
@@ -54,6 +83,7 @@ interface ChatMessage {
 }
 
 export default function SubscriberHub({
+
   profile,
   onUpdateProfile,
   onSectionChange
@@ -170,16 +200,16 @@ export default function SubscriberHub({
       } else {
         const initialMsgs: Record<string, ChatMessage[]> = {
           'c-user-current': [
-            { id: 'm1', userId: 'usr-9', displayName: 'Demo User', username: 'demo_user', text: 'Sample message — subscriber chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'm2', userId: 'usr-8', displayName: 'Demo User 2', username: 'demo_user_2', text: 'Demo message for layout testing.', timestamp: new Date(Date.now() - 18000000).toISOString() },
+            { id: 'm1', userId: 'usr-9', displayName: 'Preview Guest', username: 'preview_only', text: 'Preview message — create an account to unlock real subscriber chat.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'm2', userId: 'usr-8', displayName: 'Preview Guest 2', username: 'preview_only_2', text: 'Preview-only layout message. No real user data shown.', timestamp: new Date(Date.now() - 18000000).toISOString() },
             { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome to the subscriber chat. This is a demo — real messages appear once subscribers join.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
           ],
           'c-alpha-guru': [
-            { id: 'ag1', userId: 'usr-2', displayName: 'Demo User 3', username: 'demo_user_3', text: 'Sample question — demo chat in development.', timestamp: new Date(Date.now() - 36000000).toISOString() },
+            { id: 'ag1', userId: 'usr-2', displayName: 'Preview Guest 3', username: 'preview_only_3', text: 'Preview question — real subscriber messages appear after login.', timestamp: new Date(Date.now() - 36000000).toISOString() },
             { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Demo Capper A', username: 'alphaguru', text: 'Demo response — subscriber chat is in development.', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
           ],
           'c-parabolics': [
-            { id: 'hp1', userId: 'usr-5', displayName: 'Demo User 4', username: 'demo_user_4', text: 'Demo message — subscriber chat in development.', timestamp: new Date(Date.now() - 20000000).toISOString() }
+            { id: 'hp1', userId: 'usr-5', displayName: 'Preview Guest 4', username: 'preview_only_4', text: 'Preview-only message. No real user data shown.', timestamp: new Date(Date.now() - 20000000).toISOString() }
           ]
         };
         setMessages(initialMsgs);
@@ -247,7 +277,7 @@ export default function SubscriberHub({
 
   const handleSubscribe = (capper: SubscriberCapper, price: number, monthsName: string) => {
     if (credits < price) {
-      alert(`❌ Insufficient credits! This premium ${monthsName} sub requires ${price} credits. Please go to the Theme Store and tap "Claim Free Credits" to top up immediately!`);
+      alert(`Insufficient credits. This premium ${monthsName} subscription requires ${price} credits. Credit top-up controls are limited during beta.`);
       return;
     }
 
@@ -745,7 +775,7 @@ export default function SubscriberHub({
                             <div className="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
                               <span className="text-[10px] font-bold text-emerald-400 font-mono tracking-wider flex items-center gap-1.5 uppercase">
                                 <Ticket className="w-4 h-4 text-emerald-400 shrink-0" />
-                                {parlay.title}
+                                {getPublicParlayTitle(parlay.title)}
                               </span>
                               <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded-full font-bold">
                                 Wager: {parlay.wagerAmount} units
@@ -758,9 +788,9 @@ export default function SubscriberHub({
                                 <div key={leg.id} className="p-2.5 bg-slate-950/40 rounded-xl border border-slate-850/50 flex justify-between items-center text-xs">
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] font-bold font-mono px-1.5 bg-[#171e30] border border-blue-900/30 text-sky-400 rounded uppercase">
-                                      {leg.game}
+                                      {shouldShowPublicGameLabel(leg.game) ? cleanCustomerText(leg.game) : 'MLB'}
                                     </span>
-                                    <p className="font-extrabold text-slate-100 uppercase text-[11px] mt-1">{leg.selection}</p>
+                                    <p className="font-extrabold text-slate-100 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
                                   </div>
                                   <span className="font-mono text-[10px] font-black text-emerald-400">
                                     {(leg.odds > 0) ? `+${decimalToAmerican(leg.odds)}` : decimalToAmerican(leg.odds)}

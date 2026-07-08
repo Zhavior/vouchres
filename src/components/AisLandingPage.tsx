@@ -31,7 +31,7 @@ import {
   Check,
   MousePointer2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from '../lib/motion';
 import { CreatorProofProfile } from '../types';
 
 function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string) => void }) {

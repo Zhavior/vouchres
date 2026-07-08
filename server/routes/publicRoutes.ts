@@ -1,6 +1,8 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, requireAuth, requireStaff, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { generationLimiter } from "../middleware/rateLimit";
+import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 
 /**
  * Public routes — world-readable data used by the home feed, leaderboard,
@@ -18,6 +20,39 @@ import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../midd
  *   GET  /api/following                — caller's follows (auth)
  */
 export const publicRoutes = Router();
+
+
+// =========================================================
+// AI Judge Leaderboard
+// =========================================================
+
+
+publicRoutes.post("/ai-judges/save-current-picks", requireAuth, requireStaff, generationLimiter, async (_req, res: Response) => {
+  try {
+    const { saveCurrentAiJudgePicksToLedger } = await import("../services/aiJudges/aiJudgePickLedgerService");
+    const payload = await saveCurrentAiJudgePicksToLedger();
+    return res.json(payload);
+  } catch (error: any) {
+    console.error("[ai-judges] save current picks failed", error?.message);
+    return res.status(500).json({
+      status: "error",
+      message: error?.message ?? "Failed to save AI Judge picks",
+    });
+  }
+});
+
+publicRoutes.get("/ai-judges/leaderboard", async (_req, res: Response) => {
+  try {
+    const payload = await buildAiJudgeLeaderboard();
+    return res.json(payload);
+  } catch (error: any) {
+    console.error("[ai-judges] leaderboard failed", error?.message);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to build AI Judge leaderboard",
+    });
+  }
+});
 
 // =========================================================
 // Leaderboard
@@ -326,11 +361,15 @@ publicRoutes.get("/profile/:id/stats", async (req, res: Response) => {
 /**
  * GET /api/profile/:id/picks
  */
-publicRoutes.get("/profile/:id/picks", async (req, res: Response) => {
+publicRoutes.get("/profile/:id/picks", requireAuth, async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
   const status = req.query.status as string | undefined;
+
+  if (id !== req.user!.id && !req.user!.profile.is_staff) {
+    return res.status(403).json({ error: "forbidden" });
+  }
 
   let query = supabaseAdmin
     .from("picks")

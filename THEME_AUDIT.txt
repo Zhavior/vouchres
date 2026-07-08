@@ -1,0 +1,205 @@
+src/index.css:181:    opacity: var(--theme-particle-opacity, 0.3);
+src/index.css:184:    opacity: var(--theme-particle-opacity, 0.3);
+src/index.css:207:  background-color: var(--theme-card-bg-fallback, rgba(14, 18, 28, 0.65)) !important;
+src/index.css:208:  border-color: var(--theme-border-color) !important;
+src/index.css:209:  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 18px var(--theme-shadow-glow) !important;
+src/index.css:210:  background-image: var(--theme-card-bg-gradient) !important;
+src/index.css:217:  border-right-color: var(--theme-border-color) !important;
+src/index.css:218:  box-shadow: 4px 0 25px -5px var(--theme-shadow-glow) !important;
+src/index.css:222:  border-right-color: var(--theme-border-color) !important;
+src/index.css:223:  border-left-color: var(--theme-border-color) !important;
+src/index.css:227:  border-bottom-color: var(--theme-border-color) !important;
+src/index.css:228:  box-shadow: 0 4px 20px -2px var(--theme-shadow-glow) !important;
+src/index.css:235:  border-color: var(--theme-border-color) !important;
+src/index.css:240:  color: var(--theme-accent-color) !important;
+src/index.css:241:  text-shadow: 0 0 8px var(--theme-shadow-glow) !important;
+src/index.css:246:  background-color: var(--theme-shadow-glow) !important;
+src/index.css:247:  color: var(--theme-accent-color) !important;
+src/index.css:248:  border-color: var(--theme-border-color) !important;
+src/index.css:914:   VOUCH EDGE GLOBAL BORDER KILL SWITCH
+src/index.css:974:   VOUCH EDGE GECKO SIDEBAR
+src/index.css:978:html[data-ve-theme="cyber"] {
+src/index.css:979:  --gecko-1: 34, 211, 238;
+src/index.css:980:  --gecko-2: 16, 185, 129;
+src/index.css:981:  --gecko-3: 59, 130, 246;
+src/index.css:984:html[data-ve-theme="gold"] {
+src/index.css:985:  --gecko-1: 251, 191, 36;
+src/index.css:986:  --gecko-2: 249, 115, 22;
+src/index.css:987:  --gecko-3: 168, 85, 247;
+src/index.css:990:html[data-ve-theme="royal"] {
+src/index.css:991:  --gecko-1: 167, 139, 250;
+src/index.css:992:  --gecko-2: 236, 72, 153;
+src/index.css:993:  --gecko-3: 59, 130, 246;
+src/index.css:996:html[data-ve-theme="fire"] {
+src/index.css:997:  --gecko-1: 251, 113, 133;
+src/index.css:998:  --gecko-2: 249, 115, 22;
+src/index.css:999:  --gecko-3: 239, 68, 68;
+src/index.css:1002:html[data-ve-theme="ocean"] {
+src/index.css:1003:  --gecko-1: 45, 212, 191;
+src/index.css:1004:  --gecko-2: 14, 165, 233;
+src/index.css:1005:  --gecko-3: 16, 185, 129;
+src/index.css:1008:html:not([data-ve-theme]) {
+src/index.css:1009:  --gecko-1: 34, 211, 238;
+src/index.css:1010:  --gecko-2: 16, 185, 129;
+src/index.css:1011:  --gecko-3: 59, 130, 246;
+src/index.css:1016:    radial-gradient(circle at 20% 0%, rgba(var(--gecko-1), 0.26), transparent 34%),
+src/index.css:1017:    radial-gradient(circle at 90% 20%, rgba(var(--gecko-2), 0.14), transparent 36%),
+src/index.css:1019:  border-right: 1px solid rgba(var(--gecko-1), 0.16) !important;
+src/index.css:1021:    inset -1px 0 0 rgba(var(--gecko-1), 0.10),
+src/index.css:1022:    22px 0 90px rgba(var(--gecko-1), 0.10) !important;
+src/index.css:1033:    linear-gradient(135deg, rgba(var(--gecko-1), 0.07), transparent 32%),
+src/index.css:1034:    linear-gradient(315deg, rgba(var(--gecko-2), 0.06), transparent 36%),
+src/index.css:1035:    linear-gradient(rgba(var(--gecko-1), 0.035) 1px, transparent 1px),
+src/index.css:1036:    linear-gradient(90deg, rgba(var(--gecko-1), 0.035) 1px, transparent 1px);
+src/index.css:1043:  border-color: rgba(var(--gecko-1), 0.11) !important;
+src/index.css:1051:    linear-gradient(135deg, rgba(var(--gecko-1), 0.09), rgba(2, 6, 23, 0.18)) !important;
+src/index.css:1064:    linear-gradient(135deg, rgba(var(--gecko-1), 0.18), rgba(var(--gecko-2), 0.08)) !important;
+src/index.css:1065:  border-color: rgba(var(--gecko-1), 0.22) !important;
+src/index.css:1066:  box-shadow: 0 12px 38px rgba(var(--gecko-1), 0.13) !important;
+src/index.css:1073:    linear-gradient(135deg, rgba(var(--gecko-1), 0.24), rgba(var(--gecko-2), 0.10)) !important;
+src/index.css:1074:  border-color: rgba(var(--gecko-1), 0.28) !important;
+src/index.css:1077:    0 16px 48px rgba(var(--gecko-1), 0.16) !important;
+src/index.css:1081:  color: rgb(var(--gecko-1)) !important;
+src/index.css:1082:  filter: drop-shadow(0 0 10px rgba(var(--gecko-1), 0.35));
+src/index.css:1090:  color: rgb(var(--gecko-1)) !important;
+src/index.css:1147:   FINAL PRODUCT-WIDE THEME CONSISTENCY PASS
+src/index.css:1152:  --skin-1: 34, 211, 238;
+src/index.css:1153:  --skin-2: 16, 185, 129;
+src/index.css:1154:  --skin-3: 59, 130, 246;
+src/index.css:1155:  --skin-bg: 2, 6, 23;
+src/index.css:1156:  --skin-card: rgba(3, 12, 26, 0.56);
+src/index.css:1157:  --skin-border: rgba(34, 211, 238, 0.10);
+src/index.css:1161:html[data-ve-theme="cyber"] {
+src/index.css:1162:  --skin-1: 34, 211, 238;
+src/index.css:1163:  --skin-2: 16, 185, 129;
+src/index.css:1164:  --skin-3: 59, 130, 246;
+src/index.css:1165:  --skin-bg: 2, 6, 23;
+src/index.css:1166:  --skin-card: rgba(3, 12, 26, 0.56);
+src/index.css:1167:  --skin-border: rgba(34, 211, 238, 0.10);
+src/index.css:1170:html[data-ve-theme="gold"] {
+src/index.css:1171:  --skin-1: 251, 191, 36;
+src/index.css:1172:  --skin-2: 249, 115, 22;
+src/index.css:1173:  --skin-3: 168, 85, 247;
+src/index.css:1174:  --skin-bg: 13, 8, 2;
+src/index.css:1175:  --skin-card: rgba(24, 14, 4, 0.58);
+src/index.css:1176:  --skin-border: rgba(251, 191, 36, 0.13);
+src/index.css:1179:html[data-ve-theme="royal"] {
+src/index.css:1180:  --skin-1: 167, 139, 250;
+src/index.css:1181:  --skin-2: 236, 72, 153;
+src/index.css:1182:  --skin-3: 59, 130, 246;
+src/index.css:1183:  --skin-bg: 8, 5, 24;
+src/index.css:1184:  --skin-card: rgba(15, 9, 38, 0.60);
+src/index.css:1185:  --skin-border: rgba(167, 139, 250, 0.13);
+src/index.css:1188:html[data-ve-theme="fire"] {
+src/index.css:1189:  --skin-1: 251, 113, 133;
+src/index.css:1190:  --skin-2: 249, 115, 22;
+src/index.css:1191:  --skin-3: 239, 68, 68;
+src/index.css:1192:  --skin-bg: 16, 3, 3;
+src/index.css:1193:  --skin-card: rgba(31, 8, 8, 0.58);
+src/index.css:1194:  --skin-border: rgba(251, 113, 133, 0.14);
+src/index.css:1197:html[data-ve-theme="ocean"] {
+src/index.css:1198:  --skin-1: 45, 212, 191;
+src/index.css:1199:  --skin-2: 14, 165, 233;
+src/index.css:1200:  --skin-3: 16, 185, 129;
+src/index.css:1201:  --skin-bg: 2, 16, 19;
+src/index.css:1202:  --skin-card: rgba(4, 24, 28, 0.58);
+src/index.css:1203:  --skin-border: rgba(45, 212, 191, 0.13);
+src/index.css:1214:    radial-gradient(circle at 12% 8%, rgba(var(--skin-1), 0.22), transparent 28%),
+src/index.css:1215:    radial-gradient(circle at 88% 12%, rgba(var(--skin-2), 0.16), transparent 34%),
+src/index.css:1216:    radial-gradient(circle at 50% 100%, rgba(var(--skin-3), 0.12), transparent 40%),
+src/index.css:1217:    linear-gradient(135deg, rgb(var(--skin-bg)), #020617 52%, rgb(var(--skin-bg))) !important;
+src/index.css:1233:  border-color: var(--skin-border) !important;
+src/index.css:1243:  --tw-ring-color: rgba(var(--skin-1), 0.14) !important;
+src/index.css:1250:  border-color: rgba(var(--skin-1), 0.075) !important;
+src/index.css:1262:    radial-gradient(circle at 18% 0%, rgba(var(--skin-1), 0.10), transparent 38%),
+src/index.css:1263:    linear-gradient(135deg, rgba(var(--skin-1), 0.052), var(--skin-card)) !important;
+src/index.css:1264:  border-color: var(--skin-border) !important;
+src/index.css:1267:    0 22px 70px rgba(var(--skin-1), 0.075) !important;
+src/index.css:1275:    radial-gradient(circle at 22% 0%, rgba(var(--skin-1), 0.34), transparent 35%),
+src/index.css:1276:    radial-gradient(circle at 90% 20%, rgba(var(--skin-2), 0.18), transparent 38%),
+src/index.css:1277:    linear-gradient(180deg, rgba(var(--skin-bg), 0.70), rgba(var(--skin-bg), 0.34)) !important;
+src/index.css:1278:  border-right: 1px solid rgba(var(--skin-1), 0.18) !important;
+src/index.css:1280:    inset -1px 0 0 rgba(var(--skin-1), 0.12),
+src/index.css:1281:    24px 0 95px rgba(var(--skin-1), 0.13) !important;
+src/index.css:1287:  border-color: rgba(var(--skin-1), 0.12) !important;
+src/index.css:1295:    linear-gradient(135deg, rgba(var(--skin-1), 0.085), rgba(var(--skin-bg), 0.26)) !important;
+src/index.css:1301:  color: rgb(var(--skin-1)) !important;
+src/index.css:1302:  filter: drop-shadow(0 0 12px rgba(var(--skin-1), 0.42));
+src/index.css:1310:    linear-gradient(135deg, rgba(var(--skin-1), 0.22), rgba(var(--skin-2), 0.10)) !important;
+src/index.css:1311:  border-color: rgba(var(--skin-1), 0.26) !important;
+src/index.css:1312:  box-shadow: 0 14px 44px rgba(var(--skin-1), 0.15) !important;
+src/index.css:1324:    linear-gradient(135deg, rgba(var(--skin-1), 0.96), rgba(var(--skin-2), 0.82)) !important;
+src/index.css:1326:  border-color: rgba(var(--skin-1), 0.22) !important;
+src/index.css:1327:  box-shadow: 0 16px 45px rgba(var(--skin-1), 0.23) !important;
+src/index.css:1338:  color: rgb(var(--skin-1)) !important;
+src/index.css:1345:  border-color: rgba(var(--skin-1), 0.13) !important;
+src/index.css:1346:  background: rgba(var(--skin-bg), 0.44) !important;
+src/index.css:1353:  border-color: rgba(var(--skin-1), 0.30) !important;
+src/index.css:1354:  box-shadow: 0 0 0 3px rgba(var(--skin-1), 0.075) !important;
+src/styles/cyber-theme.css:404:   Change <html data-ve-theme="..."> to swap the whole app.
+src/styles/cyber-theme.css:408:[data-ve-theme="cyber"] {
+src/styles/cyber-theme.css:418:[data-ve-theme="gold"] {
+src/styles/cyber-theme.css:428:[data-ve-theme="royal"] {
+src/styles/cyber-theme.css:438:[data-ve-theme="fire"] {
+src/styles/cyber-theme.css:448:[data-ve-theme="ocean"] {
+src/styles/cyber-theme.css:491:   Sidebar now reacts to data-ve-theme changes.
+src/styles/cyber-theme.css:495:[data-ve-theme="cyber"] {
+src/styles/cyber-theme.css:496:  --ve-sidebar-bg: rgba(2, 6, 23, 0.44);
+src/styles/cyber-theme.css:497:  --ve-sidebar-bg-strong: rgba(2, 6, 23, 0.62);
+src/styles/cyber-theme.css:498:  --ve-sidebar-border: rgba(34, 211, 238, 0.10);
+src/styles/cyber-theme.css:499:  --ve-sidebar-glow: rgba(34, 211, 238, 0.18);
+src/styles/cyber-theme.css:500:  --ve-sidebar-active: rgba(34, 211, 238, 0.16);
+src/styles/cyber-theme.css:503:[data-ve-theme="gold"] {
+src/styles/cyber-theme.css:504:  --ve-sidebar-bg: rgba(20, 12, 2, 0.42);
+src/styles/cyber-theme.css:505:  --ve-sidebar-bg-strong: rgba(28, 16, 3, 0.60);
+src/styles/cyber-theme.css:506:  --ve-sidebar-border: rgba(251, 191, 36, 0.13);
+src/styles/cyber-theme.css:507:  --ve-sidebar-glow: rgba(251, 191, 36, 0.20);
+src/styles/cyber-theme.css:508:  --ve-sidebar-active: rgba(251, 191, 36, 0.16);
+src/styles/cyber-theme.css:511:[data-ve-theme="royal"] {
+src/styles/cyber-theme.css:512:  --ve-sidebar-bg: rgba(9, 5, 26, 0.42);
+src/styles/cyber-theme.css:513:  --ve-sidebar-bg-strong: rgba(12, 8, 34, 0.60);
+src/styles/cyber-theme.css:514:  --ve-sidebar-border: rgba(167, 139, 250, 0.13);
+src/styles/cyber-theme.css:515:  --ve-sidebar-glow: rgba(167, 139, 250, 0.20);
+src/styles/cyber-theme.css:516:  --ve-sidebar-active: rgba(167, 139, 250, 0.16);
+src/styles/cyber-theme.css:519:[data-ve-theme="fire"] {
+src/styles/cyber-theme.css:520:  --ve-sidebar-bg: rgba(22, 3, 3, 0.42);
+src/styles/cyber-theme.css:521:  --ve-sidebar-bg-strong: rgba(31, 6, 6, 0.60);
+src/styles/cyber-theme.css:522:  --ve-sidebar-border: rgba(251, 113, 133, 0.13);
+src/styles/cyber-theme.css:523:  --ve-sidebar-glow: rgba(251, 113, 133, 0.20);
+src/styles/cyber-theme.css:524:  --ve-sidebar-active: rgba(251, 113, 133, 0.16);
+src/styles/cyber-theme.css:527:[data-ve-theme="ocean"] {
+src/styles/cyber-theme.css:528:  --ve-sidebar-bg: rgba(2, 18, 20, 0.42);
+src/styles/cyber-theme.css:529:  --ve-sidebar-bg-strong: rgba(4, 25, 28, 0.60);
+src/styles/cyber-theme.css:530:  --ve-sidebar-border: rgba(45, 212, 191, 0.13);
+src/styles/cyber-theme.css:531:  --ve-sidebar-glow: rgba(45, 212, 191, 0.20);
+src/styles/cyber-theme.css:532:  --ve-sidebar-active: rgba(45, 212, 191, 0.16);
+src/styles/cyber-theme.css:538:    radial-gradient(circle at 50% 0%, var(--ve-sidebar-glow), transparent 34%),
+src/styles/cyber-theme.css:539:    linear-gradient(180deg, var(--ve-sidebar-bg-strong), var(--ve-sidebar-bg)) !important;
+src/styles/cyber-theme.css:540:  border-right: 1px solid var(--ve-sidebar-border) !important;
+src/styles/cyber-theme.css:555:    radial-gradient(circle at 20% 12%, var(--ve-sidebar-glow), transparent 26%);
+src/styles/cyber-theme.css:568:  border-color: var(--ve-sidebar-border) !important;
+src/styles/cyber-theme.css:582:  background: var(--ve-sidebar-active) !important;
+src/styles/cyber-theme.css:583:  border-color: var(--ve-sidebar-border) !important;
+src/styles/cyber-theme.css:588:  background: var(--ve-sidebar-active) !important;
+src/styles/cyber-theme.css:589:  border-color: var(--ve-sidebar-border) !important;
+src/components/edgePortal/edgePortalTheme.css:19:  --edge-portal-accent: var(--theme-accent-color, #22d3ee);
+src/components/edgePortal/edgePortalTheme.css:20:  --edge-portal-border: var(--theme-border-color, rgba(34, 211, 238, 0.18));
+src/components/edgePortal/edgePortalTheme.css:21:  --edge-portal-card: var(--theme-card-bg-fallback, rgba(15, 23, 42, 0.72));
+src/components/profile/VouchShareCard.tsx:23:      '--theme-border-color': activeTheme.borderColor || 'rgba(6,182,212,0.2)',
+src/components/profile/VouchShareCard.tsx:24:      '--theme-accent-color': activeTheme.accentText.includes('cyan') ? '#22d3ee' : activeTheme.accentText.includes('orange') ? '#f97316' : activeTheme.accentText.includes('emerald') ? '#10b981' : activeTheme.accentText.includes('rose') ? '#e11d48' : '#eab308',
+src/components/profile/ProfileShareCard.tsx:22:      '--theme-border-color': activeTheme.borderColor || 'rgba(6,182,212,0.2)',
+src/components/profile/ProfileShareCard.tsx:23:      '--theme-accent-color': activeTheme.accentText.includes('cyan') ? '#22d3ee' : activeTheme.accentText.includes('orange') ? '#f97316' : activeTheme.accentText.includes('emerald') ? '#10b981' : activeTheme.accentText.includes('rose') ? '#e11d48' : '#eab308',
+src/components/theme/ThemeProvider.tsx:168:    root.style.setProperty('--theme-accent-color', accent);
+src/components/theme/ThemeProvider.tsx:169:    root.style.setProperty('--theme-border-color', activeTheme.borderColor || 'rgba(6,182,212,0.2)');
+src/components/theme/ThemeProvider.tsx:170:    root.style.setProperty('--theme-glow-color', glow);
+src/components/transitions/EdgePortalTransition.tsx:51:          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(var(--skin-1),0.28),transparent_28%),radial-gradient(circle_at_50%_50%,rgba(var(--skin-2),0.16),transparent_44%),linear-gradient(135deg,rgba(var(--skin-bg),1),#020617)]" />
+src/components/transitions/EdgePortalTransition.tsx:52:          <div className="absolute inset-0 bg-[linear-gradient(rgba(var(--skin-1),0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(var(--skin-1),0.045)_1px,transparent_1px)] bg-[size:42px_42px] opacity-70" />
+src/components/transitions/EdgePortalTransition.tsx:57:              "border-[rgba(var(--skin-1),0.22)] bg-[rgba(var(--skin-1),0.035)] shadow-[0_0_120px_rgba(var(--skin-1),0.24)]",
+src/components/transitions/EdgePortalTransition.tsx:65:              "border-[rgba(var(--skin-2),0.18)] bg-[rgba(var(--skin-2),0.035)] shadow-[0_0_90px_rgba(var(--skin-2),0.16)]",
+src/components/transitions/EdgePortalTransition.tsx:73:              "border-[rgba(var(--skin-1),0.16)] bg-[rgba(var(--skin-bg),0.62)] shadow-[0_30px_120px_rgba(var(--skin-1),0.20)] backdrop-blur-2xl",
+src/components/transitions/EdgePortalTransition.tsx:77:            <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl border border-[rgba(var(--skin-1),0.22)] bg-[rgba(var(--skin-1),0.12)] shadow-[0_0_45px_rgba(var(--skin-1),0.24)]">
+src/components/transitions/EdgePortalTransition.tsx:78:              <Zap className="h-8 w-8 text-[rgb(var(--skin-1))]" />
+src/components/transitions/EdgePortalTransition.tsx:81:            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[rgba(var(--skin-1),0.16)] bg-[rgba(var(--skin-1),0.08)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[rgb(var(--skin-1))]">
+src/components/transitions/EdgePortalTransition.tsx:94:            <div className="mt-6 h-2 overflow-hidden rounded-full border border-[rgba(var(--skin-1),0.14)] bg-slate-950/60">
+src/components/transitions/EdgePortalTransition.tsx:97:                  "h-full rounded-full bg-gradient-to-r from-[rgb(var(--skin-1))] to-[rgb(var(--skin-2))] transition-all duration-700 ease-out",
+src/components/ThemeStore.tsx:835:          {/* CREATOR MONETIZATION & SELLABLE THEME LAUNCHPAD */}

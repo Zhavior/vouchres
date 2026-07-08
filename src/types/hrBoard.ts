@@ -15,9 +15,12 @@ export interface HrRowJudge {
 
 export interface HrBoardRow {
   playerId: number;
+  rank?: number;
   playerName: string;
   team: string;
   teamId: number;
+  opponent?: string;
+  gamePk?: number | string;
   headshot: string;
   grade: Grade;
   hrEdge: number;
@@ -40,8 +43,35 @@ export interface HrBoardRow {
   source: string;
   riskLabel: RiskLabel;
   reasons: string[];
+  warnings?: string[];
+  lineupStatus?: string;
+  venue?: string;
+  opponentPitcherName?: string;
+  recentForm?: {
+    gamesChecked?: number;
+    atBats?: number;
+    hits?: number;
+    homeRuns?: number;
+    doubles?: number;
+    triples?: number;
+    extraBaseHits?: number;
+    totalBases?: number;
+    slugging?: number;
+    recentHrRate?: number;
+    recentPowerScore?: number;
+  };
+  scoreBreakdown?: {
+    hitterPower?: number;
+    pitcherVulnerability?: number;
+    parkFactor?: number;
+    recentForm?: number;
+    lineupConfidence?: number;
+    riskPenalty?: number;
+    finalScore?: number;
+  };
   judge: HrRowJudge;
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
+  raw?: Record<string, unknown>;
 }
 
 export interface HrBoardGame {
@@ -64,8 +94,25 @@ export interface HrBoardResponse {
   dataQuality: "full" | "partial" | "limited" | "projection_preview";
   disclaimer: string;
   games?: HrBoardGame[];
+  /** Effective rows for the current mode — confirmed if any exist, else falls back to preview. */
+  rows?: Array<Record<string, unknown>>;
   candidates?: Array<Record<string, unknown>>;
+  confirmedCandidates?: Array<Record<string, unknown>>;
   projectedCandidates?: Array<Record<string, unknown>>;
+  allProjectedCandidates?: Array<Record<string, unknown>>;
+  candidateBuckets?: {
+    confirmed?: Array<Record<string, unknown>>;
+    projected?: Array<Record<string, unknown>>;
+    allProjected?: Array<Record<string, unknown>>;
+    blocked?: Array<Record<string, unknown>>;
+  };
+  counts?: {
+    rows?: number;
+    confirmedCandidates?: number;
+    projectedCandidates?: number;
+    allProjectedCandidates?: number;
+    totalCandidates?: number;
+  };
   previewMeta?: {
     previewLimit: number;
     eligiblePreviewPoolCount: number;

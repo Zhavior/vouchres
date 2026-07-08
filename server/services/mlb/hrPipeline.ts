@@ -26,6 +26,7 @@ import { clamp } from "../intelligence/scoring";
 import { getParkFactor } from "./parkFactors";
 import { validateHrCandidate, validateProjectedPreviewCandidate } from "./hrValidator";
 import { MLB_PLAYER_RECORDS } from "../../../src/data/playerData";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import {
   TodayPlayer,
   TodayPlayerPool,
@@ -78,6 +79,8 @@ interface PoolBuildResult {
     totalPlayersChecked: number;
     previewPoolBeforeRegistryFilter?: number;
     previewPoolAfterSafetyFilter?: number;
+    confirmedLineupsLoaded?: number;
+    projectedLineupsLoaded?: number;
     teamMismatchBlocked?: number;
     teamMismatchExamples?: Array<{
       playerName: string;
@@ -133,10 +136,13 @@ async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Ma
           if (!game.gamePk) return;
 
           try {
-            const res = await fetch(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`);
-            if (!res.ok) return;
-
-            const boxscore = await res.json();
+            const boxscore = await sportsFetchJson<any>(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`, {
+              cacheKey: `hrPipeline:boxscore:${game.gamePk}`,
+              ttlMs: 2 * 60_000,
+              timeoutMs: 8_000,
+              retries: 1,
+              debugLabel: "hrPipeline",
+            });
             const teams = [boxscore?.teams?.away, boxscore?.teams?.home];
 
             for (const team of teams) {
@@ -387,11 +393,13 @@ function scoreCandidate(
   let recentHr = 0;
   let recentHrGames = 0;
   let smallSamplePenalty = 0;
+  let hrRate = 0; // HR per plate appearance (function-scoped for the hitterPower calc)
 
   // Hitter power component — this should dominate over generic environment boosts.
   if (hitterStats?.season) {
     const s = hitterStats.season;
     const hrPerPA = s.hrPerPA || 0;
+    hrRate = hrPerPA;
     seasonHR = s.homeRuns || 0;
     plateAppearances = s.plateAppearances || 0;
     atBats = s.atBats || 0;
@@ -515,8 +523,83 @@ function scoreCandidate(
 
   hrScore = clamp(Math.round(hrScore), 1, 100);
 
+  const hitterPower = clamp(
+    (hrRate * 1000 * 1.8) +
+    (iso * 120) +
+    (slug * 35) +
+    (seasonHR * 1.2) +
+    (recentHr * 5),
+    0,
+    100
+  );
+
+  const pitcherVulnerability = clamp(
+    ((pitcherHr9 || 1.0) * 34) +
+    ((pitcherStats?.inningsPitched ?? 0) > 0
+      ? (((pitcherStats?.baseOnBalls ?? 0) / (pitcherStats?.inningsPitched ?? 1)) * 9) * 3
+      : 0),
+    0,
+    100
+  );
+
+  const parkContext = clamp(50 + parkBoost * 6, 0, 100);
+
+  const lineupVolume = player.lineupStatus === "confirmed"
+    ? clamp(80 - ((player.battingOrder ?? 6) - 1) * 7, 35, 90)
+    : 55;
+
+  const handednessEdge =
+    player.battingHand === "S" ? 65 :
+    pitcher?.throws && (
+      (player.battingHand === "L" && pitcher.throws === "R") ||
+      (player.battingHand === "R" && pitcher.throws === "L")
+    ) ? 70 :
+    pitcher?.throws ? 45 : 50;
+
+  const recentForm = clamp(45 + recentHr * 14 + recentHrGames * 8, 0, 100);
+
+  const penalties = clamp(
+    smallSamplePenalty +
+    (player.lineupStatus !== "confirmed" ? 7 : 0) +
+    (player.injuryStatus === "day_to_day" || player.injuryStatus === "questionable" ? 15 : 0) +
+    (player.injuryStatus === "unknown" ? 5 : 0),
+    0,
+    100
+  );
+
+  const scoreBreakdown = {
+    hitterPower: Math.round(hitterPower),
+    pitcherVulnerability: Math.round(pitcherVulnerability),
+    parkContext: Math.round(parkContext),
+    lineupVolume: Math.round(lineupVolume),
+    handednessEdge: Math.round(handednessEdge),
+    recentForm: Math.round(recentForm),
+    penalties: Math.round(penalties),
+  };
+
+  const baseHrProbability = plateAppearances > 0
+    ? (seasonHR / plateAppearances) * 4.25
+    : 0.018;
+
+  const estimatedHrProbability = Number(clamp(
+    baseHrProbability *
+      (0.75 + hitterPower / 160) *
+      (0.85 + pitcherVulnerability / 250) *
+      hrMultiplier *
+      (0.9 + lineupVolume / 500) *
+      (1 - penalties / 500),
+    0.003,
+    0.14
+  ).toFixed(4));
+
+  const confidenceTier =
+    hrScore >= 82 ? "elite" :
+    hrScore >= 68 ? "strong" :
+    hrScore >= 53 ? "watchlist" :
+    hrScore >= 38 ? "thin" : "avoid";
+
   // Risk tier
-  let riskTier =
+  let riskTier: "Strong" | "Playable" | "Sneaky" | "Longshot" | "Lotto" | "Avoid" =
     hrScore >= 80 ? "Strong" :
     hrScore >= 65 ? "Playable" :
     hrScore >= 50 ? "Sneaky" :
@@ -572,17 +655,22 @@ function scoreCandidate(
     opponentPitcherName: pitcher?.pitcherName ?? "TBD",
     opponentPitcher: pitcher?.pitcherName ?? "TBD",
     opponentPitcherId: pitcher?.pitcherId ?? 0,
+    opponentPitcherHand: pitcher?.throws === "L" || pitcher?.throws === "R" ? pitcher.throws : null,
+    batSide: player.battingHand === "U" ? null : player.battingHand,
     venue: venueName,
     parkFactor,
     parkSource: (park as any).source ?? "park_factor_table",
     hrMultiplier,
     weatherBoost: 0,
     weatherSource: "unavailable",
-    lineupStatus: player.lineupStatus,
+    lineupStatus: player.lineupStatus as LineupStatus,
     battingOrder: player.battingOrder ?? null,
     injuryStatus: player.injuryStatus,
     hrScore,
+    estimatedHrProbability,
+    confidenceTier,
     dataConfidence,
+    scoreBreakdown,
     riskTier,
     status,
     reasons,
@@ -672,8 +760,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
     const pitcherStatsMap = new Map<number, PitcherSeasonStats | null>();
     const pitcherResults = await Promise.allSettled(
       [...pitcherIds].map(async (id) => {
-        const fullStats = pitcherStatsCache.get(`pitcher:${id}`) ?? await getPitcherStats(id);
-        pitcherStatsCache.set(`pitcher:${id}`, fullStats);
+        const fullStats = await pitcherStatsCache.getOrSet(`pitcher:${id}`, () => getPitcherStats(id));
         return { id, season: fullStats.season };
       })
     );
@@ -690,8 +777,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
       const batch = poolPlayerIds.slice(i, i + CONCURRENCY);
       const results = await Promise.allSettled(
         batch.map(async (id) => {
-          const stats = hitterStatsCache.get(`hitter:${id}`) ?? await getHitterStats(id);
-          hitterStatsCache.set(`hitter:${id}`, stats);
+          const stats = await hitterStatsCache.getOrSet(`hitter:${id}`, () => getHitterStats(id));
           return { id, stats };
         })
       );
@@ -815,12 +901,12 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
             }
           }
 
-          const previewCandidate = {
+          const previewCandidate: ScoredHrCandidate = {
             ...previewScored,
-            lineupStatus: "projected_unconfirmed",
+            lineupStatus: "projected_unconfirmed" as LineupStatus,
             dataConfidence: previewConfidence,
             registryConflict,
-            dataQuality: "projection_preview",
+            dataQuality: "projection_preview" as const,
             warnings: Array.from(new Set(previewWarnings)),
           };
 
@@ -887,7 +973,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
           reasons: previewValidation.reasons,
           opponentPitcher: pitcher?.pitcherName ?? null,
           gamePk: player.gamePk,
-          lineupStatus: player.lineupStatus,
+          lineupStatus: player.lineupStatus as LineupStatus,
           injuryStatus: player.injuryStatus ?? "unknown",
         });
 
@@ -926,7 +1012,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
           reasons: validation.reasons,
           opponentPitcher: pitcher?.pitcherName ?? null,
           gamePk: player.gamePk,
-          lineupStatus: player.lineupStatus,
+          lineupStatus: player.lineupStatus as LineupStatus,
           injuryStatus: player.injuryStatus ?? "unknown",
         });
 

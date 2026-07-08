@@ -1,0 +1,1085 @@
+import { useEffect, useMemo, useState } from 'react';
+
+type Pitcher = {
+  id?: number | string;
+  name?: string;
+  fullName?: string;
+  throws?: string;
+  hand?: string;
+};
+
+type Player = {
+  playerId?: number | string;
+  id?: number | string;
+  playerName?: string;
+  name?: string;
+  team?: string;
+  opponent?: string;
+  position?: string;
+  bats?: string;
+  throws?: string;
+  battingOrder?: number | string;
+  source?: string;
+  confidence?: number;
+  headshot?: string;
+};
+
+type Game = {
+  gamePk?: number | string;
+  id?: number | string;
+  awayTeam?: string;
+  homeTeam?: string;
+  away?: string;
+  home?: string;
+  gameTime?: string;
+  startTime?: string;
+  venue?: string;
+  status?: string;
+  lineupConfirmed?: boolean;
+  awayPitcher?: Pitcher | null;
+  homePitcher?: Pitcher | null;
+  awayLineup?: Player[];
+  homeLineup?: Player[];
+  players?: Player[];
+  totalPlayers?: number;
+};
+
+type DailyBoardResponse = {
+  ok?: boolean;
+  date?: string;
+  games?: Game[];
+  totalGames?: number;
+  totalPlayers?: number;
+  source?: string;
+  updatedAt?: string;
+};
+
+interface DailyPlayersPageProps {
+  onAddLegToParlay?: (player: any, prop: any) => void;
+}
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+function safeText(value: any, fallback = 'TBD'): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+
+  if (typeof value === 'object') {
+    return (
+      value.fullName ||
+      value.name ||
+      value.displayName ||
+      value.abbrev ||
+      value.abbreviation ||
+      value.code ||
+      fallback
+    );
+  }
+
+  return fallback;
+}
+
+function playerName(player: Player) {
+  return safeText(player.playerName || player.name, 'Unknown Player');
+}
+
+function pitcherName(pitcher?: Pitcher | null) {
+  if (!pitcher) return 'TBD';
+  return safeText(pitcher.name || pitcher.fullName, 'TBD');
+}
+
+function teamName(value?: any) {
+  return safeText(value, 'TBD');
+}
+
+function getGamePlayers(game: Game): Player[] {
+  const away = Array.isArray(game.awayLineup) ? game.awayLineup : [];
+  const home = Array.isArray(game.homeLineup) ? game.homeLineup : [];
+  const players = Array.isArray(game.players) ? game.players : [];
+  return [...away, ...home, ...players];
+}
+
+function normalizeResponse(raw: any): DailyBoardResponse {
+  const data = raw?.payload || raw?.data || raw || {};
+  const games = Array.isArray(data.games) ? data.games : [];
+
+  return {
+    ok: data.ok ?? raw?.ok ?? true,
+    date: data.date || todayISO(),
+    games,
+    totalGames: data.totalGames ?? games.length,
+    totalPlayers:
+      data.totalPlayers ??
+      games.reduce((sum: number, game: Game) => sum + getGamePlayers(game).length, 0),
+    source: data.source || 'daily-player-board',
+    updatedAt: data.updatedAt || new Date().toISOString(),
+  };
+}
+
+function dataQuality(game: Game) {
+  const total = getGamePlayers(game).length;
+  if (game.lineupConfirmed && total > 0) return 'CONFIRMED';
+  if (total > 0) return 'PROJECTED';
+  if (game.awayPitcher || game.homePitcher) return 'PITCHERS';
+  return 'GAME SHELL';
+}
+
+function qualityClass(label: string) {
+  if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (label === 'PROJECTED') return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
+  if (label === 'PITCHERS') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
+  return 'border-slate-500/30 bg-slate-500/10 text-slate-300';
+}
+
+function positionClass(pos?: string) {
+  const p = String(pos || '').toUpperCase();
+  if (p === 'P') return 'text-cyan-300';
+  if (['C', '1B', '2B', '3B', 'SS'].includes(p)) return 'text-emerald-300';
+  if (['LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-amber-300';
+  return 'text-slate-400';
+}
+
+function playerHeadshot(player: Player): string | null {
+  const id = player.playerId || player.id;
+  if (!id) return null;
+
+  // MLBAM image pattern. Good lightweight fallback for player cards.
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${id}/headshot/67/current`;
+}
+
+function teamLogoUrl(team: any): string | null {
+  const id = team?.id || team?.teamId || team?.mlbId;
+  if (!id) return null;
+  return `https://www.mlbstatic.com/team-logos/${id}.svg`;
+}
+
+function gameTeamId(game: Game, side: 'away' | 'home'): string | number | undefined {
+  const anyGame: any = game;
+  return (
+    anyGame?.[`${side}TeamId`] ||
+    anyGame?.teams?.[side]?.team?.id ||
+    anyGame?.[side]?.id ||
+    undefined
+  );
+}
+
+function formatGameTime(value?: string) {
+  if (!value) return 'Time TBD';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function matchupStatus(game: Game) {
+  const total = getGamePlayers(game).length;
+  if (game.lineupConfirmed && total >= 16) return 'Lineups confirmed';
+  if (total > 0) return 'Projected hitters';
+  if (game.awayPitcher || game.homePitcher) return 'Pitchers posted';
+  return 'Game shell';
+}
+
+function matchupStatusClass(status: string) {
+  if (status === 'Lineups confirmed') return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200';
+  if (status === 'Projected hitters') return 'border-amber-400/25 bg-amber-400/10 text-amber-200';
+  if (status === 'Pitchers posted') return 'border-cyan-400/25 bg-cyan-400/10 text-cyan-200';
+  return 'border-slate-600 bg-slate-800 text-slate-300';
+}
+
+function scrollToGame(gamePk?: string | number) {
+  if (!gamePk) return;
+  const element = document.getElementById(`daily-game-${gamePk}`);
+  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; name: string; align?: 'left' | 'right' }) {
+  const src = id ? `https://www.mlbstatic.com/team-logos/${id}.svg` : null;
+
+  return (
+    <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
+      {align === 'left' && (
+        <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
+        </div>
+      )}
+
+      <div className={`min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
+        <div className="truncate text-sm font-black text-white">{name}</div>
+        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+          {align === 'right' ? 'Home' : 'Away'}
+        </div>
+      </div>
+
+      {align === 'right' && (
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-white/95 p-1 shadow-lg shadow-black/20">
+          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-700">{name.slice(0, 2)}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function DailyPlayersSkeleton() {
+  return (
+    <div className="space-y-5">
+      <section className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5 shadow-2xl shadow-cyan-950/20">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="h-4 w-40 animate-pulse rounded-full bg-cyan-300/20" />
+            <div className="mt-4 h-9 w-72 animate-pulse rounded-2xl bg-slate-800" />
+            <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded-full bg-slate-800" />
+          </div>
+          <div className="hidden h-12 w-36 animate-pulse rounded-2xl bg-cyan-300/10 md:block" />
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="h-3 w-24 animate-pulse rounded-full bg-slate-800" />
+              <div className="mt-3 h-7 w-16 animate-pulse rounded-xl bg-slate-700" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-cyan-400/15 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-950/20">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <div className="h-4 w-44 animate-pulse rounded-full bg-cyan-300/20" />
+            <div className="mt-2 h-3 w-64 animate-pulse rounded-full bg-slate-800" />
+          </div>
+          <div className="hidden h-7 w-20 animate-pulse rounded-full bg-slate-800 sm:block" />
+        </div>
+
+        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+          {[0, 1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="min-w-[310px] rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/20 p-4"
+            >
+              <div className="mb-4 flex justify-between">
+                <div className="h-6 w-28 animate-pulse rounded-full bg-slate-800" />
+                <div className="h-4 w-16 animate-pulse rounded-full bg-slate-800" />
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
+                  <div>
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-slate-800" />
+                    <div className="mt-2 h-3 w-12 animate-pulse rounded-full bg-slate-800" />
+                  </div>
+                </div>
+                <div className="h-7 w-7 animate-pulse rounded-full bg-slate-800" />
+                <div className="flex items-center justify-end gap-2">
+                  <div>
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-slate-800" />
+                    <div className="ml-auto mt-2 h-3 w-12 animate-pulse rounded-full bg-slate-800" />
+                  </div>
+                  <div className="h-10 w-10 animate-pulse rounded-2xl bg-white/20" />
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-800 bg-black/20 p-3">
+                <div className="h-3 w-full animate-pulse rounded-full bg-slate-800" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-full bg-slate-800" />
+                <div className="mt-2 h-3 w-4/6 animate-pulse rounded-full bg-slate-800" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {[0, 1].map((game) => (
+        <section
+          key={game}
+          className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20"
+        >
+          <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
+            <div className="h-5 w-40 animate-pulse rounded-full bg-slate-800" />
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr]">
+              <div className="h-16 animate-pulse rounded-2xl bg-slate-900" />
+              <div className="h-12 w-20 animate-pulse rounded-2xl bg-slate-900" />
+              <div className="h-16 animate-pulse rounded-2xl bg-slate-900" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 p-4 lg:grid-cols-2">
+            {[0, 1].map((side) => (
+              <div key={side} className="rounded-3xl border border-slate-800 bg-slate-950/70 p-3">
+                <div className="mb-3 h-12 animate-pulse rounded-2xl bg-slate-900" />
+                <div className="grid gap-2">
+                  {[0, 1, 2, 3].map((player) => (
+                    <div key={player} className="flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+                      <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-800" />
+                      <div className="flex-1">
+                        <div className="h-4 w-40 animate-pulse rounded-full bg-slate-800" />
+                        <div className="mt-2 h-3 w-28 animate-pulse rounded-full bg-slate-800" />
+                        <div className="mt-3 h-5 w-32 animate-pulse rounded-full bg-slate-800" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+
+
+function TeamVsTeamShowcase({ games }: { games: any[] }) {
+  const getTeam = (game: any, side: "away" | "home") => {
+    const raw =
+      side === "away"
+        ? game?.awayTeam || game?.away || game?.teams?.away?.team
+        : game?.homeTeam || game?.home || game?.teams?.home?.team;
+
+    if (!raw) return { name: "TBD", abbr: "TBD", logo: "" };
+    if (typeof raw === "string") return { name: raw, abbr: raw.slice(0, 3).toUpperCase(), logo: "" };
+
+    return {
+      name: raw.name || raw.teamName || raw.shortName || raw.abbreviation || "TBD",
+      abbr: raw.abbreviation || raw.teamName || raw.shortName || raw.name?.slice(0, 3)?.toUpperCase() || "TBD",
+      logo: raw.logo || raw.logoUrl || raw.teamLogo || raw.image || "",
+    };
+  };
+
+  const getTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const getPitcher = (game: any, side: "away" | "home") => {
+    const value =
+      side === "away"
+        ? game?.awayPitcher || game?.away_sp || game?.probablePitchers?.away || game?.teams?.away?.probablePitcher
+        : game?.homePitcher || game?.home_sp || game?.probablePitchers?.home || game?.teams?.home?.probablePitcher;
+
+    if (!value) return "Projected SP";
+    if (typeof value === "string") return value;
+    return value.fullName || value.name || "Projected SP";
+  };
+
+  const visibleGames = games.slice(0, 18);
+
+  return (
+    <section className="daily-team-showcase" aria-label="Team versus team slideshow">
+      <div className="daily-team-shortcuts" aria-label="Team shortcuts">
+        {visibleGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <a className="daily-team-shortcut" href={`#daily-game-${index}`} key={`shortcut-${game?.gamePk || game?.game_id || game?.id || index}`}>
+              <span>{away.abbr}</span>
+              <b>vs</b>
+              <span>{home.abbr}</span>
+            </a>
+          );
+        })}
+      </div>
+
+      <div className="daily-team-showcase-track">
+        {visibleGames.map((game: any, index: number) => {
+          const away = getTeam(game, "away");
+          const home = getTeam(game, "home");
+
+          return (
+            <article className="daily-team-slide" id={`daily-game-${index}`} key={game?.gamePk || game?.game_id || game?.id || index}>
+              <div className="daily-team-slide-top">
+                <span>Game {index + 1}</span>
+                <strong>{getTime(game)}</strong>
+              </div>
+
+              <div className="daily-team-versus">
+                <div className="daily-team-side">
+                  <div className="daily-team-logo">
+                    {away.logo ? <img src={away.logo} alt="" /> : <span>{away.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{away.name}</h3>
+                  <p>SP: {getPitcher(game, "away")}</p>
+                </div>
+
+                <div className="daily-team-vs-pill">VS</div>
+
+                <div className="daily-team-side daily-team-side-right">
+                  <div className="daily-team-logo">
+                    {home.logo ? <img src={home.logo} alt="" /> : <span>{home.abbr.slice(0, 2)}</span>}
+                  </div>
+                  <h3>{home.name}</h3>
+                  <p>SP: {getPitcher(game, "home")}</p>
+                </div>
+              </div>
+
+              <div className="daily-team-slide-footer">
+                <span>Projected matchup</span>
+                <span>Scroll for next team →</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function LiveTeamsStrip({ games }: { games: any[] }) {
+  const getTeamName = (team: any) => {
+    if (!team) return "TBD";
+    if (typeof team === "string") return team;
+    return team.name || team.teamName || team.abbreviation || team.shortName || "TBD";
+  };
+
+  const getGameTime = (game: any) => {
+    const raw = game?.gameDate || game?.startTime || game?.dateTime || game?.time;
+    if (!raw) return "Today";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return String(raw);
+    return parsed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+
+  const marqueeGames = games.length > 0 ? [...games, ...games] : [];
+
+  return (
+    <section className="daily-live-teams-strip" aria-label="Live teams today">
+      <div className="daily-live-teams-header">
+        <div>
+          <p className="daily-live-eyebrow">Today’s slate</p>
+          <h2>Live Teams</h2>
+        </div>
+        <p>{games.length} games loaded</p>
+      </div>
+
+      <div className="daily-live-teams-scroller" aria-live="off">
+        <div className="daily-live-teams-track">
+        {marqueeGames.map((game: any, index: number) => {
+          const away = getTeamName(game?.awayTeam || game?.away || game?.teams?.away?.team);
+          const home = getTeamName(game?.homeTeam || game?.home || game?.teams?.home?.team);
+
+          return (
+            <article className="daily-live-team-card" key={game?.gamePk || game?.game_id || game?.id || index}>
+              <div className="daily-live-status">
+                <span>MLB</span>
+                <strong>{getGameTime(game)}</strong>
+              </div>
+
+              <div className="daily-live-matchup">
+                <span>{away}</span>
+                <b>@</b>
+                <span>{home}</span>
+              </div>
+
+              <div className="daily-live-card-footer">
+                <span>Open matchup</span>
+                <span>Research board →</span>
+              </div>
+            </article>
+          );
+        })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+function MatchupRail({ games }: { games: Game[] }) {
+  if (!games.length) return null;
+
+  return (
+    <section className="rounded-3xl border border-cyan-400/15 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-950/20">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-black uppercase tracking-[0.22em] text-cyan-200">
+            Today’s Matchups
+          </div>
+          <div className="mt-1 text-xs text-slate-500">
+            Side-scroll board updates with the day’s MLB slate.
+          </div>
+        </div>
+
+        <div className="hidden rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-400 sm:block">
+          Scroll →
+        </div>
+      </div>
+
+      <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
+        {games.map((game, index) => {
+          const awayTeam = teamName(game.awayTeam || (game as any).away);
+          const homeTeam = teamName(game.homeTeam || (game as any).home);
+          const awayId = gameTeamId(game, 'away');
+          const homeId = gameTeamId(game, 'home');
+          const status = matchupStatus(game);
+
+          return (
+            <button
+              key={`${game.gamePk || game.id || index}-rail`}
+              type="button"
+              onClick={() => scrollToGame(game.gamePk || game.id)}
+              className="min-w-[310px] snap-start rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/20 p-4 text-left shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:shadow-cyan-950/30"
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${matchupStatusClass(status)}`}>
+                  {status}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500">
+                  {formatGameTime(game.gameTime || game.startTime)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <TeamLogoBadge id={awayId} name={awayTeam} />
+                <div className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-black text-slate-500">
+                  @
+                </div>
+                <TeamLogoBadge id={homeId} name={homeTeam} align="right" />
+              </div>
+
+              <div className="mt-4 grid gap-2 rounded-2xl border border-slate-800 bg-black/20 p-3 text-[11px]">
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Away SP</span>
+                  <span className="truncate font-bold text-cyan-100">{pitcherName(game.awayPitcher)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Home SP</span>
+                  <span className="truncate font-bold text-cyan-100">{pitcherName(game.homePitcher)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Venue</span>
+                  <span className="truncate font-bold text-slate-300">{game.venue || 'TBD'}</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+
+function orderNumber(player: Player): number {
+  const raw = String(player.battingOrder || '').replace(/\D/g, '');
+  const num = Number(raw);
+  return Number.isFinite(num) && num > 0 ? num : 999;
+}
+
+function sortLineup(players: Player[]): Player[] {
+  return [...players].sort((a, b) => {
+    const orderDiff = orderNumber(a) - orderNumber(b);
+    if (orderDiff !== 0) return orderDiff;
+    return playerName(a).localeCompare(playerName(b));
+  });
+}
+
+function PlayerCard({ player, index }: { player: Player; index: number }) {
+  const headshot = playerHeadshot(player);
+  const isProjected = String(player.source || '').toLowerCase().includes('projected');
+  const order = orderNumber(player) === 999 ? index + 1 : orderNumber(player);
+
+  return (
+    <div className="daily-player-mini-card group flex gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 shadow-lg shadow-black/20 transition hover:border-cyan-400/40 hover:bg-slate-900">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
+        {headshot ? (
+          <img
+            src={headshot}
+            alt={playerName(player)}
+            className="h-full w-full object-cover object-top"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-500">
+            {playerName(player).slice(0, 1)}
+          </div>
+        )}
+
+        <div className="absolute bottom-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-black text-white">
+          #{order}
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-sm font-black text-white">
+              {playerName(player)}
+            </div>
+            <div className="mt-0.5 text-[11px] font-semibold text-slate-400">
+              {teamName(player.team)} vs {teamName(player.opponent)}
+            </div>
+          </div>
+
+          <span className={`rounded-full bg-slate-800 px-2 py-1 text-[10px] font-black ${positionClass(player.position)}`}>
+            {player.position || '—'}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+          {player.bats && (
+            <span className="rounded-full border border-slate-700 bg-slate-800 px-2 py-1 text-slate-300">
+              Bats {player.bats}
+            </span>
+          )}
+
+          <span
+            className={`rounded-full border px-2 py-1 font-bold ${
+              isProjected
+                ? 'border-amber-400/25 bg-amber-400/10 text-amber-200'
+                : 'border-cyan-400/25 bg-cyan-400/10 text-cyan-200'
+            }`}
+          >
+            {isProjected ? 'Projected' : 'Confirmed'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LineupColumn({
+  title,
+  pitcher,
+  players,
+  search,
+}: {
+  title: string;
+  pitcher?: Pitcher | null;
+  players: Player[];
+  search: string;
+}) {
+  const q = search.trim().toLowerCase();
+
+  const filtered = sortLineup(players).filter((player) => {
+    if (!q) return true;
+    return [
+      playerName(player),
+      player.team,
+      player.opponent,
+      player.position,
+      player.source,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q);
+  });
+
+  return (
+    <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-3">
+      <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div>
+          <div className="text-base font-black text-white">{title}</div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            SP: <span className="font-bold text-cyan-200">{pitcherName(pitcher)}</span>
+          </div>
+        </div>
+
+        <div className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-black text-slate-300">
+          {filtered.length}/9
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-5 text-center">
+          <div className="text-sm font-black text-slate-300">Lineup pending</div>
+          <div className="mt-1 text-xs text-slate-500">
+            No posted hitters found yet for this side.
+          </div>
+        </div>
+      ) : (
+        <div className="daily-player-photo-rail" aria-label={`${title} player carousel`}>
+          {filtered.map((player, index) => (
+            <PlayerCard
+              key={`${player.playerId || player.id || playerName(player)}-${teamName(player.team)}-${index}`}
+              player={player}
+              index={index}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GameCard({ game, search }: { game: Game; search: string }) {
+  const awayTeam = teamName(game.awayTeam || game.away);
+  const homeTeam = teamName(game.homeTeam || game.home);
+
+  const awayPlayers = sortLineup(Array.isArray(game.awayLineup) ? game.awayLineup : []);
+  const homePlayers = sortLineup(Array.isArray(game.homeLineup) ? game.homeLineup : []);
+
+  const quality = dataQuality(game);
+  const totalLoaded = awayPlayers.length + homePlayers.length;
+
+  return (
+    <section id={`daily-game-${game.gamePk || game.id}`} className="scroll-mt-6 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl shadow-cyan-950/20">
+      <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <span className={`rounded-full border px-3 py-1 text-[10px] font-black tracking-[0.18em] ${qualityClass(quality)}`}>
+            {quality}
+          </span>
+
+          <span className="text-xs text-slate-500">
+            {game.status || 'Scheduled'}
+          </span>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
+          <div>
+            <div className="text-lg font-black text-slate-100">{awayTeam}</div>
+            <div className="mt-1 text-xs text-slate-500">
+              SP: <span className="text-cyan-200">{pitcherName(game.awayPitcher)}</span>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">at</div>
+            <div className="text-xs text-slate-400">{game.gameTime || game.startTime || 'Time TBD'}</div>
+          </div>
+
+          <div className="md:text-right">
+            <div className="text-lg font-black text-slate-100">{homeTeam}</div>
+            <div className="mt-1 text-xs text-slate-500">
+              SP: <span className="text-cyan-200">{pitcherName(game.homePitcher)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span>{game.venue || 'Venue TBD'}</span>
+          <span>•</span>
+          <span>
+            {totalLoaded > 0
+              ? `${totalLoaded} hitters loaded`
+              : 'Lineup pending from MLB'}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-4 p-4 lg:grid-cols-2">
+        <LineupColumn
+          title={awayTeam}
+          pitcher={game.awayPitcher}
+          players={awayPlayers}
+          search={search}
+        />
+
+        <LineupColumn
+          title={homeTeam}
+          pitcher={game.homePitcher}
+          players={homePlayers}
+          search={search}
+        />
+      </div>
+    </section>
+  );
+}
+
+
+async function fetchProjectedHitters(
+  teamId: number | string,
+  teamName: string,
+  opponent: string
+): Promise<Player[]> {
+  try {
+    const rosterUrl = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=active`;
+    const response = await fetch(rosterUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    const roster = Array.isArray(data?.roster) ? data.roster : [];
+
+    return roster
+      .filter((item: any) => {
+        const pos = item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '';
+        return pos && pos !== 'P';
+      })
+      .slice(0, 9)
+      .map((item: any, index: number) => ({
+        playerId: item?.person?.id,
+        playerName: item?.person?.fullName || item?.person?.name || 'Unknown Player',
+        team: teamName,
+        opponent,
+        position: item?.position?.abbreviation || item?.person?.primaryPosition?.abbreviation || '—',
+        bats: undefined,
+        throws: undefined,
+        battingOrder: index + 1,
+        source: 'PROJECTED_active_roster_until_lineup_posts',
+        confidence: 0.4,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchDirectMlbScheduleBoard(): Promise<DailyBoardResponse> {
+  const date = todayISO();
+  const scheduleUrl =
+    `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher,team,venue`;
+
+  const response = await fetch(scheduleUrl, { headers: { accept: 'application/json' } });
+
+  if (!response.ok) {
+    throw new Error(`MLB direct schedule failed: ${response.status}`);
+  }
+
+  const schedule = await response.json();
+  const rawGames = schedule?.dates?.flatMap((d: any) => d?.games || []) || [];
+
+  const games: Game[] = await Promise.all(
+    rawGames.map(async (game: any) => {
+      const awayTeam = game?.teams?.away?.team?.name || 'Away';
+      const homeTeam = game?.teams?.home?.team?.name || 'Home';
+
+      const awayPitcherRaw = game?.teams?.away?.probablePitcher;
+      const homePitcherRaw = game?.teams?.home?.probablePitcher;
+
+      const awayLineup = game?.teams?.away?.team?.id
+        ? await fetchProjectedHitters(game.teams.away.team.id, awayTeam, homeTeam)
+        : [];
+
+      const homeLineup = game?.teams?.home?.team?.id
+        ? await fetchProjectedHitters(game.teams.home.team.id, homeTeam, awayTeam)
+        : [];
+
+      const players = [...awayLineup, ...homeLineup];
+
+      return {
+        gamePk: game?.gamePk,
+        awayTeam,
+        homeTeam,
+        awayTeamId: game?.teams?.away?.team?.id,
+        homeTeamId: game?.teams?.home?.team?.id,
+        gameTime: game?.gameDate || '',
+        venue: game?.venue?.name || '',
+        status: game?.status?.detailedState || game?.status?.abstractGameState || 'Scheduled',
+        awayPitcher: awayPitcherRaw
+          ? {
+              id: awayPitcherRaw.id,
+              name: awayPitcherRaw.fullName || awayPitcherRaw.name || 'TBD',
+              throws: awayPitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        homePitcher: homePitcherRaw
+          ? {
+              id: homePitcherRaw.id,
+              name: homePitcherRaw.fullName || homePitcherRaw.name || 'TBD',
+              throws: homePitcherRaw?.pitchHand?.code || '',
+            }
+          : null,
+        lineupConfirmed: false,
+        awayLineup,
+        homeLineup,
+        players,
+        totalPlayers: players.length,
+      };
+    })
+  );
+
+  const totalPlayers = games.reduce((sum, game) => sum + getGamePlayers(game).length, 0);
+
+  return {
+    ok: true,
+    date,
+    games,
+    totalGames: games.length,
+    totalPlayers,
+    source: 'direct_mlb_statsapi_projected_hitters',
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
+  const [data, setData] = useState<DailyBoardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'confirmed' | 'pending' | 'pitchers'>('all');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  async function fetchBoard() {
+    setLoading(true);
+    setError(null);
+
+    let finalData: DailyBoardResponse | null = null;
+    let finalError = '';
+
+    try {
+      finalData = await fetchDirectMlbScheduleBoard();
+    } catch (directErr: any) {
+      finalError = directErr?.message || String(directErr);
+    }
+
+    if (!finalData) {
+      try {
+        finalData = await fetchDirectMlbScheduleBoard();
+        finalError = '';
+      } catch (directErr: any) {
+        finalData = {
+          ok: false,
+          date: todayISO(),
+          games: [],
+          totalGames: 0,
+          totalPlayers: 0,
+          source: 'empty-fallback',
+          updatedAt: new Date().toISOString(),
+        };
+        setError(finalError || directErr?.message || 'Could not load Daily Player Board.');
+      }
+    }
+
+    setData(finalData);
+    setLastUpdated(new Date());
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchBoard();
+  }, []);
+
+  const games = useMemo(() => {
+    const list = data?.games || [];
+
+    return list.filter((game) => {
+      const quality = dataQuality(game);
+      if (filter === 'confirmed') return quality === 'CONFIRMED';
+      if (filter === 'pending') return quality !== 'CONFIRMED';
+      if (filter === 'pitchers') return Boolean(game.awayPitcher || game.homePitcher);
+      return true;
+    });
+  }, [data?.games, filter]);
+
+  const totalPlayers = useMemo(
+    () => (data?.games || []).reduce((sum, game) => sum + getGamePlayers(game).length, 0),
+    [data?.games]
+  );
+
+  return (
+    <main className="ve-page ve-grid-bg min-h-screen px-4 py-6 text-slate-100">
+      <div className="mx-0 max-w-none space-y-5">
+        <header className="rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-950 via-slate-950 to-cyan-950/20 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                  Daily Player Board
+                </span>
+                <span className="text-xs text-slate-500">{data?.date || todayISO()}</span>
+              </div>
+
+              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                Today’s MLB Starting Lineups
+              </h1>
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                Actual posted MLB starting hitters from both teams when lineups are available.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={fetchBoard}
+              className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 text-sm font-black text-cyan-100 hover:bg-cyan-300/20"
+            >
+              Refresh Board
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Games Loaded</div>
+              <div className="mt-1 text-2xl font-black text-white">{data?.totalGames ?? games.length}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Players Starting</div>
+              <div className="mt-1 text-2xl font-black text-white">{totalPlayers}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div className="text-xs text-slate-500">Last Updated</div>
+              <div className="mt-1 text-sm font-bold text-white">
+                {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-950/80 p-4 md:flex-row md:items-center md:justify-between">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search player, team, position..."
+            className="w-full rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 md:max-w-md"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setFilter(item)}
+                className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wide ${
+                  filter === item
+                    ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-100'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-100'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {loading && (
+          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-400">
+            Loading Daily Player Board...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-3xl border border-red-400/20 bg-red-950/20 p-5 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+
+        {!loading && games.length === 0 && (
+          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8 text-center">
+            <div className="text-lg font-black text-white">No games found for this filter.</div>
+            <div className="mt-2 text-sm text-slate-500">
+              Try All or Refresh Board. If it still shows empty, the backend endpoint is not returning today’s MLB schedule.
+            </div>
+          </div>
+        )}
+
+        {!loading && games.length > 0 && <TeamVsTeamShowcase games={games} />}
+
+        {!loading && games.length > 0 && (
+          <div className="grid gap-5">
+            {games.map((game, index) => (
+              <GameCard
+                key={`${game.gamePk || game.id || index}`}
+                game={game}
+                search={search}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

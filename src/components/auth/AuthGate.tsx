@@ -170,8 +170,8 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
         <p className="auth-gate__legal">
           By signing in, you agree to our{" "}
           <a href="/terms">Terms</a> and{" "}
-          <a href="/privacy">Privacy Policy</a>. You must be 21+ and located in
-          a jurisdiction where sports betting is legal to use this app.
+          <a href="/privacy">Privacy Policy</a>. You must be of legal age in your jurisdiction and
+          located somewhere this is legal to use this app.
           Predictions are for research and entertainment only — not betting advice.
         </p>
       </div>

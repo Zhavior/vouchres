@@ -3,6 +3,21 @@ dist
 .env
 .env.local
 .env.*.local
+.env.local.*
 .DS_Store
 .vite
 .vercel
+
+# Local patch backups - keep outside Vite source tree
+src/**/*.before*.ts
+src/**/*.before*.tsx
+src/**/*.backup*.ts
+src/**/*.backup*.tsx
+_code_backups/
+
+.env
+.env.*
+!.env.example
+*.zip
+__MACOSX/
+.DS_Store

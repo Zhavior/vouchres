@@ -4,8 +4,10 @@
  * AND their currentTeam.id (from /v1/people?hydrate=currentTeam) must match.
  * Any mismatch is logged and dropped — no fallbacks, no synthetic pools.
  */
-import { TTLCache } from "../../lib/cache";
+import { TTLCache, limitConcurrency } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { NormalizedPlayer, headshotUrl } from "./mlbTypes";
+import { parseMlbPeopleResponse, parseMlbRosterResponse, parseMlbTeamsResponse, type MlbRosterEntry } from "./mlbStatsApiSchemas";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
@@ -18,12 +20,18 @@ function bats(code?: string): "L" | "R" | "S" | "U" {
 }
 
 async function getMlbTeams(): Promise<Array<{ id: number; name: string; abbreviation: string }>> {
-  const res = await fetch(`${BASE}/v1/teams?sportId=1&activeStatus=Y`);
-  if (!res.ok) throw new Error(`teams ${res.status}`);
-  const data = await res.json();
-  const teams: any[] = Array.isArray(data?.teams) ? data.teams : [];
+  const data = await sportsFetchJson<unknown>(`${BASE}/v1/teams?sportId=1&activeStatus=Y`, {
+    cacheKey: "mlb:teams:active",
+    ttlMs: 20 * 60_000,
+    staleIfErrorMs: 5 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "teamRosterClient",
+  });
+  const { teams, warnings } = parseMlbTeamsResponse(data, "teamRoster:teams");
+  for (const warning of warnings) console.warn(`[teamRosterClient] ${warning}`);
+
   return teams
-    .filter((t) => typeof t.id === "number" && t.name)
     .map((t) => ({ id: t.id, name: t.name, abbreviation: t.abbreviation || t.teamCode || "" }));
 }
 
@@ -38,13 +46,18 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
     const batch = playerIds.slice(i, i + BATCH);
     try {
       const url = `${BASE}/v1/people?personIds=${batch.join(",")}&hydrate=currentTeam`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.warn(`[teamRosterClient] people verification ${res.status} for batch starting at ${i}`);
-        continue;
-      }
-      const data = await res.json();
-      for (const p of data?.people ?? []) {
+      const data = await sportsFetchJson<unknown>(url, {
+        cacheKey: `mlb:people:current-team:${batch.join(",")}`,
+        ttlMs: 20 * 60_000,
+        staleIfErrorMs: 5 * 60_000,
+        timeoutMs: 8_000,
+        retries: 1,
+        debugLabel: "teamRosterClient",
+      });
+      const { people, warnings } = parseMlbPeopleResponse(data, "teamRoster:people");
+      for (const warning of warnings) console.warn(`[teamRosterClient] ${warning}`);
+
+      for (const p of people) {
         const ctId: number | undefined = p?.currentTeam?.id;
         if (p?.id && ctId) {
           result.set(p.id, {
@@ -63,53 +76,58 @@ async function verifyCurrentTeams(playerIds: number[]): Promise<Map<number, { id
 
 async function getTeamActiveHitters(team: { id: number; name: string; abbreviation: string }): Promise<NormalizedPlayer[]> {
   const teamId = team.id;
-  const res = await fetch(`${BASE}/v1/teams/${teamId}/roster?rosterType=active`);
-  if (!res.ok) throw new Error(`team ${teamId} roster ${res.status}`);
-
-  const data = await res.json();
-  const roster: any[] = Array.isArray(data?.roster) ? data.roster : [];
+  const data = await sportsFetchJson<unknown>(`${BASE}/v1/teams/${teamId}/roster?rosterType=active`, {
+    cacheKey: `mlb:team:${teamId}:active-roster`,
+    ttlMs: 20 * 60_000,
+    staleIfErrorMs: 5 * 60_000,
+    timeoutMs: 8_000,
+    retries: 1,
+    debugLabel: "teamRosterClient",
+  });
+  const { roster, warnings } = parseMlbRosterResponse(data, `teamRoster:roster:${teamId}`);
+  for (const warning of warnings) console.warn(`[teamRosterClient] ${warning}`);
 
   // Step 1: filter to non-pitchers with valid IDs
-  const candidates = roster.filter((r) => {
+  const candidates: MlbRosterEntry[] = roster.filter((r) => {
     const pos = r?.position?.abbreviation;
     return r?.person?.id && r?.person?.fullName && pos && pos !== "P";
   });
 
-  const candidateIds = candidates.map((r) => r.person.id as number);
+  const candidateIds = candidates.map((r) => r.person?.id as number);
 
   // Step 2: verify each player's currentTeam.id matches teamId
   const currentTeamMap = await verifyCurrentTeams(candidateIds);
 
   const verified: NormalizedPlayer[] = [];
   for (const r of candidates) {
-    const playerId = r.person.id as number;
+    const playerId = r.person?.id as number;
     const verifiedTeam = currentTeamMap.get(playerId);
     const verifiedTeamId = verifiedTeam?.id;
 
     if (verifiedTeamId === undefined) {
       console.warn(
-        `[HR BOARD ROSTER DROP] ${r.person.fullName} (${playerId}) — currentTeam not returned by people API, dropping from team ${teamId}`
+        `[HR BOARD ROSTER DROP] ${r.person?.fullName} (${playerId}) — currentTeam not returned by people API, dropping from team ${teamId}`
       );
       continue;
     }
 
     if (verifiedTeamId !== teamId) {
       console.warn(
-        `[HR BOARD ROSTER DROP] ${r.person.fullName} listed=${teamId} verified=${verifiedTeamId} — mismatch, dropping`
+        `[HR BOARD ROSTER DROP] ${r.person?.fullName} listed=${teamId} verified=${verifiedTeamId} — mismatch, dropping`
       );
       continue;
     }
 
     if (process.env.DEBUG_HR_PIPELINE === "true") {
       console.log(
-        `[HR BOARD ROSTER OK]   ${r.person.fullName} (${playerId}) team=${team.name} (${teamId}) ✓`
+        `[HR BOARD ROSTER OK]   ${r.person?.fullName} (${playerId}) team=${team.name} (${teamId}) ✓`
       );
     }
 
     const pos = r.position.abbreviation as string;
     verified.push({
       playerId,
-      playerName: r.person.fullName,
+      playerName: r.person?.fullName ?? "Unknown",
       position: pos,
       bats: bats(r.person?.batSide?.code),
       team: team.name,
@@ -144,6 +162,12 @@ export async function getActiveHittersByTeam(
     ? `${CACHE_KEY}:teams:${teamIds.sort((a, b) => a - b).join(",")}`
     : CACHE_KEY;
 
+  const cached = hittersCache.get(cacheKey);
+  if (cached) {
+    console.log(`[teamRosterClient] cache hit for key=${cacheKey.slice(0, 40)}`);
+    return cached;
+  }
+
   return hittersCache.getOrSet(cacheKey, async () => {
     const map = new Map<number, NormalizedPlayer[]>();
 
@@ -175,19 +199,20 @@ export async function getActiveHittersByTeam(
         console.log(`[teamRosterClient] Fetching rosters for all ${teams.length} teams`);
       }
 
-      const results = await Promise.allSettled(
-        teams.map(async (team) => {
+      console.log(`[teamRosterClient] cache miss — fetching rosters for ${teams.length} teams (max 3 concurrent)`);
+      const results = await limitConcurrency(teams, 3, async (team) => {
+        console.log(`[teamRosterClient] starting roster fetch for team ${team.id} (${team.abbreviation})`);
+        try {
           const hitters = await getTeamActiveHitters(team);
-          return { team, hitters };
-        })
-      );
+          return { ok: true as const, team, hitters };
+        } catch (err) {
+          console.error(`[teamRosterClient] roster fetch failed for team ${team.id}:`, (err as Error).message);
+          return { ok: false as const, team, hitters: [] as NormalizedPlayer[] };
+        }
+      });
 
       for (const result of results) {
-        if (result.status !== "fulfilled") {
-          console.error("[teamRosterClient] roster fetch failed:", result.reason);
-          continue;
-        }
-        map.set(result.value.team.id, result.value.hitters);
+        map.set(result.team.id, result.hitters);
       }
     } catch (err) {
       console.error("[teamRosterClient] getActiveHittersByTeam failed:", (err as Error).message);

@@ -1,0 +1,368 @@
+import { getSupabaseAdmin } from "../../middleware/auth";
+import type { HrEvent } from "../mlb/hrFeedService";
+
+export type NotificationType = "HOME_RUN" | "PARLAY_GRADED";
+
+export interface NotificationRecord {
+  id: string;
+  user_id: string;
+  type: NotificationType | string;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  dedupe_key: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface NotificationPrefs {
+  in_app_enabled: boolean;
+  hr_alerts_enabled: boolean;
+  parlay_alerts_enabled: boolean;
+  browser_push_enabled: boolean;
+}
+
+export interface NotificationCreateResult {
+  created: number;
+  duplicates: number;
+  pushSent: number;
+  pushSkipped: number;
+  warnings: string[];
+}
+
+export interface NotificationListResult {
+  notifications: NotificationRecord[];
+  unreadCount: number;
+  warnings: string[];
+}
+
+export interface PushSubscriptionInput {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+const DEFAULT_PREFS: NotificationPrefs = {
+  in_app_enabled: true,
+  hr_alerts_enabled: true,
+  parlay_alerts_enabled: true,
+  browser_push_enabled: false,
+};
+
+const MISSING_TABLE_CODES = new Set(["42P01", "PGRST205", "PGRST204", "42703"]);
+
+function missingTable(error: any): boolean {
+  return error?.code && MISSING_TABLE_CODES.has(error.code);
+}
+
+function pushConfigured(): boolean {
+  return Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT);
+}
+
+function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean {
+  if (!prefs.in_app_enabled) return false;
+  if (type === "HOME_RUN") return prefs.hr_alerts_enabled;
+  if (type === "PARLAY_GRADED") return prefs.parlay_alerts_enabled;
+  return true;
+}
+
+async function getPrefs(userId: string): Promise<{ prefs: NotificationPrefs; warnings: string[] }> {
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
+      .from("notification_preferences")
+      .select("in_app_enabled, hr_alerts_enabled, parlay_alerts_enabled, browser_push_enabled")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) {
+      if (missingTable(error)) return { prefs: DEFAULT_PREFS, warnings: ["notification_preferences table missing; using safe defaults"] };
+      return { prefs: DEFAULT_PREFS, warnings: [`preference lookup failed: ${error.message}`] };
+    }
+    return { prefs: { ...DEFAULT_PREFS, ...(data ?? {}) }, warnings: [] };
+  } catch (err: any) {
+    return { prefs: DEFAULT_PREFS, warnings: [`preference lookup unavailable: ${err?.message ?? "unknown error"}`] };
+  }
+}
+
+async function getRecipientUserIds(explicitUserIds?: string[]): Promise<{ userIds: string[]; warnings: string[] }> {
+  if (explicitUserIds?.length) return { userIds: [...new Set(explicitUserIds)], warnings: [] };
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .limit(1000);
+    if (error) return { userIds: [], warnings: [`recipient lookup failed: ${error.message}`] };
+    return { userIds: (data ?? []).map((row: any) => String(row.id)), warnings: [] };
+  } catch (err: any) {
+    return { userIds: [], warnings: [`recipient lookup unavailable: ${err?.message ?? "unknown error"}`] };
+  }
+}
+
+async function maybeSendPush(args: {
+  userId: string;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  prefs: NotificationPrefs;
+}): Promise<{ sent: number; skipped: number; warnings: string[] }> {
+  if (!args.prefs.browser_push_enabled) {
+    return { sent: 0, skipped: 1, warnings: ["push skipped: browser push preference disabled"] };
+  }
+  if (!pushConfigured()) {
+    return { sent: 0, skipped: 1, warnings: ["push skipped: VAPID/web push env vars are not configured"] };
+  }
+
+  // Web Push dispatch is intentionally a no-op until a web-push provider is
+  // installed/configured. In-app persistence remains the source of truth.
+  return { sent: 0, skipped: 1, warnings: ["push skipped: web push sender is not configured in this deployment"] };
+}
+
+export async function createNotification(args: {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  dedupeKey: string;
+}): Promise<NotificationCreateResult> {
+  const warnings: string[] = [];
+  const { prefs, warnings: prefWarnings } = await getPrefs(args.userId);
+  warnings.push(...prefWarnings);
+
+  if (!typeEnabled(args.type, prefs)) {
+    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`${args.type} notification skipped by user preferences`, ...warnings] };
+  }
+
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { error } = await supabaseAdmin.from("notifications").insert({
+      user_id: args.userId,
+      type: args.type,
+      title: args.title,
+      message: args.message,
+      metadata: args.metadata,
+      dedupe_key: args.dedupeKey,
+    });
+    if (error) {
+      if (error.code === "23505") {
+        console.log(`[notifications] duplicate skipped ${args.dedupeKey}`);
+        return { created: 0, duplicates: 1, pushSent: 0, pushSkipped: 0, warnings };
+      }
+      if (missingTable(error)) {
+        return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notifications table missing: ${error.message}`, ...warnings] };
+      }
+      throw error;
+    }
+  } catch (err: any) {
+    return { created: 0, duplicates: 0, pushSent: 0, pushSkipped: 1, warnings: [`notification insert failed: ${err?.message ?? "unknown error"}`, ...warnings] };
+  }
+
+  const push = await maybeSendPush({
+    userId: args.userId,
+    title: args.title,
+    message: args.message,
+    metadata: args.metadata,
+    prefs,
+  });
+  warnings.push(...push.warnings);
+
+  return { created: 1, duplicates: 0, pushSent: push.sent, pushSkipped: push.skipped, warnings };
+}
+
+export function homeRunDedupeKey(event: Pick<HrEvent, "gamePk" | "id" | "playerId">): string {
+  return `HOME_RUN:${event.gamePk}:${event.id}:${event.playerId}`;
+}
+
+export function buildHomeRunNotification(event: HrEvent) {
+  return {
+    type: "HOME_RUN" as const,
+    title: "Home Run Alert",
+    message: `${event.playerName} homered for ${event.teamAbbr || event.team}.`,
+    metadata: {
+      playerId: event.playerId,
+      playerName: event.playerName,
+      teamId: (event as any).teamId ?? null,
+      teamAbbr: event.teamAbbr,
+      gameId: String(event.gamePk),
+      inning: event.inning,
+      eventId: event.id,
+      source: "mlb_live_feed",
+    },
+    dedupeKey: homeRunDedupeKey(event),
+  };
+}
+
+export async function createHomeRunNotifications(
+  event: HrEvent,
+  opts: { userIds?: string[] } = {}
+): Promise<NotificationCreateResult> {
+  const start = Date.now();
+  const recipients = await getRecipientUserIds(opts.userIds);
+  const warnings = [...recipients.warnings];
+  let created = 0;
+  let duplicates = 0;
+  let pushSent = 0;
+  let pushSkipped = 0;
+
+  for (const userId of recipients.userIds) {
+    const payload = buildHomeRunNotification(event);
+    const result = await createNotification({
+      userId,
+      ...payload,
+    });
+    created += result.created;
+    duplicates += result.duplicates;
+    pushSent += result.pushSent;
+    pushSkipped += result.pushSkipped;
+    warnings.push(...result.warnings);
+  }
+
+  console.log(
+    `[notifications] HR event ${event.id} scanned users=${recipients.userIds.length} created=${created} duplicates=${duplicates} pushSent=${pushSent} pushSkipped=${pushSkipped} ${Date.now() - start}ms`
+  );
+  return { created, duplicates, pushSent, pushSkipped, warnings: [...new Set(warnings)] };
+}
+
+export async function processHomeRunEvents(
+  events: HrEvent[],
+  opts: { userIds?: string[] } = {}
+): Promise<NotificationCreateResult & { scanned: number }> {
+  let created = 0;
+  let duplicates = 0;
+  let pushSent = 0;
+  let pushSkipped = 0;
+  const warnings: string[] = [];
+  for (const event of events) {
+    const result = await createHomeRunNotifications(event, opts);
+    created += result.created;
+    duplicates += result.duplicates;
+    pushSent += result.pushSent;
+    pushSkipped += result.pushSkipped;
+    warnings.push(...result.warnings);
+  }
+  console.log(`[notifications] HR events scanned=${events.length} created=${created} duplicates=${duplicates}`);
+  return { scanned: events.length, created, duplicates, pushSent, pushSkipped, warnings: [...new Set(warnings)] };
+}
+
+export function buildParlayGradedNotification(args: {
+  parlayId: string;
+  status: string;
+  legCount: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  voids: number;
+}) {
+  return {
+    type: "PARLAY_GRADED" as const,
+    title: "Parlay Graded",
+    message: `Your ${args.legCount}-leg parlay was graded: ${args.status}.`,
+    metadata: {
+      parlayId: args.parlayId,
+      status: args.status,
+      wins: args.wins,
+      losses: args.losses,
+      pushes: args.pushes,
+      voids: args.voids,
+    },
+    dedupeKey: `PARLAY_GRADED:${args.parlayId}`,
+  };
+}
+
+export async function createParlayGradedNotification(args: {
+  userId: string;
+  parlayId: string;
+  status: string;
+  legCount: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  voids: number;
+}): Promise<NotificationCreateResult> {
+  const payload = buildParlayGradedNotification(args);
+  const result = await createNotification({
+    userId: args.userId,
+    ...payload,
+  });
+  console.log(`[notifications] parlay graded parlay=${args.parlayId} status=${args.status} created=${result.created} duplicates=${result.duplicates}`);
+  return result;
+}
+
+export async function listNotifications(userId: string, limit = 50): Promise<NotificationListResult> {
+  const warnings: string[] = [];
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const [rows, unread] = await Promise.all([
+      supabaseAdmin
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(Math.min(limit, 100)),
+      supabaseAdmin
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .is("read_at", null),
+    ]);
+    if (rows.error) throw rows.error;
+    if (unread.error) throw unread.error;
+    return { notifications: (rows.data ?? []) as NotificationRecord[], unreadCount: unread.count ?? 0, warnings };
+  } catch (err: any) {
+    return { notifications: [], unreadCount: 0, warnings: [`notifications unavailable: ${err?.message ?? "unknown error"}`] };
+  }
+}
+
+export async function markNotificationRead(userId: string, id: string): Promise<NotificationListResult> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  await supabaseAdmin
+    .from("notifications")
+    .update({ read_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
+  return listNotifications(userId);
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<NotificationListResult> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  await supabaseAdmin
+    .from("notifications")
+    .update({ read_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("read_at", null);
+  return listNotifications(userId);
+}
+
+export async function savePushSubscription(userId: string, input: PushSubscriptionInput, userAgent?: string): Promise<{ ok: boolean; warnings: string[] }> {
+  const warnings: string[] = [];
+  if (!pushConfigured()) warnings.push("push subscription stored, but VAPID/web push env vars are not configured");
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { error } = await supabaseAdmin.from("push_subscriptions").upsert(
+    {
+      user_id: userId,
+      endpoint: input.endpoint,
+      p256dh: input.keys.p256dh,
+      auth: input.keys.auth,
+      user_agent: userAgent ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,endpoint" }
+  );
+  if (error) return { ok: false, warnings: [`push subscription failed: ${error.message}`, ...warnings] };
+  return { ok: true, warnings };
+}
+
+export async function deletePushSubscription(userId: string, endpoint: string): Promise<{ ok: boolean; warnings: string[] }> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("push_subscriptions")
+    .delete()
+    .eq("user_id", userId)
+    .eq("endpoint", endpoint);
+  if (error) return { ok: false, warnings: [`push unsubscribe failed: ${error.message}`] };
+  return { ok: true, warnings: [] };
+}
