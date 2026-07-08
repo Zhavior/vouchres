@@ -73,7 +73,17 @@ export function registerHrBoardRoutes(app: Express): void {
       });
     }
 
-    res.json(snapshot);
+    res.json({
+      success: true,
+      data: snapshot,
+      meta: buildApiMeta({
+        source: "mlb_statsapi_live_feed",
+        dataQuality: "official_mlb_live_feed",
+        updatedAt: snapshot.updatedAt,
+        warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
+        cache: { strategy: "ttl_cache_with_last_good_snapshot", ttlMs: 60_000 },
+      }),
+    });
   }));
 
   /* ============ MAIN: Validated HR Board ============ */
@@ -90,7 +100,7 @@ export function registerHrBoardRoutes(app: Express): void {
           updatedAt: payload.generatedAt,
           generatedAt: payload.generatedAt,
           warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
         }),
       });
     } catch (err: any) {
@@ -152,7 +162,7 @@ export function registerHrBoardRoutes(app: Express): void {
           updatedAt: payload.generatedAt,
           generatedAt: payload.generatedAt,
           warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
         }),
       });
     } catch (err: any) {

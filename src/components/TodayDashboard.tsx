@@ -22,6 +22,7 @@ import { vouchedgeApi } from '../api/vouchedgeApi';
 import type { DailyMlbReport } from '../types/mlb';
 import type { Parlay } from '../types';
 import { useMode } from '../lib/useMode';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -170,28 +171,28 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
   const reportStatus = loading ? 'Syncing' : report ? report.dataQuality || 'Projected' : 'Limited';
 
   return (
-    <main className="ve-page-shell px-3 py-4 sm:px-4 lg:py-5">
+    <main className={`${Z8_PAGE} ve-page-shell px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto max-w-[1320px] space-y-4">
-        <section className="ve-premium-panel relative overflow-hidden rounded-3xl p-4 sm:p-5 lg:p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.65),hsl(var(--ve-accent-gold)/0.38),transparent)]" />
+        <section className={`${Z8_PANEL} ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-stretch">
             <div className="flex flex-col justify-between gap-5">
               <div>
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.10)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-accent-cyan))]">
+                  <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                     <Sparkles className="h-3.5 w-3.5" />
                     Today’s Research Command Center
                   </span>
-                  <span className="rounded-full border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">
+                  <span className={`border border-white/10 bg-black/25 px-3 py-1 ${Z8_LABEL} text-white/40`}>
                     {reportStatus}
                   </span>
                 </div>
 
-                <h1 className="max-w-4xl text-3xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-4xl lg:text-5xl">
+                <h1 className="max-w-4xl text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl font-mono uppercase">
                   VouchEdge Research Command Center
                 </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-[hsl(var(--ve-text-secondary))] sm:text-base">
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55 sm:text-base font-mono">
                   Start with the live MLB board, move into player and matchup research, then publish or track every vouch from one professional workspace.
                 </p>
               </div>
@@ -203,7 +204,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
               </div>
             </div>
 
-            <div className="ve-surface-card rounded-2xl p-3">
+            <div className={`${Z8_PANEL} ve-surface-card p-3`}>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">Live Brief</p>
@@ -320,27 +321,27 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
 function accentClasses(accent: DashboardCard['accent']) {
   if (accent === 'gold') {
     return {
-      text: 'text-[hsl(var(--ve-accent-gold))]',
-      bg: 'bg-[hsl(var(--ve-accent-gold)/0.10)]',
-      border: 'border-[hsl(var(--ve-accent-gold)/0.30)]',
-      hover: 'hover:border-[hsl(var(--ve-accent-gold)/0.44)]',
+      text: 'text-vouch-emerald',
+      bg: 'bg-vouch-emerald/10',
+      border: 'border-vouch-emerald/30',
+      hover: 'hover:border-vouch-emerald/44',
     };
   }
 
   if (accent === 'indigo') {
     return {
-      text: 'text-[hsl(var(--ve-accent-pink))]',
-      bg: 'bg-[hsl(var(--ve-accent-pink)/0.10)]',
-      border: 'border-[hsl(var(--ve-accent-pink)/0.30)]',
-      hover: 'hover:border-[hsl(var(--ve-accent-pink)/0.44)]',
+      text: 'text-vouch-cyan',
+      bg: 'bg-vouch-cyan/10',
+      border: 'border-vouch-cyan/30',
+      hover: 'hover:border-vouch-cyan/44',
     };
   }
 
   return {
-    text: 'text-[hsl(var(--ve-accent-cyan))]',
-    bg: 'bg-[hsl(var(--ve-accent-cyan)/0.10)]',
-    border: 'border-[hsl(var(--ve-accent-cyan)/0.30)]',
-    hover: 'hover:border-[hsl(var(--ve-accent-cyan)/0.44)]',
+    text: 'text-vouch-cyan',
+    bg: 'bg-vouch-cyan/10',
+    border: 'border-vouch-cyan/30',
+    hover: 'hover:border-vouch-cyan/44',
   };
 }
 
@@ -361,8 +362,8 @@ function CommandButton({
       onClick={() => onSectionChange(section)}
       className={
         primary
-          ? 'inline-flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan))] px-4 py-2.5 text-sm font-black text-[hsl(var(--ve-bg))] shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.18)] transition hover:brightness-110'
-          : 'inline-flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.42)] px-4 py-2.5 text-sm font-black text-[hsl(var(--ve-text-secondary))] transition hover:border-[hsl(var(--ve-accent-cyan)/0.40)] hover:text-[hsl(var(--ve-text-primary))]'
+          ? `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
+          : `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
       }
     >
       {label}
@@ -373,16 +374,16 @@ function CommandButton({
 
 function ModeToggle({ mode, toggleMode }: { mode: string; toggleMode: () => void }) {
   return (
-    <div className="flex items-center gap-1 rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-deep)/0.36)] p-1 text-[10px] font-black">
+    <div className={`flex items-center gap-1 border border-white/10 bg-black/25 p-1 ${Z8_LABEL}`}>
       {(['beginner', 'advanced'] as const).map((item) => (
         <button
           key={item}
           type="button"
           onClick={() => item !== mode && toggleMode()}
-          className={`rounded-lg px-2.5 py-1 capitalize transition ${
+          className={`px-2.5 py-1 capitalize transition border ${
             mode === item
-              ? 'bg-[hsl(var(--ve-accent-cyan)/0.16)] text-[hsl(var(--ve-accent-cyan))]'
-              : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'
+              ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+              : 'border-transparent text-white/40 hover:text-white/65'
           }`}
         >
           {item}
@@ -415,9 +416,9 @@ function SignalRow({
     <button
       type="button"
       onClick={onClick}
-      className={`group grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface)/0.52)] p-3 text-left transition ${tone.hover}`}
+      className={`group grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 border border-white/10 bg-black/25 p-3 text-left transition font-z8 ${tone.hover}`}
     >
-      <span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${tone.border} ${tone.bg}`}>
+      <span className={`flex h-10 w-10 items-center justify-center border ${tone.border} ${tone.bg}`}>
         <Icon className={`h-4 w-4 ${tone.text}`} />
       </span>
       <span className="min-w-0">
@@ -434,11 +435,11 @@ function SignalRow({
 
 function MetricTile({ label, value, detail }: { label: string; value: string | number; detail: string }) {
   return (
-    <div className="ve-stat-card rounded-2xl px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[hsl(var(--ve-text-muted))]">{label}</p>
+    <div className={`${Z8_PANEL} ve-stat-card px-4 py-3`}>
+      <p className={`${Z8_LABEL} text-white/40`}>{label}</p>
       <div className="mt-1 flex items-end justify-between gap-3">
-        <strong className="text-2xl font-black text-[hsl(var(--ve-text-primary))]">{value}</strong>
-        <span className="text-xs font-semibold text-[hsl(var(--ve-text-muted))]">{detail}</span>
+        <strong className="text-2xl font-black text-white font-mono">{value}</strong>
+        <span className="text-xs font-semibold text-white/40 font-mono">{detail}</span>
       </div>
     </div>
   );
@@ -458,11 +459,11 @@ function DashboardSection({
   columns?: string;
 }) {
   return (
-    <section className="ve-premium-panel rounded-3xl p-4">
+    <section className={`${Z8_PANEL} ve-premium-panel p-4`}>
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-[hsl(var(--ve-text-primary))]">{title}</h2>
-          <p className="mt-0.5 text-xs leading-5 text-[hsl(var(--ve-text-muted))]">{subtitle}</p>
+          <h2 className="text-lg font-black text-white font-mono uppercase">{title}</h2>
+          <p className="mt-0.5 text-xs leading-5 text-white/40 font-mono">{subtitle}</p>
         </div>
       </div>
       <div className={`grid gap-3 ${columns}`}>
@@ -488,10 +489,10 @@ function FeatureCard({
     <button
       type="button"
       onClick={() => onSectionChange(card.section)}
-      className={`ve-tool-card group flex min-h-[154px] flex-col justify-between rounded-2xl p-3.5 text-left ${tone.hover}`}
+      className={`${Z8_PANEL} ve-tool-card group flex min-h-[154px] flex-col justify-between p-3.5 text-left font-z8 ${tone.hover}`}
     >
       <span className="flex items-start justify-between gap-3">
-        <span className={`flex h-11 w-11 items-center justify-center rounded-xl border ${tone.border} ${tone.bg}`}>
+        <span className={`flex h-11 w-11 items-center justify-center border ${tone.border} ${tone.bg}`}>
           <Icon className={`h-5 w-5 ${tone.text}`} />
         </span>
         <span className={`rounded-full border ${tone.border} ${tone.bg} px-2 py-1 text-[9px] font-black uppercase tracking-wide ${tone.text}`}>

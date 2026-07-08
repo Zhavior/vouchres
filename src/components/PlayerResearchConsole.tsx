@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy }, { useState, useEffect } from 'react';
 import { apiUrl } from '../lib/apiBase';
 import { 
   ResponsiveContainer, 
@@ -43,7 +43,8 @@ import { MLBPlayer, Leg, Vouch } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 import { searchMLBPlayers, enrichPlayerStats, getActiveMLBRoster } from '../utils/mlbApi';
-import PokemonPlayerCard from './PokemonPlayerCard';
+const PokemonPlayerCard = lazy(() => import('./PokemonPlayerCard'));
+
 
 interface PlayerResearchConsoleProps {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
@@ -625,6 +626,7 @@ export default function PlayerResearchConsole({
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/generic/headshot/67/current'; }}
                             className="w-11 h-11 rounded-2xl object-cover bg-[hsl(var(--ve-bg)/0.72)] border border-[hsl(var(--ve-border)/0.32)] flex-shrink-0"
                           />
+              </Suspense>
                           <span className="absolute -bottom-1 -right-1 text-[8.5px] font-black bg-[hsl(var(--ve-surface-raised)/0.74)] text-[hsl(var(--ve-text-soft))] border border-[hsl(var(--ve-border)/0.36)] px-1 rounded-md font-mono">
                             #{player.number}
                           </span>
@@ -965,6 +967,7 @@ export default function PlayerResearchConsole({
               </div>
 
               {dossierMode === 'POKEMON' ? (
+                <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-white/45">Loading player card...</div>}>
                 <PokemonPlayerCard
                   activePlayer={activePlayer}
                   activeLegs={activeLegs}

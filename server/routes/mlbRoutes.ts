@@ -140,17 +140,17 @@ export function registerMlbRoutes(app: Express): void {
   app.get("/api/health/mlb", asyncHandler(async (req: Request, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const report = await getMlbHealthReport(date);
-    res.status(report.status === "down" ? 503 : 200).json(report);
+    res.status(report.status === "down" ? 503 : 200).json({ ok: report.status !== "down", ...report });
   }));
 
   app.get("/api/mlb/live", asyncHandler(async (req: Request, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
-    res.json(await getLiveGames(date));
+    res.json({ ok: true, ...(await getLiveGames(date)) });
   }));
 
   app.get("/api/mlb/games/today", asyncHandler(async (_req: Request, res: Response) => {
     const start = Date.now();
-    res.json({ date: todayISO(), games: await getTodayGames(), warnings: [] });
+    res.json({ ok: true, date: todayISO(), games: await getTodayGames(), warnings: [] });
     console.log(`[endpoint] GET /api/mlb/games/today ${Date.now() - start}ms`);
   }));
 
@@ -177,9 +177,10 @@ export function registerMlbRoutes(app: Express): void {
           cache: { strategy: "ttl_cache", ttlMs: TTL.liveFeed },
         }),
       });
-    } catch (err: any) {
-      console.error("[mlbRoutes] lineup/today failed:", err?.message);
-      res.status(503).json({ ok: false, error: "Lineup data unavailable", message: err?.message, games: [], totalPlayers: 0, warnings: [err?.message ?? "Lineup data unavailable"] });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Lineup data unavailable";
+      console.error("[mlbRoutes] lineup/today failed:", message);
+      throw upstreamUnavailable("Lineup data unavailable", err);
     } finally {
       console.log(`[endpoint] GET /api/mlb/lineup/today ${Date.now() - start}ms`);
     }

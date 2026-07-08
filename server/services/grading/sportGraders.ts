@@ -64,7 +64,11 @@ async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
       debugLabel: "sportGraders",
     });
     return { final: true, raw };
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[sportGraders] MLB game fetch failed gamePk=${gamePk}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }

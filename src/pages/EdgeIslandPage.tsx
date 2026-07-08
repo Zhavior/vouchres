@@ -8,6 +8,7 @@ import { QuickActionsRow } from '../components/edgeIsland/QuickActionsRow';
 import { TodaysEdgeBoard } from '../components/edgeIsland/TodaysEdgeBoard';
 import type { CreatorProofProfile, Parlay } from '../types';
 import type { EdgeBoardRow, EdgeIslandSummary, FavoriteSignal } from '../components/edgeIsland/edgeIslandTypes';
+import { VECard, VESectionHeader, VEBadge } from '../components/ui/ve';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -213,12 +214,32 @@ export default function EdgeIslandPage({ onSectionChange, savedSlips = [], profi
 
   return (
     <EdgeIslandShell profile={personalProfile} isLoggedIn={isLoggedIn} updatedAt={remote.generatedAt}>
-      <div className="space-y-4">
+      <div className="space-y-6">
+        <VECard strong className="relative overflow-hidden">
+          <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_10%,rgba(103,232,249,.25),transparent_35%)]" />
+          <div className="relative z-10">
+            <div className="mb-4 flex flex-wrap gap-3">
+              <VEBadge>{isLoggedIn ? 'Personal Command Center' : 'Preview Mode'}</VEBadge>
+              <VEBadge>{summary.edgeCount} Live Edges</VEBadge>
+              <VEBadge>{summary.gameCount ?? 0} Games</VEBadge>
+            </div>
+
+            <VESectionHeader
+              eyebrow="Edge Island"
+              title="Your betting intelligence home."
+              subtitle="Live HR candidates, saved signals, verified slips, and VouchEdge model confidence in one workspace."
+            />
+          </div>
+        </VECard>
+
         {!isLoggedIn ? <LoggedOutTeaser onSectionChange={onSectionChange} /> : null}
-        <EdgeSummaryPanel summary={summary} loading={loading} />
-        <FavoriteStrip favorites={favorites} onSectionChange={onSectionChange} />
-        <TodaysEdgeBoard rows={remote.rows} loading={loading} error={error} onSectionChange={onSectionChange} />
-        <QuickActionsRow onSectionChange={onSectionChange} />
+
+        <div className="grid gap-6">
+          <EdgeSummaryPanel summary={summary} loading={loading} />
+          <FavoriteStrip favorites={favorites} onSectionChange={onSectionChange} />
+          <TodaysEdgeBoard rows={remote.rows} loading={loading} error={error} onSectionChange={onSectionChange} />
+          <QuickActionsRow onSectionChange={onSectionChange} />
+        </div>
       </div>
     </EdgeIslandShell>
   );

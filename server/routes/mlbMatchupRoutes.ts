@@ -1,6 +1,6 @@
 /** Premium Live Games matchup routes. */
 import type { Express, Request, Response } from "express";
-import { getGameMatchups, getGameMatchup, getLiveMatchupMatrix, getMatchupMatrix } from "../services/mlb/gameMatchupService";
+import { getGameMatchup, getMatchupMatrix } from "../services/mlb/gameMatchupService";
 import { buildSportsTruthSnapshot } from "../services/hubs/sportsTruthHub";
 import { getPitcherMatchup } from "../services/mlb/pitcherMatchupService";
 import { getTodayGamesWeather } from "../services/mlb/weatherService";
@@ -8,7 +8,6 @@ import { getStatcastBatterMap, STATCAST_MIN_PA } from "../services/mlb/statcastC
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
 import { isMlbFinalStatusText, isMlbLiveStatus } from "../services/mlb/gameStatus";
 import { TTLCache } from "../lib/cache";
-import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import { AppError } from "../errors/AppError";
@@ -24,6 +23,12 @@ const scoresCache = new TTLCache<unknown>(45_000);
 
 function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
+}
+
+function rethrowOrUpstream(err: unknown, message: string): never {
+  console.error("[matchupRoutes]", message, (err as Error)?.message);
+  if (err instanceof AppError) throw err;
+  throw upstreamUnavailable(message, err);
 }
 
 export function registerMatchupRoutes(app: Express): void {
@@ -45,6 +50,7 @@ export function registerMatchupRoutes(app: Express): void {
       }, 45_000);
       const updatedAt = new Date().toISOString();
       res.json({
+        ok: true,
         scores,
         updatedAt,
         meta: buildApiMeta({
@@ -55,9 +61,8 @@ export function registerMatchupRoutes(app: Express): void {
           cache: { strategy: "ttl_cache", ttlMs: 45_000 },
         }),
       });
-    } catch (err: any) {
-      console.error("[scores/today] failed:", err?.message);
-      throw upstreamUnavailable("Scores unavailable.", err);
+    } catch (err) {
+      rethrowOrUpstream(err, "Scores unavailable.");
     }
   }));
 
@@ -65,11 +70,9 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = dateQueryOrToday(req.query.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
-      res.json(snapshot);
-    } catch (err: any) {
-      console.error("[sports-truth/mlb/today] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Sports truth snapshot unavailable.", err);
+      res.json({ ok: true, ...snapshot });
+    } catch (err) {
+      rethrowOrUpstream(err, "Sports truth snapshot unavailable.");
     }
   }));
 
@@ -79,6 +82,7 @@ export function registerMatchupRoutes(app: Express): void {
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUPS_TODAY] served from SportsTruthHub date=${date}`);
       res.json({
+        ok: true,
         count: snapshot.matchups.length,
         matchups: snapshot.matchups,
         generatedAt: snapshot.generatedAt,
@@ -88,12 +92,11 @@ export function registerMatchupRoutes(app: Express): void {
           updatedAt: snapshot.generatedAt,
           generatedAt: snapshot.generatedAt,
           warnings: [],
-          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 300_000 },
         }),
       });
-    } catch (err: any) {
-      console.error("[matchups/today] failed:", err?.message);
-      throw upstreamUnavailable("Today matchups unavailable.", err);
+    } catch (err) {
+      rethrowOrUpstream(err, "Today matchups unavailable.");
     }
   }));
 
@@ -103,6 +106,7 @@ export function registerMatchupRoutes(app: Express): void {
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUPS_DATE] served from SportsTruthHub date=${date}`);
       res.json({
+        ok: true,
         count: snapshot.matchups.length,
         matchups: snapshot.matchups,
         generatedAt: snapshot.generatedAt,
@@ -112,13 +116,11 @@ export function registerMatchupRoutes(app: Express): void {
           updatedAt: snapshot.generatedAt,
           generatedAt: snapshot.generatedAt,
           warnings: [],
-          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 300_000 },
         }),
       });
-    } catch (err: any) {
-      console.error("[matchups/date] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Date matchups unavailable.", err);
+    } catch (err) {
+      rethrowOrUpstream(err, "Date matchups unavailable.");
     }
   }));
 
@@ -126,26 +128,20 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = dateQueryOrToday(req.query.date);
       const matrix = await getMatchupMatrix(date);
-      res.json(matrix);
-    } catch (err: any) {
-      console.error("[matchup-matrix] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Matchup matrix unavailable.", err);
+      res.json({ ok: true, ...matrix });
+    } catch (err) {
+      rethrowOrUpstream(err, "Matchup matrix unavailable.");
     }
   }));
 
   app.get("/api/mlb/matchup-matrix/live", asyncHandler(async (req: Request, res: Response) => {
     try {
       const date = dateQueryOrToday(req.query.date);
-
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUP_MATRIX_LIVE] served from SportsTruthHub date=${date}`);
-
-      res.json(snapshot.matchupMatrix);
-    } catch (err: any) {
-      console.error("[matchup-matrix/live] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Live matchup matrix unavailable.", err);
+      res.json({ ok: true, ...snapshot.matchupMatrix });
+    } catch (err) {
+      rethrowOrUpstream(err, "Live matchup matrix unavailable.");
     }
   }));
 
@@ -154,10 +150,9 @@ export function registerMatchupRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     const m = await getGameMatchup(gamePk, date);
     if (!m) throw new AppError({ status: 404, code: "not_found", message: "Matchup not found." });
-    res.json({ matchup: m });
+    res.json({ ok: true, matchup: m });
   }));
 
-  /** Pro Pitcher Matchup Drawer — pitcher card + opponent lineup with BvP. */
   app.get("/api/mlb/matchup-matrix/:gamePk/pitcher/:pitcherId", asyncHandler(async (req: Request, res: Response) => {
     try {
       const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
@@ -165,34 +160,27 @@ export function registerMatchupRoutes(app: Express): void {
       const date = optionalDateQuery(req.query.date);
       const result = await getPitcherMatchup(gamePk, pitcherId, date);
       if (!result) throw new AppError({ status: 404, code: "not_found", message: "Pitcher matchup not found." });
-      res.json(result);
-    } catch (err: any) {
-      console.error("[matchup-matrix/pitcher] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Pitcher matchup unavailable.", err);
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      rethrowOrUpstream(err, "Pitcher matchup unavailable.");
     }
   }));
 
-  /** Real first-pitch weather per game (Open-Meteo + sourced stadium table).
-   *  Roofed venues are flagged; unknown venues return "unavailable" — never estimated. */
   app.get("/api/mlb/weather/today", asyncHandler(async (req: Request, res: Response) => {
     try {
       const date = optionalDateQuery(req.query.date);
       const weather = await getTodayGamesWeather(date);
-      res.json({ weather, source: "open-meteo", updatedAt: new Date().toISOString() });
-    } catch (err: any) {
-      console.error("[weather/today] failed:", err?.message);
-      if (err instanceof AppError) throw err;
-      throw upstreamUnavailable("Weather unavailable.", err);
+      res.json({ ok: true, weather, source: "open-meteo", updatedAt: new Date().toISOString() });
+    } catch (err) {
+      rethrowOrUpstream(err, "Weather unavailable.");
     }
   }));
 
-  /** Season Statcast batter quality (Baseball Savant leaderboards, 12h cache).
-   *  Players under the PA threshold are absent — nothing is estimated for them. */
   app.get("/api/mlb/statcast/batters", asyncHandler(async (_req: Request, res: Response) => {
     try {
       const batters = await getStatcastBatterMap();
       res.json({
+        ok: true,
         batters,
         count: Object.keys(batters).length,
         minPa: STATCAST_MIN_PA,
@@ -200,9 +188,8 @@ export function registerMatchupRoutes(app: Express): void {
         source: "baseball-savant",
         updatedAt: new Date().toISOString(),
       });
-    } catch (err: any) {
-      console.error("[statcast/batters] failed:", err?.message);
-      throw upstreamUnavailable("Statcast batters unavailable.", err);
+    } catch (err) {
+      rethrowOrUpstream(err, "Statcast batters unavailable.");
     }
   }));
 }

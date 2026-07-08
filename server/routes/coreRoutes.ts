@@ -97,7 +97,7 @@ coreRoutes.post(
       await incrementQuota(req.user!.id, q.key, q.day);
     }
 
-    return res.status(201).json(pick);
+    return res.status(201).json({ ok: true, pick });
   })
 );
 
@@ -129,7 +129,7 @@ coreRoutes.get(
       limit: query.limit,
       offset: query.offset,
     });
-    return res.json({ picks, total, limit: query.limit, offset: query.offset });
+    return res.json({ ok: true, picks, total, limit: query.limit, offset: query.offset });
   })
 );
 

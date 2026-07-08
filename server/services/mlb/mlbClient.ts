@@ -130,7 +130,13 @@ export async function getGameFeed(gamePk: number): Promise<any | null> {
             await redisSetJson(redisKey, fresh, feedTtlSeconds);
             return fresh;
           } finally {
-            await redisDel(lockKey).catch(() => {});
+            await redisDel(lockKey).catch((err) => {
+              console.warn("[MLB_CACHE] redis unlock failed", JSON.stringify({
+                gamePk,
+                lockKey,
+                message: (err as Error)?.message ?? String(err),
+              }));
+            });
           }
         }
 
@@ -170,7 +176,11 @@ export async function getLinescore(gamePk: number): Promise<any | null> {
   const url = `${BASE}/v1/game/${gamePk}/linescore`;
   try {
     return await fetchJson<any>(url);
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[mlbClient] getLinescore failed gamePk=${gamePk}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }
@@ -179,7 +189,11 @@ export async function getBoxscore(gamePk: number): Promise<any | null> {
   const url = `${BASE}/v1/game/${gamePk}/boxscore`;
   try {
     return await fetchJson<any>(url);
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[mlbClient] getBoxscore failed gamePk=${gamePk}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }
@@ -200,7 +214,11 @@ export async function getPlayerBasics(playerId: number): Promise<any | null> {
       team: p.currentTeam?.name ?? "Free Agent",
       headshot: headshotUrl(p.id),
     };
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[mlbClient] getPlayerBasics failed playerId=${playerId}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }

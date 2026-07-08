@@ -11,6 +11,7 @@
 import React from 'react';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
 import { ACCENT, withAlpha } from '../../theme/colors';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
 
 /* ============================================================================
    Format helpers — never throw, always return fallback on bad data
@@ -46,8 +47,8 @@ export const StatChip: React.FC<{
   color?: string;
 }> = React.memo(function StatChip({ label, value, color = 'hsl(var(--ve-text-primary))' }) {
   return (
-    <div className="rounded-lg border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] px-2 py-1.5 text-center">
-      <div className="font-mono text-[8px] uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">{label}</div>
+    <div className={`${Z8_SURFACE} px-2 py-1.5 text-center font-z8`}>
+      <div className={`${Z8_LABEL} text-[8px] text-white/40`}>{label}</div>
       <div className="font-mono text-xs font-black" style={{ color }}>
         {value}
       </div>
@@ -73,18 +74,26 @@ export function generateId(prefix = 'id'): string {
 export const Card: React.FC<{ className?: string; onClick?: () => void; children: React.ReactNode }> = ({ className = '', onClick, children }) => {
   const Tag: any = onClick ? 'button' : 'div';
   return (
-    <Tag onClick={onClick} className={`ve-card text-left rounded-2xl p-4 transition-all ${onClick ? 'hover:border-[hsl(var(--ve-accent-cyan)/0.36)] hover:-translate-y-0.5 w-full' : ''} ${className}`}>
+    <Tag
+      onClick={onClick}
+      className={`ve-card ${Z8_PANEL} text-left p-4 transition-all font-z8 ${onClick ? 'hover:border-vouch-cyan/40 hover:bg-vouch-cyan/5 w-full cursor-pointer' : ''} ${className}`}
+    >
       {children}
     </Tag>
   );
 };
 
 export function Button({ variant = 'primary', size = 'md', onClick, children, className = '' }: { variant?: 'primary' | 'ghost'; size?: 'sm' | 'md'; onClick?: () => void; children: React.ReactNode; className?: string }) {
-  const base = size === 'sm' ? 'text-xs px-2.5 py-1.5' : 'text-sm px-4 py-2.5';
-  const style = variant === 'primary'
-    ? 've-button-primary'
-    : 've-button-secondary';
-  return <button onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 font-black rounded-xl transition-all ${base} ${style} ${className}`}>{children}</button>;
+  const base = size === 'sm' ? 'text-[10px] px-2.5 py-1.5' : 'text-[11px] px-4 py-2.5';
+  const style = variant === 'primary' ? Z8_ACTIVE : Z8_IDLE;
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-1.5 border font-mono font-bold uppercase tracking-wide transition-all ${base} ${style} ${className}`}
+    >
+      {children}
+    </button>
+  );
 }
 
 const STATUS: Record<string, string> = {
@@ -95,7 +104,7 @@ const STATUS: Record<string, string> = {
 export function StatusBadge({ status }: { status: string }) {
   const c = STATUS[status] ?? 'hsl(var(--ve-text-muted))';
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-black font-mono uppercase tracking-wide px-2 py-0.5 rounded-full border" style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>
+    <span className={`inline-flex items-center gap-1 border px-2 py-0.5 ${Z8_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>
       {status === 'Live' && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
       {status}
     </span>
@@ -109,13 +118,13 @@ const RISK: Record<string, string> = {
 
 export function RiskBadge({ risk }: { risk: string }) {
   const c = RISK[risk] ?? 'hsl(var(--ve-text-muted))';
-  return <span className="text-[10px] font-black font-mono uppercase px-2 py-0.5 rounded border" style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>{risk}</span>;
+  return <span className={`border px-2 py-0.5 ${Z8_LABEL}`} style={{ color: c, borderColor: withAlpha(c, 0.34), background: withAlpha(c, 0.08) }}>{risk}</span>;
 }
 
 export const ScorePill: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color = ACCENT.matchup }) => {
   return (
-    <div className="text-center px-2.5 py-1.5 rounded-xl bg-[hsl(var(--ve-surface-raised)/0.30)] border border-[hsl(var(--ve-border)/0.28)]">
-      <p className="text-[8px] text-[hsl(var(--ve-text-muted))] font-mono uppercase tracking-wider">{label}</p>
+    <div className={`${Z8_SURFACE} px-2.5 py-1.5 text-center font-z8`}>
+      <p className={`${Z8_LABEL} text-[8px] text-white/40`}>{label}</p>
       <p className="text-sm font-mono font-black" style={{ color }}>{value}</p>
     </div>
   );
@@ -123,12 +132,12 @@ export const ScorePill: React.FC<{ label: string; value: string | number; color?
 
 export function Section({ title, subtitle, action, children }: { title?: string; subtitle?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="mb-7">
+    <section className="mb-7 font-z8">
       {(title || action) && (
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
-            {title && <h2 className="text-lg font-black tracking-tight text-[hsl(var(--ve-text-primary))]">{title}</h2>}
-            {subtitle && <p className="text-xs text-[hsl(var(--ve-text-secondary))] mt-0.5">{subtitle}</p>}
+            {title && <h2 className="text-lg font-black tracking-tight text-white font-mono uppercase">{title}</h2>}
+            {subtitle && <p className="text-xs text-white/55 mt-0.5 font-mono">{subtitle}</p>}
           </div>
           {action}
         </div>

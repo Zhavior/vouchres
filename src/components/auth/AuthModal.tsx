@@ -109,7 +109,7 @@ const PLAN_OPTIONS: Array<{
   {
     id: 'capper',
     label: 'Capper',
-    price: '$29.99/mo',
+    price: '$34.99/mo',
     icon: Coins,
     tagline: 'Sell picks, run your own club.',
     perks: ['Everything in Pro', 'Paid storefront, 0% commission', 'Subscriber chat & clubs', 'Locked-in beta price — won’t increase later'],

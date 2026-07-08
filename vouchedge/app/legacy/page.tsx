@@ -1,15 +1,15 @@
 "use client";
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TerminalCard, DataPoint } from '../components/Terminal';
-import { VouchLedger } from '../components/Ledger';
-import { MatchupIntelligence } from '../components/MatchupIntelligence';
-import { PropTerminal } from '../components/PropTerminal';
-import { ProfilePreview } from '../components/ProfilePreview';
-import { MonetizationEngine } from '../components/Monetization';
-import { DailySlate } from '../components/Slate';
-import { Ticker } from '../components/Ticker';
-import { useLiveTerminal } from '../hooks/useLiveTerminal';
+import { TerminalCard, DataPoint } from '../../components/Terminal';
+import { VouchLedger } from '../../components/Ledger';
+import { MatchupIntelligence } from '../../components/MatchupIntelligence';
+import { PropTerminal } from '../../components/PropTerminal';
+import { ProfilePreview } from '../../components/ProfilePreview';
+import { MonetizationEngine } from '../../components/Monetization';
+import { DailySlate } from '../../components/Slate';
+import { Ticker } from '../../components/Ticker';
+import { useLiveTerminal } from '../../hooks/useLiveTerminal';
 
 export default function Home() {
   const [view, setView] = useState<'ledger' | 'matchup' | 'props' | 'profile' | 'money'>('ledger');
@@ -72,7 +72,7 @@ export default function Home() {
                     {view === 'ledger' && <VouchLedger />}
                     {view === 'matchup' && <MatchupIntelligence />}
                     {view === 'props' && <PropTerminal />}
-                    {view === 'profile' && <ProfilePreview />}
+                    {view === 'profile' && <ProfilePreview handle="EDGE_ANALYST" />}
                     {view === 'money' && <MonetizationEngine />}
                   </motion.div>
                 </AnimatePresence>

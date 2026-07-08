@@ -25,6 +25,24 @@ import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 const MAX_BATTERS = 13;
 const STATS_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
+function shiftYmd(date: string, days: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day + days));
+  return utc.toISOString().slice(0, 10);
+}
+
+async function findGameByPkNearDate(gamePk: number, date: string) {
+  const candidateDates = [date, shiftYmd(date, -1), shiftYmd(date, 1)];
+
+  for (const candidateDate of candidateDates) {
+    const games = await getScheduleByDate(candidateDate);
+    const game = games.find((g) => g.gamePk === gamePk);
+    if (game) return { game, resolvedDate: candidateDate };
+  }
+
+  return null;
+}
+
 /** Batch-fetch batSide codes for a set of player ids in one /people call. */
 async function fetchPeopleBatSides(ids: number[]): Promise<Map<number, "L" | "R" | "S">> {
   const out = new Map<number, "L" | "R" | "S">();
@@ -41,7 +59,11 @@ async function fetchPeopleBatSides(ids: number[]): Promise<Map<number, "L" | "R"
       const code = p?.batSide?.code;
       if (p?.id && (code === "L" || code === "R" || code === "S")) out.set(p.id, code);
     }
-  } catch {
+  } catch (err) {
+    console.warn(
+      "[pitcherMatchup] people batSide fetch failed:",
+      err instanceof Error ? err.message : String(err),
+    );
     return out;
   }
   return out;
@@ -159,11 +181,14 @@ export async function getPitcherMatchup(
   return reportCache.getOrSet(
     `pitcher_matchup_v1:${gamePk}:${pitcherId}:${date}`,
     async () => {
-      const games = await getScheduleByDate(date);
-      const game = games.find((g) => g.gamePk === gamePk);
-      if (!game) return null;
+      const resolved = await findGameByPkNearDate(gamePk, date);
+      if (!resolved) return null;
+      const { game, resolvedDate } = resolved;
 
       const warnings: string[] = [];
+      if (resolvedDate !== date) {
+        warnings.push(`Game found on ${resolvedDate}; requested date was ${date}.`);
+      }
 
       // Determine which side the pitcher is on → opponent is the other team.
       const away = game.probablePitchers.away;
@@ -257,20 +282,42 @@ export async function getPitcherMatchup(
           for (const b of batters) {
             if (b.bats === "U" && people.has(b.id)) b.bats = people.get(b.id)!;
           }
-        } catch {
+        } catch (err) {
           // leave as "U" — UI renders "—"
+          console.warn(
+            "[pitcherMatchup] batSide enrichment failed:",
+            err instanceof Error ? err.message : String(err),
+          );
         }
       }
 
-      const statcastMap = await getStatcastBatterMap().catch(() => ({} as Record<number, StatcastBatterQuality>));
+      const statcastMap = await getStatcastBatterMap().catch((err) => {
+        console.warn(
+          "[pitcherMatchup] statcast map failed:",
+          err instanceof Error ? err.message : String(err),
+        );
+        return {} as Record<number, StatcastBatterQuality>;
+      });
 
       const projectedLineup = await limitConcurrency<PitcherMatchupBatter, typeof batters[number]>(
         batters,
         4,
         async (b) => {
           const [hitter, bvpRaw] = await Promise.all([
-            getHitterStats(b.id).catch(() => null),
-            getBatterVsPitcher(b.id, pitcherId).catch(() => null),
+            getHitterStats(b.id).catch((err) => {
+              console.warn(
+                `[pitcherMatchup] hitter stats failed player=${b.id}:`,
+                err instanceof Error ? err.message : String(err),
+              );
+              return null;
+            }),
+            getBatterVsPitcher(b.id, pitcherId).catch((err) => {
+              console.warn(
+                `[pitcherMatchup] BvP failed batter=${b.id} pitcher=${pitcherId}:`,
+                err instanceof Error ? err.message : String(err),
+              );
+              return null;
+            }),
           ]);
 
           const recent = hitter?.recentGames ?? [];

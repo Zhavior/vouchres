@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError, isAppError } from "../errors/AppError";
+import { captureException } from "../lib/sentry";
 import type { RequestWithContext } from "./requestContext";
 
 function statusFromUnknown(error: unknown): number {
@@ -52,9 +53,15 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
   };
 
   if (status >= 500) {
-    console.error("[api:error]", logPayload, normalized.cause ?? normalized);
+    console.error("[api:error]", JSON.stringify(logPayload));
+    captureException(normalized.cause ?? normalized, {
+      requestId,
+      method: req.method,
+      path: req.originalUrl,
+      code: normalized.code,
+    });
   } else {
-    console.warn("[api:warn]", logPayload);
+    console.warn("[api:warn]", JSON.stringify(logPayload));
   }
 
   return res.status(status).json({

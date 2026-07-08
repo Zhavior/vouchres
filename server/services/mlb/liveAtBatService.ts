@@ -60,6 +60,9 @@ export interface LiveAtBatSnapshot {
 }
 
 const cache = new TTLCache<LiveAtBatSnapshot | null>(12_000);
+const lastGoodSnapshots = new Map<number, { snapshot: LiveAtBatSnapshot; expiresAt: number }>();
+const LAST_GOOD_TTL_MS = 2 * 60_000;
+const MAX_LAST_GOOD_SNAPSHOTS = 64;
 
 function num(v: unknown): number | null {
   const n = Number(v);
@@ -139,6 +142,21 @@ function mapPlay(play: any, box: any): LiveAtBatSnapshot["play"] {
   };
 }
 
+function rememberLastGood(gamePk: number, snapshot: LiveAtBatSnapshot): void {
+  const now = Date.now();
+  for (const [key, value] of lastGoodSnapshots.entries()) {
+    if (value.expiresAt <= now) lastGoodSnapshots.delete(key);
+  }
+
+  lastGoodSnapshots.set(gamePk, { snapshot, expiresAt: now + LAST_GOOD_TTL_MS });
+
+  while (lastGoodSnapshots.size > MAX_LAST_GOOD_SNAPSHOTS) {
+    const oldest = lastGoodSnapshots.keys().next().value;
+    if (oldest == null) break;
+    lastGoodSnapshots.delete(oldest);
+  }
+}
+
 async function fetchWinProb(gamePk: number): Promise<LiveAtBatSnapshot["winProb"]> {
   try {
     const entries = await sportsFetchJson<any[]>(`${BASE}/v1/game/${gamePk}/winProbability`, {
@@ -155,45 +173,62 @@ async function fetchWinProb(gamePk: number): Promise<LiveAtBatSnapshot["winProb"
       awayPct: num(last.awayTeamWinProbability) ?? 50,
       lastSwingHomePct: num(last.homeTeamWinProbabilityAdded) ?? 0,
     };
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[liveAtBat] winProbability failed gamePk=${gamePk}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null; // win prob is enrichment — never block the snapshot on it
   }
 }
 
 export async function getLiveAtBat(gamePk: number): Promise<LiveAtBatSnapshot | null> {
   return cache.getOrSet(`at-bat:${gamePk}`, async () => {
-    const feed = await getGameFeed(gamePk);
-    if (!feed) return null;
+    try {
+      const feed = await getGameFeed(gamePk);
+      if (!feed) return lastGoodSnapshots.get(gamePk)?.snapshot ?? null;
 
-    const linescore = feed.liveData?.linescore ?? {};
-    const box = feed.liveData?.boxscore;
-    const allPlays: any[] = feed.liveData?.plays?.allPlays ?? [];
-    const currentPlay = feed.liveData?.plays?.currentPlay;
+      const linescore = feed.liveData?.linescore ?? {};
+      const box = feed.liveData?.boxscore;
+      const allPlays: any[] = feed.liveData?.plays?.allPlays ?? [];
+      const currentPlay = feed.liveData?.plays?.currentPlay;
 
-    // Show the in-progress at-bat once it has a pitch; otherwise the most
-    // recent completed at-bat that actually had pitches.
-    const withPitches = (p: any) => (p?.playEvents ?? []).some((e: any) => e?.isPitch);
-    const play = withPitches(currentPlay)
-      ? currentPlay
-      : [...allPlays].reverse().find(withPitches) ?? null;
+      // Show the in-progress at-bat once it has a pitch; otherwise the most
+      // recent completed at-bat that actually had pitches.
+      const withPitches = (p: any) => (p?.playEvents ?? []).some((e: any) => e?.isPitch);
+      const play = withPitches(currentPlay)
+        ? currentPlay
+        : [...allPlays].reverse().find(withPitches) ?? null;
 
-    const teamMeta = (side: "away" | "home") => ({
-      teamId: num(feed.gameData?.teams?.[side]?.id),
-      abbr: String(feed.gameData?.teams?.[side]?.abbreviation ?? (side === "away" ? "AWY" : "HOM")),
-      runs: num(linescore.teams?.[side]?.runs),
-    });
+      const teamMeta = (side: "away" | "home") => ({
+        teamId: num(feed.gameData?.teams?.[side]?.id),
+        abbr: String(feed.gameData?.teams?.[side]?.abbreviation ?? (side === "away" ? "AWY" : "HOM")),
+        runs: num(linescore.teams?.[side]?.runs),
+      });
 
-    return {
-      gamePk,
-      status: String(feed.gameData?.status?.detailedState ?? "Unknown"),
-      inning: num(linescore.currentInning),
-      halfInning: linescore.inningHalf ?? null,
-      outs: num(linescore.outs),
-      away: teamMeta("away"),
-      home: teamMeta("home"),
-      winProb: await fetchWinProb(gamePk),
-      play: mapPlay(play, box),
-      updatedAt: new Date().toISOString(),
-    };
+      const snapshot: LiveAtBatSnapshot = {
+        gamePk,
+        status: String(feed.gameData?.status?.detailedState ?? "Unknown"),
+        inning: num(linescore.currentInning),
+        halfInning: linescore.inningHalf ?? null,
+        outs: num(linescore.outs),
+        away: teamMeta("away"),
+        home: teamMeta("home"),
+        winProb: await fetchWinProb(gamePk),
+        play: mapPlay(play, box),
+        updatedAt: new Date().toISOString(),
+      };
+
+      rememberLastGood(gamePk, snapshot);
+      return snapshot;
+    } catch (error) {
+      const lastGood = lastGoodSnapshots.get(gamePk);
+      if (lastGood && lastGood.expiresAt > Date.now()) {
+        console.warn(`[liveAtBat] serving last-good snapshot gamePk=${gamePk}:`, (error as Error).message);
+        return lastGood.snapshot;
+      }
+
+      throw error;
+    }
   });
 }

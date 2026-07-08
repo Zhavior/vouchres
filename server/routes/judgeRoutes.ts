@@ -19,12 +19,15 @@ export function registerJudgeRoutes(app: Express): void {
         details: [{ path: "pick", message: "Required." }],
       });
     }
-    res.json({ verdict: runJudgePanel(pick) });
+    return res.json({ ok: true, verdict: runJudgePanel(pick) });
   }));
 
   app.post("/api/judge/parlay", requireAuth, gradingLimiter, asyncHandler(async (req: Request, res: Response) => {
     const pick = (req.body?.pick ?? {}) as PickCandidate;
-    res.json({ verdict: runJudgePanel({ ...pick, isParlay: true, legs: pick.legs ?? req.body?.legs ?? 3 }) });
+    return res.json({
+      ok: true,
+      verdict: runJudgePanel({ ...pick, isParlay: true, legs: pick.legs ?? req.body?.legs ?? 3 }),
+    });
   }));
 
   app.post("/api/judge/bias", requireAuth, gradingLimiter, asyncHandler(async (req: Request, res: Response) => {
@@ -37,6 +40,6 @@ export function registerJudgeRoutes(app: Express): void {
         details: [{ path: "pick", message: "Required." }],
       });
     }
-    res.json({ result: judgeBias(pick) });
+    return res.json({ ok: true, result: judgeBias(pick) });
   }));
 }

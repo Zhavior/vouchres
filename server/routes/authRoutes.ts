@@ -1,6 +1,10 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, optionalAuth } from "../middleware/auth";
+import { z } from "zod";
+import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { validate } from "../middleware/validation";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 
 /**
  * Auth routes — minimal session/profile endpoints used by the frontend.
@@ -12,33 +16,14 @@ import { AuthedRequest, requireAuth, optionalAuth } from "../middleware/auth";
  */
 export const authRoutes = Router();
 
-/**
- * GET /api/auth/me
- * Returns the caller's full profile. Used by useAuth() on app load.
- */
-authRoutes.get("/me", requireAuth, (req: AuthedRequest, res: Response) => {
-  // requireAuth already loaded the profile into req.user.profile
-  // Fetch the full row including stats
-  return res.json(req.user!.profile);
-});
+authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  return res.json({ ok: true, ...req.user!.profile });
+}));
 
-/**
- * POST /api/auth/signout
- * Server-side no-op for Supabase JWT auth (the JWT just expires client-side).
- * Endpoint exists so the frontend has a stable API surface if we later move
- * to cookie-session auth or add server-side session revocation.
- */
-authRoutes.post("/signout", requireAuth, async (req: AuthedRequest, res: Response) => {
-  // In a future implementation: revoke the refresh token via Supabase admin API.
-  // For now, the client calls supabase.auth.signOut() which clears localStorage.
+authRoutes.post("/signout", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {
   return res.json({ ok: true });
-});
+}));
 
-/**
- * PATCH /api/auth/profile
- * Update editable profile fields. Server-side validation prevents users
- * from writing to fields they shouldn't (tier, is_staff, trust_score, etc.)
- */
 const ProfileUpdateSchema = z.object({
   username: z.string().min(3).max(24).regex(/^[a-zA-Z0-9_]+$/).optional(),
   display_name: z.string().max(64).optional(),
@@ -46,21 +31,15 @@ const ProfileUpdateSchema = z.object({
   avatar_url: z.string().url().max(500).optional().nullable(),
 });
 
-import { z } from "zod";
-import { validate } from "../middleware/validation";
-import { supabaseAdmin } from "../middleware/auth";
-
 authRoutes.patch(
   "/profile",
   requireAuth,
   validate({ body: ProfileUpdateSchema }),
-  async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
     const updates = req.body as z.infer<typeof ProfileUpdateSchema>;
 
-    // Whitelist fields — never accept tier, is_staff, trust_score, etc. from client
     const safeUpdates: Record<string, any> = {};
     if (updates.username !== undefined) {
-      // Check availability
       const { data: existing } = await supabaseAdmin
         .from("profiles")
         .select("id")
@@ -68,7 +47,12 @@ authRoutes.patch(
         .neq("id", req.user!.id)
         .maybeSingle();
       if (existing) {
-        return res.status(409).json({ error: "username_taken" });
+        throw new AppError({
+          status: 409,
+          code: "conflict",
+          message: "Username is already taken.",
+          details: { error: "username_taken" },
+        });
       }
       safeUpdates.username = updates.username;
     }
@@ -77,7 +61,12 @@ authRoutes.patch(
     if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url;
 
     if (Object.keys(safeUpdates).length === 0) {
-      return res.status(400).json({ error: "no_updates" });
+      throw new AppError({
+        status: 400,
+        code: "bad_request",
+        message: "No updates provided.",
+        details: { error: "no_updates" },
+      });
     }
 
     const { data, error } = await supabaseAdmin
@@ -89,27 +78,28 @@ authRoutes.patch(
 
     if (error) {
       console.error("[auth] profile update failed", error);
-      return res.status(500).json({ error: "update_failed" });
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to update profile.",
+        cause: error,
+      });
     }
 
-    return res.json(data);
-  }
+    return res.json({ ok: true, ...data });
+  }),
 );
 
-/**
- * GET /api/auth/username-check?username=X
- * Public — used by the signup form to check availability as the user types.
- */
 authRoutes.get(
   "/username-check",
   optionalAuth,
-  async (req, res: Response) => {
+  asyncHandler(async (req, res: Response) => {
     const username = String(req.query.username ?? "").trim();
     if (username.length < 3 || username.length > 24) {
-      return res.json({ available: false, reason: "invalid_length" });
+      return res.json({ ok: true, available: false, reason: "invalid_length" });
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.json({ available: false, reason: "invalid_chars" });
+      return res.json({ ok: true, available: false, reason: "invalid_chars" });
     }
 
     const { data } = await supabaseAdmin
@@ -118,6 +108,6 @@ authRoutes.get(
       .eq("lower(username)", username.toLowerCase())
       .maybeSingle();
 
-    return res.json({ available: !data });
-  }
+    return res.json({ ok: true, available: !data });
+  }),
 );

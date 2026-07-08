@@ -1,40 +1,14 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-type VECardTone = 'default' | 'elevated' | 'soft' | 'danger' | 'success' | 'warning';
-
-type VECardProps = HTMLAttributes<HTMLDivElement> & {
-  tone?: VECardTone;
-  interactive?: boolean;
+type VECardProps = {
   children: ReactNode;
+  className?: string;
+  strong?: boolean;
 };
 
-const toneClass: Record<VECardTone, string> = {
-  default: 've-card',
-  elevated: 've-card ve-card-elevated',
-  soft: 've-card ve-card-soft',
-  danger: 've-card ve-card-danger',
-  success: 've-card ve-card-success',
-  warning: 've-card ve-card-warning',
-};
-
-export function VECard({
-  tone = 'default',
-  interactive = false,
-  className = '',
-  children,
-  ...props
-}: VECardProps) {
+export function VECard({ children, className = '', strong = false }: VECardProps) {
   return (
-    <div
-      className={[
-        toneClass[tone],
-        interactive ? 've-card-interactive' : '',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      {...props}
-    >
+    <div className={`${strong ? 've-card-strong' : 've-card'} p-6 ${className}`}>
       {children}
     </div>
   );

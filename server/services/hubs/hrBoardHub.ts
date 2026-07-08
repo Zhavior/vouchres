@@ -22,7 +22,7 @@ export async function getCachedHrBoardResponse(input: {
 } = {}): Promise<HrBoardSnapshot> {
   const previewLimit = input.previewLimit ?? 350;
   const key = cacheKey(input.date, previewLimit);
-  const ttlSeconds = Number(process.env.HR_BOARD_HUB_TTL_SECONDS ?? 120);
+  const ttlSeconds = Number(process.env.HR_BOARD_HUB_TTL_SECONDS ?? 900);
 
   const cached = localHrBoardCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
@@ -95,7 +95,7 @@ function deepKey(date?: string | null): string {
 
 export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardSnapshot> {
   const key = validatedKey(date);
-  const ttlSeconds = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 120);
+  const ttlSeconds = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900);
 
   const cached = localValidatedHrBoardCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
@@ -137,7 +137,7 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
 
 export async function getCachedDeepHrBoard(date?: string | null): Promise<DeepHrBoardSnapshot> {
   const key = deepKey(date);
-  const ttlSeconds = Number(process.env.DEEP_HR_BOARD_HUB_TTL_SECONDS ?? 300);
+  const ttlSeconds = Number(process.env.DEEP_HR_BOARD_HUB_TTL_SECONDS ?? 1200);
 
   const cached = localDeepHrBoardCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {

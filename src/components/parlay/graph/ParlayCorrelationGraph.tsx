@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, lazy } from 'react';
 import type { ElementDefinition, StylesheetJson } from 'cytoscape';
-import { CytoscapeGraph } from '../../../lib/graph/CytoscapeGraph';
+
 import type { PublicParlaySlip } from '../../../lib/parlayDisplay';
+const CytoscapeGraph = lazy(() => import('../../../lib/graph/CytoscapeGraph'));
 
 interface ParlayCorrelationGraphProps {
   slips: PublicParlaySlip[];
@@ -78,12 +79,14 @@ export const ParlayCorrelationGraph: React.FC<ParlayCorrelationGraphProps> = ({ 
       <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">
         Legs that co-occur in your saved slips
       </p>
-      <CytoscapeGraph
+      <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-white/45">Loading graph...</div>}>
+        <CytoscapeGraph
         elements={elements}
         stylesheet={STYLESHEET}
         layout={{ name: 'cose', animate: false, fit: true, padding: 24 } as any}
         height={260}
       />
+      </Suspense>
     </div>
   );
 };

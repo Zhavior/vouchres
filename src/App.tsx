@@ -26,14 +26,13 @@ import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip }
 import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
-import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
 const EdgeIslandPage = lazy(() => import('./pages/EdgeIslandPage'));
-const FrontPage = lazy(() => import('./pages/FrontPage'));
+const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 const VouchBoard = lazy(() => import('./components/VouchBoard'));
 const ProfilePage = lazy(() => import('./components/ProfilePage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
@@ -145,6 +144,7 @@ const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_A
 
 const PUBLIC_SECTIONS = new Set([
   'welcome',
+  'vouchedge_intro',
   'feed',
   'home',
   'daily_players',
@@ -157,6 +157,43 @@ const PUBLIC_SECTIONS = new Set([
   'subscriber_club',
   'mlb_stats',
 ]);
+
+const SIGNED_IN_HOME = 'today';
+
+function getSavedActiveSection(): string | null {
+  try {
+    return localStorage.getItem('vouchedge_active_section');
+  } catch {
+    return null;
+  }
+}
+
+/** Signed-in users must never land on the public intro terminal. */
+function resolveAuthenticatedSection(section: string): string {
+  if (!hasRealAuthToken()) return section;
+  if (section !== 'vouchedge_intro' && section !== 'welcome') return section;
+  const saved = getSavedActiveSection();
+  if (saved && saved !== 'vouchedge_intro' && saved !== 'welcome') return saved;
+  return SIGNED_IN_HOME;
+}
+
+function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
+  if (typeof window === 'undefined') return;
+  const pathname = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase().replace(/^#/, '');
+  const onLandingPath =
+    pathname === '/' ||
+    pathname === '/vouchedge' ||
+    pathname === '/vouchedge-intro' ||
+    hash === 'vouchedge_intro' ||
+    hash === 'vouchedge' ||
+    hash === 'vouchedge-intro' ||
+    hash === 'welcome' ||
+    hash === '';
+  if (onLandingPath) {
+    window.history.replaceState(null, '', `/${homeSection}`);
+  }
+}
 
 function hasRealAuthToken() {
   try {
@@ -216,13 +253,41 @@ function requiresLogin(section: string) {
   return PROTECTED_SECTIONS.has(section);
 }
 
-
 function resolveDevSectionFromLocation() {
   if (typeof window === 'undefined') return null;
 
   const pathname = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
   const target = hash || pathname;
+
+  if (target === '' || target === '/') {
+    return hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+  }
+
+  if (target === 'vouchres/vouchedge' || target === '/vouchres/vouchedge') {
+    const section = hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    window.history.replaceState(null, '', hasRealAuthToken() ? `/${section}` : '/vouchedge');
+    return section;
+  }
+
+  if (
+    target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
+    target === 'vouchedge' || target === '/vouchedge'
+  ) {
+    if (hasRealAuthToken()) {
+      window.history.replaceState(null, '', `/${SIGNED_IN_HOME}`);
+      return SIGNED_IN_HOME;
+    }
+    return 'vouchedge_intro';
+  }
+
+  if (target === 'today' || target === '/today') {
+    return 'today';
+  }
+
+  if (target === 'welcome' || target === '/welcome') {
+    return hasRealAuthToken() ? SIGNED_IN_HOME : 'welcome';
+  }
 
   if (
     target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
@@ -384,9 +449,9 @@ export default function App() {
 
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
-    if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
-    return 'welcome';
+    const raw = locationSection
+      ?? (DEV_BYPASS_AUTH && hasRealAuthToken() ? 'hr_board' : 'vouchedge_intro');
+    return resolveAuthenticatedSection(raw);
   });
   const activeSectionRef = useRef(activeSection);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -404,23 +469,24 @@ export default function App() {
   // launcher button (mounted globally, under the notification bell).
   const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
 
-  // Boot loader: `appReady` flips once initial local data is loaded; the loader
-  // then rushes to 100% and unmounts itself via `hideBootLoader`.
-  const [appReady, setAppReady] = useState(false);
-  const [hideBootLoader, setHideBootLoader] = useState(false);
-  const [, setVouchEdgeLoadProgress] = useState(8);
-  const [, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
-
   const navigateSection = (section: string) => {
-    if (PUBLIC_SECTIONS.has(section)) {
-      saveActiveSection(section);
-      setActiveSection(section);
+    const target = resolveAuthenticatedSection(section);
+    if (target !== section) {
+      replaceLandingUrl(target);
+      saveActiveSection(target);
+      setActiveSection(target);
       return;
     }
 
-    if (requiresLogin(section) && !hasRealAuthToken()) {
+    if (PUBLIC_SECTIONS.has(target)) {
+      saveActiveSection(target);
+      setActiveSection(target);
+      return;
+    }
+
+    if (requiresLogin(target) && !hasRealAuthToken()) {
       try {
-        localStorage.setItem('vouchedge_after_auth_destination', section);
+        localStorage.setItem('vouchedge_after_auth_destination', target);
       } catch {
         // ignore storage failures
       }
@@ -430,8 +496,8 @@ export default function App() {
       return;
     }
 
-    saveActiveSection(section);
-    setActiveSection(section);
+    saveActiveSection(target);
+    setActiveSection(target);
   }
 
   const handleLoginSuccess = () => {
@@ -449,35 +515,22 @@ export default function App() {
       saveActiveSection('welcome');
       setActiveSection('welcome');
       setLoggingOut(false);
+      window.history.replaceState(null, '', '/');
     }, 900);
   };
   
   useEffect(() => {
-    if (hideBootLoader) return;
-
-    const messages = [
-      "Starting VouchEdge systems...",
-      "Loading AI ledger...",
-      "Syncing V.A.I smart picks...",
-      "Checking result engine...",
-      "Preparing premium command center...",
-    ];
-
-    let tick = 0;
-    const timer = window.setInterval(() => {
-      tick += 1;
-      setVouchEdgeLoadProgress((current) => {
-        if (appReady) return Math.min(100, current + 18);
-        return Math.min(92, current + 7);
-      });
-      setVouchEdgeLoadMessage(messages[Math.min(messages.length - 1, tick % messages.length)]);
-    }, 260);
-
-    return () => window.clearInterval(timer);
-  }, [appReady, hideBootLoader]);
-
-  useEffect(() => {
     activeSectionRef.current = activeSection;
+  }, [activeSection]);
+
+  // Signed-in users must never stay on the public landing page.
+  useEffect(() => {
+    if (!hasRealAuthToken()) return;
+    if (activeSection !== 'vouchedge_intro' && activeSection !== 'welcome') return;
+    const next = resolveAuthenticatedSection(activeSection);
+    replaceLandingUrl(next);
+    saveActiveSection(next);
+    setActiveSection(next);
   }, [activeSection]);
 
   useEffect(() => {
@@ -654,9 +707,6 @@ export default function App() {
       console.error('LocalStorage load failed, using fallbacks', e);
       setPosts(INITIAL_POSTS);
       setProfile(INITIAL_PROFILE);
-    } finally {
-      // Initial local data is loaded — let the boot loader finish to 100%.
-      setAppReady(true);
     }
   }, []);
 
@@ -1653,18 +1703,21 @@ export default function App() {
 
   const renderMainView = () => {
     switch (activeSection) {
-      case 'welcome':
-        return hasRealAuthToken() ? (
-          <EdgeIslandPage
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
-            profile={profile}
-            isLoggedIn
+      case 'vouchedge_intro':
+        if (hasRealAuthToken()) {
+          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        }
+        return (
+          <VouchEdgeTerminalPage
+            onAuthed={handleLoginSuccess}
           />
-        ) : (
-          <FrontPage
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
+        );
+      case 'welcome':
+        if (hasRealAuthToken()) {
+          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        }
+        return (
+          <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
           />
         );
@@ -1919,9 +1972,14 @@ export default function App() {
     }
   };
 
+  const isPublicFrontPage =
+    (activeSection === 'welcome' && !hasRealAuthToken())
+    || (activeSection === 'vouchedge_intro' && !hasRealAuthToken());
+  const showGlobalAppChrome = !isPublicFrontPage;
+
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
-      <VouchEdgeBootGate enabled={activeSection !== 'welcome' && hasRealAuthToken()}>
+      <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
         <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
         <div className="ve-motion-bg" aria-hidden="true">
           <div className="ve-motion-grid" />
@@ -1933,9 +1991,6 @@ export default function App() {
         </div>
 
         <div className="ve-motion-content">
-          {!hideBootLoader && (
-            <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
-          )}
           {loggingOut && <GoodbyeScreen />}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
         {/* Desktop only — on mobile this is rendered inline inside each page's
@@ -1944,7 +1999,7 @@ export default function App() {
             whatever page content happened to scroll underneath it. */}
         <div className="hidden md:block">
           <AuthStatusBadge
-            hideGuest={activeSection === 'welcome'}
+            hideGuest={activeSection === 'welcome' || activeSection === 'vouchedge_intro'}
             onLoginSuccess={handleLoginSuccess}
             onLogoutComplete={handleLogoutComplete}
           />
@@ -1961,7 +2016,7 @@ export default function App() {
           onAuthLoginSuccess={handleLoginSuccess}
           onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isPendingRoute}
-          isPublicFrontPage={activeSection === 'welcome' && !hasRealAuthToken()}
+          isPublicFrontPage={isPublicFrontPage}
         >
           <Suspense
             fallback={
@@ -1972,9 +2027,9 @@ export default function App() {
           >
             {renderMainView()}
           </Suspense>
-          {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
+          {showGlobalAppChrome && <HrNotifications savedSlips={savedSlips} />}
         </HomeFeedLayout>
-        <AppNotificationsHost onNavigate={navigateSection} />
+        {showGlobalAppChrome && <AppNotificationsHost onNavigate={navigateSection} />}
 
         {/* The Edge Island launcher — third button in the stack: app
             notifications bell sits at bottom-44/40, HR notifications bell
@@ -1983,7 +2038,7 @@ export default function App() {
             for a third full-size button between the HR bell and the nav
             bar — so this one renders smaller on mobile only (w-10/h-10 vs
             w-12/h-12 on desktop) to fit without overlapping either. */}
-        {activeSection !== 'welcome' && (
+        {showGlobalAppChrome && (
           <button
             type="button"
             onClick={() => setEdgeIslandOpen(true)}
@@ -1995,13 +2050,15 @@ export default function App() {
           </button>
         )}
 
-        <EdgeIslandCommandCenter
-          open={edgeIslandOpen}
-          onClose={() => setEdgeIslandOpen(false)}
-          onSectionChange={navigateSection}
-          savedSlips={savedSlips}
-          profile={profile}
-        />
+        {showGlobalAppChrome && (
+          <EdgeIslandCommandCenter
+            open={edgeIslandOpen}
+            onClose={() => setEdgeIslandOpen(false)}
+            onSectionChange={navigateSection}
+            savedSlips={savedSlips}
+            profile={profile}
+          />
+        )}
           </AppErrorBoundary>
         </div>
         </div>

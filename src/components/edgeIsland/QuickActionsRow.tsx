@@ -1,4 +1,5 @@
 import { BarChart3, FlaskConical, Layers, Radio, ShieldCheck } from 'lucide-react';
+import { VECard } from '../ui/ve';
 import type { EdgeIslandSectionProps } from './edgeIslandTypes';
 
 const ACTIONS = [
@@ -11,7 +12,7 @@ const ACTIONS = [
 
 export function QuickActionsRow({ onSectionChange }: EdgeIslandSectionProps) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-black/35 p-4 backdrop-blur-2xl">
+    <VECard strong className="p-4">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <div className="terminal-text text-vouch-cyan">Quick actions</div>
@@ -40,6 +41,6 @@ export function QuickActionsRow({ onSectionChange }: EdgeIslandSectionProps) {
           );
         })}
       </div>
-    </section>
+    </VECard>
   );
 }

@@ -199,7 +199,7 @@ export default function HomeFeedLayout({
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex-1 min-w-0 bg-obsidian-900 font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'border-r border-white/10 pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-obsidian-900 font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'border-r border-white/10 pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
           {!isPublicFrontPage && (
             <header className="md:hidden sticky top-0 bg-obsidian-900/90 backdrop-blur-md glass-border border-b px-3 py-2.5 flex items-center justify-between gap-2 z-30 select-none font-z8">
@@ -253,7 +253,7 @@ export default function HomeFeedLayout({
           )}
 
           {/* Render Active Page Content */}
-          <div className="w-full h-full" id="inner-view-slot">
+          <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot">
             {children}
           </div>
         </main>
@@ -284,19 +284,23 @@ export default function HomeFeedLayout({
       )}
 
       {/* Globally Floating VouchEdge AI Agent */}
-      <AisFeatureAgent 
-        profile={profile} 
-        savedSlips={savedSlips} 
-        activeLegs={activeLegs}
-        onSectionChange={onSectionChange}
-      />
+      {!isPublicFrontPage && (
+        <AisFeatureAgent
+          profile={profile}
+          savedSlips={savedSlips}
+          activeLegs={activeLegs}
+          onSectionChange={onSectionChange}
+        />
+      )}
 
       {/* Command Palette (Cmd+K) */}
-      <CmdKPalette
-        open={cmdKOpen}
-        onClose={() => setCmdKOpen(false)}
-        onNavigate={onSectionChange}
-      />
+      {!isPublicFrontPage && (
+        <CmdKPalette
+          open={cmdKOpen}
+          onClose={() => setCmdKOpen(false)}
+          onNavigate={onSectionChange}
+        />
+      )}
 
     </div>
   );

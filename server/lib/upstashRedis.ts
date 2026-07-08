@@ -35,6 +35,11 @@ async function redisCommand<T = any>(command: unknown[]): Promise<T | null> {
   return data?.result ?? null;
 }
 
+export async function redisGet(key: string): Promise<string | null> {
+  if (!isUpstashEnabled()) return null;
+  return redisCommand<string>(["GET", key]);
+}
+
 export async function redisGetJson<T>(key: string): Promise<T | null> {
   if (!isUpstashEnabled()) return null;
 
@@ -74,6 +79,18 @@ export async function redisDel(key: string): Promise<void> {
   if (!isUpstashEnabled()) return;
 
   await redisCommand(["DEL", key]);
+}
+
+/** Increment a counter and set TTL on first hit. Returns null when Redis is disabled. */
+export async function redisIncr(key: string, ttlSeconds: number): Promise<number | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const count = await redisCommand<number>(["INCR", key]);
+  if (count === 1 && ttlSeconds > 0) {
+    await redisCommand(["EXPIRE", key, ttlSeconds]);
+  }
+
+  return typeof count === "number" ? count : null;
 }
 
 export async function sleep(ms: number): Promise<void> {

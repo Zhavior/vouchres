@@ -1,39 +1,21 @@
 import type { ReactNode } from 'react';
-import { VEButton } from './VEButton';
-import { VECard } from './VECard';
-
-type VEStateTone = 'loading' | 'empty' | 'error' | 'success';
 
 type VEStateProps = {
-  tone?: VEStateTone;
-  eyebrow?: string;
   title: string;
   description?: string;
-  icon?: ReactNode;
-  actionLabel?: string;
-  onAction?: () => void;
+  children?: ReactNode;
 };
 
-export function VEState({
-  tone = 'empty',
-  eyebrow,
-  title,
-  description,
-  icon,
-  actionLabel,
-  onAction,
-}: VEStateProps) {
+export function VEState({ title, description, children }: VEStateProps) {
   return (
-    <VECard className={`ve-state ve-state-${tone}`}>
-      {icon ? <div className="ve-state-icon">{icon}</div> : null}
-      {eyebrow ? <div className="ve-kicker">{eyebrow}</div> : null}
-      <h2 className="ve-state-title">{title}</h2>
-      {description ? <p className="ve-state-description">{description}</p> : null}
-      {actionLabel && onAction ? (
-        <VEButton variant={tone === 'error' ? 'danger' : 'secondary'} onClick={onAction}>
-          {actionLabel}
-        </VEButton>
-      ) : null}
-    </VECard>
+    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center text-white">
+      <div className="text-xl font-black uppercase tracking-tight">{title}</div>
+      {description && (
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/50">
+          {description}
+        </p>
+      )}
+      {children && <div className="mt-6">{children}</div>}
+    </div>
   );
 }

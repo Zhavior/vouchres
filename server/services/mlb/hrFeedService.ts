@@ -23,7 +23,7 @@ export interface HrEvent {
   timestamp: string;
 }
 
-const HR_CACHE_TTL = process.env.NODE_ENV === 'development' ? 120_000 : 60_000;
+const HR_CACHE_TTL = 900_000;
 const hrCache = new TTLCache<HrEvent[]>(HR_CACHE_TTL);
 const MAX_GAMES = 15;
 

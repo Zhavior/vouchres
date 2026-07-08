@@ -78,6 +78,7 @@ export function upstreamUnavailable(message: string, cause: unknown): AppError {
     status: 503,
     code: "external_service_error",
     message,
+    expose: true,
     cause,
   });
 }

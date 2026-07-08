@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-body { background: #0A0A0A !important; color: white; -webkit-font-smoothing: antialiased; margin: 0; }
-.glass { background: rgba(22, 22, 22, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+html,
+body {
+  margin: 0;
+  background: #020617;
+  color: white;
+}
+
+* {
+  box-sizing: border-box;
+}

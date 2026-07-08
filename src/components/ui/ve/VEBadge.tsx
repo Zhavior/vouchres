@@ -1,31 +1,13 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-type VEBadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
-
-type VEBadgeProps = HTMLAttributes<HTMLSpanElement> & {
-  tone?: VEBadgeTone;
+type VEBadgeProps = {
   children: ReactNode;
+  className?: string;
 };
 
-const toneClass: Record<VEBadgeTone, string> = {
-  neutral: 've-badge',
-  info: 've-badge',
-  success: 've-badge ve-badge-good',
-  warning: 've-badge ve-badge-risk',
-  danger: 've-badge ve-badge-danger',
-};
-
-export function VEBadge({
-  tone = 'neutral',
-  className = '',
-  children,
-  ...props
-}: VEBadgeProps) {
+export function VEBadge({ children, className = '' }: VEBadgeProps) {
   return (
-    <span
-      className={[toneClass[tone], className].filter(Boolean).join(' ')}
-      {...props}
-    >
+    <span className={`inline-flex items-center rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 ${className}`}>
       {children}
     </span>
   );

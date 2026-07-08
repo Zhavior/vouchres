@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, lazy } from 'react';
 import type { ElementDefinition, StylesheetJson } from 'cytoscape';
-import { CytoscapeGraph } from '../../lib/graph/CytoscapeGraph';
+
 import type { FeedPost } from '../../types';
+const CytoscapeGraph = lazy(() => import('../../lib/graph/CytoscapeGraph'));
 
 interface CapperNetworkGraphProps {
   posts: FeedPost[];
@@ -96,7 +97,8 @@ export const CapperNetworkGraph: React.FC<CapperNetworkGraphProps> = ({ posts, f
           <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: '#94a3b8' }} />Unverified</span>
         </span>
       </div>
-      <CytoscapeGraph
+      <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-white/45">Loading graph...</div>}>
+        <CytoscapeGraph
         elements={elements}
         stylesheet={STYLESHEET}
         layout={{ name: 'cose', animate: false, fit: true, padding: 28 } as any}
@@ -105,6 +107,7 @@ export const CapperNetworkGraph: React.FC<CapperNetworkGraphProps> = ({ posts, f
           if (id !== 'you') onSelectCapper?.(id);
         }}
       />
+      </Suspense>
     </div>
   );
 };

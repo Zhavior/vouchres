@@ -1,4 +1,6 @@
 import type { Express, Request, Response } from "express";
+import { AppError } from "../errors/AppError";
+import { asyncHandler } from "../lib/asyncHandler";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
 import {
@@ -10,64 +12,91 @@ import {
 } from "../services/aiJudges/socialDraftService";
 
 export function registerAiJudgeSocialRoutes(app: Express): void {
-  app.get("/api/ai-judge-social/judges", (_req: Request, res: Response) => {
+  app.get("/api/ai-judge-social/judges", asyncHandler(async (_req: Request, res: Response) => {
     res.json({
+      ok: true,
       status: "ready",
       mode: "safe_prototype",
       judges: listJudges(),
     });
-  });
+  }));
 
-  app.post("/api/ai-judge-social/generate-hr-drafts", requireAuth, requireStaff, generationLimiter, async (req: Request, res: Response) => {
-    try {
+  app.post(
+    "/api/ai-judge-social/generate-hr-drafts",
+    requireAuth,
+    requireStaff,
+    generationLimiter,
+    asyncHandler(async (req: Request, res: Response) => {
       const result = await generateHrSocialDrafts({
         date: req.body?.date,
         scheduledFor: req.body?.scheduledFor,
       });
 
       res.json({
+        ok: true,
         status: "ready",
         mode: "safe_prototype_no_real_x_posting",
         ...result,
       });
-    } catch (err: any) {
-      console.error("[aiJudgeSocialRoutes] generate drafts failed:", err?.message);
-      res.status(503).json({
-        status: "error",
-        error: "Failed to generate AI judge social drafts",
-        message: err?.message,
-      });
-    }
-  });
+    }),
+  );
 
-  app.get("/api/ai-judge-social/drafts", requireAuth, requireStaff, (_req: Request, res: Response) => {
-    res.json({
-      status: "ready",
-      mode: "safe_prototype",
-      drafts: listDrafts(),
-    });
-  });
-
-  app.post("/api/ai-judge-social/drafts/:draftId/queue", requireAuth, requireStaff, generationLimiter, (req: Request, res: Response) => {
-    try {
+  app.get(
+    "/api/ai-judge-social/drafts",
+    requireAuth,
+    requireStaff,
+    asyncHandler(async (_req: Request, res: Response) => {
       res.json({
-        status: "queued",
-        draft: queueDraft(req.params.draftId),
+        ok: true,
+        status: "ready",
+        mode: "safe_prototype",
+        drafts: listDrafts(),
       });
-    } catch (err: any) {
-      res.status(404).json({ status: "error", message: err?.message });
-    }
-  });
+    }),
+  );
 
-  app.post("/api/ai-judge-social/drafts/:draftId/mock-post", requireAuth, requireStaff, generationLimiter, (req: Request, res: Response) => {
-    try {
-      res.json({
-        status: "mock_posted",
-        message: "Safe prototype only. Nothing was posted to X/Twitter.",
-        draft: mockPostDraft(req.params.draftId),
-      });
-    } catch (err: any) {
-      res.status(404).json({ status: "error", message: err?.message });
-    }
-  });
+  app.post(
+    "/api/ai-judge-social/drafts/:draftId/queue",
+    requireAuth,
+    requireStaff,
+    generationLimiter,
+    asyncHandler(async (req: Request, res: Response) => {
+      try {
+        const draft = queueDraft(req.params.draftId);
+        res.json({
+          ok: true,
+          status: "queued",
+          draft,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Draft not found") {
+          throw new AppError({ status: 404, code: "not_found", message: error.message });
+        }
+        throw error;
+      }
+    }),
+  );
+
+  app.post(
+    "/api/ai-judge-social/drafts/:draftId/mock-post",
+    requireAuth,
+    requireStaff,
+    generationLimiter,
+    asyncHandler(async (req: Request, res: Response) => {
+      try {
+        const draft = mockPostDraft(req.params.draftId);
+        res.json({
+          ok: true,
+          status: "mock_posted",
+          message: "Safe prototype only. Nothing was posted to X/Twitter.",
+          draft,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Draft not found") {
+          throw new AppError({ status: 404, code: "not_found", message: error.message });
+        }
+        throw error;
+      }
+    }),
+  );
 }

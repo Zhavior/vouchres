@@ -1,0 +1,55 @@
+:root {
+  --ve-bg: #020617;
+  --ve-surface: rgba(255,255,255,.045);
+  --ve-surface-strong: rgba(0,0,0,.45);
+  --ve-border: rgba(255,255,255,.10);
+  --ve-cyan: #67e8f9;
+  --ve-muted: rgba(255,255,255,.55);
+}
+
+.ve-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34,211,238,.18), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(16,185,129,.10), transparent 32%),
+    linear-gradient(180deg, #020617 0%, #000 55%, #020617 100%);
+  color: white;
+}
+
+.ve-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.ve-card {
+  border: 1px solid var(--ve-border);
+  background: var(--ve-surface);
+  border-radius: 28px;
+}
+
+.ve-card-strong {
+  border: 1px solid rgba(103,232,249,.18);
+  background: var(--ve-surface-strong);
+  border-radius: 28px;
+}
+
+.ve-button-primary {
+  background: var(--ve-cyan);
+  color: #020617;
+  border-radius: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.ve-button-secondary {
+  border: 1px solid var(--ve-border);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.72);
+  border-radius: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}

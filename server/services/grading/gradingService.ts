@@ -1,3 +1,5 @@
+import { AppError } from "../../errors/AppError";
+import { runWithDistributedLock } from "../../lib/distributedLock";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
@@ -67,6 +69,14 @@ function isLikelyMlbGamePk(value: unknown): boolean {
 }
 
 /**
+ * Process-local coalescing plus optional Upstash distributed lock so concurrent
+ * cron/staff grade runs don't race-settle the same pending picks across instances.
+ */
+let gradePendingInflight: Promise<GradeRunResult> | null = null;
+
+const GRADE_PENDING_LOCK = "grading:pending-picks";
+
+/**
  * Grade all pending picks whose event has concluded.
  *
  * Strategy:
@@ -78,10 +88,37 @@ function isLikelyMlbGamePk(value: unknown): boolean {
  * Idempotent: re-running on already-graded picks is a no-op (we only query
  * status='pending'). Safe to retry on transient failures.
  *
+ * Concurrent callers on this process await the same in-flight run to prevent
+ * double-settlement races; dryRun always executes a fresh read-only pass.
+ *
  * @param opts.days Look back N days for pending picks (default 3)
  * @param opts.dryRun If true, returns what would be graded without writing
  */
 export async function gradePendingPicks(opts: {
+  days?: number;
+  dryRun?: boolean;
+} = {}): Promise<GradeRunResult> {
+  if (opts.dryRun) {
+    return runGradePendingPicks(opts);
+  }
+
+  if (gradePendingInflight) {
+    return gradePendingInflight;
+  }
+
+  return runWithDistributedLock(GRADE_PENDING_LOCK, async () => {
+    if (gradePendingInflight) {
+      return gradePendingInflight;
+    }
+
+    gradePendingInflight = runGradePendingPicks(opts).finally(() => {
+      gradePendingInflight = null;
+    });
+    return gradePendingInflight;
+  });
+}
+
+async function runGradePendingPicks(opts: {
   days?: number;
   dryRun?: boolean;
 } = {}): Promise<GradeRunResult> {
@@ -101,7 +138,14 @@ export async function gradePendingPicks(opts: {
 
   if (error) {
     console.error("[grading] fetch pending failed", error);
-    throw error;
+    throw new AppError({
+      status: 503,
+      code: "external_service_error",
+      message: "Unable to load pending picks for grading.",
+      details: { reason: "pending_picks_fetch_failed" },
+      expose: true,
+      cause: error,
+    });
   }
 
   if (!pending || pending.length === 0) {

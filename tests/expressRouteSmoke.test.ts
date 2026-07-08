@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { apiNotFoundHandler } from "../server/middleware/apiNotFound";
 import { requestContext } from "../server/middleware/requestContext";
+import { routeTiming } from "../server/middleware/routeTiming";
 import { registerApiRoutes } from "../server/routes";
 
 let server: Server;
@@ -29,6 +30,7 @@ beforeAll(async () => {
 
   const app = express();
   app.use(requestContext);
+  app.use(routeTiming);
   app.use(express.json());
   registerApiRoutes(app);
   app.use("/api", apiNotFoundHandler);
@@ -66,6 +68,52 @@ describe("API route smoke envelopes", () => {
       },
     });
     expect(response.body.error.requestId).toEqual(expect.any(String));
+  });
+
+  it("exposes backend production health with route metrics", async () => {
+    const coreHealth = await requestJson("/api/system/core-health");
+    expect(coreHealth.status).toBe(200);
+    expect(coreHealth.body).toMatchObject({
+      ok: true,
+      status: "ok",
+      service: "vouchedge-core",
+    });
+
+    await requestJson("/api/health");
+    const response = await requestJson("/api/health/backend");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      ok: true,
+      service: "vouchedge-backend",
+      dependencies: {
+        redis: expect.objectContaining({
+          enabled: expect.any(Boolean),
+          mode: expect.any(String),
+        }),
+        sentry: expect.objectContaining({
+          enabled: expect.any(Boolean),
+          configured: expect.any(Boolean),
+        }),
+        sportsHttp: expect.objectContaining({
+          requests: expect.any(Number),
+          cacheSize: expect.any(Number),
+        }),
+      },
+      api: {
+        totals: expect.objectContaining({
+          requests: expect.any(Number),
+        }),
+        statusClasses: expect.objectContaining({
+          "2xx": expect.any(Number),
+          "4xx": expect.any(Number),
+          "5xx": expect.any(Number),
+        }),
+        routes: expect.any(Array),
+      },
+      warnings: expect.any(Array),
+    });
+    expect(response.body.api.totals.requests).toBeGreaterThan(0);
   });
 
   it("normalizes public MLB validation errors", async () => {
@@ -163,6 +211,7 @@ describe("API route smoke envelopes", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
+      ok: true,
       sport: "MLB",
       date: "2026-07-07",
       games: [],
@@ -191,6 +240,23 @@ describe("API route smoke envelopes", () => {
       code: "validation_error",
       message: "limit must be an integer between 1 and 100.",
     });
+  });
+
+  it("denies cron routes in production when CRON_SECRET is unset", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "");
+
+    const response = await requestJson("/api/cron/parlays/grade-due");
+    expect(response.status).toBe(503);
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: "internal_server_error",
+        message: "Internal server error.",
+      },
+    });
+
+    vi.unstubAllEnvs();
   });
 
   it("normalizes missing auth on canonical parlay save", async () => {

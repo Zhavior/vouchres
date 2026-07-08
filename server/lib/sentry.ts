@@ -27,9 +27,22 @@ const SENTRY_DSN = process.env.SENTRY_DSN ?? "";
 const SENTRY_ENV = process.env.NODE_ENV ?? "development";
 
 let initialized = false;
+let missingDsnLogged = false;
+
+export function isSentryEnabled(): boolean {
+  return initialized;
+}
 
 export function initServerSentry(app?: Express) {
-  if (!SENTRY_DSN || initialized) return;
+  if (initialized) return;
+
+  if (!SENTRY_DSN) {
+    if (SENTRY_ENV !== "production" && !missingDsnLogged) {
+      console.log("[sentry] SENTRY_DSN not set — server error reporting disabled.");
+      missingDsnLogged = true;
+    }
+    return;
+  }
 
   Sentry.init({
     dsn: SENTRY_DSN,
