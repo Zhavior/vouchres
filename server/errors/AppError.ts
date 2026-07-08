@@ -10,6 +10,7 @@ export type AppErrorCode =
   | "entitlement_required"
   | "quota_exceeded"
   | "rate_limited"
+  | "gone"
   | "external_service_error"
   | "internal_server_error";
 

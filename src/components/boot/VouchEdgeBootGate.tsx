@@ -1,7 +1,6 @@
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { useVouchEdgeBoot } from "../../features/hr/hooks/useVouchEdgeBoot";
-import VouchEdgeBootScreen from "./VouchEdgeBootScreen";
 
 type Props = {
   children: ReactNode;
@@ -32,19 +31,14 @@ export default function VouchEdgeBootGate({
 
   const boot = useVouchEdgeBoot(shouldRunBoot);
 
-  if (!shouldRunBoot) {
-    return <>{children}</>;
-  }
-
-  if (!boot.ready) {
-    return <VouchEdgeBootScreen boot={boot} />;
-  }
-
-  try {
-    sessionStorage.setItem(storageKey, "true");
-  } catch {
-    // Safe no-op. Some privacy modes can block storage.
-  }
+  useEffect(() => {
+    if (!shouldRunBoot || !boot.ready) return;
+    try {
+      sessionStorage.setItem(storageKey, "true");
+    } catch {
+      // Safe no-op. Some privacy modes can block storage.
+    }
+  }, [boot.ready, shouldRunBoot, storageKey]);
 
   return <>{children}</>;
 }

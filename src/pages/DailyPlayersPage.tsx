@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Calendar, RefreshCw, Users } from 'lucide-react';
 import { bootDataStore } from '../lib/boot/bootDataStore';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
 type Pitcher = {
   id?: number | string;
@@ -132,17 +134,17 @@ function dataQuality(game: Game) {
 }
 
 function qualityClass(label: string) {
-  if (label === 'CONFIRMED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
-  if (label === 'PROJECTED') return 'border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
-  if (label === 'PITCHERS') return 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
-  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.28)] text-[hsl(var(--ve-text-secondary))]';
+  if (label === 'CONFIRMED') return 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald';
+  if (label === 'PROJECTED') return 'border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan';
+  if (label === 'PITCHERS') return 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/90';
+  return 'border-white/10 bg-black/25 text-white/45';
 }
 
 function positionClass(pos?: string) {
   const p = String(pos || '').toUpperCase();
-  if (p === 'P') return 'text-[hsl(var(--ve-accent-cyan))]';
-  if (['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-[hsl(var(--ve-text-secondary))]';
-  return 'text-[hsl(var(--ve-text-muted))]';
+  if (p === 'P') return 'text-vouch-cyan';
+  if (['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'OF'].includes(p)) return 'text-white/70';
+  return 'text-white/40';
 }
 
 function playerHeadshot(player: Player): string | null {
@@ -190,10 +192,10 @@ function matchupStatus(game: Game) {
 }
 
 function matchupStatusClass(status: string) {
-  if (status === 'Lineups confirmed') return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200';
-  if (status === 'Projected hitters') return 'border-[hsl(var(--ve-accent-gold)/0.25)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
-  if (status === 'Pitchers posted') return 'border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]';
-  return 'border-[hsl(var(--ve-border)/0.32)] bg-[hsl(var(--ve-surface-raised)/0.38)] text-[hsl(var(--ve-text-secondary))]';
+  if (status === 'Lineups confirmed') return 'border-vouch-emerald/40 bg-vouch-emerald/10 text-vouch-emerald';
+  if (status === 'Projected hitters') return 'border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan';
+  if (status === 'Pitchers posted') return 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/90';
+  return 'border-white/10 bg-black/25 text-white/45';
 }
 
 function scrollToGame(gamePk?: string | number) {
@@ -602,7 +604,10 @@ function TeamInitialIcon({ name }: { name: string }) {
       : safe.slice(0, 2).toUpperCase();
 
   return (
-    <span className="daily-team-initial-icon" aria-hidden="true">
+    <span
+      className="inline-grid h-8 w-8 shrink-0 place-items-center border border-white/10 bg-black/30 font-mono text-[10px] font-bold uppercase text-vouch-cyan/80"
+      aria-hidden="true"
+    >
       {initials}
     </span>
   );
@@ -618,34 +623,24 @@ function handednessLabel(hand?: string | null): string {
 }
 
 function handednessClass(hand?: string | null): string {
-  const normalized = String(hand || "").slice(0, 1).toUpperCase();
-
-  if (normalized === "L") {
-    return "border-[hsl(var(--ve-accent-cyan)/0.34)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))]";
-  }
-
-  if (normalized === "R") {
-    return "border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.12)] text-[hsl(var(--ve-accent-gold))]";
-  }
-
-  if (normalized === "S") {
-    return "border-[hsl(var(--ve-accent-purple)/0.34)] bg-[hsl(var(--ve-accent-purple)/0.12)] text-[hsl(var(--ve-accent-purple))]";
-  }
-
-  return "border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface-raised)/0.52)] text-[hsl(var(--ve-text-muted))]";
+  const normalized = String(hand || '').slice(0, 1).toUpperCase();
+  if (normalized === 'L') return 'border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan';
+  if (normalized === 'R') return 'border-white/15 bg-black/30 text-white/65';
+  if (normalized === 'S') return 'border-vouch-cyan/25 bg-vouch-cyan/8 text-vouch-cyan/80';
+  return 'border-white/10 bg-black/25 text-white/40';
 }
 
-function HandednessBadge({ hand, prefix = "Bats" }: { hand?: string | null; prefix?: string }) {
-  const normalized = String(hand || "").slice(0, 1).toUpperCase() || "U";
+function HandednessBadge({ hand, prefix = 'Bats' }: { hand?: string | null; prefix?: string }) {
+  const normalized = String(hand || '').slice(0, 1).toUpperCase() || 'U';
   const label = handednessLabel(normalized);
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${handednessClass(normalized)}`}
+      className={`inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${handednessClass(normalized)}`}
       title={`${prefix} ${label}`}
       aria-label={`${prefix} ${label}`}
     >
-      <span className="text-[9px] font-bold opacity-75">{prefix}</span>
+      <span className="opacity-70">{prefix}</span>
       <span>{normalized}</span>
     </span>
   );
@@ -1205,27 +1200,22 @@ function getDailyStatus(game: any): string {
   return "Pending";
 }
 
-function DailyTeamIcon({ team }: { team: any }) {
+function DailyTeamIcon({ team, size = 'md' }: { team: any; size?: 'sm' | 'md' | 'lg' }) {
   const name = getTeamLabel(team);
   const logoUrl = getTeamLogoUrl(team);
+  const sizeClass = size === 'lg' ? 'h-12 w-12' : size === 'sm' ? 'h-7 w-7' : 'h-9 w-9';
+  const [logoFailed, setLogoFailed] = useState(false);
 
   return (
-    <span className="daily-team-icon daily-team-logo-pro" aria-hidden="true">
-      {logoUrl ? (
-        <>
-          <img
-            src={logoUrl}
-            alt=""
-            loading="lazy"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              event.currentTarget.parentElement?.classList.add("daily-logo-failed");
-            }}
-          />
-          <span className="daily-team-fallback-logo">
-            <TeamInitialIcon name={name} />
-          </span>
-        </>
+    <span className={`relative inline-grid ${sizeClass} shrink-0 place-items-center overflow-hidden border border-white/10 bg-black/30`} aria-hidden="true">
+      {logoUrl && !logoFailed ? (
+        <img
+          src={logoUrl}
+          alt=""
+          className="h-[70%] w-[70%] object-contain"
+          loading="lazy"
+          onError={() => setLogoFailed(true)}
+        />
       ) : (
         <TeamInitialIcon name={name} />
       )}
@@ -1244,51 +1234,58 @@ function DailyStarterRow({ player, index, teamAbbr, search }: { player: any; ind
   const isMatch =
     query.length > 0 &&
     `${name} ${position} ${hand} ${teamAbbr}`.toLowerCase().includes(query);
+  const isProjected = String(player?.source || '').toLowerCase().includes('project');
 
   return (
     <button
       type="button"
-      className={`daily-player-row-pro daily-player-click-card ${isMatch ? "is-search-match" : ""}`}
+      className={`grid min-h-[48px] w-full grid-cols-[28px_36px_minmax(0,1fr)_auto] items-center gap-2 border px-2 py-1.5 text-left font-z8 transition ${
+        isMatch
+          ? 'border-vouch-cyan/45 bg-vouch-cyan/10'
+          : 'border-white/10 bg-black/25 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5'
+      }`}
       onClick={() => {
-        if (playerUrl) window.open(playerUrl, "_blank", "noopener,noreferrer");
+        if (playerUrl) window.open(playerUrl, '_blank', 'noopener,noreferrer');
       }}
       aria-label={playerUrl ? `Open ${name} MLB profile` : `${name} starter card`}
     >
-      <div className="daily-batting-order-pro">{order}</div>
+      <div className={`${Z8_LABEL} flex h-7 w-7 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan`}>
+        {order}
+      </div>
 
-      <div className="daily-player-avatar-pro">
+      <div className="relative h-9 w-9 overflow-hidden border border-white/10 bg-black/30">
         {playerImage ? (
-          <>
-            <img
-              src={playerImage}
-              alt={name}
-              loading="lazy"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-                event.currentTarget.parentElement?.classList.add("daily-headshot-failed");
-              }}
-            />
-            <span className="daily-player-fallback-avatar">{getDailyPlayerInitials(player)}</span>
-          </>
+          <img
+            src={playerImage}
+            alt=""
+            className="h-full w-full object-cover object-top"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
+            }}
+          />
         ) : (
-          <span>{getDailyPlayerInitials(player)}</span>
+          <span className="flex h-full w-full items-center justify-center font-mono text-[10px] font-bold text-white/50">
+            {getDailyPlayerInitials(player)}
+          </span>
         )}
       </div>
 
-      <div className="daily-player-main-pro">
-        <strong>{name}</strong>
-        <span className="daily-player-meta-pro">
+      <div className="min-w-0">
+        <strong className="block truncate font-mono text-xs font-bold uppercase tracking-wide text-white">{name}</strong>
+        <span className="mt-0.5 flex flex-wrap items-center gap-1 font-mono text-[9px] uppercase tracking-wide text-white/40">
           <span>{teamAbbr}</span>
           <span>·</span>
-          <span>{position || "UTIL"}</span>
-          <span>·</span>
+          <span>{position || 'UTIL'}</span>
           <HandednessBadge hand={hand} prefix="Bats" />
         </span>
       </div>
 
-      <div className="daily-player-status-stack">
-        <span className="daily-player-status-pro">Live</span>
-        <small>View</small>
+      <div className="flex flex-col items-end gap-0.5">
+        <span className={`${Z8_LABEL} border px-1.5 py-0.5 ${isProjected ? 'border-vouch-cyan/30 bg-vouch-cyan/8 text-vouch-cyan/80' : 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald'}`}>
+          {isProjected ? 'Proj' : 'Live'}
+        </span>
+        <small className="font-mono text-[8px] uppercase tracking-widest text-white/30">View</small>
       </div>
     </button>
   );
@@ -1302,21 +1299,22 @@ function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "h
   const sideLabel = side === "away" ? "Away starters" : "Home starters";
 
   return (
-    <section className="daily-roster-panel-pro">
-      <div className="daily-roster-panel-head-pro">
-        <div className="daily-roster-title-pro">
+    <section className={`${Z8_SURFACE} min-w-0 overflow-hidden`}>
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/30 px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-2.5">
           <DailyTeamIcon team={team} />
-          <div>
-            <strong>{teamName}</strong>
-            <span>{sideLabel}</span>
+          <div className="min-w-0">
+            <strong className="block truncate font-mono text-xs font-bold uppercase tracking-wide text-white">{teamName}</strong>
+            <span className={`${Z8_LABEL} text-white/40`}>{sideLabel}</span>
           </div>
         </div>
-
-        <div className="daily-starter-count-pro">{players.length}/9</div>
+        <div className={`${Z8_LABEL} border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-1 text-vouch-emerald`}>
+          {players.length}/9
+        </div>
       </div>
 
       {players.length > 0 ? (
-        <div className="daily-starters-list-pro">
+        <div className="grid gap-1.5 p-2">
           {players.map((player, index) => (
             <DailyStarterRow
               key={`${side}-${player?.id || player?.playerId || player?.mlbId || getDailyPlayerName(player)}-${index}`}
@@ -1328,9 +1326,11 @@ function DailyRosterPanel({ game, side, search }: { game: any; side: "away" | "h
           ))}
         </div>
       ) : (
-        <div className="daily-lineup-pending-pro">
-          <strong>Lineup pending</strong>
-          <span>Starters will appear here once MLB data is available.</span>
+        <div className="border-t border-white/10 px-4 py-8 text-center">
+          <strong className={`${Z8_LABEL} block text-white/70`}>Lineup pending</strong>
+          <span className="mt-1 block font-mono text-[10px] text-white/40">
+            Starters will appear here once MLB data is available.
+          </span>
         </div>
       )}
     </section>
@@ -1365,85 +1365,114 @@ function DailyMatchupTheater({
   const awayPlayers = getDailyPlayersForSide(selectedGame, "away");
   const homePlayers = getDailyPlayersForSide(selectedGame, "home");
   const status = getDailyStatus(selectedGame);
+  const isProjectedSlate = status === 'Projected' || status === 'Pending';
 
   return (
     <section
-      className="daily-theater-pro"
+      className={`${Z8_PANEL} overflow-hidden p-0`}
       tabIndex={0}
       onKeyDown={(event) => {
-        if (event.key === "ArrowLeft") goToPreviousGame();
-        if (event.key === "ArrowRight") goToNextGame();
+        if (event.key === 'ArrowLeft') goToPreviousGame();
+        if (event.key === 'ArrowRight') goToNextGame();
       }}
     >
-      <div className="daily-theater-topbar-pro">
-        <button type="button" onClick={goToPreviousGame} className="daily-nav-arrow-pro" aria-label="Previous matchup">
+      <div className="flex items-center gap-2 border-b border-white/10 bg-black/30 p-2">
+        <button
+          type="button"
+          onClick={goToPreviousGame}
+          className={`${Z8_IDLE} flex h-9 w-9 shrink-0 items-center justify-center font-mono text-sm`}
+          aria-label="Previous matchup"
+        >
           ←
         </button>
 
-        <div className="daily-matchup-count-pro">
-          <span>Matchup</span>
-          <strong>{selectedGameIndex + 1} / {games.length}</strong>
+        <div className={`${Z8_SURFACE} flex shrink-0 flex-col items-center px-3 py-1.5 text-center`}>
+          <span className={`${Z8_LABEL} text-white/40`}>Matchup</span>
+          <strong className="font-mono text-sm font-bold text-white">
+            {selectedGameIndex + 1} / {games.length}
+          </strong>
         </div>
 
-        <div className="daily-shortcut-rail-pro" aria-label="Matchup shortcuts">
+        <div className="no-scrollbar flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1" aria-label="Matchup shortcuts">
           {games.map((game, index) => {
             const chipAway = game.awayTeam;
             const chipHome = game.homeTeam;
             const isActive = index === selectedGameIndex;
+            const chipStatus = getDailyStatus(game);
 
             return (
               <button
                 type="button"
                 key={`daily-chip-${game?.gamePk || game?.game_id || game?.id || index}`}
-                className={`daily-matchup-chip-pro ${isActive ? "is-active" : ""}`}
+                className={`flex min-w-[160px] shrink-0 flex-col gap-1 border px-2 py-1.5 text-left font-z8 transition ${
+                  isActive ? Z8_ACTIVE : Z8_IDLE
+                }`}
                 onClick={() => setSelectedGameIndex(index)}
                 aria-label={`Open ${getTeamLabel(chipAway)} versus ${getTeamLabel(chipHome)}`}
               >
-                <DailyTeamIcon team={chipAway} />
-                <span className="daily-chip-copy-pro">
-                  <strong>{getTeamAbbrSafe(chipAway)}</strong>
-                  <em>vs</em>
-                  <strong>{getTeamAbbrSafe(chipHome)}</strong>
-                </span>
-                <DailyTeamIcon team={chipHome} />
-                <small>{getDailyStatus(game)}</small>
+                <div className="flex items-center justify-between gap-2">
+                  <DailyTeamIcon team={chipAway} size="sm" />
+                  <span className={`${Z8_LABEL} text-vouch-cyan/80`}>vs</span>
+                  <DailyTeamIcon team={chipHome} size="sm" />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] font-bold text-white">
+                    {getTeamAbbrSafe(chipAway)} @ {getTeamAbbrSafe(chipHome)}
+                  </span>
+                  <span className={`${Z8_LABEL} ${chipStatus === 'Confirmed' ? 'text-vouch-emerald' : 'text-vouch-cyan/70'}`}>
+                    {chipStatus}
+                  </span>
+                </div>
               </button>
             );
           })}
         </div>
 
-        <button type="button" onClick={goToNextGame} className="daily-nav-arrow-pro" aria-label="Next matchup">
+        <button
+          type="button"
+          onClick={goToNextGame}
+          className={`${Z8_IDLE} flex h-9 w-9 shrink-0 items-center justify-center font-mono text-sm`}
+          aria-label="Next matchup"
+        >
           →
         </button>
       </div>
 
-      <article className="daily-matchup-card-pro">
-        <header className="daily-faceoff-header-pro">
-          <div className="daily-faceoff-team-pro">
-            <DailyTeamIcon team={away} />
-            <div>
-              <span>Away</span>
-              <strong>{awayName}</strong>
-              <small>{awayPlayers.length}/9 starters loaded</small>
+      {isProjectedSlate && (
+        <div className={`${Z8_LABEL} border-b border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-2 text-vouch-cyan/90`}>
+          Official lineup not posted yet — projected roster preview only.
+        </div>
+      )}
+
+      <article className="border-b border-white/10">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-white/10 bg-black/25 p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <DailyTeamIcon team={away} size="lg" />
+            <div className="min-w-0">
+              <span className={`${Z8_LABEL} text-white/40`}>Away</span>
+              <strong className="block truncate font-mono text-base font-bold uppercase tracking-wide text-white">{awayName}</strong>
+              <small className={`${Z8_LABEL} text-white/35`}>{awayPlayers.length}/9 starters loaded</small>
             </div>
           </div>
 
-          <div className="daily-vs-stack-pro">
-            <span>{status}</span>
-            <strong>{awayAbbr} VS {homeAbbr}</strong>
+          <div className={`${Z8_SURFACE} px-4 py-2 text-center`}>
+            <span className={`${Z8_LABEL} ${status === 'Confirmed' ? 'text-vouch-emerald' : 'text-vouch-cyan/80'}`}>{status}</span>
+            <strong className="mt-1 block font-mono text-xs font-bold tracking-widest text-vouch-cyan">
+              {awayAbbr} VS {homeAbbr}
+            </strong>
           </div>
 
-          <div className="daily-faceoff-team-pro is-home">
-            <div>
-              <span>Home</span>
-              <strong>{homeName}</strong>
-              <small>{homePlayers.length}/9 starters loaded</small>
+          <div className="flex min-w-0 items-center justify-end gap-3 text-right">
+            <div className="min-w-0">
+              <span className={`${Z8_LABEL} text-white/40`}>Home</span>
+              <strong className="block truncate font-mono text-base font-bold uppercase tracking-wide text-white">{homeName}</strong>
+              <small className={`${Z8_LABEL} text-white/35`}>{homePlayers.length}/9 starters loaded</small>
             </div>
-            <DailyTeamIcon team={home} />
+            <DailyTeamIcon team={home} size="lg" />
           </div>
         </header>
 
-        <div className="daily-rosters-grid-pro">
+        <div className="grid gap-3 p-3 lg:grid-cols-2">
           <DailyRosterPanel game={selectedGame} side="away" search={search} />
           <DailyRosterPanel game={selectedGame} side="home" search={search} />
         </div>
@@ -1556,72 +1585,70 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
   };
 
   return (
-    <main className="ve-page-shell min-h-screen px-3 py-4 sm:px-4 lg:py-5">
+    <main className={`${Z8_PAGE} px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-0 max-w-none space-y-4">
-        <header className="ve-premium-panel overflow-hidden rounded-2xl p-4 sm:p-5">
+        <header className={`${Z8_PANEL} p-4 sm:p-5`}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
+                <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
                   Daily Player Board
                 </span>
-                <span className="ve-chip px-2.5 py-1">{data?.date || todayISO()}</span>
+                <span className={`${Z8_LABEL} border border-white/10 bg-black/25 px-2.5 py-1 text-white/50`}>
+                  <Calendar className="mr-1 inline h-3 w-3 text-vouch-cyan/70" />
+                  {data?.date || todayISO()}
+                </span>
               </div>
 
-              <h1 className="text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">
-                Today’s MLB Starting Lineups
+              <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-white sm:text-3xl">
+                Today&apos;s MLB Starting Lineups
               </h1>
 
-              <p className="mt-1.5 max-w-3xl text-xs leading-5 text-[hsl(var(--ve-text-muted))] sm:text-sm">
-                Actual posted MLB starting hitters from both teams when lineups are available.
+              <p className="mt-1.5 max-w-3xl font-mono text-[11px] leading-5 text-white/45 sm:text-xs">
+                Posted MLB starting hitters when lineups are available. Projected previews are labeled — never shown as confirmed.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => fetchBoard()}
-              className="ve-btn-primary w-full px-4 py-2.5 text-xs uppercase tracking-wide sm:w-auto"
+              className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
             >
+              <RefreshCw className="h-3.5 w-3.5" />
               Refresh Board
             </button>
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <div className="ve-stat-card rounded-xl px-3 py-2.5">
-              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Games Loaded</div>
-              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{data?.totalGames ?? games.length}</div>
-            </div>
-            <div className="ve-stat-card rounded-xl px-3 py-2.5">
-              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Players Starting</div>
-              <div className="mt-0.5 text-xl font-black text-[hsl(var(--ve-text-primary))]">{totalPlayers}</div>
-            </div>
-            <div className="ve-stat-card rounded-xl px-3 py-2.5">
-              <div className="text-[10px] font-black uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">Last Updated</div>
-              <div className="mt-0.5 text-sm font-bold text-[hsl(var(--ve-text-primary))]">
-                {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet'}
+            {[
+              { label: 'Games Loaded', value: data?.totalGames ?? games.length },
+              { label: 'Players Starting', value: totalPlayers },
+              { label: 'Last Updated', value: lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet' },
+            ].map((stat) => (
+              <div key={stat.label} className={`${Z8_SURFACE} px-3 py-2.5`}>
+                <div className={`${Z8_LABEL} text-white/40`}>{stat.label}</div>
+                <div className="mt-0.5 font-mono text-xl font-bold text-white">{stat.value}</div>
               </div>
-            </div>
+            ))}
           </div>
         </header>
 
-        <section className="ve-premium-panel flex flex-col gap-3 rounded-2xl p-3 md:flex-row md:items-center md:justify-between">
+        <section className={`${Z8_PANEL} flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between`}>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search player, team, position..."
-            className="w-full rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.44)] px-3.5 py-2.5 text-sm text-[hsl(var(--ve-text-primary))] outline-none placeholder:text-[hsl(var(--ve-text-muted))] focus:border-[hsl(var(--ve-accent-cyan)/0.55)] md:max-w-md"
+            className={`${Z8_SURFACE} w-full px-3.5 py-2.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20 md:max-w-md`}
           />
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
               <button
                 key={item}
                 type="button"
                 onClick={() => setFilter(item)}
-                className={`rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
-                  filter === item
-                    ? 'border-[hsl(var(--ve-accent-cyan)/0.42)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
-                    : 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]'
+                className={`border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wide transition ${
+                  filter === item ? Z8_ACTIVE : Z8_IDLE
                 }`}
               >
                 {item}
@@ -1631,27 +1658,29 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
         </section>
 
         {loading && (
-          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center text-[hsl(var(--ve-text-muted))] shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
-            Loading Daily Player Board...
+          <div className={`${Z8_PANEL} flex items-center justify-center gap-3 p-10 text-center`}>
+            <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
+            <span className={`${Z8_LABEL} text-white/50`}>Loading Daily Player Board...</span>
           </div>
         )}
 
         {!loading && error && (
-          <div className="rounded-3xl border border-red-400/20 bg-red-950/20 p-5 text-sm text-red-200">
+          <div className="border border-red-500/30 bg-red-500/10 px-4 py-3 font-mono text-sm text-red-300">
             {error}
           </div>
         )}
 
         {!loading && games.length === 0 && (
-          <div className="rounded-3xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-surface)/0.72)] p-8 text-center shadow-xl shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
-            <div className="text-lg font-black text-[hsl(var(--ve-text-primary))]">No games found for this filter.</div>
-            <div className="mt-2 text-sm text-[hsl(var(--ve-text-muted))]">
-              Try All or Refresh Board. If it still shows empty, the backend endpoint is not returning today’s MLB schedule.
+          <div className={`${Z8_PANEL} p-8 text-center`}>
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center border border-white/10 bg-black/30">
+              <Users className="h-6 w-6 text-white/35" />
+            </div>
+            <div className="font-mono text-base font-bold uppercase tracking-wide text-white">No games found for this filter.</div>
+            <div className="mt-2 font-mono text-xs text-white/45">
+              Try All or Refresh Board. If it still shows empty, the schedule endpoint may not have today&apos;s MLB slate.
             </div>
           </div>
         )}
-
-        {false && !loading && games.length > 0 && <TeamVsTeamShowcase games={games} />}
 
         {!loading && games.length > 0 && (
           <DailyMatchupTheater

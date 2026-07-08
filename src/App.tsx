@@ -26,7 +26,6 @@ import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip }
 import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
-import VouchEdgeLoader from './components/loading/VouchEdgeLoader';
 import NbaNflArena from './components/NbaNflArena';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
@@ -470,13 +469,6 @@ export default function App() {
   // launcher button (mounted globally, under the notification bell).
   const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
 
-  // Boot loader: `appReady` flips once initial local data is loaded; the loader
-  // then rushes to 100% and unmounts itself via `hideBootLoader`.
-  const [appReady, setAppReady] = useState(false);
-  const [hideBootLoader, setHideBootLoader] = useState(false);
-  const [, setVouchEdgeLoadProgress] = useState(8);
-  const [, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
-
   const navigateSection = (section: string) => {
     const target = resolveAuthenticatedSection(section);
     if (target !== section) {
@@ -526,30 +518,6 @@ export default function App() {
     }, 900);
   };
   
-  useEffect(() => {
-    if (hideBootLoader) return;
-
-    const messages = [
-      "Starting VouchEdge systems...",
-      "Loading AI ledger...",
-      "Syncing V.A.I smart picks...",
-      "Checking result engine...",
-      "Preparing premium command center...",
-    ];
-
-    let tick = 0;
-    const timer = window.setInterval(() => {
-      tick += 1;
-      setVouchEdgeLoadProgress((current) => {
-        if (appReady) return Math.min(100, current + 18);
-        return Math.min(92, current + 7);
-      });
-      setVouchEdgeLoadMessage(messages[Math.min(messages.length - 1, tick % messages.length)]);
-    }, 260);
-
-    return () => window.clearInterval(timer);
-  }, [appReady, hideBootLoader]);
-
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
@@ -738,9 +706,6 @@ export default function App() {
       console.error('LocalStorage load failed, using fallbacks', e);
       setPosts(INITIAL_POSTS);
       setProfile(INITIAL_PROFILE);
-    } finally {
-      // Initial local data is loaded — let the boot loader finish to 100%.
-      setAppReady(true);
     }
   }, []);
 
@@ -2025,9 +1990,6 @@ export default function App() {
         </div>
 
         <div className="ve-motion-content">
-          {!hideBootLoader && (
-            <VouchEdgeLoader ready={appReady} onDone={() => setHideBootLoader(true)} />
-          )}
           {loggingOut && <GoodbyeScreen />}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
         {/* Desktop only — on mobile this is rendered inline inside each page's

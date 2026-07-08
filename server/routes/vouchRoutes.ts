@@ -3,6 +3,8 @@ import type { Response } from "express";
 import { z } from "zod";
 import { AuthedRequest, requireAuth, optionalAuth } from "../middleware/auth";
 import { validate } from "../middleware/validation";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 import { createVouch, listVouchesForUser, hideVouch } from "../services/persistence/vouchService";
 
 /**
@@ -32,41 +34,63 @@ const CreateVouchSchema = z.object({
   visibility: z.enum(["public", "private"]).optional(),
 });
 
-vouchRoutes.get("/vouches", optionalAuth, async (req: AuthedRequest, res: Response) => {
-  if (!req.user) return res.json({ vouches: [] });
-  try {
-    const vouches = await listVouchesForUser(req.user.id);
-    return res.json({ vouches });
-  } catch (error) {
+vouchRoutes.get("/vouches", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  if (!req.user) return res.json({ ok: true, vouches: [] });
+
+  const vouches = await listVouchesForUser(req.user.id).catch((error) => {
     console.error("[vouches] list failed", error);
-    return res.status(500).json({ error: "fetch_failed" });
-  }
-});
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to fetch vouches.",
+      cause: error,
+    });
+  });
+
+  return res.json({ ok: true, vouches });
+}));
 
 vouchRoutes.post(
   "/vouches",
   requireAuth,
   validate({ body: CreateVouchSchema }),
-  async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
     const body = req.body as z.infer<typeof CreateVouchSchema>;
-    try {
-      const vouch = await createVouch({ user_id: req.user!.id, ...body });
-      return res.status(201).json(vouch);
-    } catch (error) {
+
+    const vouch = await createVouch({ user_id: req.user!.id, ...body }).catch((error) => {
       console.error("[vouches] create failed", error);
-      return res.status(500).json({ error: "create_failed" });
-    }
-  }
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to create vouch.",
+        cause: error,
+      });
+    });
+
+    return res.status(201).json({ ok: true, ...vouch });
+  }),
 );
 
-vouchRoutes.delete("/vouches/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+vouchRoutes.delete("/vouches/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
-  try {
-    const hidden = await hideVouch(id, req.user!.id);
-    if (!hidden) return res.status(404).json({ error: "not_found" });
-    return res.json({ ok: true });
-  } catch (error) {
+
+  const hidden = await hideVouch(id, req.user!.id).catch((error) => {
     console.error("[vouches] hide failed", error);
-    return res.status(500).json({ error: "hide_failed" });
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to hide vouch.",
+      cause: error,
+    });
+  });
+
+  if (!hidden) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Vouch not found.",
+    });
   }
-});
+
+  return res.json({ ok: true });
+}));

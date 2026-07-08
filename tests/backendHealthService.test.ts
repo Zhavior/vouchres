@@ -31,6 +31,10 @@ describe("backend health report", () => {
           enabled: false,
           mode: "memory_fallback",
         },
+        sentry: {
+          enabled: false,
+          configured: false,
+        },
       },
       api: {
         totals: {
@@ -50,6 +54,7 @@ describe("backend health report", () => {
     });
     expect(report.memory.rssMb).toEqual(expect.any(Number));
     expect(report.cache.mlbSchedule).toEqual(expect.objectContaining({ size: expect.any(Number) }));
+    expect(report.cache.hrValidatedBoard).toEqual(expect.objectContaining({ size: expect.any(Number) }));
     expect(report.dependencies.sportsHttp).toEqual(expect.objectContaining({ requests: expect.any(Number) }));
   });
 
@@ -59,11 +64,30 @@ describe("backend health report", () => {
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
     vi.stubEnv("CRON_SECRET", "");
+    vi.stubEnv("SENTRY_DSN", "https://example.ingest.sentry.io/1");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
 
     const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
 
     expect(report.status).toBe("degraded");
     expect(report.warnings.join(" ")).toContain("Missing required production config");
     expect(report.warnings.join(" ")).toContain("CRON_SECRET");
+  });
+
+  it("warns in production when Sentry and Redis are missing", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role");
+    vi.stubEnv("CRON_SECRET", "cron-secret");
+    vi.stubEnv("SENTRY_DSN", "");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
+
+    const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
+
+    expect(report.status).toBe("degraded");
+    expect(report.warnings.join(" ")).toContain("SENTRY_DSN");
+    expect(report.warnings.join(" ")).toContain("Upstash Redis");
   });
 });

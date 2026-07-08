@@ -14,7 +14,7 @@ import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../
 
 export const getParlayHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
   const parlay = await getUserParlay({ userId: req.user!.id, parlayId: req.params.id });
-  return res.json(parlay);
+  return res.json({ ok: true, parlay });
 });
 
 export const listMyParlaysHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -24,7 +24,7 @@ export const listMyParlaysHandler = asyncHandler(async (req: AuthedRequest, res:
     limit: query.limit,
     offset: query.offset,
   });
-  return res.json(result);
+  return res.json({ ok: true, ...result });
 });
 
 export const listLegacyParlaysHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -38,7 +38,7 @@ export const listLegacyParlaysHandler = asyncHandler(async (req: AuthedRequest, 
     limit: query.limit,
     offset: query.offset,
   });
-  return res.json(result);
+  return res.json({ ok: true, ...result });
 });
 
 export const saveMeParlayHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -46,7 +46,7 @@ export const saveMeParlayHandler = asyncHandler(async (req: AuthedRequest, res: 
     userId: req.user!.id,
     body: req.body as SaveMeParlayInput,
   });
-  return res.status(result.statusCode).json(result.body);
+  return res.status(result.statusCode).json({ ok: true, ...result.body });
 });
 
 export const updateParlayHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -57,10 +57,10 @@ export const updateParlayHandler = asyncHandler(async (req: AuthedRequest, res: 
     title: body.title,
     stakeUnits: body.stake_units,
   });
-  return res.json(parlay);
+  return res.json({ ok: true, parlay });
 });
 
 export const hideParlayHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
   const result = await hideUserParlay({ userId: req.user!.id, parlayId: req.params.id });
-  return res.json(result);
+  return res.json({ ok: true, ...result });
 });

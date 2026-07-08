@@ -177,9 +177,10 @@ export function registerMlbRoutes(app: Express): void {
           cache: { strategy: "ttl_cache", ttlMs: TTL.liveFeed },
         }),
       });
-    } catch (err: any) {
-      console.error("[mlbRoutes] lineup/today failed:", err?.message);
-      res.status(503).json({ ok: false, error: "Lineup data unavailable", message: err?.message, games: [], totalPlayers: 0, warnings: [err?.message ?? "Lineup data unavailable"] });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Lineup data unavailable";
+      console.error("[mlbRoutes] lineup/today failed:", message);
+      throw upstreamUnavailable("Lineup data unavailable", err);
     } finally {
       console.log(`[endpoint] GET /api/mlb/lineup/today ${Date.now() - start}ms`);
     }

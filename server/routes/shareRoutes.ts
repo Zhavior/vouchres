@@ -1,5 +1,7 @@
 import { Router } from "express";
 import sharp from "sharp";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 import { getCachedHrBoardResponse } from "../services/hubs/hrBoardHub";
 import {
   findHrShareCardCandidate,
@@ -16,14 +18,19 @@ export const shareRoutes = Router();
 /**
  * GET /api/share/vouch/:id/card.png
  * Public share-card image for a vouch, used as the Open Graph image at /v/:id.
- * SVG rendered server-side, converted to PNG (X/Slack/iMessage crawlers don't
- * accept SVG for og:image/twitter:image).
  */
-shareRoutes.get("/share/vouch/:id/card.png", async (req, res) => {
-  try {
-    const vouch = await getPublicVouch(req.params.id);
-    if (!vouch) return res.status(404).json({ error: "vouch_not_found" });
+shareRoutes.get("/share/vouch/:id/card.png", asyncHandler(async (req, res) => {
+  const vouch = await getPublicVouch(req.params.id);
+  if (!vouch) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Vouch not found.",
+      details: { error: "vouch_not_found" },
+    });
+  }
 
+  try {
     const svg = renderVouchShareCardSvg({
       playerOrTeam: vouch.player_or_team,
       market: vouch.market,
@@ -41,11 +48,16 @@ shareRoutes.get("/share/vouch/:id/card.png", async (req, res) => {
     return res.status(200).send(png);
   } catch (error) {
     console.error("[share] vouch card render failed", error);
-    return res.status(500).json({ error: "share_card_failed" });
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to render vouch share card.",
+      cause: error,
+    });
   }
-});
+}));
 
-shareRoutes.get("/share/hr-card", async (req, res) => {
+shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
   try {
     const params = parseHrShareCardParams(req.query as Record<string, unknown>);
     const board = await getCachedHrBoardResponse({ date: params.date, previewLimit: 350 });
@@ -53,10 +65,14 @@ shareRoutes.get("/share/hr-card", async (req, res) => {
     const candidate = findHrShareCardCandidate(candidates, params);
 
     if (!candidate) {
-      return res.status(404).json({
-        error: "HR player candidate not found for this board date",
-        playerId: params.playerId,
-        date: params.date ?? board.date,
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "HR player candidate not found for this board date.",
+        details: {
+          playerId: params.playerId,
+          date: params.date ?? board.date,
+        },
       });
     }
 
@@ -68,16 +84,30 @@ shareRoutes.get("/share/hr-card", async (req, res) => {
     Object.entries(HR_SHARE_CARD_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
     return res.status(200).send(svg);
   } catch (error: unknown) {
+    if (error instanceof AppError) throw error;
     if (error instanceof HrShareCardRequestError) {
-      return res.status(error.statusCode).json(error.payload);
+      throw new AppError({
+        status: error.statusCode,
+        code: error.statusCode === 404 ? "not_found" : "bad_request",
+        message: typeof error.payload?.error === "string"
+          ? error.payload.error
+          : "Invalid HR share card request.",
+        details: error.payload,
+        expose: true,
+      });
     }
 
     const err = error as { name?: string; message?: string };
-    return res.status(500).json({
-      error: "Failed to generate HR share card",
-      errorName: err?.name ?? "Error",
-      message: err?.message ?? "Unknown error",
-      route: "/api/share/hr-card",
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to generate HR share card.",
+      details: {
+        errorName: err?.name ?? "Error",
+        message: err?.message ?? "Unknown error",
+        route: "/api/share/hr-card",
+      },
+      cause: error,
     });
   }
-});
+}));

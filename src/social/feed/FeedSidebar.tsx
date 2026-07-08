@@ -260,7 +260,7 @@ export default function FeedSidebar({
   return (
     <aside
       className={[
-        'relative hidden md:flex flex-col h-screen sticky top-0 font-z8',
+        'relative hidden md:flex h-full min-h-0 flex-col font-z8',
         'w-[72px] xl:w-[280px]',
         'border-r border-white/10',
         'bg-obsidian-800 px-2 xl:px-3.5 py-4',

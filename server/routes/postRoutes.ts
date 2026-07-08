@@ -3,6 +3,8 @@ import type { Response } from "express";
 import { z } from "zod";
 import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 
 /**
  * Posts routes — the social feed.
@@ -21,16 +23,7 @@ import { validate } from "../middleware/validation";
  */
 export const postRoutes = Router();
 
-// =========================================================
-// Feed
-// =========================================================
-
-/**
- * GET /api/feed?limit=50&offset=0
- * Returns posts from people the caller follows, plus their own.
- * Falls back to demo posts if caller follows nobody.
- */
-postRoutes.get("/feed", optionalAuth, async (req: AuthedRequest, res: Response) => {
+postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
 
@@ -46,48 +39,46 @@ postRoutes.get("/feed", optionalAuth, async (req: AuthedRequest, res: Response) 
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
-  // If logged in, filter to: posts by people I follow + my own posts + all demo posts
-  if ((req as any).user) {
+  if (req.user) {
     const { data: follows } = await supabaseAdmin
       .from("follows")
       .select("following_profile_id")
-      .eq("follower_id", (req as any).user.id);
+      .eq("follower_id", req.user.id);
 
     const followedIds = (follows ?? []).map((f: any) => f.following_profile_id).filter(Boolean);
-    followedIds.push((req as any).user.id); // include self
+    followedIds.push(req.user.id);
 
     if (followedIds.length > 1) {
       query = query.or(`author_id.in.(${followedIds.join(",")}),is_demo.eq.true`);
     } else {
-      // Following nobody — show demo posts only
       query = query.eq("is_demo", true);
     }
   } else {
-    // Not logged in — show demo posts only
     query = query.eq("is_demo", true);
   }
 
   const { data, error, count } = await query;
   if (error) {
     console.error("[feed] query failed", error);
-    return res.status(500).json({ error: "fetch_failed" });
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to fetch feed.",
+      cause: error,
+    });
   }
 
   return res.json({
+    ok: true,
     posts: data ?? [],
     total: count ?? 0,
     limit,
     offset,
     has_real_content: (data ?? []).some((p: any) => !p.is_demo),
   });
-});
+}));
 
-/**
- * GET /api/feed/discover
- * Returns demo + popular posts for new users to see what the feed looks like.
- * Public — no auth required.
- */
-postRoutes.get("/feed/discover", async (_req, res: Response) => {
+postRoutes.get("/feed/discover", asyncHandler(async (_req, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from("posts")
     .select(`
@@ -100,13 +91,17 @@ postRoutes.get("/feed/discover", async (_req, res: Response) => {
     .order("view_count", { ascending: false })
     .limit(20);
 
-  if (error) return res.status(500).json({ error: "fetch_failed" });
-  return res.json({ posts: data ?? [] });
-});
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to fetch discover feed.",
+      cause: error,
+    });
+  }
 
-// =========================================================
-// Posts CRUD
-// =========================================================
+  return res.json({ ok: true, posts: data ?? [] });
+}));
 
 const CreatePostSchema = z.object({
   body: z.string().min(1).max(4000),
@@ -114,48 +109,49 @@ const CreatePostSchema = z.object({
   vouch_id: z.string().uuid().optional(),
 });
 
-/**
- * POST /api/posts
- * Create a post. Optionally attach a pick.
- *
- * Quota: free users can post 10 times/day. Paid users unlimited.
- * (Apply the quota middleware in your route registration.)
- */
 postRoutes.post(
   "/posts",
   requireAuth,
   validate({ body: CreatePostSchema }),
-  async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { body: postBody, pick_id, vouch_id } = req.body as z.infer<typeof CreatePostSchema>;
 
-    // If pick_id is provided, verify ownership
     if (pick_id) {
       const { data: pick } = await supabaseAdmin
         .from("picks")
         .select("user_id")
         .eq("id", pick_id)
         .single();
-      if (!pick || pick.user_id !== (req as any).user!.id) {
-        return res.status(403).json({ error: "pick_not_owned" });
+      if (!pick || pick.user_id !== req.user!.id) {
+        throw new AppError({
+          status: 403,
+          code: "forbidden",
+          message: "Pick is not owned by the current user.",
+          details: { error: "pick_not_owned" },
+        });
       }
     }
 
-    // If vouch_id is provided, verify ownership
     if (vouch_id) {
       const { data: vouch } = await supabaseAdmin
         .from("vouches")
         .select("user_id")
         .eq("id", vouch_id)
         .single();
-      if (!vouch || vouch.user_id !== (req as any).user!.id) {
-        return res.status(403).json({ error: "vouch_not_owned" });
+      if (!vouch || vouch.user_id !== req.user!.id) {
+        throw new AppError({
+          status: 403,
+          code: "forbidden",
+          message: "Vouch is not owned by the current user.",
+          details: { error: "vouch_not_owned" },
+        });
       }
     }
 
     const { data, error } = await supabaseAdmin
       .from("posts")
       .insert({
-        author_id: (req as any).user!.id,
+        author_id: req.user!.id,
         body: postBody,
         pick_id: pick_id ?? null,
         vouch_id: vouch_id ?? null,
@@ -169,17 +165,19 @@ postRoutes.post(
 
     if (error) {
       console.error("[posts] create failed", error);
-      return res.status(500).json({ error: "create_failed" });
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to create post.",
+        cause: error,
+      });
     }
 
-    return res.status(201).json(data);
-  }
+    return res.status(201).json({ ok: true, ...data });
+  }),
 );
 
-/**
- * GET /api/posts/:id
- */
-postRoutes.get("/posts/:id", optionalAuth, async (req, res: Response) => {
+postRoutes.get("/posts/:id", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const { data, error } = await supabaseAdmin
     .from("posts")
@@ -193,129 +191,138 @@ postRoutes.get("/posts/:id", optionalAuth, async (req, res: Response) => {
     .eq("id", id)
     .single();
 
-  if (error || !data) return res.status(404).json({ error: "not_found" });
+  if (error || !data) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Post not found.",
+    });
+  }
 
-  // If logged in, check if caller has liked this post
   let liked_by_me = false;
-  if ((req as any).user) {
+  if (req.user) {
     const { data: like } = await supabaseAdmin
       .from("post_likes")
       .select("post_id")
       .eq("post_id", id)
-      .eq("profile_id", (req as any).user.id)
+      .eq("profile_id", req.user.id)
       .maybeSingle();
     liked_by_me = !!like;
   }
 
-  return res.json({ ...data, liked_by_me });
-});
+  return res.json({ ok: true, ...data, liked_by_me });
+}));
 
-/**
- * DELETE /api/posts/:id
- * Author can delete their own post. Cascade deletes likes + comments.
- */
-postRoutes.delete("/posts/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const { error } = await supabaseAdmin
     .from("posts")
     .delete()
     .eq("id", id)
-    .eq("author_id", (req as any).user!.id); // RLS-style filter at the query level too
+    .eq("author_id", req.user!.id);
 
-  if (error) return res.status(500).json({ error: "delete_failed" });
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to delete post.",
+      cause: error,
+    });
+  }
+
   return res.json({ ok: true });
-});
+}));
 
-/**
- * POST /api/posts/:id/view
- * Record a view. Idempotent per session (client uses sessionStorage to dedupe).
- */
-postRoutes.post("/posts/:id/view", async (req, res: Response) => {
+postRoutes.post("/posts/:id/view", asyncHandler(async (req, res: Response) => {
   const { id } = req.params;
   const { error } = await supabaseAdmin.rpc("increment_post_view", { p_post_id: id });
   if (error) {
-    // Probably the post doesn't exist — fail silently
     return res.json({ ok: false });
   }
   return res.json({ ok: true });
-});
+}));
 
-// =========================================================
-// Likes
-// =========================================================
-
-/**
- * POST /api/posts/:id/like
- */
-postRoutes.post("/posts/:id/like", requireAuth, async (req: AuthedRequest, res: Response) => {
+postRoutes.post("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
 
-  // Verify post exists
   const { data: post } = await supabaseAdmin
     .from("posts")
     .select("id")
     .eq("id", id)
     .single();
-  if (!post) return res.status(404).json({ error: "post_not_found" });
+  if (!post) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Post not found.",
+      details: { error: "post_not_found" },
+    });
+  }
 
   const { error } = await supabaseAdmin.from("post_likes").upsert(
-    { post_id: id, profile_id: (req as any).user!.id },
-    { onConflict: "post_id,profile_id" }
+    { post_id: id, profile_id: req.user!.id },
+    { onConflict: "post_id,profile_id" },
   );
 
-  if (error) {
-    // 23505 = unique violation — already liked. Treat as success.
-    if (error.code !== "23505") {
-      return res.status(500).json({ error: "like_failed" });
-    }
+  if (error && error.code !== "23505") {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to like post.",
+      cause: error,
+    });
   }
 
   return res.json({ ok: true, liked: true });
-});
+}));
 
-/**
- * DELETE /api/posts/:id/like
- */
-postRoutes.delete("/posts/:id/like", requireAuth, async (req: AuthedRequest, res: Response) => {
+postRoutes.delete("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const { error } = await supabaseAdmin
     .from("post_likes")
     .delete()
     .eq("post_id", id)
-    .eq("profile_id", (req as any).user!.id);
+    .eq("profile_id", req.user!.id);
 
-  if (error) return res.status(500).json({ error: "unlike_failed" });
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to unlike post.",
+      cause: error,
+    });
+  }
+
   return res.json({ ok: true, liked: false });
-});
-
-// =========================================================
-// Comments
-// =========================================================
+}));
 
 const CreateCommentSchema = z.object({
   body: z.string().min(1).max(1000),
 });
 
-/**
- * POST /api/posts/:id/comments
- */
 postRoutes.post(
   "/posts/:id/comments",
   requireAuth,
   validate({ body: CreateCommentSchema }),
-  async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
     const { body: commentBody } = req.body as z.infer<typeof CreateCommentSchema>;
 
-    // Verify post exists
     const { data: post } = await supabaseAdmin.from("posts").select("id").eq("id", id).single();
-    if (!post) return res.status(404).json({ error: "post_not_found" });
+    if (!post) {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Post not found.",
+        details: { error: "post_not_found" },
+      });
+    }
 
     const { data, error } = await supabaseAdmin
       .from("post_comments")
       .insert({
         post_id: id,
-        author_id: (req as any).user!.id,
+        author_id: req.user!.id,
         body: commentBody,
       })
       .select(`
@@ -324,15 +331,20 @@ postRoutes.post(
       `)
       .single();
 
-    if (error) return res.status(500).json({ error: "comment_failed" });
-    return res.status(201).json(data);
-  }
+    if (error) {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to create comment.",
+        cause: error,
+      });
+    }
+
+    return res.status(201).json({ ok: true, ...data });
+  }),
 );
 
-/**
- * GET /api/posts/:id/comments?limit=50&offset=0
- */
-postRoutes.get("/posts/:id/comments", async (req, res: Response) => {
+postRoutes.get("/posts/:id/comments", asyncHandler(async (req, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
@@ -347,21 +359,34 @@ postRoutes.get("/posts/:id/comments", async (req, res: Response) => {
     .order("created_at", { ascending: true })
     .range(offset, offset + limit - 1);
 
-  if (error) return res.status(500).json({ error: "fetch_failed" });
-  return res.json({ comments: data ?? [] });
-});
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to fetch comments.",
+      cause: error,
+    });
+  }
 
-/**
- * DELETE /api/comments/:id
- */
-postRoutes.delete("/comments/:id", requireAuth, async (req: AuthedRequest, res: Response) => {
+  return res.json({ ok: true, comments: data ?? [] });
+}));
+
+postRoutes.delete("/comments/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const { error } = await supabaseAdmin
     .from("post_comments")
     .delete()
     .eq("id", id)
-    .eq("author_id", (req as any).user!.id);
+    .eq("author_id", req.user!.id);
 
-  if (error) return res.status(500).json({ error: "delete_failed" });
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to delete comment.",
+      cause: error,
+    });
+  }
+
   return res.json({ ok: true });
-});
+}));

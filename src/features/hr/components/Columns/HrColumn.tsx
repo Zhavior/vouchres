@@ -24,7 +24,7 @@ export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSele
         <span className="border border-white/10 bg-black/30 px-2 py-0.5 font-mono text-[11px] text-zinc-500">{players.length}</span>
       </div>
 
-      <div className="flex max-h-[calc(100vh-270px)] flex-col gap-2 overflow-y-auto p-2">
+      <div className="flex flex-col gap-2 p-2">
         {players.map((player) => (
           <HrPlayerCard
             key={player.stableId}

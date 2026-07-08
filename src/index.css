@@ -3513,9 +3513,7 @@ body {
 }
 
 #inner-view-slot {
-  transition:
-    opacity 220ms ease,
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: none;
 }
 
 /* Keep animation respectful and fast for users who reduce motion */
@@ -6201,5 +6199,64 @@ body,
   50% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ==========================================================
+   SCROLL STABILITY — single scroll pane, sticky headers stick
+   ========================================================== */
+
+@media (min-width: 1181px) {
+  #layout-inner-frame.ve-layout-frame,
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame #center-main-content-column {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .ve-scroll-pane,
+  #inner-view-slot {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  #layout-inner-frame #center-main-content-column {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .ve-scroll-pane,
+  #inner-view-slot {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    scroll-behavior: auto !important;
   }
 }

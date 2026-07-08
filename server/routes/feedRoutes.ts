@@ -11,18 +11,21 @@ feedRoutes.get("/feed/composer-options", asyncHandler(async (req: Request, res: 
   const sport = typeof req.query.sport === "string" ? req.query.sport : "MLB";
   const date = typeof req.query.date === "string" ? req.query.date : undefined;
 
-  try {
-    const options = await getFeedComposerOptions({ sport, date });
-    const playerCount = options.games.reduce(
-      (sum, game) => sum + game.awayTeam.players.length + game.homeTeam.players.length,
-      0
-    );
-    console.log(
-      `[endpoint] GET /api/feed/composer-options ${Date.now() - start}ms games=${options.games.length} players=${playerCount}`
-    );
-    return res.json(options);
-  } catch (err: any) {
-    console.error("[feedRoutes] composer-options failed", err?.message);
+  const options = await getFeedComposerOptions({ sport, date }).catch((err) => {
+    console.error("[feedRoutes] composer-options failed", (err as Error)?.message);
     throw upstreamUnavailable("Composer options unavailable.", err);
-  }
+  });
+
+  const playerCount = options.games.reduce(
+    (sum, game) => sum + game.awayTeam.players.length + game.homeTeam.players.length,
+    0,
+  );
+  console.log(
+    `[endpoint] GET /api/feed/composer-options ${Date.now() - start}ms games=${options.games.length} players=${playerCount}`,
+  );
+
+  return res.json({
+    ok: true,
+    ...options,
+  });
 }));

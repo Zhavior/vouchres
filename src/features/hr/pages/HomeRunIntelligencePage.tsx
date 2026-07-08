@@ -184,8 +184,9 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] px-4 py-6 text-white md:px-8">
+    <div className="min-h-0 bg-[#0A0A0A] px-4 py-6 pb-12 text-white md:px-8">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
+        <div className="sticky top-0 z-30 -mx-4 space-y-5 bg-[#0A0A0A]/95 px-4 py-2 backdrop-blur-md md:-mx-8 md:px-8">
         <HrHeader
           mode={vm.mode}
           viewMode={viewMode}
@@ -275,6 +276,7 @@ const HomeRunIntelligencePage: React.FC = () => {
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
         />
+        </div>
 
         {vm.loading ? (
           <LoadingSkeleton />

@@ -18,6 +18,7 @@
  */
 
 import { TTLCache } from "../../lib/cache";
+import { HybridTTLCache } from "../../lib/hybridTTLCache";
 import { getScheduleByDate, todayISO } from "./mlbClient";
 import { getActiveHittersByTeam } from "./teamRosterClient";
 import { getHitterStats, getPitcherStats, HitterStats, PitcherSeasonStats } from "./statsClient";
@@ -45,7 +46,7 @@ const rosterCache = new TTLCache<Map<number, any[]>>(20 * 60_000); // 20 min
 const pitcherStatsCache = new TTLCache<any>(15 * 60_000); // 15 min
 const hitterStatsCache = new TTLCache<HitterStats>(15 * 60_000); // 15 min
 const boxscoreLineupCache = new TTLCache<Map<number, number>>(2 * 60_000); // 2 min — official batting order
-const boardCache = new TTLCache<any>(5 * 60_000); // 5 min — final scored board
+const boardCache = new HybridTTLCache<any>(5 * 60_000, "hr:validatedBoard", "hr:board"); // 5 min — final scored board
 const TEAM_MISMATCH_REASON = "Team mismatch / stale roster assignment";
 const REGISTRY_CONFLICT_WARNING =
   "Trusted registry differs from MLB current roster. Using MLB active roster/currentTeam for preview.";
@@ -679,6 +680,10 @@ function scoreCandidate(
     lastUpdated: new Date().toISOString(),
     dataSource: "MLB Stats API + validated pipeline",
   };
+}
+
+export function getHrBoardCacheStats() {
+  return boardCache.getStats();
 }
 
 /* ============ Main pipeline — buildValidatedHrBoard ============ */

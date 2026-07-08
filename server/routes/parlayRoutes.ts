@@ -7,7 +7,7 @@ import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { assertCronAuthorized } from "../lib/cronAuth";
 import { AppError } from "../errors/AppError";
-import { boolQuery, boundedInt, optionalYmd } from "../lib/requestValidators";
+import { boolQuery, boundedInt, optionalYmd, upstreamUnavailable } from "../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
 import { gradePendingPicks } from "../services/grading/gradingService";
 import { previewLiveHrParlayMatches } from "../services/grading/liveHrParlayService";
@@ -160,29 +160,23 @@ function buildGeneratedAiParlays(options: ComposerOptionsResponse) {
    POST /api/parlays/ai-generate
    Backend AI parlay generation from MLB composer options.
    ============================================================ */
-parlayRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, async (req: AuthedRequest, res: Response) => {
+parlayRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const start = Date.now();
   const date = ymdFromValue(req.body?.date) ?? todayYmd();
-  try {
-    const options = await getFeedComposerOptions({ sport: "MLB", date });
-    const result = buildGeneratedAiParlays(options);
-    console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
-    return res.json({
-      parlays: result.parlays,
-      warnings: result.warnings,
-      generatedAt: new Date().toISOString(),
-      source: AI_PARLAY_SOURCE,
-    });
-  } catch (err: any) {
-    console.error("[parlays/ai-generate] failed", err?.message);
-    return res.status(503).json({
-      parlays: [],
-      warnings: [err?.message ?? "AI parlay generation unavailable"],
-      generatedAt: new Date().toISOString(),
-      source: AI_PARLAY_SOURCE,
-    });
-  }
-});
+  const options = await getFeedComposerOptions({ sport: "MLB", date }).catch((err) => {
+    console.error("[parlays/ai-generate] failed", (err as Error)?.message);
+    throw upstreamUnavailable("AI parlay generation unavailable.", err);
+  });
+  const result = buildGeneratedAiParlays(options);
+  console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
+  return res.json({
+    ok: true,
+    parlays: result.parlays,
+    warnings: result.warnings,
+    generatedAt: new Date().toISOString(),
+    source: AI_PARLAY_SOURCE,
+  });
+}));
 
 /* ============================================================
    POST /api/parlays/grade  — stateless grading (no auth, no DB)
@@ -240,7 +234,12 @@ parlayRoutes.post(
       stakeUnits
     );
 
-    return res.json({ legs: gradedLegs, parlay, gradedAt: new Date().toISOString() });
+    return res.json({
+      ok: true,
+      legs: gradedLegs,
+      parlay,
+      gradedAt: new Date().toISOString(),
+    });
   })
 );
 
@@ -361,6 +360,8 @@ parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandle
   }
 
   return res.json({
+    ok: true,
+    mode: "grade_due",
     gradedParlays: settled.length,
     gradedLegs: graded.length,
     pendingLegs: pending.length,
@@ -456,12 +457,14 @@ parlayRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request, re
  * the full grading identity: game_id, player_id, market_code, event_key,
  * stat_target, comparator, and external_provider.
  */
-parlayRoutes.post("/parlays", requireAuth, async (_req: AuthedRequest, res: Response) => {
-  return res.status(410).json({
-    error: "legacy_parlay_route_disabled",
+parlayRoutes.post("/parlays", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {
+  throw new AppError({
+    status: 410,
+    code: "gone",
     message: "Use POST /api/parlays/save for canonical parlay saves.",
+    details: { legacy: "legacy_parlay_route_disabled" },
   });
-});
+}));
 
 
 
@@ -858,6 +861,7 @@ parlayRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: 
       : 0;
 
   return res.json({
+    ok: true,
     widgets: {
       savedPicks: summary.total,
       savedParlays: summary.parlays,
@@ -950,6 +954,7 @@ parlayRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedReque
   );
 
   return res.json({
+    ok: true,
     ledger,
     summary,
     total: count ?? 0,

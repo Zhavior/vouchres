@@ -1,7 +1,9 @@
 import { getRouteMetricsSnapshot } from "../../lib/observability/routeMetrics";
 import { getSportsHttpStats } from "../../lib/sports/sportsHttpClient";
+import { isSentryEnabled } from "../../lib/sentry";
 import { isUpstashEnabled } from "../../lib/upstashRedis";
 import { gameFeedCache, reportCache, scheduleCache } from "../mlb/mlbCache";
+import { getHrBoardCacheStats } from "../mlb/hrPipeline";
 
 type BackendHealthStatus = "ok" | "degraded";
 
@@ -93,6 +95,12 @@ export function getBackendHealthReport(now = new Date()) {
   if (providerFailureRate >= 0.2 && sportsHttp.requests >= 5) {
     warnings.push(`Sports provider failure rate is ${Math.round(providerFailureRate * 100)}%.`);
   }
+  if (env === "production" && !configured("SENTRY_DSN")) {
+    warnings.push("SENTRY_DSN is not configured; production exceptions will only hit stdout.");
+  }
+  if (env === "production" && !(configured("UPSTASH_REDIS_REST_URL") && configured("UPSTASH_REDIS_REST_TOKEN"))) {
+    warnings.push("Upstash Redis is not configured; rate limits and HR board cache use single-instance memory.");
+  }
 
   const status: BackendHealthStatus = warnings.length > 0 ? "degraded" : "ok";
 
@@ -109,12 +117,17 @@ export function getBackendHealthReport(now = new Date()) {
         enabled: isUpstashEnabled(),
         mode: isUpstashEnabled() ? "upstash_rest" : "memory_fallback",
       },
+      sentry: {
+        enabled: isSentryEnabled(),
+        configured: configured("SENTRY_DSN"),
+      },
       sportsHttp,
     },
     cache: {
       mlbSchedule: scheduleCache.getStats(),
       mlbLiveFeed: gameFeedCache.getStats(),
       mlbReports: reportCache.getStats(),
+      hrValidatedBoard: getHrBoardCacheStats(),
     },
     api: routes,
     warnings,

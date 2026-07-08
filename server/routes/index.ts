@@ -27,6 +27,8 @@ import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
 import { getPublicVouch } from "../services/persistence/vouchService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
+import { asyncHandler } from "../lib/asyncHandler";
+import { AppError } from "../errors/AppError";
 import type { Request, Response } from "express";
 
 function escapeHtml(value: unknown): string {
@@ -63,14 +65,29 @@ export function registerApiRoutes(app: Express): void {
   registerAiJudgeSocialRoutes(app);
 
   // Skills introspection + generic runner.
-  app.get("/api/skills", (_req: Request, res: Response) => res.json({ skills: listSkills() }));
-  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, async (req: Request, res: Response) => {
+  app.get("/api/skills", (_req: Request, res: Response) => res.json({ ok: true, skills: listSkills() }));
+  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
     try {
-      res.json({ result: await runSkill(req.params.id, req.body ?? {}) });
+      res.json({ ok: true, result: await runSkill(req.params.id, req.body ?? {}) });
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+      const message = err instanceof Error ? err.message : "Skill failed.";
+      if (message.startsWith("Unknown skill:")) {
+        throw new AppError({
+          status: 404,
+          code: "not_found",
+          message,
+          details: { skillId: req.params.id },
+        });
+      }
+      throw new AppError({
+        status: 400,
+        code: "bad_request",
+        message,
+        details: { skillId: req.params.id },
+        cause: err,
+      });
     }
-  });
+  }));
 
   // Backend health.
   app.get("/api/system/core-health", (_req: Request, res: Response) =>
@@ -87,7 +104,7 @@ export function registerApiRoutes(app: Express): void {
   );
 
   app.get("/api/health", (_req: Request, res: Response) =>
-    res.json({ status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
+    res.json({ ok: true, status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
   );
 
   app.get("/api/health/backend", (_req: Request, res: Response) => {
@@ -99,7 +116,7 @@ export function registerApiRoutes(app: Express): void {
   // crawlers, which don't execute JS, see the Open Graph tags. Must be
   // registered before the SPA catch-all in server.ts; registerApiRoutes()
   // already runs before that catch-all.
-  app.get("/v/:id", async (req: Request, res: Response) => {
+  app.get("/v/:id", asyncHandler(async (req: Request, res: Response) => {
     try {
       const vouch = await getPublicVouch(req.params.id);
       const baseUrl = `${req.protocol}://${req.get("host")}`;
@@ -149,5 +166,5 @@ export function registerApiRoutes(app: Express): void {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this vouch.</p></body></html>`);
     }
-  });
+  }));
 }

@@ -83,6 +83,10 @@ describe("API route smoke envelopes", () => {
           enabled: expect.any(Boolean),
           mode: expect.any(String),
         }),
+        sentry: expect.objectContaining({
+          enabled: expect.any(Boolean),
+          configured: expect.any(Boolean),
+        }),
         sportsHttp: expect.objectContaining({
           requests: expect.any(Number),
           cacheSize: expect.any(Number),
@@ -199,6 +203,7 @@ describe("API route smoke envelopes", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
+      ok: true,
       sport: "MLB",
       date: "2026-07-07",
       games: [],
@@ -227,6 +232,23 @@ describe("API route smoke envelopes", () => {
       code: "validation_error",
       message: "limit must be an integer between 1 and 100.",
     });
+  });
+
+  it("denies cron routes in production when CRON_SECRET is unset", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "");
+
+    const response = await requestJson("/api/cron/parlays/grade-due");
+    expect(response.status).toBe(503);
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: "internal_server_error",
+        message: "Internal server error.",
+      },
+    });
+
+    vi.unstubAllEnvs();
   });
 
   it("normalizes missing auth on canonical parlay save", async () => {
