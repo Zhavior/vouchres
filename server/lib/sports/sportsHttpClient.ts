@@ -14,9 +14,18 @@ type SportsFetchOptions = {
 
 const cache = new Map<string, CacheEntry<unknown>>();
 const inFlight = new Map<string, Promise<unknown>>();
+const stats = {
+  requests: 0,
+  cacheHits: 0,
+  inflightReuses: 0,
+  upstreamSuccesses: 0,
+  upstreamFailures: 0,
+  staleIfErrorHits: 0,
+};
 
 const DEFAULT_TIMEOUT_MS = Number(process.env.SPORTS_HTTP_TIMEOUT_MS ?? 8_000);
 const DEFAULT_RETRIES = Number(process.env.SPORTS_HTTP_RETRIES ?? 1);
+const MAX_CACHE_ENTRIES = Number(process.env.SPORTS_HTTP_MAX_CACHE_ENTRIES ?? 1_000);
 
 function redactUrl(url: string): string {
   try {
@@ -38,6 +47,28 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   }
 }
 
+function pruneCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of cache.entries()) {
+    if (entry.expiresAt <= now) cache.delete(key);
+  }
+
+  while (cache.size > MAX_CACHE_ENTRIES) {
+    let oldestKey: string | null = null;
+    let oldestExpiresAt = Number.POSITIVE_INFINITY;
+
+    for (const [key, entry] of cache.entries()) {
+      if (entry.expiresAt < oldestExpiresAt) {
+        oldestKey = key;
+        oldestExpiresAt = entry.expiresAt;
+      }
+    }
+
+    if (!oldestKey) break;
+    cache.delete(oldestKey);
+  }
+}
+
 async function sportsFetch<T>(
   url: string,
   parse: (res: Response) => Promise<T>,
@@ -51,13 +82,20 @@ async function sportsFetch<T>(
   const label = options.debugLabel ?? "sportsHttp";
 
   const cached = cache.get(key) as CacheEntry<T> | undefined;
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (cached && cached.expiresAt > Date.now()) {
+    stats.cacheHits++;
+    return cached.value;
+  }
 
   const existing = inFlight.get(key) as Promise<T> | undefined;
-  if (existing) return existing;
+  if (existing) {
+    stats.inflightReuses++;
+    return existing;
+  }
 
   const request = (async () => {
     let lastError: unknown;
+    stats.requests++;
 
     for (let attempt = 0; attempt <= retries; attempt += 1) {
       try {
@@ -77,12 +115,14 @@ async function sportsFetch<T>(
 
         if (ttlMs > 0) {
           cache.set(key, { value: data, expiresAt: Date.now() + ttlMs });
+          pruneCache();
         }
 
         if (process.env.DEBUG_SPORTS_HTTP === "true") {
           console.log(`[${label}] complete ${Date.now() - started}ms`);
         }
 
+        stats.upstreamSuccesses++;
         return data;
       } catch (err) {
         lastError = err;
@@ -103,9 +143,11 @@ async function sportsFetch<T>(
 
     if (stale && staleIfErrorMs > 0 && staleAgeMs <= staleIfErrorMs) {
       console.warn(`[${label}] stale-if-error ${redactUrl(url)} ageMs=${Math.max(0, staleAgeMs)}`);
+      stats.staleIfErrorHits++;
       return stale.value;
     }
 
+    stats.upstreamFailures++;
     throw err;
   } finally {
     inFlight.delete(key);
@@ -118,4 +160,13 @@ export async function sportsFetchJson<T>(url: string, options: SportsFetchOption
 
 export async function sportsFetchText(url: string, options: SportsFetchOptions = {}): Promise<string> {
   return sportsFetch<string>(url, (res) => res.text(), options);
+}
+
+export function getSportsHttpStats() {
+  return {
+    ...stats,
+    cacheSize: cache.size,
+    maxCacheEntries: MAX_CACHE_ENTRIES,
+    inflight: inFlight.size,
+  };
 }

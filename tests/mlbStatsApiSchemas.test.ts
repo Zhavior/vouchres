@@ -71,5 +71,11 @@ describe("MLB Stats API schedule parsing", () => {
       venue: "Test Park",
     });
     expect(response.warnings).toContain("Probability fields are unavailable until a backed model is connected; no synthetic projections returned.");
+    expect(response.meta).toMatchObject({
+      source: "mlb_statsapi_schedule",
+      dataQuality: "official_mlb_schedule",
+      updatedAt: "2026-07-08T01:00:00.000Z",
+      cache: { strategy: "sports_http_ttl_stale_if_error", ttlMs: 45000 },
+    });
   });
 });

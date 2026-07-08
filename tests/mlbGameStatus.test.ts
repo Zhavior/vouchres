@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMlbFinalStatusText, isMlbLiveStatus } from "../server/services/mlb/gameStatus";
+import { formatMlbStatus, isMlbFinalStatusText, isMlbLiveStatus } from "../server/services/mlb/gameStatus";
 
 describe("MLB game status classification", () => {
   it("treats common in-game MLB status labels as live", () => {
@@ -23,5 +23,13 @@ describe("MLB game status classification", () => {
     expect(isMlbFinalStatusText("Game Over")).toBe(true);
     expect(isMlbFinalStatusText("Completed Early")).toBe(true);
     expect(isMlbFinalStatusText("Top 9th")).toBe(false);
+  });
+
+  it("classifies MLB status objects for grading and route code", () => {
+    expect(isMlbFinalStatusText({ abstractGameState: "Final", detailedState: "Final", codedGameState: "F" })).toBe(true);
+    expect(isMlbFinalStatusText({ abstractGameState: "Live", detailedState: "In Progress", codedGameState: "I" })).toBe(false);
+    expect(isMlbLiveStatus({ abstractGameState: "Live", detailedState: "Warmup", codedGameState: "PW" })).toBe(true);
+    expect(formatMlbStatus({ abstractGameState: "Live", detailedState: "Warmup", codedGameState: "PW", statusCode: "PW" }))
+      .toBe("abstract=Live, detailed=Warmup, coded=PW, statusCode=PW");
   });
 });

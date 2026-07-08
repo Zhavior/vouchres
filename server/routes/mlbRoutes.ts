@@ -7,7 +7,9 @@ import { getLiveGames } from "../services/mlb/liveGamesService";
 import { TTL, TTLCache } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
 import { sportsFetchJson } from "../lib/sports/sportsHttpClient";
+import { buildApiMeta } from "../lib/apiResponseMeta";
 import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "../services/mlb/mlbStatsApiSchemas";
+import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -135,6 +137,12 @@ async function getTodayLineups(date: string) {
 }
 
 export function registerMlbRoutes(app: Express): void {
+  app.get("/api/health/mlb", asyncHandler(async (req: Request, res: Response) => {
+    const date = dateQueryOrToday(req.query.date);
+    const report = await getMlbHealthReport(date);
+    res.status(report.status === "down" ? 503 : 200).json(report);
+  }));
+
   app.get("/api/mlb/live", asyncHandler(async (req: Request, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     res.json(await getLiveGames(date));
@@ -162,6 +170,12 @@ export function registerMlbRoutes(app: Express): void {
         source: "mlb_statsapi_live",
         updatedAt: new Date().toISOString(),
         warnings: [],
+        meta: buildApiMeta({
+          source: "mlb_statsapi_lineups",
+          dataQuality: "official_mlb_lineup",
+          warnings: [],
+          cache: { strategy: "ttl_cache", ttlMs: TTL.liveFeed },
+        }),
       });
     } catch (err: any) {
       console.error("[mlbRoutes] lineup/today failed:", err?.message);
@@ -178,7 +192,17 @@ export function registerMlbRoutes(app: Express): void {
   app.get("/api/mlb/games/date/:date", asyncHandler(async (req: Request, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
-    res.json({ date, games: await getScheduleByDate(date), warnings: [] });
+    const games = await getScheduleByDate(date);
+    res.json({
+      date,
+      games,
+      warnings: [],
+      meta: buildApiMeta({
+        source: "mlb_statsapi_schedule",
+        dataQuality: games.length > 0 ? "official_mlb_schedule" : "limited",
+        warnings: [],
+      }),
+    });
     console.log(`[endpoint] GET /api/mlb/games/date/:date ${Date.now() - start}ms`);
   }));
 

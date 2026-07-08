@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
+import { getSportsHttpStats, sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
 
 describe("sports HTTP client", () => {
   afterEach(() => {
@@ -57,5 +57,10 @@ describe("sports HTTP client", () => {
       staleIfErrorMs: 5_000,
       retries: 0,
     })).rejects.toThrow("HTTP 502");
+  });
+
+  it("reports bounded cache capacity for production visibility", () => {
+    expect(getSportsHttpStats().maxCacheEntries).toBeGreaterThan(0);
+    expect(getSportsHttpStats().cacheSize).toBeLessThanOrEqual(getSportsHttpStats().maxCacheEntries);
   });
 });

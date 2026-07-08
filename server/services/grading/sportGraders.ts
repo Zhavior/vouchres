@@ -13,6 +13,7 @@
  */
 
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { isMlbFinalStatusText } from "../mlb/gameStatus";
 
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
 
@@ -50,7 +51,7 @@ async function _doFetchMLBGame(gamePk: string): Promise<GameData | null> {
       retries: 1,
       debugLabel: "sportGraders",
     });
-    if (ls?.isComplete !== true) {
+    if (ls?.isComplete !== true && !isMlbFinalStatusText(ls?.status)) {
       return { final: false, raw: null };
     }
 
