@@ -72,7 +72,7 @@ export default function Home() {
                     {view === 'ledger' && <VouchLedger />}
                     {view === 'matchup' && <MatchupIntelligence />}
                     {view === 'props' && <PropTerminal />}
-                    {view === 'profile' && <ProfilePreview />}
+                    {view === 'profile' && <ProfilePreview handle="EDGE_ANALYST" />}
                     {view === 'money' && <MonetizationEngine />}
                   </motion.div>
                 </AnimatePresence>
