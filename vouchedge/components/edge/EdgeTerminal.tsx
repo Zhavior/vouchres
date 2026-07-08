@@ -26,7 +26,7 @@ export function EdgeTerminal() {
     async function load() {
       const [liveRes, boardRes] = await Promise.all([
         fetch("/api/mlb/live", { cache: "no-store" }),
-        fetch("/api/mlb/hr-board/today?previewLimit=350", { cache: "no-store" }),
+        fetch("/api/mlb/hr-board/today?previewLimit=1050", { cache: "no-store" }),
       ]);
 
       setLive(await liveRes.json());

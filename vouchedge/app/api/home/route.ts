@@ -10,7 +10,7 @@ export async function GET() {
 
     const [liveRes, boardRes] = await Promise.allSettled([
       fetch(`${origin}/api/mlb/live`, { cache: "no-store" }),
-      fetch(`${origin}/api/mlb/hr-board/today?previewLimit=3`, {
+      fetch(`${origin}/api/mlb/hr-board/today?previewLimit=10`, {
         cache: "no-store",
       }),
     ]);

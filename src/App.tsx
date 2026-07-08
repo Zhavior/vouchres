@@ -28,7 +28,6 @@ import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import NbaNflArena from './components/NbaNflArena';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
-import MarketingLandingPage from './components/MarketingLandingPage';
 
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
@@ -1709,9 +1708,8 @@ export default function App() {
           return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
         }
         return (
-          <MarketingLandingPage
+          <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
-            onSectionChange={navigateSection}
           />
         );
       case 'welcome':
@@ -1719,9 +1717,8 @@ export default function App() {
           return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
         }
         return (
-          <MarketingLandingPage
+          <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
-            onSectionChange={navigateSection}
           />
         );
       case 'today':
