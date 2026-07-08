@@ -219,7 +219,14 @@ const LiveAtBatSchema = z.object({
   outs: z.number().nullable(),
   updatedAt: z.string().datetime(),
   play: z.record(z.string(), z.unknown()).nullable().optional(),
-}).passthrough().openapi("LiveAtBatResponse");
+}).passthrough().openapi("LiveAtBatSnapshot");
+
+const LiveAtBatEnvelopeSchema = z.object({
+  ok: z.literal(true),
+  success: z.literal(true),
+  data: LiveAtBatSchema,
+  meta: z.record(z.string(), z.unknown()).optional(),
+}).openapi("LiveAtBatResponse");
 
 const HrBoardPlayerSchema = z.object({
   player: z.record(z.string(), z.unknown()),
@@ -272,6 +279,43 @@ const MlbHealthSchema = z.object({
   date: z.string(),
   warnings: z.array(z.string()).optional(),
 }).passthrough().openapi("MlbHealthResponse");
+
+const HrBoardPoolSchema = z.object({
+  totalPlayersChecked: z.number().int().nonnegative(),
+  confirmedStarters: z.number().int().nonnegative(),
+  projectedStarters: z.number().int().nonnegative(),
+  benchOrUnknown: z.number().int().nonnegative(),
+  injuredScratchedBlocked: z.number().int().nonnegative(),
+  hrCandidatesScored: z.number().int().nonnegative(),
+}).passthrough().openapi("HrBoardPoolResponse");
+
+const HrBoardDebugSchema = z.object({
+  date: z.string(),
+  gamesLoaded: z.number().int().nonnegative().optional(),
+  candidatesValidated: z.number().int().nonnegative().optional(),
+  candidatesBlocked: z.number().int().nonnegative().optional(),
+  teamMismatchBlocked: z.number().int().nonnegative().optional(),
+  staleDataWarnings: z.array(z.string()).optional(),
+  lastRefresh: z.string().optional(),
+}).passthrough().openapi("HrBoardDebugResponse");
+
+const NotificationsUnreadCountSchema = z.object({
+  ok: z.literal(true),
+  notifications: z.array(z.record(z.string(), z.unknown())),
+  unreadCount: z.number().int().nonnegative(),
+  warnings: z.array(z.string()).optional(),
+}).openapi("NotificationsUnreadCountResponse");
+
+const ParlayIntegritySchema = z.object({
+  ok: z.boolean(),
+  scanner: z.literal("parlay_integrity_nose"),
+  checkedAt: z.string().datetime(),
+  issues: z.record(z.string(), z.number().int().nonnegative()),
+  cache: z.object({
+    gradedLegResults: z.number().int().nonnegative(),
+  }),
+  advice: z.string(),
+}).openapi("ParlayIntegrityResponse");
 
 openapiRegistry.register("OkEnvelope", OkEnvelopeSchema);
 openapiRegistry.register("ErrorEnvelope", ErrorEnvelopeSchema);
