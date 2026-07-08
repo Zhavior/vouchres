@@ -35,6 +35,11 @@ async function redisCommand<T = any>(command: unknown[]): Promise<T | null> {
   return data?.result ?? null;
 }
 
+export async function redisGet(key: string): Promise<string | null> {
+  if (!isUpstashEnabled()) return null;
+  return redisCommand<string>(["GET", key]);
+}
+
 export async function redisGetJson<T>(key: string): Promise<T | null> {
   if (!isUpstashEnabled()) return null;
 

@@ -1,4 +1,5 @@
 import { AppError } from "../../errors/AppError";
+import { runWithDistributedLock } from "../../lib/distributedLock";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
@@ -68,11 +69,12 @@ function isLikelyMlbGamePk(value: unknown): boolean {
 }
 
 /**
- * Process-local lock so concurrent cron/staff grade runs don't race-settle
- * the same pending picks on a single instance. Cross-instance coordination
- * still requires Redis/DB locking in production multi-node.
+ * Process-local coalescing plus optional Upstash distributed lock so concurrent
+ * cron/staff grade runs don't race-settle the same pending picks across instances.
  */
 let gradePendingInflight: Promise<GradeRunResult> | null = null;
+
+const GRADE_PENDING_LOCK = "grading:pending-picks";
 
 /**
  * Grade all pending picks whose event has concluded.
@@ -104,10 +106,16 @@ export async function gradePendingPicks(opts: {
     return gradePendingInflight;
   }
 
-  gradePendingInflight = runGradePendingPicks(opts).finally(() => {
-    gradePendingInflight = null;
+  return runWithDistributedLock(GRADE_PENDING_LOCK, async () => {
+    if (gradePendingInflight) {
+      return gradePendingInflight;
+    }
+
+    gradePendingInflight = runGradePendingPicks(opts).finally(() => {
+      gradePendingInflight = null;
+    });
+    return gradePendingInflight;
   });
-  return gradePendingInflight;
 }
 
 async function runGradePendingPicks(opts: {
