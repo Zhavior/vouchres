@@ -1,6 +1,7 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
+import { calculateWeightedScore } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -146,19 +147,6 @@ function lineupStatusFor(entry: RosterEntry): LineupStatus {
   return 'projected';
 }
 
-function weightedScore(drivers: WeightedFactor[]): number {
-  let sum = 0;
-  let weight = 0;
-
-  for (const driver of drivers) {
-    if (driver.value == null) continue;
-    sum += driver.value * driver.weight;
-    weight += driver.weight;
-  }
-
-  return Math.round(weight > 0 ? sum / weight : 0);
-}
-
 function roundedDrivers(drivers: WeightedFactor[]): WeightedFactor[] {
   return drivers.map((driver) => ({
     ...driver,
@@ -302,7 +290,7 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
   const drivers = roundedDrivers(statType === 'pitcher_k'
     ? pitchingDrivers(context.stat)
     : battingDrivers(statType, context.stat, lineupIndex, statScope));
-  const rawScore = weightedScore(drivers);
+  const rawScore = calculateWeightedScore(drivers);
   const config = STAT_CONFIG[statType];
   const statScore = clamp(rawScore, 0, 100);
   const confidence = clamp(35 + (parseNumber(context.stat.gamesPlayed || context.stat.gamesPitched) * 1.8), 35, 88);
