@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { billingRoutes } from "../server/routes/billingRoutes";
 
 vi.mock("../server/services/billing/stripeService", () => ({
@@ -21,6 +22,7 @@ beforeAll(async () => {
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
 
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api/billing", billingRoutes);
   app.use("/api/billing", apiErrorHandler);
@@ -83,6 +85,9 @@ describe("billing routes", () => {
         message: "Missing Stripe signature header.",
       },
     });
+    expect(typeof body.error.requestId).toBe("string");
+    expect(body.error.requestId.length).toBeGreaterThan(0);
+    expect(response.headers.get("x-request-id")).toBe(body.error.requestId);
   });
 
   it("returns unified error envelope when webhook signature is invalid", async () => {
@@ -114,6 +119,153 @@ describe("billing routes", () => {
         code: "bad_request",
         message: "Invalid Stripe webhook signature.",
       },
+    });
+    expect(typeof body.error.requestId).toBe("string");
+    expect(response.headers.get("x-request-id")).toBe(body.error.requestId);
+  });
+
+  it("returns unified 500 envelope when webhook handler fails after signature verify", async () => {
+    const stripeService = await import("../server/services/billing/stripeService");
+    const event = {
+      id: "evt_fail_1",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          subscription: "sub_fail_1",
+        },
+      },
+    };
+
+    vi.mocked(stripeService.isStripeConfigured).mockReturnValue(true);
+    vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
+      shouldProcess: true,
+      status: "processing",
+    } as any);
+    vi.mocked(stripeService.finishStripeWebhookEvent).mockResolvedValueOnce(undefined as never);
+    vi.mocked(stripeService.getStripe).mockReturnValue({
+      webhooks: {
+        constructEvent: vi.fn(() => event),
+      },
+      subscriptions: {
+        retrieve: vi.fn(async () => {
+          throw new Error("stripe retrieve failed");
+        }),
+      },
+    } as any);
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+
+    const response = await fetch(`${baseUrl}/api/billing/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=1,v1=good",
+      },
+      body: JSON.stringify({ type: "checkout.session.completed" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toMatchObject({
+      ok: false,
+      error: {
+        code: "internal_server_error",
+        message: "Internal server error.",
+      },
+    });
+    expect(typeof body.error.requestId).toBe("string");
+    expect(stripeService.finishStripeWebhookEvent).toHaveBeenCalledWith(
+      "evt_fail_1",
+      "failed",
+      "stripe retrieve failed",
+    );
+  });
+
+  it("processes a signed checkout.session.completed webhook and returns ok received", async () => {
+    const stripeService = await import("../server/services/billing/stripeService");
+    const event = {
+      id: "evt_test_1",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          subscription: "sub_test_1",
+        },
+      },
+    };
+
+    const stripeClient = {
+      webhooks: {
+        constructEvent: vi.fn(() => event),
+      },
+      subscriptions: {
+        retrieve: vi.fn(async () => ({
+          id: "sub_test_1",
+          status: "active",
+        })),
+      },
+    };
+
+    vi.mocked(stripeService.isStripeConfigured).mockReturnValue(true);
+    vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
+      shouldProcess: true,
+      status: "processing",
+    } as any);
+    vi.mocked(stripeService.finishStripeWebhookEvent).mockResolvedValueOnce(undefined as any);
+    vi.mocked(stripeService.syncSubscription).mockResolvedValueOnce(undefined as any);
+    vi.mocked(stripeService.getStripe).mockReturnValue(stripeClient as any);
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+
+    const response = await fetch(`${baseUrl}/api/billing/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=1,v1=good",
+      },
+      body: JSON.stringify({ type: "checkout.session.completed" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ ok: true, received: true });
+    expect(stripeService.syncSubscription).toHaveBeenCalled();
+    expect(stripeService.finishStripeWebhookEvent).toHaveBeenCalledWith("evt_test_1", "processed");
+  });
+
+  it("skips duplicate Stripe webhook events", async () => {
+    const stripeService = await import("../server/services/billing/stripeService");
+    const event = {
+      id: "evt_dup_1",
+      type: "customer.subscription.updated",
+      data: { object: { id: "sub_dup" } },
+    };
+
+    vi.mocked(stripeService.isStripeConfigured).mockReturnValueOnce(true);
+    vi.mocked(stripeService.beginStripeWebhookEvent).mockResolvedValueOnce({
+      shouldProcess: false,
+      status: "processed",
+    } as any);
+    vi.mocked(stripeService.getStripe).mockReturnValueOnce({
+      webhooks: {
+        constructEvent: vi.fn(() => event),
+      },
+    } as any);
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+
+    const response = await fetch(`${baseUrl}/api/billing/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=1,v1=good",
+      },
+      body: JSON.stringify({ type: "customer.subscription.updated" }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      received: true,
+      duplicate: true,
+      status: "processed",
     });
   });
 });

@@ -3,10 +3,31 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { parlayRoutes } from "../server/routes/parlayRoutes";
+import { AppError } from "../server/errors/AppError";
 
 vi.mock("../server/middleware/auth", () => ({
-  requireAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
-  getSupabaseAdmin: vi.fn(),
+  requireAuth: (req: any, _res: unknown, next: () => void) => {
+    req.user = {
+      id: "user-test-1",
+      profile: { is_staff: (globalThis as any).__parlayTestIsStaff !== false },
+    };
+    next();
+  },
+  requireStaff: (req: any, _res: unknown, next: (err?: unknown) => void) => {
+    if (!req.user?.profile?.is_staff) {
+      return next(new AppError({
+        status: 403,
+        code: "forbidden",
+        message: "Staff access is required.",
+      }));
+    }
+    next();
+  },
+  getSupabaseAdmin: vi.fn(async () => ({
+    from: () => ({
+      insert: async () => ({ error: null }),
+    }),
+  })),
 }));
 
 vi.mock("../server/services/grading/sportGraders", () => ({
@@ -169,5 +190,91 @@ describe("parlay routes", () => {
       gradedLegs: 3,
     });
     expect(gradePendingPicks).toHaveBeenCalled();
+  });
+
+  it("rejects non-staff POST /parlays/grade-due", async () => {
+    (globalThis as any).__parlayTestIsStaff = false;
+    vi.mocked(gradePendingPicks).mockClear();
+    try {
+      const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: 2 }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body).toMatchObject({
+        ok: false,
+        error: { code: "forbidden" },
+      });
+      expect(vi.mocked(gradePendingPicks).mock.calls).toEqual([]);
+    } finally {
+      (globalThis as any).__parlayTestIsStaff = true;
+    }
+  });
+
+  it("returns graded envelope for authenticated POST /parlays/grade-due", async () => {
+    vi.mocked(gradePendingPicks).mockResolvedValueOnce({
+      graded: [
+        { pick_id: "pick-a", status: "won" },
+        { pick_id: "pick-b", status: "graded_error", error: "bad_feed" },
+      ],
+      skipped: [
+        { pick_id: "pick-c", error: "game isComplete=false" },
+        { pick_id: "pick-d", error: "unexpected grader failure" },
+      ],
+      summary: { warnings: ["partial settle"] },
+    } as any);
+
+    const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ days: 3 }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      mode: "grade_due",
+      gradedParlays: 1,
+      gradedLegs: 2,
+      pendingLegs: 1,
+      warnings: ["partial settle"],
+      errors: [{ pick_id: "pick-d", error: "unexpected grader failure" }],
+    });
+    expect(gradePendingPicks).toHaveBeenCalledWith({ days: 3 });
+  });
+
+  it("survives grading_logs insert failures without blocking the grade response", async () => {
+    const { getSupabaseAdmin } = await import("../server/middleware/auth");
+    vi.mocked(getSupabaseAdmin).mockResolvedValueOnce({
+      from: () => ({
+        insert: async () => {
+          throw Object.assign(new Error("grading_logs unavailable"), { code: "ECONNRESET" });
+        },
+      }),
+    } as any);
+    vi.mocked(gradePendingPicks).mockResolvedValueOnce({
+      graded: [{ pick_id: "pick-1", status: "won" }],
+      skipped: [],
+      summary: { warnings: [] },
+    } as any);
+
+    const response = await fetch(`${baseUrl}/api/parlays/grade-due`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ days: 2 }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      mode: "grade_due",
+      gradedParlays: 1,
+      gradedLegs: 1,
+    });
   });
 });

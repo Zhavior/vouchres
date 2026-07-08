@@ -155,9 +155,13 @@ async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Ma
                 }
               });
             }
-          } catch {
+          } catch (err) {
             // Boxscores are often unavailable before lineups are posted.
             // Keep the board projected instead of failing the HR pipeline.
+            console.warn(
+              `[hrPipeline] boxscore unavailable gamePk=${game.gamePk}:`,
+              err instanceof Error ? err.message : String(err),
+            );
           }
         })
       );

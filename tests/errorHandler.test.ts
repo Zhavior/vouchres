@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
+import { ZodError, z } from "zod";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { AppError } from "../server/errors/AppError";
 
@@ -8,11 +9,11 @@ vi.mock("../server/lib/sentry", () => ({
   captureException: (...args: unknown[]) => captureException(...args),
 }));
 
-function runErrorHandler(error: unknown) {
+function runErrorHandler(error: unknown, overrides: { requestId?: string } = {}) {
   const req: any = {
     method: "GET",
     originalUrl: "/api/test",
-    requestId: "req_test_1",
+    requestId: overrides.requestId ?? "req_test_1",
   };
   const res: any = {
     headersSent: false,
@@ -77,5 +78,29 @@ describe("api error handler", () => {
       },
     });
     expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
+  it("normalizes Zod validation failures into requestId-aware envelopes", () => {
+    let zodError: ZodError;
+    try {
+      z.object({ days: z.number().int().min(1) }).parse({ days: "nope" });
+      throw new Error("Expected Zod parse to fail");
+    } catch (error) {
+      zodError = error as ZodError;
+    }
+
+    const { res } = runErrorHandler(zodError!, { requestId: "req_zod_9" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toMatchObject({
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "Request validation failed.",
+        requestId: "req_zod_9",
+      },
+    });
+    expect(Array.isArray(res.body.error.details)).toBe(true);
+    expect(captureException).not.toHaveBeenCalled();
   });
 });

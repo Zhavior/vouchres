@@ -35,7 +35,7 @@ export function registerAiRoutes(app: Express): void {
     validate({ body: AiChatRequestSchema }),
     asyncHandler(async (req: Request, res: Response) => {
       const result = await generateAiChatResponse(req.body as AiChatInput);
-      return res.json(result);
+      return res.json({ ok: true, ...result });
     })
   );
 
@@ -46,7 +46,7 @@ export function registerAiRoutes(app: Express): void {
     validate({ body: AiImageRequestSchema }),
     asyncHandler(async (req: Request, res: Response) => {
       const result = await generateAiImage(req.body as AiImageInput);
-      return res.json(result);
+      return res.json({ ok: true, ...result });
     })
   );
 
@@ -57,7 +57,7 @@ export function registerAiRoutes(app: Express): void {
     validate({ body: AiThemeRequestSchema }),
     asyncHandler(async (req: Request, res: Response) => {
       const result = await generateAiTheme(req.body as AiThemeInput);
-      return res.json(result);
+      return res.json({ ok: true, ...result });
     })
   );
 
@@ -68,7 +68,7 @@ export function registerAiRoutes(app: Express): void {
     validate({ body: PlayerResearchRequestSchema }),
     asyncHandler(async (req: Request, res: Response) => {
       const result = await generatePlayerResearch(req.body as PlayerResearchInput);
-      return res.json(result);
+      return res.json({ ok: true, ...result });
     })
   );
 
@@ -82,11 +82,11 @@ export function registerAiRoutes(app: Express): void {
         details: [{ path: "pick", message: "Required." }],
       });
     }
-    res.json(await explainPick(pick));
+    res.json({ ok: true, ...(await explainPick(pick)) });
   }));
 
   app.post("/api/ai/daily-report", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
-    res.json(await getDailyReportNarrative(req.body?.date));
+    res.json({ ok: true, ...(await getDailyReportNarrative(req.body?.date)) });
   }));
 
   app.post("/api/ai/learning-note", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
@@ -102,7 +102,10 @@ export function registerAiRoutes(app: Express): void {
         ],
       });
     }
-    res.json(await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened }));
+    res.json({
+      ok: true,
+      ...(await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened })),
+    });
   }));
 
   app.post(
@@ -113,7 +116,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: Request, res: Response) => {
       const result = await generateParlayEdgeReport(req.body as ParlayEdgeInput);
       assertParlayEdgeReportIsSafe(result.report);
-      return res.json(result);
+      return res.json({ ok: true, ...result });
     })
   );
 }

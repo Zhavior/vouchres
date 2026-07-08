@@ -59,7 +59,11 @@ async function fetchPeopleBatSides(ids: number[]): Promise<Map<number, "L" | "R"
       const code = p?.batSide?.code;
       if (p?.id && (code === "L" || code === "R" || code === "S")) out.set(p.id, code);
     }
-  } catch {
+  } catch (err) {
+    console.warn(
+      "[pitcherMatchup] people batSide fetch failed:",
+      err instanceof Error ? err.message : String(err),
+    );
     return out;
   }
   return out;
@@ -278,20 +282,42 @@ export async function getPitcherMatchup(
           for (const b of batters) {
             if (b.bats === "U" && people.has(b.id)) b.bats = people.get(b.id)!;
           }
-        } catch {
+        } catch (err) {
           // leave as "U" — UI renders "—"
+          console.warn(
+            "[pitcherMatchup] batSide enrichment failed:",
+            err instanceof Error ? err.message : String(err),
+          );
         }
       }
 
-      const statcastMap = await getStatcastBatterMap().catch(() => ({} as Record<number, StatcastBatterQuality>));
+      const statcastMap = await getStatcastBatterMap().catch((err) => {
+        console.warn(
+          "[pitcherMatchup] statcast map failed:",
+          err instanceof Error ? err.message : String(err),
+        );
+        return {} as Record<number, StatcastBatterQuality>;
+      });
 
       const projectedLineup = await limitConcurrency<PitcherMatchupBatter, typeof batters[number]>(
         batters,
         4,
         async (b) => {
           const [hitter, bvpRaw] = await Promise.all([
-            getHitterStats(b.id).catch(() => null),
-            getBatterVsPitcher(b.id, pitcherId).catch(() => null),
+            getHitterStats(b.id).catch((err) => {
+              console.warn(
+                `[pitcherMatchup] hitter stats failed player=${b.id}:`,
+                err instanceof Error ? err.message : String(err),
+              );
+              return null;
+            }),
+            getBatterVsPitcher(b.id, pitcherId).catch((err) => {
+              console.warn(
+                `[pitcherMatchup] BvP failed batter=${b.id} pitcher=${pitcherId}:`,
+                err instanceof Error ? err.message : String(err),
+              );
+              return null;
+            }),
           ]);
 
           const recent = hitter?.recentGames ?? [];

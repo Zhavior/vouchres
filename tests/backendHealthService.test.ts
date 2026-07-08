@@ -90,4 +90,61 @@ describe("backend health report", () => {
     expect(report.warnings.join(" ")).toContain("SENTRY_DSN");
     expect(report.warnings.join(" ")).toContain("Upstash Redis");
   });
+
+  it("requires Stripe webhook secret in production when Stripe secret is configured", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role");
+    vi.stubEnv("CRON_SECRET", "cron-secret");
+    vi.stubEnv("SENTRY_DSN", "https://example.ingest.sentry.io/1");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
+    vi.stubEnv("STRIPE_SECRET_KEY", "sk_test");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+
+    const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
+
+    expect(report.status).toBe("degraded");
+    expect(report.warnings.join(" ")).toContain("STRIPE_WEBHOOK_SECRET");
+  });
+
+  it("exposes productionProof checklist with envReady and soakPending", () => {
+    vi.stubEnv("NODE_ENV", "development");
+
+    const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
+
+    expect(report.productionProof).toEqual(
+      expect.objectContaining({
+        envReady: expect.any(Boolean),
+        soakPending: expect.arrayContaining([
+          expect.objectContaining({ id: "db_grading_soak", ready: false }),
+          expect.objectContaining({ id: "multi_instance_soak", ready: false }),
+        ]),
+        items: expect.any(Array),
+      }),
+    );
+    expect(report.productionProof.items.length).toBeGreaterThanOrEqual(6);
+    expect(report.config.every((check) => typeof check.requiredForProductionProof === "boolean")).toBe(true);
+  });
+
+  it("marks productionProof.envReady when all proof env vars are present", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role");
+    vi.stubEnv("CRON_SECRET", "cron-secret");
+    vi.stubEnv("SENTRY_DSN", "https://example.ingest.sentry.io/1");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "token");
+    vi.stubEnv("STRIPE_SECRET_KEY", "");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+
+    const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
+
+    expect(report.productionProof.envReady).toBe(true);
+    expect(report.productionProof.items.find((item) => item.id === "cron_secret")?.ready).toBe(true);
+    expect(report.productionProof.items.find((item) => item.id === "sentry_dsn")?.ready).toBe(true);
+    expect(report.productionProof.items.find((item) => item.id === "upstash_redis")?.ready).toBe(true);
+    expect(report.productionProof.soakPending.every((item) => item.ready === false)).toBe(true);
+    expect(report.warnings.join(" ")).not.toContain("Production proof env incomplete");
+  });
 });

@@ -72,4 +72,21 @@ describe("mlb lineup routes", () => {
       },
     });
   });
+
+  it("returns ok envelope for live + games today", async () => {
+    const live = await fetch(`${baseUrl}/api/mlb/live`);
+    const liveBody = await live.json();
+    expect(live.status).toBe(200);
+    expect(liveBody.ok).toBe(true);
+
+    const today = await fetch(`${baseUrl}/api/mlb/games/today`);
+    const todayBody = await today.json();
+    expect(today.status).toBe(200);
+    expect(todayBody).toMatchObject({
+      ok: true,
+      date: "2026-07-08",
+      games: [],
+      warnings: [],
+    });
+  });
 });

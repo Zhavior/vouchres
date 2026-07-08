@@ -173,7 +173,11 @@ async function fetchWinProb(gamePk: number): Promise<LiveAtBatSnapshot["winProb"
       awayPct: num(last.awayTeamWinProbability) ?? 50,
       lastSwingHomePct: num(last.homeTeamWinProbabilityAdded) ?? 0,
     };
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[liveAtBat] winProbability failed gamePk=${gamePk}:`,
+      err instanceof Error ? err.message : String(err),
+    );
     return null; // win prob is enrichment — never block the snapshot on it
   }
 }

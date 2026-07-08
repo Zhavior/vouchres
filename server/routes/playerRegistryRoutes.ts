@@ -30,7 +30,8 @@ function queryString(value: unknown, maxLength: number): string {
 
 playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (_req: Request, res: Response) => {
   try {
-    return res.json(await getPlayerCount());
+    const count = await getPlayerCount();
+    return res.json({ ok: true, ...count });
   } catch (error) {
     throw registryUnavailable(error);
   }
@@ -40,6 +41,7 @@ playerRegistryRoutes.get("/mlb/players/registry", asyncHandler(async (_req: Requ
   try {
     const players = await getPlayerRegistry();
     return res.json({
+      ok: true,
       count: players.length,
       players,
       dataSource: "official_mlb",
@@ -54,6 +56,7 @@ playerRegistryRoutes.get("/mlb/players/active", asyncHandler(async (_req: Reques
   try {
     const players = await getActivePlayers();
     return res.json({
+      ok: true,
       count: players.length,
       players,
       dataSource: "official_mlb",
@@ -69,6 +72,7 @@ playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request
     const q = queryString(req.query.q, 80);
     const players = await searchPlayers(q);
     return res.json({
+      ok: true,
       query: q,
       count: players.length,
       players,
@@ -92,7 +96,7 @@ playerRegistryRoutes.get("/mlb/players/:playerId", asyncHandler(async (req: Requ
         details: { playerId, dataSource: "official_mlb" },
       });
     }
-    return res.json({ player, dataSource: "official_mlb", updatedAt: new Date().toISOString() });
+    return res.json({ ok: true, player, dataSource: "official_mlb", updatedAt: new Date().toISOString() });
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw registryUnavailable(error);

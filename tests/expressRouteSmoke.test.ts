@@ -71,6 +71,14 @@ describe("API route smoke envelopes", () => {
   });
 
   it("exposes backend production health with route metrics", async () => {
+    const coreHealth = await requestJson("/api/system/core-health");
+    expect(coreHealth.status).toBe(200);
+    expect(coreHealth.body).toMatchObject({
+      ok: true,
+      status: "ok",
+      service: "vouchedge-core",
+    });
+
     await requestJson("/api/health");
     const response = await requestJson("/api/health/backend");
 

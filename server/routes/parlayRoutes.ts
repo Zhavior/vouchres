@@ -1,7 +1,8 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { createHash } from "node:crypto";
-import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../middleware/auth";
+import { AuthedRequest, getSupabaseAdmin, requireAuth, requireStaff } from "../middleware/auth";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { generationLimiter, gradingLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
@@ -250,7 +251,7 @@ parlayRoutes.post(
    This mutates DB state, so it must never run from a GET/read request.
    ============================================================ */
 
-parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayRoutes.post("/parlays/live-hr-sync", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
   const date = optionalYmd(rawDate);
   const repair = await repairLegacyParlayIdentityForSync({
@@ -269,7 +270,7 @@ parlayRoutes.post("/parlays/live-hr-sync", requireAuth, gradingLimiter, asyncHan
   });
 }));
 
-parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayRoutes.post("/parlays/live-hr-preview", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
   const date = optionalYmd(rawDate);
   const matches = await previewLiveHrParlayMatches(date);
@@ -304,7 +305,7 @@ parlayRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request,
   });
 }));
 
-parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request, res: Response) => {
+parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
   const days = boundedInt(req.query.days, "days", 2, 1, 7);
@@ -314,6 +315,17 @@ parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request, re
   const settled = graded.filter((row) => row.status !== "graded_error");
   const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
   const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+  const requestId = req.requestId ?? "unknown";
+
+  console.log("[parlays/grade-due]", JSON.stringify({
+    requestId,
+    mode: "cron_grade_due",
+    days,
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    errorCount: errors.length,
+  }));
 
   return res.json({
     ok: true,
@@ -328,7 +340,8 @@ parlayRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request, re
   });
 }));
 
-parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+/* Staff-only: systemwide grading mutates every user's pending picks. Cron uses /cron/*. */
+parlayRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days;
   const days = boundedInt(rawDays, "days", 2, 1, 7);
   const result = await gradePendingPicks({ days });
@@ -337,8 +350,18 @@ parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandle
   const settled = graded.filter((row) => row.status !== "graded_error");
   const pending = skipped.filter((row) => row.error?.includes("not final") || row.error?.includes("isComplete=false"));
   const errors = skipped.filter((row) => !row.error?.includes("not final") && !row.error?.includes("isComplete=false"));
+  const requestId = (req as AuthedRequest & RequestWithContext).requestId ?? "unknown";
 
-  console.log(`[parlays/grade-due] settled=${settled.length} pending=${pending.length} errors=${errors.length}`);
+  console.log("[parlays/grade-due]", JSON.stringify({
+    requestId,
+    mode: "grade_due",
+    days,
+    userId: req.user?.id ?? null,
+    gradedParlays: settled.length,
+    gradedLegs: graded.length,
+    pendingLegs: pending.length,
+    errorCount: errors.length,
+  }));
 
   // Best-effort audit trail. Swallow if grading_logs (migration 0004) is absent.
   try {
@@ -351,12 +374,20 @@ parlayRoutes.post("/parlays/grade-due", requireAuth, gradingLimiter, asyncHandle
       const supabaseAdmin = await getSupabaseAdmin();
       const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
       if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
-        console.warn("[parlays/grade-due] grading_logs write failed", logErr.code, logErr.message);
+        console.warn("[parlays/grade-due] grading_logs write failed", JSON.stringify({
+          requestId,
+          code: logErr.code,
+          message: logErr.message,
+        }));
       }
     }
   } catch (logErr: any) {
     // table missing or transient — never block grading on the audit log
-    console.warn("[parlays/grade-due] grading_logs unavailable", logErr?.code);
+    console.warn("[parlays/grade-due] grading_logs unavailable", JSON.stringify({
+      requestId,
+      code: logErr?.code ?? null,
+      message: logErr instanceof Error ? logErr.message : String(logErr),
+    }));
   }
 
   return res.json({

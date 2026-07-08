@@ -41,8 +41,14 @@ describe("cron auth", () => {
         mockRequest({ headers: { authorization: "Bearer secret-token" } }),
       ),
     ).toBe(true);
+  });
+
+  it("rejects query-string cron tokens to prevent log/Referer leaks", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "secret-token");
+
     expect(
       isAuthorizedCronRequest(mockRequest({ query: { token: "secret-token" } })),
-    ).toBe(true);
+    ).toBe(false);
   });
 });

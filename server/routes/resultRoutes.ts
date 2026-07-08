@@ -21,10 +21,10 @@ export function registerResultRoutes(app: Express): void {
           throw new AppError({ status: 403, code: "forbidden", message: "Staff access is required." });
         }
         const out = await getLedger({ capperId, limit, offset });
-        return res.json({ scope: "staff_capper", picks: out.picks, total: out.total, warnings: [] });
+        return res.json({ ok: true, scope: "staff_capper", picks: out.picks, total: out.total, warnings: [] });
       }
       const out = await getLedger({ userId: authedReq.user!.id, limit, offset });
-      return res.json({ scope: "current_user", picks: out.picks, total: out.total, warnings: [] });
+      return res.json({ ok: true, scope: "current_user", picks: out.picks, total: out.total, warnings: [] });
     } catch (err: any) {
       console.error("[results] ledger failed", err?.message);
       if (err instanceof AppError) throw err;
@@ -47,6 +47,6 @@ export function registerResultRoutes(app: Express): void {
     }
     const out = await gradeAndLearn(pickId, result, whatActuallyHappened);
     if (!out.pick) throw new AppError({ status: 404, code: "not_found", message: "Pick not found." });
-    res.json(out);
+    return res.json({ ok: true, ...out });
   }));
 }

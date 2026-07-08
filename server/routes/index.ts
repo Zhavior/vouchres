@@ -29,7 +29,9 @@ import { getPublicVouch } from "../services/persistence/vouchService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import { captureException } from "../lib/sentry";
 import type { Request, Response } from "express";
+import type { RequestWithContext } from "../middleware/requestContext";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -92,6 +94,7 @@ export function registerApiRoutes(app: Express): void {
   // Backend health.
   app.get("/api/system/core-health", (_req: Request, res: Response) =>
     res.json({
+      ok: true,
       status: "ok",
       service: "vouchedge-core",
       routes: {
@@ -116,7 +119,7 @@ export function registerApiRoutes(app: Express): void {
   // crawlers, which don't execute JS, see the Open Graph tags. Must be
   // registered before the SPA catch-all in server.ts; registerApiRoutes()
   // already runs before that catch-all.
-  app.get("/v/:id", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/v/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const vouch = await getPublicVouch(req.params.id);
       const baseUrl = `${req.protocol}://${req.get("host")}`;
@@ -124,6 +127,7 @@ export function registerApiRoutes(app: Express): void {
       if (!vouch) {
         res.status(404);
         res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("x-request-id", req.requestId ?? "unknown");
         return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>Vouch not found — VouchEdge</title></head><body><p>This vouch isn't available.</p></body></html>`);
       }
 
@@ -161,9 +165,16 @@ export function registerApiRoutes(app: Express): void {
 </body>
 </html>`);
     } catch (error) {
-      console.error("[share] /v/:id failed", error);
+      const requestId = req.requestId ?? "unknown";
+      console.error("[share] /v/:id failed", JSON.stringify({
+        requestId,
+        vouchId: req.params.id,
+        message: error instanceof Error ? error.message : String(error),
+      }));
+      captureException(error, { requestId, path: req.originalUrl, vouchId: req.params.id });
       res.status(500);
       res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("x-request-id", requestId);
       return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this vouch.</p></body></html>`);
     }
   }));

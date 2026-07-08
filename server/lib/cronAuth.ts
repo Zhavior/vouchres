@@ -17,13 +17,13 @@ export function isAuthorizedCronRequest(req: Request): boolean {
     return !isProductionRuntime();
   }
 
+  // Bearer only — never accept ?token= (leaks into access logs, Referer, and proxies).
   const authHeader = req.headers.authorization || "";
   const bearerToken = authHeader.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length).trim()
     : "";
-  const queryToken = typeof req.query.token === "string" ? req.query.token : "";
 
-  return bearerToken === cronSecret || queryToken === cronSecret;
+  return bearerToken === cronSecret;
 }
 
 export function assertCronAuthorized(req: Request): void {
