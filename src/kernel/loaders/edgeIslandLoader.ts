@@ -1,24 +1,12 @@
 import { vouchedgeApi } from '../../api/vouchedgeApi';
-import { apiClient } from '../../lib/apiClient';
+import { loadNotifications } from './notificationsLoader';
 
-async function fetchNotifications(): Promise<unknown[]> {
-  try {
-    const payload = await apiClient.get<{
-      notifications?: unknown[];
-      items?: unknown[];
-    }>('/api/notifications');
-
-    return payload.notifications ?? payload.items ?? [];
-  } catch {
-    return [];
-  }
-}
 
 export async function loadEdgeIsland() {
   const [summary, board, notifications] = await Promise.all([
     vouchedgeApi.dailyReport(),
     vouchedgeApi.hrBoardToday(25),
-    fetchNotifications(),
+    loadNotifications(),
   ]);
 
   return {

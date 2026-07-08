@@ -1,20 +1,9 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { vouchedgeApi } from '../../../api/vouchedgeApi';
-import { apiClient } from '../../../lib/apiClient';
 import { queryKeys } from '../../../hooks/queries/queryKeys';
 import type { EdgeIslandData } from '../types/edgeIslandData';
 
-async function fetchNotifications(): Promise<unknown[]> {
-  try {
-    const payload = await apiClient.get<{ notifications?: unknown[]; items?: unknown[] }>(
-      '/api/notifications'
-    );
-    return payload.notifications ?? payload.items ?? [];
-  } catch {
-    return [];
-  }
-}
 
 export function useEdgeIslandData() {
   const [reportQuery, boardQuery, notificationsQuery] = useQueries({
