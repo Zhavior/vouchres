@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { HrBoardRepository } from "../../../repositories/HrBoardRepository";
+import { loadHrBoard } from "../../../kernel";
 import { useVouchResource } from "./useVouchResource";
 
 const PREVIEW_LIMIT = 350;
@@ -13,11 +13,8 @@ export function useDailyHrBoard(date: string) {
   const isToday = date === todayISO();
 
   const fetcher = useCallback(
-    () =>
-      isToday
-        ? HrBoardRepository.getToday(PREVIEW_LIMIT)
-        : HrBoardRepository.getByDate(date, PREVIEW_LIMIT),
-    [date, isToday]
+    () => hr.loadHrBoard(date),
+    [date]
   );
 
   return useVouchResource({

@@ -12,6 +12,7 @@
  *  - All 18+ features preserved, just 2-level hierarchy
  */
 
+import { VECard } from '../../components/ui/ve';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
@@ -133,7 +134,7 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
-    <div className={['glass-panel glass-border font-mono transition-all', hasActive ? 'border-vouch-cyan/35' : 'border-white/10'].join(' ')}>
+    <VECard className={['font-mono transition-all', hasActive ? 'border-vouch-cyan/35' : 'border-white/10'].join(' ')}>
       {/* Group header */}
       <button
         onClick={onToggle}
@@ -181,7 +182,7 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
           ))}
         </div>
       </div>
-    </div>
+    </VECard>
   );
 }
 

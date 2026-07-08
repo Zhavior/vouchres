@@ -1,5 +1,6 @@
 import React from 'react';
 import { SlidersHorizontal, Trophy, Layers } from 'lucide-react';
+import { VECard } from '../../components/ui/ve';
 
 interface FeedTabsProps {
   activeTab: string;
@@ -43,7 +44,7 @@ export default function FeedTabs({
   ];
 
   return (
-    <div className="glass-panel glass-border font-z8 flex flex-col sticky top-0 z-30 w-full rounded-none border-x-0" id="feed-navigation-tabs-composite">
+    <VECard className="font-z8 flex flex-col sticky top-0 z-30 w-full rounded-none border-x-0" id="feed-navigation-tabs-composite">
       {/* Primary tabs scroll */}
       <div className="flex overflow-x-auto no-scrollbar scroll-smooth w-full select-none">
         {tabs.map((tab) => {
@@ -126,6 +127,6 @@ export default function FeedTabs({
           </div>
         </div>
       )}
-    </div>
+    </VECard>
   );
 }

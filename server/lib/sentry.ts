@@ -24,7 +24,8 @@ import type { Express, Request, Response, NextFunction } from "express";
  */
 
 const SENTRY_DSN = process.env.SENTRY_DSN ?? "";
-const SENTRY_ENV = process.env.NODE_ENV ?? "development";
+/** Prefer SENTRY_ENVIRONMENT when set (e.g. staging); falls back to NODE_ENV. */
+const SENTRY_ENV = process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? "development";
 
 let initialized = false;
 let missingDsnLogged = false;
@@ -100,12 +101,76 @@ export function initServerSentry(app?: Express) {
 export const sentryRequestHandler = (Sentry as any).requestHandler ?? ((req: any, res: any, next: any) => next());
 export const sentryErrorHandler = Sentry.expressErrorHandler;
 
+export type SentryCaptureContext = {
+  extra?: Record<string, unknown>;
+  tags?: Record<string, string>;
+};
+
 /**
  * Capture an exception manually.
  */
-export function captureException(err: Error | unknown, context?: Record<string, any>) {
+export function captureException(err: Error | unknown, context?: SentryCaptureContext) {
   if (!initialized) return;
-  Sentry.captureException(err, { extra: context });
+  Sentry.withScope((scope) => {
+    if (context?.tags) {
+      for (const [key, value] of Object.entries(context.tags)) {
+        scope.setTag(key, value);
+      }
+    }
+    if (context?.extra) {
+      scope.setExtras(context.extra);
+    }
+    Sentry.captureException(err);
+  });
+}
+
+/**
+ * Structured capture for grading pipeline failures (cron, staff, job, per-pick).
+ */
+export function captureGradingFailure(
+  err: Error | unknown,
+  context: {
+    source: "cron" | "staff" | "job" | "pick" | "run";
+    parlayId?: string;
+    pickId?: string;
+    eventId?: string;
+    dryRun?: boolean;
+    cron?: boolean;
+    extra?: Record<string, unknown>;
+  }
+) {
+  captureException(err, {
+    tags: {
+      service: "grading",
+      grading_source: context.source,
+      ...(context.parlayId ? { parlay_id: context.parlayId } : {}),
+      ...(context.pickId ? { pick_id: context.pickId } : {}),
+      ...(context.eventId ? { event_id: context.eventId } : {}),
+      ...(context.cron ? { cron: "true" } : {}),
+    },
+    extra: {
+      dryRun: context.dryRun,
+      ...context.extra,
+    },
+  });
+}
+
+/**
+ * Add a breadcrumb for non-fatal observability signals (e.g. circuit breaker open).
+ */
+export function addBreadcrumb(breadcrumb: {
+  category: string;
+  message: string;
+  level?: Sentry.SeverityLevel;
+  data?: Record<string, unknown>;
+}) {
+  if (!initialized) return;
+  Sentry.addBreadcrumb({
+    category: breadcrumb.category,
+    message: breadcrumb.message,
+    level: breadcrumb.level ?? "info",
+    data: breadcrumb.data,
+  });
 }
 
 /**
@@ -167,6 +232,7 @@ export function asyncHandler<T extends Request = Request>(
  *
  * .env.local additions (server-side only — never VITE_ prefix):
  *   SENTRY_DSN=https://your-key@sentry.io/server-project-id
+ *   SENTRY_ENVIRONMENT=production   # optional; defaults to NODE_ENV
  *
  * .env.local additions (client-side, VITE_ prefix OK):
  *   VITE_SENTRY_DSN=https://your-key@sentry.io/frontend-project-id

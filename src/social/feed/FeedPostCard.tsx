@@ -1,3 +1,4 @@
+import { VECard } from '../../components/ui/ve';
 import React, { useState } from 'react';
 import { 
   Heart, 
@@ -481,8 +482,8 @@ export default function FeedPostCard({
   }
 
   return (
-    <article 
-      className="bg-[hsl(var(--ve-surface)/0.76)] rounded-3xl border border-[hsl(var(--ve-border)/0.38)] p-4 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
+    <VECard
+      className="p-4 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
@@ -1058,6 +1059,6 @@ export default function FeedPostCard({
           </div>
         </div>
       )}
-    </article>
+    </VECard>
   );
 }

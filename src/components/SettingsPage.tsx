@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
 import { apiClient } from '../lib/apiClient';
+import { VEButton } from './ui/ve';
 import { supabase } from '../lib/supabaseClient';
 import {
   fetchBillingStatus,
@@ -716,16 +717,17 @@ export default function SettingsPage({
 
                 <Section title="Payment method" subtitle="Update your card, view invoices, or cancel your subscription.">
                   <div className="space-y-3">
-                    <button
+                    <VEButton
                       type="button"
                       onClick={handleManageBilling}
                       disabled={portalLoading}
-                      className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/50 px-4 py-2.5 text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors"
+                      variant="ghost"
+                      className="border-slate-700 bg-slate-900/50 text-slate-200 hover:bg-slate-800 hover:text-white"
                     >
                       {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                       Manage billing
                       <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
-                    </button>
+                    </VEButton>
                     {billingPortalError && (
                       <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-950/30 px-4 py-3">
                         <Zap className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
@@ -795,15 +797,16 @@ export default function SettingsPage({
                       <p className="text-sm font-medium text-white">Data export</p>
                       <p className="text-xs text-slate-500">Download your picks, parlays, profile, and activity as JSON.</p>
                     </div>
-                    <button
+                    <VEButton
                       type="button"
                       onClick={handleExportData}
                       disabled={privacyLoading === 'export'}
-                      className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                      variant="ghost"
+                      className="border-slate-700 text-slate-200"
                     >
                       {privacyLoading === 'export' ? <Loader className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                       Export
-                    </button>
+                    </VEButton>
                   </div>
                 </Section>
 
@@ -815,14 +818,15 @@ export default function SettingsPage({
                       <p className="text-sm font-medium text-white">Reset local data</p>
                       <p className="text-xs text-slate-500">Clears picks, slips, vouches, and profile previews on this browser.</p>
                     </div>
-                    <button
+                    <VEButton
                       type="button"
                       onClick={handleResetClick}
-                      className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+                      variant="ghost"
+                      className="border-slate-700 text-slate-200"
                     >
                       <RefreshCw className="h-4 w-4" />
                       Reset
-                    </button>
+                    </VEButton>
                   </div>
                 </Section>
 
@@ -837,15 +841,16 @@ export default function SettingsPage({
                           Schedules deletion with a 30-day grace period. Active subscriptions will be cancelled. This cannot be undone.
                         </p>
                       </div>
-                      <button
+                      <VEButton
                         type="button"
                         onClick={handleScheduleDeletion}
                         disabled={privacyLoading === 'delete'}
-                        className="shrink-0 flex items-center gap-2 rounded-lg border border-red-500/40 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                        variant="ghost"
+                        className="border-red-500/40 text-red-400 hover:bg-red-500/10"
                       >
                         {privacyLoading === 'delete' ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         Delete account
-                      </button>
+                      </VEButton>
                     </div>
                   </div>
                 </Section>

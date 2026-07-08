@@ -1,34 +1,18 @@
-import { useEffect, useState } from 'react';
-import { getEdgeIslandData } from '../services/edgeIslandService';
+import { useQuery } from '@tanstack/react-query';
+import { edge, kernelQueryKeys } from '../../../kernel';
 import type { EdgeIslandData } from '../types/edgeIslandData';
 
+
 export function useEdgeIslandData() {
-  const [data, setData] = useState<EdgeIslandData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const query = useQuery({
+    queryKey: kernelQueryKeys.edgeIsland(),
+    queryFn: edge.loadEdgeIsland,
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    let alive = true;
-
-    getEdgeIslandData()
-      .then((nextData) => {
-        if (!alive) return;
-        setData(nextData);
-        setError(null);
-      })
-      .catch((err) => {
-        if (!alive) return;
-        setError(err instanceof Error ? err.message : 'Failed to load Edge Island.');
-      })
-      .finally(() => {
-        if (!alive) return;
-        setLoading(false);
-      });
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  return { data, loading, error };
+  return {
+    data: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error?.message ?? null,
+  };
 }

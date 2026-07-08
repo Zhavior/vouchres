@@ -7,6 +7,7 @@ import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators"
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePendingPicks } from "../../services/grading/gradingService";
+import { captureGradingFailure } from "../../lib/sentry";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
 import { partitionGradeDueResult } from "./parlayGradingResponses";
 import {
@@ -15,6 +16,18 @@ import {
   repairLegacyParlayIdentityForSync,
 } from "./parlayRepairHelpers";
 
+/**
+ * Cron-only parlay maintenance routes.
+ *
+ * Schedule (Vercel): see vercel.json → crons → `/api/cron/parlays/grade-due`
+ *   - Default: `0 10 * * *` UTC (daily morning pass after West-coast finals)
+ *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized)
+ *
+ * Multi-instance safety:
+ *   - gradePendingPicks() uses process-local coalescing + Upstash distributed lock
+ *     (`grading:pending-picks` in server/lib/distributedLock.ts) when Redis is configured.
+ *   - Re-runs are idempotent: only `status=pending` picks are graded.
+ */
 export const parlayCronRoutes = Router();
 
 parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
@@ -42,7 +55,13 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
   assertCronAuthorized(req);
 
   const days = boundedInt(req.query.days, "days", 2, 1, 7);
-  const result = await gradePendingPicks({ days });
+  let result;
+  try {
+    result = await gradePendingPicks({ days });
+  } catch (err) {
+    captureGradingFailure(err, { source: "cron", cron: true, extra: { days, route: "grade-due" } });
+    throw err;
+  }
   const { settled, pending, errors, summary } = partitionGradeDueResult(result);
   const requestId = req.requestId ?? "unknown";
 

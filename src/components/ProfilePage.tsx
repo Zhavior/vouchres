@@ -7,6 +7,7 @@ import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
+import { VEButton } from './ui/ve';
 
 interface ProfilePageProps {
   profile: CreatorProofProfile;
@@ -292,22 +293,24 @@ export default function ProfilePage({
 
                 {!isEditing ? (
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
+                    <VEButton
                       onClick={() => setShowShareModal(true)}
-                      className="px-3.5 py-1.5 bg-sky-950/50 hover:bg-sky-900/40 text-sky-400 hover:text-sky-300 rounded-xl text-xs font-extrabold border border-sky-800/40 flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
                       id="share-profile-btn"
+                      variant="ghost"
+                      className="border-sky-800/40 text-sky-400 hover:text-sky-300"
                     >
                       <Share className="w-3.5 h-3.5" />
                       Share Card
-                    </button>
-                    <button 
+                    </VEButton>
+                    <VEButton
                       onClick={() => setIsEditing(true)}
-                      className="px-3.5 py-1.5 bg-[#0b0f19] hover:bg-slate-900 text-slate-300 hover:text-slate-100 rounded-xl text-xs font-bold border border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer"
                       id="edit-profile-btn"
+                      variant="ghost"
+                      className="border-slate-800 text-slate-300 hover:text-slate-100"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       Edit Profile
-                    </button>
+                    </VEButton>
                   </div>
                 ) : null}
               </div>

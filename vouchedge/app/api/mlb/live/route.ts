@@ -1,4 +1,7 @@
-import { NextResponse } from "next/server";
+import { proxyBackendGet } from "@/lib/api/backendProxy";
+
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  return NextResponse.json({ ok: true, confidence: 84.4, line: "-118" });
+  return proxyBackendGet("/api/mlb/live");
 }

@@ -4,6 +4,7 @@ import TrendingVouchesPanel from './TrendingVouchesPanel';
 import ProofBuildersPanel from './ProofBuildersPanel';
 import HotMarketsPanel from './HotMarketsPanel';
 import { FeedPost, CreatorProofProfile, Vouch } from '../../types';
+import { VECard } from '../../components/ui/ve';
 
 interface FeedRightRailProps {
   posts: FeedPost[];
@@ -30,7 +31,7 @@ export default function FeedRightRail({
       <ProofBuildersPanel profile={profile} />
 
       {/* 4. Risk Reminder Plate */}
-      <div className="glass-panel glass-border rounded-2xl p-4 border-rose-400/15" id="risk-reminder-plate">
+      <VECard className="border-rose-400/15" id="risk-reminder-plate">
         <div className="flex gap-2.5 items-start">
           <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
           <div className="text-xs">
@@ -40,7 +41,7 @@ export default function FeedRightRail({
             </p>
           </div>
         </div>
-      </div>
+      </VECard>
 
     </aside>
   );

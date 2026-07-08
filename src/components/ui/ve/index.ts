@@ -4,5 +4,10 @@ export { VEButton } from './VEButton';
 export { VESectionHeader } from './VESectionHeader';
 export { VEBadge } from './VEBadge';
 export { VEState } from './VEState';
-
 export { VEAppShell } from './VEAppShell';
+
+export { VEWidget } from './VEWidget';
+export { VEGrid } from './VEGrid';
+export { VEStat } from './VEStat';
+export { VESkeleton } from './VESkeleton';
+export { VEEmptyState } from './VEEmptyState';

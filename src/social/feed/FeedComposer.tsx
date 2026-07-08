@@ -1,3 +1,4 @@
+import { VECard } from '../../components/ui/ve';
 import React from 'react';
 import { CheckCircle2, Lock, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
 import { FeedPost, Parlay } from '../../types';
@@ -129,7 +130,8 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
   };
 
   return (
-    <form className="glass-panel glass-border font-z8 rounded-3xl p-4 space-y-4" onSubmit={handleSubmit}>
+    <VECard className="font-z8 rounded-3xl p-4 space-y-4">
+      <form onSubmit={handleSubmit}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
@@ -273,6 +275,7 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
         <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-vouch-emerald/60" />
         <span>Posts appear instantly in your feed. Results and saved parlays stay tied to your VouchEdge profile.</span>
       </div>
-    </form>
+      </form>
+    </VECard>
   );
 }

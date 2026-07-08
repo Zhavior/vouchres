@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { VEButton } from '../../../components/ui/ve';
 import { RefreshCw, AlertOctagon, Inbox, Flame, Award, Eye, Moon } from 'lucide-react';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
@@ -252,15 +253,17 @@ const HomeRunIntelligencePage: React.FC = () => {
 
           <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-white/35">
             <span>Last refreshed {lastUpdatedLabel}</span>
-            <button
+            <VEButton
               type="button"
               onClick={handleRefresh}
               aria-label="Refresh data"
               disabled={vm.loading}
-              className="flex h-7 w-7 items-center justify-center border border-white/10 bg-black/30 text-zinc-400 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:opacity-50"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 border-white/10 bg-black/30 text-zinc-400 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${vm.loading ? 'animate-spin' : ''}`} />
-            </button>
+            </VEButton>
           </div>
         </div>
 

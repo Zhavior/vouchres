@@ -92,7 +92,7 @@ describe("live at-bat API route", () => {
         warnings: [],
         cache: {
           strategy: "ttl_cache_with_last_good_snapshot",
-          ttlMs: 12_000,
+          ttlMs: 60_000,
         },
       },
     });
