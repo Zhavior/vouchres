@@ -10,6 +10,7 @@
 import { getGameFeed } from "./mlbClient";
 import { headshotUrl } from "./mlbTypes";
 import { TTLCache } from "../../lib/cache";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
@@ -63,6 +64,66 @@ const cache = new TTLCache<LiveAtBatSnapshot | null>(12_000);
 const lastGoodSnapshots = new Map<number, { snapshot: LiveAtBatSnapshot; expiresAt: number }>();
 const LAST_GOOD_TTL_MS = 2 * 60_000;
 const MAX_LAST_GOOD_SNAPSHOTS = 64;
+const LAST_GOOD_REDIS_PREFIX = "live-at-bat:last-good";
+
+type LastGoodAtBatEntry = { snapshot: LiveAtBatSnapshot; storedAt: number };
+
+async function persistLastGoodToRedis(gamePk: number, entry: LastGoodAtBatEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${gamePk}`;
+  const ttlSeconds = Math.max(1, Math.floor(LAST_GOOD_TTL_MS / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[liveAtBat] redis last-good write failed gamePk=${gamePk}`,
+      (error as Error)?.message,
+    );
+  }
+}
+
+async function loadLastGoodFromRedis(gamePk: number): Promise<LastGoodAtBatEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${gamePk}`;
+  try {
+    const remote = await redisGetJson<LastGoodAtBatEntry>(redisKey);
+    if (!remote?.snapshot || typeof remote.storedAt !== "number") return null;
+
+    const ageMs = Date.now() - remote.storedAt;
+    if (ageMs > LAST_GOOD_TTL_MS) return null;
+
+    lastGoodSnapshots.set(gamePk, {
+      snapshot: remote.snapshot,
+      expiresAt: remote.storedAt + LAST_GOOD_TTL_MS,
+    });
+    console.log(`[liveAtBat] redis last-good hit gamePk=${gamePk} ageMs=${ageMs}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[liveAtBat] redis last-good read failed gamePk=${gamePk}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+async function resolveLastGoodSnapshot(gamePk: number): Promise<LiveAtBatSnapshot | null> {
+  const local = lastGoodSnapshots.get(gamePk);
+  if (local && local.expiresAt > Date.now()) return local.snapshot;
+
+  const remote = await loadLastGoodFromRedis(gamePk);
+  if (!remote) return null;
+
+  return remote.snapshot;
+}
+
+/** Test-only reset for live at-bat caches and last-good snapshots. */
+export function resetLiveAtBatCachesForTests(): void {
+  cache.clear();
+  lastGoodSnapshots.clear();
+}
 
 function num(v: unknown): number | null {
   const n = Number(v);
@@ -149,6 +210,7 @@ function rememberLastGood(gamePk: number, snapshot: LiveAtBatSnapshot): void {
   }
 
   lastGoodSnapshots.set(gamePk, { snapshot, expiresAt: now + LAST_GOOD_TTL_MS });
+  void persistLastGoodToRedis(gamePk, { snapshot, storedAt: now });
 
   while (lastGoodSnapshots.size > MAX_LAST_GOOD_SNAPSHOTS) {
     const oldest = lastGoodSnapshots.keys().next().value;
@@ -186,7 +248,7 @@ export async function getLiveAtBat(gamePk: number): Promise<LiveAtBatSnapshot | 
   return cache.getOrSet(`at-bat:${gamePk}`, async () => {
     try {
       const feed = await getGameFeed(gamePk);
-      if (!feed) return lastGoodSnapshots.get(gamePk)?.snapshot ?? null;
+      if (!feed) return resolveLastGoodSnapshot(gamePk);
 
       const linescore = feed.liveData?.linescore ?? {};
       const box = feed.liveData?.boxscore;
@@ -222,10 +284,10 @@ export async function getLiveAtBat(gamePk: number): Promise<LiveAtBatSnapshot | 
       rememberLastGood(gamePk, snapshot);
       return snapshot;
     } catch (error) {
-      const lastGood = lastGoodSnapshots.get(gamePk);
-      if (lastGood && lastGood.expiresAt > Date.now()) {
+      const lastGood = await resolveLastGoodSnapshot(gamePk);
+      if (lastGood) {
         console.warn(`[liveAtBat] serving last-good snapshot gamePk=${gamePk}:`, (error as Error).message);
-        return lastGood.snapshot;
+        return lastGood;
       }
 
       throw error;

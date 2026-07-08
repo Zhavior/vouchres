@@ -4,6 +4,7 @@
  */
 import { getScheduleByDate, getGameFeed, todayISO } from "./mlbClient";
 import { TTLCache } from "../../lib/cache";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { headshotUrl } from "./mlbTypes";
 
 export interface HrEvent {
@@ -37,13 +38,59 @@ export interface HrFeedPayload {
 }
 
 const lastGoodHrFeeds = new Map<string, { payload: HrFeedPayload; storedAt: number }>();
+const LAST_GOOD_REDIS_PREFIX = "mlb-hr-feed:last-good";
 
-function rememberLastGoodHrFeed(date: string, payload: HrFeedPayload): void {
-  lastGoodHrFeeds.set(date, { payload, storedAt: Date.now() });
+type LastGoodHrFeedEntry = { payload: HrFeedPayload; storedAt: number };
+
+async function persistLastGoodToRedis(date: string, entry: LastGoodHrFeedEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  const ttlSeconds = Math.max(1, Math.floor(LAST_GOOD_TTL_MS / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[hrFeed] redis last-good write failed date=${date}`,
+      (error as Error)?.message,
+    );
+  }
 }
 
-function serveLastGoodHrFeed(date: string): HrFeedPayload | null {
-  const entry = lastGoodHrFeeds.get(date);
+async function loadLastGoodFromRedis(date: string): Promise<LastGoodHrFeedEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  try {
+    const remote = await redisGetJson<LastGoodHrFeedEntry>(redisKey);
+    if (!remote?.payload || typeof remote.storedAt !== "number") return null;
+
+    const ageMs = Date.now() - remote.storedAt;
+    if (ageMs > LAST_GOOD_TTL_MS) return null;
+
+    lastGoodHrFeeds.set(date, remote);
+    console.log(`[hrFeed] redis last-good hit date=${date} ageMs=${ageMs}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[hrFeed] redis last-good read failed date=${date}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+function rememberLastGoodHrFeed(date: string, payload: HrFeedPayload): void {
+  const entry: LastGoodHrFeedEntry = { payload, storedAt: Date.now() };
+  lastGoodHrFeeds.set(date, entry);
+  void persistLastGoodToRedis(date, entry);
+}
+
+async function serveLastGoodHrFeed(date: string): Promise<HrFeedPayload | null> {
+  let entry = lastGoodHrFeeds.get(date);
+  if (!entry) {
+    entry = (await loadLastGoodFromRedis(date)) ?? undefined;
+  }
   if (!entry) return null;
   if (Date.now() - entry.storedAt > LAST_GOOD_TTL_MS) return null;
 
@@ -76,7 +123,7 @@ export async function getTodayHomeRuns(date = todayISO()): Promise<HrFeedPayload
       rememberLastGoodHrFeed(date, payload);
       return payload;
     } catch (error) {
-      const lastGood = serveLastGoodHrFeed(date);
+      const lastGood = await serveLastGoodHrFeed(date);
       if (lastGood) return lastGood;
       throw error;
     }

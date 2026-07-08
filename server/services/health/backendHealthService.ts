@@ -149,7 +149,7 @@ function productionProofChecklist(checks: ConfigCheck[]): {
       label: "Upstream last-good fallback coverage (MLB feeds)",
       ready: true,
       detail:
-        "Automated tests cover last-good snapshots for HR board hub, HR feed, daily report, live at-bat, and lineup board. " +
+        "Automated tests cover last-good snapshots (L1 + Redis L2 read-through) for HR board hub, HR feed, daily report, live at-bat, and lineup board. " +
         "Staging should still kill Stats API briefly and confirm honest warnings on /api/mlb/lineup/today and /api/mlb/hr-board/today.",
     },
   ];

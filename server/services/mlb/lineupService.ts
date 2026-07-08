@@ -1,5 +1,6 @@
 /** Today's MLB lineups from Stats API with last-good fallback on upstream failure. */
 import { TTL, TTLCache } from "../../lib/cache";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { headshotUrl } from "./mlbTypes";
 import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "./mlbStatsApiSchemas";
@@ -45,13 +46,59 @@ export interface LineupPayload {
 }
 
 const lastGoodLineups = new Map<string, { lineups: LineupGame[]; storedAt: number }>();
+const LAST_GOOD_REDIS_PREFIX = "mlb-lineups:last-good";
 
-function rememberLastGoodLineups(date: string, lineups: LineupGame[]): void {
-  lastGoodLineups.set(date, { lineups, storedAt: Date.now() });
+type LastGoodLineupEntry = { lineups: LineupGame[]; storedAt: number };
+
+async function persistLastGoodToRedis(date: string, entry: LastGoodLineupEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  const ttlSeconds = Math.max(1, Math.floor(LAST_GOOD_TTL_MS / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[lineup] redis last-good write failed date=${date}`,
+      (error as Error)?.message,
+    );
+  }
 }
 
-function serveLastGoodLineups(date: string): LineupPayload | null {
-  const entry = lastGoodLineups.get(date);
+async function loadLastGoodFromRedis(date: string): Promise<LastGoodLineupEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  try {
+    const remote = await redisGetJson<LastGoodLineupEntry>(redisKey);
+    if (!remote?.lineups || typeof remote.storedAt !== "number") return null;
+
+    const ageMs = Date.now() - remote.storedAt;
+    if (ageMs > LAST_GOOD_TTL_MS) return null;
+
+    lastGoodLineups.set(date, remote);
+    console.log(`[lineup] redis last-good hit date=${date} ageMs=${ageMs}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[lineup] redis last-good read failed date=${date}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+function rememberLastGoodLineups(date: string, lineups: LineupGame[]): void {
+  const entry: LastGoodLineupEntry = { lineups, storedAt: Date.now() };
+  lastGoodLineups.set(date, entry);
+  void persistLastGoodToRedis(date, entry);
+}
+
+async function serveLastGoodLineups(date: string): Promise<LineupPayload | null> {
+  let entry = lastGoodLineups.get(date);
+  if (!entry) {
+    entry = (await loadLastGoodFromRedis(date)) ?? undefined;
+  }
   if (!entry) return null;
   if (Date.now() - entry.storedAt > LAST_GOOD_TTL_MS) return null;
 
@@ -215,7 +262,7 @@ export async function getTodayLineups(date: string): Promise<LineupPayload> {
       rememberLastGoodLineups(date, lineups);
       return { lineups, warnings: [] };
     } catch (error) {
-      const lastGood = serveLastGoodLineups(date);
+      const lastGood = await serveLastGoodLineups(date);
       if (lastGood) return lastGood;
       throw error;
     }

@@ -4,7 +4,14 @@ vi.mock("../server/lib/sports/sportsHttpClient", () => ({
   sportsFetchJson: vi.fn(),
 }));
 
+vi.mock("../server/lib/upstashRedis", () => ({
+  isUpstashEnabled: vi.fn(() => false),
+  redisGetJson: vi.fn(),
+  redisSetJson: vi.fn(),
+}));
+
 import { sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../server/lib/upstashRedis";
 import {
   getTodayLineups,
   invalidateLineupCacheForTests,
@@ -53,6 +60,7 @@ describe("getTodayLineups last-good fallback", () => {
   beforeEach(() => {
     resetLineupCachesForTests();
     vi.clearAllMocks();
+    vi.mocked(isUpstashEnabled).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -83,5 +91,28 @@ describe("getTodayLineups last-good fallback", () => {
     vi.mocked(sportsFetchJson).mockRejectedValue(new Error("statsapi down"));
 
     await expect(getTodayLineups("2026-07-08")).rejects.toThrow("statsapi down");
+  });
+
+  it("serves last-good lineups from Redis when local L1 is empty", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    vi.mocked(sportsFetchJson)
+      .mockResolvedValueOnce(schedulePayload)
+      .mockResolvedValueOnce(peoplePayload)
+      .mockRejectedValueOnce(new Error("statsapi timeout"));
+
+    const first = await getTodayLineups("2026-07-08");
+    expect(first.lineups).toHaveLength(1);
+    expect(redisSetJson).toHaveBeenCalled();
+
+    resetLineupCachesForTests();
+    invalidateLineupCacheForTests("2026-07-08");
+
+    const storedAt = Date.now() - 5_000;
+    vi.mocked(redisGetJson).mockResolvedValueOnce({ lineups: first.lineups, storedAt });
+
+    const fallback = await getTodayLineups("2026-07-08");
+    expect(fallback.servedFromLastGood).toBe(true);
+    expect(fallback.warnings.join(" ")).toContain("last-known lineup board");
+    expect(redisGetJson).toHaveBeenCalled();
   });
 });

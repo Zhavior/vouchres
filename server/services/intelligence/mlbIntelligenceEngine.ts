@@ -20,6 +20,7 @@ import { rankHrTargets, findSneakyHrTargets, HrTarget, SneakyHrTarget } from "./
 import { rankRbiTargets, RbiEnvironmentReport } from "./rbiEnvironmentEngine";
 import { scoreRunEnvironment, RunEnvironment } from "./runEnvironmentEngine";
 import { TTL, limitConcurrency } from "../../lib/cache";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 
 export interface DailyMlbReport {
   date: string;
@@ -61,13 +62,59 @@ const LAST_GOOD_DAILY_REPORT_WARNING =
   "Serving last-known daily report; upstream refresh failed. Data is from the prior successful build.";
 
 const lastGoodDailyReports = new Map<string, { report: DailyMlbReport; storedAt: number }>();
+const LAST_GOOD_REDIS_PREFIX = "mlb-daily-report:last-good";
 
-function rememberLastGoodDailyReport(date: string, report: DailyMlbReport): void {
-  lastGoodDailyReports.set(date, { report, storedAt: Date.now() });
+type LastGoodDailyReportEntry = { report: DailyMlbReport; storedAt: number };
+
+async function persistLastGoodToRedis(date: string, entry: LastGoodDailyReportEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  const ttlSeconds = Math.max(1, Math.floor(LAST_GOOD_DAILY_REPORT_MS / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[sharedReport] redis last-good write failed date=${date}`,
+      (error as Error)?.message,
+    );
+  }
 }
 
-function serveLastGoodDailyReport(date: string): DailyMlbReport | null {
-  const entry = lastGoodDailyReports.get(date);
+async function loadLastGoodFromRedis(date: string): Promise<LastGoodDailyReportEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${date}`;
+  try {
+    const remote = await redisGetJson<LastGoodDailyReportEntry>(redisKey);
+    if (!remote?.report || typeof remote.storedAt !== "number") return null;
+
+    const ageMs = Date.now() - remote.storedAt;
+    if (ageMs > LAST_GOOD_DAILY_REPORT_MS) return null;
+
+    lastGoodDailyReports.set(date, remote);
+    console.log(`[sharedReport] redis last-good hit date=${date} ageMs=${ageMs}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[sharedReport] redis last-good read failed date=${date}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+function rememberLastGoodDailyReport(date: string, report: DailyMlbReport): void {
+  const entry: LastGoodDailyReportEntry = { report, storedAt: Date.now() };
+  lastGoodDailyReports.set(date, entry);
+  void persistLastGoodToRedis(date, entry);
+}
+
+async function serveLastGoodDailyReport(date: string): Promise<DailyMlbReport | null> {
+  let entry = lastGoodDailyReports.get(date);
+  if (!entry) {
+    entry = (await loadLastGoodFromRedis(date)) ?? undefined;
+  }
   if (!entry) return null;
   if (Date.now() - entry.storedAt > LAST_GOOD_DAILY_REPORT_MS) return null;
 
@@ -98,7 +145,7 @@ export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbR
     } catch (err) {
       reportBuildStats.failed++;
       console.error(`[sharedReport] build failed for ${date}:`, (err as Error).message);
-      const lastGood = serveLastGoodDailyReport(date);
+      const lastGood = await serveLastGoodDailyReport(date);
       if (lastGood) return lastGood;
       return buildEmptyReport(date, [`Daily report build failed: ${(err as Error).message}`]);
     }

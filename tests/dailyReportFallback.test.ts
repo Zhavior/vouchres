@@ -9,7 +9,14 @@ vi.mock("../server/services/mlb/statsClient", () => ({
   getPitcherStats: vi.fn(),
 }));
 
+vi.mock("../server/lib/upstashRedis", () => ({
+  isUpstashEnabled: vi.fn(() => false),
+  redisGetJson: vi.fn(),
+  redisSetJson: vi.fn(),
+}));
+
 import { getScheduleByDate } from "../server/services/mlb/mlbClient";
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../server/lib/upstashRedis";
 import {
   clearDailyReportCache,
   getSharedDailyReport,
@@ -21,6 +28,7 @@ describe("getSharedDailyReport last-good fallback", () => {
     clearDailyReportCache();
     resetDailyReportLastGoodForTests();
     vi.clearAllMocks();
+    vi.mocked(isUpstashEnabled).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -63,5 +71,38 @@ describe("getSharedDailyReport last-good fallback", () => {
     expect(report.gameCount).toBe(0);
     expect(report.dataQuality).toBe("limited");
     expect(report.warnings.join(" ")).toContain("Daily report build failed");
+  });
+
+  it("serves last-good daily report from Redis when local L1 is empty", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    vi.mocked(getScheduleByDate)
+      .mockResolvedValueOnce([
+        {
+          gamePk: 777001,
+          status: "Scheduled",
+          gameDate: "2026-07-08",
+          awayTeam: { name: "Boston Red Sox", abbreviation: "BOS" },
+          homeTeam: { name: "New York Yankees", abbreviation: "NYY" },
+          probablePitchers: { away: null, home: null },
+          score: { home: 0, away: 0 },
+          venue: "Yankee Stadium",
+        },
+      ] as any)
+      .mockRejectedValueOnce(new Error("schedule timeout"));
+
+    const first = await getSharedDailyReport("2026-07-08");
+    expect(first.gameCount).toBe(1);
+    expect(redisSetJson).toHaveBeenCalled();
+
+    clearDailyReportCache("2026-07-08");
+    resetDailyReportLastGoodForTests();
+
+    const storedAt = Date.now() - 5_000;
+    vi.mocked(redisGetJson).mockResolvedValueOnce({ report: first, storedAt });
+
+    const fallback = await getSharedDailyReport("2026-07-08");
+    expect(fallback.gameCount).toBe(1);
+    expect(fallback.warnings.join(" ")).toContain("last-known daily report");
+    expect(redisGetJson).toHaveBeenCalled();
   });
 });

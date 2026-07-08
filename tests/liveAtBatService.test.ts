@@ -13,6 +13,14 @@ vi.mock("../server/lib/sports/sportsHttpClient", () => ({
   sportsFetchJson: mocks.sportsFetchJson,
 }));
 
+vi.mock("../server/lib/upstashRedis", () => ({
+  isUpstashEnabled: vi.fn(() => false),
+  redisGetJson: vi.fn(),
+  redisSetJson: vi.fn(),
+}));
+
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../server/lib/upstashRedis";
+
 function feedWithPitch(gamePk: number) {
   return {
     gameData: {
@@ -75,10 +83,14 @@ describe("getLiveAtBat", () => {
     mocks.getGameFeed.mockReset();
     mocks.sportsFetchJson.mockReset();
     mocks.sportsFetchJson.mockResolvedValue([]);
+    vi.mocked(isUpstashEnabled).mockReturnValue(false);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
+    const { resetLiveAtBatCachesForTests } = await import("../server/services/mlb/liveAtBatService");
+    resetLiveAtBatCachesForTests();
+    vi.clearAllMocks();
   });
 
   it("serves a recent last-good snapshot when MLB live feed fails after cache expiry", async () => {
@@ -98,5 +110,26 @@ describe("getLiveAtBat", () => {
 
     expect(fallback).toEqual(first);
     expect(mocks.getGameFeed).toHaveBeenCalledTimes(2);
+  });
+
+  it("serves last-good snapshot from Redis when local L1 is empty", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    const { getLiveAtBat, resetLiveAtBatCachesForTests } = await import("../server/services/mlb/liveAtBatService");
+
+    mocks.getGameFeed.mockResolvedValueOnce(feedWithPitch(1234));
+    const first = await getLiveAtBat(1234);
+    expect(first?.play?.batter.name).toBe("Test Batter");
+    expect(redisSetJson).toHaveBeenCalled();
+
+    resetLiveAtBatCachesForTests();
+    vi.advanceTimersByTime(13_000);
+
+    const storedAt = Date.now() - 5_000;
+    vi.mocked(redisGetJson).mockResolvedValueOnce({ snapshot: first, storedAt });
+    mocks.getGameFeed.mockRejectedValueOnce(new Error("MLB feed timeout"));
+
+    const fallback = await getLiveAtBat(1234);
+    expect(fallback).toEqual(first);
+    expect(redisGetJson).toHaveBeenCalled();
   });
 });
