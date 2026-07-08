@@ -24,11 +24,66 @@ export interface HrEvent {
 }
 
 const HR_CACHE_TTL = 900_000;
-const hrCache = new TTLCache<HrEvent[]>(HR_CACHE_TTL);
+const hrCache = new TTLCache<HrFeedPayload>(HR_CACHE_TTL);
 const MAX_GAMES = 15;
 
-export async function getTodayHomeRuns(date = todayISO()): Promise<HrEvent[]> {
+const LAST_GOOD_TTL_MS = 5 * 60_000;
+const LAST_GOOD_WARNING =
+  "Serving last-known home run feed; upstream refresh failed. Events are real plays from the prior successful fetch.";
+
+export interface HrFeedPayload {
+  events: HrEvent[];
+  warnings: string[];
+}
+
+const lastGoodHrFeeds = new Map<string, { payload: HrFeedPayload; storedAt: number }>();
+
+function rememberLastGoodHrFeed(date: string, payload: HrFeedPayload): void {
+  lastGoodHrFeeds.set(date, { payload, storedAt: Date.now() });
+}
+
+function serveLastGoodHrFeed(date: string): HrFeedPayload | null {
+  const entry = lastGoodHrFeeds.get(date);
+  if (!entry) return null;
+  if (Date.now() - entry.storedAt > LAST_GOOD_TTL_MS) return null;
+
+  console.warn(`[hrFeed] serving last-good feed date=${date} ageMs=${Date.now() - entry.storedAt}`);
+  return {
+    events: entry.payload.events,
+    warnings: [...new Set([...entry.payload.warnings, LAST_GOOD_WARNING])],
+  };
+}
+
+export function resetHrFeedCachesForTests(): void {
+  hrCache.clear();
+  lastGoodHrFeeds.clear();
+}
+
+/** Test-only: drop cached HR feed without clearing last-good snapshots. */
+export function invalidateHrFeedCacheForTests(date?: string): void {
+  if (date) {
+    hrCache.delete(`hrfeed:${date}`);
+    return;
+  }
+  hrCache.clear();
+}
+
+export async function getTodayHomeRuns(date = todayISO()): Promise<HrFeedPayload> {
   return hrCache.getOrSet(`hrfeed:${date}`, async () => {
+    try {
+      const events = await fetchHrEventsForDate(date);
+      const payload: HrFeedPayload = { events, warnings: [] };
+      rememberLastGoodHrFeed(date, payload);
+      return payload;
+    } catch (error) {
+      const lastGood = serveLastGoodHrFeed(date);
+      if (lastGood) return lastGood;
+      throw error;
+    }
+  });
+}
+
+async function fetchHrEventsForDate(date: string): Promise<HrEvent[]> {
     const games = await getScheduleByDate(date);
     // Only games that have started have play data.
     const relevant = games
@@ -70,5 +125,4 @@ export async function getTodayHomeRuns(date = todayISO()): Promise<HrEvent[]> {
     const events = batches.flat();
     events.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)); // newest first
     return events.slice(0, 60);
-  });
 }

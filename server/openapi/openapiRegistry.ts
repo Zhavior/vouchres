@@ -50,11 +50,23 @@ const LiveGamesSchema = z.object({
   updatedAt: z.string().datetime(),
 }).openapi("LiveGamesResponse");
 
+const HrBoardCandidateSchema = z.object({
+  playerId: z.union([z.string(), z.number()]).optional(),
+  playerName: z.string().optional(),
+  team: z.string().optional(),
+  lineupStatus: z.enum(["confirmed", "projected_unconfirmed", "projected", "unknown"]).optional(),
+  hrScore: z.number().optional(),
+  status: z.string().optional(),
+  warnings: z.array(z.string()).optional(),
+}).passthrough();
+
 const HrBoardTodaySchema = z.object({
   date: z.string(),
   generatedAt: z.string().datetime(),
-  confirmedCandidates: z.array(z.record(z.string(), z.unknown())).optional(),
-  projectedCandidates: z.array(z.record(z.string(), z.unknown())).optional(),
+  dataQuality: z.enum(["validated_hr_board", "projection_preview"]).optional(),
+  candidates: z.array(HrBoardCandidateSchema).optional(),
+  projectedCandidates: z.array(HrBoardCandidateSchema).optional(),
+  counts: z.record(z.string(), z.unknown()).optional(),
   warnings: z.array(z.string()).optional(),
 }).passthrough().openapi("HrBoardTodayResponse");
 
@@ -90,6 +102,48 @@ const ListParlaysQueryDocSchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 }).openapi("ListParlaysQuery");
 
+const ParlayLegSummarySchema = z.object({
+  market: z.string().optional(),
+  selection: z.string().optional(),
+  gamePk: z.union([z.string(), z.number()]).optional(),
+  status: z.string().optional(),
+  odds_decimal: z.number().nullable().optional(),
+}).passthrough();
+
+const MeParlaysListSchema = z.object({
+  ok: z.literal(true),
+  parlays: z.array(z.object({
+    id: z.string(),
+    status: z.string().optional(),
+    stake_units: z.number().optional(),
+    legs: z.array(ParlayLegSummarySchema).optional(),
+  }).passthrough()),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+}).openapi("MeParlaysListResponse");
+
+const GradeParlayResponseSchema = z.object({
+  ok: z.literal(true),
+  legs: z.array(z.object({
+    sport: z.string(),
+    gamePk: z.string(),
+    market: z.string(),
+    selection: z.string(),
+    oddsDecimal: z.number().nullable(),
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    actual: z.number().nullable(),
+    note: z.string().nullable(),
+  })),
+  parlay: z.object({
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    settledUnits: z.number().nullable(),
+    combinedOdds: z.number().nullable(),
+    note: z.string(),
+  }),
+  gradedAt: z.string().datetime(),
+}).openapi("GradeParlayResponse");
+
 const NotificationsListSchema = z.object({
   ok: z.literal(true),
   notifications: z.array(z.record(z.string(), z.unknown())),
@@ -112,6 +166,29 @@ const MlbScoresTodaySchema = z.object({
   meta: z.record(z.string(), z.unknown()).optional(),
 }).openapi("MlbScoresTodayResponse");
 
+const MlbMatchupsTodaySchema = z.object({
+  ok: z.literal(true),
+  count: z.number().int().nonnegative(),
+  matchups: z.array(z.record(z.string(), z.unknown())),
+  updatedAt: z.string().datetime(),
+  meta: z.record(z.string(), z.unknown()).optional(),
+}).openapi("MlbMatchupsTodayResponse");
+
+const DailyMlbReportSchema = z.object({
+  ok: z.literal(true).optional(),
+  date: z.string(),
+  gameCount: z.number().int().nonnegative().optional(),
+  dataQuality: z.string().optional(),
+  games: z.array(z.record(z.string(), z.unknown())).optional(),
+  hrTargets: z.array(z.record(z.string(), z.unknown())).optional(),
+  runEnvironments: z.array(z.record(z.string(), z.unknown())).optional(),
+}).passthrough().openapi("DailyMlbReportResponse");
+
+const AuthSignoutSchema = z.object({
+  ok: z.literal(true),
+  message: z.string().optional(),
+}).openapi("AuthSignoutResponse");
+
 const GradeDueMetaSchema = z.object({
   ok: z.literal(true),
   mode: z.literal("cron_grade_due"),
@@ -127,6 +204,75 @@ const GradeDueMetaSchema = z.object({
   checkedAt: z.string().datetime(),
 }).openapi("GradeDueCronResponse");
 
+const HrFeedTodaySchema = z.object({
+  count: z.number().int().nonnegative(),
+  events: z.array(z.record(z.string(), z.unknown())),
+  generatedAt: z.string().datetime(),
+  warnings: z.array(z.string()).optional(),
+}).openapi("HrFeedTodayResponse");
+
+const LiveAtBatSchema = z.object({
+  gamePk: z.number(),
+  status: z.string(),
+  inning: z.number().nullable(),
+  halfInning: z.string().nullable(),
+  outs: z.number().nullable(),
+  updatedAt: z.string().datetime(),
+  play: z.record(z.string(), z.unknown()).nullable().optional(),
+}).passthrough().openapi("LiveAtBatResponse");
+
+const HrBoardPlayerSchema = z.object({
+  player: z.record(z.string(), z.unknown()),
+}).openapi("HrBoardPlayerResponse");
+
+const UsernameCheckSchema = z.object({
+  ok: z.literal(true),
+  available: z.boolean(),
+  reason: z.string().optional(),
+}).openapi("UsernameCheckResponse");
+
+const BillingStatusSchema = z.object({
+  ok: z.literal(true),
+  tier: z.string(),
+  status: z.string().optional(),
+  entitlements: z.record(z.string(), z.unknown()).optional(),
+}).passthrough().openapi("BillingStatusResponse");
+
+const BillingCheckoutSchema = z.object({
+  tier: z.enum(["pro", "creator"]),
+  interval: z.enum(["monthly", "yearly"]).default("monthly"),
+}).openapi("BillingCheckoutRequest");
+
+const MlbGamesTodaySchema = z.object({
+  ok: z.literal(true),
+  date: z.string(),
+  games: z.array(z.record(z.string(), z.unknown())),
+  warnings: z.array(z.string()).optional(),
+}).openapi("MlbGamesTodayResponse");
+
+const MlbLineupTodaySchema = z.object({
+  ok: z.literal(true),
+  date: z.string(),
+  games: z.array(z.object({
+    gamePk: z.number(),
+    status: z.string(),
+    lineupConfirmed: z.boolean(),
+    awayLineup: z.array(z.record(z.string(), z.unknown())),
+    homeLineup: z.array(z.record(z.string(), z.unknown())),
+  }).passthrough()),
+  totalGames: z.number().int().nonnegative(),
+  totalPlayers: z.number().int().nonnegative(),
+  warnings: z.array(z.string()).optional(),
+  source: z.string().optional(),
+}).passthrough().openapi("MlbLineupTodayResponse");
+
+const MlbHealthSchema = z.object({
+  ok: z.boolean(),
+  status: z.enum(["ok", "degraded", "down"]),
+  date: z.string(),
+  warnings: z.array(z.string()).optional(),
+}).passthrough().openapi("MlbHealthResponse");
+
 openapiRegistry.register("OkEnvelope", OkEnvelopeSchema);
 openapiRegistry.register("ErrorEnvelope", ErrorEnvelopeSchema);
 openapiRegistry.register("BackendHealth", HealthBackendSchema);
@@ -136,9 +282,71 @@ openapiRegistry.register("AuthMeResponse", AuthMeSchema);
 openapiRegistry.register("GradeParlayRequest", GradeParlayDocSchema);
 openapiRegistry.register("SaveMeParlayRequest", SaveMeParlayDocSchema);
 openapiRegistry.register("ListParlaysQuery", ListParlaysQueryDocSchema);
+openapiRegistry.register("MeParlaysListResponse", MeParlaysListSchema);
+openapiRegistry.register("GradeParlayResponse", GradeParlayResponseSchema);
 openapiRegistry.register("NotificationsListResponse", NotificationsListSchema);
 openapiRegistry.register("MlbScoresTodayResponse", MlbScoresTodaySchema);
+openapiRegistry.register("MlbMatchupsTodayResponse", MlbMatchupsTodaySchema);
+openapiRegistry.register("DailyMlbReportResponse", DailyMlbReportSchema);
+openapiRegistry.register("AuthSignoutResponse", AuthSignoutSchema);
 openapiRegistry.register("GradeDueCronResponse", GradeDueMetaSchema);
+openapiRegistry.register("HrFeedTodayResponse", HrFeedTodaySchema);
+openapiRegistry.register("LiveAtBatResponse", LiveAtBatSchema);
+openapiRegistry.register("HrBoardPlayerResponse", HrBoardPlayerSchema);
+openapiRegistry.register("UsernameCheckResponse", UsernameCheckSchema);
+openapiRegistry.register("BillingStatusResponse", BillingStatusSchema);
+openapiRegistry.register("BillingCheckoutRequest", BillingCheckoutSchema);
+openapiRegistry.register("MlbGamesTodayResponse", MlbGamesTodaySchema);
+openapiRegistry.register("MlbLineupTodayResponse", MlbLineupTodaySchema);
+openapiRegistry.register("MlbHealthResponse", MlbHealthSchema);
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/matchups/today",
+  summary: "Today's matchup research snapshot",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "Matchup list",
+      content: { "application/json": { schema: MlbMatchupsTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/reports/daily",
+  summary: "Daily MLB research report",
+  tags: ["MLB"],
+  request: {
+    query: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Daily report",
+      content: { "application/json": { schema: DailyMlbReportSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/auth/signout",
+  summary: "Sign out current session",
+  tags: ["Auth"],
+  responses: {
+    200: {
+      description: "Signed out",
+      content: { "application/json": { schema: AuthSignoutSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
 
 openapiRegistry.registerPath({
   method: "get",
@@ -289,7 +497,7 @@ openapiRegistry.registerPath({
   responses: {
     200: {
       description: "Graded legs",
-      content: { "application/json": { schema: OkEnvelopeSchema } },
+      content: { "application/json": { schema: GradeParlayResponseSchema } },
     },
   },
 });
@@ -303,7 +511,250 @@ openapiRegistry.registerPath({
   responses: {
     200: {
       description: "Parlay list",
+      content: { "application/json": { schema: MeParlaysListSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/hr-feed/today",
+  summary: "Real home-run plays from today's MLB games",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "HR feed",
+      content: { "application/json": { schema: HrFeedTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/live-at-bat/{gamePk}",
+  summary: "Pitch-by-pitch live at-bat snapshot for one game",
+  tags: ["MLB"],
+  request: {
+    params: z.object({
+      gamePk: z.coerce.number().int().positive(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Live at-bat snapshot",
+      content: { "application/json": { schema: LiveAtBatSchema } },
+    },
+    404: {
+      description: "Game feed unavailable",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/hr-board/player/{playerId}",
+  summary: "Single validated HR board player detail",
+  tags: ["MLB"],
+  request: {
+    params: z.object({
+      playerId: z.coerce.number().int().positive(),
+    }),
+    query: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Player detail",
+      content: { "application/json": { schema: HrBoardPlayerSchema } },
+    },
+    404: {
+      description: "Player not in validated candidates",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/auth/username-check",
+  summary: "Public username availability check",
+  tags: ["Auth"],
+  request: {
+    query: z.object({
+      username: z.string().min(3).max(24),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Availability result",
+      content: { "application/json": { schema: UsernameCheckSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/billing/status",
+  summary: "Authenticated subscription tier and entitlements",
+  tags: ["Billing"],
+  responses: {
+    200: {
+      description: "Billing status",
+      content: { "application/json": { schema: BillingStatusSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/billing/checkout",
+  summary: "Create Stripe checkout session",
+  tags: ["Billing"],
+  request: {
+    body: {
+      content: { "application/json": { schema: BillingCheckoutSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Checkout session URL",
       content: { "application/json": { schema: OkEnvelopeSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/parlays/grade-due",
+  summary: "Staff: grade all pending picks (systemwide)",
+  tags: ["Parlays"],
+  request: {
+    query: z.object({
+      days: z.coerce.number().int().min(1).max(7).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Grade run summary",
+      content: { "application/json": { schema: GradeDueMetaSchema } },
+    },
+    403: {
+      description: "Staff only",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/games/today",
+  summary: "Today's MLB schedule games",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "Today's games",
+      content: { "application/json": { schema: MlbGamesTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/lineup/today",
+  summary: "Today's official batting lineups",
+  tags: ["MLB"],
+  request: {
+    query: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Lineup board",
+      content: { "application/json": { schema: MlbLineupTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/health/mlb",
+  summary: "MLB upstream health probe",
+  tags: ["Health"],
+  request: {
+    query: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "MLB health",
+      content: { "application/json": { schema: MlbHealthSchema } },
+    },
+    503: {
+      description: "MLB upstream down",
+      content: { "application/json": { schema: MlbHealthSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/hr-board/date/{date}",
+  summary: "Validated HR board for a specific date",
+  tags: ["MLB"],
+  request: {
+    params: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }),
+    query: z.object({
+      previewLimit: z.coerce.number().int().min(1).max(350).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "HR board",
+      content: { "application/json": { schema: HrBoardTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "patch",
+  path: "/api/auth/profile",
+  summary: "Update authenticated user profile",
+  tags: ["Auth"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            username: z.string().min(3).max(24).optional(),
+            display_name: z.string().max(64).optional(),
+            bio: z.string().max(500).optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated profile",
+      content: { "application/json": { schema: AuthMeSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });
@@ -314,8 +765,8 @@ export function buildOpenApiDocument() {
     openapi: "3.0.3",
     info: {
       title: "VouchEdge API",
-      version: "0.2.0",
-      description: "Phase 3 OpenAPI — MLB, parlay, auth, notifications, cron, and health routes.",
+      version: "0.3.0",
+      description: "Phase 4 OpenAPI — MLB, parlay, auth, billing, notifications, cron, and health routes.",
     },
     servers: [{ url: "/", description: "Current host" }],
   });

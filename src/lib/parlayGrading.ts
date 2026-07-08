@@ -9,6 +9,7 @@
  */
 
 import type { Parlay, Leg } from '../types';
+import { apiClient } from './apiClient';
 
 export interface GradedLeg {
   sport: string;
@@ -59,23 +60,13 @@ export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
   if (legs.length === 0) return null;
 
   try {
-    const res = await fetch('/api/parlays/grade', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ legs, stakeUnits: p.wagerAmount ?? 1 }),
+    const data = await apiClient.post<GradeResponse>('/api/parlays/grade', {
+      legs,
+      stakeUnits: p.wagerAmount ?? 1,
     });
-    if (!res.ok) {
-      let detail = "";
-      try {
-        detail = await res.text();
-      } catch {
-        detail = "";
-      }
-      console.warn("[parlayGrading] grade request failed", res.status, detail);
-      return null;
-    }
-    return (await res.json()) as GradeResponse;
-  } catch {
+    return data;
+  } catch (err) {
+    console.warn("[parlayGrading] grade request failed", err);
     return null;
   }
 }

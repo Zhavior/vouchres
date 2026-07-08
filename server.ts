@@ -9,7 +9,7 @@ import { apiNotFoundHandler } from "./server/middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "./server/middleware/rateLimit";
 import { requestContext } from "./server/middleware/requestContext";
 import { routeTiming } from "./server/middleware/routeTiming";
-import { initServerSentry } from "./server/lib/sentry";
+import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
 
 // Load base env, then local secrets (.env.local) which take precedence.
@@ -40,6 +40,9 @@ export async function createApp() {
   // Registered before the Vite/static catch-all so these API paths resolve first.
   registerApiRoutes(app);
   app.use("/api", apiNotFoundHandler);
+  if (isSentryEnabled()) {
+    app.use("/api", sentryErrorHandler());
+  }
   app.use("/api", apiErrorHandler);
 
   // Serve static assets with Vite dev server middleware compatibility

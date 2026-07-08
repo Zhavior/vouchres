@@ -90,8 +90,8 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
 notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const start = Date.now();
   const date = typeof req.body?.date === "string" ? req.body.date : undefined;
-  const events = await getTodayHomeRuns(date);
-  const out = await processHomeRunEvents(events);
+  const feed = await getTodayHomeRuns(date);
+  const out = await processHomeRunEvents(feed.events);
   console.log(`[endpoint] POST /api/notifications/scan-hr ${Date.now() - start}ms scanned=${out.scanned} created=${out.created}`);
   return res.json({ ok: true, ...out });
 }));

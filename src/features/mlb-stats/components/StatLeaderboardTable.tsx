@@ -34,6 +34,7 @@ const SORTABLE: Record<string, StatSortField> = {
 };
 
 function formatCell(key: string, row: StatPlayerRow, statType: StatType): React.ReactNode {
+  const intelligenceScore = row.intelligence?.score ?? row.statScore;
   const config   = STAT_CONFIG[statType];
   const meta     = TIER_META[row.tier];
   const tierLabel = config.tierLabels[row.tier];
@@ -60,9 +61,9 @@ function formatCell(key: string, row: StatPlayerRow, statType: StatType): React.
         <span
           className="font-extrabold text-sm"
           style={{ color: `hsl(var(--${config.token}))` }}
-          aria-label={`Score: ${row.statScore}`}
+          aria-label={`Score: ${intelligenceScore}`}
         >
-          {row.statScore}
+          {intelligenceScore}
         </span>
       );
     case 'edgePct': {

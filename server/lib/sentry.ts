@@ -98,8 +98,14 @@ export function initServerSentry(app?: Express) {
  *   // ... all your routes ...
  *   app.use(sentryErrorHandler());
  */
-export const sentryRequestHandler = (Sentry as any).requestHandler ?? ((req: any, res: any, next: any) => next());
+export const sentryRequestHandler = (Sentry as any).requestHandler
+  ?? ((_req: Request, _res: Response, next: NextFunction) => next());
 export const sentryErrorHandler = Sentry.expressErrorHandler;
+
+export function mountSentryExpressErrorHandler(app: Express): void {
+  if (!initialized) return;
+  app.use(sentryErrorHandler());
+}
 
 export type SentryCaptureContext = {
   extra?: Record<string, unknown>;

@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import { vouchedgeApi } from '../api/vouchedgeApi';
+import { useMemo } from 'react';
 import { EdgeIslandShell } from '../components/edgeIsland/EdgeIslandShell';
 import { EdgeSummaryPanel } from '../components/edgeIsland/EdgeSummaryPanel';
 import { FavoriteStrip } from '../components/edgeIsland/FavoriteStrip';
@@ -8,6 +7,8 @@ import { QuickActionsRow } from '../components/edgeIsland/QuickActionsRow';
 import { TodaysEdgeBoard } from '../components/edgeIsland/TodaysEdgeBoard';
 import type { CreatorProofProfile, Parlay } from '../types';
 import type { EdgeBoardRow, EdgeIslandSummary, FavoriteSignal } from '../components/edgeIsland/edgeIslandTypes';
+import { useDailyReport } from '../hooks/queries/useDailyReport';
+import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import { VECard, VESectionHeader, VEBadge } from '../components/ui/ve';
 
 interface Props {
@@ -146,50 +147,29 @@ function tierLabel(profile?: CreatorProofProfile | null): string {
 }
 
 export default function EdgeIslandPage({ onSectionChange, savedSlips = [], profile, isLoggedIn = true }: Props) {
-  const [remote, setRemote] = useState<EdgeIslandRemoteState>({ gameCount: null, rows: [], generatedAt: null });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dailyReportQuery = useDailyReport();
+  const hrBoardQuery = useHrBoardToday(12);
 
-  useEffect(() => {
-    let alive = true;
+  const loading = dailyReportQuery.isLoading || hrBoardQuery.isLoading;
+  const error = hrBoardQuery.isError
+    ? (hrBoardQuery.error instanceof Error ? hrBoardQuery.error.message : 'HR board unavailable')
+    : null;
 
-    async function load() {
-      setLoading(true);
-      setError(null);
+  const remote = useMemo<EdgeIslandRemoteState>(() => {
+    const gameCount =
+      typeof dailyReportQuery.data?.gameCount === 'number' ? dailyReportQuery.data.gameCount : null;
 
-      const [reportResult, boardResult] = await Promise.allSettled([
-        vouchedgeApi.dailyReport(),
-        vouchedgeApi.hrBoardToday(12),
-      ]);
-
-      if (!alive) return;
-
-      const gameCount =
-        reportResult.status === 'fulfilled' && typeof reportResult.value?.gameCount === 'number'
-          ? reportResult.value.gameCount
-          : null;
-
-      if (boardResult.status === 'fulfilled') {
-        const root = asRecord(boardResult.value);
-        setRemote({
-          gameCount,
-          rows: normalizeEdgeRows(boardResult.value),
-          generatedAt: firstString(root, ['generatedAt'], '') || new Date().toISOString(),
-        });
-      } else {
-        setRemote({ gameCount, rows: [], generatedAt: null });
-        setError(boardResult.reason instanceof Error ? boardResult.reason.message : 'HR board unavailable');
-      }
-
-      setLoading(false);
+    if (!hrBoardQuery.data) {
+      return { gameCount, rows: [], generatedAt: null };
     }
 
-    void load();
-
-    return () => {
-      alive = false;
+    const root = asRecord(hrBoardQuery.data);
+    return {
+      gameCount,
+      rows: normalizeEdgeRows(hrBoardQuery.data),
+      generatedAt: firstString(root, ['generatedAt'], '') || new Date().toISOString(),
     };
-  }, []);
+  }, [dailyReportQuery.data, hrBoardQuery.data]);
 
   const personalProfile = isLoggedIn ? profile : null;
   const personalSlips = isLoggedIn ? savedSlips : [];

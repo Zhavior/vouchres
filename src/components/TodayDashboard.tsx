@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -18,9 +18,8 @@ import {
   UserCircle,
   Users,
 } from 'lucide-react';
-import { vouchedgeApi } from '../api/vouchedgeApi';
-import type { DailyMlbReport } from '../types/mlb';
 import type { Parlay } from '../types';
+import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { useMode } from '../lib/useMode';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
@@ -149,16 +148,9 @@ const ACCOUNT_TOOLS: DashboardCard[] = [
 
 export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Props) {
   const [mode, , toggleMode] = useMode();
-  const [report, setReport] = useState<DailyMlbReport | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    vouchedgeApi
-      .dailyReport()
-      .then(setReport)
-      .catch(() => setReport(null))
-      .finally(() => setLoading(false));
-  }, []);
+  const dailyReportQuery = useDailyReport();
+  const report = dailyReportQuery.data ?? null;
+  const loading = dailyReportQuery.isLoading;
 
   const pendingSlips = useMemo(
     () => savedSlips.filter((slip) => String(slip.status || 'PENDING').toUpperCase() === 'PENDING').length,
