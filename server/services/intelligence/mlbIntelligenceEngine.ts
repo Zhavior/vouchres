@@ -56,6 +56,34 @@ const reportBuildStats = {
   failed: 0,
 };
 
+const LAST_GOOD_DAILY_REPORT_MS = 30 * 60_000;
+const LAST_GOOD_DAILY_REPORT_WARNING =
+  "Serving last-known daily report; upstream refresh failed. Data is from the prior successful build.";
+
+const lastGoodDailyReports = new Map<string, { report: DailyMlbReport; storedAt: number }>();
+
+function rememberLastGoodDailyReport(date: string, report: DailyMlbReport): void {
+  lastGoodDailyReports.set(date, { report, storedAt: Date.now() });
+}
+
+function serveLastGoodDailyReport(date: string): DailyMlbReport | null {
+  const entry = lastGoodDailyReports.get(date);
+  if (!entry) return null;
+  if (Date.now() - entry.storedAt > LAST_GOOD_DAILY_REPORT_MS) return null;
+
+  console.warn(`[sharedReport] serving last-good daily report date=${date} ageMs=${Date.now() - entry.storedAt}`);
+  return {
+    ...entry.report,
+    dataQuality: entry.report.dataQuality === "full" ? "partial" : entry.report.dataQuality,
+    warnings: [...new Set([...entry.report.warnings, LAST_GOOD_DAILY_REPORT_WARNING])],
+  };
+}
+
+/** Test-only reset for daily report last-good snapshots. */
+export function resetDailyReportLastGoodForTests(): void {
+  lastGoodDailyReports.clear();
+}
+
 export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbReport> {
   const cacheKey = `dailyReport:${date}`;
   return reportCache.getOrSet(cacheKey, async () => {
@@ -64,11 +92,14 @@ export async function getSharedDailyReport(date = todayISO()): Promise<DailyMlbR
     try {
       const report = await buildDailyReportInternal(date);
       reportBuildStats.completed++;
+      rememberLastGoodDailyReport(date, report);
       console.log(`[sharedReport] build complete for ${date}`);
       return report;
     } catch (err) {
       reportBuildStats.failed++;
       console.error(`[sharedReport] build failed for ${date}:`, (err as Error).message);
+      const lastGood = serveLastGoodDailyReport(date);
+      if (lastGood) return lastGood;
       return buildEmptyReport(date, [`Daily report build failed: ${(err as Error).message}`]);
     }
   }, TTL.dailyReport) as Promise<DailyMlbReport>;

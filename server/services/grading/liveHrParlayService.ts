@@ -84,7 +84,7 @@ export async function previewLiveHrParlayMatches(date?: string): Promise<LiveHrL
 
   const events: HrEvent[] = [];
   for (const scanDate of dates) {
-    events.push(...await getTodayHomeRuns(scanDate));
+    events.push(...(await getTodayHomeRuns(scanDate)).events);
   }
 
   if (events.length === 0) {

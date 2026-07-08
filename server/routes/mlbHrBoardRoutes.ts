@@ -78,13 +78,23 @@ const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 6
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
   app.get("/api/mlb/hr-feed/today", asyncHandler(async (_req: Request, res: Response) => {
-    const events = await getTodayHomeRuns();
-    res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
+    const feed = await getTodayHomeRuns();
+    res.json({
+      count: feed.events.length,
+      events: feed.events,
+      generatedAt: new Date().toISOString(),
+      warnings: feed.warnings,
+    });
   }));
   app.get("/api/mlb/hr-feed/date/:date", asyncHandler(async (req: Request, res: Response) => {
     const date = requiredYmd(req.params.date);
-    const events = await getTodayHomeRuns(date);
-    res.json({ count: events.length, events, generatedAt: new Date().toISOString() });
+    const feed = await getTodayHomeRuns(date);
+    res.json({
+      count: feed.events.length,
+      events: feed.events,
+      generatedAt: new Date().toISOString(),
+      warnings: feed.warnings,
+    });
   }));
 
   // Live at-bat snapshot — pitch-by-pitch data for one game's current AB.
