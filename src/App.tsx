@@ -28,6 +28,7 @@ import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import NbaNflArena from './components/NbaNflArena';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
+import MarketingLandingPage from './components/MarketingLandingPage';
 
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
@@ -512,9 +513,10 @@ export default function App() {
   const handleLogoutComplete = () => {
     setLoggingOut(true);
     window.setTimeout(() => {
-      saveActiveSection('vouchedge_intro');
-      setActiveSection('vouchedge_intro');
+      saveActiveSection('welcome');
+      setActiveSection('welcome');
       setLoggingOut(false);
+      window.history.replaceState(null, '', '/');
     }, 900);
   };
   
@@ -1707,8 +1709,9 @@ export default function App() {
           return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
         }
         return (
-          <VouchEdgeTerminalPage
+          <MarketingLandingPage
             onAuthed={handleLoginSuccess}
+            onSectionChange={navigateSection}
           />
         );
       case 'welcome':
@@ -1716,8 +1719,9 @@ export default function App() {
           return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
         }
         return (
-          <VouchEdgeTerminalPage
+          <MarketingLandingPage
             onAuthed={handleLoginSuccess}
+            onSectionChange={navigateSection}
           />
         );
       case 'today':
