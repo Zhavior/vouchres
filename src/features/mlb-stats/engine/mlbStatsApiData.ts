@@ -1,7 +1,7 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
-import { calculateWeightedScore } from '../../../kernel';
+import { calculateWeightedScore, rankByScore } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -391,13 +391,13 @@ export async function fetchMlbStatHubRows(statType: StatType, date: string, stat
   const rows = contexts
     .map((context, index) => makeRow(statType, context, index % 12, statScope, season))
     .filter((row): row is StatPlayerRow => row != null)
-    .sort((a, b) => b.statScore - a.statScore);
+    
 
   const bySeason = [...rows].sort((a, b) => (b.seasonValue ?? 0) - (a.seasonValue ?? 0));
   const rank = new Map(bySeason.map((row, index) => [row.stableId, index + 1]));
 
-  return rows.map((row) => ({
+  return rankByScore(rows.map((row) => ({
     ...row,
     seasonRank: rank.get(row.stableId) ?? null,
-  }));
+  })));
 }
