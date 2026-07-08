@@ -32,6 +32,7 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import VouchStudioDarkroom from './VouchStudioDarkroom';
 import VouchCard from './vouch-system/VouchCard';
 import VouchPack from './vouchBoard/VouchPack';
+import { VEWidget } from './ui/ve';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -731,7 +732,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             <div className="lg:col-span-8 space-y-6">
               
               {/* Performance Return Curve Card */}
-              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
+              <VEWidget className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
@@ -833,10 +834,10 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
+              </VEWidget>
 
               {/* Backtester Controls & Console HUD */}
-              <div className="bg-[hsl(var(--ve-surface)/0.74)] border border-[hsl(var(--ve-border)/0.34)] rounded-3xl p-5 space-y-4 shadow-xl shadow-[hsl(var(--ve-shadow)/0.16)] backdrop-blur-xl">
+              <VEWidget className="space-y-4">
                 <div>
                   <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))] uppercase tracking-wider flex items-center gap-1.5">
                     <SlidersHorizontal className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))]" />
@@ -949,7 +950,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
                   </div>
                 </div>
 
-              </div>
+              </VEWidget>
 
             </div>
 
