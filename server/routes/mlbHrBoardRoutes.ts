@@ -19,6 +19,7 @@ import type { Express, Request, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { boundedInt, optionalYmd, positiveInt, requiredYmd, upstreamUnavailable } from "../lib/requestValidators";
+import { buildApiMeta } from "../lib/apiResponseMeta";
 import { getCachedValidatedHrBoard, getCachedDeepHrBoard } from "../services/hubs/hrBoardHub";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 import { getLiveAtBat } from "../services/mlb/liveAtBatService";
@@ -26,6 +27,25 @@ import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 
 function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 350, 10, 350);
+}
+
+function collectHrBoardWarnings(payload: { rows?: unknown }): string[] {
+  if (!Array.isArray(payload.rows)) return [];
+
+  const warnings = new Set<string>();
+  for (const row of payload.rows) {
+    const rowWarnings = typeof row === "object" && row !== null && "warnings" in row
+      ? (row as { warnings?: unknown }).warnings
+      : undefined;
+    if (!Array.isArray(rowWarnings)) continue;
+
+    for (const warning of rowWarnings) {
+      if (typeof warning === "string" && warning.trim()) warnings.add(warning.trim());
+      if (warnings.size >= 10) return [...warnings];
+    }
+  }
+
+  return [...warnings];
 }
 
 export function registerHrBoardRoutes(app: Express): void {
@@ -61,7 +81,18 @@ export function registerHrBoardRoutes(app: Express): void {
     try {
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard();
-      res.json(buildHrBoardApiPayload(result, previewLimit));
+      const payload = buildHrBoardApiPayload(result, previewLimit);
+      res.json({
+        ...payload,
+        meta: buildApiMeta({
+          source: "validated_hr_board_pipeline",
+          dataQuality: payload.dataQuality === "projection_preview" ? "projection_preview" : "validated_hr_board",
+          updatedAt: payload.generatedAt,
+          generatedAt: payload.generatedAt,
+          warnings: collectHrBoardWarnings(payload),
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+        }),
+      });
     } catch (err: any) {
       console.error("[hr-board/today] validated pipeline failed:", err.message);
       if (err instanceof AppError) throw err;
@@ -112,7 +143,18 @@ export function registerHrBoardRoutes(app: Express): void {
       const date = requiredYmd(req.params.date);
       const previewLimit = parsePreviewLimit(req.query.previewLimit);
       const result = await getCachedValidatedHrBoard(date);
-      res.json(buildHrBoardApiPayload(result, previewLimit));
+      const payload = buildHrBoardApiPayload(result, previewLimit);
+      res.json({
+        ...payload,
+        meta: buildApiMeta({
+          source: "validated_hr_board_pipeline",
+          dataQuality: payload.dataQuality === "projection_preview" ? "projection_preview" : "validated_hr_board",
+          updatedAt: payload.generatedAt,
+          generatedAt: payload.generatedAt,
+          warnings: collectHrBoardWarnings(payload),
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+        }),
+      });
     } catch (err: any) {
       console.error("[hr-board/date] failed:", err?.message);
       if (err instanceof AppError) throw err;

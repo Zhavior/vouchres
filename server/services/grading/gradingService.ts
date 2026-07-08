@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
 import { createParlayGradedNotification } from "../notifications/notificationService";
+import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
 
 /**
  * Grading service — resolves pick outcomes by fetching results from the
@@ -251,25 +252,6 @@ export async function gradePendingPicks(opts: {
   return { graded, skipped, summary: summarizeGradeRun(graded, skipped, pending.length) };
 }
 
-const isMlbFinalStatus = (status: any): boolean => {
-  const abstractState = String(status?.abstractGameState || "").toLowerCase();
-  const detailedState = String(status?.detailedState || "").toLowerCase();
-  const codedState = String(status?.codedGameState || "").toUpperCase();
-  const statusCode = String(status?.statusCode || "").toUpperCase();
-
-  return (
-    abstractState === "final" ||
-    detailedState.includes("final") ||
-    detailedState.includes("completed") ||
-    detailedState.includes("official") ||
-    codedState === "F" ||
-    statusCode === "F"
-  );
-};
-
-const formatMlbStatus = (status: any): string =>
-  `abstract=${status?.abstractGameState ?? "unknown"}, detailed=${status?.detailedState ?? "unknown"}, coded=${status?.codedGameState ?? "unknown"}`;
-
 async function resolveMlbGameFromSchedule(
   gamePk: string,
   expectedGameDate?: string | null
@@ -313,7 +295,7 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
 
   if (scheduledGame) {
     gameDate = scheduledGame.game_date;
-    if (!isMlbFinalStatus(scheduledGame.status)) {
+    if (!isMlbFinalStatusText(scheduledGame.status)) {
       throw new Error(`game not final from schedule date ${expectedGameDate} (${formatMlbStatus(scheduledGame.status)})`);
     }
   } else {
@@ -327,7 +309,7 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
     });
     const status = feed?.gameData?.status || {};
 
-    if (!isMlbFinalStatus(status)) {
+    if (!isMlbFinalStatusText(status)) {
       throw new Error(`game not final (${formatMlbStatus(status)})`);
     }
 

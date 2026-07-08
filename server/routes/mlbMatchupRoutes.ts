@@ -10,6 +10,7 @@ import { isMlbFinalStatusText, isMlbLiveStatus } from "../services/mlb/gameStatu
 import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
+import { buildApiMeta } from "../lib/apiResponseMeta";
 import { AppError } from "../errors/AppError";
 import {
   optionalYmd as optionalDateQuery,
@@ -42,7 +43,18 @@ export function registerMatchupRoutes(app: Express): void {
           score: g.score,
         }));
       }, 45_000);
-      res.json({ scores, updatedAt: new Date().toISOString() });
+      const updatedAt = new Date().toISOString();
+      res.json({
+        scores,
+        updatedAt,
+        meta: buildApiMeta({
+          source: "mlb_statsapi_schedule_linescore",
+          dataQuality: "official_mlb_scores",
+          updatedAt,
+          warnings: [],
+          cache: { strategy: "ttl_cache", ttlMs: 45_000 },
+        }),
+      });
     } catch (err: any) {
       console.error("[scores/today] failed:", err?.message);
       throw upstreamUnavailable("Scores unavailable.", err);
@@ -66,7 +78,19 @@ export function registerMatchupRoutes(app: Express): void {
       const date = todayISO();
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUPS_TODAY] served from SportsTruthHub date=${date}`);
-      res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
+      res.json({
+        count: snapshot.matchups.length,
+        matchups: snapshot.matchups,
+        generatedAt: snapshot.generatedAt,
+        meta: buildApiMeta({
+          source: "sports_truth_hub",
+          dataQuality: "sports_truth_snapshot",
+          updatedAt: snapshot.generatedAt,
+          generatedAt: snapshot.generatedAt,
+          warnings: [],
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+        }),
+      });
     } catch (err: any) {
       console.error("[matchups/today] failed:", err?.message);
       throw upstreamUnavailable("Today matchups unavailable.", err);
@@ -78,7 +102,19 @@ export function registerMatchupRoutes(app: Express): void {
       const date = requiredDateParam(req.params.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
       console.log(`[MATCHUPS_DATE] served from SportsTruthHub date=${date}`);
-      res.json({ count: snapshot.matchups.length, matchups: snapshot.matchups, generatedAt: snapshot.generatedAt });
+      res.json({
+        count: snapshot.matchups.length,
+        matchups: snapshot.matchups,
+        generatedAt: snapshot.generatedAt,
+        meta: buildApiMeta({
+          source: "sports_truth_hub",
+          dataQuality: "sports_truth_snapshot",
+          updatedAt: snapshot.generatedAt,
+          generatedAt: snapshot.generatedAt,
+          warnings: [],
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+        }),
+      });
     } catch (err: any) {
       console.error("[matchups/date] failed:", err?.message);
       if (err instanceof AppError) throw err;

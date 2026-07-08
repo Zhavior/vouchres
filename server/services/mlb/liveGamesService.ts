@@ -1,9 +1,8 @@
-import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
-import { todayISO } from "./mlbClient";
+import { getScheduleByDate, todayISO } from "./mlbClient";
 import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
 import { MlbScheduleGame, parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
-
-const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
+import { buildApiMeta, type ApiResponseMeta } from "../../lib/apiResponseMeta";
+import type { NormalizedGame } from "./mlbTypes";
 
 type NullableSidePct = { home: number | null; away: number | null };
 
@@ -41,6 +40,7 @@ export interface LiveGamesResponse {
   games: LiveGameCard[];
   warnings: string[];
   updatedAt: string;
+  meta: ApiResponseMeta;
 }
 
 const EMPTY_PREDICTIONS: LiveGamePredictionBlock = {
@@ -80,9 +80,37 @@ function normalizeLiveGame(game: MlbScheduleGame): LiveGameCard {
   };
 }
 
+function normalizeScheduleGame(game: NormalizedGame): LiveGameCard {
+  return {
+    id: String(game.gamePk),
+    homeTeam: safeName(game.homeTeam.name, "Home Team"),
+    awayTeam: safeName(game.awayTeam.name, "Away Team"),
+    homeScore: safeScore(game.score.home),
+    awayScore: safeScore(game.score.away),
+    status: safeName(game.status, "Scheduled"),
+    venue: game.venue && game.venue !== "TBD" ? game.venue : null,
+    gameDate: game.gameDate || null,
+    isLive: isMlbLiveStatus(game.status),
+    isFinal: isMlbFinalStatusText(game.status),
+    isApiReal: true,
+    predictionsAvailable: false,
+    predictionStatus: "unavailable",
+    predictionSource: "not_computed",
+    predictions: EMPTY_PREDICTIONS,
+  };
+}
+
 export function buildLiveGamesResponse(scheduleData: unknown, date: string, now = new Date()): LiveGamesResponse {
   const { games, warnings: parseWarnings } = parseMlbScheduleResponse(scheduleData, `live:${date}`);
   const normalizedGames = games.map(normalizeLiveGame).filter((game) => game.id);
+
+  const warnings = [
+    ...parseWarnings,
+    ...(normalizedGames.length > 0
+      ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
+      : ["Official MLB schedule returned no games for this date; no mock games were substituted."]),
+  ];
+  const updatedAt = now.toISOString();
 
   return {
     success: true,
@@ -91,26 +119,41 @@ export function buildLiveGamesResponse(scheduleData: unknown, date: string, now 
     source: "mlb_statsapi_schedule",
     date,
     games: normalizedGames,
-    warnings: [
-      ...parseWarnings,
-      ...(normalizedGames.length > 0
-        ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
-        : ["Official MLB schedule returned no games for this date; no mock games were substituted."]),
-    ],
-    updatedAt: now.toISOString(),
+    warnings,
+    updatedAt,
+    meta: buildApiMeta({
+      source: "mlb_statsapi_schedule",
+      dataQuality: normalizedGames.length > 0 ? "official_mlb_schedule" : "limited",
+      updatedAt,
+      warnings,
+      cache: { strategy: "sports_http_ttl_stale_if_error", ttlMs: 45_000 },
+    }),
   };
 }
 
 export async function getLiveGames(date = todayISO()): Promise<LiveGamesResponse> {
-  const url = `${MLB_BASE}/v1/schedule?sportId=1&date=${encodeURIComponent(date)}&hydrate=linescore,team,venue`;
-  const scheduleData = await sportsFetchJson<unknown>(url, {
-    cacheKey: `mlb-live:${date}`,
-    ttlMs: 45_000,
-    staleIfErrorMs: 90_000,
-    timeoutMs: 5_000,
-    retries: 1,
-    debugLabel: "mlbLiveGames",
-  });
+  const scheduleGames = await getScheduleByDate(date);
+  const normalizedGames = scheduleGames.map(normalizeScheduleGame).filter((game) => game.id);
+  const warnings = normalizedGames.length > 0
+    ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
+    : ["Official MLB schedule returned no games for this date; no mock games were substituted."];
+  const updatedAt = new Date().toISOString();
 
-  return buildLiveGamesResponse(scheduleData, date);
+  return {
+    success: true,
+    isRealApi: normalizedGames.length > 0,
+    dataQuality: normalizedGames.length > 0 ? "official_mlb_schedule" : "official_mlb_empty_schedule",
+    source: "mlb_statsapi_schedule",
+    date,
+    games: normalizedGames,
+    warnings,
+    updatedAt,
+    meta: buildApiMeta({
+      source: "mlb_statsapi_schedule",
+      dataQuality: normalizedGames.length > 0 ? "official_mlb_schedule" : "limited",
+      updatedAt,
+      warnings,
+      cache: { strategy: "shared_schedule_cache", ttlMs: 5 * 60_000 },
+    }),
+  };
 }
