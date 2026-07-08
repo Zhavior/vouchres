@@ -2,14 +2,12 @@
 import type { Express, Request, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
-import { headshotUrl } from "../services/mlb/mlbTypes";
 import { getLiveGames } from "../services/mlb/liveGamesService";
-import { TTL, TTLCache } from "../lib/cache";
+import { TTL } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
-import { sportsFetchJson } from "../lib/sports/sportsHttpClient";
 import { buildApiMeta } from "../lib/apiResponseMeta";
-import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "../services/mlb/mlbStatsApiSchemas";
 import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
+import { getTodayLineups } from "../services/mlb/lineupService";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -18,122 +16,8 @@ import {
   ymdOrDefault,
 } from "../lib/requestValidators";
 
-const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
-const lineupCache = new TTLCache<any[]>(TTL.liveFeed, "mlb:lineups");
-
 function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
-}
-
-async function fetchMlb<T>(path: string): Promise<T> {
-  const start = Date.now();
-  console.log(`[mlbRoutes] MLB request ${path}`);
-  const data = await sportsFetchJson<T>(`${MLB_BASE}${path}`, {
-    cacheKey: `mlbRoutes:${path}`,
-    ttlMs: 60_000,
-    timeoutMs: 10_000,
-    retries: 1,
-    debugLabel: "mlbRoutes",
-  });
-  console.log(`[mlbRoutes] MLB request complete ${path} ${Date.now() - start}ms`);
-  return data;
-}
-
-function normalizeBat(value: unknown): "L" | "R" | "S" | "U" {
-  return value === "L" || value === "R" || value === "S" ? value : "U";
-}
-
-function normalizeThrow(value: unknown): "L" | "R" | "U" {
-  return value === "L" || value === "R" ? value : "U";
-}
-
-async function fetchPlayerHandedness(playerIds: number[]) {
-  const uniqueIds = [...new Set(playerIds.filter((id) => Number.isFinite(id)))];
-  const hands = new Map<number, { bats: "L" | "R" | "S" | "U"; throws: "L" | "R" | "U" }>();
-
-  for (let i = 0; i < uniqueIds.length; i += 75) {
-    const batch = uniqueIds.slice(i, i + 75);
-    if (!batch.length) continue;
-
-    const data = await fetchMlb<unknown>(`/v1/people?personIds=${batch.join(",")}`);
-    const { people, warnings } = parseMlbPeopleResponse(data, "lineup:people");
-    for (const warning of warnings) console.warn(`[mlbRoutes] ${warning}`);
-    for (const person of people) {
-      hands.set(Number(person.id), {
-        bats: normalizeBat(person?.batSide?.code),
-        throws: normalizeThrow(person?.pitchHand?.code),
-      });
-    }
-  }
-
-  return hands;
-}
-
-/** Fetch all lineups for today's games from the MLB Stats API */
-async function getTodayLineups(date: string) {
-  return lineupCache.getOrSet(`lineups:${date}`, async () => {
-    const data = await fetchMlb<unknown>(
-      `/v1/schedule?sportId=1&date=${date}&hydrate=lineups,probablePitcher(note),team,linescore`
-    );
-
-    const { games, warnings } = parseMlbScheduleResponse(data, `lineup:${date}`);
-    for (const warning of warnings) console.warn(`[mlbRoutes] ${warning}`);
-
-    const lineupPlayers = (game: MlbScheduleGame, side: "awayPlayers" | "homePlayers"): MlbPlayer[] => {
-      const rawLineups = game.lineups as { awayPlayers?: unknown; homePlayers?: unknown } | undefined;
-      const rawPlayers = rawLineups?.[side];
-      return Array.isArray(rawPlayers)
-        ? parseMlbPeopleResponse({ people: rawPlayers }, `lineup:${date}:${side}`).people
-        : [];
-    };
-
-    const playerIds = games.flatMap((game) => [
-      ...lineupPlayers(game, "awayPlayers").map((p) => Number(p.id)),
-      ...lineupPlayers(game, "homePlayers").map((p) => Number(p.id)),
-      Number(game.teams?.away?.probablePitcher?.id),
-      Number(game.teams?.home?.probablePitcher?.id),
-    ]);
-    const handedness = await fetchPlayerHandedness(playerIds);
-
-    return games.map((game) => {
-      const awayTeam = { id: game.teams?.away?.team?.id, name: game.teams?.away?.team?.name, abbrev: game.teams?.away?.team?.abbreviation };
-      const homeTeam = { id: game.teams?.home?.team?.id, name: game.teams?.home?.team?.name, abbrev: game.teams?.home?.team?.abbreviation };
-
-      const mapPlayers = (players: MlbPlayer[], team: typeof awayTeam) =>
-        players.map((p, idx) => ({
-          playerId: p.id,
-          playerName: p.fullName ?? "Unknown",
-          position: p.primaryPosition?.abbreviation ?? "—",
-          battingOrder: idx + 1,
-          bats: handedness.get(Number(p.id))?.bats ?? normalizeBat(p.batSide?.code),
-          team: team.name,
-          teamId: team.id,
-          teamAbbrev: team.abbrev,
-          headshot: headshotUrl(p.id),
-        }));
-
-      const awayLineup = mapPlayers(lineupPlayers(game, "awayPlayers"), awayTeam);
-      const homeLineup = mapPlayers(lineupPlayers(game, "homePlayers"), homeTeam);
-
-      const awayPitcher = game.teams?.away?.probablePitcher;
-      const homePitcher = game.teams?.home?.probablePitcher;
-
-      return {
-        gamePk: game.gamePk,
-        gameDate: game.gameDate,
-        status: game.status?.detailedState ?? game.status?.abstractGameState ?? "Scheduled",
-        venue: game.venue?.name ?? "TBD",
-        awayTeam,
-        homeTeam,
-        awayPitcher: awayPitcher ? { id: awayPitcher.id, name: awayPitcher.fullName, throws: handedness.get(Number(awayPitcher.id))?.throws ?? normalizeThrow(awayPitcher.pitchHand?.code), headshot: headshotUrl(awayPitcher.id) } : null,
-        homePitcher: homePitcher ? { id: homePitcher.id, name: homePitcher.fullName, throws: handedness.get(Number(homePitcher.id))?.throws ?? normalizeThrow(homePitcher.pitchHand?.code), headshot: headshotUrl(homePitcher.id) } : null,
-        awayLineup,
-        homeLineup,
-        lineupConfirmed: awayLineup.length > 0 || homeLineup.length > 0,
-        totalPlayers: awayLineup.length + homeLineup.length,
-      };
-    });
-  });
 }
 
 export function registerMlbRoutes(app: Express): void {
@@ -159,7 +43,7 @@ export function registerMlbRoutes(app: Express): void {
     const start = Date.now();
     const date = dateQueryOrToday(req.query.date);
     try {
-      const lineups = await getTodayLineups(date);
+      const { lineups, warnings, servedFromLastGood } = await getTodayLineups(date);
       const totalPlayers = lineups.reduce((sum, g) => sum + g.totalPlayers, 0);
       res.json({
         ok: true,
@@ -167,14 +51,17 @@ export function registerMlbRoutes(app: Express): void {
         games: lineups,
         totalGames: lineups.length,
         totalPlayers,
-        source: "mlb_statsapi_live",
+        source: servedFromLastGood ? "mlb_statsapi_lineups_last_good" : "mlb_statsapi_live",
         updatedAt: new Date().toISOString(),
-        warnings: [],
+        warnings,
         meta: buildApiMeta({
-          source: "mlb_statsapi_lineups",
-          dataQuality: "official_mlb_lineup",
-          warnings: [],
-          cache: { strategy: "ttl_cache", ttlMs: TTL.liveFeed },
+          source: servedFromLastGood ? "mlb_statsapi_lineups_last_good" : "mlb_statsapi_lineups",
+          dataQuality: servedFromLastGood ? "cached_official_mlb_lineup" : "official_mlb_lineup",
+          warnings,
+          cache: {
+            strategy: servedFromLastGood ? "lineup_last_good_snapshot" : "ttl_cache",
+            ttlMs: TTL.liveFeed,
+          },
         }),
       });
     } catch (err: unknown) {
