@@ -13,7 +13,7 @@ export function useDailyHrBoard(date: string) {
   const isToday = date === todayISO();
 
   const fetcher = useCallback(
-    () => loadHrBoard(date),
+    () => hr.loadHrBoard(date),
     [date]
   );
 

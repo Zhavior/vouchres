@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { kernelQueryKeys, loadEdgeIsland } from '../../../kernel';
+import { edge, kernelQueryKeys } from '../../../kernel';
 import type { EdgeIslandData } from '../types/edgeIslandData';
 
 
 export function useEdgeIslandData() {
   const query = useQuery({
     queryKey: kernelQueryKeys.edgeIsland(),
-    queryFn: loadEdgeIsland,
+    queryFn: edge.loadEdgeIsland,
     staleTime: 60_000,
   });
 

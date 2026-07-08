@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { loadHrResults } from '../../../kernel';
+import { hr } from '../../../kernel';
 import { useVouchResource } from './useVouchResource';
 import type { HrEvent } from '../../../types/notifications';
 
@@ -30,7 +30,7 @@ export function useHrResultsForDate(date: string): HrResultsForDate {
     cacheKey: `hr-feed:${date}`,
     refreshMs: isToday ? REFRESH_MS : null,
     staleMs: isToday ? REFRESH_MS : null,
-    fetcher: () => loadHrResults(date),
+    fetcher: () => hr.loadHrResults(date),
   });
 
   const hitByPlayerId = useMemo(() => {
