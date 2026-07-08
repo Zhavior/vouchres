@@ -1,6 +1,8 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
+import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction } from '../../../kernel';
+import type { SportsIntelligenceResult } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -146,19 +148,6 @@ function lineupStatusFor(entry: RosterEntry): LineupStatus {
   return 'projected';
 }
 
-function weightedScore(drivers: WeightedFactor[]): number {
-  let sum = 0;
-  let weight = 0;
-
-  for (const driver of drivers) {
-    if (driver.value == null) continue;
-    sum += driver.value * driver.weight;
-    weight += driver.weight;
-  }
-
-  return Math.round(weight > 0 ? sum / weight : 0);
-}
-
 function roundedDrivers(drivers: WeightedFactor[]): WeightedFactor[] {
   return drivers.map((driver) => ({
     ...driver,
@@ -290,7 +279,7 @@ function defaultBookLine(statType: StatType, score: number): number {
 
 function modelProbability(statType: StatType, score: number): number {
   const base = statType === 'hr' || statType === 'sb' || statType === 'doubles' ? 0.12 : 0.36;
-  return Math.round(clamp(base + score / 180, 0.05, 0.86) * 1000) / 1000;
+  return generatePrediction({ baseline: base, adjustment: score / 180, min: 0.05, max: 0.86 });
 }
 
 function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number, statScope: StatScope, season: string): StatPlayerRow | null {
@@ -302,14 +291,26 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
   const drivers = roundedDrivers(statType === 'pitcher_k'
     ? pitchingDrivers(context.stat)
     : battingDrivers(statType, context.stat, lineupIndex, statScope));
-  const rawScore = weightedScore(drivers);
+  const rawScore = calculateWeightedScore(drivers);
   const config = STAT_CONFIG[statType];
   const statScore = clamp(rawScore, 0, 100);
-  const confidence = clamp(35 + (parseNumber(context.stat.gamesPlayed || context.stat.gamesPitched) * 1.8), 35, 88);
+  const confidence = calculateConfidence(parseNumber(context.stat.gamesPlayed || context.stat.gamesPitched));
   const seasonValue = seasonValueFor(statType, context.stat);
   const probability = modelProbability(statType, statScore);
   const impliedProbability = Math.round(clamp(probability - 0.035, 0.04, 0.82) * 1000) / 1000;
   const edgePct = Math.round((probability - impliedProbability) * 1000) / 10;
+  const intelligence: SportsIntelligenceResult = {
+    playerId: String(context.person.id),
+    score: statScore,
+    rank: null,
+    confidence,
+    prediction: probability,
+    metadata: {
+      statType,
+      seasonValue,
+    },
+  };
+
 
   return {
     stableId: `${statScope}:${season}:${statType}:${context.gamePk}:${context.person.id}:${context.team.id}`,
@@ -324,6 +325,7 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
     lineupSpot: statType === 'pitcher_k' ? null : lineupIndex + 1,
     lineupStatus: context.lineupStatus,
     statScore,
+    intelligence,
     tier: assignTier(statScore, config.thresholds),
     confidence,
     drivers,
@@ -403,13 +405,17 @@ export async function fetchMlbStatHubRows(statType: StatType, date: string, stat
   const rows = contexts
     .map((context, index) => makeRow(statType, context, index % 12, statScope, season))
     .filter((row): row is StatPlayerRow => row != null)
-    .sort((a, b) => b.statScore - a.statScore);
+    
 
   const bySeason = [...rows].sort((a, b) => (b.seasonValue ?? 0) - (a.seasonValue ?? 0));
   const rank = new Map(bySeason.map((row, index) => [row.stableId, index + 1]));
 
-  return rows.map((row) => ({
+  return rankByScore(rows.map((row) => ({
     ...row,
     seasonRank: rank.get(row.stableId) ?? null,
-  }));
+    intelligence: {
+      ...row.intelligence,
+      rank: rank.get(row.stableId) ?? 0,
+    },
+  })));
 }
