@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { vouchedgeApi } from '../../../api/vouchedgeApi';
+import { loadNotifications } from '../../../kernel/loaders/notificationsLoader';
 import { queryKeys } from '../../../hooks/queries/queryKeys';
 import type { EdgeIslandData } from '../types/edgeIslandData';
 
@@ -20,7 +21,7 @@ export function useEdgeIslandData() {
       },
       {
         queryKey: ['notifications'] as const,
-        queryFn: fetchNotifications,
+        queryFn: loadNotifications,
         staleTime: 30_000,
       },
     ],
