@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
 import { vouchedgeApi } from '../api/vouchedgeApi';
+import { useLiveGames } from '../hooks/queries/useLiveGames';
+import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import type { GameMatchup, HrWatch, LiveScore } from '../types/matchup';
 import type { MLBPlayer } from '../types';
 import type { HrBoardResponse } from '../types/hrBoard';
@@ -476,71 +478,56 @@ function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[
 }
 
 export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Props) {
+  const liveGamesQuery = useLiveGames();
+  const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
   const [liveScores, setLiveScores] = useState<LiveScore[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
   const [selected, setSelected] = useState<GameMatchup | null>(null);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSourceNote('Loading live games...');
+  const loading = (liveGamesQuery.isLoading || hrBoardQuery.isLoading) && matchups.length === 0;
 
-    const scoresPromise = vouchedgeApi.scoresToday().catch(() => null);
-    const officialPromise = withTimeout(vouchedgeApi.liveGames(), 6000, 'Official live schedule').catch(() => null);
-
-    let fastLoaded = false;
-    let officialBase: GameMatchup[] = [];
-    const official = await officialPromise;
-    if (official?.games?.length) {
-      officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
-      if (officialBase.length > 0) {
-        fastLoaded = true;
-        setMatchups(officialBase);
-        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
-        setLoading(false);
-      }
-    }
-
-    const scoreResult = await scoresPromise;
-    if (Array.isArray(scoreResult?.scores)) {
-      setLiveScores(scoreResult.scores);
-      if (officialBase.length > 0) {
-        officialBase = applyScores(officialBase, scoreResult.scores);
-        setMatchups(officialBase);
-      }
-    }
-
-    try {
-      const board = await withTimeout(vouchedgeApi.hrBoardToday(50), 7000, 'HR board preview');
-      const fastMatchups = buildMatchupsFromHrBoard(board);
+  const mergeFromQueries = useCallback((officialBase: GameMatchup[], hrBoard: HrBoardResponse | undefined) => {
+    let merged = officialBase;
+    if (hrBoard) {
+      const fastMatchups = buildMatchupsFromHrBoard(hrBoard);
       if (fastMatchups.length > 0) {
-        fastLoaded = true;
-        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, fastMatchups) : fastMatchups);
-        setSourceNote('Live games loaded. Enriching game context...');
-        setLoading(false);
+        merged = officialBase.length > 0 ? mergeMatchups(officialBase, fastMatchups) : fastMatchups;
       }
-    } catch {
-      setSourceNote('Live games preview unavailable. Trying matchup model...');
     }
+    return merged;
+  }, []);
 
+  const enrichMatchups = useCallback(async (officialBase: GameMatchup[]) => {
+    setEnriching(true);
     try {
+      const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
+      if (Array.isArray(scoreResult?.scores)) {
+        setLiveScores(scoreResult.scores);
+        officialBase = applyScores(officialBase, scoreResult.scores);
+      }
+
       const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
       const next = Array.isArray(res.matchups) ? res.matchups : [];
       if (next.length > 0) {
         setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, next) : next);
         setError(null);
         setSourceNote('Live game model loaded.');
-      } else if (!fastLoaded) {
+      } else if (officialBase.length === 0) {
         setError('No live game data available. No fake games shown.');
         setSourceNote('No verified live game rows returned.');
+      } else {
+        setMatchups(officialBase);
+        setError(null);
+        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
       }
     } catch {
-      if (fastLoaded) {
+      if (officialBase.length > 0) {
+        setMatchups(officialBase);
         setError(null);
         setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
       } else {
@@ -549,19 +536,47 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
         setSourceNote('Backend unavailable.');
       }
     } finally {
-      setLoading(false);
+      setEnriching(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
+    const official = liveGamesQuery.data;
+    let officialBase: GameMatchup[] = [];
+    if (official?.games?.length) {
+      officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
+      if (officialBase.length > 0) {
+        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
+      }
+    }
 
+    const merged = mergeFromQueries(officialBase, hrBoardQuery.data);
+    if (merged.length > 0) {
+      setMatchups(merged);
+      setSourceNote((note) => note === 'Loading live games...' ? 'Live games loaded. Enriching game context...' : note);
+    }
+
+    if (officialBase.length > 0 || merged.length > 0) {
+      void enrichMatchups(merged.length > 0 ? merged : officialBase);
+    } else if (liveGamesQuery.isError && hrBoardQuery.isError) {
+      setError('Live games unavailable right now. No fake games shown.');
+      setSourceNote('Backend unavailable.');
+    }
+  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries, enrichMatchups]);
+
+  useEffect(() => {
+    if (!liveGamesQuery.data?.games?.length) return;
     const id = window.setInterval(() => {
-      load();
+      void liveGamesQuery.refetch();
+      void hrBoardQuery.refetch();
     }, REFRESH_MS);
-
     return () => window.clearInterval(id);
-  }, [load]);
+  }, [liveGamesQuery, hrBoardQuery, liveGamesQuery.data?.games?.length]);
+
+  const load = useCallback(() => {
+    void liveGamesQuery.refetch();
+    void hrBoardQuery.refetch();
+  }, [liveGamesQuery, hrBoardQuery]);
 
   // Always overlay the latest scores from the fast scores endpoint.
   const scoredMatchups = applyScores(matchups, liveScores);
@@ -604,7 +619,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
             <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-cyan-300">{sourceNote}</p>
           </div>
           <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-500/50 transition-colors">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching || liveGamesQuery.isFetching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
         <div className="flex items-center gap-2 mt-4">

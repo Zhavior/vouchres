@@ -4,7 +4,7 @@ import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
 import EdgeIslandCommandCenter from './components/theEdge/EdgeIslandCommandCenter';
 import { Sparkles as EdgeIslandIcon } from 'lucide-react';
-import { apiUrl } from './lib/apiBase';
+import { useLiveGames } from './hooks/queries/useLiveGames';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
@@ -556,7 +556,8 @@ export default function App() {
   const [savedVouches, setSavedVouches] = useState<Vouch[]>([]);
   const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
-  const [liveGames, setLiveGames] = useState<any[]>([]);
+  const { data: liveGamesPayload } = useLiveGames();
+  const liveGames = liveGamesPayload?.games ?? [];
   const canSeeThemeStore = canAccessThemeStore(profile);
 
   useEffect(() => {

@@ -1,6 +1,5 @@
-import { cachedJsonFetch } from '../lib/clientApiCache';
 import React, { useState, useEffect, useMemo } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { useLiveGames, type LiveGamesPayload } from '../hooks/queries/useLiveGames';
 import { 
   Tv, 
   Flame, 
@@ -65,37 +64,30 @@ interface LiveGamesProps {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number; spec: string }) => void;
 }
 
-export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGamesProps) {
-  const [games, setGames] = useState<LiveGame[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
-  const [isPollerActive, setIsPollerActive] = useState<boolean>(true);
-  const [lastRefreshed, setLastRefreshed] = useState<string>('');
+const EMPTY_PREDICTIONS: LiveGame['predictions'] = {
+  winningPct: { home: 0, away: 0 },
+  hrPct: { home: 0, away: 0 },
+  hitsPct: { home: 0, away: 0 },
+  rbisPct: { home: 0, away: 0 },
+};
 
-  // Fetch live matches from our backend API
-  const fetchLiveGames = async () => {
-    setLoading(true);
-    setErrorCode(null);
-    try {
-      const response = await cachedJsonFetch<any>(apiUrl('/api/mlb/live'), {}, 15000);
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success && data.games) {
-        setGames(data.games);
-        // Default select the first active or live game
-        if (data.games.length > 0) {
-          setSelectedGameId(data.games[0].id);
-        }
-      } else {
-        throw new Error(data.error || 'Failed to fetch games structure');
-      }
-    } catch (err: any) {
-      console.warn("Live API fetch warning; using server-side direct simulation model as fallback", err);
-      // In case the API load fails or is booting, we generate an ultra-reliable set on-the-fly to prevent blank pages
-      const fallbackGames: LiveGame[] = [
+function mapApiGame(game: LiveGamesPayload['games'][number]): LiveGame {
+  return {
+    id: game.id,
+    homeTeam: game.homeTeam,
+    awayTeam: game.awayTeam,
+    homeScore: game.homeScore ?? 0,
+    awayScore: game.awayScore ?? 0,
+    status: game.status,
+    venue: game.venue ?? '',
+    gameDate: game.gameDate ?? '',
+    isApiReal: true,
+    predictions: EMPTY_PREDICTIONS,
+  };
+}
+
+function buildFallbackGames(): LiveGame[] {
+  return [
         {
           id: '2026101',
           homeTeam: "Los Angeles Dodgers",
@@ -165,17 +157,38 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
           }
         }
       ];
-      setGames(fallbackGames);
-      setSelectedGameId(fallbackGames[0].id);
-    } finally {
-      setLoading(false);
-      setLastRefreshed(new Date().toLocaleTimeString());
-    }
-  };
+}
+
+export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGamesProps) {
+  const liveGamesQuery = useLiveGames();
+  const [games, setGames] = useState<LiveGame[]>([]);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+  const [isPollerActive, setIsPollerActive] = useState<boolean>(true);
+
+  const loading = liveGamesQuery.isLoading && games.length === 0;
+  const lastRefreshed = liveGamesQuery.dataUpdatedAt
+    ? new Date(liveGamesQuery.dataUpdatedAt).toLocaleTimeString()
+    : '';
 
   useEffect(() => {
-    fetchLiveGames();
-  }, []);
+    if (liveGamesQuery.data?.success && liveGamesQuery.data.games.length > 0) {
+      const nextGames = liveGamesQuery.data.games.map(mapApiGame);
+      setGames(nextGames);
+      setSelectedGameId((current) => current ?? nextGames[0]?.id ?? null);
+      return;
+    }
+
+    if (liveGamesQuery.isError && games.length === 0) {
+      console.warn('Live API fetch warning; using local preview matrix as fallback', liveGamesQuery.error);
+      const fallbackGames = buildFallbackGames();
+      setGames(fallbackGames);
+      setSelectedGameId(fallbackGames[0]?.id ?? null);
+    }
+  }, [liveGamesQuery.data, liveGamesQuery.isError, liveGamesQuery.error, games.length]);
+
+  const fetchLiveGames = () => {
+    void liveGamesQuery.refetch();
+  };
 
   // Set up an optional simulated polling system to simulate live ballpark score increments
   useEffect(() => {

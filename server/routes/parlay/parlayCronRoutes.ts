@@ -15,6 +15,18 @@ import {
   repairLegacyParlayIdentityForSync,
 } from "./parlayRepairHelpers";
 
+/**
+ * Cron-only parlay maintenance routes.
+ *
+ * Schedule (Vercel): see vercel.json → crons → `/api/cron/parlays/grade-due`
+ *   - Default: `0 10 * * *` UTC (daily morning pass after West-coast finals)
+ *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized)
+ *
+ * Multi-instance safety:
+ *   - gradePendingPicks() uses process-local coalescing + Upstash distributed lock
+ *     (`grading:pending-picks` in server/lib/distributedLock.ts) when Redis is configured.
+ *   - Re-runs are idempotent: only `status=pending` picks are graded.
+ */
 export const parlayCronRoutes = Router();
 
 parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
