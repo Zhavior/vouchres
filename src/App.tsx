@@ -159,6 +159,43 @@ const PUBLIC_SECTIONS = new Set([
   'mlb_stats',
 ]);
 
+const SIGNED_IN_HOME = 'today';
+
+function getSavedActiveSection(): string | null {
+  try {
+    return localStorage.getItem('vouchedge_active_section');
+  } catch {
+    return null;
+  }
+}
+
+/** Signed-in users must never land on the public intro terminal. */
+function resolveAuthenticatedSection(section: string): string {
+  if (!hasRealAuthToken()) return section;
+  if (section !== 'vouchedge_intro' && section !== 'welcome') return section;
+  const saved = getSavedActiveSection();
+  if (saved && saved !== 'vouchedge_intro' && saved !== 'welcome') return saved;
+  return SIGNED_IN_HOME;
+}
+
+function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
+  if (typeof window === 'undefined') return;
+  const pathname = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase().replace(/^#/, '');
+  const onLandingPath =
+    pathname === '/' ||
+    pathname === '/vouchedge' ||
+    pathname === '/vouchedge-intro' ||
+    hash === 'vouchedge_intro' ||
+    hash === 'vouchedge' ||
+    hash === 'vouchedge-intro' ||
+    hash === 'welcome' ||
+    hash === '';
+  if (onLandingPath) {
+    window.history.replaceState(null, '', `/${homeSection}`);
+  }
+}
+
 function hasRealAuthToken() {
   try {
     // Only trust Supabase's real auth storage — never old demo/local keys.
@@ -217,7 +254,6 @@ function requiresLogin(section: string) {
   return PROTECTED_SECTIONS.has(section);
 }
 
-
 function resolveDevSectionFromLocation() {
   if (typeof window === 'undefined') return null;
 
@@ -226,19 +262,32 @@ function resolveDevSectionFromLocation() {
   const target = hash || pathname;
 
   if (target === '' || target === '/') {
-    return 'vouchedge_intro';
+    return hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
   }
 
   if (target === 'vouchres/vouchedge' || target === '/vouchres/vouchedge') {
-    window.history.replaceState(null, '', '/vouchedge');
-    return 'vouchedge_intro';
+    const section = hasRealAuthToken() ? SIGNED_IN_HOME : 'vouchedge_intro';
+    window.history.replaceState(null, '', hasRealAuthToken() ? `/${section}` : '/vouchedge');
+    return section;
   }
 
   if (
     target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
     target === 'vouchedge' || target === '/vouchedge'
   ) {
+    if (hasRealAuthToken()) {
+      window.history.replaceState(null, '', `/${SIGNED_IN_HOME}`);
+      return SIGNED_IN_HOME;
+    }
     return 'vouchedge_intro';
+  }
+
+  if (target === 'today' || target === '/today') {
+    return 'today';
+  }
+
+  if (target === 'welcome' || target === '/welcome') {
+    return hasRealAuthToken() ? SIGNED_IN_HOME : 'welcome';
   }
 
   if (
@@ -401,9 +450,9 @@ export default function App() {
 
   const [activeSection, setActiveSection] = useState<string>(() => {
     const locationSection = resolveDevSectionFromLocation();
-    if (locationSection) return locationSection;
-    if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
-    return 'vouchedge_intro';
+    const raw = locationSection
+      ?? (DEV_BYPASS_AUTH && hasRealAuthToken() ? 'hr_board' : 'vouchedge_intro');
+    return resolveAuthenticatedSection(raw);
   });
   const activeSectionRef = useRef(activeSection);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -429,15 +478,23 @@ export default function App() {
   const [, setVouchEdgeLoadMessage] = useState("Starting VouchEdge systems...");
 
   const navigateSection = (section: string) => {
-    if (PUBLIC_SECTIONS.has(section)) {
-      saveActiveSection(section);
-      setActiveSection(section);
+    const target = resolveAuthenticatedSection(section);
+    if (target !== section) {
+      replaceLandingUrl(target);
+      saveActiveSection(target);
+      setActiveSection(target);
       return;
     }
 
-    if (requiresLogin(section) && !hasRealAuthToken()) {
+    if (PUBLIC_SECTIONS.has(target)) {
+      saveActiveSection(target);
+      setActiveSection(target);
+      return;
+    }
+
+    if (requiresLogin(target) && !hasRealAuthToken()) {
       try {
-        localStorage.setItem('vouchedge_after_auth_destination', section);
+        localStorage.setItem('vouchedge_after_auth_destination', target);
       } catch {
         // ignore storage failures
       }
@@ -447,8 +504,8 @@ export default function App() {
       return;
     }
 
-    saveActiveSection(section);
-    setActiveSection(section);
+    saveActiveSection(target);
+    setActiveSection(target);
   }
 
   const handleLoginSuccess = () => {
@@ -495,6 +552,16 @@ export default function App() {
 
   useEffect(() => {
     activeSectionRef.current = activeSection;
+  }, [activeSection]);
+
+  // Signed-in users must never stay on the public landing page.
+  useEffect(() => {
+    if (!hasRealAuthToken()) return;
+    if (activeSection !== 'vouchedge_intro' && activeSection !== 'welcome') return;
+    const next = resolveAuthenticatedSection(activeSection);
+    replaceLandingUrl(next);
+    saveActiveSection(next);
+    setActiveSection(next);
   }, [activeSection]);
 
   useEffect(() => {
@@ -1671,20 +1738,19 @@ export default function App() {
   const renderMainView = () => {
     switch (activeSection) {
       case 'vouchedge_intro':
+        if (hasRealAuthToken()) {
+          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        }
         return (
           <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
           />
         );
       case 'welcome':
-        return hasRealAuthToken() ? (
-          <EdgeIslandPage
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
-            profile={profile}
-            isLoggedIn
-          />
-        ) : (
+        if (hasRealAuthToken()) {
+          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        }
+        return (
           <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
           />
@@ -1940,7 +2006,9 @@ export default function App() {
     }
   };
 
-  const isPublicFrontPage = (activeSection === 'welcome' && !hasRealAuthToken()) || activeSection === 'vouchedge_intro';
+  const isPublicFrontPage =
+    (activeSection === 'welcome' && !hasRealAuthToken())
+    || (activeSection === 'vouchedge_intro' && !hasRealAuthToken());
   const showGlobalAppChrome = !isPublicFrontPage;
 
   return (

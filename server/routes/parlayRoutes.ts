@@ -5,6 +5,7 @@ import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../middleware/auth
 import { generationLimiter, gradingLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
+import { assertCronAuthorized } from "../lib/cronAuth";
 import { AppError } from "../errors/AppError";
 import { boolQuery, boundedInt, optionalYmd } from "../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../services/grading/sportGraders";
@@ -282,23 +283,6 @@ parlayRoutes.post("/parlays/live-hr-preview", requireAuth, gradingLimiter, async
     matches,
   });
 }));
-
-const isAuthorizedCronRequest = (req: Request) => {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
-
-  const authHeader = req.headers.authorization || "";
-  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length).trim() : "";
-  const queryToken = typeof req.query.token === "string" ? req.query.token : "";
-
-  return bearerToken === cronSecret || queryToken === cronSecret;
-};
-
-function assertCronAuthorized(req: Request): void {
-  if (!isAuthorizedCronRequest(req)) {
-    throw new AppError({ status: 401, code: "invalid_token", message: "Unauthorized cron request." });
-  }
-}
 
 parlayRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
   assertCronAuthorized(req);

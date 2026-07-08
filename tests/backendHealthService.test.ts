@@ -58,10 +58,12 @@ describe("backend health report", () => {
     vi.stubEnv("SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    vi.stubEnv("CRON_SECRET", "");
 
     const report = getBackendHealthReport(new Date("2026-07-08T22:00:00.000Z"));
 
     expect(report.status).toBe("degraded");
     expect(report.warnings.join(" ")).toContain("Missing required production config");
+    expect(report.warnings.join(" ")).toContain("CRON_SECRET");
   });
 });

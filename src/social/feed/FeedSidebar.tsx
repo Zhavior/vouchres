@@ -52,10 +52,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 /** Group → Z8 accent class used for the group header label colour. Disciplined two-accent system: emerald for proof/action groups, cyan for everything else. */
 const GROUP_ACCENT: Record<string, string> = {
-  Daily: 'text-[#00E5FF]',
-  'Pro Labs': 'text-[#00E5FF]',
-  'Build & Track': 'text-[#00E5FF]',
-  Social: 'text-[#00E5FF]',
+  Daily: 'text-vouch-cyan',
+  'Pro Labs': 'text-vouch-cyan',
+  'Build & Track': 'text-vouch-cyan',
+  Social: 'text-vouch-cyan',
   Account: 'text-white/40',
 };
 
@@ -97,16 +97,16 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
         'group relative w-full flex items-center justify-center xl:justify-start gap-3',
         'border font-mono pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 text-sm uppercase tracking-wide transition-all outline-none',
         isActive
-          ? 'border-[#00E5FF]/55 bg-[#00E5FF]/10 text-white shadow-[0_0_20px_rgba(0,229,255,0.08)]'
-          : 'border-white/10 bg-black/25 text-white/45 hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/5 hover:text-white',
+          ? 'border-vouch-cyan/55 bg-vouch-cyan/10 text-white shadow-[0_0_20px_rgba(0,240,255,0.08)]'
+          : 'border-white/10 bg-black/25 text-white/45 hover:border-vouch-cyan/40 hover:bg-vouch-cyan/5 hover:text-white',
       ].join(' ')}
     >
       <span
         className={[
           'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center border transition-all',
           isActive
-            ? 'border-[#00E5FF]/45 bg-[#00E5FF]/15 text-[#00E5FF]'
-            : 'border-white/10 bg-black/30 text-[#00E5FF]/65 group-hover:border-[#00E5FF]/35 group-hover:text-[#00E5FF]',
+            ? 'border-vouch-cyan/45 bg-vouch-cyan/15 text-vouch-cyan'
+            : 'border-white/10 bg-black/30 text-vouch-cyan/65 group-hover:border-vouch-cyan/35 group-hover:text-vouch-cyan',
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
@@ -133,11 +133,11 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
-    <div className={['border bg-black/25 font-mono transition-all', hasActive ? 'border-[#00E5FF]/35' : 'border-white/10'].join(' ')}>
+    <div className={['glass-panel glass-border font-mono transition-all', hasActive ? 'border-vouch-cyan/35' : 'border-white/10'].join(' ')}>
       {/* Group header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.28em] transition-colors hover:bg-[#00E5FF]/5 outline-none"
+        className="w-full flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.28em] transition-colors hover:bg-vouch-cyan/5 outline-none"
         aria-expanded={!collapsed}
       >
         <span className={['hidden xl:block', accentClass].join(' ')}>
@@ -263,7 +263,7 @@ export default function FeedSidebar({
         'relative hidden md:flex flex-col h-screen sticky top-0 font-z8',
         'w-[72px] xl:w-[280px]',
         'border-r border-white/10',
-        'bg-[#0A0A0A] px-2 xl:px-3.5 py-4',
+        'bg-obsidian-800 px-2 xl:px-3.5 py-4',
         'text-white',
         'justify-between select-none backdrop-blur-sm',
         'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
@@ -275,11 +275,11 @@ export default function FeedSidebar({
         {/* Brand logo */}
         <button
           onClick={() => onSectionChange('feed')}
-          className="group relative w-full flex items-center gap-3 border border-white/10 bg-black/30 p-2.5 cursor-pointer transition-all hover:border-[#00E5FF]/45 hover:bg-[#00E5FF]/5"
+          className="group relative w-full flex items-center gap-3 border border-white/10 bg-black/30 p-2.5 cursor-pointer transition-all hover:border-vouch-cyan/45 hover:bg-vouch-cyan/5"
           id="brand-logo-id"
           aria-label="Go to Home Feed"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#00E5FF]/35 bg-[#00E5FF]/10 text-[#00E5FF]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan">
             <span className="font-mono text-[13px] font-black tracking-tight">VE</span>
           </div>
           <div className="hidden xl:block min-w-0 flex-1">
@@ -287,7 +287,7 @@ export default function FeedSidebar({
               <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
                 VouchEdge
               </span>
-              <span className="font-mono border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#00E5FF]">
+              <span className="font-mono border border-vouch-cyan/25 bg-vouch-cyan/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-vouch-cyan">
                 Live
               </span>
             </div>
@@ -300,7 +300,7 @@ export default function FeedSidebar({
         {/* Cmd+K hint — desktop only */}
         <button
           onClick={onOpenCmdK}
-          className="hidden xl:flex w-full items-center gap-2 border border-white/10 bg-black/25 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white/40 transition-all hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white"
+          className="hidden xl:flex w-full items-center gap-2 border border-white/10 bg-black/25 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white/40 transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white"
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
@@ -329,9 +329,9 @@ export default function FeedSidebar({
                 className={[
                   'flex-1 flex items-center justify-center gap-1.5 border px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
                   isActive
-                    ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                     : sport.enabled
-                      ? 'border-transparent text-white/40 hover:border-[#00E5FF]/30 hover:bg-[#00E5FF]/5 hover:text-white'
+                      ? 'border-transparent text-white/40 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-white'
                       : 'text-white/25 cursor-not-allowed opacity-70',
                 ].join(' ')}
               >
@@ -385,15 +385,15 @@ export default function FeedSidebar({
         {/* Sync status pill — desktop only */}
         <div className="hidden xl:flex items-center justify-between gap-2 border border-white/10 bg-black/25 px-3.5 py-2.5 font-mono">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[#00E5FF]">
+            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-vouch-cyan">
               Sync
             </p>
             <p className="mt-0.5 text-[10px] uppercase leading-relaxed tracking-wide text-white/40">
               Live data connected
             </p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1 border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#00E5FF]">
-            <span className="h-1.5 w-1.5 bg-[#00E5FF] animate-pulse" />
+          <span className="inline-flex shrink-0 items-center gap-1 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-vouch-cyan">
+            <span className="h-1.5 w-1.5 bg-vouch-cyan animate-pulse" />
             Online
           </span>
         </div>
@@ -405,8 +405,8 @@ export default function FeedSidebar({
             className={[
               'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
               activeSection === 'customize'
-                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                : 'border-white/10 text-white/40 hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white',
+                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                : 'border-white/10 text-white/40 hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white',
             ].join(' ')}
             aria-label="Customize layout"
           >
@@ -418,8 +418,8 @@ export default function FeedSidebar({
             className={[
               'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
               activeSection === 'settings'
-                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                : 'border-white/10 text-white/40 hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white',
+                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                : 'border-white/10 text-white/40 hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white',
             ].join(' ')}
             aria-label="Settings"
           >
@@ -431,7 +431,7 @@ export default function FeedSidebar({
         {/* Profile card */}
         <button
           onClick={() => onSectionChange('profile')}
-          className="w-full flex items-center gap-3 border border-white/10 bg-black/30 p-3 cursor-pointer transition-all hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5"
+          className="w-full flex items-center gap-3 border border-white/10 bg-black/30 p-3 cursor-pointer transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5"
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >
@@ -449,7 +449,7 @@ export default function FeedSidebar({
                 {profile.displayName}
               </h4>
               {profile.verified && (
-                <Shield className="h-3 w-3 shrink-0 text-[#00E5FF] fill-[#00E5FF]/85" />
+                <Shield className="h-3 w-3 shrink-0 text-vouch-cyan fill-vouch-cyan/85" />
               )}
             </div>
             <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-white/40 truncate">
@@ -460,7 +460,7 @@ export default function FeedSidebar({
           </div>
           {/* Notification badge on avatar when collapsed */}
           {unreadNotifications > 0 && (
-            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-[#00E5FF] text-[8px] font-black text-black">
+            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-vouch-cyan text-[8px] font-black text-black">
               {unreadNotifications > 9 ? '9+' : unreadNotifications}
             </span>
           )}

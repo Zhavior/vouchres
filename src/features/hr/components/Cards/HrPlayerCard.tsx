@@ -53,53 +53,53 @@ function getTier(score: number): TierConfig {
   if (score >= 97) return {
     label: 'ELITE',
     tokenAccent: 've-accent-cyan',
-    ringHex: '#00E5FF',
+    ringHex: '#00F0FF',
     borderClass: 'border-white/10',
-    borderHoverClass: 'hover:border-[#00E5FF]/55',
-    textClass: 'text-[#00E5FF]',
-    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
-    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
-    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
+    borderHoverClass: 'hover:border-vouch-cyan/55',
+    textClass: 'text-vouch-cyan',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,240,255,0.10)]',
+    chipClass: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan',
+    badgeClass: 'bg-vouch-cyan/10 text-vouch-cyan border-vouch-cyan/35',
   };
   if (score >= 92) return {
     label: 'STRONG',
     tokenAccent: 've-accent-cyan',
-    ringHex: '#00E5FF',
+    ringHex: '#00F0FF',
     borderClass: 'border-white/10',
-    borderHoverClass: 'hover:border-[#00E5FF]/55',
-    textClass: 'text-[#00E5FF]',
-    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
-    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
-    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
+    borderHoverClass: 'hover:border-vouch-cyan/55',
+    textClass: 'text-vouch-cyan',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,240,255,0.10)]',
+    chipClass: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan',
+    badgeClass: 'bg-vouch-cyan/10 text-vouch-cyan border-vouch-cyan/35',
   };
   if (score >= 85) return {
     label: 'WATCH',
     tokenAccent: 've-accent-cyan',
-    ringHex: '#00E5FF',
+    ringHex: '#00F0FF',
     borderClass: 'border-white/10',
-    borderHoverClass: 'hover:border-[#00E5FF]/55',
-    textClass: 'text-[#00E5FF]',
-    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
-    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
-    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
+    borderHoverClass: 'hover:border-vouch-cyan/55',
+    textClass: 'text-vouch-cyan',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,240,255,0.10)]',
+    chipClass: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan',
+    badgeClass: 'bg-vouch-cyan/10 text-vouch-cyan border-vouch-cyan/35',
   };
   if (score >= 75) return {
     label: 'SLEEPER',
     tokenAccent: 've-accent-cyan',
-    ringHex: '#00E5FF',
+    ringHex: '#00F0FF',
     borderClass: 'border-white/10',
-    borderHoverClass: 'hover:border-[#00E5FF]/55',
-    textClass: 'text-[#00E5FF]',
-    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
-    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
-    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
+    borderHoverClass: 'hover:border-vouch-cyan/55',
+    textClass: 'text-vouch-cyan',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,240,255,0.10)]',
+    chipClass: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan',
+    badgeClass: 'bg-vouch-cyan/10 text-vouch-cyan border-vouch-cyan/35',
   };
   return {
     label: 'FADE',
     tokenAccent: 've-text-muted',
     ringHex: '#64748b',
     borderClass: 'border-white/10',
-    borderHoverClass: 'hover:border-[#00E5FF]/35',
+    borderHoverClass: 'hover:border-vouch-cyan/35',
     textClass: 'text-[hsl(var(--ve-text-muted))]',
     glowClass: '',
     chipClass: 'border border-white/10 bg-black/30 text-[hsl(var(--ve-text-muted))]',
@@ -110,9 +110,9 @@ function getTier(score: number): TierConfig {
 function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNode; className: string } {
   switch (status) {
     case 'official':
-      return { label: 'Official', icon: <ShieldCheck className="h-3 w-3" />, className: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]' };
+      return { label: 'Official', icon: <ShieldCheck className="h-3 w-3" />, className: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan' };
     case 'projected':
-      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]' };
+      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan' };
     case 'blocked':
       return { label: 'Blocked', icon: <ShieldAlert className="h-3 w-3" />, className: 'border border-red-500/30 bg-red-500/10 text-red-300' };
     default:
@@ -208,7 +208,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
         tier.borderClass,
         'bg-black/30 p-4 text-left',
         'transition-all duration-[var(--ve-duration-normal)]',
-        'hover:-translate-y-0.5 hover:bg-[#00E5FF]/5',
+        'hover:-translate-y-0.5 hover:bg-vouch-cyan/5',
         tier.borderHoverClass,
         tier.glowClass,
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ve-accent-cyan)/0.40)]',
@@ -217,7 +217,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       {/* Warning dot */}
       {hasWarnings && (
         <span
-          className="absolute right-3 top-3 h-2 w-2 bg-[#00E5FF] shadow-[0_0_8px_2px_rgba(0,229,255,0.55)]"
+          className="absolute right-3 top-3 h-2 w-2 bg-vouch-cyan shadow-[0_0_8px_2px_rgba(0,229,255,0.55)]"
           title={`${player.warnings?.length} warning(s)`}
         />
       )}
@@ -319,7 +319,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
             <span className={[
               'inline-flex items-center gap-1 border px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ml-auto',
               edgePositive
-                ? 'border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]'
+                ? 'border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan'
                 : edgeNegative
                   ? 'border-red-500/30 bg-red-500/10 text-red-300'
                   : 'border-white/10 bg-black/30 text-[hsl(var(--ve-text-muted))]',

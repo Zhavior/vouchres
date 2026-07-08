@@ -16,6 +16,7 @@ import {
   BarChart3, Trophy, Sparkles, Settings, LayoutDashboard, ShoppingBag,
   User, X,
 } from 'lucide-react';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -148,7 +149,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[200] bg-[hsl(var(--ve-bg-deep)/0.82)] backdrop-blur-[6px]"
+        className="fixed inset-0 z-[200] bg-obsidian-900/82 backdrop-blur-[6px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -161,15 +162,15 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
         className={[
           'fixed z-[201] left-1/2 top-[12vh] -translate-x-1/2',
           'w-full max-w-[540px] mx-4',
-          'rounded-2xl border border-[hsl(var(--ve-accent-cyan)/0.25)]',
-          'bg-[hsl(var(--ve-bg-panel)/0.96)] shadow-[0_24px_80px_-16px_hsl(var(--ve-shadow)/0.70)]',
-          'overflow-hidden',
+          Z8_PANEL,
+          'border-vouch-cyan/25 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.85)]',
+          'overflow-hidden font-z8',
           'animate-in fade-in slide-in-from-top-4 duration-200',
         ].join(' ')}
       >
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[hsl(var(--ve-border)/0.32)]">
-          <Search className="h-4 w-4 shrink-0 text-[hsl(var(--ve-text-muted)/0.70)]" />
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+          <Search className="h-4 w-4 shrink-0 text-white/40" />
           <input
             ref={inputRef}
             type="text"
@@ -177,20 +178,20 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
             onChange={e => { setQuery(e.target.value); setCursor(0); }}
             onKeyDown={handleKeyDown}
             placeholder="Jump to any section…"
-            className="flex-1 bg-transparent text-[hsl(var(--ve-text-primary))] placeholder:text-[hsl(var(--ve-text-muted)/0.55)] text-sm outline-none"
+            className="flex-1 bg-transparent text-white placeholder:text-white/40 text-sm font-mono outline-none"
             autoComplete="off"
             spellCheck={false}
           />
           {query && (
             <button
               onClick={() => { setQuery(''); setCursor(0); inputRef.current?.focus(); }}
-              className="text-[hsl(var(--ve-text-muted)/0.55)] hover:text-[hsl(var(--ve-text-primary))] transition-colors"
+              className="text-white/40 hover:text-white transition-colors"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <kbd className="hidden sm:flex items-center gap-0.5 rounded-md border border-[hsl(var(--ve-border)/0.50)] bg-[hsl(var(--ve-surface)/0.45)] px-1.5 py-0.5 text-[9px] font-black tracking-wider text-[hsl(var(--ve-text-muted)/0.60)]">
+          <kbd className={`hidden sm:flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${Z8_LABEL} text-white/40`}>
             ESC
           </kbd>
         </div>
@@ -202,15 +203,15 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
           role="listbox"
         >
           {results.length === 0 ? (
-            <div className="px-4 py-10 text-center text-sm text-[hsl(var(--ve-text-muted)/0.60)]">
-              No sections match <strong className="text-[hsl(var(--ve-text-primary))]">"{query}"</strong>
+            <div className="px-4 py-10 text-center text-sm text-white/40 font-mono">
+              No sections match <strong className="text-white">"{query}"</strong>
             </div>
           ) : (
             Object.entries(grouped).map(([group, items]) => {
               const globalOffset = results.indexOf(items[0]);
               return (
                 <div key={group} className="mb-1">
-                  <div className="px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.28em] text-[hsl(var(--ve-text-muted)/0.50)]">
+                  <div className={`px-4 py-1.5 ${Z8_LABEL} text-white/40`}>
                     {group}
                   </div>
                   {items.map((item, i) => {
@@ -226,25 +227,23 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
                         onClick={() => navigate(item.id)}
                         onMouseEnter={() => setCursor(idx)}
                         className={[
-                          'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-[var(--ve-duration-fast)]',
-                          isActive
-                            ? 'bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-text-primary))]'
-                            : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
+                          'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all border border-transparent font-mono',
+                          isActive ? Z8_ACTIVE : `${Z8_IDLE} border-transparent`,
                         ].join(' ')}
                       >
                         <span
                           className={[
-                            'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border transition-all',
+                            'flex h-7 w-7 shrink-0 items-center justify-center border transition-all',
                             isActive
-                              ? 'border-[hsl(var(--ve-accent-cyan)/0.40)] bg-[hsl(var(--ve-accent-cyan)/0.14)] text-[hsl(var(--ve-accent-cyan))]'
-                              : 'border-[hsl(var(--ve-border)/0.40)] bg-[hsl(var(--ve-surface)/0.42)] text-[hsl(var(--ve-text-muted))]',
+                              ? 'border-vouch-cyan/45 bg-vouch-cyan/15 text-vouch-cyan'
+                              : 'border-white/10 bg-black/30 text-vouch-cyan/65',
                           ].join(' ')}
                         >
                           <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <span className="flex-1 text-left font-medium">{item.label}</span>
+                        <span className="flex-1 text-left font-medium uppercase tracking-wide">{item.label}</span>
                         {isActive && (
-                          <kbd className="flex items-center gap-0.5 rounded border border-[hsl(var(--ve-border)/0.50)] bg-[hsl(var(--ve-surface)/0.45)] px-1.5 py-0.5 text-[9px] font-black tracking-wider text-[hsl(var(--ve-text-muted)/0.55)]">
+                          <kbd className={`flex items-center gap-0.5 border border-white/10 bg-black/30 px-1.5 py-0.5 ${Z8_LABEL} text-white/40`}>
                             ↵
                           </kbd>
                         )}
@@ -258,22 +257,22 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
         </div>
 
         {/* Footer hint */}
-        <div className="flex items-center justify-between gap-4 border-t border-[hsl(var(--ve-border)/0.28)] px-4 py-2.5">
-          <div className="flex items-center gap-3 text-[10px] text-[hsl(var(--ve-text-muted)/0.50)]">
+        <div className="flex items-center justify-between gap-4 border-t border-white/10 px-4 py-2.5">
+          <div className="flex items-center gap-3 text-[10px] text-white/40 font-mono">
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-[hsl(var(--ve-border)/0.50)] bg-[hsl(var(--ve-surface)/0.40)] px-1 py-0.5 text-[9px]">↑↓</kbd>
+              <kbd className="border border-white/10 bg-black/30 px-1 py-0.5 text-[9px]">↑↓</kbd>
               navigate
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-[hsl(var(--ve-border)/0.50)] bg-[hsl(var(--ve-surface)/0.40)] px-1 py-0.5 text-[9px]">↵</kbd>
+              <kbd className="border border-white/10 bg-black/30 px-1 py-0.5 text-[9px]">↵</kbd>
               open
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-[hsl(var(--ve-border)/0.50)] bg-[hsl(var(--ve-surface)/0.40)] px-1 py-0.5 text-[9px]">esc</kbd>
+              <kbd className="border border-white/10 bg-black/30 px-1 py-0.5 text-[9px]">esc</kbd>
               close
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--ve-text-muted)/0.40)]">
+          <div className="flex items-center gap-1 text-[10px] text-white/30 font-mono">
             <Command className="h-2.5 w-2.5" />
             <span className="font-black tracking-wider">K</span>
           </div>

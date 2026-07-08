@@ -21,7 +21,7 @@ const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorCl
   <div
     className={`flex items-center gap-2.5 border bg-black/25 px-3.5 py-2.5 font-mono transition duration-200 ${colorClasses} ${glowClasses}`}
   >
-    <div className="flex h-8 w-8 items-center justify-center border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]">{icon}</div>
+    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
     <div className="flex flex-col leading-tight">
       <span className="text-lg font-extrabold text-slate-50">{value}</span>
       <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">{label}</span>
@@ -132,7 +132,7 @@ const EmptyState: React.FC<{
           <button
             type="button"
             onClick={onShowPreview}
-            className="flex items-center gap-2 border border-[#00E5FF]/35 bg-[#00E5FF]/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-[#00E5FF] transition duration-200 hover:bg-[#00E5FF]/15"
+            className="flex items-center gap-2 border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-vouch-cyan transition duration-200 hover:bg-vouch-cyan/15"
           >
             Show preview candidates ({previewCount})
           </button>
@@ -140,7 +140,7 @@ const EmptyState: React.FC<{
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-2 border border-white/10 bg-black/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF]"
+          className="flex items-center gap-2 border border-white/10 bg-black/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
         >
           <RefreshCw className="h-4 w-4" />
           Refresh
@@ -199,7 +199,7 @@ const HomeRunIntelligencePage: React.FC = () => {
         />
 
         {vm.autoSwitchedToPreview && (
-          <div className="flex items-center gap-2 border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#00E5FF]">
+          <div className="flex items-center gap-2 border border-vouch-cyan/25 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
             <AlertOctagon className="h-4 w-4 shrink-0" />
             No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Switch back to the Confirmed tab anytime.
           </div>
@@ -212,35 +212,35 @@ const HomeRunIntelligencePage: React.FC = () => {
               label="Elite"
               value={eliteCount}
               icon={<Flame className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              colorClasses="border-white/10 hover:border-vouch-cyan/35"
               glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Strong"
               value={strongCount}
               icon={<Award className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              colorClasses="border-white/10 hover:border-vouch-cyan/35"
               glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Watch"
               value={watchCount}
               icon={<Eye className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              colorClasses="border-white/10 hover:border-vouch-cyan/35"
               glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Sleepers"
               value={sleeperCount}
               icon={<Moon className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              colorClasses="border-white/10 hover:border-vouch-cyan/35"
               glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <div
-              className="flex items-center gap-2.5 border border-[#00E5FF]/35 bg-[#00E5FF]/10 px-3.5 py-2.5 font-mono"
+              className="flex items-center gap-2.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3.5 py-2.5 font-mono"
             >
-              <div className="flex h-8 w-8 items-center justify-center border border-[#00E5FF]/25 bg-black/30">
-                <span className="text-xs font-black text-[#00E5FF]">Σ</span>
+              <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-black/30">
+                <span className="text-xs font-black text-vouch-cyan">Σ</span>
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="text-lg font-extrabold text-slate-50">{totalCount}</span>
@@ -256,7 +256,7 @@ const HomeRunIntelligencePage: React.FC = () => {
               onClick={handleRefresh}
               aria-label="Refresh data"
               disabled={vm.loading}
-              className="flex h-7 w-7 items-center justify-center border border-white/10 bg-black/30 text-zinc-400 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF] disabled:opacity-50"
+              className="flex h-7 w-7 items-center justify-center border border-white/10 bg-black/30 text-zinc-400 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${vm.loading ? 'animate-spin' : ''}`} />
             </button>

@@ -93,7 +93,7 @@ function DataPoint({ label, value, active = false }: { label: string; value: str
   return (
     <div className="flex min-w-0 flex-col gap-1 border-r border-white/5 p-4">
       <span className="font-mono text-[10px] uppercase tracking-widest text-white/40">{label}</span>
-      <span className={`truncate font-mono text-lg font-bold sm:text-xl ${active ? 'text-[#00E5FF]' : 'text-white'}`}>
+      <span className={`truncate font-mono text-lg font-bold sm:text-xl ${active ? 'text-vouch-cyan' : 'text-white'}`}>
         {value}
       </span>
     </div>
@@ -108,8 +108,8 @@ function VouchButton() {
       onClick={() => setVouched(true)}
       className={`shrink-0 border px-3 py-1 font-mono text-[9px] font-bold uppercase transition-all ${
         vouched
-          ? 'border-[#00E5FF] bg-[#00E5FF] text-black'
-          : 'border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black'
+          ? 'border-vouch-cyan bg-vouch-cyan text-black'
+          : 'border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan hover:text-black'
       }`}
     >
       {vouched ? 'Vouched' : '+ Vouch'}
@@ -132,7 +132,7 @@ function DailySlate({ onSelect, selectedId }: { onSelect: (id: number) => void; 
             key={m.id}
             onClick={() => onSelect(m.id)}
             className={`grid w-full cursor-pointer grid-cols-4 items-center p-3 text-left transition-colors ${
-              selectedId === m.id ? 'border-l-2 border-[#00E5FF] bg-[#00E5FF]/10' : 'hover:bg-white/[0.02]'
+              selectedId === m.id ? 'border-l-2 border-vouch-cyan bg-vouch-cyan/10' : 'hover:bg-white/[0.02]'
             }`}
           >
             <span className="col-span-2 flex items-center gap-2">
@@ -144,7 +144,7 @@ function DailySlate({ onSelect, selectedId }: { onSelect: (id: number) => void; 
               <span>{m.awayOdds}</span>
               <span>{m.homeOdds}</span>
             </span>
-            <span className={`text-right ${m.time === 'LIVE' ? 'animate-pulse text-[#00E5FF]' : 'text-white/40'}`}>
+            <span className={`text-right ${m.time === 'LIVE' ? 'animate-pulse text-vouch-cyan' : 'text-white/40'}`}>
               {m.time}
             </span>
           </button>
@@ -160,7 +160,7 @@ function VouchLedger() {
       {['ALPHA_QUANT', 'SHARP_BETTOR', 'DATA_MINER'].map((user) => (
         <div key={user} className="flex items-center justify-between gap-3 border-b border-white/5 p-2">
           <span className="text-white/80">@{user}</span>
-          <span className="font-bold text-[#00E5FF]">NYY ML</span>
+          <span className="font-bold text-vouch-cyan">NYY ML</span>
           <VouchButton />
         </div>
       ))}
@@ -172,16 +172,16 @@ function MatchupIntelligence() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div className="border border-white/10 bg-white/5 p-4">
-        <div className="mb-2 text-[8px] uppercase text-[#00E5FF]">Zone_Matrix</div>
+        <div className="mb-2 text-[8px] uppercase text-vouch-cyan">Zone_Matrix</div>
         <div className="grid grid-cols-3 gap-1">
           {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className={`aspect-square border border-white/5 ${i === 4 ? 'bg-[#00E5FF]/20' : ''}`} />
+            <div key={i} className={`aspect-square border border-white/5 ${i === 4 ? 'bg-vouch-cyan/20' : ''}`} />
           ))}
         </div>
       </div>
       <div className="flex h-24 items-end gap-1 border border-white/10 bg-white/5 p-4">
         {[40, 70, 45, 90, 65].map((h, i) => (
-          <div key={i} className="flex-1 bg-[#00E5FF]/40" style={{ height: `${h}%` }} />
+          <div key={i} className="flex-1 bg-vouch-cyan/40" style={{ height: `${h}%` }} />
         ))}
       </div>
     </div>
@@ -197,7 +197,7 @@ function PropTerminal() {
       ].map((item) => (
         <div key={item.player} className="flex items-center justify-between gap-3 border-b border-white/5 p-2">
           <span className="text-white">{item.player}</span>
-          <span className="font-bold text-[#00E5FF]">{item.edge}</span>
+          <span className="font-bold text-vouch-cyan">{item.edge}</span>
           <VouchButton />
         </div>
       ))}
@@ -208,14 +208,14 @@ function PropTerminal() {
 function ProfilePreview() {
   return (
     <div className="space-y-4 font-mono text-[10px]">
-      <div className="flex items-center justify-between border border-[#00E5FF]/20 bg-[#00E5FF]/10 p-4">
+      <div className="flex items-center justify-between border border-vouch-cyan/20 bg-vouch-cyan/10 p-4">
         <div>
           <div className="text-sm font-bold uppercase text-white">@EDGE_ANALYST</div>
-          <div className="text-[8px] uppercase tracking-widest text-[#00E5FF]">Identity_Verified</div>
+          <div className="text-[8px] uppercase tracking-widest text-vouch-cyan">Identity_Verified</div>
         </div>
         <div className="text-right">
           <div className="text-[8px] uppercase text-white/20">Trust_Score</div>
-          <div className="text-lg font-bold text-[#00E5FF]">--.-</div>
+          <div className="text-lg font-bold text-vouch-cyan">--.-</div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -238,9 +238,9 @@ function ProfilePreview() {
 function MonetizationEngine() {
   return (
     <div className="space-y-4 font-mono text-[10px]">
-      <div className="border border-[#00E5FF]/20 bg-[#00E5FF]/5 p-4">
-        <div className="mb-1 uppercase text-[#00E5FF]/60">Monthly_Revenue</div>
-        <div className="text-xl font-bold text-[#00E5FF]">$12,480.00</div>
+      <div className="border border-vouch-cyan/20 bg-vouch-cyan/5 p-4">
+        <div className="mb-1 uppercase text-vouch-cyan/60">Monthly_Revenue</div>
+        <div className="text-xl font-bold text-vouch-cyan">$12,480.00</div>
       </div>
       <div className="border border-white/5 bg-white/5 p-4">
         <div className="mb-1 uppercase text-white/40">Subscribers</div>
@@ -255,7 +255,7 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
     <section className="mt-8 border border-white/10 bg-white/[0.025] p-4 sm:p-5">
       <div className="mb-4 flex flex-col justify-between gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-end">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-[#00E5FF]">These are Beta Prices</div>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-vouch-cyan">These are Beta Prices</div>
           <h2 className="mt-1 text-xl font-bold uppercase tracking-tight text-white">Terminal Access</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
@@ -271,14 +271,14 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
             onClick={() => onSelectPlan(plan.id)}
             className={`group flex min-h-[190px] flex-col justify-between border p-4 text-left transition-all hover:-translate-y-0.5 ${
               plan.featured
-                ? 'border-[#00E5FF]/60 bg-[#00E5FF]/10 shadow-[0_0_24px_rgba(0,229,255,0.12)]'
-                : 'border-white/10 bg-black/30 hover:border-[#00E5FF]/40'
+                ? 'border-vouch-cyan/60 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,229,255,0.12)]'
+                : 'border-white/10 bg-black/30 hover:border-vouch-cyan/40'
             }`}
           >
             <span>
               <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">{plan.descriptor}</span>
               <span className="mt-1 block text-lg font-black uppercase text-white">{plan.name}</span>
-              <span className={plan.featured ? 'mt-3 block text-2xl font-black text-[#00E5FF]' : 'mt-3 block text-2xl font-black text-white'}>
+              <span className={plan.featured ? 'mt-3 block text-2xl font-black text-vouch-cyan' : 'mt-3 block text-2xl font-black text-white'}>
                 {plan.price}
               </span>
             </span>
@@ -289,7 +289,7 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
                 </span>
               ))}
             </span>
-            <span className="mt-4 block border-t border-white/10 pt-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[#00E5FF] group-hover:text-white">
+            <span className="mt-4 block border-t border-white/10 pt-3 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan group-hover:text-white">
               Select {plan.name}
             </span>
           </button>
@@ -330,11 +330,11 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div className="relative z-10 mx-auto w-full max-w-6xl">
           <div className="mb-8 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 text-center sm:flex-row sm:text-left">
             <div className="text-xl font-bold uppercase italic tracking-tighter">
-              VouchEdge<span className="text-[#00E5FF]">.Terminal</span>
+              VouchEdge<span className="text-vouch-cyan">.Terminal</span>
             </div>
             <div className="flex flex-col items-center gap-3 sm:flex-row">
               <div className="hidden font-mono text-[10px] uppercase tracking-widest text-white/40 sm:block">
-                System_Status: <span className="text-[#00E5FF]">Optimal</span> // Latency: {liveData.latency}ms
+                System_Status: <span className="text-vouch-cyan">Optimal</span> // Latency: {liveData.latency}ms
               </div>
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
           <div className="space-y-8">
             <section className="mx-auto flex w-full max-w-4xl flex-col items-center space-y-6 text-center">
               <h1 className="text-4xl font-bold leading-none tracking-tighter sm:text-5xl lg:text-6xl">
-                Command the board with <span className="text-[#00E5FF]">pristine</span> intelligence.
+                Command the board with <span className="text-vouch-cyan">pristine</span> intelligence.
               </h1>
               <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/40">
                 The definitive research and verification terminal for serious analysts. Analyze live data,
@@ -364,7 +364,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                     key={action.label}
                     type="button"
                     onClick={action.onClick}
-                    className="h-14 border border-[#00E5FF]/55 bg-[#00E5FF]/10 px-5 font-mono text-[11px] font-bold uppercase tracking-widest text-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black"
+                    className="h-14 border border-vouch-cyan/55 bg-vouch-cyan/10 px-5 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.08)] transition-all hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black"
                   >
                     {action.label}
                   </button>
@@ -373,7 +373,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </section>
 
             <section className="w-full space-y-4">
-              <div className="text-center font-mono text-[10px] uppercase tracking-widest text-[#00E5FF]">
+              <div className="text-center font-mono text-[10px] uppercase tracking-widest text-vouch-cyan">
                 Active_Daily_Slate
               </div>
               <DailySlate selectedId={selectedGame} onSelect={setSelectedGame} />
@@ -388,7 +388,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                       type="button"
                       onClick={() => setView(tab)}
                       className={`flex-1 py-3 font-mono text-[9px] uppercase tracking-widest transition-all ${
-                        view === tab ? 'bg-[#00E5FF] font-bold text-black' : 'text-white/40 hover:text-white'
+                        view === tab ? 'bg-vouch-cyan font-bold text-black' : 'text-white/40 hover:text-white'
                       }`}
                     >
                       {tab}

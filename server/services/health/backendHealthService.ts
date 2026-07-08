@@ -47,6 +47,16 @@ function configChecks(): ConfigCheck[] {
       configured: configured("UPSTASH_REDIS_REST_URL") && configured("UPSTASH_REDIS_REST_TOKEN"),
       requiredInProduction: false,
     },
+    {
+      name: "CRON_SECRET",
+      configured: configured("CRON_SECRET"),
+      requiredInProduction: true,
+    },
+    {
+      name: "SENTRY_DSN",
+      configured: configured("SENTRY_DSN"),
+      requiredInProduction: false,
+    },
   ];
 }
 

@@ -9,6 +9,7 @@ import { apiNotFoundHandler } from "./server/middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "./server/middleware/rateLimit";
 import { requestContext } from "./server/middleware/requestContext";
 import { routeTiming } from "./server/middleware/routeTiming";
+import { initServerSentry } from "./server/lib/sentry";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
@@ -17,6 +18,8 @@ dotenv.config({ path: ".env.local", override: true });
 
 export async function createApp() {
   const app = express();
+
+  initServerSentry(app);
 
   app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
   app.use(requestContext);

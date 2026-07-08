@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
+import { Z8_ICON_BOX, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
 
 export interface ProKpiTile {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -35,26 +36,20 @@ export const ProPageHeader: React.FC<ProPageHeaderProps> = React.memo(function P
         style={{ background: `linear-gradient(to bottom, ${withAlpha(accent, 0.10)}, transparent)` }}
       />
 
-      <div className="ve-premium-panel relative flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className={`${Z8_PANEL} ve-premium-panel relative flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between`}>
         <div className="min-w-0">
           {badge && (
-            <div
-              className="mb-3 inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em]"
-              style={{ color: accent, borderColor: withAlpha(accent, 0.26), background: withAlpha(accent, 0.08) }}
-            >
+            <div className={`mb-3 inline-flex border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
               {badge}
             </div>
           )}
-          <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-2xl">
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-xl border"
-              style={{ borderColor: withAlpha(accent, 0.30), background: withAlpha(accent, 0.10) }}
-            >
-              <Icon className="h-4 w-4" style={{ color: accent }} />
+          <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-white sm:text-2xl font-mono uppercase">
+            <span className={`h-8 w-8 ${Z8_ICON_BOX}`}>
+              <Icon className="h-4 w-4 text-vouch-cyan" />
             </span>
             {title}
           </h1>
-          {subtitle && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">{subtitle}</p>}
+          {subtitle && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55 font-mono">{subtitle}</p>}
         </div>
         {right}
       </div>
@@ -67,27 +62,22 @@ export const ProPageHeader: React.FC<ProPageHeaderProps> = React.memo(function P
             return (
               <div
                 key={`${tile.label}-${idx}`}
-                className="ve-card-compact relative overflow-hidden px-3 py-2.5"
-                style={{ borderColor: withAlpha(tileAccent, 0.24) }}
+                className={`${Z8_PANEL} ve-card-compact relative overflow-hidden px-3 py-2.5`}
               >
                 <span
-                  className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: `linear-gradient(90deg, transparent, ${withAlpha(tileAccent, 0.45)}, transparent)` }}
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/45 to-transparent"
                 />
                 <div className="flex items-center gap-2">
                   {TileIcon && (
-                    <span
-                      className="flex h-6 w-6 items-center justify-center rounded-md border"
-                      style={{ borderColor: withAlpha(tileAccent, 0.30), background: withAlpha(tileAccent, 0.08) }}
-                    >
-                      <TileIcon className="h-3 w-3" style={{ color: tileAccent }} />
+                    <span className={`h-6 w-6 ${Z8_ICON_BOX}`}>
+                      <TileIcon className="h-3 w-3 text-vouch-cyan" />
                     </span>
                   )}
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">
+                  <span className={`${Z8_LABEL} text-white/40`}>
                     {tile.label}
                   </span>
                 </div>
-                <p className="mt-1.5 font-mono text-base font-black" style={{ color: tileAccent }}>
+                <p className="mt-1.5 font-mono text-base font-black text-vouch-cyan">
                   {tile.value}
                 </p>
               </div>

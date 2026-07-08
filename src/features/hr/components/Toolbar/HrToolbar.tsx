@@ -38,10 +38,10 @@ const MODE_OPTIONS: { key: HrSourceMode; label: string }[] = [
 ];
 
 const TIER_ACTIVE_CLASSES: Record<string, string> = {
-  elite: 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]',
-  strong: 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]',
-  watch: 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]',
-  sleeper: 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]',
+  elite: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
+  strong: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
+  watch: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
+  sleeper: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
 };
 
 function csvEscape(value: string | number | null | undefined): string {
@@ -143,20 +143,20 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-[220px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#00E5FF]/60" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-vouch-cyan/60" />
           <input
             type="text"
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search players, teams, pitchers..."
-            className="w-full border border-white/10 bg-black/30 py-2.5 pl-9 pr-9 text-sm text-slate-100 placeholder:text-zinc-600 outline-none transition duration-200 focus:border-[#00E5FF]/45 focus:ring-1 focus:ring-[#00E5FF]/25"
+            className="w-full border border-white/10 bg-black/30 py-2.5 pl-9 pr-9 text-sm text-slate-100 placeholder:text-zinc-600 outline-none transition duration-200 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/25"
           />
           {searchValue.length > 0 && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
               aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-zinc-500 transition duration-200 hover:text-[#00E5FF]"
+              className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-zinc-500 transition duration-200 hover:text-vouch-cyan"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -172,8 +172,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
               onClick={() => onSourceModeChange(opt.key)}
               className={`border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
                 sourceMode === opt.key
-                  ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                  : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
+                  ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                  : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
               }`}
               aria-pressed={sourceMode === opt.key}
             >
@@ -195,8 +195,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             title="Card view"
             className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'cards'
-                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
+                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
           >
             <LayoutGrid className="h-3.5 w-3.5" />
@@ -209,8 +209,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             title="Table view"
             className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'table'
-                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
+                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
           >
             <Table2 className="h-3.5 w-3.5" />
@@ -223,8 +223,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             title="Treemap view"
             className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'treemap'
-                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
+                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
           >
             <LayoutDashboard className="h-3.5 w-3.5" />
@@ -237,7 +237,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
           type="button"
           onClick={() => downloadCsv(rows)}
           disabled={exportDisabled}
-          className="flex items-center gap-1.5 border border-white/10 bg-black/30 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-zinc-300 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-1.5 border border-white/10 bg-black/30 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-zinc-300 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="h-3.5 w-3.5" />
           Export CSV
@@ -247,7 +247,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Tier filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <SlidersHorizontal className="h-3.5 w-3.5 text-[#00E5FF]/60" />
+          <SlidersHorizontal className="h-3.5 w-3.5 text-vouch-cyan/60" />
           {TIER_OPTIONS.map((tier) => {
             const active = activeTiers.includes(tier.key);
             return (
@@ -257,8 +257,8 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                 onClick={() => onToggleTier(tier.key)}
                 className={`border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
                   active
-                    ? TIER_ACTIVE_CLASSES[tier.key] || 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
-                    : 'border-white/10 bg-black/25 text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
+                    ? TIER_ACTIVE_CLASSES[tier.key] || 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                    : 'border-white/10 bg-black/25 text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
                 }`}
                 aria-pressed={active}
               >
