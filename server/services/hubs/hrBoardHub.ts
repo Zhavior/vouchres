@@ -1,3 +1,4 @@
+import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { buildHrBoardResponse } from "../mlb/hr-engine/buildHrBoardResponse";
 import { buildValidatedHrBoard } from "../mlb/hrPipeline";
 import { buildHrBoard } from "../mlb/dailyHrBoardService";
@@ -85,18 +86,64 @@ type DeepCacheEntry = {
 const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
 const localValidatedHrBoardBuilds = new Map<string, Promise<ValidatedHrBoardSnapshot>>();
 const lastGoodValidatedHrBoards = new Map<string, { board: ValidatedHrBoardSnapshot; storedAt: number }>();
+const LAST_GOOD_REDIS_PREFIX = "validated-hr-board:last-good";
+
+type LastGoodEntry = { board: ValidatedHrBoardSnapshot; storedAt: number };
 
 export type ValidatedHrBoardResult = ValidatedHrBoardSnapshot & {
   servedFromLastGood?: boolean;
   lastGoodWarnings?: string[];
 };
 
-function rememberLastGoodValidatedBoard(key: string, board: ValidatedHrBoardSnapshot): void {
-  lastGoodValidatedHrBoards.set(key, { board, storedAt: Date.now() });
+async function persistLastGoodToRedis(key: string, entry: LastGoodEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${key}`;
+  const ttlSeconds = Math.max(1, Math.floor(LAST_GOOD_TTL_MS / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[HR_BOARD_HUB] redis last-good write failed key=${key}`,
+      (error as Error)?.message,
+    );
+  }
 }
 
-function serveLastGoodValidatedBoard(key: string, cause: unknown): ValidatedHrBoardResult | null {
-  const lastGood = lastGoodValidatedHrBoards.get(key);
+async function loadLastGoodFromRedis(key: string): Promise<LastGoodEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${LAST_GOOD_REDIS_PREFIX}:${key}`;
+  try {
+    const remote = await redisGetJson<LastGoodEntry>(redisKey);
+    if (!remote?.board || typeof remote.storedAt !== "number") return null;
+
+    const ageMs = Date.now() - remote.storedAt;
+    if (ageMs > LAST_GOOD_TTL_MS) return null;
+
+    lastGoodValidatedHrBoards.set(key, remote);
+    console.log(`[HR_BOARD_HUB] redis last-good hit key=${key} ageMs=${ageMs}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[HR_BOARD_HUB] redis last-good read failed key=${key}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+function rememberLastGoodValidatedBoard(key: string, board: ValidatedHrBoardSnapshot): void {
+  const entry: LastGoodEntry = { board, storedAt: Date.now() };
+  lastGoodValidatedHrBoards.set(key, entry);
+  void persistLastGoodToRedis(key, entry);
+}
+
+async function serveLastGoodValidatedBoard(key: string, cause: unknown): Promise<ValidatedHrBoardResult | null> {
+  let lastGood = lastGoodValidatedHrBoards.get(key);
+  if (!lastGood) {
+    lastGood = (await loadLastGoodFromRedis(key)) ?? undefined;
+  }
   if (!lastGood) return null;
 
   const ageMs = Date.now() - lastGood.storedAt;
@@ -180,7 +227,7 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
       console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
       return board;
     } catch (err) {
-      const fallback = serveLastGoodValidatedBoard(key, err);
+      const fallback = await serveLastGoodValidatedBoard(key, err);
       if (fallback) return fallback;
       throw err;
     }

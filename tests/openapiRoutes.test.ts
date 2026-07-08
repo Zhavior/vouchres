@@ -48,8 +48,12 @@ describe("openapi routes", () => {
     expect(body.paths["/api/mlb/hr-feed/today"]).toBeTruthy();
     expect(body.paths["/api/mlb/live-at-bat/{gamePk}"]).toBeTruthy();
     expect(body.paths["/api/mlb/hr-board/player/{playerId}"]).toBeTruthy();
+    expect(body.paths["/api/mlb/hr-board/today/pool"]).toBeTruthy();
+    expect(body.paths["/api/mlb/hr-board/today/debug"]).toBeTruthy();
+    expect(body.paths["/api/notifications/unread-count"]).toBeTruthy();
+    expect(body.paths["/api/cron/parlays/integrity"]).toBeTruthy();
     expect(body.paths["/api/billing/status"]).toBeTruthy();
     expect(body.paths["/api/parlays/grade-due"]).toBeTruthy();
-    expect(Object.keys(body.paths).length).toBeGreaterThanOrEqual(25);
+    expect(Object.keys(body.paths).length).toBeGreaterThanOrEqual(29);
   });
 });
