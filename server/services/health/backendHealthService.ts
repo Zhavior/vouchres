@@ -144,6 +144,14 @@ function productionProofChecklist(checks: ConfigCheck[]): {
         "Automated tests cover distributed Redis lock exclusivity and grade-due coalescing. " +
         "Staging should still run ≥2 instances behind a load balancer with Upstash enabled.",
     },
+    {
+      id: "upstream_fallback_coverage",
+      label: "Upstream last-good fallback coverage (MLB feeds)",
+      ready: true,
+      detail:
+        "Automated tests cover last-good snapshots for HR board hub, HR feed, daily report, live at-bat, and lineup board. " +
+        "Staging should still kill Stats API briefly and confirm honest warnings on /api/mlb/lineup/today and /api/mlb/hr-board/today.",
+    },
   ];
 
   return {

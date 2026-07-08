@@ -119,6 +119,7 @@ describe("backend health report", () => {
         soakPending: expect.arrayContaining([
           expect.objectContaining({ id: "db_grading_soak", ready: true }),
           expect.objectContaining({ id: "multi_instance_soak", ready: true }),
+          expect.objectContaining({ id: "upstream_fallback_coverage", ready: true }),
         ]),
         items: expect.any(Array),
       }),

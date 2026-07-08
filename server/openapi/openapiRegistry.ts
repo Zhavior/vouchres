@@ -50,11 +50,23 @@ const LiveGamesSchema = z.object({
   updatedAt: z.string().datetime(),
 }).openapi("LiveGamesResponse");
 
+const HrBoardCandidateSchema = z.object({
+  playerId: z.union([z.string(), z.number()]).optional(),
+  playerName: z.string().optional(),
+  team: z.string().optional(),
+  lineupStatus: z.enum(["confirmed", "projected_unconfirmed", "projected", "unknown"]).optional(),
+  hrScore: z.number().optional(),
+  status: z.string().optional(),
+  warnings: z.array(z.string()).optional(),
+}).passthrough();
+
 const HrBoardTodaySchema = z.object({
   date: z.string(),
   generatedAt: z.string().datetime(),
-  confirmedCandidates: z.array(z.record(z.string(), z.unknown())).optional(),
-  projectedCandidates: z.array(z.record(z.string(), z.unknown())).optional(),
+  dataQuality: z.enum(["validated_hr_board", "projection_preview"]).optional(),
+  candidates: z.array(HrBoardCandidateSchema).optional(),
+  projectedCandidates: z.array(HrBoardCandidateSchema).optional(),
+  counts: z.record(z.string(), z.unknown()).optional(),
   warnings: z.array(z.string()).optional(),
 }).passthrough().openapi("HrBoardTodayResponse");
 
@@ -89,6 +101,48 @@ const ListParlaysQueryDocSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 }).openapi("ListParlaysQuery");
+
+const ParlayLegSummarySchema = z.object({
+  market: z.string().optional(),
+  selection: z.string().optional(),
+  gamePk: z.union([z.string(), z.number()]).optional(),
+  status: z.string().optional(),
+  odds_decimal: z.number().nullable().optional(),
+}).passthrough();
+
+const MeParlaysListSchema = z.object({
+  ok: z.literal(true),
+  parlays: z.array(z.object({
+    id: z.string(),
+    status: z.string().optional(),
+    stake_units: z.number().optional(),
+    legs: z.array(ParlayLegSummarySchema).optional(),
+  }).passthrough()),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+}).openapi("MeParlaysListResponse");
+
+const GradeParlayResponseSchema = z.object({
+  ok: z.literal(true),
+  legs: z.array(z.object({
+    sport: z.string(),
+    gamePk: z.string(),
+    market: z.string(),
+    selection: z.string(),
+    oddsDecimal: z.number().nullable(),
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    actual: z.number().nullable(),
+    note: z.string().nullable(),
+  })),
+  parlay: z.object({
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    settledUnits: z.number().nullable(),
+    combinedOdds: z.number().nullable(),
+    note: z.string(),
+  }),
+  gradedAt: z.string().datetime(),
+}).openapi("GradeParlayResponse");
 
 const NotificationsListSchema = z.object({
   ok: z.literal(true),
@@ -199,10 +253,17 @@ const MlbGamesTodaySchema = z.object({
 const MlbLineupTodaySchema = z.object({
   ok: z.literal(true),
   date: z.string(),
-  games: z.array(z.record(z.string(), z.unknown())),
+  games: z.array(z.object({
+    gamePk: z.number(),
+    status: z.string(),
+    lineupConfirmed: z.boolean(),
+    awayLineup: z.array(z.record(z.string(), z.unknown())),
+    homeLineup: z.array(z.record(z.string(), z.unknown())),
+  }).passthrough()),
   totalGames: z.number().int().nonnegative(),
   totalPlayers: z.number().int().nonnegative(),
   warnings: z.array(z.string()).optional(),
+  source: z.string().optional(),
 }).passthrough().openapi("MlbLineupTodayResponse");
 
 const MlbHealthSchema = z.object({
@@ -221,6 +282,8 @@ openapiRegistry.register("AuthMeResponse", AuthMeSchema);
 openapiRegistry.register("GradeParlayRequest", GradeParlayDocSchema);
 openapiRegistry.register("SaveMeParlayRequest", SaveMeParlayDocSchema);
 openapiRegistry.register("ListParlaysQuery", ListParlaysQueryDocSchema);
+openapiRegistry.register("MeParlaysListResponse", MeParlaysListSchema);
+openapiRegistry.register("GradeParlayResponse", GradeParlayResponseSchema);
 openapiRegistry.register("NotificationsListResponse", NotificationsListSchema);
 openapiRegistry.register("MlbScoresTodayResponse", MlbScoresTodaySchema);
 openapiRegistry.register("MlbMatchupsTodayResponse", MlbMatchupsTodaySchema);
@@ -434,7 +497,7 @@ openapiRegistry.registerPath({
   responses: {
     200: {
       description: "Graded legs",
-      content: { "application/json": { schema: OkEnvelopeSchema } },
+      content: { "application/json": { schema: GradeParlayResponseSchema } },
     },
   },
 });
@@ -448,7 +511,7 @@ openapiRegistry.registerPath({
   responses: {
     200: {
       description: "Parlay list",
-      content: { "application/json": { schema: OkEnvelopeSchema } },
+      content: { "application/json": { schema: MeParlaysListSchema } },
     },
   },
 });
