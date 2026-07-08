@@ -1,7 +1,7 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
-import { calculateWeightedScore, rankByScore } from '../../../kernel';
+import { calculateWeightedScore, rankByScore, calculateConfidence } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -293,7 +293,7 @@ function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number
   const rawScore = calculateWeightedScore(drivers);
   const config = STAT_CONFIG[statType];
   const statScore = clamp(rawScore, 0, 100);
-  const confidence = clamp(35 + (parseNumber(context.stat.gamesPlayed || context.stat.gamesPitched) * 1.8), 35, 88);
+  const confidence = calculateConfidence(parseNumber(context.stat.gamesPlayed || context.stat.gamesPitched));
   const seasonValue = seasonValueFor(statType, context.stat);
   const probability = modelProbability(statType, statScore);
   const impliedProbability = Math.round(clamp(probability - 0.035, 0.04, 0.82) * 1000) / 1000;

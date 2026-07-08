@@ -1,11 +1,11 @@
 export function calculateConfidence(
   sampleSize: number,
-  volatility: number,
 ): number {
-  const sizeFactor = Math.min(sampleSize / 100, 1);
-  const volatilityFactor = Math.max(0, 1 - volatility);
-
-  return Number(
-    (sizeFactor * volatilityFactor).toFixed(3),
+  return Math.min(
+    88,
+    Math.max(
+      35,
+      Math.round(35 + sampleSize * 1.8),
+    ),
   );
 }
