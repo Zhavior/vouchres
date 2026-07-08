@@ -7,6 +7,7 @@ import { getLiveGames } from "../services/mlb/liveGamesService";
 import { TTL, TTLCache } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
 import { sportsFetchJson } from "../lib/sports/sportsHttpClient";
+import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "../services/mlb/mlbStatsApiSchemas";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -52,8 +53,10 @@ async function fetchPlayerHandedness(playerIds: number[]) {
     const batch = uniqueIds.slice(i, i + 75);
     if (!batch.length) continue;
 
-    const data = await fetchMlb<any>(`/v1/people?personIds=${batch.join(",")}`);
-    for (const person of data?.people ?? []) {
+    const data = await fetchMlb<unknown>(`/v1/people?personIds=${batch.join(",")}`);
+    const { people, warnings } = parseMlbPeopleResponse(data, "lineup:people");
+    for (const warning of warnings) console.warn(`[mlbRoutes] ${warning}`);
+    for (const person of people) {
       hands.set(Number(person.id), {
         bats: normalizeBat(person?.batSide?.code),
         throws: normalizeThrow(person?.pitchHand?.code),
@@ -67,25 +70,35 @@ async function fetchPlayerHandedness(playerIds: number[]) {
 /** Fetch all lineups for today's games from the MLB Stats API */
 async function getTodayLineups(date: string) {
   return lineupCache.getOrSet(`lineups:${date}`, async () => {
-    const data = await fetchMlb<any>(
+    const data = await fetchMlb<unknown>(
       `/v1/schedule?sportId=1&date=${date}&hydrate=lineups,probablePitcher(note),team,linescore`
     );
 
-    const games: any[] = data?.dates?.[0]?.games ?? [];
-    const playerIds = games.flatMap((game: any) => [
-      ...(game.lineups?.awayPlayers ?? []).map((p: any) => Number(p.id)),
-      ...(game.lineups?.homePlayers ?? []).map((p: any) => Number(p.id)),
+    const { games, warnings } = parseMlbScheduleResponse(data, `lineup:${date}`);
+    for (const warning of warnings) console.warn(`[mlbRoutes] ${warning}`);
+
+    const lineupPlayers = (game: MlbScheduleGame, side: "awayPlayers" | "homePlayers"): MlbPlayer[] => {
+      const rawLineups = game.lineups as { awayPlayers?: unknown; homePlayers?: unknown } | undefined;
+      const rawPlayers = rawLineups?.[side];
+      return Array.isArray(rawPlayers)
+        ? parseMlbPeopleResponse({ people: rawPlayers }, `lineup:${date}:${side}`).people
+        : [];
+    };
+
+    const playerIds = games.flatMap((game) => [
+      ...lineupPlayers(game, "awayPlayers").map((p) => Number(p.id)),
+      ...lineupPlayers(game, "homePlayers").map((p) => Number(p.id)),
       Number(game.teams?.away?.probablePitcher?.id),
       Number(game.teams?.home?.probablePitcher?.id),
     ]);
     const handedness = await fetchPlayerHandedness(playerIds);
 
-    return games.map((game: any) => {
+    return games.map((game) => {
       const awayTeam = { id: game.teams?.away?.team?.id, name: game.teams?.away?.team?.name, abbrev: game.teams?.away?.team?.abbreviation };
       const homeTeam = { id: game.teams?.home?.team?.id, name: game.teams?.home?.team?.name, abbrev: game.teams?.home?.team?.abbreviation };
 
-      const mapPlayers = (players: any[], team: typeof awayTeam) =>
-        (players ?? []).map((p: any, idx: number) => ({
+      const mapPlayers = (players: MlbPlayer[], team: typeof awayTeam) =>
+        players.map((p, idx) => ({
           playerId: p.id,
           playerName: p.fullName ?? "Unknown",
           position: p.primaryPosition?.abbreviation ?? "—",
@@ -97,8 +110,8 @@ async function getTodayLineups(date: string) {
           headshot: headshotUrl(p.id),
         }));
 
-      const awayLineup = mapPlayers(game.lineups?.awayPlayers ?? [], awayTeam);
-      const homeLineup = mapPlayers(game.lineups?.homePlayers ?? [], homeTeam);
+      const awayLineup = mapPlayers(lineupPlayers(game, "awayPlayers"), awayTeam);
+      const homeLineup = mapPlayers(lineupPlayers(game, "homePlayers"), homeTeam);
 
       const awayPitcher = game.teams?.away?.probablePitcher;
       const homePitcher = game.teams?.home?.probablePitcher;

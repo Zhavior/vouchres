@@ -26,6 +26,7 @@ import { clamp } from "../intelligence/scoring";
 import { getParkFactor } from "./parkFactors";
 import { validateHrCandidate, validateProjectedPreviewCandidate } from "./hrValidator";
 import { MLB_PLAYER_RECORDS } from "../../../src/data/playerData";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import {
   TodayPlayer,
   TodayPlayerPool,
@@ -135,10 +136,13 @@ async function buildOfficialBattingOrderMap(games: NormalizedGame[]): Promise<Ma
           if (!game.gamePk) return;
 
           try {
-            const res = await fetch(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`);
-            if (!res.ok) return;
-
-            const boxscore = await res.json();
+            const boxscore = await sportsFetchJson<any>(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`, {
+              cacheKey: `hrPipeline:boxscore:${game.gamePk}`,
+              ttlMs: 2 * 60_000,
+              timeoutMs: 8_000,
+              retries: 1,
+              debugLabel: "hrPipeline",
+            });
             const teams = [boxscore?.teams?.away, boxscore?.teams?.home];
 
             for (const team of teams) {

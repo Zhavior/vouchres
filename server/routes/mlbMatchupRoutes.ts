@@ -6,6 +6,7 @@ import { getPitcherMatchup } from "../services/mlb/pitcherMatchupService";
 import { getTodayGamesWeather } from "../services/mlb/weatherService";
 import { getStatcastBatterMap, STATCAST_MIN_PA } from "../services/mlb/statcastClient";
 import { getScheduleByDate, todayISO } from "../services/mlb/mlbClient";
+import { isMlbFinalStatusText, isMlbLiveStatus } from "../services/mlb/gameStatus";
 import { TTLCache } from "../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
@@ -34,8 +35,8 @@ export function registerMatchupRoutes(app: Express): void {
         return games.map((g) => ({
           gamePk: g.gamePk,
           status: g.status,
-          isLive: /progress|live|in play|warmup/i.test(g.status),
-          isFinal: /final|game over|completed/i.test(g.status),
+          isLive: isMlbLiveStatus(g.status),
+          isFinal: isMlbFinalStatusText(g.status),
           inning: g.inning ?? null,
           inningState: g.linescore?.inningState ?? null,
           score: g.score,

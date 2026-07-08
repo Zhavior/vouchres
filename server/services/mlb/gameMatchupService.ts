@@ -14,6 +14,7 @@ import { buildPitcherVulnerability } from "../intelligence/pitcherVulnerabilityE
 import { scoreRunEnvironment, RunEnvironment } from "../intelligence/runEnvironmentEngine";
 import { buildHitterRow, HrBoardRow } from "../intelligence/hrEdgeEngine";
 import { clamp } from "../intelligence/scoring";
+import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
 
 const LINEUP_SIZE = 9;
 
@@ -393,8 +394,8 @@ function buildMatchup(
   const away = matchupTeam(game.awayTeam, game.probablePitchers.away, game.homeTeam.name, game.venue, awayPStats);
   const home = matchupTeam(game.homeTeam, game.probablePitchers.home, game.awayTeam.name, game.venue, homePStats);
   const status = game.status;
-  const isLive = /progress|live|in play|warmup/i.test(status);
-  const isFinal = /final|game over/i.test(status);
+  const isLive = isMlbLiveStatus(status);
+  const isFinal = isMlbFinalStatusText(status);
 
   // ---- Win probability (log5 + home field + starting pitcher) ----
   const pHome = seasonWinPct(game.homeTeam);

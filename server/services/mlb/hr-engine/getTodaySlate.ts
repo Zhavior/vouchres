@@ -1,5 +1,6 @@
 import type { HrSlateGame } from "./hrEngineTypes";
 import { sportsFetchJson } from "../../../lib/sports/sportsHttpClient";
+import { todayISO as mlbTodayISO } from "../mlbClient";
 
 const MLB_SCHEDULE_URL = "https://statsapi.mlb.com/api/v1/schedule";
 
@@ -37,7 +38,7 @@ const TEAM_ABBR: Record<string, string> = {
 };
 
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return mlbTodayISO();
 }
 
 export function teamAbbr(name: string, fallback?: string | null) {
