@@ -6,3 +6,5 @@ export { kernelQueryKeys } from './queries/queryKeys';
 export { loadHrBoard } from './loaders/hrBoardLoader';
 
 export { loadHrResults } from './loaders/hrResultsLoader';
+
+export { hr, edge } from './domains';
