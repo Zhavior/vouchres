@@ -29,10 +29,17 @@ function parsePreviewLimit(raw: unknown): number {
   return boundedInt(raw, "previewLimit", 350, 10, 350);
 }
 
-function collectHrBoardWarnings(payload: { rows?: unknown }): string[] {
-  if (!Array.isArray(payload.rows)) return [];
-
+function collectHrBoardWarnings(payload: { rows?: unknown }, result?: { lastGoodWarnings?: string[]; servedFromLastGood?: boolean }): string[] {
   const warnings = new Set<string>();
+
+  if (result?.servedFromLastGood && Array.isArray(result.lastGoodWarnings)) {
+    for (const warning of result.lastGoodWarnings) {
+      if (typeof warning === "string" && warning.trim()) warnings.add(warning.trim());
+    }
+  }
+
+  if (!Array.isArray(payload.rows)) return [...warnings];
+
   for (const row of payload.rows) {
     const rowWarnings = typeof row === "object" && row !== null && "warnings" in row
       ? (row as { warnings?: unknown }).warnings
@@ -47,6 +54,26 @@ function collectHrBoardWarnings(payload: { rows?: unknown }): string[] {
 
   return [...warnings];
 }
+
+function buildHrBoardRouteMeta(
+  payload: { dataQuality?: string; generatedAt?: string },
+  result: { lastGoodWarnings?: string[]; servedFromLastGood?: boolean },
+  payloadForWarnings: { rows?: unknown },
+) {
+  return buildApiMeta({
+    source: result.servedFromLastGood ? "validated_hr_board_last_good" : "validated_hr_board_pipeline",
+    dataQuality: payload.dataQuality === "projection_preview" ? "projection_preview" : "validated_hr_board",
+    updatedAt: payload.generatedAt,
+    generatedAt: payload.generatedAt,
+    warnings: collectHrBoardWarnings(payloadForWarnings, result),
+    cache: {
+      strategy: result.servedFromLastGood ? "hr_board_last_good_snapshot" : "hr_board_hub_ttl",
+      ttlMs: result.servedFromLastGood ? LAST_GOOD_TTL_MS : 900_000,
+    },
+  });
+}
+
+const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000);
 
 export function registerHrBoardRoutes(app: Express): void {
   // Live home-run feed (real HR plays from today's games).
@@ -94,14 +121,7 @@ export function registerHrBoardRoutes(app: Express): void {
       const payload = buildHrBoardApiPayload(result, previewLimit);
       res.json({
         ...payload,
-        meta: buildApiMeta({
-          source: "validated_hr_board_pipeline",
-          dataQuality: payload.dataQuality === "projection_preview" ? "projection_preview" : "validated_hr_board",
-          updatedAt: payload.generatedAt,
-          generatedAt: payload.generatedAt,
-          warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
-        }),
+        meta: buildHrBoardRouteMeta(payload, result, payload),
       });
     } catch (err: any) {
       console.error("[hr-board/today] validated pipeline failed:", err.message);
@@ -156,14 +176,7 @@ export function registerHrBoardRoutes(app: Express): void {
       const payload = buildHrBoardApiPayload(result, previewLimit);
       res.json({
         ...payload,
-        meta: buildApiMeta({
-          source: "validated_hr_board_pipeline",
-          dataQuality: payload.dataQuality === "projection_preview" ? "projection_preview" : "validated_hr_board",
-          updatedAt: payload.generatedAt,
-          generatedAt: payload.generatedAt,
-          warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
-        }),
+        meta: buildHrBoardRouteMeta(payload, result, payload),
       });
     } catch (err: any) {
       console.error("[hr-board/date] failed:", err?.message);

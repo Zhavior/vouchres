@@ -112,6 +112,29 @@ const MlbScoresTodaySchema = z.object({
   meta: z.record(z.string(), z.unknown()).optional(),
 }).openapi("MlbScoresTodayResponse");
 
+const MlbMatchupsTodaySchema = z.object({
+  ok: z.literal(true),
+  count: z.number().int().nonnegative(),
+  matchups: z.array(z.record(z.string(), z.unknown())),
+  updatedAt: z.string().datetime(),
+  meta: z.record(z.string(), z.unknown()).optional(),
+}).openapi("MlbMatchupsTodayResponse");
+
+const DailyMlbReportSchema = z.object({
+  ok: z.literal(true).optional(),
+  date: z.string(),
+  gameCount: z.number().int().nonnegative().optional(),
+  dataQuality: z.string().optional(),
+  games: z.array(z.record(z.string(), z.unknown())).optional(),
+  hrTargets: z.array(z.record(z.string(), z.unknown())).optional(),
+  runEnvironments: z.array(z.record(z.string(), z.unknown())).optional(),
+}).passthrough().openapi("DailyMlbReportResponse");
+
+const AuthSignoutSchema = z.object({
+  ok: z.literal(true),
+  message: z.string().optional(),
+}).openapi("AuthSignoutResponse");
+
 const GradeDueMetaSchema = z.object({
   ok: z.literal(true),
   mode: z.literal("cron_grade_due"),
@@ -138,7 +161,58 @@ openapiRegistry.register("SaveMeParlayRequest", SaveMeParlayDocSchema);
 openapiRegistry.register("ListParlaysQuery", ListParlaysQueryDocSchema);
 openapiRegistry.register("NotificationsListResponse", NotificationsListSchema);
 openapiRegistry.register("MlbScoresTodayResponse", MlbScoresTodaySchema);
+openapiRegistry.register("MlbMatchupsTodayResponse", MlbMatchupsTodaySchema);
+openapiRegistry.register("DailyMlbReportResponse", DailyMlbReportSchema);
+openapiRegistry.register("AuthSignoutResponse", AuthSignoutSchema);
 openapiRegistry.register("GradeDueCronResponse", GradeDueMetaSchema);
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/matchups/today",
+  summary: "Today's matchup research snapshot",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "Matchup list",
+      content: { "application/json": { schema: MlbMatchupsTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/reports/daily",
+  summary: "Daily MLB research report",
+  tags: ["MLB"],
+  request: {
+    query: z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Daily report",
+      content: { "application/json": { schema: DailyMlbReportSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/auth/signout",
+  summary: "Sign out current session",
+  tags: ["Auth"],
+  responses: {
+    200: {
+      description: "Signed out",
+      content: { "application/json": { schema: AuthSignoutSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
 
 openapiRegistry.registerPath({
   method: "get",

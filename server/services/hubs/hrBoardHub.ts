@@ -2,6 +2,9 @@ import { buildHrBoardResponse } from "../mlb/hr-engine/buildHrBoardResponse";
 import { buildValidatedHrBoard } from "../mlb/hrPipeline";
 import { buildHrBoard } from "../mlb/dailyHrBoardService";
 
+const LAST_GOOD_WARNING = "Serving last good snapshot — upstream temporarily unavailable";
+const LAST_GOOD_TTL_MS = Number(process.env.VALIDATED_HR_BOARD_LAST_GOOD_MS ?? 60 * 60_000);
+
 type HrBoardSnapshot = Awaited<ReturnType<typeof buildHrBoardResponse>>;
 
 type CacheEntry = {
@@ -81,6 +84,56 @@ type DeepCacheEntry = {
 
 const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
 const localValidatedHrBoardBuilds = new Map<string, Promise<ValidatedHrBoardSnapshot>>();
+const lastGoodValidatedHrBoards = new Map<string, { board: ValidatedHrBoardSnapshot; storedAt: number }>();
+
+export type ValidatedHrBoardResult = ValidatedHrBoardSnapshot & {
+  servedFromLastGood?: boolean;
+  lastGoodWarnings?: string[];
+};
+
+function rememberLastGoodValidatedBoard(key: string, board: ValidatedHrBoardSnapshot): void {
+  lastGoodValidatedHrBoards.set(key, { board, storedAt: Date.now() });
+}
+
+function serveLastGoodValidatedBoard(key: string, cause: unknown): ValidatedHrBoardResult | null {
+  const lastGood = lastGoodValidatedHrBoards.get(key);
+  if (!lastGood) return null;
+
+  const ageMs = Date.now() - lastGood.storedAt;
+  if (ageMs > LAST_GOOD_TTL_MS) return null;
+
+  console.warn(
+    `[HR_BOARD_HUB] serving last-good validated board key=${key} ageMs=${ageMs}:`,
+    cause instanceof Error ? cause.message : String(cause),
+  );
+
+  const staleDataWarnings = Array.from(
+    new Set([...(lastGood.board.debug?.staleDataWarnings ?? []), LAST_GOOD_WARNING]),
+  );
+
+  return {
+    ...lastGood.board,
+    servedFromLastGood: true,
+    lastGoodWarnings: [LAST_GOOD_WARNING],
+    debug: {
+      ...lastGood.board.debug,
+      staleDataWarnings,
+      lastRefresh: lastGood.board.debug?.lastRefresh ?? new Date(lastGood.storedAt).toISOString(),
+    },
+  };
+}
+
+/** Test-only reset for hub caches and last-good snapshots. */
+export function resetValidatedHrBoardHubForTests(): void {
+  localValidatedHrBoardCache.clear();
+  localValidatedHrBoardBuilds.clear();
+  lastGoodValidatedHrBoards.clear();
+}
+
+/** Test-only: force a rebuild on next fetch while keeping last-good snapshots. */
+export function expireValidatedHrBoardHubCacheForTests(): void {
+  localValidatedHrBoardCache.clear();
+}
 
 const localDeepHrBoardCache = new Map<string, DeepCacheEntry>();
 const localDeepHrBoardBuilds = new Map<string, Promise<DeepHrBoardSnapshot>>();
@@ -93,7 +146,7 @@ function deepKey(date?: string | null): string {
   return `deep-hr-board:${date ?? "today"}`;
 }
 
-export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardSnapshot> {
+export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardResult> {
   const key = validatedKey(date);
   const ttlSeconds = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900);
 
@@ -113,17 +166,24 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
     return activeBuild;
   }
 
-  const buildPromise = (async () => {
+  const buildPromise = (async (): Promise<ValidatedHrBoardResult> => {
     console.log(`[HR_BOARD_HUB] validated building key=${key}`);
-    const board = await buildValidatedHrBoard(date ?? undefined);
+    try {
+      const board = await buildValidatedHrBoard(date ?? undefined);
 
-    localValidatedHrBoardCache.set(key, {
-      expiresAt: Date.now() + ttlSeconds * 1000,
-      board,
-    });
+      rememberLastGoodValidatedBoard(key, board);
+      localValidatedHrBoardCache.set(key, {
+        expiresAt: Date.now() + ttlSeconds * 1000,
+        board,
+      });
 
-    console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
-    return board;
+      console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
+      return board;
+    } catch (err) {
+      const fallback = serveLastGoodValidatedBoard(key, err);
+      if (fallback) return fallback;
+      throw err;
+    }
   })();
 
   localValidatedHrBoardBuilds.set(key, buildPromise);

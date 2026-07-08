@@ -42,6 +42,8 @@ describe("openapi routes", () => {
     expect(body.paths["/api/parlays/save"]).toBeTruthy();
     expect(body.paths["/api/cron/parlays/grade-due"]).toBeTruthy();
     expect(body.paths["/api/notifications"]).toBeTruthy();
-    expect(body.paths["/api/mlb/scores/today"]).toBeTruthy();
+    expect(body.paths["/api/mlb/matchups/today"]).toBeTruthy();
+    expect(body.paths["/api/mlb/reports/daily"]).toBeTruthy();
+    expect(body.paths["/api/auth/signout"]).toBeTruthy();
   });
 });

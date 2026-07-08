@@ -4,9 +4,11 @@ import { apiErrorHandler } from "../server/middleware/errorHandler";
 import { AppError } from "../server/errors/AppError";
 
 const captureException = vi.fn();
+const isSentryEnabled = vi.fn(() => false);
 
 vi.mock("../server/lib/sentry", () => ({
   captureException: (...args: unknown[]) => captureException(...args),
+  isSentryEnabled: () => isSentryEnabled(),
 }));
 
 function runErrorHandler(error: unknown, overrides: { requestId?: string } = {}) {
@@ -38,6 +40,8 @@ function runErrorHandler(error: unknown, overrides: { requestId?: string } = {})
 describe("api error handler", () => {
   afterEach(() => {
     captureException.mockClear();
+    isSentryEnabled.mockReset();
+    isSentryEnabled.mockReturnValue(false);
     vi.unstubAllEnvs();
   });
 
@@ -78,6 +82,21 @@ describe("api error handler", () => {
       },
     });
     expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips manual Sentry capture when express error handler is enabled", () => {
+    isSentryEnabled.mockReturnValue(true);
+
+    runErrorHandler(
+      new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Database exploded.",
+        expose: false,
+      }),
+    );
+
+    expect(captureException).not.toHaveBeenCalled();
   });
 
   it("normalizes Zod validation failures into requestId-aware envelopes", () => {
