@@ -21,6 +21,7 @@
     "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts",
     "test": "vitest run",
     "bundle-budget": "node scripts/bundle-budget.mjs",
+    "staging-soak": "node scripts/staging-soak.mjs",
     "typecheck": "tsc --noEmit",
     "quality": "npm run typecheck && npm run lint && npm run build",
     "lint:strict": "eslint . --max-warnings=0",

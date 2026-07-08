@@ -1,6 +1,8 @@
+import { apiUrl } from "./apiBase";
+
 export async function fetchNotificationsSafe() {
   try {
-    const res = await fetch("/api/notifications", {
+    const res = await fetch(apiUrl("/api/notifications"), {
       credentials: "include",
       headers: { Accept: "application/json" },
     });
