@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
@@ -502,39 +502,32 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     return merged;
   }, []);
 
-  const enrichMatchups = useCallback(async (officialBase: GameMatchup[]) => {
+  const enrichMatchups = useCallback(async (base: GameMatchup[]) => {
+    if (base.length === 0) return;
     setEnriching(true);
     try {
       const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
+      let working = base;
       if (Array.isArray(scoreResult?.scores)) {
         setLiveScores(scoreResult.scores);
-        officialBase = applyScores(officialBase, scoreResult.scores);
+        working = applyScores(working, scoreResult.scores);
       }
 
       const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
       const next = Array.isArray(res.matchups) ? res.matchups : [];
       if (next.length > 0) {
-        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, next) : next);
+        setMatchups(working.length > 0 ? mergeMatchups(working, next) : next);
         setError(null);
         setSourceNote('Live game model loaded.');
-      } else if (officialBase.length === 0) {
-        setError('No live game data available. No fake games shown.');
-        setSourceNote('No verified live game rows returned.');
       } else {
-        setMatchups(officialBase);
+        setMatchups(working);
         setError(null);
-        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
+        setSourceNote('Live model returned no rows. Showing verified schedule preview.');
       }
     } catch {
-      if (officialBase.length > 0) {
-        setMatchups(officialBase);
-        setError(null);
-        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
-      } else {
-        setError('Live games unavailable right now. No fake games shown.');
-        setMatchups([]);
-        setSourceNote('Backend unavailable.');
-      }
+      setMatchups(base);
+      setError(null);
+      setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
     } finally {
       setEnriching(false);
     }
@@ -552,26 +545,29 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
     const merged = mergeFromQueries(officialBase, hrBoardQuery.data);
     if (merged.length > 0) {
-      setMatchups(merged);
-      setSourceNote((note) => note === 'Loading live games...' ? 'Live games loaded. Enriching game context...' : note);
-    }
-
-    if (officialBase.length > 0 || merged.length > 0) {
-      void enrichMatchups(merged.length > 0 ? merged : officialBase);
+      setMatchups((prev) => {
+        const scored = liveScores.length > 0 ? applyScores(merged, liveScores) : merged;
+        return scored.length > 0 ? scored : prev;
+      });
     } else if (liveGamesQuery.isError && hrBoardQuery.isError) {
       setError('Live games unavailable right now. No fake games shown.');
       setSourceNote('Backend unavailable.');
     }
-  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries, enrichMatchups]);
+  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries, liveScores]);
 
   useEffect(() => {
-    if (!liveGamesQuery.data?.games?.length) return;
+    const merged = mergeFromQueries(
+      (liveGamesQuery.data?.games ?? []).map(matchupFromLiveGame).filter((game) => game.gamePk),
+      hrBoardQuery.data,
+    );
+    if (merged.length === 0) return;
+
+    void enrichMatchups(merged);
     const id = window.setInterval(() => {
-      void liveGamesQuery.refetch();
-      void hrBoardQuery.refetch();
+      void enrichMatchups(merged);
     }, REFRESH_MS);
     return () => window.clearInterval(id);
-  }, [liveGamesQuery, hrBoardQuery, liveGamesQuery.data?.games?.length]);
+  }, [enrichMatchups, mergeFromQueries, liveGamesQuery.data, hrBoardQuery.data]);
 
   const load = useCallback(() => {
     void liveGamesQuery.refetch();

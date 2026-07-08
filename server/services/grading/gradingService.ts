@@ -1,5 +1,6 @@
 import { AppError } from "../../errors/AppError";
 import { runWithDistributedLock } from "../../lib/distributedLock";
+import { captureGradingFailure } from "../../lib/sentry";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
@@ -138,7 +139,7 @@ async function runGradePendingPicks(opts: {
 
   if (error) {
     console.error("[grading] fetch pending failed", error);
-    throw new AppError({
+    const fetchError = new AppError({
       status: 503,
       code: "external_service_error",
       message: "Unable to load pending picks for grading.",
@@ -146,6 +147,8 @@ async function runGradePendingPicks(opts: {
       expose: true,
       cause: error,
     });
+    captureGradingFailure(fetchError, { source: "run", extra: { phase: "fetch_pending", days } });
+    throw fetchError;
   }
 
   if (!pending || pending.length === 0) {
@@ -279,6 +282,13 @@ async function runGradePendingPicks(opts: {
         graded.push({ ...result, pick_id: pick.id });
       } catch (err: any) {
         console.error(`[grading] pick ${pick.id} failed`, err);
+        captureGradingFailure(err, {
+          source: "pick",
+          pickId: pick.id,
+          parlayId: pick.leg_type === "parlay" ? pick.id : undefined,
+          eventId: pick.event_id ? String(pick.event_id) : undefined,
+          dryRun: opts.dryRun,
+        });
         skipped.push({
           pick_id: pick.id,
           status: "graded_error",

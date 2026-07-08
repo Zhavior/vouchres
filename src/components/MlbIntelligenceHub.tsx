@@ -1,4 +1,5 @@
 import { cachedJsonFetch } from '../lib/clientApiCache';
+import { apiClient } from '../lib/apiClient';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
@@ -267,9 +268,7 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
 }
 
 async function loadAiJudgeLeaderboard(): Promise<AiJudgeLeaderboard> {
-  const res = await fetch('/api/ai-judges/leaderboard', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`AI Judge Leaderboard unavailable (${res.status})`);
-  return res.json();
+  return apiClient.get<AiJudgeLeaderboard>('/api/ai-judges/leaderboard');
 }
 
 function availabilityTone(status?: string) {

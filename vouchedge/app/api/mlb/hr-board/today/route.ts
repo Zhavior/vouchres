@@ -1,11 +1,9 @@
-import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { clampPreviewLimit, proxyBackendGet } from "@/lib/api/backendProxy";
 
-export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    rows: [
-      { id: "1", player: "A. Judge", team: "NYY", pitcher: "G. Cole", confidence: 84.4, line: "+410" },
-      { id: "2", player: "R. Devers", team: "BOS", pitcher: "T. Houck", confidence: 81.2, line: "+360" }
-    ]
-  });
+export const dynamic = "force-dynamic";
+
+export async function GET(request: NextRequest) {
+  const previewLimit = clampPreviewLimit(request.nextUrl.searchParams.get("previewLimit"));
+  return proxyBackendGet(`/api/mlb/hr-board/today?previewLimit=${previewLimit}`);
 }

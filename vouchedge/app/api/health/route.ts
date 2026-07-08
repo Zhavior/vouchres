@@ -1,12 +1,7 @@
-import { apiOk } from "@/lib/api/response";
+import { proxyBackendGet } from "@/lib/api/backendProxy";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return apiOk({
-    service: "vouchedge",
-    status: "healthy",
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV ?? "unknown",
-  });
+  return proxyBackendGet("/api/health/backend");
 }

@@ -7,6 +7,7 @@ import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators"
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePendingPicks } from "../../services/grading/gradingService";
+import { captureGradingFailure } from "../../lib/sentry";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
 import { partitionGradeDueResult } from "./parlayGradingResponses";
 import {
@@ -54,7 +55,13 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
   assertCronAuthorized(req);
 
   const days = boundedInt(req.query.days, "days", 2, 1, 7);
-  const result = await gradePendingPicks({ days });
+  let result;
+  try {
+    result = await gradePendingPicks({ days });
+  } catch (err) {
+    captureGradingFailure(err, { source: "cron", cron: true, extra: { days, route: "grade-due" } });
+    throw err;
+  }
   const { settled, pending, errors, summary } = partitionGradeDueResult(result);
   const requestId = req.requestId ?? "unknown";
 

@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getSportsHttpStats, sportsFetchJson } from "../server/lib/sports/sportsHttpClient";
+import { getMlbStatsCircuitBreaker, resetMlbStatsCircuitBreakerForTests } from "../server/lib/sports/circuitBreaker";
 
 describe("sports HTTP client", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    resetMlbStatsCircuitBreakerForTests();
   });
 
   it("can serve a bounded stale cache value when an upstream refresh fails", async () => {
@@ -62,5 +64,38 @@ describe("sports HTTP client", () => {
   it("reports bounded cache capacity for production visibility", () => {
     expect(getSportsHttpStats().maxCacheEntries).toBeGreaterThan(0);
     expect(getSportsHttpStats().cacheSize).toBeLessThanOrEqual(getSportsHttpStats().maxCacheEntries);
+  });
+
+  it("serves last-good cache when MLB circuit is open", async () => {
+    vi.useFakeTimers();
+    resetMlbStatsCircuitBreakerForTests();
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, version: 1 }), { status: 200 }))
+      .mockResolvedValue(new Response("service unavailable", { status: 503 }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const url = "https://statsapi.mlb.com/api/v1/schedule?sportId=1";
+
+    await sportsFetchJson<{ version: number }>(url, {
+      cacheKey: "sports-http-circuit-test",
+      ttlMs: 1_000,
+      retries: 0,
+    });
+
+    vi.setSystemTime(Date.now() + 1_500);
+
+    const breaker = getMlbStatsCircuitBreaker();
+    for (let i = 0; i < 5; i += 1) {
+      breaker.recordFailure();
+    }
+    expect(breaker.getState()).toBe("open");
+
+    await expect(sportsFetchJson<{ version: number }>(url, {
+      cacheKey: "sports-http-circuit-test",
+      ttlMs: 1_000,
+      retries: 0,
+    })).resolves.toEqual({ ok: true, version: 1 });
   });
 });

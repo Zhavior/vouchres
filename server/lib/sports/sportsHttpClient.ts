@@ -1,3 +1,9 @@
+import {
+  CircuitOpenError,
+  getMlbStatsCircuitBreaker,
+  isMlbStatsUrl,
+} from "./circuitBreaker";
+
 type CacheEntry<T> = {
   value: T;
   expiresAt: number;
@@ -93,9 +99,18 @@ async function sportsFetch<T>(
     return existing;
   }
 
+  const mlbBreaker = isMlbStatsUrl(url) ? getMlbStatsCircuitBreaker() : null;
+
   const request = (async () => {
     let lastError: unknown;
     stats.requests++;
+
+    if (mlbBreaker && !mlbBreaker.canExecute()) {
+      throw new CircuitOpenError(
+        "mlb_stats_api",
+        `MLB Stats API circuit open — refusing upstream call for ${redactUrl(url)}`
+      );
+    }
 
     for (let attempt = 0; attempt <= retries; attempt += 1) {
       try {
@@ -122,10 +137,14 @@ async function sportsFetch<T>(
           console.log(`[${label}] complete ${Date.now() - started}ms`);
         }
 
+        mlbBreaker?.recordSuccess();
         stats.upstreamSuccesses++;
         return data;
       } catch (err) {
         lastError = err;
+        if (!(err instanceof CircuitOpenError)) {
+          mlbBreaker?.recordFailure();
+        }
         if (attempt >= retries) break;
       }
     }
@@ -143,6 +162,12 @@ async function sportsFetch<T>(
 
     if (stale && staleIfErrorMs > 0 && staleAgeMs <= staleIfErrorMs) {
       console.warn(`[${label}] stale-if-error ${redactUrl(url)} ageMs=${Math.max(0, staleAgeMs)}`);
+      stats.staleIfErrorHits++;
+      return stale.value;
+    }
+
+    if (err instanceof CircuitOpenError && stale) {
+      console.warn(`[${label}] circuit-open stale fallback ${redactUrl(url)} ageMs=${Math.max(0, staleAgeMs)}`);
       stats.staleIfErrorHits++;
       return stale.value;
     }

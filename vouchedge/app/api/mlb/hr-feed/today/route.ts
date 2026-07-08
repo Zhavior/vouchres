@@ -1,11 +1,7 @@
-import { NextResponse } from "next/server";
+import { proxyBackendGet } from "@/lib/api/backendProxy";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    items: [
-      { id: "1", player: "A. Judge", team: "NYY", confidence: 84.4, line: "+410" },
-      { id: "2", player: "R. Devers", team: "BOS", confidence: 81.2, line: "+360" }
-    ]
-  });
+  return proxyBackendGet("/api/mlb/hr-feed/today");
 }

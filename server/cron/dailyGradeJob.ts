@@ -1,4 +1,5 @@
 import { gradePendingPicks } from "../services/grading/gradingService";
+import { captureGradingFailure } from "../lib/sentry";
 
 /**
  * Daily grade job — runs nightly to grade picks from the previous day's games.
@@ -60,6 +61,7 @@ async function main() {
     }
   } catch (err) {
     console.error("[gradeJob] fatal error", err);
+    captureGradingFailure(err, { source: "job", dryRun, cron: true });
     process.exit(1);
   }
 }
@@ -77,6 +79,7 @@ export async function startInProcessCron() {
       await gradePendingPicks({ days: 3 });
     } catch (err) {
       console.error("[cron] grade job failed", err);
+      captureGradingFailure(err, { source: "cron", cron: true });
     }
   });
   console.log("[cron] daily grade job scheduled for 06:00 UTC");
