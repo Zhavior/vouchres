@@ -8,3 +8,5 @@ export { loadHrBoard } from './loaders/hrBoardLoader';
 export { loadHrResults } from './loaders/hrResultsLoader';
 
 export { hr, edge, mlb } from './domains';
+
+export * from './sports';

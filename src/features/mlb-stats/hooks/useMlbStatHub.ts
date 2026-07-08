@@ -10,7 +10,7 @@ import type {
   StatType, StatHubFilters, StatPlayerRow,
   StatViewTab, StatViewMode, StatSortField, StatSortDir, StatTier, StatScope,
 } from '../types/statHubTypes';
-import { fetchMlbStatHubRows } from '../engine/mlbStatsApiData';
+import { mlb } from '../../../kernel';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -57,7 +57,7 @@ export function useMlbStatHub() {
     setLoading(true);
     setError(null);
 
-    fetchMlbStatHubRows(filters.statType, filters.date, filters.statScope)
+    mlb.stats(filters.statType, filters.date, filters.statScope).then((result) => result.rows)
       .then((nextRows) => {
         if (!alive) return;
         setAllRows(nextRows);
