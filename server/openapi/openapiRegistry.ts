@@ -335,7 +335,8 @@ openapiRegistry.register("DailyMlbReportResponse", DailyMlbReportSchema);
 openapiRegistry.register("AuthSignoutResponse", AuthSignoutSchema);
 openapiRegistry.register("GradeDueCronResponse", GradeDueMetaSchema);
 openapiRegistry.register("HrFeedTodayResponse", HrFeedTodaySchema);
-openapiRegistry.register("LiveAtBatResponse", LiveAtBatSchema);
+openapiRegistry.register("LiveAtBatSnapshot", LiveAtBatSchema);
+openapiRegistry.register("LiveAtBatResponse", LiveAtBatEnvelopeSchema);
 openapiRegistry.register("HrBoardPlayerResponse", HrBoardPlayerSchema);
 openapiRegistry.register("UsernameCheckResponse", UsernameCheckSchema);
 openapiRegistry.register("BillingStatusResponse", BillingStatusSchema);
@@ -343,6 +344,10 @@ openapiRegistry.register("BillingCheckoutRequest", BillingCheckoutSchema);
 openapiRegistry.register("MlbGamesTodayResponse", MlbGamesTodaySchema);
 openapiRegistry.register("MlbLineupTodayResponse", MlbLineupTodaySchema);
 openapiRegistry.register("MlbHealthResponse", MlbHealthSchema);
+openapiRegistry.register("HrBoardPoolResponse", HrBoardPoolSchema);
+openapiRegistry.register("HrBoardDebugResponse", HrBoardDebugSchema);
+openapiRegistry.register("NotificationsUnreadCountResponse", NotificationsUnreadCountSchema);
+openapiRegistry.register("ParlayIntegrityResponse", ParlayIntegritySchema);
 
 openapiRegistry.registerPath({
   method: "get",
@@ -416,6 +421,23 @@ openapiRegistry.registerPath({
 
 openapiRegistry.registerPath({
   method: "get",
+  path: "/api/notifications/unread-count",
+  summary: "Authenticated user unread notification count",
+  tags: ["Notifications"],
+  responses: {
+    200: {
+      description: "Unread count",
+      content: { "application/json": { schema: NotificationsUnreadCountSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
   path: "/api/mlb/scores/today",
   summary: "Lightweight live MLB scores (schedule + linescore)",
   tags: ["MLB"],
@@ -423,6 +445,23 @@ openapiRegistry.registerPath({
     200: {
       description: "Today's scores",
       content: { "application/json": { schema: MlbScoresTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/cron/parlays/integrity",
+  summary: "Cron: parlay grading identity health scan (Bearer CRON_SECRET)",
+  tags: ["Cron"],
+  responses: {
+    200: {
+      description: "Integrity report",
+      content: { "application/json": { schema: ParlayIntegritySchema } },
+    },
+    401: {
+      description: "Unauthorized cron",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });
@@ -586,7 +625,7 @@ openapiRegistry.registerPath({
   responses: {
     200: {
       description: "Live at-bat snapshot",
-      content: { "application/json": { schema: LiveAtBatSchema } },
+      content: { "application/json": { schema: LiveAtBatEnvelopeSchema } },
     },
     404: {
       description: "Game feed unavailable",
@@ -748,6 +787,32 @@ openapiRegistry.registerPath({
     503: {
       description: "MLB upstream down",
       content: { "application/json": { schema: MlbHealthSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/hr-board/today/pool",
+  summary: "Today player pool summary for validated HR board",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "Pool summary",
+      content: { "application/json": { schema: HrBoardPoolSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/mlb/hr-board/today/debug",
+  summary: "Debug counts and warnings for validated HR board pipeline",
+  tags: ["MLB"],
+  responses: {
+    200: {
+      description: "Debug payload",
+      content: { "application/json": { schema: HrBoardDebugSchema } },
     },
   },
 });
