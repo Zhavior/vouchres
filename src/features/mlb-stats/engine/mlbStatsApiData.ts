@@ -1,8 +1,8 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
-import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction } from '../../../kernel';
-import type { SportsIntelligenceResult } from '../../../kernel';
+import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction, createSportsIntelligenceResult } from '../../../kernel';
+
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
