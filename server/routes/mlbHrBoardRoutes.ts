@@ -81,7 +81,7 @@ export function registerHrBoardRoutes(app: Express): void {
         dataQuality: "official_mlb_live_feed",
         updatedAt: snapshot.updatedAt,
         warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
-        cache: { strategy: "ttl_cache_with_last_good_snapshot", ttlMs: 12_000 },
+        cache: { strategy: "ttl_cache_with_last_good_snapshot", ttlMs: 60_000 },
       }),
     });
   }));
@@ -100,7 +100,7 @@ export function registerHrBoardRoutes(app: Express): void {
           updatedAt: payload.generatedAt,
           generatedAt: payload.generatedAt,
           warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
         }),
       });
     } catch (err: any) {
@@ -162,7 +162,7 @@ export function registerHrBoardRoutes(app: Express): void {
           updatedAt: payload.generatedAt,
           generatedAt: payload.generatedAt,
           warnings: collectHrBoardWarnings(payload),
-          cache: { strategy: "hr_board_hub_ttl", ttlMs: 120_000 },
+          cache: { strategy: "hr_board_hub_ttl", ttlMs: 900_000 },
         }),
       });
     } catch (err: any) {

@@ -159,12 +159,17 @@ function memorySnapshot() {
   };
 }
 
+export function getMissingProductionConfig(): string[] {
+  const checks = configChecks();
+  return checks
+    .filter((check) => check.requiredInProduction && !check.configured)
+    .map((check) => check.name);
+}
+
 export function getBackendHealthReport(now = new Date()) {
   const env = process.env.NODE_ENV || "development";
   const checks = configChecks();
-  const missingProductionConfig = env === "production"
-    ? checks.filter((check) => check.requiredInProduction && !check.configured)
-    : [];
+  const missingProductionConfig = env === "production" ? getMissingProductionConfig() : [];
 
   const routes = getRouteMetricsSnapshot(now);
   const sportsHttp = getSportsHttpStats();

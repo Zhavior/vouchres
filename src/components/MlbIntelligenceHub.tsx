@@ -1,3 +1,4 @@
+import { cachedJsonFetch } from '../lib/clientApiCache';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
@@ -126,7 +127,7 @@ const cleanOpponent = (c: Candidate) => c.opponent || c.opponentTeam || 'TBD';
 const cleanPitcher = (c: Candidate) => c.opponentPitcherName || 'Pitcher TBD';
 
 async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
-  const res = await fetch('/api/mlb/hr-board/today', { cache: 'no-store' });
+  const res = await cachedJsonFetch<any>('/api/mlb/hr-board/today', {}, 45000);
   if (!res.ok) throw new Error(`HR board request failed: ${res.status}`);
 
   const raw = await res.json();

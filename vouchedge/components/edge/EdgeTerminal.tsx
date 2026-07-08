@@ -26,12 +26,17 @@ export function EdgeTerminal() {
     async function load() {
       const [liveRes, boardRes] = await Promise.all([
         fetch("/api/mlb/live", { cache: "no-store" }),
-        fetch("/api/mlb/hr-board/today?previewLimit=1050", { cache: "no-store" }),
+        fetch("/api/mlb/hr-board/today?previewLimit=50", { cache: "no-store" }),
       ]);
 
-      setLive(await liveRes.json());
-      const board = await boardRes.json();
-      setRows(board.rows ?? board.data?.rows ?? []);
+      if (liveRes.ok) {
+        setLive(await liveRes.json());
+      }
+
+      if (boardRes.ok) {
+        const board = await boardRes.json();
+        setRows(board.rows ?? board.data?.rows ?? []);
+      }
     }
 
     load().catch(console.error);

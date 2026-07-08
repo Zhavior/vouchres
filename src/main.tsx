@@ -17,3 +17,4 @@ createRoot(document.getElementById('root')!).render(
     </AppErrorBoundary>
   </StrictMode>,
 );
+import './styles/vouchedge-theme.css';

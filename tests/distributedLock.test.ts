@@ -75,7 +75,7 @@ describe("runWithDistributedLock", () => {
     vi.mocked(redisSet).mockResolvedValue(false);
 
     await expect(
-      runWithDistributedLock("test:busy", async () => "nope", { waitMs: 5, pollMs: 2 }),
+      runWithDistributedLock("test:busy", async () => "nope", { waitMs: 50, pollMs: 10 }),
     ).rejects.toMatchObject({
       name: "AppError",
       status: 409,

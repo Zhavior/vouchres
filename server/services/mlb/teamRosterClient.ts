@@ -147,6 +147,45 @@ async function getTeamActiveHitters(team: { id: number; name: string; abbreviati
   return verified;
 }
 
+
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function getTodayTeamIds(): Promise<number[]> {
+  const date = todayIsoDate();
+
+  try {
+    const data = await sportsFetchJson<any>(`${BASE}/v1/schedule?sportId=1&date=${date}`, {
+      cacheKey: `mlb:schedule:team-ids:${date}`,
+      ttlMs: 10 * 60_000,
+      staleIfErrorMs: 10 * 60_000,
+      timeoutMs: 8_000,
+      retries: 1,
+      debugLabel: "teamRosterClient:schedule",
+    });
+
+    const ids = new Set<number>();
+    const dates = Array.isArray(data?.dates) ? data.dates : [];
+
+    for (const d of dates) {
+      const games = Array.isArray(d?.games) ? d.games : [];
+      for (const game of games) {
+        const awayId = game?.teams?.away?.team?.id;
+        const homeId = game?.teams?.home?.team?.id;
+
+        if (typeof awayId === "number") ids.add(awayId);
+        if (typeof homeId === "number") ids.add(homeId);
+      }
+    }
+
+    return [...ids];
+  } catch (err) {
+    console.warn("[teamRosterClient] failed to resolve today's team IDs:", (err as Error).message);
+    return [];
+  }
+}
+
 /**
  * Map of teamId -> active position players, pitchers excluded, currentTeam verified.
  *
@@ -158,9 +197,10 @@ export async function getActiveHittersByTeam(
   teamIds?: number[]
 ): Promise<Map<number, NormalizedPlayer[]>> {
   // Use a separate cache key when filtered by team IDs
+  const dateKey = todayIsoDate();
   const cacheKey = teamIds && teamIds.length > 0
     ? `${CACHE_KEY}:teams:${teamIds.sort((a, b) => a - b).join(",")}`
-    : CACHE_KEY;
+    : `${CACHE_KEY}:today:${dateKey}`;
 
   const cached = hittersCache.get(cacheKey);
   if (cached) {
@@ -194,9 +234,18 @@ export async function getActiveHittersByTeam(
 
         console.log(`[teamRosterClient] Fetching rosters for ${teams.length} official teams (today's slate only)`);
       } else {
-        // Legacy: fetch all 30 teams
-        teams = await getMlbTeams();
-        console.log(`[teamRosterClient] Fetching rosters for all ${teams.length} teams`);
+        // Legacy/no teamIds caller: default to today's slate instead of all 30 teams.
+        const todayTeamIds = await getTodayTeamIds();
+
+        if (todayTeamIds.length > 0) {
+          const wantedTeamIds = new Set(todayTeamIds);
+          const allTeams = await getMlbTeams();
+          teams = allTeams.filter((team) => wantedTeamIds.has(team.id));
+          console.log(`[teamRosterClient] No teamIds provided; using today's slate (${teams.length} teams)`);
+        } else {
+          teams = await getMlbTeams();
+          console.warn(`[teamRosterClient] No schedule team IDs found; falling back to all ${teams.length} teams`);
+        }
       }
 
       console.log(`[teamRosterClient] cache miss — fetching rosters for ${teams.length} teams (max 3 concurrent)`);

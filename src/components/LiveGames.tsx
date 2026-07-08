@@ -1,3 +1,4 @@
+import { cachedJsonFetch } from '../lib/clientApiCache';
 import React, { useState, useEffect, useMemo } from 'react';
 import { apiUrl } from '../lib/apiBase';
 import { 
@@ -77,7 +78,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
     setLoading(true);
     setErrorCode(null);
     try {
-      const response = await fetch(apiUrl('/api/mlb/live'));
+      const response = await cachedJsonFetch<any>(apiUrl('/api/mlb/live'), {}, 15000);
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }

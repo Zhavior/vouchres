@@ -1,4 +1,5 @@
 import { ArrowRight, Clock3, Flame, ShieldCheck } from 'lucide-react';
+import { VECard } from '../ui/ve';
 import type { EdgeBoardRow, EdgeIslandSectionProps } from './edgeIslandTypes';
 
 interface TodaysEdgeBoardProps extends EdgeIslandSectionProps {
@@ -16,7 +17,7 @@ function scoreTone(score: number | null): string {
 
 export function TodaysEdgeBoard({ rows, loading, error, onSectionChange }: TodaysEdgeBoardProps) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-black/35 p-4 backdrop-blur-2xl">
+    <VECard strong className="p-4">
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="terminal-text text-vouch-emerald">Today's edge board</div>
@@ -126,6 +127,6 @@ export function TodaysEdgeBoard({ rows, loading, error, onSectionChange }: Today
           </div>
         </div>
       )}
-    </section>
+    </VECard>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy }, { useState, useEffect } from 'react';
 import { apiUrl } from '../lib/apiBase';
 import { 
   Plus, 
@@ -21,12 +21,13 @@ import {
   Lock
 } from 'lucide-react';
 import { Parlay, Leg, MLBPlayer, Vouch, FeedPost, CreatorProofProfile } from '../types';
-import RiskTierVisualization from './RiskTierVisualization';
+
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 import ParlaySlipSummary, { BuilderMode } from './parlay/ParlaySlipSummary';
 import { getFounderPointsLabel } from "../lib/founderAccess";
+const RiskTierVisualization = lazy(() => import('./RiskTierVisualization'));
 
 interface ParlayLabProps {
   onSaveParlay: (parlay: Parlay) => void;
@@ -482,7 +483,9 @@ export default function ParlayLab({
       </div>
 
       {/* Embedded Portfolio risk metrics */}
-      <RiskTierVisualization savedParlays={savedParlays} />
+      <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-white/45">Loading risk chart...</div>}>
+        <RiskTierVisualization savedParlays={savedParlays} />
+      </Suspense>
 
       {/* Builder + single source-of-truth Results navigation */}
       <div className="flex flex-col sm:flex-row gap-3 bg-[#0f1524]/90 p-1 rounded-2xl border border-slate-900 shadow-xl" id="parlay-fuse-tabs">

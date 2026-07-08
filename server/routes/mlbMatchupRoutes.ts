@@ -92,7 +92,7 @@ export function registerMatchupRoutes(app: Express): void {
           updatedAt: snapshot.generatedAt,
           generatedAt: snapshot.generatedAt,
           warnings: [],
-          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 300_000 },
         }),
       });
     } catch (err) {
@@ -116,7 +116,7 @@ export function registerMatchupRoutes(app: Express): void {
           updatedAt: snapshot.generatedAt,
           generatedAt: snapshot.generatedAt,
           warnings: [],
-          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 60_000 },
+          cache: { strategy: "sports_truth_hub_ttl", ttlMs: 300_000 },
         }),
       });
     } catch (err) {

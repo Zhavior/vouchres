@@ -68,7 +68,7 @@ export async function buildSportsTruthSnapshot(
     throw new Error(`Unsupported sport: ${sport}`);
   }
 
-  const ttlSeconds = Number(process.env.SPORTS_TRUTH_HUB_REDIS_TTL_SECONDS ?? 60);
+  const ttlSeconds = Number(process.env.SPORTS_TRUTH_HUB_REDIS_TTL_SECONDS ?? 300);
   const redisKey = `sports-truth:${sport}:today:${options.date}`;
 
   const localCached = getLocalTruthSnapshot(redisKey);
