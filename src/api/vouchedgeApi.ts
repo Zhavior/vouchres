@@ -68,6 +68,10 @@ function normalizeDailyReport(raw: any): DailyMlbReport {
   } as DailyMlbReport;
 }
 
+function normalizeLiveAtBatSnapshot(raw: LiveAtBatSnapshot | { data?: LiveAtBatSnapshot }): LiveAtBatSnapshot {
+  return (raw as { data?: LiveAtBatSnapshot })?.data ?? (raw as LiveAtBatSnapshot);
+}
+
 async function hrBoardTodayWithDevFallback(previewLimit?: number): Promise<HrBoardResponse> {
   const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
   const localPath = `/api/mlb/hr-board/today${query}`;
@@ -135,7 +139,8 @@ export const vouchedgeApi = {
   hrFeedByDate: (date: string) => getJson<HrFeedResponse>(`/api/mlb/hr-feed/date/${date}`),
 
   // Live at-bat pitch-by-pitch snapshot
-  liveAtBat: (gamePk: number) => getJson<LiveAtBatSnapshot>(`/api/mlb/live-at-bat/${gamePk}`),
+  liveAtBat: async (gamePk: number) =>
+    normalizeLiveAtBatSnapshot(await getJson<LiveAtBatSnapshot | { data: LiveAtBatSnapshot }>(`/api/mlb/live-at-bat/${gamePk}`)),
 
   // Live Games matchups
   liveGames: () => getJson<{

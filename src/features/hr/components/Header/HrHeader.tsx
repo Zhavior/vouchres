@@ -26,18 +26,18 @@ function isoAddDays(iso: string, delta: number): string {
 }
 
 const HrDateNav: React.FC<{ date: string; isToday: boolean; onChange: (date: string) => void }> = ({ date, isToday, onChange }) => (
-  <div className="flex items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.03] px-1.5 py-1">
+  <div className="flex items-center gap-1 border border-white/10 bg-black/25 px-1.5 py-1 font-mono">
     <button
       type="button"
       onClick={() => onChange(isoAddDays(date, -1))}
       aria-label="Previous day"
-      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition-colors duration-150 hover:bg-white/[0.06] hover:text-cyan-300"
+      className="flex h-6 w-6 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-[#00E5FF]/30 hover:bg-[#00E5FF]/5 hover:text-[#00E5FF]"
     >
       <ChevronLeft className="h-3.5 w-3.5" />
     </button>
     <label className="relative flex cursor-pointer items-center gap-1.5 px-1.5">
-      <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-      <span className="text-xs font-bold tabular-nums text-zinc-200">{isToday ? 'Today' : date}</span>
+      <Calendar className="h-3.5 w-3.5 text-[#00E5FF]" />
+      <span className="text-xs font-bold uppercase tracking-widest tabular-nums text-zinc-200">{isToday ? 'Today' : date}</span>
       <input
         type="date"
         value={date}
@@ -52,7 +52,7 @@ const HrDateNav: React.FC<{ date: string; isToday: boolean; onChange: (date: str
       onClick={() => onChange(isoAddDays(date, 1))}
       disabled={isToday}
       aria-label="Next day"
-      className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition-colors duration-150 hover:bg-white/[0.06] hover:text-cyan-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+      className="flex h-6 w-6 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-[#00E5FF]/30 hover:bg-[#00E5FF]/5 hover:text-[#00E5FF] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
     >
       <ChevronRight className="h-3.5 w-3.5" />
     </button>
@@ -79,22 +79,22 @@ function formatRelativeTime(date: Date | null | undefined): string | null {
 
 const LivePulse: React.FC<{ active: boolean }> = ({ active }) => {
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-3 py-1.5">
+    <div className="flex items-center gap-2 border border-white/10 bg-black/25 px-3 py-1.5 font-mono">
       <div className="flex items-end gap-[3px] h-3">
         <span
-          className={`w-[3px] rounded-full bg-cyan-400 ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
+          className={`w-[3px] bg-[#00E5FF] ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
           style={{ height: '40%', animationDelay: '0ms' }}
         />
         <span
-          className={`w-[3px] rounded-full bg-cyan-400 ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
+          className={`w-[3px] bg-[#00E5FF] ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
           style={{ height: '100%', animationDelay: '150ms' }}
         />
         <span
-          className={`w-[3px] rounded-full bg-cyan-400 ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
+          className={`w-[3px] bg-[#00E5FF] ${active ? 'animate-[pulse-bar_1s_ease-in-out_infinite]' : 'opacity-30'}`}
           style={{ height: '65%', animationDelay: '300ms' }}
         />
       </div>
-      <span className={`text-[10px] font-bold tracking-widest ${active ? 'text-cyan-400' : 'text-zinc-600'}`}>
+      <span className={`text-[10px] font-bold tracking-widest ${active ? 'text-[#00E5FF]' : 'text-zinc-600'}`}>
         {active ? 'LIVE' : 'IDLE'}
       </span>
       <style>{`
@@ -121,18 +121,18 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   const relativeTime = formatRelativeTime(lastUpdated);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-[hsl(var(--ve-bg-deep))] px-5 py-4">
+    <header className="flex flex-wrap items-center justify-between gap-4 border border-white/10 bg-black/25 px-5 py-4">
       {/* Left: brand */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 ring-1 ring-amber-500/30">
-          <Flame className="h-5 w-5 text-amber-400" strokeWidth={2.25} />
-          <div className="absolute inset-0 rounded-xl bg-amber-500/10 blur-md -z-10" />
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center border border-[#00E5FF]/35 bg-[#00E5FF]/10">
+          <Flame className="h-5 w-5 text-[#00E5FF]" strokeWidth={2.25} />
+          <div className="absolute inset-0 bg-[#00E5FF]/10 blur-md -z-10" />
         </div>
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-extrabold tracking-tight bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">
+          <h1 className="truncate font-mono text-lg font-extrabold uppercase tracking-tight text-white">
             HOME RUN INTELLIGENCE
           </h1>
-          <p className="truncate text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+          <p className="truncate font-mono text-[11px] font-medium uppercase tracking-widest text-white/40">
             MLB &middot; {isToday ? 'TODAY' : date} &middot; {mode}
           </p>
         </div>
@@ -152,14 +152,14 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
 
       {/* Right: view toggle + refresh */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center rounded-full border border-white/[0.06] bg-white/[0.03] p-1">
+        <div className="flex items-center border border-white/10 bg-black/25 p-1 font-mono">
           <button
             type="button"
             onClick={() => onViewModeChange('cards')}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'cards'
-                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'cards'}
           >
@@ -169,10 +169,10 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
           <button
             type="button"
             onClick={() => onViewModeChange('table')}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'table'
-                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'table'}
           >
@@ -182,10 +182,10 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
           <button
             type="button"
             onClick={() => onViewModeChange('treemap')}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition duration-200 ${
+            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
               viewMode === 'treemap'
-                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-500/40'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                : 'border-transparent text-zinc-500 hover:border-[#00E5FF]/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'treemap'}
           >
@@ -200,7 +200,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             aria-label="Refresh"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-zinc-400 transition duration-200 hover:border-cyan-500/30 hover:text-cyan-300 disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center border border-white/10 bg-black/25 text-zinc-400 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF] disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>

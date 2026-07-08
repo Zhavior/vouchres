@@ -19,13 +19,12 @@ interface MiniStatChipProps {
 
 const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
   <div
-    className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}
-    style={{ background: 'hsl(var(--ve-bg-panel))' }}
+    className={`flex items-center gap-2.5 border bg-black/25 px-3.5 py-2.5 font-mono transition duration-200 ${colorClasses} ${glowClasses}`}
   >
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">{icon}</div>
+    <div className="flex h-8 w-8 items-center justify-center border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]">{icon}</div>
     <div className="flex flex-col leading-tight">
       <span className="text-lg font-extrabold text-slate-50">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{label}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">{label}</span>
     </div>
   </div>
 );
@@ -49,30 +48,28 @@ const LoadingSkeleton: React.FC = () => (
     {Array.from({ length: 4 }).map((_, colIdx) => (
       <div
         key={colIdx}
-        className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-4"
-        style={{ background: 'hsl(var(--ve-bg-panel))' }}
+        className="flex flex-col gap-3 border border-white/10 bg-black/25 p-4"
       >
-        <div className="h-4 w-24 animate-pulse rounded-full bg-white/[0.08]" />
+        <div className="h-4 w-24 animate-pulse bg-white/[0.08]" />
         {Array.from({ length: 3 }).map((__, cardIdx) => (
           <div
             key={cardIdx}
-            className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-4"
-            style={{ background: 'hsl(var(--ve-surface))' }}
+            className="flex flex-col gap-3 border border-white/10 bg-black/30 p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-white/[0.08]" />
+              <div className="h-12 w-12 shrink-0 animate-pulse bg-white/[0.08]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 animate-pulse rounded-full bg-white/[0.08]" />
-                <div className="h-2.5 w-1/2 animate-pulse rounded-full bg-white/[0.06]" />
+                <div className="h-3 w-3/4 animate-pulse bg-white/[0.08]" />
+                <div className="h-2.5 w-1/2 animate-pulse bg-white/[0.06]" />
               </div>
-              <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-white/[0.08]" />
+              <div className="h-14 w-14 shrink-0 animate-pulse bg-white/[0.08]" />
             </div>
             <div className="grid grid-cols-4 gap-1.5">
               {Array.from({ length: 4 }).map((___, chipIdx) => (
-                <div key={chipIdx} className="h-10 animate-pulse rounded-lg bg-white/[0.05]" />
+                <div key={chipIdx} className="h-10 animate-pulse bg-white/[0.05]" />
               ))}
             </div>
-            <div className="h-6 w-full animate-pulse rounded-full bg-white/[0.05]" />
+            <div className="h-6 w-full animate-pulse bg-white/[0.05]" />
           </div>
         ))}
       </div>
@@ -86,8 +83,8 @@ interface ErrorStateProps {
 }
 
 const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
-  <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-red-500/25 bg-red-500/[0.04] px-6 py-16 text-center">
-    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 ring-1 ring-red-500/30">
+  <div className="flex flex-col items-center justify-center gap-4 border border-red-500/25 bg-black/30 px-6 py-16 text-center">
+    <div className="flex h-14 w-14 items-center justify-center border border-red-500/30 bg-red-500/10">
       <AlertOctagon className="h-7 w-7 text-red-400" />
     </div>
     <div>
@@ -97,7 +94,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
     <button
       type="button"
       onClick={onRetry}
-      className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition duration-200 hover:bg-red-500/15"
+      className="flex items-center gap-2 border border-red-500/30 bg-red-500/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-red-300 transition duration-200 hover:bg-red-500/15"
     >
       <RefreshCw className="h-4 w-4" />
       Retry
@@ -115,10 +112,9 @@ const EmptyState: React.FC<{
 
   return (
     <div
-      className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] px-6 py-16 text-center"
-      style={{ background: 'hsl(var(--ve-bg-panel))' }}
+      className="flex flex-col items-center justify-center gap-4 border border-white/10 bg-black/25 px-6 py-16 text-center"
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04] ring-1 ring-white/[0.08]">
+      <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/30">
         <Inbox className="h-7 w-7 text-zinc-500" />
       </div>
       <div>
@@ -136,7 +132,7 @@ const EmptyState: React.FC<{
           <button
             type="button"
             onClick={onShowPreview}
-            className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition duration-200 hover:bg-cyan-500/15"
+            className="flex items-center gap-2 border border-[#00E5FF]/35 bg-[#00E5FF]/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-[#00E5FF] transition duration-200 hover:bg-[#00E5FF]/15"
           >
             Show preview candidates ({previewCount})
           </button>
@@ -144,7 +140,7 @@ const EmptyState: React.FC<{
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-200 hover:bg-white/[0.06]"
+          className="flex items-center gap-2 border border-white/10 bg-black/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF]"
         >
           <RefreshCw className="h-4 w-4" />
           Refresh
@@ -188,10 +184,7 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen px-4 py-6 md:px-8"
-      style={{ background: 'hsl(var(--ve-bg-deep))' }}
-    >
+    <div className="min-h-screen bg-[#0A0A0A] px-4 py-6 text-white md:px-8">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
         <HrHeader
           mode={vm.mode}
@@ -206,7 +199,7 @@ const HomeRunIntelligencePage: React.FC = () => {
         />
 
         {vm.autoSwitchedToPreview && (
-          <div className="flex items-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] px-4 py-2.5 text-xs font-semibold text-cyan-200">
+          <div className="flex items-center gap-2 border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#00E5FF]">
             <AlertOctagon className="h-4 w-4 shrink-0" />
             No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Switch back to the Confirmed tab anytime.
           </div>
@@ -218,53 +211,52 @@ const HomeRunIntelligencePage: React.FC = () => {
             <MiniStatChip
               label="Elite"
               value={eliteCount}
-              icon={<Flame className="h-4 w-4 text-amber-400" />}
-              colorClasses="border-amber-500/30"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(245,158,11,0.5)]"
+              icon={<Flame className="h-4 w-4" />}
+              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Strong"
               value={strongCount}
-              icon={<Award className="h-4 w-4 text-emerald-400" />}
-              colorClasses="border-emerald-500/30"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(16,185,129,0.5)]"
+              icon={<Award className="h-4 w-4" />}
+              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Watch"
               value={watchCount}
-              icon={<Eye className="h-4 w-4 text-blue-400" />}
-              colorClasses="border-blue-500/30"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(59,130,246,0.5)]"
+              icon={<Eye className="h-4 w-4" />}
+              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <MiniStatChip
               label="Sleepers"
               value={sleeperCount}
-              icon={<Moon className="h-4 w-4 text-purple-400" />}
-              colorClasses="border-purple-500/30"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(168,85,247,0.5)]"
+              icon={<Moon className="h-4 w-4" />}
+              colorClasses="border-white/10 hover:border-[#00E5FF]/35"
+              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
             />
             <div
-              className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] px-3.5 py-2.5"
-              style={{ background: 'hsl(var(--ve-bg-panel))' }}
+              className="flex items-center gap-2.5 border border-[#00E5FF]/35 bg-[#00E5FF]/10 px-3.5 py-2.5 font-mono"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10">
-                <span className="text-xs font-black text-cyan-300">Σ</span>
+              <div className="flex h-8 w-8 items-center justify-center border border-[#00E5FF]/25 bg-black/30">
+                <span className="text-xs font-black text-[#00E5FF]">Σ</span>
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="text-lg font-extrabold text-slate-50">{totalCount}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Total</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Total</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-white/35">
             <span>Last refreshed {lastUpdatedLabel}</span>
             <button
               type="button"
               onClick={handleRefresh}
               aria-label="Refresh data"
               disabled={vm.loading}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-zinc-400 transition duration-200 hover:border-cyan-500/30 hover:text-cyan-300 disabled:opacity-50"
+              className="flex h-7 w-7 items-center justify-center border border-white/10 bg-black/30 text-zinc-400 transition duration-200 hover:border-[#00E5FF]/35 hover:text-[#00E5FF] disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${vm.loading ? 'animate-spin' : ''}`} />
             </button>

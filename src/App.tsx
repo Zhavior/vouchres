@@ -33,7 +33,7 @@ import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
 const EdgeIslandPage = lazy(() => import('./pages/EdgeIslandPage'));
-const FrontPage = lazy(() => import('./pages/FrontPage'));
+const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 const VouchBoard = lazy(() => import('./components/VouchBoard'));
 const ProfilePage = lazy(() => import('./components/ProfilePage'));
 const SettingsPage = lazy(() => import('./components/SettingsPage'));
@@ -145,6 +145,7 @@ const DEV_BYPASS_AUTH = import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_A
 
 const PUBLIC_SECTIONS = new Set([
   'welcome',
+  'vouchedge_intro',
   'feed',
   'home',
   'daily_players',
@@ -223,6 +224,22 @@ function resolveDevSectionFromLocation() {
   const pathname = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase().replace(/^#/, '');
   const target = hash || pathname;
+
+  if (target === '' || target === '/') {
+    return 'vouchedge_intro';
+  }
+
+  if (target === 'vouchres/vouchedge' || target === '/vouchres/vouchedge') {
+    window.history.replaceState(null, '', '/vouchedge');
+    return 'vouchedge_intro';
+  }
+
+  if (
+    target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
+    target === 'vouchedge' || target === '/vouchedge'
+  ) {
+    return 'vouchedge_intro';
+  }
 
   if (
     target === 'daily-hr-watch-new' || target === '/daily-hr-watch-new' ||
@@ -386,7 +403,7 @@ export default function App() {
     const locationSection = resolveDevSectionFromLocation();
     if (locationSection) return locationSection;
     if (DEV_BYPASS_AUTH && hasRealAuthToken()) return 'hr_board';
-    return 'welcome';
+    return 'vouchedge_intro';
   });
   const activeSectionRef = useRef(activeSection);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -446,8 +463,8 @@ export default function App() {
   const handleLogoutComplete = () => {
     setLoggingOut(true);
     window.setTimeout(() => {
-      saveActiveSection('welcome');
-      setActiveSection('welcome');
+      saveActiveSection('vouchedge_intro');
+      setActiveSection('vouchedge_intro');
       setLoggingOut(false);
     }, 900);
   };
@@ -1653,6 +1670,12 @@ export default function App() {
 
   const renderMainView = () => {
     switch (activeSection) {
+      case 'vouchedge_intro':
+        return (
+          <VouchEdgeTerminalPage
+            onAuthed={handleLoginSuccess}
+          />
+        );
       case 'welcome':
         return hasRealAuthToken() ? (
           <EdgeIslandPage
@@ -1662,9 +1685,7 @@ export default function App() {
             isLoggedIn
           />
         ) : (
-          <FrontPage
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
+          <VouchEdgeTerminalPage
             onAuthed={handleLoginSuccess}
           />
         );
@@ -1919,9 +1940,12 @@ export default function App() {
     }
   };
 
+  const isPublicFrontPage = (activeSection === 'welcome' && !hasRealAuthToken()) || activeSection === 'vouchedge_intro';
+  const showGlobalAppChrome = !isPublicFrontPage;
+
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
-      <VouchEdgeBootGate enabled={activeSection !== 'welcome' && hasRealAuthToken()}>
+      <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
         <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
         <div className="ve-motion-bg" aria-hidden="true">
           <div className="ve-motion-grid" />
@@ -1944,7 +1968,7 @@ export default function App() {
             whatever page content happened to scroll underneath it. */}
         <div className="hidden md:block">
           <AuthStatusBadge
-            hideGuest={activeSection === 'welcome'}
+            hideGuest={activeSection === 'welcome' || activeSection === 'vouchedge_intro'}
             onLoginSuccess={handleLoginSuccess}
             onLogoutComplete={handleLogoutComplete}
           />
@@ -1961,7 +1985,7 @@ export default function App() {
           onAuthLoginSuccess={handleLoginSuccess}
           onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isPendingRoute}
-          isPublicFrontPage={activeSection === 'welcome' && !hasRealAuthToken()}
+          isPublicFrontPage={isPublicFrontPage}
         >
           <Suspense
             fallback={
@@ -1972,9 +1996,9 @@ export default function App() {
           >
             {renderMainView()}
           </Suspense>
-          {activeSection !== 'welcome' && <HrNotifications savedSlips={savedSlips} />}
+          {showGlobalAppChrome && <HrNotifications savedSlips={savedSlips} />}
         </HomeFeedLayout>
-        <AppNotificationsHost onNavigate={navigateSection} />
+        {showGlobalAppChrome && <AppNotificationsHost onNavigate={navigateSection} />}
 
         {/* The Edge Island launcher — third button in the stack: app
             notifications bell sits at bottom-44/40, HR notifications bell
@@ -1983,7 +2007,7 @@ export default function App() {
             for a third full-size button between the HR bell and the nav
             bar — so this one renders smaller on mobile only (w-10/h-10 vs
             w-12/h-12 on desktop) to fit without overlapping either. */}
-        {activeSection !== 'welcome' && (
+        {showGlobalAppChrome && (
           <button
             type="button"
             onClick={() => setEdgeIslandOpen(true)}
@@ -1995,13 +2019,15 @@ export default function App() {
           </button>
         )}
 
-        <EdgeIslandCommandCenter
-          open={edgeIslandOpen}
-          onClose={() => setEdgeIslandOpen(false)}
-          onSectionChange={navigateSection}
-          savedSlips={savedSlips}
-          profile={profile}
-        />
+        {showGlobalAppChrome && (
+          <EdgeIslandCommandCenter
+            open={edgeIslandOpen}
+            onClose={() => setEdgeIslandOpen(false)}
+            onSectionChange={navigateSection}
+            savedSlips={savedSlips}
+            profile={profile}
+          />
+        )}
           </AppErrorBoundary>
         </div>
         </div>

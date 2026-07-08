@@ -114,7 +114,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
           </span>
           <p className="text-sm font-bold text-white mt-1.5">Pro and Capper are in beta.</p>
           <p className="text-xs text-white/40 leading-normal mt-0.5">
-            Signing up now helps support development and locks in your price — $19.99 for Pro, $29.99 for Capper — for as long as you stay subscribed.
+            Signing up now helps support development and locks in your price — $19.99 for Pro, $34.99 for Capper — for as long as you stay subscribed. These are Beta Prices.
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
             Plans
           </h3>
           <p className="text-[11px] text-white/40 mt-1">
-            <span className="text-vouch-emerald font-bold">Pro ($19.99)</span> unlocks every research lab. <span className="text-vouch-cyan font-bold">Capper ($29.99)</span> adds pick selling and your own subscriber chat & clubs. Both are locked-in beta prices.
+            <span className="text-vouch-emerald font-bold">Pro ($19.99)</span> unlocks every research lab. <span className="text-vouch-cyan font-bold">Capper ($34.99)</span> adds pick selling and your own subscriber chat & clubs. These are Beta Prices.
           </p>
         </div>
 
@@ -274,7 +274,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <Coins className="w-4 h-4 text-vouch-cyan" />
                 </h4>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-vouch-cyan font-sans">$29.99</span>
+                  <span className="text-2xl font-black text-vouch-cyan font-sans">$34.99</span>
                   <span className="text-white/40 text-xs">/ Month</span>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed pt-1">

@@ -8,6 +8,7 @@ import { apiErrorHandler } from "./server/middleware/errorHandler";
 import { apiNotFoundHandler } from "./server/middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "./server/middleware/rateLimit";
 import { requestContext } from "./server/middleware/requestContext";
+import { routeTiming } from "./server/middleware/routeTiming";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
@@ -19,6 +20,7 @@ export async function createApp() {
 
   app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
   app.use(requestContext);
+  app.use(routeTiming);
   app.use(helmetMiddleware);
   app.use(corsMiddleware);
 

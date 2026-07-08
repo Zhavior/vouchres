@@ -284,19 +284,23 @@ export default function HomeFeedLayout({
       )}
 
       {/* Globally Floating VouchEdge AI Agent */}
-      <AisFeatureAgent 
-        profile={profile} 
-        savedSlips={savedSlips} 
-        activeLegs={activeLegs}
-        onSectionChange={onSectionChange}
-      />
+      {!isPublicFrontPage && (
+        <AisFeatureAgent
+          profile={profile}
+          savedSlips={savedSlips}
+          activeLegs={activeLegs}
+          onSectionChange={onSectionChange}
+        />
+      )}
 
       {/* Command Palette (Cmd+K) */}
-      <CmdKPalette
-        open={cmdKOpen}
-        onClose={() => setCmdKOpen(false)}
-        onNavigate={onSectionChange}
-      />
+      {!isPublicFrontPage && (
+        <CmdKPalette
+          open={cmdKOpen}
+          onClose={() => setCmdKOpen(false)}
+          onNavigate={onSectionChange}
+        />
+      )}
 
     </div>
   );

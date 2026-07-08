@@ -26,6 +26,7 @@ import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
 import { getPublicVouch } from "../services/persistence/vouchService";
+import { getBackendHealthReport } from "../services/health/backendHealthService";
 import type { Request, Response } from "express";
 
 function escapeHtml(value: unknown): string {
@@ -88,6 +89,11 @@ export function registerApiRoutes(app: Express): void {
   app.get("/api/health", (_req: Request, res: Response) =>
     res.json({ status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
   );
+
+  app.get("/api/health/backend", (_req: Request, res: Response) => {
+    const report = getBackendHealthReport();
+    res.json(report);
+  });
 
   // Public share permalink — server-rendered (not the SPA) so X/Slack/iMessage
   // crawlers, which don't execute JS, see the Open Graph tags. Must be

@@ -52,71 +52,71 @@ interface TierConfig {
 function getTier(score: number): TierConfig {
   if (score >= 97) return {
     label: 'ELITE',
-    tokenAccent: 've-accent-gold',
-    ringHex: '#f59e0b',
-    borderClass: 'border-[hsl(var(--ve-accent-gold)/0.35)]',
-    borderHoverClass: 'hover:border-[hsl(var(--ve-accent-gold)/0.65)]',
-    textClass: 'text-[hsl(var(--ve-accent-gold))]',
-    glowClass: 'shadow-[0_0_28px_-6px_hsl(var(--ve-accent-gold)/0.50)]',
-    chipClass: 'bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))] ring-[hsl(var(--ve-accent-gold)/0.28)]',
-    badgeClass: 'bg-[hsl(var(--ve-accent-gold)/0.15)] text-[hsl(var(--ve-accent-gold))] border-[hsl(var(--ve-accent-gold)/0.45)]',
+    tokenAccent: 've-accent-cyan',
+    ringHex: '#00E5FF',
+    borderClass: 'border-white/10',
+    borderHoverClass: 'hover:border-[#00E5FF]/55',
+    textClass: 'text-[#00E5FF]',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
+    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
+    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
   };
   if (score >= 92) return {
     label: 'STRONG',
-    tokenAccent: 've-success',
-    ringHex: '#10b981',
-    borderClass: 'border-[hsl(var(--ve-success)/0.30)]',
-    borderHoverClass: 'hover:border-[hsl(var(--ve-success)/0.60)]',
-    textClass: 'text-[hsl(var(--ve-success))]',
-    glowClass: 'shadow-[0_0_28px_-6px_hsl(var(--ve-success)/0.45)]',
-    chipClass: 'bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))] ring-[hsl(var(--ve-success)/0.28)]',
-    badgeClass: 'bg-[hsl(var(--ve-success)/0.14)] text-[hsl(var(--ve-success))] border-[hsl(var(--ve-success)/0.40)]',
+    tokenAccent: 've-accent-cyan',
+    ringHex: '#00E5FF',
+    borderClass: 'border-white/10',
+    borderHoverClass: 'hover:border-[#00E5FF]/55',
+    textClass: 'text-[#00E5FF]',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
+    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
+    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
   };
   if (score >= 85) return {
     label: 'WATCH',
     tokenAccent: 've-accent-cyan',
-    ringHex: '#22d3ee',
-    borderClass: 'border-[hsl(var(--ve-accent-cyan)/0.28)]',
-    borderHoverClass: 'hover:border-[hsl(var(--ve-accent-cyan)/0.55)]',
-    textClass: 'text-[hsl(var(--ve-accent-cyan))]',
-    glowClass: 'shadow-[0_0_28px_-6px_hsl(var(--ve-accent-cyan)/0.40)]',
-    chipClass: 'bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))] ring-[hsl(var(--ve-accent-cyan)/0.24)]',
-    badgeClass: 'bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))] border-[hsl(var(--ve-accent-cyan)/0.38)]',
+    ringHex: '#00E5FF',
+    borderClass: 'border-white/10',
+    borderHoverClass: 'hover:border-[#00E5FF]/55',
+    textClass: 'text-[#00E5FF]',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
+    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
+    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
   };
   if (score >= 75) return {
     label: 'SLEEPER',
-    tokenAccent: 've-accent-pink',
-    ringHex: '#818cf8',
-    borderClass: 'border-[hsl(var(--ve-accent-pink)/0.26)]',
-    borderHoverClass: 'hover:border-[hsl(var(--ve-accent-pink)/0.52)]',
-    textClass: 'text-[hsl(var(--ve-accent-pink))]',
-    glowClass: 'shadow-[0_0_28px_-6px_hsl(var(--ve-accent-pink)/0.38)]',
-    chipClass: 'bg-[hsl(var(--ve-accent-pink)/0.09)] text-[hsl(var(--ve-accent-pink))] ring-[hsl(var(--ve-accent-pink)/0.22)]',
-    badgeClass: 'bg-[hsl(var(--ve-accent-pink)/0.12)] text-[hsl(var(--ve-accent-pink))] border-[hsl(var(--ve-accent-pink)/0.35)]',
+    tokenAccent: 've-accent-cyan',
+    ringHex: '#00E5FF',
+    borderClass: 'border-white/10',
+    borderHoverClass: 'hover:border-[#00E5FF]/55',
+    textClass: 'text-[#00E5FF]',
+    glowClass: 'hover:shadow-[0_0_24px_rgba(0,229,255,0.10)]',
+    chipClass: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]',
+    badgeClass: 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/35',
   };
   return {
     label: 'FADE',
     tokenAccent: 've-text-muted',
     ringHex: '#64748b',
-    borderClass: 'border-[hsl(var(--ve-border)/0.35)]',
-    borderHoverClass: 'hover:border-[hsl(var(--ve-border)/0.60)]',
+    borderClass: 'border-white/10',
+    borderHoverClass: 'hover:border-[#00E5FF]/35',
     textClass: 'text-[hsl(var(--ve-text-muted))]',
     glowClass: '',
-    chipClass: 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] ring-[hsl(var(--ve-border)/0.30)]',
-    badgeClass: 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] border-[hsl(var(--ve-border)/0.40)]',
+    chipClass: 'border border-white/10 bg-black/30 text-[hsl(var(--ve-text-muted))]',
+    badgeClass: 'bg-black/30 text-[hsl(var(--ve-text-muted))] border-white/10',
   };
 }
 
 function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNode; className: string } {
   switch (status) {
     case 'official':
-      return { label: 'Official', icon: <ShieldCheck className="h-3 w-3" />, className: 'bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))] ring-[hsl(var(--ve-success)/0.25)]' };
+      return { label: 'Official', icon: <ShieldCheck className="h-3 w-3" />, className: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]' };
     case 'projected':
-      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))] ring-[hsl(var(--ve-accent-cyan)/0.25)]' };
+      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'border border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]' };
     case 'blocked':
-      return { label: 'Blocked', icon: <ShieldAlert className="h-3 w-3" />, className: 'bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))] ring-[hsl(var(--ve-danger)/0.25)]' };
+      return { label: 'Blocked', icon: <ShieldAlert className="h-3 w-3" />, className: 'border border-red-500/30 bg-red-500/10 text-red-300' };
     default:
-      return { label: '—', icon: <ShieldOff className="h-3 w-3" />, className: 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] ring-[hsl(var(--ve-border)/0.20)]' };
+      return { label: '—', icon: <ShieldOff className="h-3 w-3" />, className: 'border border-white/10 bg-black/30 text-[hsl(var(--ve-text-muted))]' };
   }
 }
 
@@ -175,7 +175,7 @@ const ScoreRing: React.FC<{ score: number; hexColor: string }> = ({ score, hexCo
           style={{ transition: 'stroke-dashoffset 500ms ease' }}
         />
       </svg>
-      <span className="absolute text-base font-extrabold text-[hsl(var(--ve-text-primary))]">{Math.round(score)}</span>
+      <span className="absolute font-mono text-base font-extrabold text-[hsl(var(--ve-text-primary))]">{Math.round(score)}</span>
     </div>
   );
 };
@@ -204,11 +204,11 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       onClick={() => onClick?.(player)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(player); } }}
       className={[
-        'group relative flex w-full cursor-pointer flex-col gap-3 rounded-2xl border',
+        'group relative flex w-full cursor-pointer flex-col gap-3 border',
         tier.borderClass,
-        'bg-[hsl(var(--ve-bg-panel)/0.46)] p-4 text-left',
+        'bg-black/30 p-4 text-left',
         'transition-all duration-[var(--ve-duration-normal)]',
-        'hover:-translate-y-0.5',
+        'hover:-translate-y-0.5 hover:bg-[#00E5FF]/5',
         tier.borderHoverClass,
         tier.glowClass,
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ve-accent-cyan)/0.40)]',
@@ -217,7 +217,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       {/* Warning dot */}
       {hasWarnings && (
         <span
-          className="absolute right-3 top-3 h-2 w-2 rounded-full bg-[hsl(var(--ve-warning))] shadow-[0_0_8px_2px_hsl(var(--ve-warning)/0.55)]"
+          className="absolute right-3 top-3 h-2 w-2 bg-[#00E5FF] shadow-[0_0_8px_2px_rgba(0,229,255,0.55)]"
           title={`${player.warnings?.length} warning(s)`}
         />
       )}
@@ -231,11 +231,11 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
               src={player.headshotUrl}
               alt={player.playerName}
               onError={() => setImgError(true)}
-              className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-[hsl(var(--ve-border)/0.40)]"
+              className="h-11 w-11 shrink-0 border border-white/10 object-cover"
             />
           ) : (
             <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[hsl(var(--ve-text-primary))] ring-1 ring-[hsl(var(--ve-border)/0.40)]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/10 font-mono text-xs font-bold text-[hsl(var(--ve-text-primary))]"
               style={{ backgroundColor: teamColor(player.team) }}
             >
               {initials(player.playerName)}
@@ -243,12 +243,12 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           )}
           {/* Name / matchup */}
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-[hsl(var(--ve-text-primary))]">{player.playerName}</p>
-            <p className="truncate text-xs text-[hsl(var(--ve-text-muted))]">
+            <p className="truncate font-mono text-sm font-bold uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">{player.playerName}</p>
+            <p className="truncate font-mono text-xs uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">
               {player.team || '—'} <span className="text-[hsl(var(--ve-text-muted)/0.45)]">vs</span> {player.opponent || '—'}
             </p>
             {player.pitcherName && (
-              <p className="truncate text-[11px] text-[hsl(var(--ve-text-muted)/0.55)]">
+              <p className="truncate font-mono text-[11px] uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.55)]">
                 vs {player.pitcherName}
               </p>
             )}
@@ -258,7 +258,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
         <div className="flex shrink-0 flex-col items-center gap-1.5">
           <ScoreRing score={player.hrScore} hexColor={tier.ringHex} />
           <span className={[
-            'rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em]',
+            'border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[0.14em]',
             tier.badgeClass,
           ].join(' ')}>
             {tier.label}
@@ -268,13 +268,13 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
 
       {/* Row 2: truth badge + HR result signal + rank */}
       <div className="flex items-center justify-between gap-2">
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badge.className}`}>
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${badge.className}`}>
           {badge.icon}
           {badge.label}
         </span>
         {hrResult === 'hit' && (
           <span
-            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide"
+            className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide"
             style={{ borderColor: 'rgba(245,158,11,0.45)', background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}
             title="Real box score confirms a home run this game"
           >
@@ -283,7 +283,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
         )}
         {hrResult === 'no-hr' && (
           <span
-            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide"
             style={{ borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)' }}
             title="Graded final — no home run"
           >
@@ -291,12 +291,12 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           </span>
         )}
         {player.rank != null && (
-          <span className="text-[10px] font-bold text-[hsl(var(--ve-text-muted)/0.60)]">
+          <span className="font-mono text-[10px] font-bold text-[hsl(var(--ve-text-muted)/0.60)]">
             #{player.rank}
           </span>
         )}
         {player.gameTime && (
-          <span className="ml-auto text-[10px] text-[hsl(var(--ve-text-muted)/0.50)]">
+          <span className="ml-auto font-mono text-[10px] text-[hsl(var(--ve-text-muted)/0.50)]">
             {player.gameTime}
           </span>
         )}
@@ -308,7 +308,7 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           {signals.map(s => (
             <span
               key={s.label}
-              className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold ring-1 ${tier.chipClass}`}
+              className={`inline-flex items-center gap-1 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ${tier.chipClass}`}
             >
               {s.label}
               <span className="opacity-80">{fmt(s.value)}</span>
@@ -317,12 +317,12 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           {/* Vegas edge chip */}
           {edgeVal !== null && (
             <span className={[
-              'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold ring-1 ml-auto',
+              'inline-flex items-center gap-1 border px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide ml-auto',
               edgePositive
-                ? 'bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))] ring-[hsl(var(--ve-success)/0.28)]'
+                ? 'border-[#00E5FF]/25 bg-[#00E5FF]/10 text-[#00E5FF]'
                 : edgeNegative
-                  ? 'bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))] ring-[hsl(var(--ve-danger)/0.28)]'
-                  : 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] ring-[hsl(var(--ve-border)/0.30)]',
+                  ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                  : 'border-white/10 bg-black/30 text-[hsl(var(--ve-text-muted))]',
             ].join(' ')}>
               <Zap className="h-2.5 w-2.5" />
               VE Edge {edgePositive ? '+' : ''}{edgeVal}%
@@ -342,9 +342,9 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
               {(player.hrProbability * 100).toFixed(1)}%
             </span>
           </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-[hsl(var(--ve-border)/0.30)]">
+          <div className="h-1 w-full overflow-hidden bg-white/10">
             <div
-              className={`h-full rounded-full transition-all duration-500`}
+              className="h-full transition-all duration-500"
               style={{
                 width: `${Math.min(100, player.hrProbability * 700)}%`, // scale: 14% HR prob = full bar
                 background: `hsl(var(--${tier.tokenAccent}))`,
@@ -367,8 +367,8 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           type="button"
           onClick={(e) => { e.stopPropagation(); onViewProfile(player); }}
           className={[
-            'mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border py-1.5',
-            'text-[10px] font-bold uppercase tracking-[0.14em] transition-all duration-150',
+            'mt-1 flex w-full items-center justify-center gap-1.5 border py-1.5',
+            'font-mono text-[10px] font-bold uppercase tracking-[0.14em] transition-all duration-150',
             'opacity-0 group-hover:opacity-100',
             `border-[hsl(var(--${tier.tokenAccent})/0.28)] text-[hsl(var(--${tier.tokenAccent}))]`,
             `hover:bg-[hsl(var(--${tier.tokenAccent})/0.08)]`,

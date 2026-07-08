@@ -73,7 +73,17 @@ export function registerHrBoardRoutes(app: Express): void {
       });
     }
 
-    res.json(snapshot);
+    res.json({
+      success: true,
+      data: snapshot,
+      meta: buildApiMeta({
+        source: "mlb_statsapi_live_feed",
+        dataQuality: "official_mlb_live_feed",
+        updatedAt: snapshot.updatedAt,
+        warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
+        cache: { strategy: "ttl_cache_with_last_good_snapshot", ttlMs: 12_000 },
+      }),
+    });
   }));
 
   /* ============ MAIN: Validated HR Board ============ */

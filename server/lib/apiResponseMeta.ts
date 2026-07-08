@@ -2,6 +2,7 @@ export type ApiDataQuality =
   | "official_mlb_schedule"
   | "official_mlb_lineup"
   | "official_mlb_scores"
+  | "official_mlb_live_feed"
   | "sports_truth_snapshot"
   | "validated_hr_board"
   | "projection_preview"

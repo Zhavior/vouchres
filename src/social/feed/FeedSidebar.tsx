@@ -52,10 +52,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 /** Group → Z8 accent class used for the group header label colour. Disciplined two-accent system: emerald for proof/action groups, cyan for everything else. */
 const GROUP_ACCENT: Record<string, string> = {
-  Daily: 'text-vouch-emerald',
-  'Pro Labs': 'text-vouch-cyan',
-  'Build & Track': 'text-vouch-emerald',
-  Social: 'text-vouch-cyan',
+  Daily: 'text-[#00E5FF]',
+  'Pro Labs': 'text-[#00E5FF]',
+  'Build & Track': 'text-[#00E5FF]',
+  Social: 'text-[#00E5FF]',
   Account: 'text-white/40',
 };
 
@@ -94,20 +94,24 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
       id={`sidebar-link-${id}`}
       aria-current={isActive ? 'page' : undefined}
       className={[
-        'glass-panel glass-border font-z8 group relative w-full flex items-center justify-center xl:justify-start gap-3',
-        'pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 rounded-2xl text-sm transition-all outline-none',
-        isActive ? 'text-white font-black' : 'text-white/50 hover:text-white',
+        'group relative w-full flex items-center justify-center xl:justify-start gap-3',
+        'border font-mono pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 text-sm uppercase tracking-wide transition-all outline-none',
+        isActive
+          ? 'border-[#00E5FF]/55 bg-[#00E5FF]/10 text-white shadow-[0_0_20px_rgba(0,229,255,0.08)]'
+          : 'border-white/10 bg-black/25 text-white/45 hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/5 hover:text-white',
       ].join(' ')}
     >
       <span
         className={[
-          'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-all',
-          isActive ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'bg-vouch-emerald/10 text-vouch-emerald/70 group-hover:text-vouch-emerald',
+          'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center border transition-all',
+          isActive
+            ? 'border-[#00E5FF]/45 bg-[#00E5FF]/15 text-[#00E5FF]'
+            : 'border-white/10 bg-black/30 text-[#00E5FF]/65 group-hover:border-[#00E5FF]/35 group-hover:text-[#00E5FF]',
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
       </span>
-      <span className="relative z-10 hidden xl:block truncate text-[13px] font-semibold leading-none">
+      <span className="relative z-10 hidden xl:block truncate text-[12px] font-bold leading-none">
         {label}
       </span>
       {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
@@ -129,19 +133,19 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
-    <div className={['glass-panel glass-border font-z8 rounded-[1.4rem] transition-all', hasActive ? 'border-vouch-emerald/20' : ''].join(' ')}>
+    <div className={['border bg-black/25 font-mono transition-all', hasActive ? 'border-[#00E5FF]/35' : 'border-white/10'].join(' ')}>
       {/* Group header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-[1.4rem] text-[10px] font-black uppercase tracking-[0.28em] transition-colors hover:bg-white/[0.03] outline-none"
+        className="w-full flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.28em] transition-colors hover:bg-[#00E5FF]/5 outline-none"
         aria-expanded={!collapsed}
       >
         <span className={['hidden xl:block', accentClass].join(' ')}>
           {group}
         </span>
         {/* Collapsed icon-only indicator */}
-        <span className="xl:hidden flex items-center justify-center w-5 h-5 rounded-full bg-white/[0.04] border border-white/10">
-          <span className={['block w-1.5 h-1.5 rounded-full bg-current', accentClass].join(' ')} />
+        <span className="xl:hidden flex items-center justify-center w-5 h-5 border border-white/10 bg-black/30">
+          <span className={['block w-1.5 h-1.5 bg-current', accentClass].join(' ')} />
         </span>
         <span className="hidden xl:flex items-center gap-1.5">
           <span className="text-[9px] text-white/30">
@@ -164,7 +168,7 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
         ].join(' ')}
         aria-hidden={collapsed}
       >
-        <div className="px-2 pb-2.5 space-y-1">
+        <div className="px-2 pb-2.5 pt-2 space-y-1">
           {items.map(f => (
             <NavItem
               key={f.id}
@@ -259,7 +263,7 @@ export default function FeedSidebar({
         'relative hidden md:flex flex-col h-screen sticky top-0 font-z8',
         'w-[72px] xl:w-[280px]',
         'border-r border-white/10',
-        'bg-obsidian-900 px-2 xl:px-3.5 py-4',
+        'bg-[#0A0A0A] px-2 xl:px-3.5 py-4',
         'text-white',
         'justify-between select-none backdrop-blur-sm',
         'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
@@ -271,23 +275,23 @@ export default function FeedSidebar({
         {/* Brand logo */}
         <button
           onClick={() => onSectionChange('feed')}
-          className="glass-panel glass-border group relative w-full flex items-center gap-3 rounded-2xl p-2.5 cursor-pointer transition-all"
+          className="group relative w-full flex items-center gap-3 border border-white/10 bg-black/30 p-2.5 cursor-pointer transition-all hover:border-[#00E5FF]/45 hover:bg-[#00E5FF]/5"
           id="brand-logo-id"
           aria-label="Go to Home Feed"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
-            <span className="text-[13px] font-black tracking-tight">VE</span>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#00E5FF]/35 bg-[#00E5FF]/10 text-[#00E5FF]">
+            <span className="font-mono text-[13px] font-black tracking-tight">VE</span>
           </div>
           <div className="hidden xl:block min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate text-[15px] font-black tracking-tight text-white">
+              <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
                 VouchEdge
               </span>
-              <span className="terminal-text rounded-full bg-vouch-emerald/10 px-2 py-0.5 text-vouch-emerald">
+              <span className="font-mono border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#00E5FF]">
                 Live
               </span>
             </div>
-            <p className="mt-0.5 truncate text-[11px] font-medium text-white/40">
+            <p className="mt-0.5 truncate font-mono text-[10px] font-medium uppercase tracking-wide text-white/40">
               MLB Intelligence Command
             </p>
           </div>
@@ -296,19 +300,19 @@ export default function FeedSidebar({
         {/* Cmd+K hint — desktop only */}
         <button
           onClick={onOpenCmdK}
-          className="glass-panel glass-border hidden xl:flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] text-white/40 transition-all hover:text-white"
+          className="hidden xl:flex w-full items-center gap-2 border border-white/10 bg-black/25 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white/40 transition-all hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white"
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 text-left">Quick search…</span>
-          <span className="flex items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40">
+          <span className="flex items-center gap-0.5 border border-white/10 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40">
             <Command className="h-2.5 w-2.5" />K
           </span>
         </button>
 
         {/* Sport Switcher pills */}
         <div
-          className="glass-panel glass-border flex flex-col xl:flex-row gap-1 rounded-2xl p-1.5"
+          className="flex flex-col xl:flex-row gap-1 border border-white/10 bg-black/25 p-1.5 font-mono"
           id="sidebar-sport-switcher"
           role="group"
           aria-label="Sport selector"
@@ -323,18 +327,18 @@ export default function FeedSidebar({
                 title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 id={`sidebar-sport-${sport.id}`}
                 className={[
-                  'flex-1 flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-black transition-all',
+                  'flex-1 flex items-center justify-center gap-1.5 border px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
                   isActive
-                    ? 'bg-vouch-emerald/10 text-vouch-emerald'
+                    ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
                     : sport.enabled
-                      ? 'text-white/40 hover:text-white hover:bg-white/[0.04]'
+                      ? 'border-transparent text-white/40 hover:border-[#00E5FF]/30 hover:bg-[#00E5FF]/5 hover:text-white'
                       : 'text-white/25 cursor-not-allowed opacity-70',
                 ].join(' ')}
               >
                 <span className="text-sm leading-none">{sport.emoji}</span>
                 <span className="hidden xl:inline">{sport.label}</span>
                 {!sport.enabled && (
-                  <span className="terminal-text hidden xl:inline-flex items-center rounded-full bg-white/[0.04] px-1.5 py-0.5 text-white/30">
+                  <span className="hidden xl:inline-flex items-center border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white/30">
                     Soon
                   </span>
                 )}
@@ -379,17 +383,17 @@ export default function FeedSidebar({
       {/* ── Bottom section ────────────────────────────────────────── */}
       <div className="relative z-10 mt-4 space-y-2.5">
         {/* Sync status pill — desktop only */}
-        <div className="glass-panel glass-border hidden xl:flex items-center justify-between gap-2 rounded-2xl px-3.5 py-2.5">
+        <div className="hidden xl:flex items-center justify-between gap-2 border border-white/10 bg-black/25 px-3.5 py-2.5 font-mono">
           <div>
-            <p className="terminal-text text-white/40">
+            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[#00E5FF]">
               Sync
             </p>
-            <p className="mt-0.5 text-[10px] leading-relaxed text-white/40">
+            <p className="mt-0.5 text-[10px] uppercase leading-relaxed tracking-wide text-white/40">
               Live data connected
             </p>
           </div>
-          <span className="terminal-text inline-flex shrink-0 items-center gap-1 rounded-full bg-vouch-emerald/10 px-2 py-0.5 text-vouch-emerald">
-            <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-pulse" />
+          <span className="inline-flex shrink-0 items-center gap-1 border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#00E5FF]">
+            <span className="h-1.5 w-1.5 bg-[#00E5FF] animate-pulse" />
             Online
           </span>
         </div>
@@ -399,10 +403,10 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('customize')}
             className={[
-              'glass-panel glass-border flex items-center justify-center xl:justify-start gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all',
+              'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
               activeSection === 'customize'
-                ? 'text-vouch-emerald bg-vouch-emerald/10'
-                : 'text-white/40 hover:text-white',
+                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                : 'border-white/10 text-white/40 hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white',
             ].join(' ')}
             aria-label="Customize layout"
           >
@@ -412,10 +416,10 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('settings')}
             className={[
-              'glass-panel glass-border flex items-center justify-center xl:justify-start gap-2 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition-all',
+              'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
               activeSection === 'settings'
-                ? 'text-vouch-cyan bg-vouch-cyan/10'
-                : 'text-white/40 hover:text-white',
+                ? 'border-[#00E5FF]/45 bg-[#00E5FF]/10 text-[#00E5FF]'
+                : 'border-white/10 text-white/40 hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5 hover:text-white',
             ].join(' ')}
             aria-label="Settings"
           >
@@ -427,7 +431,7 @@ export default function FeedSidebar({
         {/* Profile card */}
         <button
           onClick={() => onSectionChange('profile')}
-          className="glass-panel glass-border w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all"
+          className="w-full flex items-center gap-3 border border-white/10 bg-black/30 p-3 cursor-pointer transition-all hover:border-[#00E5FF]/35 hover:bg-[#00E5FF]/5"
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >
@@ -441,14 +445,14 @@ export default function FeedSidebar({
           />
           <div className="hidden xl:block min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <h4 className="font-semibold text-sm text-white truncate leading-none">
+              <h4 className="font-mono text-sm font-bold uppercase tracking-wide text-white truncate leading-none">
                 {profile.displayName}
               </h4>
               {profile.verified && (
-                <Shield className="h-3 w-3 shrink-0 text-vouch-emerald fill-vouch-emerald/85" />
+                <Shield className="h-3 w-3 shrink-0 text-[#00E5FF] fill-[#00E5FF]/85" />
               )}
             </div>
-            <p className="mt-0.5 text-[11px] text-white/40 truncate">
+            <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-white/40 truncate">
               {profile.winRate != null
                 ? `${Math.round(profile.winRate * 100)}% win rate`
                 : 'View profile'}
@@ -456,7 +460,7 @@ export default function FeedSidebar({
           </div>
           {/* Notification badge on avatar when collapsed */}
           {unreadNotifications > 0 && (
-            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-vouch-cyan text-[8px] font-black text-black">
+            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-[#00E5FF] text-[8px] font-black text-black">
               {unreadNotifications > 9 ? '9+' : unreadNotifications}
             </span>
           )}
