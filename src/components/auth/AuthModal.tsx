@@ -120,6 +120,7 @@ const PLAN_OPTIONS: Array<{
 interface AuthModalProps {
   open: boolean;
   initialMode?: Mode;
+  initialPlan?: SignupPlan;
   onClose: () => void;
   /** Called after a successful sign-in / sign-up so the host can route into the app. */
   onAuthed?: () => void;
@@ -135,6 +136,7 @@ const BLURPLE = '#5865F2';
 export default function AuthModal({
   open,
   initialMode = 'signup',
+  initialPlan = 'free',
   onClose,
   onAuthed,
   onGuest,
@@ -166,10 +168,10 @@ export default function AuthModal({
       setEmailSent(false);
       setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
       setIntroIndex(0);
-      setPlan('free');
+      setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });
     }
-  }, [open, initialMode]);
+  }, [open, initialMode, initialPlan]);
 
   // Close on Escape
   useEffect(() => {

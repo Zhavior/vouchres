@@ -3,6 +3,15 @@ type CacheEntry<T> = {
   expiresAt: number;
 };
 
+type SportsFetchOptions = {
+  cacheKey?: string;
+  ttlMs?: number;
+  staleIfErrorMs?: number;
+  timeoutMs?: number;
+  retries?: number;
+  debugLabel?: string;
+};
+
 const cache = new Map<string, CacheEntry<unknown>>();
 const inFlight = new Map<string, Promise<unknown>>();
 
@@ -29,17 +38,13 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   }
 }
 
-export async function sportsFetchJson<T>(
+async function sportsFetch<T>(
   url: string,
-  options: {
-    cacheKey?: string;
-    ttlMs?: number;
-    timeoutMs?: number;
-    retries?: number;
-    debugLabel?: string;
-  } = {}
+  parse: (res: Response) => Promise<T>,
+  options: SportsFetchOptions = {}
 ): Promise<T> {
   const ttlMs = options.ttlMs ?? 0;
+  const staleIfErrorMs = options.staleIfErrorMs ?? 0;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const retries = options.retries ?? DEFAULT_RETRIES;
   const key = options.cacheKey ?? url;
@@ -68,7 +73,7 @@ export async function sportsFetchJson<T>(
           throw new Error(`HTTP ${res.status} for ${redactUrl(url)}`);
         }
 
-        const data = (await res.json()) as T;
+        const data = await parse(res);
 
         if (ttlMs > 0) {
           cache.set(key, { value: data, expiresAt: Date.now() + ttlMs });
@@ -92,7 +97,25 @@ export async function sportsFetchJson<T>(
 
   try {
     return await request;
+  } catch (err) {
+    const stale = cache.get(key) as CacheEntry<T> | undefined;
+    const staleAgeMs = stale ? Date.now() - stale.expiresAt : Number.POSITIVE_INFINITY;
+
+    if (stale && staleIfErrorMs > 0 && staleAgeMs <= staleIfErrorMs) {
+      console.warn(`[${label}] stale-if-error ${redactUrl(url)} ageMs=${Math.max(0, staleAgeMs)}`);
+      return stale.value;
+    }
+
+    throw err;
   } finally {
     inFlight.delete(key);
   }
+}
+
+export async function sportsFetchJson<T>(url: string, options: SportsFetchOptions = {}): Promise<T> {
+  return sportsFetch<T>(url, (res) => res.json() as Promise<T>, options);
+}
+
+export async function sportsFetchText(url: string, options: SportsFetchOptions = {}): Promise<string> {
+  return sportsFetch<string>(url, (res) => res.text(), options);
 }

@@ -13,6 +13,7 @@
  *   - Feed failure → null, cached briefly, never synthesized.
  */
 import { TTLCache } from "../../lib/cache";
+import { sportsFetchText } from "../../lib/sports/sportsHttpClient";
 
 export interface StatcastBatterQuality {
   playerId: number;
@@ -81,9 +82,14 @@ function num(value: string | undefined): number | null {
 }
 
 async function fetchCsv(url: string): Promise<Array<Record<string, string>>> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
-  if (!res.ok) throw new Error(`savant ${res.status} ${url}`);
-  return parseCsv(await res.text());
+  const text = await sportsFetchText(url, {
+    cacheKey: `statcast:csv:${url}`,
+    ttlMs: 12 * 60 * 60_000,
+    timeoutMs: 20_000,
+    retries: 1,
+    debugLabel: "statcastClient",
+  });
+  return parseCsv(text);
 }
 
 function seasonYear(): number {

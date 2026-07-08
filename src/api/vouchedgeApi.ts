@@ -138,6 +138,26 @@ export const vouchedgeApi = {
   liveAtBat: (gamePk: number) => getJson<LiveAtBatSnapshot>(`/api/mlb/live-at-bat/${gamePk}`),
 
   // Live Games matchups
+  liveGames: () => getJson<{
+    success: boolean;
+    date: string;
+    games: Array<{
+      id: string;
+      homeTeam: string;
+      awayTeam: string;
+      homeScore: number | null;
+      awayScore: number | null;
+      status: string;
+      venue: string | null;
+      gameDate: string | null;
+      isLive?: boolean;
+      isFinal?: boolean;
+      predictionsAvailable?: boolean;
+      warnings?: string[];
+    }>;
+    warnings?: string[];
+    updatedAt: string;
+  }>("/api/mlb/live"),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
   scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),

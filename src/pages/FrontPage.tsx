@@ -40,6 +40,7 @@ export default function FrontPage({ onSectionChange, savedSlips = [], onAuthed }
   const [slate, setSlate] = useState<SlateGame[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [authPlan, setAuthPlan] = useState<'free' | 'pro' | 'capper'>('free');
 
   useEffect(() => {
     let alive = true;
@@ -58,6 +59,19 @@ export default function FrontPage({ onSectionChange, savedSlips = [], onAuthed }
     return () => { alive = false; };
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedAuth = params.get('auth');
+    if (requestedAuth !== 'login' && requestedAuth !== 'signup') return;
+
+    const requestedPlan = params.get('plan');
+    const plan = requestedPlan === 'pro' || requestedPlan === 'capper' ? requestedPlan : 'free';
+
+    setAuthPlan(plan);
+    setAuthMode(requestedAuth);
+    setAuthOpen(true);
+  }, []);
+
   const stats = {
     gamesToday: slate.length,
     liveNow: slate.filter((g) => g.live).length,
@@ -70,9 +84,9 @@ export default function FrontPage({ onSectionChange, savedSlips = [], onAuthed }
         <WelcomeIntro
           slate={slate}
           stats={stats}
-          onStartTrial={() => { setAuthMode('signup'); setAuthOpen(true); }}
+          onStartTrial={() => { setAuthPlan('free'); setAuthMode('signup'); setAuthOpen(true); }}
           onOpenDailyBoard={() => onSectionChange('daily_players')}
-          onLogin={() => { setAuthMode('login'); setAuthOpen(true); }}
+          onLogin={() => { setAuthPlan('free'); setAuthMode('login'); setAuthOpen(true); }}
           onOpenModule={(section) => onSectionChange(section)}
         />
       </div>
@@ -80,6 +94,7 @@ export default function FrontPage({ onSectionChange, savedSlips = [], onAuthed }
       <AuthModal
         open={authOpen}
         initialMode={authMode}
+        initialPlan={authPlan}
         onClose={() => setAuthOpen(false)}
         onAuthed={() => {
           setAuthOpen(false);

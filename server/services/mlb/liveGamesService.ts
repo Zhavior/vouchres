@@ -1,5 +1,7 @@
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { todayISO } from "./mlbClient";
+import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
+import { MlbScheduleGame, parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
 
 const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
@@ -21,6 +23,8 @@ export interface LiveGameCard {
   status: string;
   venue: string | null;
   gameDate: string | null;
+  isLive: boolean;
+  isFinal: boolean;
   isApiReal: boolean;
   predictionsAvailable: false;
   predictionStatus: "unavailable";
@@ -54,16 +58,20 @@ function safeScore(value: unknown): number | null {
   return Number.isFinite(Number(value)) ? Number(value) : null;
 }
 
-function normalizeLiveGame(game: any): LiveGameCard {
+function normalizeLiveGame(game: MlbScheduleGame): LiveGameCard {
+  const status = game.status?.detailedState ?? game.status?.abstractGameState;
+
   return {
-    id: String(game?.gamePk ?? ""),
-    homeTeam: safeName(game?.teams?.home?.team?.name, "Home Team"),
-    awayTeam: safeName(game?.teams?.away?.team?.name, "Away Team"),
-    homeScore: safeScore(game?.teams?.home?.score),
-    awayScore: safeScore(game?.teams?.away?.score),
-    status: safeName(game?.status?.detailedState ?? game?.status?.abstractGameState, "Scheduled"),
-    venue: typeof game?.venue?.name === "string" && game.venue.name.trim() ? game.venue.name.trim() : null,
-    gameDate: typeof game?.gameDate === "string" ? game.gameDate : null,
+    id: String(game.gamePk),
+    homeTeam: safeName(game.teams?.home?.team?.name, "Home Team"),
+    awayTeam: safeName(game.teams?.away?.team?.name, "Away Team"),
+    homeScore: safeScore(game.teams?.home?.score),
+    awayScore: safeScore(game.teams?.away?.score),
+    status: safeName(status, "Scheduled"),
+    venue: typeof game.venue?.name === "string" && game.venue.name.trim() ? game.venue.name.trim() : null,
+    gameDate: typeof game.gameDate === "string" ? game.gameDate : null,
+    isLive: isMlbLiveStatus(status),
+    isFinal: isMlbFinalStatusText(status),
     isApiReal: true,
     predictionsAvailable: false,
     predictionStatus: "unavailable",
@@ -72,8 +80,8 @@ function normalizeLiveGame(game: any): LiveGameCard {
   };
 }
 
-export function buildLiveGamesResponse(scheduleData: any, date: string, now = new Date()): LiveGamesResponse {
-  const games = (scheduleData?.dates ?? []).flatMap((entry: any) => Array.isArray(entry?.games) ? entry.games : []);
+export function buildLiveGamesResponse(scheduleData: unknown, date: string, now = new Date()): LiveGamesResponse {
+  const { games, warnings: parseWarnings } = parseMlbScheduleResponse(scheduleData, `live:${date}`);
   const normalizedGames = games.map(normalizeLiveGame).filter((game) => game.id);
 
   return {
@@ -83,18 +91,22 @@ export function buildLiveGamesResponse(scheduleData: any, date: string, now = ne
     source: "mlb_statsapi_schedule",
     date,
     games: normalizedGames,
-    warnings: normalizedGames.length > 0
-      ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
-      : ["Official MLB schedule returned no games for this date; no mock games were substituted."],
+    warnings: [
+      ...parseWarnings,
+      ...(normalizedGames.length > 0
+        ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
+        : ["Official MLB schedule returned no games for this date; no mock games were substituted."]),
+    ],
     updatedAt: now.toISOString(),
   };
 }
 
 export async function getLiveGames(date = todayISO()): Promise<LiveGamesResponse> {
   const url = `${MLB_BASE}/v1/schedule?sportId=1&date=${encodeURIComponent(date)}&hydrate=linescore,team,venue`;
-  const scheduleData = await sportsFetchJson<any>(url, {
+  const scheduleData = await sportsFetchJson<unknown>(url, {
     cacheKey: `mlb-live:${date}`,
     ttlMs: 45_000,
+    staleIfErrorMs: 90_000,
     timeoutMs: 5_000,
     retries: 1,
     debugLabel: "mlbLiveGames",

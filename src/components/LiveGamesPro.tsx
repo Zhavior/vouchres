@@ -9,6 +9,7 @@ import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
+import PlayerHeadshot from './parlays/PlayerHeadshot';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -26,6 +27,8 @@ function gradeColor(g: string): string {
 }
 const FORM_COLOR: Record<string, string> = { Hot: '#fb7185', Average: '#94a3b8', Cold: '#60a5fa', Slump: '#64748b' };
 
+type LiveGameApiCard = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>['games'][number];
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? value as Record<string, unknown> : {};
 }
@@ -39,6 +42,19 @@ function num(value: unknown, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function isLiveStatus(status: unknown): boolean {
+  const value = String(status ?? '').toLowerCase();
+  return (
+    /progress|live|in play|warmup|delayed/i.test(value) ||
+    /\b(top|bottom|middle|end)\s+\d/.test(value) ||
+    /\b\d+(st|nd|rd|th)\s+inning\b/.test(value)
+  );
+}
+
+function isFinalStatus(status: unknown): boolean {
+  return /final|game over|completed/i.test(String(status ?? ''));
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const id = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
@@ -49,6 +65,98 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
       window.clearTimeout(id);
       reject(error);
     });
+  });
+}
+
+function teamAbbr(name: string): string {
+  const logo = logoByTeamName(name);
+  if (logo) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    return parts.length > 1 ? parts.map((part) => part[0]).join('').slice(0, 4).toUpperCase() : name.slice(0, 4).toUpperCase();
+  }
+  return name.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 4).toUpperCase() || 'TBD';
+}
+
+function matchupFromLiveGame(game: LiveGameApiCard): GameMatchup {
+  const status = text(game.status, 'Scheduled');
+  const live = typeof game.isLive === 'boolean' ? game.isLive : isLiveStatus(status);
+  const final = typeof game.isFinal === 'boolean' ? game.isFinal : isFinalStatus(status);
+  const awayName = text(game.awayTeam, 'Away Team');
+  const homeName = text(game.homeTeam, 'Home Team');
+  const awayAbbr = teamAbbr(awayName);
+  const homeAbbr = teamAbbr(homeName);
+
+  return {
+    gamePk: num(game.id, 0),
+    status,
+    isLive: live,
+    isFinal: final,
+    gameTime: text(game.gameDate, ''),
+    venue: text(game.venue, 'Venue pending'),
+    away: {
+      teamId: 0,
+      name: awayName,
+      abbreviation: awayAbbr,
+      logo: logoByTeamName(awayName) ?? '',
+      record: null,
+      seasonWinPct: 0,
+      probablePitcher: null,
+    },
+    home: {
+      teamId: 0,
+      name: homeName,
+      abbreviation: homeAbbr,
+      logo: logoByTeamName(homeName) ?? '',
+      record: null,
+      seasonWinPct: 0,
+      probablePitcher: null,
+    },
+    score: {
+      away: num(game.awayScore, 0),
+      home: num(game.homeScore, 0),
+    },
+    winProbability: { away: 0, home: 0 },
+    winProbModel: ['Official MLB schedule is connected. Projection probabilities are pending a backed model.'],
+    runEnvironment: null,
+    topHrWatch: [],
+    keyFactors: ['Official MLB live schedule row. No synthetic projections added.'],
+    whatToWatch: live ? ['Game is live according to MLB schedule status.'] : ['Game is not live yet according to MLB schedule status.'],
+    aiVerdict: game.predictionsAvailable
+      ? 'Projection model connected.'
+      : 'Official live game card is available. Projection probabilities require a backed model before they will be shown.',
+    dataQuality: 'limited',
+  };
+}
+
+function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
+  const byGame = new Map<string, GameMatchup>();
+  base.forEach((game) => byGame.set(String(game.gamePk), game));
+
+  enrichments.forEach((rich) => {
+    const key = String(rich.gamePk);
+    const existing = byGame.get(key);
+    if (!existing) {
+      byGame.set(key, rich);
+      return;
+    }
+
+    byGame.set(key, {
+      ...rich,
+      status: existing.status || rich.status,
+      isLive: existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status),
+      isFinal: existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status),
+      score: existing.score ?? rich.score,
+      gameTime: existing.gameTime || rich.gameTime,
+      venue: rich.venue || existing.venue,
+      away: { ...rich.away, logo: rich.away.logo || existing.away.logo },
+      home: { ...rich.home, logo: rich.home.logo || existing.home.logo },
+    });
+  });
+
+  return Array.from(byGame.values()).sort((a, b) => {
+    const liveDelta = Number(b.isLive) - Number(a.isLive);
+    if (liveDelta) return liveDelta;
+    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
   });
 }
 
@@ -215,7 +323,7 @@ const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen 
           <span className="text-[9px] text-slate-500 font-mono uppercase mr-1">HR Watch</span>
           {topHrWatch.slice(0, 3).map((w) => (
             <span key={w.playerId} className="flex items-center gap-1">
-              <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-5 h-5 rounded-full object-cover bg-slate-900 border border-slate-700" />
+              <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={20} />
               <span className="text-[10px] text-slate-300 truncate max-w-[70px]">{w.playerName.split(' ').slice(-1)[0]}</span>
               <span className="text-[9px] font-mono font-bold" style={{ color: gradeColor(w.grade) }}>{w.hrEdge}</span>
             </span>
@@ -313,7 +421,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
             <div className="space-y-2">
               {topHrWatch.map((w) => (
                 <div key={w.playerId} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
-                  <img src={w.headshot} alt={w.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
+                  <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={36} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-100 truncate flex items-center gap-1.5">
                       {w.playerName}
@@ -353,15 +461,15 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
 /** Merge live scores into matchup list by gamePk. */
 function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
   if (!scores.length) return matchups;
-  const map = new Map(scores.map((s) => [s.gamePk, s]));
+  const map = new Map(scores.map((s) => [String(s.gamePk), s]));
   return matchups.map((m) => {
-    const s = map.get(m.gamePk);
+    const s = map.get(String(m.gamePk));
     if (!s) return m;
     return {
       ...m,
       score: s.score,
-      isLive: s.isLive,
-      isFinal: s.isFinal,
+      isLive: s.isLive || isLiveStatus(s.status),
+      isFinal: s.isFinal || isFinalStatus(s.status),
       status: s.status,
     };
   });
@@ -377,31 +485,42 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
 
-  // Scores poll independently at 45s — much faster than the heavy matchup model.
-  const loadScores = useCallback(async () => {
-    try {
-      const res = await vouchedgeApi.scoresToday();
-      if (Array.isArray(res.scores)) setLiveScores(res.scores);
-    } catch {
-      // silent — scores are best-effort
-    }
-  }, []);
-
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     setSourceNote('Loading live games...');
 
-    // Kick off a fast scores fetch in parallel with everything else.
-    loadScores();
+    const scoresPromise = vouchedgeApi.scoresToday().catch(() => null);
+    const officialPromise = withTimeout(vouchedgeApi.liveGames(), 6000, 'Official live schedule').catch(() => null);
 
     let fastLoaded = false;
+    let officialBase: GameMatchup[] = [];
+    const official = await officialPromise;
+    if (official?.games?.length) {
+      officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
+      if (officialBase.length > 0) {
+        fastLoaded = true;
+        setMatchups(officialBase);
+        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
+        setLoading(false);
+      }
+    }
+
+    const scoreResult = await scoresPromise;
+    if (Array.isArray(scoreResult?.scores)) {
+      setLiveScores(scoreResult.scores);
+      if (officialBase.length > 0) {
+        officialBase = applyScores(officialBase, scoreResult.scores);
+        setMatchups(officialBase);
+      }
+    }
+
     try {
       const board = await withTimeout(vouchedgeApi.hrBoardToday(50), 7000, 'HR board preview');
       const fastMatchups = buildMatchupsFromHrBoard(board);
       if (fastMatchups.length > 0) {
         fastLoaded = true;
-        setMatchups(fastMatchups);
+        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, fastMatchups) : fastMatchups);
         setSourceNote('Live games loaded. Enriching game context...');
         setLoading(false);
       }
@@ -413,7 +532,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
       const next = Array.isArray(res.matchups) ? res.matchups : [];
       if (next.length > 0) {
-        setMatchups(next);
+        setMatchups(officialBase.length > 0 ? mergeMatchups(officialBase, next) : next);
         setError(null);
         setSourceNote('Live game model loaded.');
       } else if (!fastLoaded) {
@@ -432,7 +551,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     } finally {
       setLoading(false);
     }
-  }, [loadScores]);
+  }, []);
 
   useEffect(() => {
     load();

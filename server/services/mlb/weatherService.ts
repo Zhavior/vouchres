@@ -13,6 +13,7 @@
  */
 import { getScheduleByDate, todayISO } from "./mlbClient";
 import { TTLCache } from "../../lib/cache";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 type RoofType = "open" | "retractable" | "fixed";
 
@@ -111,9 +112,13 @@ async function getHourlyForecast(lat: number, lon: number): Promise<HourlyForeca
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
         `&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,precipitation_probability` +
         `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=UTC&forecast_days=2`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) throw new Error(`open-meteo ${res.status}`);
-      const data: any = await res.json();
+      const data = await sportsFetchJson<any>(url, {
+        cacheKey: key,
+        ttlMs: 30 * 60_000,
+        timeoutMs: 8_000,
+        retries: 1,
+        debugLabel: "weatherService",
+      });
       const hourly = data?.hourly;
       if (!Array.isArray(hourly?.time)) return null;
       return hourly as HourlyForecast;

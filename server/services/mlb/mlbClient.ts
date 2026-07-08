@@ -15,19 +15,36 @@ import {
 } from "../../lib/upstashRedis";
 
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const TIMEOUT_MS = 8000;
 let mlbRequestCount = 0;
 
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+export function todayISO(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    return now.toISOString().slice(0, 10);
+  }
+
+  return `${year}-${month}-${day}`;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
   return sportsFetchJson<T>(url, {
     cacheKey: `mlb:${url}`,
     ttlMs: 30_000,
+    staleIfErrorMs: 2 * 60_000,
     timeoutMs: 8_000,
     retries: 1,
     debugLabel: "mlbClient",
@@ -47,8 +64,9 @@ export async function getScheduleByDate(date: string): Promise<NormalizedGame[]>
   return scheduleCache.getOrSet(`schedule:${date}`, async () => {
     const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
     try {
-      const data = await fetchJson<any>(url);
-      const games: any[] = data?.dates?.[0]?.games ?? [];
+      const data = await fetchJson<unknown>(url);
+      const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
+      for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
       return games.map(normalizeGame);
     } catch (err) {
       console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);

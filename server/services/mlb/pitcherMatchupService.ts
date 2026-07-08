@@ -20,6 +20,7 @@ import { headshotUrl, type NormalizedPlayer, type NormalizedTeam } from "./mlbTy
 import { reportCache } from "./mlbCache";
 import { limitConcurrency } from "../../lib/cache";
 import { getStatcastBatterMap, type StatcastBatterQuality } from "./statcastClient";
+import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const MAX_BATTERS = 13;
 const STATS_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
@@ -28,14 +29,20 @@ const STATS_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/ap
 async function fetchPeopleBatSides(ids: number[]): Promise<Map<number, "L" | "R" | "S">> {
   const out = new Map<number, "L" | "R" | "S">();
   if (ids.length === 0) return out;
-  const res = await fetch(`${STATS_BASE}/v1/people?personIds=${ids.join(",")}`, {
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) return out;
-  const json: any = await res.json();
-  for (const p of json?.people ?? []) {
-    const code = p?.batSide?.code;
-    if (p?.id && (code === "L" || code === "R" || code === "S")) out.set(p.id, code);
+  try {
+    const json = await sportsFetchJson<any>(`${STATS_BASE}/v1/people?personIds=${ids.join(",")}`, {
+      cacheKey: `pitcherMatchup:people:${[...ids].sort((a, b) => a - b).join(",")}`,
+      ttlMs: 10 * 60_000,
+      timeoutMs: 8_000,
+      retries: 1,
+      debugLabel: "pitcherMatchup",
+    });
+    for (const p of json?.people ?? []) {
+      const code = p?.batSide?.code;
+      if (p?.id && (code === "L" || code === "R" || code === "S")) out.set(p.id, code);
+    }
+  } catch {
+    return out;
   }
   return out;
 }
