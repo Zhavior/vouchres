@@ -1,7 +1,7 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
-import { calculateWeightedScore, rankByScore, calculateConfidence } from '../../../kernel';
+import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction } from '../../../kernel';
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
 
@@ -278,7 +278,7 @@ function defaultBookLine(statType: StatType, score: number): number {
 
 function modelProbability(statType: StatType, score: number): number {
   const base = statType === 'hr' || statType === 'sb' || statType === 'doubles' ? 0.12 : 0.36;
-  return Math.round(clamp(base + score / 180, 0.05, 0.86) * 1000) / 1000;
+  return generatePrediction({ baseline: base, adjustment: score / 180, min: 0.05, max: 0.86 });
 }
 
 function makeRow(statType: StatType, context: PlayerContext, lineupIndex: number, statScope: StatScope, season: string): StatPlayerRow | null {
