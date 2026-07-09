@@ -10,7 +10,7 @@ vi.mock("../server/middleware/auth", () => ({
   requireAuth: (req: any, _res: unknown, next: () => void) => {
     req.user = {
       id: "user_test",
-      profile: { id: "user_test", username: "tester", display_name: "Tester" },
+      profile: { id: "user_test", username: "tester", handle: "tester", display_name: "Tester" },
     };
     next();
   },
@@ -53,6 +53,31 @@ afterAll(async () => {
 
 describe("auth routes", () => {
   it("returns current profile with ok envelope", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: "user_test",
+              username: "tester",
+              handle: "tester",
+              display_name: "Tester",
+              tier: "free",
+              trust_score: 50,
+              total_picks: 0,
+              won_picks: 0,
+              lost_picks: 0,
+              pushed_picks: 0,
+              net_units: 0,
+              is_staff: false,
+              is_demo: false,
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+
     const response = await fetch(`${baseUrl}/api/auth/me`);
     const body = await response.json();
 
@@ -61,6 +86,8 @@ describe("auth routes", () => {
       ok: true,
       id: "user_test",
       username: "tester",
+      handle: "tester",
+      entitlements: { tier: "free" },
     });
   });
 
@@ -82,7 +109,31 @@ describe("auth routes", () => {
     });
   });
 
-  it("checks username availability with ok envelope", async () => {
+  it("checks handle availability with ok envelope", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: null, error: null }),
+        }),
+      }),
+    });
+
+    const response = await fetch(`${baseUrl}/api/auth/handle-check?handle=freshname`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      available: true,
+      handle: "freshname",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
+
+  it("checks username availability via legacy alias", async () => {
     fromMock.mockReturnValueOnce({
       select: () => ({
         eq: () => ({
@@ -98,10 +149,7 @@ describe("auth routes", () => {
     expect(body).toMatchObject({
       ok: true,
       available: true,
-      meta: {
-        requestId: expect.any(String),
-        timestamp: expect.any(String),
-      },
+      handle: "freshname",
     });
   });
 });

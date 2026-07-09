@@ -14,6 +14,7 @@ type Props = {
 const GUEST_PROFILE: CreatorProofProfile = {
   displayName: "there",
   username: "guest",
+  handle: "guest",
   avatarUrl: "",
   bio: "",
   verified: false,

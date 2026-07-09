@@ -36,7 +36,7 @@ import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
 
 type Mode = 'login' | 'signup';
-type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro' | 'capper';
 type SignupStep = 'intro' | 'plan' | 'policy' | 'form';
 type AgreementKey = 'age' | 'terms' | 'research';
@@ -151,11 +151,11 @@ export default function AuthModal({
   const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
   const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({ age: false, terms: false, research: false });
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  const [handle, setHandle] = useState('');
   const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [usernameState, setUsernameState] = useState<UsernameState>('idle');
+  const [handleState, setHandleState] = useState<HandleState>('idle');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -184,19 +184,20 @@ export default function AuthModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  // Live username availability (signup only)
-  const checkUsername = useCallback((value: string) => {
+  // Live @handle availability (signup only)
+  const checkHandle = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (value.length < 3 || value.length > 24) { setUsernameState(value ? 'invalid' : 'idle'); return; }
-    if (!/^[a-zA-Z0-9_]+$/.test(value)) { setUsernameState('invalid'); return; }
-    setUsernameState('checking');
+    const normalized = value.trim().toLowerCase();
+    if (normalized.length < 3 || normalized.length > 30) { setHandleState(normalized ? 'invalid' : 'idle'); return; }
+    if (!/^[a-z0-9][a-z0-9_]*$/.test(normalized)) { setHandleState('invalid'); return; }
+    setHandleState('checking');
     debounceRef.current = setTimeout(async () => {
       try {
-        const data = await apiClient.get<{ available?: boolean }>('/api/auth/username-check', { username: value });
-        setUsernameState(data.available ? 'available' : 'taken');
+        const data = await apiClient.get<{ available?: boolean }>(`/api/users/handle/${encodeURIComponent(normalized)}`);
+        setHandleState(data.available ? 'available' : 'taken');
       } catch {
         // If the check endpoint is unreachable, don't block signup on it.
-        setUsernameState('idle');
+        setHandleState('idle');
       }
     }, 450);
   }, []);
@@ -234,8 +235,13 @@ export default function AuthModal({
     if (!email.trim()) { setError('Enter your email.'); return; }
     if (!password) { setError('Enter your password.'); return; }
     if (mode === 'signup') {
-      if (username.trim().length < 3) { setError('Pick a username (3+ characters).'); return; }
-      if (usernameState === 'taken') { setError('That username is taken.'); return; }
+      const normalizedHandle = handle.trim().toLowerCase();
+      if (normalizedHandle.length < 3) { setError('Pick a handle (3+ characters).'); return; }
+      if (!/^[a-z0-9][a-z0-9_]*$/.test(normalizedHandle)) {
+        setError('Handle must start with a letter or number and use only lowercase letters, numbers, and underscores.');
+        return;
+      }
+      if (handleState === 'taken') { setError('That handle is already taken.'); return; }
     }
 
     setBusy(true);
@@ -244,7 +250,7 @@ export default function AuthModal({
         const { data, error } = await signUpWithEmail({
           email: email.trim(),
           password,
-          username: username.trim(),
+          handle: handle.trim().toLowerCase(),
           inviteCode: inviteCode.trim() || undefined,
         });
         if (error) { setError(friendlyError(error.message)); return; }
@@ -301,12 +307,12 @@ export default function AuthModal({
 
   if (!open) return null;
 
-  const usernameHint: Record<UsernameState, { text: string; color: string } | null> = {
+  const handleHint: Record<HandleState, { text: string; color: string } | null> = {
     idle: null,
     checking: { text: 'Checking…', color: '#94a3b8' },
     available: { text: 'Available', color: '#34d399' },
     taken: { text: 'Already taken', color: '#f87171' },
-    invalid: { text: '3–24 letters, numbers, or _', color: '#fbbf24' },
+    invalid: { text: '3–30 chars, lowercase letters, numbers, or _', color: '#fbbf24' },
   };
 
   return (
@@ -716,7 +722,7 @@ export default function AuthModal({
               />
             </Field>
 
-            {/* Username (signup) */}
+            {/* Handle (signup) */}
             <AnimatePresence initial={false}>
               {mode === 'signup' && (
                 <motion.div
@@ -727,21 +733,26 @@ export default function AuthModal({
                   className="overflow-hidden"
                 >
                   <Field icon={<User className="w-4 h-4" />}>
+                    <span className="text-sm text-slate-500 shrink-0">@</span>
                     <input
                       type="text"
                       autoComplete="username"
-                      placeholder="username"
-                      value={username}
-                      onChange={(e) => { setUsername(e.target.value); checkUsername(e.target.value); }}
+                      placeholder="yourhandle"
+                      value={handle}
+                      onChange={(e) => {
+                        const next = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                        setHandle(next);
+                        checkHandle(next);
+                      }}
                       className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                     />
-                    {usernameState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
-                    {usernameState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                    {usernameState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
+                    {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
+                    {handleState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                    {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
                   </Field>
-                  {usernameHint[usernameState] && (
-                    <p className="text-[11px] mt-1 ml-1 font-medium" style={{ color: usernameHint[usernameState]!.color }}>
-                      {usernameHint[usernameState]!.text}
+                  {handleHint[handleState] && (
+                    <p className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
+                      {handleHint[handleState]!.text}
                     </p>
                   )}
                 </motion.div>

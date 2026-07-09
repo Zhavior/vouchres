@@ -5,6 +5,7 @@ import {
   getAuthToken,
 } from "./supabaseClient";
 import { apiClient } from "./apiClient";
+import { mapAuthMeToUserProfile } from "./profileFromAuth";
 
 export type SubscriptionTier = "free" | "gold" | "seller_pro";
 
@@ -12,6 +13,7 @@ export interface UserProfile {
   id: string;
   email: string | null;
   username: string;
+  handle: string;
   display_name: string;
   avatar_url: string | null;
   bio: string;
@@ -61,7 +63,7 @@ export function useAuth() {
     try {
       // Hit any authenticated endpoint that returns profile data;
       // /api/auth/me is the cleanest single source of truth.
-      return await apiClient.get<UserProfile>("/api/auth/me");
+      return mapAuthMeToUserProfile(await apiClient.get<Record<string, unknown>>("/api/auth/me"));
     } catch (err: any) {
       if (err?.status === 401) return null;
       console.error("[useAuth] profile fetch failed", err);

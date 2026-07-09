@@ -3,6 +3,7 @@ import ThemeStore from "./ThemeStore";
 const epicThemePreviewProfile = {
   displayName: "VouchEdge Preview",
   username: "vouchedge-preview",
+  handle: "vouchedge-preview",
   avatarUrl: "",
   bio: "Preview profile for the VouchEdge theme showcase.",
   verified: true,
