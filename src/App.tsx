@@ -10,6 +10,7 @@ import { queryKeys } from './hooks/queries/queryKeys';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import MainViewRouter from './components/routing/MainViewRouter';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
@@ -26,47 +27,10 @@ import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
+import RouteShellSkeleton from "./components/boot/RouteShellSkeleton";
+import { AppShellProvider } from "./context/AppShellContext";
 
-const ProAccessGate = lazy(() =>
-  import('./components/pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
-);
-
-const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
-const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
-const EdgeIslandPage = lazy(() => import('./pages/EdgeIslandPage'));
-const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
-const VouchBoard = lazy(() => import('./components/VouchBoard'));
-const ProfilePage = lazy(() => import('./components/ProfilePage'));
-const SettingsPage = lazy(() => import('./components/SettingsPage'));
-const PremiumSubPage = lazy(() => import('./components/PremiumSubPage'));
-const PlayerResearchHub = lazy(() => import('./components/PlayerResearchHub'));
-const CustomizePage = lazy(() => import('./components/CustomizePage'));
-const ResultsStudio = lazy(() => import('./components/results/ResultsStudio'));
-const SmartAiEngine = lazy(() => import('./components/SmartAiEngine'));
-const MlbIntelligenceHub = lazy(() => import('./components/MlbIntelligenceHub'));
-const Leaderboard = lazy(() => import('./components/Leaderboard'));
-const ThemeStore = lazy(() => import('./components/ThemeStore'));
-const EpicThemeShowcase = lazy(() =>
-  import('./components/vouchedge/EpicThemeShowcase').then((module) => ({
-    default: module.EpicThemeShowcase,
-  })),
-);
-const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
-const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
-const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
-const AiPilotPage = lazy(() => import('./features/ai/pages/AiPilotPage'));
-const MlbStatHubPage = lazy(() => import('./features/mlb-stats/pages/MlbStatHubPage'));
-const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
-const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
-const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage'));
-const PlayerEdgeLabPage = lazy(() => import('./pages/pro/PlayerEdgeLabPage'));
-const TeamMatchupLabPage = lazy(() => import('./pages/pro/TeamMatchupLabPage'));
-const HitterMatchupZonesPage = lazy(() => import('./pages/pro/HitterMatchupZonesPage'));
-const ProGraphsLabPage = lazy(() => import('./pages/pro/ProGraphsLabPage'));
-const ProCommandCenterPage = lazy(() => import('./pages/pro/ProCommandCenterPage'));
-const ParlayCommandCenter = lazy(() => import('./components/parlay/ParlayCommandCenter'));
 const EdgeIslandCommandCenter = lazy(() => import('./components/theEdge/EdgeIslandCommandCenter'));
-const NbaNflArena = lazy(() => import('./components/NbaNflArena'));
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -491,12 +455,6 @@ export default function App() {
   const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
 
-  const navigateToUserProfile = (userId: string) => {
-    if (!userId) return;
-    setProfileViewUserId(userId);
-    navigateSection('profile');
-  };
-
   const commitSection = useCallback((target: string) => {
     startTransition(() => {
       saveActiveSection(target);
@@ -534,23 +492,33 @@ export default function App() {
     commitSection(target);
   }, [commitSection]);
 
-  const handleLoginSuccess = () => {
+  const navigateToUserProfile = useCallback((userId: string) => {
+    if (!userId) return;
+    setProfileViewUserId(userId);
+    navigateSection('profile');
+  }, [navigateSection]);
+
+  const handleClearProfileViewUser = useCallback(() => {
+    setProfileViewUserId(null);
+  }, []);
+
+  const handleLoginSuccess = useCallback(() => {
     try {
       localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
     } catch {
       // ignore storage failures
     }
     navigateSection('welcome');
-  };
+  }, [navigateSection]);
 
-  const handleLogoutComplete = () => {
+  const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
     window.setTimeout(() => {
       window.history.replaceState(null, '', '/');
       commitSection('welcome');
       setLoggingOut(false);
     }, 900);
-  };
+  }, [commitSection]);
   
   useEffect(() => {
     activeSectionRef.current = activeSection;
@@ -588,6 +556,7 @@ export default function App() {
   const [savedVouches, setSavedVouches] = useState<Vouch[]>([]);
   const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
+  const activeLegsRef = useRef<Leg[]>([]);
   const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection);
   const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
   const liveGames = liveGamesPayload?.games ?? [];
@@ -824,6 +793,10 @@ export default function App() {
     postsRef.current = posts;
   }, [posts]);
 
+  useEffect(() => {
+    activeLegsRef.current = activeLegs;
+  }, [activeLegs]);
+
   // Legacy AI parlay auto-sync is intentionally quarantined.
   // New save truth must flow through pushParlayToBackend() -> /api/me/parlays
   // and consume the enriched backend response. Leaving this heartbeat active
@@ -1017,14 +990,14 @@ export default function App() {
     void pushVouchToBackend(newVouch);
   }, []);
 
-  const handleRemoveVouchFromBoard = (vouchId: string) => {
-    const existing = savedVouches.find((v) => v.id === vouchId);
-    syncVouches(savedVouches.filter((v) => v.id !== vouchId));
+  const handleRemoveVouchFromBoard = useCallback((vouchId: string) => {
+    const existing = savedVouchesRef.current.find((v) => v.id === vouchId);
+    syncVouches(savedVouchesRef.current.filter((v) => v.id !== vouchId));
     if (existing?.backendVouchId) {
       apiClient.delete(`/api/vouches/${encodeURIComponent(existing.backendVouchId)}`)
         .catch((err) => console.warn('[vouches] backend hide failed', err));
     }
-  };
+  }, []);
 
   // Interaction: Write comment
   const handleAddComment = useCallback((postId: string, commentContent: string) => {
@@ -1214,7 +1187,7 @@ export default function App() {
     }
   };
 
-  const handleSaveParlaySlip = async (newParlay: Parlay | CanonicalParlaySlip) => {
+  const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
     const normalizedUiStatus =
       newParlay.status === 'won'
         ? 'WON'
@@ -1240,7 +1213,7 @@ export default function App() {
     };
 
     // Optimistic localStorage save — instant
-    const updated = [savedParlay, ...savedSlips];
+    const updated = [savedParlay, ...savedSlipsRef.current];
     syncSlips(updated);
 
     notify({
@@ -1255,7 +1228,7 @@ export default function App() {
 
     // Background backend sync — non-blocking, best-effort
     await pushParlayToBackend(savedParlay);
-  };
+  }, [navigateSection]);
 
   const pushAiParlaysToBackend = async (parlays: Parlay[]): Promise<void> => {
     if (!isSupabaseConfigured) return;
@@ -1276,7 +1249,7 @@ export default function App() {
   // Grade pending parlays against the live MLB feed and reflect outcomes in
   // Results + profile stats. Idempotent: only PENDING+gradable parlays are sent,
   // and only PENDING→settled transitions update win/loss/units.
-  const handleGradeResults = async () => {
+  const handleGradeResults = useCallback(async () => {
     if (gradingRef.current) return;
     gradingRef.current = true;
     setIsGrading(true);
@@ -1314,13 +1287,12 @@ export default function App() {
       setIsGrading(false);
       setGradingLastChecked(new Date());
     }
-  };
+  }, []);
 
   // Auto-grade when the user opens Results or My Parlays.
   useEffect(() => {
     if (activeSection === 'results' || activeSection === 'live_parlays') handleGradeResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSection]);
+  }, [activeSection, handleGradeResults]);
 
   // Run the scheduled AI parlay generation if it's past today's set time and we
   // haven't generated for today yet. Confirmed-starter parlays only.
@@ -1407,13 +1379,13 @@ export default function App() {
   }, []);
 
   // Update Profile Hub details
-  const handleUpdateProfile = (updatedProfile: Partial<CreatorProofProfile>) => {
-    const nextProfile = { ...profile, ...updatedProfile };
-    syncProfile(nextProfile);
-  };
+  const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
+    const cur = profileRef.current ?? INITIAL_PROFILE;
+    syncProfile({ ...cur, ...updatedProfile });
+  }, []);
 
   // Reset all local state to initial empty values
-  const handleResetDatabase = () => {
+  const handleResetDatabase = useCallback(() => {
     localStorage.removeItem('vouchedge_posts');
     localStorage.removeItem('vouchedge_slips');
     localStorage.removeItem('vouchedge_vouches');
@@ -1429,9 +1401,34 @@ export default function App() {
     localStorage.setItem('vouchedge_slips', JSON.stringify([]));
     localStorage.setItem('vouchedge_vouches', JSON.stringify(seeds));
     localStorage.setItem('vouchedge_profile', JSON.stringify(INITIAL_PROFILE));
-  };
+  }, []);
 
   const savedVouchIds = useMemo(() => savedVouches.map((v) => v.id), [savedVouches]);
+
+  const appShellState = useMemo(
+    () => ({
+      posts,
+      profile,
+      savedVouchIds,
+      savedVouches,
+      savedSlips,
+      activeLegs,
+      onSaveVouch: handleSaveVouch,
+      onAuthLoginSuccess: handleLoginSuccess,
+      onAuthLogoutComplete: handleLogoutComplete,
+    }),
+    [
+      posts,
+      profile,
+      savedVouchIds,
+      savedVouches,
+      savedSlips,
+      activeLegs,
+      handleSaveVouch,
+      handleLoginSuccess,
+      handleLogoutComplete,
+    ],
+  );
 
   const resolvePlayerResearchMarket = (market: string, spec: string) => {
     const text = `${market} ${spec}`.toLowerCase();
@@ -1506,7 +1503,7 @@ export default function App() {
     return `${parts.sport}_${gamePart}_${playerPart}_${marketPart}_${targetPart}_${comparatorPart}`;
   };
 
-  const handleAddLegFromResearch = (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
+  const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
     // Check if player's game has played already and status is Final
     const playerTeam = player.team ? player.team.toLowerCase() : '';
     const matchedGame = liveGames.find((g: any) => 
@@ -1519,7 +1516,7 @@ export default function App() {
       return;
     }
 
-    if (activeLegs.some(l => l.selection === prop.spec)) {
+    if (activeLegsRef.current.some(l => l.selection === prop.spec)) {
       alert("This player prop selection is already added to your current parlay slip!");
       return;
     }
@@ -1579,7 +1576,7 @@ export default function App() {
       playerId,
       teamId,
     };
-    setActiveLegs([...activeLegs, newLeg]);
+    setActiveLegs((prev) => [...prev, newLeg]);
     useParlayCommandStore.getState().addDraftLeg({
       id: newLeg.id,
       source: "manual",
@@ -1601,10 +1598,9 @@ export default function App() {
       tags: draftTags,
     });
     alert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
-  };
+  }, [liveGames]);
 
-  // Render content depending on left sidebar active item
-  const handleHideSavedParlay = async (parlayId: string) => {
+  const handleHideSavedParlay = useCallback(async (parlayId: string) => {
     const target = savedSlipsRef.current.find((slip) => {
       const realId = String((slip as any).id ?? (slip as any).sourceId ?? '');
       const publicId = String((slip as any).publicId ?? '');
@@ -1634,304 +1630,17 @@ export default function App() {
     });
 
     syncSlips(nextSlips);
-  };
+  }, []);
 
-
-  const renderMainView = () => {
-    switch (activeSection) {
-      case 'vouchedge_intro':
-        if (hasRealAuthToken()) {
-          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} profile={profile} isLoggedIn={hasRealAuthToken()} />;
-        }
-        return (
-          <VouchEdgeTerminalPage
-            onAuthed={handleLoginSuccess}
-          />
-        );
-      case 'welcome':
-      case 'island':
-        return (
-          <EdgeIslandPage
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
-            profile={profile}
-            isLoggedIn={hasRealAuthToken()}
-          />
-        );
-      case 'today':
-        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} profile={profile} isLoggedIn={hasRealAuthToken()} />;
-      case 'feed':
-        return (
-          <HomeFeedPage
-            posts={posts}
-            savedSlips={savedSlips}
-            profileName={profile.displayName}
-            onPostCreated={handlePostCreated}
-            onLikePost={handleLikePost}
-            onVouchPost={handleVouchPost}
-            onRepostPost={handleRepostPost}
-            onSaveVouch={handleSaveVouch}
-            savedVouchIds={savedVouchIds}
-            onAddComment={handleAddComment}
-            onDeletePost={handleDeletePost}
-            profile={profile}
-            onSectionChange={navigateSection}
-          />
-        );
-      case 'build':
-        return (
-          <ParlayCommandCenter
-            savedSlips={savedSlips}
-            liveGames={liveGames}
-            onSectionChange={navigateSection}
-            onAddLegToParlay={handleAddLegFromResearch}
-            onSaveVouch={handleSaveVouch}
-            onPostCreated={handlePostCreated}
-            initialPanel="build"
-            onSaveParlay={handleSaveParlaySlip}
-            onHideParlay={handleHideSavedParlay}
-          />
-        );
-      case 'ai_pilot':
-        return (
-          <AiPilotPage
-            onSectionChange={navigateSection}
-            onSaveParlay={handleSaveParlaySlip}
-          />
-        );
-      case 'ai_engine':
-        return (
-          <SmartAiEngine
-            onSectionChange={navigateSection}
-            onAddLegToParlay={handleAddLegFromResearch}
-            onSaveVouch={handleSaveVouch}
-            onPostCreated={handlePostCreated}
-            onSaveParlay={handleSaveParlaySlip}
-            liveGames={liveGames}
-          />
-        );
-      case 'intel':
-        return <MlbIntelligenceHub profile={profile} onSectionChange={navigateSection} />;
-
-      // 'daily_hr_watch_new' was the legacy HR page's section id. Kept here
-      // (rather than removed outright) so any stale bookmark/localStorage
-      // value from before this merge still resolves to the real page
-      // instead of hitting the "View not found" fallback below.
-      case 'daily_hr_watch_new':
-      case 'hr_board':
-        return (
-          <HomeRunIntelligencePage />
-        );
-      case 'mlb_stats':
-        return (
-          <Suspense fallback={null}>
-            <MlbStatHubPage />
-          </Suspense>
-        );
-      case 'daily_players':
-        return <DailyPlayersPage onSectionChange={navigateSection} />;
-      case 'live_parlays':
-        return (
-          <ParlayCommandCenter
-            key="live_parlays"
-            savedSlips={savedSlips}
-            liveGames={liveGames}
-            onSectionChange={navigateSection}
-            onAddLegToParlay={handleAddLegFromResearch}
-            onSaveVouch={handleSaveVouch}
-            onPostCreated={handlePostCreated}
-            initialPanel="live"
-            onSaveParlay={handleSaveParlaySlip}
-            onHideParlay={handleHideSavedParlay}
-          />
-        );
-      case 'live_game_lab':
-        return (
-          <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
-            <LiveGameLabPage />
-          </ProAccessGate>
-        );
-      case 'pro_command_center':
-        return (
-          <ProAccessGate
-            profile={profile}
-            featureName="VouchEdge Pro Command Center"
-            onNavigatePremium={() => navigateSection('premium')}
-          >
-            <ProCommandCenterPage />
-          </ProAccessGate>
-        );
-      case 'player_edge_lab':
-        return (
-          <ProAccessGate profile={profile} featureName="Player Edge Lab" onNavigatePremium={() => navigateSection('premium')}>
-            <PlayerEdgeLabPage />
-          </ProAccessGate>
-        );
-      case 'team_matchup_lab':
-        return <TeamMatchupLabPage />;
-      case 'hitter_matchup_zones':
-        return (
-          <ProAccessGate profile={profile} featureName="Hitter Matchup Zones" onNavigatePremium={() => navigateSection('premium')}>
-            <HitterMatchupZonesPage />
-          </ProAccessGate>
-        );
-      case 'pro_graphs_lab':
-        return (
-          <ProAccessGate profile={profile} featureName="Pro Graphs Lab" onNavigatePremium={() => navigateSection('premium')}>
-            <ProGraphsLabPage />
-          </ProAccessGate>
-        );
-      case 'live_games':
-        return (
-          <LiveGamesPro
-            onSectionChange={navigateSection}
-            onAddLegToParlay={handleAddLegFromResearch}
-          />
-        );
-      case 'research':
-        return (
-          <PlayerResearchHub
-            onAddLegToParlay={handleAddLegFromResearch}
-            onSaveVouch={handleSaveVouch}
-            savedVouchIds={savedVouchIds}
-            activeLegs={activeLegs}
-            liveGames={liveGames}
-          />
-        );
-      case 'board':
-        return (
-          <VouchBoard 
-            savedVouches={savedVouches} 
-            onRemoveVouch={handleRemoveVouchFromBoard} 
-            onPostCreated={handlePostCreated}
-            profile={profile}
-          />
-        );
-      case 'leaderboard':
-        return (
-          <Leaderboard 
-            profile={profile}
-            onSectionChange={navigateSection}
-          />
-        );
-      case 'results':
-        return (
-          <ResultsStudio
-            posts={posts}
-            profile={profile}
-            savedParlays={savedSlips}
-          />
-        );
-      case 'notifications':
-        return <NotificationsPage onSectionChange={navigateSection} />;
-      case 'profile':
-        return (
-          <ProfilePage 
-            profile={profile} 
-            onUpdateProfile={handleUpdateProfile} 
-            posts={posts}
-            onLikePost={handleLikePost}
-            onVouchPost={handleVouchPost}
-            onRepostPost={handleRepostPost}
-            onSaveVouch={handleSaveVouch}
-            savedVouchIds={savedVouchIds}
-            onAddComment={handleAddComment}
-            onDeletePost={handleDeletePost}
-            savedParlays={savedSlips}
-            viewUserId={profileViewUserId}
-            onClearViewUser={() => setProfileViewUserId(null)}
-            onSectionChange={navigateSection}
-          />
-        );
-      case 'nba_nfl':
-        return (
-          <NbaNflArena
-            onSectionChange={navigateSection}
-          />
-        );
-      case 'premium':
-        return (
-          <PremiumSubPage 
-            profile={profile} 
-            onUpdateProfile={handleUpdateProfile} 
-          />
-        );
-      case 'themestore':
-        if (!canSeeThemeStore) {
-          return (
-            <ProfilePage
-              profile={profile}
-              onUpdateProfile={handleUpdateProfile}
-              posts={posts}
-              onLikePost={handleLikePost}
-              onVouchPost={handleVouchPost}
-              onRepostPost={handleRepostPost}
-              onSaveVouch={handleSaveVouch}
-              savedVouchIds={savedVouchIds}
-              onAddComment={handleAddComment}
-              onDeletePost={handleDeletePost}
-              savedParlays={savedSlips}
-              viewUserId={profileViewUserId}
-              onClearViewUser={() => setProfileViewUserId(null)}
-            />
-          );
-        }
-        return (
-          <ThemeStore
-            profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-          />
-        );
-      case 'epic_themes':
-        return <EpicThemeShowcase />;
-      case 'subscriber_hub':
-        return (
-          <ProAccessGate
-            profile={profile}
-            requiredTier="SELLER_PRO"
-            featureName="Subscriber Clubs & Chat"
-            onNavigatePremium={() => navigateSection('premium')}
-          >
-            <SubscriberHub
-              profile={profile}
-              onUpdateProfile={handleUpdateProfile}
-              onSectionChange={navigateSection}
-            />
-          </ProAccessGate>
-        );
-      case 'settings':
-        return (
-          <SettingsPage
-            onResetDatabase={handleResetDatabase}
-            profileName={profile.displayName}
-            profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-          />
-        );
-      case 'customize':
-        return (
-          <CustomizePage
-            profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-            onSectionChange={navigateSection}
-          />
-        );
-      default:
-        return (
-          <div className="p-8 text-center" id="unknown-view">
-            <h2 className="text-xl font-bold text-slate-100">View not found</h2>
-          </div>
-        );
-    }
-  };
-
+  const isLoggedIn = hasRealAuthToken();
   const isPublicFrontPage =
-    (activeSection === 'welcome' && !hasRealAuthToken())
-    || (activeSection === 'vouchedge_intro' && !hasRealAuthToken());
+    (activeSection === 'welcome' && !isLoggedIn)
+    || (activeSection === 'vouchedge_intro' && !isLoggedIn);
   const showGlobalAppChrome = !isPublicFrontPage;
 
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
+      <AppShellProvider value={appShellState}>
       <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
         <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
         <div className="ve-motion-bg" aria-hidden="true">
@@ -1960,19 +1669,32 @@ export default function App() {
         <HomeFeedLayout
           activeSection={activeSection}
           onSectionChange={navigateSection}
-          posts={posts}
-          profile={profile}
-          savedVouchIds={savedVouchIds}
-          onSaveVouch={handleSaveVouch}
-          activeLegs={activeLegs}
-          savedSlips={savedSlips}
-          onAuthLoginSuccess={handleLoginSuccess}
-          onAuthLogoutComplete={handleLogoutComplete}
           isRouteSwitching={isPendingRoute}
           isPublicFrontPage={isPublicFrontPage}
         >
-          <Suspense fallback={<div className="ve-route-suspense-fallback" aria-hidden="true" />}>
-            {renderMainView()}
+          <Suspense fallback={<RouteShellSkeleton />}>
+            <MainViewRouter
+              activeSection={activeSection}
+              navigateSection={navigateSection}
+              liveGames={liveGames}
+              isLoggedIn={isLoggedIn}
+              profileViewUserId={profileViewUserId}
+              onClearProfileViewUser={handleClearProfileViewUser}
+              canSeeThemeStore={canSeeThemeStore}
+              onLoginSuccess={handleLoginSuccess}
+              onPostCreated={handlePostCreated}
+              onLikePost={handleLikePost}
+              onVouchPost={handleVouchPost}
+              onRepostPost={handleRepostPost}
+              onDeletePost={handleDeletePost}
+              onAddComment={handleAddComment}
+              onRemoveVouchFromBoard={handleRemoveVouchFromBoard}
+              onSaveParlaySlip={handleSaveParlaySlip}
+              onHideSavedParlay={handleHideSavedParlay}
+              onAddLegFromResearch={handleAddLegFromResearch}
+              onUpdateProfile={handleUpdateProfile}
+              onResetDatabase={handleResetDatabase}
+            />
           </Suspense>
         </HomeFeedLayout>
         {/* Mobile Home + Edge Island launcher cluster */}
@@ -2013,7 +1735,7 @@ export default function App() {
         )}
 
         {showGlobalAppChrome && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<RouteShellSkeleton />}>
             <EdgeIslandCommandCenter
               open={edgeIslandOpen}
               onClose={() => setEdgeIslandOpen(false)}
@@ -2029,6 +1751,7 @@ export default function App() {
         </div>
         </div>
       </VouchEdgeBootGate>
+      </AppShellProvider>
     </ThemeProvider>
   );
 }

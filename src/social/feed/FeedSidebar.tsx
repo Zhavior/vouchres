@@ -31,6 +31,7 @@ import {
   setViewMode, FeatureLayout,
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { preloadSection } from '../../lib/routePreload';
 import { useNotificationCenter } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 
@@ -98,10 +99,16 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
   const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
+  const handleIntent = useCallback(() => {
+    preloadSection(id);
+  }, [id]);
+
   return (
     <button
       key={id}
       onClick={onClick}
+      onMouseEnter={handleIntent}
+      onFocus={handleIntent}
       id={`sidebar-link-${id}`}
       aria-current={isActive ? 'page' : undefined}
       className={[

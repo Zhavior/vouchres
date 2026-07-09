@@ -20,27 +20,35 @@ import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
+import { unwrapApiPayload } from "../lib/apiEnvelope";
+import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
 
 const DEV_HR_BOARD_FALLBACK_BASE = "https://vouchres.vercel.app";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(apiUrl(url));
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+  if (url.includes("/api/mlb/hr-board/")) {
+    recordHrBoardCacheControl(res.headers.get("cache-control"));
+  }
   const contentType = res.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
     throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
   }
-  return (await res.json()) as T;
+  return unwrapApiPayload<T>(await res.json());
 }
 
 async function getAbsoluteJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+  if (url.includes("/api/mlb/hr-board/")) {
+    recordHrBoardCacheControl(res.headers.get("cache-control"));
+  }
   const contentType = res.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
     throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
   }
-  return (await res.json()) as T;
+  return unwrapApiPayload<T>(await res.json());
 }
 
 /** Try the backend, fall back to a direct-statsapi client build (real data, no mock). */
@@ -94,7 +102,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
-  return (await res.json()) as T;
+  return unwrapApiPayload<T>(await res.json());
 }
 
 export const vouchedgeApi = {

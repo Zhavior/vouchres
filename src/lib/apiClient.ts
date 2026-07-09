@@ -1,4 +1,6 @@
 import { getAuthToken, supabase } from "./supabaseClient";
+import { parseApiErrorBody, unwrapApiPayload } from "./apiEnvelope";
+import { recordHrBoardCacheControl } from "./hrBoardCache";
 
 /**
  * Authenticated fetch helper — replaces apiBase.getJson / postJson.
@@ -72,12 +74,17 @@ async function request<T = any>(
     throw { ...body, status: res.status } as ApiError;
   }
 
+  const body = await res.json().catch(() => ({ error: "request_failed" }));
+
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "request_failed" }));
-    throw { ...body, status: res.status } as ApiError;
+    throw parseApiErrorBody(body, res.status) as ApiError;
   }
 
-  return res.json() as Promise<T>;
+  if (path.includes("/api/mlb/hr-board/")) {
+    recordHrBoardCacheControl(res.headers.get("cache-control"));
+  }
+
+  return unwrapApiPayload<T>(body);
 }
 
 export const apiClient = {

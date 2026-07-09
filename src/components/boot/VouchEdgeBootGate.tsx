@@ -1,6 +1,10 @@
 import { type ReactNode, useEffect, useMemo } from "react";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { useVouchEdgeBoot } from "../../features/hr/hooks/useVouchEdgeBoot";
+import { queryClient } from "../../lib/queryClient";
+import { queryKeys } from "../../hooks/queries/queryKeys";
+import { todayISO } from "../../hooks/queries/hrBoardQuery";
+import type { HrBoardResponse } from "../../types/hrBoard";
 
 type Props = {
   children: ReactNode;
@@ -33,6 +37,18 @@ export default function VouchEdgeBootGate({
 
   useEffect(() => {
     if (!shouldRunBoot || !boot.ready) return;
+
+    const hrBoard = bootDataStore.get<HrBoardResponse>("dailyHrBoard");
+    if (hrBoard) {
+      const date = todayISO();
+      const updatedAt = bootDataStore.getUpdatedAt("dailyHrBoard");
+      for (const limit of [75, 120]) {
+        queryClient.setQueryData(queryKeys.hrBoard(date, limit), hrBoard, {
+          updatedAt,
+        });
+      }
+    }
+
     try {
       sessionStorage.setItem(storageKey, "true");
     } catch {

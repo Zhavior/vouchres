@@ -5,6 +5,7 @@ export type AppShellState = {
   posts: FeedPost[];
   profile: CreatorProofProfile;
   savedVouchIds: string[];
+  savedVouches: Vouch[];
   savedSlips: Parlay[];
   activeLegs: Leg[];
   onSaveVouch: (vouch: Vouch) => void;

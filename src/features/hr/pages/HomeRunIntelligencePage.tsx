@@ -222,7 +222,7 @@ const HomeRunIntelligencePage: React.FC = () => {
           rows={(vm.rows ?? []) as unknown[]}
         />
 
-        {vm.loading ? (
+        {vm.loading && !vm.rows?.length ? (
           <LoadingSkeleton />
         ) : vm.error ? (
           <ErrorState message={String(vm.error)} onRetry={handleRefresh} />
