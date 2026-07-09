@@ -325,7 +325,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             {/* Hero */}
             <section className="mx-auto flex w-full max-w-5xl flex-col items-center space-y-8 text-center">
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5"
@@ -337,7 +337,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </motion.div>
 
               <motion.h1
-                initial={{ opacity: 0, y: 16 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.05 }}
                 className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl"
@@ -350,7 +350,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 16 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="mx-auto max-w-2xl text-base leading-relaxed text-white/50"
@@ -360,7 +360,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
                 className="grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4"
@@ -376,7 +376,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center"

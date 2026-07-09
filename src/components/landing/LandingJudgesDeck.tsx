@@ -12,7 +12,7 @@ function JudgeCard({ judge, index }: { judge: (typeof LANDING_JUDGES)[number]; i
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.4, delay: index * 0.08 }}

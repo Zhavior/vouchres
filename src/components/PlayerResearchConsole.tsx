@@ -1,4 +1,4 @@
-import React, { Suspense, lazy }, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { apiUrl } from '../lib/apiBase';
 import { 
   ResponsiveContainer, 
@@ -628,7 +628,6 @@ export default function PlayerResearchConsole({
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/generic/headshot/67/current'; }}
                             className="w-11 h-11 rounded-2xl object-cover bg-black/72 border border-white/32 flex-shrink-0"
                           />
-              </Suspense>
                           <span className="absolute -bottom-1 -right-1 text-[8.5px] font-black bg-black/74 text-white/70 border border-white/36 px-1 rounded-md font-mono">
                             #{player.number}
                           </span>
@@ -981,6 +980,7 @@ export default function PlayerResearchConsole({
                   handleWagerProposition={handleWagerProposition}
                   savedVouchIds={savedVouchIds}
                 />
+                </Suspense>
               ) : (
                 <>
                   {/* HERO BLOCK */}
@@ -1918,8 +1918,7 @@ export default function PlayerResearchConsole({
             </>
           )}
 
-        </div>
-
+            </div>
           )}
 
         </div>

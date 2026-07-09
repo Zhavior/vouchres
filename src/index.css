@@ -6673,17 +6673,18 @@ body,
 
 @keyframes ve-lazy-mount-fade-in {
   from {
-    opacity: 0;
     transform: translateY(4px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* Never lock route content at opacity:0 — fill-mode "both" caused black screens when
+   animations did not run (reduced motion, throttled tabs, or stuck timelines). */
 .lazy-mount-fade {
-  animation: ve-lazy-mount-fade-in 260ms ease-out both;
+  opacity: 1;
+  animation: ve-lazy-mount-fade-in 260ms ease-out;
 }
 
 .ve-lazy-chunk-skeleton {
