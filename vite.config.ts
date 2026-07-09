@@ -52,67 +52,47 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
 
-            // Core React runtime — smallest possible initial chunk
+            const isPkg = (pkg: string) =>
+              id.includes(`/node_modules/${pkg}/`) ||
+              id.includes(`\\node_modules\\${pkg}\\`);
+
+            // State + query cache — before react check (@tanstack/react-query contains "/react/")
             if (
-              id.includes('/react/') ||
-              id.includes('/react-dom/') ||
-              id.includes('/scheduler/')
+              id.includes('@tanstack/react-query') ||
+              isPkg('zustand') ||
+              isPkg('zod')
             ) {
-              return 'react-vendor';
+              return 'vendor-state';
             }
 
-            // Supabase — large auth/realtime SDK
-            if (id.includes('@supabase/')) return 'supabase-vendor';
+            // Core React runtime — exact package paths only
+            if (isPkg('react') || isPkg('react-dom') || isPkg('scheduler')) {
+              return 'vendor-react';
+            }
 
-            // Charts — recharts + all d3 sub-packages
+            if (id.includes('@supabase/')) return 'vendor-supabase';
+
             if (
               id.includes('/recharts/') ||
               id.includes('/d3-') ||
               id.includes('victory-')
             ) {
-              return 'charts-vendor';
+              return 'vendor-charts';
             }
 
-            // Animation — framer-motion + motion
-            if (id.includes('/framer-motion/') || id.includes('/motion/')) {
-              return 'motion-vendor';
+            if (isPkg('framer-motion') || isPkg('motion')) {
+              return 'vendor-motion';
             }
 
-            // Drag and drop
-            if (id.includes('@dnd-kit/')) return 'dnd-vendor';
+            if (id.includes('lucide-react')) return 'vendor-icons';
 
-            // Observability — never needed on first paint
-            if (
-              id.includes('@sentry/') ||
-              id.includes('posthog-js') ||
-              id.includes('@vercel/')
-            ) {
-              return 'telemetry-vendor';
+            if (id.includes('stripe')) return 'vendor-stripe';
+
+            if (id.includes('cytoscape') || id.includes('mermaid')) {
+              return 'vendor-graph';
             }
 
-            // Icons — lucide is large, isolate it
-            if (id.includes('lucide-react')) return 'icons-vendor';
-
-            // Stripe — only needed on billing pages
-            if (id.includes('stripe')) return 'stripe-vendor';
-
-            // State + validation + query cache
-            if (
-              id.includes('zustand') ||
-              id.includes('zod') ||
-              id.includes('@tanstack/react-query')
-            ) {
-              return 'state-vendor';
-            }
-
-            // Google AI SDK
-            if (id.includes('@google/genai')) return 'ai-vendor';
-
-            // Graph layout — cytoscape + mermaid
-            if (id.includes('cytoscape') || id.includes('mermaid')) return 'graph-vendor';
-
-            // Virtualization — feed lists
-            if (id.includes('@tanstack/react-virtual')) return 'virtual-vendor';
+            if (id.includes('@tanstack/react-virtual')) return 'vendor-virtual';
           },
         },
       },
