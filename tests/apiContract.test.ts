@@ -9,6 +9,21 @@ import { apiNotFoundHandler } from "../server/middleware/apiNotFound";
 import { requestContext } from "../server/middleware/requestContext";
 import { routeTiming } from "../server/middleware/routeTiming";
 import { registerApiRoutes } from "../server/routes";
+import { buildOpenApiDocument } from "../server/openapi/openapiRegistry";
+
+/** Top frontend-called API paths — must stay registered in OpenAPI. */
+const TOP_FE_API_PATHS = [
+  "/api/mlb/hr-board/today",
+  "/api/mlb/lineup/today",
+  "/api/auth/me",
+  "/api/me/parlays",
+  "/api/feed",
+  "/api/ai/parlay-edge",
+  "/api/billing/status",
+  "/api/notifications",
+  "/api/mlb/reports/daily",
+  "/api/parlays/grade",
+] as const;
 
 let contractServer: Server;
 let contractBaseUrl: string;
@@ -177,5 +192,22 @@ describe("API contract over HTTP", () => {
     expect(response.body.error.details).toEqual([
       { path: "date", message: "Expected YYYY-MM-DD." },
     ]);
+  });
+
+  it("registers top frontend API paths in OpenAPI", () => {
+    const doc = buildOpenApiDocument();
+    const registered = Object.keys(doc.paths ?? {});
+
+    for (const path of TOP_FE_API_PATHS) {
+      expect(registered, `missing OpenAPI path ${path}`).toContain(path);
+    }
+  });
+
+  it("returns request meta on public MLB health endpoints", async () => {
+    const response = await requestJson("/api/health/backend");
+
+    expect(response.status).toBe(200);
+    expect(response.body.ok).toBe(true);
+    expect(typeof response.headers.get("x-request-id")).toBe("string");
   });
 });

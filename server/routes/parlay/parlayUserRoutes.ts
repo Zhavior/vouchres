@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../../middleware/auth";
+import { requireTierOrQuota, incrementQuota } from "../../middleware/entitlements";
 import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
 import { asyncHandler } from "../../lib/asyncHandler";
@@ -37,22 +38,32 @@ import {
 /** User-facing parlay routes — save, list, grade preview, dashboard widgets. */
 export const parlayUserRoutes = Router();
 
-parlayUserRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const start = Date.now();
-  const date = ymdFromValue(req.body?.date) ?? todayYmd();
-  const options = await getFeedComposerOptions({ sport: "MLB", date }).catch((err) => {
-    console.error("[parlays/ai-generate] failed", (err as Error)?.message);
-    throw upstreamUnavailable("AI parlay generation unavailable.", err);
-  });
-  const result = buildGeneratedAiParlays(options);
-  console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
-  return res.json(apiOkFlat(req, {
-    parlays: result.parlays,
-    warnings: result.warnings,
-    generatedAt: new Date().toISOString(),
-    source: AI_PARLAY_SOURCE,
-  }));
-}));
+parlayUserRoutes.post(
+  "/parlays/ai-generate",
+  requireAuth,
+  generationLimiter,
+  requireTierOrQuota("gold", 2, "parlay_lab_saves"),
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    const start = Date.now();
+    const date = ymdFromValue(req.body?.date) ?? todayYmd();
+    const options = await getFeedComposerOptions({ sport: "MLB", date }).catch((err) => {
+      console.error("[parlays/ai-generate] failed", (err as Error)?.message);
+      throw upstreamUnavailable("AI parlay generation unavailable.", err);
+    });
+    const result = buildGeneratedAiParlays(options);
+    const q = (req as { __quota?: { key: string; day: string } }).__quota;
+    if (q) {
+      await incrementQuota(req.user!.id, q.key, q.day);
+    }
+    console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
+    return res.json(apiOkFlat(req, {
+      parlays: result.parlays,
+      warnings: result.warnings,
+      generatedAt: new Date().toISOString(),
+      source: AI_PARLAY_SOURCE,
+    }));
+  }),
+);
 
 parlayUserRoutes.post(
   "/parlays/grade",

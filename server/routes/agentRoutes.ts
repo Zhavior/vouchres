@@ -3,7 +3,8 @@ import type { Express, Response } from "express";
 import { listAgents, getAgent, generatePicks, JUDGE_AGENTS } from "../agents/agentRegistry";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { generationLimiter } from "../middleware/rateLimit";
-import { requireAuth, requireStaff } from "../middleware/auth";
+import { requireAuth, requireStaff, type AuthedRequest } from "../middleware/auth";
+import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
@@ -34,7 +35,12 @@ export function registerAgentRoutes(app: Express): void {
    * the MLB schedule + pitcher stats are fetched ONLY ONCE and the
    * in-flight Promise is shared across all callers.
    */
-  app.post("/api/agents/:id/generate-picks", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post(
+    "/api/agents/:id/generate-picks",
+    requireAuth,
+    generationLimiter,
+    requireTierOrQuota("gold", 5, "agent_generate_picks"),
+    asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const start = Date.now();
     const agent = getAgent(req.params.id);
     if (!agent) {
@@ -48,6 +54,10 @@ export function registerAgentRoutes(app: Express): void {
     try {
       const report = await getSharedDailyReport(req.body?.date);
       const picks = await generatePicks(agent.id, report);
+      const q = (req as { __quota?: { key: string; day: string } }).__quota;
+      if (q) {
+        await incrementQuota(req.user!.id, q.key, q.day);
+      }
       return res.json(apiOkFlat(req, {
         agent: { id: agent.id, name: agent.name, icon: agent.icon },
         picks,
@@ -73,7 +83,8 @@ export function registerAgentRoutes(app: Express): void {
         agentId: agent.id,
       });
     }
-  }));
+  }),
+  );
 
   /**
    * POST /api/agents/generate-all-picks

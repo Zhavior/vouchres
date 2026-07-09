@@ -5,12 +5,14 @@ extendZodWithOpenApi(z);
 
 export const openapiRegistry = new OpenAPIRegistry();
 
+const RequestMetaSchema = z.object({
+  requestId: z.string(),
+  timestamp: z.string().datetime(),
+}).passthrough().openapi("RequestMeta");
+
 const OkEnvelopeSchema = z.object({
   ok: z.literal(true),
-  meta: z.object({
-    requestId: z.string(),
-    timestamp: z.string().datetime(),
-  }).optional(),
+  meta: RequestMetaSchema.optional(),
 }).passthrough().openapi("OkEnvelope");
 
 const ErrorEnvelopeSchema = z.object({
@@ -77,6 +79,7 @@ const HrBoardTodaySchema = z.object({
   projectedCandidates: z.array(HrBoardCandidateSchema).optional(),
   counts: z.record(z.string(), z.unknown()).optional(),
   warnings: z.array(z.string()).optional(),
+  meta: RequestMetaSchema.optional(),
 }).passthrough().openapi("HrBoardTodayResponse");
 
 const AuthMeSchema = z.object({
@@ -356,6 +359,44 @@ const AiAgentRunStubSchema = z.object({
   message: z.string(),
 }).openapi("AiAgentRunStubResponse");
 
+const FeedListSchema = z.object({
+  ok: z.literal(true),
+  posts: z.array(z.record(z.string(), z.unknown())),
+  total: z.number().int().nonnegative().optional(),
+  limit: z.number().int().positive().optional(),
+  offset: z.number().int().nonnegative().optional(),
+  meta: RequestMetaSchema.optional(),
+}).openapi("FeedListResponse");
+
+const ParlayEdgeRequestDocSchema = z.object({
+  legs: z.array(z.object({
+    playerName: z.string().optional(),
+    market: z.string().optional(),
+    selection: z.string().optional(),
+    oddsDecimal: z.number().optional(),
+  }).passthrough()).min(1).max(12),
+}).openapi("ParlayEdgeRequest");
+
+const ParlayEdgeResponseSchema = z.object({
+  ok: z.literal(true),
+  edgeScore: z.number().optional(),
+  riskLevel: z.string().optional(),
+  report: z.string().optional(),
+  meta: RequestMetaSchema.optional(),
+}).passthrough().openapi("ParlayEdgeResponse");
+
+const AgentGeneratePicksSchema = z.object({
+  ok: z.literal(true),
+  agent: z.object({
+    id: z.string(),
+    name: z.string(),
+    icon: z.string(),
+  }),
+  picks: z.array(z.record(z.string(), z.unknown())),
+  warnings: z.array(z.string()).optional(),
+  meta: RequestMetaSchema.optional(),
+}).openapi("AgentGeneratePicksResponse");
+
 openapiRegistry.register("OkEnvelope", OkEnvelopeSchema);
 openapiRegistry.register("ErrorEnvelope", ErrorEnvelopeSchema);
 openapiRegistry.register("BackendHealth", HealthBackendSchema);
@@ -390,6 +431,10 @@ openapiRegistry.register("ParlayIntegrityResponse", ParlayIntegritySchema);
 openapiRegistry.register("AiAgentPluginMeta", AiAgentPluginMetaSchema);
 openapiRegistry.register("AiAgentRegistryResponse", AiAgentRegistrySchema);
 openapiRegistry.register("AiAgentRunStubResponse", AiAgentRunStubSchema);
+openapiRegistry.register("FeedListResponse", FeedListSchema);
+openapiRegistry.register("ParlayEdgeRequest", ParlayEdgeRequestDocSchema);
+openapiRegistry.register("ParlayEdgeResponse", ParlayEdgeResponseSchema);
+openapiRegistry.register("AgentGeneratePicksResponse", AgentGeneratePicksSchema);
 
 openapiRegistry.registerPath({
   method: "get",
@@ -908,6 +953,82 @@ openapiRegistry.registerPath({
     },
     404: {
       description: "Agent not found",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/feed",
+  summary: "Home feed (personalized when authenticated)",
+  tags: ["Feed"],
+  request: {
+    query: z.object({
+      limit: z.coerce.number().int().min(1).max(100).optional(),
+      offset: z.coerce.number().int().min(0).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Feed posts",
+      content: { "application/json": { schema: FeedListSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/ai/parlay-edge",
+  summary: "AI parlay edge report (quota-gated)",
+  tags: ["AI"],
+  request: {
+    body: {
+      content: { "application/json": { schema: ParlayEdgeRequestDocSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Parlay edge analysis",
+      content: { "application/json": { schema: ParlayEdgeResponseSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    429: {
+      description: "Daily quota exceeded",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/agents/{id}/generate-picks",
+  summary: "Generate capper agent picks for a date (quota-gated)",
+  tags: ["Agents"],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Generated picks",
+      content: { "application/json": { schema: AgentGeneratePicksSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    429: {
+      description: "Daily quota exceeded",
       content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },

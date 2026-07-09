@@ -1,4 +1,6 @@
 import express from "express";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { AppError } from "../server/errors/AppError";
@@ -79,6 +81,20 @@ afterAll(async () => {
 });
 
 describe("ai routes", () => {
+  it("wires requireTierOrQuota on every Gemini-backed POST route", () => {
+    const source = readFileSync(path.join(process.cwd(), "server/routes/aiRoutes.ts"), "utf8");
+    const routeBlocks = source.match(/app\.post\(\s*\n?\s*"([^"]+)"/g) ?? [];
+    const paths = routeBlocks.map((block) => block.match(/"([^"]+)"/)?.[1]).filter(Boolean);
+
+    expect(paths.length).toBeGreaterThanOrEqual(8);
+    for (const routePath of paths) {
+      const start = source.indexOf(`"${routePath}"`);
+      const slice = source.slice(start, start + 600);
+      expect(slice, `${routePath} missing requireTierOrQuota`).toContain("requireTierOrQuota");
+    }
+    expect(source).toContain("incrementAiQuotaIfNeeded");
+  });
+
   it("rejects unauthenticated chat requests", async () => {
     const response = await fetch(`${baseUrl}/api/ai/chat`, {
       method: "POST",

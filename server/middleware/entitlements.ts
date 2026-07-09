@@ -264,5 +264,6 @@ export async function incrementQuota(
  *   ai_daily_report:      1
  *   ai_learning_note:     5
  *   parlay_lab_saves:     2
+ *   agent_generate_picks: 5
  *   research_lookups:     15
  */

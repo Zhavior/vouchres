@@ -43,6 +43,19 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Staging soak (built server)
+        run: |
+          NODE_ENV=development PORT=3010 node dist/server.cjs &
+          SERVER_PID=$!
+          for i in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:3010/api/health/backend > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          BASE_URL=http://127.0.0.1:3010 npm run staging-soak
+          kill $SERVER_PID
+
       - name: Bundle gzip budget
         run: npm run bundle-budget
 

@@ -6,8 +6,19 @@ import { requestContext } from "../server/middleware/requestContext";
 import { registerAgentRoutes } from "../server/routes/agentRoutes";
 
 vi.mock("../server/middleware/auth", () => ({
-  requireAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
+  requireAuth: (req: any, _res: unknown, next: () => void) => {
+    req.user = {
+      id: "user_1",
+      profile: { id: "user_1", tier: "gold", is_staff: false },
+    };
+    next();
+  },
   requireStaff: (_req: unknown, _res: unknown, next: () => void) => next(),
+}));
+
+vi.mock("../server/middleware/entitlements", () => ({
+  requireTierOrQuota: () => (_req: unknown, _res: unknown, next: () => void) => next(),
+  incrementQuota: vi.fn(async () => undefined),
 }));
 
 vi.mock("../server/agents/agentRegistry", () => ({
