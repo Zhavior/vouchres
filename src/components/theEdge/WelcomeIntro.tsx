@@ -70,7 +70,7 @@ function TeamIcon({ teamId, abbr }: { teamId?: number | null; abbr: string }) {
 
 function fadeUp(delay = 0) {
   return {
-    initial: { opacity: 0, y: 16 },
+    initial: false,
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: '-80px' },
     transition: { duration: 0.5, ease, delay },

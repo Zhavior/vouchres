@@ -1053,25 +1053,31 @@ html:not([data-ve-theme]) {
    Used after Welcome Portal / login / onboarding.
    ========================================================== */
 
+.ve-edge-island-enter,
+.ve-edge-island-enter-delay-1,
+.ve-edge-island-enter-delay-2,
+.ve-edge-island-enter-delay-3 {
+  opacity: 1;
+}
+
 .ve-edge-island-enter {
-  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) ease-out;
 }
 
 .ve-edge-island-enter-delay-1 {
-  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 90ms ease-out;
 }
 
 .ve-edge-island-enter-delay-2 {
-  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 170ms both;
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 170ms ease-out;
 }
 
 .ve-edge-island-enter-delay-3 {
-  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+  animation: veEdgeIslandEnter 780ms cubic-bezier(0.16, 1, 0.3, 1) 240ms ease-out;
 }
 
 @keyframes veEdgeIslandEnter {
   from {
-    opacity: 0;
     transform: translateY(22px) scale(0.975);
     filter: blur(10px);
   }
@@ -1080,6 +1086,16 @@ html:not([data-ve-theme]) {
     opacity: 1;
     transform: translateY(0) scale(1);
     filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-edge-island-enter,
+  .ve-edge-island-enter-delay-1,
+  .ve-edge-island-enter-delay-2,
+  .ve-edge-island-enter-delay-3 {
+    animation: none;
+    opacity: 1;
   }
 }
 

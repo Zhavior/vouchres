@@ -12,6 +12,33 @@ import { queryClient } from './lib/queryClient';
 import { patchPublicNotificationsFetch } from "./lib/patchPublicNotificationsFetch";
 patchPublicNotificationsFetch();
 
+// After deploy, stale tabs can request deleted hashed chunks; Vercel used to
+// return index.html for missing /assets/* (HTML parsed as JS → black screen).
+const CHUNK_RELOAD_KEY = "vouchedge_chunk_reload_v1";
+const reloadOnceOnChunkFailure = () => {
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1") return;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+    window.location.reload();
+  } catch {
+    window.location.reload();
+  }
+};
+
+window.addEventListener("vite:preloadError", reloadOnceOnChunkFailure);
+window.addEventListener("unhandledrejection", (event) => {
+  const reason = event.reason;
+  const message =
+    reason instanceof Error
+      ? reason.message
+      : typeof reason === "string"
+        ? reason
+        : "";
+  if (/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(message)) {
+    reloadOnceOnChunkFailure();
+  }
+});
+
 const scheduleIdle = (fn: () => void) => {
   if (typeof requestIdleCallback === "function") {
     requestIdleCallback(fn, { timeout: 2000 });

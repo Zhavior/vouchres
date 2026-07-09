@@ -41,11 +41,26 @@
         background: #020617;
         color: #fafafa;
       }
-      #root { min-height: 100vh; isolation: isolate; }
+      #root {
+        min-height: 100vh;
+        isolation: isolate;
+        opacity: 1;
+        visibility: visible;
+      }
       body, #root {
         font-family: var(--font-z8);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+      /* Critical boot safety — must paint before the main CSS bundle */
+      .lazy-mount-fade,
+      .ve-hero-in,
+      .ve-edge-island-enter,
+      .ve-edge-island-enter-delay-1,
+      .ve-edge-island-enter-delay-2,
+      .ve-edge-island-enter-delay-3 {
+        opacity: 1 !important;
+        visibility: visible !important;
       }
       .font-z8 { font-family: var(--font-z8); }
       .text-vouch-cyan { color: #00f0ff; }
@@ -86,10 +101,13 @@
       }
       .ve-route-suspense-fallback { min-height: 40vh; contain: strict; pointer-events: none; }
       @keyframes ve-hero-in {
-        from { opacity: 0; transform: translateY(16px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { transform: translateY(16px); }
+        to { transform: translateY(0); }
       }
-      .ve-hero-in { animation: ve-hero-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+      .ve-hero-in {
+        opacity: 1;
+        animation: ve-hero-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) ease-out;
+      }
       @keyframes pulse { 50% { opacity: 0.5; } }
       .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
