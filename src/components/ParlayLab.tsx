@@ -58,7 +58,7 @@ export default function ParlayLab({
   initialTab = 'builder'
 }: ParlayLabProps) {
   // ParlayLab is builder-only. Verified Results live on the dedicated Results page.
-  const workMode: 'builder' = 'builder';
+  const workMode = 'builder' as const;
 
   React.useEffect(() => {
     if (initialTab === 'results') {

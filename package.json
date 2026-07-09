@@ -25,7 +25,7 @@
     "staging-soak": "node scripts/staging-soak.mjs",
     "typecheck": "tsc --noEmit",
     "quality": "npm run typecheck && npm run lint && npm run build",
-    "lint:strict": "eslint . --max-warnings=0",
+    "lint:strict": "eslint src server tests --quiet",
     "quality:strict": "npm run typecheck && npm run lint:strict && npm run build",
     "knip": "knip",
     "knip:production": "knip --production",

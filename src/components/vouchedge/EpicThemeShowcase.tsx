@@ -297,7 +297,13 @@ export function EpicThemeShowcase() {
                       <p className="text-[11px] mt-1 line-clamp-2 leading-snug" style={{ color: DC.textMuted }}>{t.description}</p>
                       {/* Action */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); equipped ? undefined : owned ? handleApply(t) : handleBuy(t); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!equipped) {
+                            if (owned) handleApply(t);
+                            else handleBuy(t);
+                          }
+                        }}
                         disabled={equipped}
                         className="mt-3 w-full py-2 rounded-lg text-xs font-bold transition-colors disabled:cursor-default"
                         style={{

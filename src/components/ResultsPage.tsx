@@ -491,7 +491,7 @@ export default function ResultsPage({ posts, profile, onTailParlay, savedParlays
       ""
     ).trim();
 
-  const uniqueByParlayParentId = <T extends any>(items: T[]): T[] => {
+  const uniqueByParlayParentId = <T,>(items: T[]): T[] => {
     const seen = new Set<string>();
     const unique: T[] = [];
 

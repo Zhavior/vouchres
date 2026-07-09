@@ -62,7 +62,7 @@ function parseCsvLine(line: string): string[] {
 }
 
 function parseCsv(text: string): Array<Record<string, string>> {
-  const lines = text.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
   const headers = parseCsvLine(lines[0]);
   return lines.slice(1).map((line) => {

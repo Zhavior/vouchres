@@ -252,7 +252,7 @@ export async function getPitcherMatchup(
       // ---- Opponent projected lineup ----
       const boxscore = await getBoxscore(gamePk);
       let lineupRaw = boxscore ? lineupFromBoxscore(boxscore, opponentTeam.teamId) : [];
-      let official = lineupRaw.some((b) => b.battingOrder != null);
+      const official = lineupRaw.some((b) => b.battingOrder != null);
 
       if (lineupRaw.length === 0) {
         // Fallback: active roster hitters (order not official).

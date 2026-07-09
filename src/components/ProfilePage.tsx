@@ -67,7 +67,7 @@ export default function ProfilePage({
 
   const getActiveThemeData = () => {
     const themeToFind = profile.profileThemeId || profile.activeTheme || 'cyber-blue';
-    let found = THEME_REGISTRY.find(t => t.id === themeToFind);
+    const found = THEME_REGISTRY.find(t => t.id === themeToFind);
     if (!found) {
       try {
         const stored = localStorage.getItem('vouchedge_market_themes');

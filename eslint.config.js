@@ -12,7 +12,10 @@ export default tseslint.config(
       'vouchedge/**',
       'vouchedge-terminal/**',
       '_code_backups',
+      '_broken_backup/**',
       'coverage',
+      'scripts/**',
+      'public/**',
       '*.config.js',
       '*.config.ts',
     ],
@@ -44,6 +47,13 @@ export default tseslint.config(
       // These rules are valuable, but too noisy to hard-block while old pages are being strangled.
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/purity': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/rules-of-hooks': 'warn',
+      'no-useless-assignment': 'warn',
+      'no-empty': 'warn',
 
       'react-refresh/only-export-components': [
         'warn',

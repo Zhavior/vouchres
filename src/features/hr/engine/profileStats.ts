@@ -17,6 +17,7 @@
  */
 
 import { HrProfileStats, HrTier, PickOutcome } from "./types";
+import { calculateProcessScore } from "./processScore";
 
 export function calculateProfileStats(
   outcomes: PickOutcome[]
@@ -129,9 +130,6 @@ function findBestAndWorstTiers(
 }
 
 function calculateGoodProcessRate(outcomes: PickOutcome[]): number {
-  // Lazy require to avoid circular dep
-  // In production, import at top of file
-  const { calculateProcessScore } = require("./processScore");
   const scored = outcomes.map(o => calculateProcessScore(o));
   const goodProcess = scored.filter(s => s.score >= 70).length;
   return outcomes.length > 0 ? goodProcess / outcomes.length : 0;

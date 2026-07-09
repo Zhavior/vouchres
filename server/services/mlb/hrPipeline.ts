@@ -871,7 +871,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
 
       // Preview mode for lineup-unconfirmed but roster/currentTeam safe players.
       if (player.lineupStatus !== "confirmed") {
-        let previewValidation = validateProjectedPreviewCandidate(
+        const previewValidation = validateProjectedPreviewCandidate(
           player,
           game,
           player.injuryStatus,

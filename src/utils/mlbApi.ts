@@ -456,7 +456,7 @@ export function calculateCalculatedAdvancedMetrics(player: MLBPlayer): MLBPlayer
   const noDoubtRatio = 0.15 + (av.exitVelocity - 88) * 0.02 + (av.launchAngle - 10) * 0.01;
   const noDoubtHrs = Math.max(0, Math.min(hrVal, Math.round(hrVal * Math.min(0.55, Math.max(0.05, noDoubtRatio)))));
 
-  let dev = (Math.sin(hrVal) * 2.5);
+  const dev = (Math.sin(hrVal) * 2.5);
   const xHr = Math.max(0, Math.round(hrVal * 0.95 + dev));
 
   // If obp or slg weren't previously in player.seasonStats, make sure they are written in

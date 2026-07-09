@@ -122,7 +122,7 @@ function productionProofChecklist(checks: ConfigCheck[]): {
     {
       id: "stripe_webhooks",
       label: "Stripe webhook secret when billing is enabled",
-      ready: !Boolean(stripeSecret?.configured) || Boolean(stripeWebhook?.configured),
+      ready: !stripeSecret?.configured || Boolean(stripeWebhook?.configured),
       detail: "If STRIPE_SECRET_KEY is set, send a signed test webhook and confirm checkout.session.completed path.",
     },
   ];
