@@ -3,15 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
-
-/** Modern evergreen targets for LightningCSS vendor prefixing. */
-const LIGHTNINGCSS_TARGETS = {
-  chrome: 105 << 16,
-  edge: 105 << 16,
-  firefox: 104 << 16,
-  safari: (16 << 16) | 0,
-  ios_saf: (16 << 16) | 0,
-} as const;
+import { LIGHTNINGCSS_TARGETS } from './css/lightningcss-targets.mjs';
 
 export default defineConfig(({ mode }) => {
   const disableHmr = process.env.DISABLE_HMR === 'true';
