@@ -138,7 +138,7 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
         {value > 0 && <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 ${lge} 1 ${f.x} ${f.y}`} stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />}
         <text x={cx} y={cy + 5} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>{value > 0 ? Math.round(value) : '—'}</text>
       </svg>
-      <span className="text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</span>
+      <span className={z8Profile.label}>{label}</span>
     </div>
   );
 };
@@ -294,10 +294,10 @@ const ProductionBarChart: React.FC<{ logs: RealGameLog[]; h?: number }> = ({ log
 
 const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simulated?: boolean }> = ({ icon, title, sub, simulated }) => (
   <div className="flex items-center gap-2.5 mb-4">
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.03)' }}>{icon}</div>
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.03]">{icon}</div>
     <div>
       <div className="flex items-center gap-2">
-        <p className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: '#ffffff' }}>{title}</p>
+        <p className="text-sm font-black uppercase tracking-[0.16em] text-white">{title}</p>
         {simulated && (
           <span
             className="rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em]"
@@ -308,7 +308,7 @@ const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simula
           </span>
         )}
       </div>
-      {sub && <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{sub}</p>}
+      {sub && <p className="text-[10px] text-white/40">{sub}</p>}
     </div>
   </div>
 );
