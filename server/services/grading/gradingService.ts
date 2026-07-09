@@ -130,7 +130,7 @@ async function runGradePendingPicks(opts: {
   // 1. Fetch pending picks
   const { data: pending, error } = await supabaseAdmin
     .from("picks")
-    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status")
+    .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status, judge_verdict")
     .eq("status", "pending")
     .not("event_id", "is", null)
     .gte("created_at", since)
@@ -408,6 +408,7 @@ async function evaluatePick(
     leg_type: string;
     event_id?: string | null;
     sport?: string | null;
+    judge_verdict?: string | null;
   },
   boxscore: any
 ): Promise<GradeResult> {
@@ -428,11 +429,17 @@ async function evaluatePick(
   }
 
   const playerName = extractPlayerName(selection, market);
+  const isAvoidPick =
+    pick.judge_verdict === "avoid" ||
+    market === "hr_avoid" ||
+    market.includes("avoid") ||
+    /^avoid\b/i.test(selection);
 
-  if (market === "hr" || market === "hr_multi") {
+  if (market === "hr" || market === "hr_multi" || market === "hr_avoid" || market === "home run") {
     const threshold = market === "hr_multi" ? 2 : 1;
     const playerHrs = countPlayerStat(boxscore, playerName, "homeRuns");
-    return settlePick(pick, playerHrs >= threshold);
+    const hitHr = playerHrs >= threshold;
+    return settlePick(pick, isAvoidPick ? !hitHr : hitHr);
   }
 
   if (market === "rbi" || market === "rbi_over") {
@@ -1005,7 +1012,9 @@ function settlePick(
 
 function extractPlayerName(selection: string, _market: string): string {
   const cleaned = selection
+    .replace(/^avoid\s+/i, "")
     .replace(/\b\d+\+?\s*(HR|RBI|RUN|RUNS)\b/i, "")
+    .replace(/\([^)]*\)/g, "")
     .replace(/\b(HR|RBI|RUN|RUNS)\b/i, "")
     .replace(/\bover\s+[\d.]+\b/i, "")
     .trim();

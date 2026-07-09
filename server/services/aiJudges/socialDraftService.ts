@@ -1,32 +1,19 @@
 import { randomUUID } from "crypto";
 import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
-
-type JudgeId =
-  | "data_scout"
-  | "power_hunter"
-  | "momentum_reader"
-  | "risk_auditor"
-  | "pro_edge_agent";
+import {
+  agentScore,
+  buildJudgeReason,
+  hrScore,
+  rankCandidatesForJudge,
+  safeArray,
+  singlePickLimit,
+  type JudgeCandidate,
+  type JudgeId,
+} from "./judgeScoring";
 
 type DraftStatus = "draft" | "queued" | "mock_posted" | "failed";
 
-type Candidate = {
-  playerId?: number | string;
-  playerName?: string;
-  name?: string;
-  team?: string;
-  opponent?: string;
-  opponentTeam?: string;
-  opponentPitcherName?: string;
-  venue?: string;
-  hrScore?: number;
-  riskTier?: string;
-  confidenceTier?: string;
-  estimatedHrProbability?: number;
-  reasons?: string[];
-  warnings?: string[];
-  scoreBreakdown?: Record<string, number>;
-};
+type Candidate = JudgeCandidate;
 
 export type AiJudge = {
   id: JudgeId;
@@ -92,125 +79,8 @@ export const AI_JUDGES: AiJudge[] = [
   },
 ];
 
-function safeArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
-
-function score(c: Candidate): number {
-  const n = Number(c.hrScore);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function metric(c: Candidate, key: string): number {
-  const n = Number(c.scoreBreakdown?.[key] ?? 0);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function warningCount(c: Candidate): number {
-  return safeArray(c.warnings).length;
-}
-
-function confidenceBonus(c: Candidate): number {
-  if (c.confidenceTier === "elite") return 10;
-  if (c.confidenceTier === "strong") return 7;
-  if (c.confidenceTier === "watchlist") return 3;
-  if (c.confidenceTier === "thin") return -5;
-  if (c.confidenceTier === "avoid") return -12;
-  return 0;
-}
-
-function agentScore(judgeId: JudgeId, c: Candidate): number {
-  const base = score(c);
-  const hitterPower = metric(c, "hitterPower");
-  const pitcherVulnerability = metric(c, "pitcherVulnerability");
-  const parkContext = metric(c, "parkContext");
-  const lineupVolume = metric(c, "lineupVolume");
-  const handednessEdge = metric(c, "handednessEdge");
-  const recentForm = metric(c, "recentForm");
-  const penalties = Math.abs(metric(c, "penalties"));
-  const warnings = warningCount(c);
-
-  if (judgeId === "data_scout") {
-    return (
-      base * 0.35 +
-      lineupVolume * 0.18 +
-      handednessEdge * 0.14 +
-      confidenceBonus(c) +
-      hitterPower * 0.12 +
-      pitcherVulnerability * 0.12 -
-      warnings * 4 -
-      penalties * 0.35
-    );
-  }
-
-  if (judgeId === "power_hunter") {
-    return (
-      base * 0.40 +
-      hitterPower * 0.28 +
-      pitcherVulnerability * 0.22 +
-      parkContext * 0.10 +
-      recentForm * 0.08 -
-      penalties * 0.20
-    );
-  }
-
-  if (judgeId === "momentum_reader") {
-    return (
-      base * 0.25 +
-      recentForm * 0.38 +
-      lineupVolume * 0.16 +
-      parkContext * 0.10 +
-      handednessEdge * 0.10 +
-      confidenceBonus(c) * 0.5 -
-      warnings * 2
-    );
-  }
-
-  if (judgeId === "risk_auditor") {
-    return (
-      warnings * 18 +
-      penalties * 1.2 +
-      (c.confidenceTier === "avoid" ? 30 : 0) +
-      (c.confidenceTier === "thin" ? 18 : 0) +
-      (base < 55 ? 12 : 0) -
-      hitterPower * 0.10 -
-      pitcherVulnerability * 0.10
-    );
-  }
-
-  return (
-    base * 0.34 +
-    hitterPower * 0.18 +
-    pitcherVulnerability * 0.18 +
-    recentForm * 0.14 +
-    lineupVolume * 0.10 +
-    handednessEdge * 0.08 +
-    parkContext * 0.08 +
-    confidenceBonus(c) -
-    warnings * 3 -
-    penalties * 0.45
-  );
-}
-
 function agentReason(judgeId: JudgeId, c: Candidate): string {
-  if (judgeId === "data_scout") {
-    return `Data Scout likes the cleaner profile: HR Edge ${score(c)}/100, lineup volume ${metric(c, "lineupVolume")}, handedness edge ${metric(c, "handednessEdge")}, confidence ${c.confidenceTier ?? "unknown"}.`;
-  }
-
-  if (judgeId === "power_hunter") {
-    return `Power Hunter is chasing upside: hitter power ${metric(c, "hitterPower")}, pitcher vulnerability ${metric(c, "pitcherVulnerability")}, park context ${metric(c, "parkContext")}.`;
-  }
-
-  if (judgeId === "momentum_reader") {
-    return `Momentum Reader sees rhythm: recent form ${metric(c, "recentForm")}, lineup volume ${metric(c, "lineupVolume")}, HR Edge ${score(c)}/100.`;
-  }
-
-  if (judgeId === "risk_auditor") {
-    const warning = safeArray<string>(c.warnings)[0] ?? "This profile needs extra review before trusting it.";
-    return `Risk Auditor flag: ${warning}`;
-  }
-
-  return `Pro Edge blends power, matchup, recent form, lineup volume, confidence tier, and risk penalties into one premium read.`;
+  return buildJudgeReason(judgeId, c);
 }
 
 function probability(c: Candidate): string {
@@ -250,21 +120,7 @@ function scheduledTimeForJudge(date: string, judgeIndex: number): string {
 }
 
 function selectPicks(judgeId: JudgeId, candidates: Candidate[]): Candidate[] {
-  const rows = [...candidates];
-
-  if (judgeId === "risk_auditor") {
-    return rows
-      .filter((c) => warningCount(c) > 0 || c.confidenceTier === "thin" || c.confidenceTier === "avoid" || score(c) < 55)
-      .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
-      .slice(0, 3);
-  }
-
-  const limit = judgeId === "power_hunter" ? 4 : 3;
-
-  return rows
-    .filter((c) => score(c) >= 45)
-    .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
-    .slice(0, limit);
+  return rankCandidatesForJudge(judgeId, candidates, singlePickLimit(judgeId));
 }
 
 function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string {
@@ -291,7 +147,7 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
       ``,
       `The Pro model found ${picks.length} premium HR paths today.`,
       picks[0]
-        ? `Top visible teaser: ${playerName(picks[0])} — HR Edge ${score(picks[0])}/100`
+        ? `Top visible teaser: ${playerName(picks[0])} — HR Edge ${hrScore(picks[0])}/100`
         : `Top visible teaser: pending HR board data.`,
       ``,
       `Pro unlock later: RBI windows, bullpen fatigue, stolen bases, pitch mix, and live parlay impact.`,
@@ -305,7 +161,7 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
 
   const lines = picks.map((p, i) => {
     const reason = agentReason(judge.id, p);
-    return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nHR Edge: ${score(p)}/100 · Agent Score: ${agentScore(judge.id, p).toFixed(1)} · Est HR: ${probability(p)}\nWhy: ${reason}`;
+    return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nHR Edge: ${hrScore(p)}/100 · Agent Score: ${agentScore(judge.id, p).toFixed(1)} · Est HR: ${probability(p)}\nWhy: ${reason}`;
   });
 
   return [

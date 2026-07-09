@@ -1,17 +1,27 @@
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  BarChart3,
+  ChevronRight,
+  FlaskConical,
+  LayoutGrid,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from 'lucide-react';
 import AuthModal from '../components/auth/AuthModal';
+import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
+import {
+  Z8_CYAN_HEX,
+  Z8_INTERACTIVE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PANEL,
+  Z8_PANEL_PREMIUM,
+} from '../theme/z8Tokens';
 
-type TerminalView = 'ledger' | 'matchup' | 'props' | 'profile' | 'money';
 type SignupPlan = 'free' | 'pro' | 'capper';
-
-const matchups = [
-  { id: 1, away: 'NYY', home: 'LAD', awayOdds: '-122', homeOdds: '+110', time: 'LIVE' },
-  { id: 2, away: 'PHI', home: 'ATL', awayOdds: '+105', homeOdds: '-125', time: '19:05' },
-  { id: 3, away: 'HOU', home: 'TEX', awayOdds: '-140', homeOdds: '+120', time: '20:10' },
-  { id: 4, away: 'CHC', home: 'MIL', awayOdds: '+130', homeOdds: '-150', time: '20:10' },
-  { id: 5, away: 'BOS', home: 'BAL', awayOdds: '+115', homeOdds: '-135', time: '21:30' },
-];
 
 const pricingPlans: Array<{
   id: SignupPlan;
@@ -45,221 +55,156 @@ const pricingPlans: Array<{
   },
 ];
 
-function useLiveTerminal() {
-  const [data, setData] = useState({ confidence: 84.2, line: -115, latency: 14 });
+const FEATURES = [
+  {
+    icon: BarChart3,
+    eyebrow: 'HR Board',
+    title: 'Verified home run intelligence',
+    copy: 'Trust-first HR board with confirmed lineups only. Projected previews are clearly labeled — never sold as confirmed.',
+    route: 'hr_board',
+  },
+  {
+    icon: LayoutGrid,
+    eyebrow: 'Edge Island',
+    title: 'Your command center',
+    copy: 'Live slate navigation, matchup context, and edge signals in one obsidian workspace — built for speed on game day.',
+    route: 'island',
+  },
+  {
+    icon: FlaskConical,
+    eyebrow: 'AI Edge Lab',
+    title: 'Judge-powered research room',
+    copy: 'Five AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
+    route: 'mlb_intelligence',
+  },
+  {
+    icon: Users,
+    eyebrow: 'Daily Players',
+    title: 'Slate-wide player research',
+    copy: 'Deep player cards, headshots, and stat context across the full daily player pool — live when signed in.',
+    route: 'daily_players',
+  },
+] as const;
 
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setData((prev) => ({
-        confidence: Number((prev.confidence + (Math.random() * 0.4 - 0.2)).toFixed(1)),
-        latency: Math.floor(Math.random() * 7) + 12,
-        line: Math.random() > 0.9 ? prev.line - 1 : prev.line,
-      }));
-    }, 2000);
-    return () => window.clearInterval(interval);
-  }, []);
+const TRUST_PILLARS = [
+  { label: 'No Hype', detail: 'No inflated edges' },
+  { label: 'Truth', detail: 'Verified lineups only' },
+  { label: 'Research', detail: 'Judge-backed reads' },
+  { label: 'Play', detail: 'Prove your record' },
+] as const;
 
-  return data;
-}
+function StatusTicker() {
+  const items = [
+    'VOUCHEDGE_TERMINAL // TRUST_FIRST_PROTOCOL',
+    'HR_BOARD: LIVE_WHEN_SIGNED_IN',
+    'JUDGE_COUNCIL: DS · PH · MR · RA · PE',
+    'NO_FAKE_LINEUPS // NO_FAKE_ODDS',
+    'EDGE_ISLAND: READY',
+  ];
 
-function Ticker() {
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-[#0A0A0A]/95 py-2 shadow-[0_-18px_40px_rgba(10,10,10,0.75)] backdrop-blur">
+    <div className="fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
       <motion.div
         animate={{ x: '-50%' }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        className="flex gap-12 whitespace-nowrap"
+        transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+        className="flex gap-16 whitespace-nowrap"
       >
-        {[1, 2].map((i) => (
-          <span key={i} className="font-mono text-[9px] uppercase tracking-widest text-white/40">
-            MLB_LIVE: NYY (-122) @ LAD (+110) // VOUCH_ALERT: @ALPHA_QUANT VOUCHED PHI ML // SYSTEM_STABLE //
-          </span>
-        ))}
+        {[1, 2].map((pass) =>
+          items.map((item) => (
+            <span key={`${pass}-${item}`} className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">
+              {item} //
+            </span>
+          )),
+        )}
       </motion.div>
     </div>
   );
 }
 
-function TerminalCard({ children }: { children: React.ReactNode }) {
+function PreviewTerminal() {
   return (
-    <div className="relative overflow-hidden rounded-sm border border-white/10 bg-[#161616] shadow-2xl">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent" />
-      {children}
-    </div>
-  );
-}
-
-function DataPoint({ label, value, active = false }: { label: string; value: string; active?: boolean }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1 border-r border-white/5 p-4">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-white/40">{label}</span>
-      <span className={`truncate font-mono text-lg font-bold sm:text-xl ${active ? 'text-vouch-cyan' : 'text-white'}`}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function VouchButton() {
-  const [vouched, setVouched] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={() => setVouched(true)}
-      className={`shrink-0 border px-3 py-1 font-mono text-[9px] font-bold uppercase transition-all ${
-        vouched
-          ? 'border-vouch-cyan bg-vouch-cyan text-black'
-          : 'border-vouch-cyan/40 text-vouch-cyan hover:bg-vouch-cyan hover:text-black'
-      }`}
-    >
-      {vouched ? 'Vouched' : '+ Vouch'}
-    </button>
-  );
-}
-
-function DailySlate({ onSelect, selectedId }: { onSelect: (id: number) => void; selectedId: number }) {
-  return (
-    <div className="overflow-hidden border border-white/5 bg-[#0A0A0A] font-mono text-[10px]">
-      <div className="grid grid-cols-4 border-b border-white/10 bg-white/5 p-2 uppercase tracking-widest text-white/40">
-        <span className="col-span-2">Matchup</span>
-        <span>Odds</span>
-        <span className="text-right">Time</span>
-      </div>
-      <div className="max-h-[200px] divide-y divide-white/5 overflow-y-auto">
-        {matchups.map((m) => (
-          <button
-            type="button"
-            key={m.id}
-            onClick={() => onSelect(m.id)}
-            className={`grid w-full cursor-pointer grid-cols-4 items-center p-3 text-left transition-colors ${
-              selectedId === m.id ? 'border-l-2 border-vouch-cyan bg-vouch-cyan/10' : 'hover:bg-white/[0.02]'
-            }`}
-          >
-            <span className="col-span-2 flex items-center gap-2">
-              <span className="font-bold text-white">{m.away}</span>
-              <span className="text-white/20">@</span>
-              <span className="font-bold text-white">{m.home}</span>
-            </span>
-            <span className="flex flex-col text-white/60">
-              <span>{m.awayOdds}</span>
-              <span>{m.homeOdds}</span>
-            </span>
-            <span className={`text-right ${m.time === 'LIVE' ? 'animate-pulse text-vouch-cyan' : 'text-white/40'}`}>
-              {m.time}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function VouchLedger() {
-  return (
-    <div className="w-full space-y-2 font-mono text-[10px]">
-      {['ALPHA_QUANT', 'SHARP_BETTOR', 'DATA_MINER'].map((user) => (
-        <div key={user} className="flex items-center justify-between gap-3 border-b border-white/5 p-2">
-          <span className="text-white/80">@{user}</span>
-          <span className="font-bold text-vouch-cyan">NYY ML</span>
-          <VouchButton />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function MatchupIntelligence() {
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div className="border border-white/10 bg-white/5 p-4">
-        <div className="mb-2 text-[8px] uppercase text-vouch-cyan">Zone_Matrix</div>
-        <div className="grid grid-cols-3 gap-1">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className={`aspect-square border border-white/5 ${i === 4 ? 'bg-vouch-cyan/20' : ''}`} />
-          ))}
-        </div>
-      </div>
-      <div className="flex h-24 items-end gap-1 border border-white/10 bg-white/5 p-4">
-        {[40, 70, 45, 90, 65].map((h, i) => (
-          <div key={i} className="flex-1 bg-vouch-cyan/40" style={{ height: `${h}%` }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PropTerminal() {
-  return (
-    <div className="space-y-2 font-mono text-[10px]">
-      {[
-        { player: 'A. JUDGE', edge: '+4.2%' },
-        { player: 'S. OHTANI', edge: '+2.8%' },
-      ].map((item) => (
-        <div key={item.player} className="flex items-center justify-between gap-3 border-b border-white/5 p-2">
-          <span className="text-white">{item.player}</span>
-          <span className="font-bold text-vouch-cyan">{item.edge}</span>
-          <VouchButton />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProfilePreview() {
-  return (
-    <div className="space-y-4 font-mono text-[10px]">
-      <div className="flex items-center justify-between border border-vouch-cyan/20 bg-vouch-cyan/10 p-4">
+    <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
+      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
         <div>
-          <div className="text-sm font-bold uppercase text-white">@EDGE_ANALYST</div>
-          <div className="text-[8px] uppercase tracking-widest text-vouch-cyan">Identity_Verified</div>
+          <p className={`${Z8_LABEL} text-vouch-cyan`}>Terminal Preview</p>
+          <p className="mt-1 text-xs text-white/40">Sign in to unlock live HR board + judge picks</p>
         </div>
-        <div className="text-right">
-          <div className="text-[8px] uppercase text-white/20">Trust_Score</div>
-          <div className="text-lg font-bold text-vouch-cyan">--.-</div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col border border-white/5 bg-white/5 p-3">
-          <span className="text-[8px] uppercase text-white/20">ROI</span>
-          <span className="font-bold text-white">0.0%</span>
-        </div>
-        <div className="flex flex-col border border-white/5 bg-white/5 p-3">
-          <span className="text-[8px] uppercase text-white/20">Vouches</span>
-          <span className="font-bold text-white">0</span>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.6)]" />
+          <span className="font-mono text-[9px] uppercase tracking-widest text-vouch-emerald/80">Standby</span>
         </div>
       </div>
-      <div className="border border-white/5 p-4 text-center text-[9px] uppercase tracking-widest text-white/20">
-        No_Verification_History_Found
+
+      <div className="grid grid-cols-2 border-b border-white/10 sm:grid-cols-4">
+        {[
+          { label: 'HR Board', value: '—' },
+          { label: 'Judges', value: '5' },
+          { label: 'Data Quality', value: 'Verified' },
+          { label: 'Status', value: 'Locked' },
+        ].map((stat) => (
+          <div key={stat.label} className="border-r border-white/5 p-4 last:border-r-0">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">{stat.label}</p>
+            <p className="mt-1 font-mono text-lg font-bold text-white/80">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3 p-5">
+        {[
+          { row: 'Confirmed lineup players', status: 'Live when signed in', tone: 'text-vouch-cyan' },
+          { row: 'Projected roster previews', status: 'Labeled + warned', tone: 'text-vouch-amber' },
+          { row: 'AI judge top picks', status: 'Updates with slate', tone: 'text-vouch-emerald' },
+          { row: 'Parlay-ready legs', status: 'Copy after sign-in', tone: 'text-white/60' },
+        ].map((row) => (
+          <div
+            key={row.row}
+            className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/30 px-4 py-3"
+          >
+            <span className="text-sm text-white/70">{row.row}</span>
+            <span className={`font-mono text-[10px] font-bold uppercase tracking-wide ${row.tone}`}>
+              {row.status}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-white/10 bg-vouch-cyan/5 px-5 py-3 text-center">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+          Official lineup not posted yet? We warn you. Team mismatch? We block it.
+        </p>
       </div>
     </div>
   );
 }
 
-function MonetizationEngine() {
+function FeatureStrip({
+  icon: Icon,
+  eyebrow,
+  title,
+  copy,
+}: (typeof FEATURES)[number]) {
   return (
-    <div className="space-y-4 font-mono text-[10px]">
-      <div className="border border-vouch-cyan/20 bg-vouch-cyan/5 p-4">
-        <div className="mb-1 uppercase text-vouch-cyan/60">Monthly_Revenue</div>
-        <div className="text-xl font-bold text-vouch-cyan">$12,480.00</div>
+    <article className={`rounded-2xl ${Z8_PANEL} ${Z8_INTERACTIVE} p-5`}>
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">
+        <Icon size={18} strokeWidth={2.25} />
       </div>
-      <div className="border border-white/5 bg-white/5 p-4">
-        <div className="mb-1 uppercase text-white/40">Subscribers</div>
-        <div className="text-xl font-bold text-white">412</div>
-      </div>
-    </div>
+      <p className={`${Z8_LABEL} text-vouch-cyan/70`}>{eyebrow}</p>
+      <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-white/50">{copy}</p>
+    </article>
   );
 }
 
 function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => void }) {
   return (
-    <section className="mt-8 border border-white/10 bg-white/[0.025] p-4 sm:p-5">
-      <div className="mb-4 flex flex-col justify-between gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-end">
+    <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-6`}>
+      <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-vouch-cyan">These are Beta Prices</div>
-          <h2 className="mt-1 text-xl font-bold uppercase tracking-tight text-white">Terminal Access</h2>
+          <p className={`${Z8_LABEL} text-vouch-cyan`}>Beta Pricing</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-white">Terminal Access</h2>
         </div>
         <p className="max-w-sm font-mono text-[10px] uppercase leading-relaxed text-white/35">
-          Beta pricing is shown in USD and built for early VouchEdge users.
+          Early VouchEdge pricing in USD. No fake trials, no bait-and-switch.
         </p>
       </div>
 
@@ -269,16 +214,22 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
             key={plan.id}
             type="button"
             onClick={() => onSelectPlan(plan.id)}
-            className={`group flex min-h-[190px] flex-col justify-between border p-4 text-left transition-all hover:-translate-y-0.5 ${
+            className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${Z8_INTERACTIVE} ${
               plan.featured
-                ? 'border-vouch-cyan/60 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,229,255,0.12)]'
+                ? 'border-vouch-cyan/50 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.12)]'
                 : 'border-white/10 bg-black/30 hover:border-vouch-cyan/40'
             }`}
           >
             <span>
               <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">{plan.descriptor}</span>
               <span className="mt-1 block text-lg font-black uppercase text-white">{plan.name}</span>
-              <span className={plan.featured ? 'mt-3 block text-2xl font-black text-vouch-cyan' : 'mt-3 block text-2xl font-black text-white'}>
+              <span
+                className={
+                  plan.featured
+                    ? 'mt-3 block text-2xl font-black text-vouch-cyan'
+                    : 'mt-3 block text-2xl font-black text-white'
+                }
+              >
                 {plan.price}
               </span>
             </span>
@@ -289,8 +240,9 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
                 </span>
               ))}
             </span>
-            <span className="mt-4 block border-t border-white/10 pt-3 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan group-hover:text-white">
+            <span className="mt-4 flex items-center gap-1 border-t border-white/10 pt-3 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan group-hover:text-white">
               Select {plan.name}
+              <ChevronRight size={12} />
             </span>
           </button>
         ))}
@@ -300,14 +252,11 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
 }
 
 export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => void }) {
-  const [view, setView] = useState<TerminalView>('ledger');
-  const [selectedGame, setSelectedGame] = useState(1);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [authPlan, setAuthPlan] = useState<SignupPlan>('free');
-  const liveData = useLiveTerminal();
 
-  const openSignup = (plan: SignupPlan) => {
+  const openSignup = (plan: SignupPlan = 'free') => {
     setAuthMode('signup');
     setAuthPlan(plan);
     setAuthOpen(true);
@@ -321,111 +270,196 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-[#0A0A0A] p-4 pb-28 font-sans text-white lg:p-12 lg:pb-32">
-        <Ticker />
-        <div className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] bg-[radial-gradient(circle_at_30%_20%,rgba(0,229,255,0.18),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_42%)] opacity-60" />
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:100%_4px]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent" />
+      <main className={`${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
+        <StatusTicker />
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl">
-          <div className="mb-8 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 text-center sm:flex-row sm:text-left">
-            <div className="text-xl font-bold uppercase italic tracking-tighter">
-              VouchEdge<span className="text-vouch-cyan">.Terminal</span>
-            </div>
-            <div className="flex flex-col items-center gap-3 sm:flex-row">
-              <div className="hidden font-mono text-[10px] uppercase tracking-widest text-white/40 sm:block">
-                System_Status: <span className="text-vouch-cyan">Optimal</span> // Latency: {liveData.latency}ms
+        {/* Ambient obsidian glow */}
+        <div
+          className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
+          style={{
+            background: `radial-gradient(circle at 30% 20%, rgba(0,240,255,0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
+          }}
+        />
+        <div
+          className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          style={{ background: `radial-gradient(circle, rgba(0,255,148,0.12), transparent 70%)` }}
+        />
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
+
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          {/* Header */}
+          <header className="mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+                <Activity size={18} className="text-vouch-cyan" />
+              </div>
+              <div>
+                <p className="text-lg font-black uppercase italic tracking-tighter text-white">
+                  VouchEdge<span className="text-vouch-cyan">.Terminal</span>
+                </p>
+                <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+                  MLB Edge Research · Trust First
+                </p>
               </div>
             </div>
-          </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openLogin}
+                className={`rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
+              >
+                Log In
+              </button>
+              <button
+                type="button"
+                onClick={() => openSignup('free')}
+                className={`rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:bg-vouch-cyan hover:text-black`}
+              >
+                Sign Up
+              </button>
+            </div>
+          </header>
 
-          <div className="space-y-8">
-            <section className="mx-auto flex w-full max-w-4xl flex-col items-center space-y-6 text-center">
-              <h1 className="text-4xl font-bold leading-none tracking-tighter sm:text-5xl lg:text-6xl">
-                Command the board with <span className="text-vouch-cyan">pristine</span> intelligence.
-              </h1>
-              <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/40">
-                The definitive research and verification terminal for serious analysts. Analyze live data,
-                execute AI models, and prove your record.
-              </p>
-              <div className="grid w-full max-w-2xl grid-cols-2 border border-white/10 bg-black/30 font-mono text-[10px] font-bold uppercase tracking-widest text-white/70 sm:grid-cols-4">
-                {['No Hype', 'Truth', 'Research', 'Play'].map((value) => (
-                  <div key={value} className="border-white/10 px-3 py-3 sm:border-l first:border-l-0">
-                    {value}
+          <div className="space-y-16 sm:space-y-20">
+            {/* Hero */}
+            <section className="mx-auto flex w-full max-w-5xl flex-col items-center space-y-8 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5"
+              >
+                <ShieldCheck size={14} className="text-vouch-cyan" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan/90">
+                  Verified HR Board · AI Judge Council
+                </span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.05 }}
+                className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl"
+              >
+                MLB edge research with{' '}
+                <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
+                  pristine
+                </span>{' '}
+                intelligence.
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mx-auto max-w-2xl text-base leading-relaxed text-white/50"
+              >
+                The trust-first terminal for serious analysts. Verified home run boards, five AI judges,
+                and honest data — no fake lineups, no inflated edges, no hype.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4"
+              >
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-1 text-[10px] text-white/35">{pillar.detail}</p>
                   </div>
                 ))}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center"
+              >
+                <button
+                  type="button"
+                  onClick={() => openSignup('free')}
+                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:max-w-[220px]`}
+                >
+                  <Sparkles size={14} />
+                  Enter the Edge
+                </button>
+                <button
+                  type="button"
+                  onClick={openLogin}
+                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white sm:max-w-[220px]`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSignup('pro')}
+                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald ${Z8_INTERACTIVE} hover:border-vouch-emerald/60 sm:max-w-[220px]`}
+                >
+                  Explore Pro
+                  <ChevronRight size={14} />
+                </button>
+              </motion.div>
+            </section>
+
+            {/* Preview terminal — honest, no fake data */}
+            <section className="space-y-4">
+              <div className="text-center">
+                <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
+                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Live terminal preview</h2>
               </div>
-              <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-                {[
-                  { label: 'Sign Up', onClick: () => openSignup('free') },
-                  { label: 'Log In', onClick: openLogin },
-                ].map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={action.onClick}
-                    className="h-14 border border-vouch-cyan/55 bg-vouch-cyan/10 px-5 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.08)] transition-all hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black"
-                  >
-                    {action.label}
-                  </button>
+              <PreviewTerminal />
+            </section>
+
+            {/* 5 Judges */}
+            <LandingJudgesDeck />
+
+            {/* Feature strips */}
+            <section className="space-y-6">
+              <div className="text-center">
+                <p className={`${Z8_LABEL} text-vouch-cyan`}>Platform</p>
+                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Built for the full research loop</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
+                  From verified HR boards to judge parlays — every module is honest about what is confirmed vs projected.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {FEATURES.map((feature) => (
+                  <FeatureStrip key={feature.eyebrow} {...feature} />
                 ))}
               </div>
             </section>
 
-            <section className="w-full space-y-4">
-              <div className="text-center font-mono text-[10px] uppercase tracking-widest text-vouch-cyan">
-                Active_Daily_Slate
-              </div>
-              <DailySlate selectedId={selectedGame} onSelect={setSelectedGame} />
-            </section>
-
-            <section className="w-full">
-              <TerminalCard>
-                <div className="flex border-b border-white/10 bg-white/5 p-1">
-                  {(['ledger', 'matchup', 'props', 'profile', 'money'] as TerminalView[]).map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setView(tab)}
-                      className={`flex-1 py-3 font-mono text-[9px] uppercase tracking-widest transition-all ${
-                        view === tab ? 'bg-vouch-cyan font-bold text-black' : 'text-white/40 hover:text-white'
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 border-b border-white/5 bg-black/40 sm:grid-cols-3">
-                  <DataPoint label="Selected_Matchup" value={selectedGame === 1 ? 'NYY @ LAD' : 'PHI @ ATL'} />
-                  <DataPoint label="AI_Confidence" value={`${liveData.confidence}%`} active />
-                  <DataPoint label="Live_Line" value={`-115 -> ${liveData.line}`} />
-                </div>
-
-                <div className="min-h-[400px] bg-black/20 p-6">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={view}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                    >
-                      {view === 'ledger' && <VouchLedger />}
-                      {view === 'matchup' && <MatchupIntelligence />}
-                      {view === 'props' && <PropTerminal />}
-                      {view === 'profile' && <ProfilePreview />}
-                      {view === 'money' && <MonetizationEngine />}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </TerminalCard>
-            </section>
-
+            {/* Pricing */}
             <PricingGrid onSelectPlan={openSignup} />
-            <div
-              aria-hidden="true"
-              className="h-16 border-t border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent"
-            />
+
+            {/* Footer CTA */}
+            <section
+              className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
+              style={{ boxShadow: `0 0 48px rgba(0,240,255,0.06)` }}
+            >
+              <p className={`${Z8_LABEL} text-vouch-cyan`}>Ready when you are</p>
+              <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+                Command the board. Prove your edge.
+              </h2>
+              <p className="mx-auto mt-3 max-w-lg text-sm text-white/45">
+                Sign in to load today&apos;s verified HR board, judge picks, and live slate intelligence.
+              </p>
+              <button
+                type="button"
+                onClick={() => openSignup('free')}
+                className={`mt-6 inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan px-8 font-mono text-[11px] font-bold uppercase tracking-widest text-black shadow-[0_0_32px_rgba(0,240,255,0.2)] ${Z8_INTERACTIVE}`}
+                style={{ ['--tw-shadow-color' as string]: Z8_CYAN_HEX }}
+              >
+                Enter the Edge
+                <ChevronRight size={14} />
+              </button>
+            </section>
           </div>
         </div>
       </main>

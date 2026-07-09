@@ -1,40 +1,21 @@
+import { getSupabaseAdmin } from "../../middleware/auth";
 import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
+import {
+  computeJudgeWinRate,
+  safeArray,
+  selectTopPicksForJudge,
+  singlePickLimit,
+  type JudgeCandidate,
+  type JudgeId,
+} from "./judgeScoring";
 
-type JudgeId =
-  | "data_scout"
-  | "power_hunter"
-  | "momentum_reader"
-  | "risk_auditor"
-  | "pro_edge_agent";
-
-type Candidate = {
-  playerId?: number | string;
-  playerName?: string;
-  name?: string;
-  team?: string;
-  opponent?: string;
-  opponentTeam?: string;
-  opponentPitcherName?: string;
-  venue?: string;
-  hrScore?: number;
-  riskTier?: string;
-  confidenceTier?: string;
-  estimatedHrProbability?: number;
-  reasons?: string[];
-  warnings?: string[];
-  scoreBreakdown?: Record<string, number>;
-  status?: string;
-  lineupStatus?: string;
-  injuryStatus?: string;
-  activeRosterStatus?: boolean;
-};
-
-const AI_JUDGES: Array<{
+export const AI_JUDGES: Array<{
   id: JudgeId;
   displayName: string;
   handle: string;
   tagline: string;
   persona: string;
+  specialty: string;
   color: string;
 }> = [
   {
@@ -43,6 +24,7 @@ const AI_JUDGES: Array<{
     handle: "ai-data-scout",
     tagline: "Clean math. Low hype. Safer profiles.",
     persona: "Finds cleaner HR profiles with better data quality and fewer red flags.",
+    specialty: "Math-first slate screening",
     color: "cyan",
   },
   {
@@ -51,6 +33,7 @@ const AI_JUDGES: Array<{
     handle: "ai-power-hunter",
     tagline: "Home-run upside hunter.",
     persona: "Chases raw HR upside using hitter power, pitcher vulnerability, and park context.",
+    specialty: "HR threat radar",
     color: "orange",
   },
   {
@@ -59,6 +42,7 @@ const AI_JUDGES: Array<{
     handle: "ai-momentum-reader",
     tagline: "Recent form and rhythm reader.",
     persona: "Reads recent form, lineup volume, and short-term momentum signals.",
+    specialty: "Game rhythm & form",
     color: "purple",
   },
   {
@@ -67,6 +51,7 @@ const AI_JUDGES: Array<{
     handle: "ai-risk-auditor",
     tagline: "Finds traps before they cost you.",
     persona: "Flags thin data, risky profiles, projection problems, and low-confidence picks.",
+    specialty: "Skeptical filter",
     color: "red",
   },
   {
@@ -75,258 +60,118 @@ const AI_JUDGES: Array<{
     handle: "ai-pro-edge",
     tagline: "Premium blended model.",
     persona: "Blends power, matchup, form, confidence, and risk into one premium read.",
+    specialty: "Premium blended edge",
     color: "emerald",
   },
 ];
 
-function safeArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
+async function getCapperStatsByNames(names: string[]) {
+  const empty = {
+    capperMap: new Map<string, { id: string; display_name: string }>(),
+    scoreMap: new Map<string, {
+      won_picks: number;
+      lost_picks: number;
+      pushed_picks: number;
+      score: number;
+      net_units: number;
+    }>(),
+    pendingMap: new Map<string, number>(),
+  };
 
-function score(c: Candidate): number {
-  const n = Number(c.hrScore);
-  return Number.isFinite(n) ? n : 0;
-}
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: cappers, error: capperError } = await supabaseAdmin
+      .from("cappers")
+      .select("id, display_name")
+      .in("display_name", names);
 
-function metric(c: Candidate, key: string): number {
-  const n = Number(c.scoreBreakdown?.[key] ?? 0);
-  return Number.isFinite(n) ? n : 0;
-}
+    if (capperError || !cappers?.length) return empty;
 
-function warningCount(c: Candidate): number {
-  return safeArray(c.warnings).length;
-}
+    const capperMap = new Map(cappers.map((c) => [c.display_name, c]));
+    const capperIds = cappers.map((c) => c.id);
 
-function confidenceBonus(c: Candidate): number {
-  if (c.confidenceTier === "elite") return 10;
-  if (c.confidenceTier === "strong") return 7;
-  if (c.confidenceTier === "watchlist") return 3;
-  if (c.confidenceTier === "thin") return -5;
-  if (c.confidenceTier === "avoid") return -12;
-  return 0;
-}
+    const { data: scores, error: scoreError } = await supabaseAdmin
+      .from("trust_scores")
+      .select("subject_id, scope, won_picks, lost_picks, pushed_picks, score, net_units")
+      .eq("subject_type", "capper")
+      .in("subject_id", capperIds)
+      .in("scope", ["MLB", "overall"]);
 
-function availabilityForPick(candidate: Candidate, judgeId: JudgeId) {
-  const warnings = safeArray<string>(candidate.warnings);
-  const reasons: string[] = [];
+    if (scoreError) return { ...empty, capperMap };
 
-  const lineupStatus = String(candidate.lineupStatus ?? "unknown");
-  const injuryStatus = String(candidate.injuryStatus ?? "unknown");
-  const status = String(candidate.status ?? "unknown");
-  const activeRosterStatus = candidate.activeRosterStatus !== false;
-
-  if (!activeRosterStatus) {
-    return {
-      status: "avoid",
-      label: "Not active-roster eligible",
-      parlayEligible: false,
-      reasons: ["Player is not active on today's verified roster."],
-    };
-  }
-
-  if (["injured_list", "scratched"].includes(injuryStatus)) {
-    return {
-      status: "avoid",
-      label: injuryStatus === "scratched" ? "Scratched" : "Injured list",
-      parlayEligible: false,
-      reasons: [`Injury status: ${injuryStatus}`],
-    };
-  }
-
-  if (judgeId === "risk_auditor") {
-    return {
-      status: "avoid",
-      label: "Trap Watch / Avoid Board",
-      parlayEligible: false,
-      reasons: warnings.length ? warnings.slice(0, 3) : ["Risk Auditor flagged this as a caution profile."],
-    };
-  }
-
-  if (lineupStatus === "confirmed" || status === "confirmed") {
-    return {
-      status: "confirmed",
-      label: "Confirmed in lineup",
-      parlayEligible: true,
-      reasons: ["Official lineup/validated candidate feed confirms this player."],
-    };
-  }
-
-  if (lineupStatus === "projected" || lineupStatus === "projected_unconfirmed" || status === "projected") {
-    reasons.push("Player is roster-valid, but official lineup is not confirmed yet.");
-    if (injuryStatus === "day_to_day" || injuryStatus === "questionable") {
-      reasons.push(`Injury status: ${injuryStatus}. Use caution.`);
-      return {
-        status: "questionable",
-        label: "Projected but questionable",
-        parlayEligible: false,
-        reasons,
-      };
+    const scoreMap = new Map<string, (typeof scores)[number]>();
+    for (const row of scores ?? []) {
+      const existing = scoreMap.get(row.subject_id);
+      if (!existing || existing.scope !== "MLB") {
+        scoreMap.set(row.subject_id, row);
+      }
     }
 
-    return {
-      status: "projected",
-      label: "Projected / wait for lineup",
-      parlayEligible: true,
-      reasons,
-    };
-  }
+    const { data: pendingRows, error: pendingError } = await supabaseAdmin
+      .from("picks")
+      .select("capper_id")
+      .in("capper_id", capperIds)
+      .eq("status", "pending")
+      .eq("leg_type", "single");
 
-  if (injuryStatus === "day_to_day" || injuryStatus === "questionable" || warnings.length > 0) {
-    return {
-      status: "questionable",
-      label: "Questionable / needs review",
-      parlayEligible: false,
-      reasons: warnings.length ? warnings.slice(0, 3) : [`Injury status: ${injuryStatus}`],
-    };
-  }
+    const pendingMap = new Map<string, number>();
+    if (!pendingError && pendingRows) {
+      for (const row of pendingRows) {
+        const id = String(row.capper_id);
+        pendingMap.set(id, (pendingMap.get(id) ?? 0) + 1);
+      }
+    }
 
-  return {
-    status: "questionable",
-    label: "Availability unknown",
-    parlayEligible: false,
-    reasons: ["Lineup and availability are not confirmed enough for parlay use."],
-  };
+    return { capperMap, scoreMap, pendingMap };
+  } catch {
+    return empty;
+  }
 }
 
-function agentScore(judgeId: JudgeId, c: Candidate): number {
-  const base = score(c);
-  const hitterPower = metric(c, "hitterPower");
-  const pitcherVulnerability = metric(c, "pitcherVulnerability");
-  const parkContext = metric(c, "parkContext");
-  const lineupVolume = metric(c, "lineupVolume");
-  const handednessEdge = metric(c, "handednessEdge");
-  const recentForm = metric(c, "recentForm");
-  const penalties = Math.abs(metric(c, "penalties"));
-  const warnings = warningCount(c);
-
-  if (judgeId === "data_scout") {
-    return base * 0.35 + lineupVolume * 0.18 + handednessEdge * 0.14 + confidenceBonus(c) + hitterPower * 0.12 + pitcherVulnerability * 0.12 - warnings * 4 - penalties * 0.35;
-  }
-
-  if (judgeId === "power_hunter") {
-    return base * 0.40 + hitterPower * 0.28 + pitcherVulnerability * 0.22 + parkContext * 0.10 + recentForm * 0.08 - penalties * 0.20;
-  }
-
-  if (judgeId === "momentum_reader") {
-    return base * 0.25 + recentForm * 0.38 + lineupVolume * 0.16 + parkContext * 0.10 + handednessEdge * 0.10 + confidenceBonus(c) * 0.5 - warnings * 2;
-  }
-
-  if (judgeId === "risk_auditor") {
-    return warnings * 18 + penalties * 1.2 + (c.confidenceTier === "avoid" ? 30 : 0) + (c.confidenceTier === "thin" ? 18 : 0) + (base < 55 ? 12 : 0) - hitterPower * 0.10 - pitcherVulnerability * 0.10;
-  }
-
-  return base * 0.34 + hitterPower * 0.18 + pitcherVulnerability * 0.18 + recentForm * 0.14 + lineupVolume * 0.10 + handednessEdge * 0.08 + parkContext * 0.08 + confidenceBonus(c) - warnings * 3 - penalties * 0.45;
-}
-
-function selectTopPicks(judgeId: JudgeId, candidates: Candidate[]) {
-  const rows = [...candidates];
-
-  const picked =
-    judgeId === "risk_auditor"
-      ? rows
-          .filter((c) => warningCount(c) > 0 || c.confidenceTier === "thin" || c.confidenceTier === "avoid" || score(c) < 55)
-          .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
-          .slice(0, 5)
-      : rows
-          .filter((c) => score(c) >= 45)
-          .sort((a, b) => agentScore(judgeId, b) - agentScore(judgeId, a))
-          .slice(0, 5);
-
-  return picked.map((p, index) => {
-    const availability = availabilityForPick(p, judgeId);
-    const playerName = p.playerName ?? p.name ?? "Unknown player";
-
-    return {
-      rank: index + 1,
-      playerId: p.playerId ?? null,
-      playerName,
-      team: p.team ?? "TBD",
-      opponent: p.opponent ?? p.opponentTeam ?? "TBD",
-      opponentPitcherName: p.opponentPitcherName ?? "TBD",
-      venue: p.venue ?? "TBD",
-      pickType: judgeId === "risk_auditor" ? "AVOID" : "HR",
-      market: judgeId === "risk_auditor" ? "Trap Watch" : "Home Run",
-      hrScore: score(p),
-      agentScore: Number(agentScore(judgeId, p).toFixed(1)),
-      estimatedHrProbability: p.estimatedHrProbability ?? null,
-      confidenceTier: p.confidenceTier ?? null,
-      riskTier: p.riskTier ?? null,
-      lineupStatus: p.lineupStatus ?? null,
-      injuryStatus: p.injuryStatus ?? null,
-      activeRosterStatus: p.activeRosterStatus ?? null,
-      availability,
-      reasons: safeArray<string>(p.reasons).slice(0, 3),
-      warnings: safeArray<string>(p.warnings).slice(0, 3),
-      parlayEligible: availability.parlayEligible,
-      parlayLeg: availability.parlayEligible
-        ? {
-            type: "player_prop",
-            sport: "mlb",
-            market: "home_run",
-            playerName,
-            team: p.team ?? "TBD",
-            opponent: p.opponent ?? p.opponentTeam ?? "TBD",
-            label: `${playerName} HR`,
-          }
-        : null,
-    };
-  });
-}
-
-async function getCapperStatsByNames(_names: string[]) {
-  // Safe mode: judge win-rate memory comes later when Supabase keys are configured.
-  // This keeps the AI Judge Leaderboard working from HR Board data only.
-  return {
-    capperMap: new Map<string, any>(),
-    scoreMap: new Map<string, any>(),
-  };
+function trustFirstCandidates(payload: Record<string, unknown>): JudgeCandidate[] {
+  const confirmed = safeArray<JudgeCandidate>(payload.candidates);
+  if (confirmed.length > 0) return confirmed;
+  return safeArray<JudgeCandidate>(payload.projectedCandidates);
 }
 
 export async function buildAiJudgeLeaderboard() {
   const board = (await getCachedValidatedHrBoard()) as any;
   const payload = board?.payload ?? board ?? {};
+  const candidates = trustFirstCandidates(payload);
 
-  const candidates = [
-    ...safeArray<Candidate>(payload.candidates),
-    ...safeArray<Candidate>(payload.projectedCandidates),
-  ];
-
-  const { capperMap, scoreMap } = await getCapperStatsByNames(AI_JUDGES.map((j) => j.displayName));
+  const { capperMap, scoreMap, pendingMap } = await getCapperStatsByNames(
+    AI_JUDGES.map((j) => j.displayName),
+  );
 
   const judges = AI_JUDGES.map((judge) => {
-    const capper = capperMap.get(judge.displayName) as any;
-    const stats = capper ? (scoreMap.get(capper.id) as any) : null;
+    const capper = capperMap.get(judge.displayName);
+    const stats = capper ? scoreMap.get(capper.id) : null;
 
     const won = Number(stats?.won_picks ?? 0);
     const lost = Number(stats?.lost_picks ?? 0);
     const pushed = Number(stats?.pushed_picks ?? 0);
     const graded = won + lost + pushed;
-    const winRate = won + lost > 0 ? Number(((won / (won + lost)) * 100).toFixed(1)) : null;
+    const winRate = computeJudgeWinRate({ won, lost, pushed });
+    const pending = capper ? Number(pendingMap.get(capper.id) ?? 0) : 0;
+
+    const topPicks = selectTopPicksForJudge(judge.id, candidates);
 
     return {
       ...judge,
       capperId: capper?.id ?? null,
       trustScore: stats?.score != null ? Number(stats.score) : 50,
       winRate,
+      singlePickLimit: singlePickLimit(judge.id),
       record: {
         won,
         lost,
         pushed,
         graded,
-        pending: 0,
+        pending,
         netUnits: Number(stats?.net_units ?? 0),
       },
-      topPicks: selectTopPicks(judge.id, candidates),
-      parlayBuilder: {
-        judgeId: judge.id,
-        judgeName: judge.displayName,
-        suggestedParlayName: `${judge.displayName} Top HR Parlay`,
-        maxLegs: 5,
-        legs: selectTopPicks(judge.id, candidates)
-          .filter((p: any) => p.parlayEligible && p.parlayLeg)
-          .slice(0, 5)
-          .map((p: any) => p.parlayLeg),
-      },
+      topPick: topPicks[0] ?? null,
+      topPicks,
     };
   });
 

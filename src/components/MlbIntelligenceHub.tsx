@@ -52,6 +52,7 @@ type IntelligenceReport = {
 
 type AiJudgePick = {
   rank: number;
+  judgeId?: string;
   playerId?: number | string | null;
   playerName: string;
   team: string;
@@ -62,17 +63,22 @@ type AiJudgePick = {
   venue?: string;
   pickType: string;
   market: string;
+  specialtyLabel?: string;
+  singlePickLabel?: string;
+  judgeReason?: string;
   hrScore: number;
   agentScore: number;
   confidenceTier?: string | null;
   riskTier?: string | null;
+  warnings?: string[];
+  gradeable?: boolean;
+  isAvoidPick?: boolean;
   availability?: {
     status: string;
     label: string;
-    parlayEligible: boolean;
+    gradeable?: boolean;
     reasons: string[];
   };
-  parlayEligible?: boolean;
 };
 
 type AiJudge = {
@@ -81,9 +87,11 @@ type AiJudge = {
   handle: string;
   tagline: string;
   persona: string;
+  specialty?: string;
   color: string;
   trustScore: number;
   winRate: number | null;
+  singlePickLimit?: number;
   record: {
     won: number;
     lost: number;
@@ -92,14 +100,8 @@ type AiJudge = {
     pending: number;
     netUnits: number;
   };
+  topPick: AiJudgePick | null;
   topPicks: AiJudgePick[];
-  parlayBuilder?: {
-    judgeId: string;
-    judgeName: string;
-    suggestedParlayName: string;
-    maxLegs: number;
-    legs: unknown[];
-  };
 };
 
 type AiJudgeLeaderboard = {
@@ -330,38 +332,80 @@ function availabilityTone(status?: string) {
   return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
 }
 
-async function copyJudgeParlayLegs(judge: AiJudge, onCopied?: (message: string) => void) {
-  const picks = safeArray<AiJudgePick>(judge.topPicks)
-    .filter((pick) => pick.parlayEligible)
-    .slice(0, 5);
+function pickTypeTone(pickType?: string) {
+  const value = String(pickType ?? '').toUpperCase();
+  if (value === 'AVOID') return 'border-red-400/30 bg-red-400/10 text-red-200';
+  if (value === 'POWER_THREAT') return 'border-orange-400/30 bg-orange-400/10 text-orange-200';
+  if (value === 'FORM_PLAY') return 'border-violet-400/30 bg-violet-400/10 text-violet-200';
+  if (value === 'CLEAN_SCREEN') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
+  if (value === 'PREMIUM_EDGE') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  return 'border-slate-700 bg-slate-800 text-slate-300';
+}
 
-  if (picks.length === 0) return;
+const JUDGE_SECTION_COPY: Record<string, { title: string; subtitle: string }> = {
+  data_scout: {
+    title: "Today's Safer HR Single",
+    subtitle: 'One math-first HR single — cleaner data profile, fewer red flags.',
+  },
+  power_hunter: {
+    title: "Today's Power Threat Single",
+    subtitle: 'One raw HR upside single from power paths, pitcher vulnerability, and park leverage.',
+  },
+  momentum_reader: {
+    title: "Today's Form Single",
+    subtitle: 'One rhythm read — recent form and lineup volume on a single HR leg.',
+  },
+  risk_auditor: {
+    title: "Today's Trap Avoid",
+    subtitle: 'One caution profile — graded when the flagged player stays cold.',
+  },
+  pro_edge_agent: {
+    title: "Today's Premium Single",
+    subtitle: 'One blended power, matchup, form, and confidence HR read.',
+  },
+};
+
+async function copyJudgeSingle(judge: AiJudge) {
+  const pick = judge.topPick ?? safeArray<AiJudgePick>(judge.topPicks)[0];
+  if (!pick) return;
 
   const lines = [
-    `${judge.displayName} Top HR Parlay`,
+    `${judge.displayName} — Today's Single`,
     '',
-    ...picks.map((pick, index) => `${index + 1}. ${pick.playerName} HR — ${pick.team} vs ${pick.opponent}`),
+    `${pick.playerName} — ${pick.singlePickLabel ?? pick.market} — ${pick.team} vs ${pick.opponent}`,
     '',
     'Built from VouchEdge AI Judge Leaderboard.',
     'Research only. Not betting advice.',
   ];
 
   await navigator.clipboard.writeText(lines.join('\n'));
-  onCopied?.(`${judge.displayName} parlay legs copied.`);
 }
 
+function formatJudgeRecord(record: AiJudge['record']) {
+  const base = `${record.won}-${record.lost}`;
+  if (record.pending > 0) return `${base} (${record.pending} pending)`;
+  if (record.graded === 0) return '0-0';
+  return base;
+}
 
 function JudgeCard({ judge }: { judge: AiJudge }) {
   const isRisk = judge.id === 'risk_auditor';
-  const picks = Array.isArray(judge.topPicks) ? judge.topPicks.slice(0, 5) : [];
-  const eligibleLegs = picks.filter((p) => p.parlayEligible);
+  const pickLimit = judge.singlePickLimit ?? 3;
+  const picks = safeArray<AiJudgePick>(judge.topPicks).slice(0, pickLimit);
+  const gradeableCount = picks.filter((p) => p.gradeable).length;
+  const sectionCopy = JUDGE_SECTION_COPY[judge.id] ?? {
+    title: isRisk ? "Today's Trap Avoids" : "Today's Singles",
+    subtitle: isRisk
+      ? 'Warning profiles tracked for trap accuracy.'
+      : `${gradeableCount} gradeable single${gradeableCount === 1 ? '' : 's'} today.`,
+  };
 
   return (
     <article className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-5 shadow-xl shadow-black/20`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
-            {isRisk ? 'Trap Watch Agent' : 'AI Capper'}
+            {judge.specialty ?? (isRisk ? 'Trap Watch Agent' : 'AI Capper')}
           </div>
           <h3 className="mt-1 text-2xl font-black text-white">{judge.displayName}</h3>
           <p className="mt-1 text-sm text-slate-400">{judge.tagline}</p>
@@ -371,7 +415,7 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
         <div className="grid grid-cols-3 gap-2 text-center">
           <StatTile label="Win Rate" value={judge.winRate == null ? 'New' : `${judge.winRate}%`} tone="emerald" />
           <StatTile label="Trust" value={String(Math.round(Number(judge.trustScore ?? 50)))} tone="sky" />
-          <StatTile label="Record" value={`${judge.record?.won ?? 0}-${judge.record?.lost ?? 0}`} tone="slate" />
+          <StatTile label="Record" value={formatJudgeRecord(judge.record)} tone="slate" />
         </div>
       </div>
 
@@ -379,26 +423,21 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-              {isRisk ? 'Top 5 Avoid / Risk Flags' : 'Top 5 Current Picks'}
+              {sectionCopy.title}
             </p>
             <p className="text-xs text-slate-400">
-              {isRisk ? 'These are warning profiles, not parlay legs.' : `${eligibleLegs.length} parlay-ready legs available.`}
+              {sectionCopy.subtitle}
+              {gradeableCount > 0 ? ` · ${gradeableCount} tracking for win rate.` : ''}
             </p>
           </div>
-
-          {!isRisk && (
-            <button
-              type="button"
-              onClick={() => {
-                void copyJudgeParlayLegs(judge);
-              }}
-              disabled={eligibleLegs.length === 0}
-              className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
-              title={eligibleLegs.length === 0 ? "No parlay-ready picks yet" : "Copy this judge's parlay legs"}
-            >
-              Copy Parlay Card
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { void copyJudgeSingles(judge); }}
+            disabled={picks.length === 0}
+            className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Copy Singles
+          </button>
         </div>
 
         <div className="space-y-2">
@@ -420,8 +459,12 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
                         </span>
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {pick.market} · Agent Score {pick.agentScore} · HR Edge {pick.hrScore}
+                        {pick.singlePickLabel ?? pick.market} · Agent Score {pick.agentScore}
+                        {!isRisk ? ` · HR Edge ${pick.hrScore}` : ''}
                       </p>
+                      {pick.judgeReason ? (
+                        <p className="mt-1 text-[11px] text-slate-300">{pick.judgeReason}</p>
+                      ) : null}
                       <p className="mt-1 text-[11px] text-slate-500">
                         Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
                       </p>
@@ -429,20 +472,29 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
                   </div>
 
                   <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${pickTypeTone(pick.pickType)}`}>
+                      {pick.singlePickLabel ?? pick.specialtyLabel ?? pick.pickType}
+                    </span>
                     <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${availabilityTone(pick.availability?.status)}`}>
                       {pick.availability?.label ?? 'Availability unknown'}
                     </span>
                     <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
-                      pick.parlayEligible
+                      pick.gradeable
                         ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
                         : 'border-slate-700 bg-slate-800 text-slate-400'
                     }`}>
-                      {pick.parlayEligible ? 'Parlay-ready' : 'No parlay'}
+                      {pick.gradeable ? 'Tracking' : 'Preview only'}
                     </span>
                   </div>
                 </div>
 
-                {pick.availability?.reasons?.length ? (
+                {isRisk && safeArray<string>(pick.warnings).length > 0 ? (
+                  <div className="mt-2 rounded-xl border border-amber-400/20 bg-amber-400/5 p-2">
+                    {pick.warnings!.slice(0, 2).map((warning, i) => (
+                      <p key={i} className="text-[11px] text-amber-200">⚠ {warning}</p>
+                    ))}
+                  </div>
+                ) : pick.availability?.reasons?.length ? (
                   <div className="mt-2 text-[11px] text-slate-500">
                     {pick.availability.reasons.slice(0, 2).join(' · ')}
                   </div>
@@ -741,8 +793,8 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-white/55">
-                  Compare each AI judge’s current top picks, availability checks, parlay-ready legs, trust score, and record.
-                  Risk Auditor flags avoid spots and should not be used to build parlays.
+                  Each AI judge posts up to three specialty singles per day. Win rate and record come from graded singles in the picks ledger — honest W/L only, no fabricated stats.
+                  Risk Auditor trap avoids win when the flagged player stays cold.
                 </p>
               </div>
               <button
