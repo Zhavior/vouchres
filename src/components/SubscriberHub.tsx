@@ -24,6 +24,19 @@ import {
 import { CreatorProofProfile, Parlay, Vouch } from '../types';
 import { decimalToAmerican } from '../utils/oddsHelper';
 import { getFounderPointsLabel } from "../lib/founderAccess";
+import {
+  Z8_ACTIVE,
+  Z8_DISPLAY,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_WARNING,
+} from '../theme/z8Tokens';
 
 
 const cleanCustomerText = (value?: string | number | null): string =>
@@ -401,36 +414,34 @@ export default function SubscriberHub({
   };
 
   return (
-    <div className="w-full text-slate-100 p-4 md:p-6 space-y-6" id="subscriber-hub-root">
+    <main className={`${Z8_PAGE} w-full ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="subscriber-hub-root">
       
       {/* Demo banner */}
-      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-300/80">
-        <span className="text-[9px] font-black font-mono uppercase px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/15 text-amber-300">Demo</span>
+      <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
+        <span className={`${Z8_LABEL} rounded border border-vouch-amber/40 bg-vouch-amber/15 px-1.5 py-0.5 text-vouch-amber`}>Demo</span>
         Subscriber counts and capper clubs are sample data — real clubs populate when cappers go live.
       </div>
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-5 text-left" id="hub-head">
-        <div className="space-y-1">
-          <span className="text-[10px] bg-sky-950 text-sky-400 font-extrabold font-mono px-2.5 py-0.5 rounded-full border border-sky-900/40 uppercase tracking-widest flex items-center gap-1 max-w-fit">
-            <Sparkles className="w-3.5 h-3.5" />
+      <header className={`${Z8_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-4 text-left md:flex-row md:items-center`} id="hub-head">
+        <div className={Z8_SECTION_HEADER}>
+          <span className={`${Z8_LABEL} inline-flex w-fit max-w-fit items-center gap-1 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-0.5 text-vouch-cyan`}>
+            <Sparkles className="h-3.5 w-3.5" />
             Premium VouchEdge Clubs
           </span>
-          <h1 className="text-2xl font-black text-slate-100 tracking-tight uppercase">
+          <h1 className={`${Z8_DISPLAY} mt-2 uppercase tracking-tight`}>
             Exclusive Subscriber Space
           </h1>
-          <p className="text-xs text-slate-400">
-            Gain deep regression insights, locked parlays, and community channels. You have <span className="text-indigo-400 font-extrabold">{credits.toLocaleString()} pts</span> theme & subscribe credits.
+          <p className="text-xs text-white/45">
+            Gain deep regression insights, locked parlays, and community channels. You have <span className="font-extrabold text-vouch-cyan">{credits.toLocaleString()} pts</span> theme & subscribe credits.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('explore')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase transition-all tracking-wide ${
-              activeTab === 'explore' && !selectedCapperId
-                ? 'bg-sky-505 bg-gradient-to-tr from-sky-600 to-indigo-600 text-[#121824]'
-                : 'bg-slate-900 border border-slate-850 text-slate-400 hover:text-slate-205'
+            className={`rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all ${
+              activeTab === 'explore' && !selectedCapperId ? Z8_ACTIVE : Z8_IDLE
             }`}
           >
             Explore Channels
@@ -440,26 +451,24 @@ export default function SubscriberHub({
               setActiveTab('channel_settings');
               setSelectedCapperId(null);
             }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase transition-all tracking-wide flex items-center gap-2 ${
-              activeTab === 'channel_settings'
-                ? 'bg-indigo-600 text-slate-100 shadow shadow-indigo-505/30'
-                : 'bg-slate-900 border border-slate-850 text-slate-400 hover:text-slate-200'
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wide transition-all ${
+              activeTab === 'channel_settings' ? Z8_ACTIVE : Z8_IDLE
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="h-4 w-4" />
             My Club Config
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Explorer Mode cards screen */}
       {activeTab === 'explore' && !selectedCapperId && (
         <div className="space-y-6">
-          <div className="bg-[#121824]/30 border border-slate-850 p-4 rounded-2xl text-left">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 text-left`}>
+            <h3 className={`${Z8_LABEL} text-sm text-white/80`}>
               How VouchEdge Subscriptions Work
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1 lines-normal">
+            <p className="mt-1 text-[11px] leading-relaxed text-white/45">
               Backing verified cappers. Subscriptions last for the selected months tier and grant unlockable access to a dedicated realtime **Chatroom**, premium model-correlated **Parlay-Only** items (which you can react and build from), and critical **Anouncements/Vouchers** directly connected to creator proof balances.
             </p>
           </div>
@@ -1170,6 +1179,6 @@ export default function SubscriberHub({
         </div>
       )}
 
-    </div>
+    </main>
   );
 }

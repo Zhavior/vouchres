@@ -13,19 +13,21 @@
  * Sport-agnostic — same palette works for MLB, NBA, NHL, NFL.
  */
 
+import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from './z8Tokens';
+
 export const ACCENT = {
-  // Core accents
-  power: 'hsl(var(--ve-accent-gold))',       // gold — premium power/confidence
-  matchup: 'hsl(var(--ve-accent-cyan))',     // cyan — pitcher/opponent context
-  form: 'hsl(var(--ve-accent-pink))',        // restrained indigo — recent form
-  confidence: 'hsl(var(--ve-accent-cyan))',  // cyan — data confidence
-  lineup: 'hsl(var(--ve-accent-gold))',      // gold — lineup/playing status
-  risk: 'hsl(var(--ve-danger))',             // red — risk
-  final: 'hsl(var(--ve-accent-gold))',       // gold — final premium composite score
+  // Core accents — Z8 vouch palette (no rainbow --ve-accent-*)
+  power: Z8_AMBER_HEX,
+  matchup: Z8_CYAN_HEX,
+  form: Z8_EMERALD_HEX,
+  confidence: Z8_CYAN_HEX,
+  lineup: Z8_AMBER_HEX,
+  risk: 'hsl(var(--ve-danger))',
+  final: Z8_AMBER_HEX,
 
   // Status colors
-  emerald: 'hsl(var(--ve-success))',         // success/confirmed
-  gold: 'hsl(var(--ve-accent-gold))',        // premium accents
+  emerald: 'hsl(var(--ve-success))',
+  gold: Z8_AMBER_HEX,
   danger: 'hsl(var(--ve-danger))',           // errors/blocked
   warning: 'hsl(var(--ve-warning))',         // warnings
 

@@ -1,12 +1,12 @@
 /**
  * StatHubHeader — Top bar: title, date picker, search, mode toggle, tier filter badges
- * All colors via CSS tokens.
  */
 
 import React from 'react';
 import type { StatType, StatViewMode, StatTier, StatScope } from '../types/statHubTypes';
 import { STAT_CONFIG, STAT_ORDER } from '../engine/statHubConfig';
 import { StatModeToggle } from './StatModeToggle';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_SECTION_HEADER, Z8_SURFACE } from '../../../theme/z8Tokens';
 
 interface Props {
   activeStatType:  StatType;
@@ -24,12 +24,12 @@ interface Props {
   onToggleTier:    (t: StatTier) => void;
 }
 
-const TIER_COLORS: Record<StatTier, string> = {
-  elite:   '--ve-accent-gold',
-  strong:  '--ve-accent-cyan',
-  watch:   '--ve-accent-pink',
-  sleeper: '--ve-text-muted',
-  fade:    '--ve-text-muted',
+const TIER_CLASSES: Record<StatTier, { active: string; idle: string }> = {
+  elite:   { active: 'border-vouch-amber/40 bg-vouch-amber/15 text-vouch-amber', idle: 'text-white/45' },
+  strong:  { active: 'border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan', idle: 'text-white/45' },
+  watch:   { active: 'border-vouch-emerald/35 bg-vouch-emerald/10 text-vouch-emerald', idle: 'text-white/45' },
+  sleeper: { active: 'border-white/20 bg-white/5 text-white/70', idle: 'text-white/45' },
+  fade:    { active: 'border-red-500/30 bg-red-500/10 text-red-300', idle: 'text-white/45' },
 };
 
 const TIER_LABELS_DEFAULT: Record<StatTier, string> = {
@@ -43,16 +43,15 @@ export const StatHubHeader: React.FC<Props> = ({
   const config = STAT_CONFIG[activeStatType];
 
   return (
-    <header className="flex flex-col gap-3 pb-4 border-b border-[hsl(var(--ve-border)/0.5)]">
-      {/* Row 1: Title + mode toggle */}
+    <header className={`${Z8_SECTION_HEADER} flex flex-col gap-3 pb-4 border-b border-white/10`}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <span className="text-2xl" aria-hidden="true">{config.icon}</span>
           <div>
-            <h1 className="text-lg font-bold text-[hsl(var(--ve-text-primary))] leading-tight">
+            <h1 className="text-lg font-bold text-white leading-tight">
               MLB Stat Intelligence Hub
             </h1>
-            <p className="text-xs text-[hsl(var(--ve-text-muted))] mt-0.5">
+            <p className={`${Z8_LABEL} mt-0.5 text-white/45`}>
               {config.description}
             </p>
           </div>
@@ -62,7 +61,6 @@ export const StatHubHeader: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Row 2: Stat type tabs */}
       <div
         role="tablist"
         aria-label="Stat category"
@@ -72,7 +70,6 @@ export const StatHubHeader: React.FC<Props> = ({
         {STAT_ORDER.map(st => {
           const cfg   = STAT_CONFIG[st];
           const active = st === activeStatType;
-          const token  = cfg.token;
           return (
             <button
               key={st}
@@ -80,18 +77,14 @@ export const StatHubHeader: React.FC<Props> = ({
               aria-selected={active}
               onClick={() => onStatType(st)}
               className={[
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap',
-                'transition-all duration-[var(--ve-duration-fast)]',
-                'focus-visible:outline focus-visible:outline-2',
-                active
-                  ? `bg-[hsl(var(--${token})/0.15)] text-[hsl(var(--${token}))] border border-[hsl(var(--${token})/0.4)] shadow-sm`
-                  : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] hover:bg-[hsl(var(--ve-surface-raised)/0.5)] border border-transparent',
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
+                active ? `${Z8_ACTIVE} rounded-lg` : `${Z8_IDLE} rounded-lg border border-transparent`,
               ].join(' ')}
             >
               <span aria-hidden="true">{cfg.icon}</span>
               <span>{cfg.shortLabel}</span>
               {cfg.phase === 2 && (
-                <span className="text-[10px] px-1 py-0 rounded bg-[hsl(var(--ve-accent-pink)/0.2)] text-[hsl(var(--ve-accent-pink))] border border-[hsl(var(--ve-accent-pink)/0.3)] leading-snug">
+                <span className={`${Z8_LABEL} rounded border border-vouch-cyan/30 bg-vouch-cyan/10 px-1 py-0 text-vouch-cyan`}>
                   β
                 </span>
               )}
@@ -100,43 +93,29 @@ export const StatHubHeader: React.FC<Props> = ({
         })}
       </div>
 
-      {/* Row 3: Search + date + tier filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Search */}
         <div className="relative flex-1 min-w-[160px] max-w-xs">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[hsl(var(--ve-text-muted))] text-xs pointer-events-none" aria-hidden="true">⌕</span>
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/35 text-xs pointer-events-none" aria-hidden="true">⌕</span>
           <input
             type="search"
             placeholder="Player, team…"
             value={search}
             onChange={e => onSearch(e.target.value)}
             aria-label="Search players"
-            className={[
-              'w-full pl-7 pr-3 py-1.5 rounded-lg text-xs',
-              'bg-[hsl(var(--ve-surface))] border border-[hsl(var(--ve-border)/0.6)]',
-              'text-[hsl(var(--ve-text-primary))] placeholder:text-[hsl(var(--ve-text-muted))]',
-              'focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ve-accent-cyan)/0.5)]',
-            ].join(' ')}
+            className={`${Z8_SURFACE} w-full rounded-lg pl-7 pr-3 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25`}
           />
         </div>
 
-        {/* Date */}
         <input
           type="date"
           value={date}
           onChange={e => onDate(e.target.value)}
           aria-label="Select date"
           disabled={statScope === 'overall'}
-          className={[
-            'px-2.5 py-1.5 rounded-lg text-xs',
-            'bg-[hsl(var(--ve-surface))] border border-[hsl(var(--ve-border)/0.6)]',
-            'text-[hsl(var(--ve-text-primary))]',
-            statScope === 'overall' ? 'opacity-45 cursor-not-allowed' : '',
-            'focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ve-accent-cyan)/0.5)]',
-          ].join(' ')}
+          className={`${Z8_SURFACE} rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25 ${statScope === 'overall' ? 'opacity-45 cursor-not-allowed' : ''}`}
         />
 
-        <div role="group" aria-label="Stat range" className="flex rounded-lg border border-[hsl(var(--ve-border)/0.55)] bg-[hsl(var(--ve-surface)/0.55)] p-0.5">
+        <div role="group" aria-label="Stat range" className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
           {(['season', 'overall'] as StatScope[]).map(scope => {
             const active = statScope === scope;
             return (
@@ -147,9 +126,7 @@ export const StatHubHeader: React.FC<Props> = ({
                 aria-pressed={active}
                 className={[
                   'px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide transition-all',
-                  active
-                    ? 'bg-[hsl(var(--ve-accent-cyan)/0.18)] text-[hsl(var(--ve-accent-cyan))]'
-                    : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
+                  active ? 'bg-vouch-cyan/15 text-vouch-cyan' : 'text-white/45 hover:text-white',
                 ].join(' ')}
               >
                 {scope === 'season' ? 'Season' : 'Overall'}
@@ -158,11 +135,10 @@ export const StatHubHeader: React.FC<Props> = ({
           })}
         </div>
 
-        {/* Tier filter badges */}
         <div role="group" aria-label="Filter by tier" className="flex gap-1 ml-auto">
           {(['elite', 'strong', 'watch', 'sleeper'] as StatTier[]).map(tier => {
             const active = tierFilter.includes(tier);
-            const token  = TIER_COLORS[tier];
+            const tierCls = TIER_CLASSES[tier];
             const count  = tierCounts[tier as keyof typeof tierCounts] as number;
             return (
               <button
@@ -170,14 +146,12 @@ export const StatHubHeader: React.FC<Props> = ({
                 onClick={() => onToggleTier(tier)}
                 aria-pressed={active}
                 className={[
-                  'flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all',
-                  active
-                    ? `bg-[hsl(var(${token})/0.2)] text-[hsl(var(${token}))] border border-[hsl(var(${token})/0.5)]`
-                    : 'bg-[hsl(var(--ve-surface)/0.4)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.4)] hover:border-[hsl(var(--ve-border))]',
+                  'flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all',
+                  active ? tierCls.active : `${Z8_SURFACE} ${tierCls.idle} hover:border-white/20`,
                 ].join(' ')}
               >
                 {TIER_LABELS_DEFAULT[tier]}
-                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[hsl(var(--ve-bg-deep)/0.6)] text-[9px]">
+                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-black/40 text-[9px]">
                   {count}
                 </span>
               </button>

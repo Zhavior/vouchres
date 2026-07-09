@@ -128,14 +128,14 @@ function displayValue(value: number | string | null | undefined, suffix = ''): s
 
 function labelClass(label: MatrixLabel): string {
   if (label === 'STRONG PLAY') return 'border-[hsl(var(--ve-success)/0.34)] bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))]';
-  if (label === 'LEAN OVER') return 'border-[hsl(var(--ve-accent-gold)/0.34)] bg-[hsl(var(--ve-accent-gold)/0.10)] text-[hsl(var(--ve-accent-gold))]';
+  if (label === 'LEAN OVER') return 'border-vouch-amber/35 bg-vouch-amber/10 text-vouch-amber';
   if (label === 'AVOID') return 'border-[hsl(var(--ve-danger)/0.34)] bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))]';
   return 'border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.34)] text-[hsl(var(--ve-text-secondary))]';
 }
 
 function confidenceClass(confidence: MatchupMatrixRow['confidence']): string {
   if (confidence === 'High') return 'text-[hsl(var(--ve-success))]';
-  if (confidence === 'Medium') return 'text-[hsl(var(--ve-accent-gold))]';
+  if (confidence === 'Medium') return 'text-vouch-amber';
   return 'text-[hsl(var(--ve-text-muted))]';
 }
 
@@ -150,8 +150,8 @@ function heatStyle(value: number | null, direction: 'higher' | 'lower' = 'higher
   }
 
   if (normalized >= 75) return { background: 'hsl(var(--ve-success) / 0.14)', color: 'hsl(var(--ve-success))' };
-  if (normalized >= 55) return { background: 'hsl(var(--ve-accent-gold) / 0.14)', color: 'hsl(var(--ve-accent-gold))' };
-  if (normalized >= 35) return { background: 'hsl(var(--ve-accent-pink) / 0.12)', color: 'hsl(var(--ve-accent-pink))' };
+  if (normalized >= 55) return { background: 'rgba(245,158,11,0.14)', color: '#f59e0b' };
+  if (normalized >= 35) return { background: 'rgba(0,255,148,0.12)', color: '#00FF94' };
   return { background: 'hsl(var(--ve-danger) / 0.12)', color: 'hsl(var(--ve-danger))' };
 }
 
@@ -539,21 +539,21 @@ export default function TeamMatchupLabPage() {
               { icon: BarChart3, label: 'Highest Opp K%', value: summary.highestOppKPct, tone: 'cyan' },
             ].map(({ icon: Icon, label, value, tone }) => (
               <div key={label} className="ve-stat-card relative overflow-hidden rounded-xl p-3">
-                <span className={`absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--tone),transparent)] ${tone === 'success' ? '[--tone:hsl(var(--ve-success)/0.58)]' : tone === 'gold' ? '[--tone:hsl(var(--ve-accent-gold)/0.58)]' : tone === 'danger' ? '[--tone:hsl(var(--ve-danger)/0.52)]' : '[--tone:hsl(var(--ve-accent-cyan)/0.58)]'}`} />
+                <span className={`absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--tone),transparent)] ${tone === 'success' ? '[--tone:hsl(var(--ve-success)/0.58)]' : tone === 'gold' ? '[--tone:rgba(245,158,11,0.58)]' : tone === 'danger' ? '[--tone:hsl(var(--ve-danger)/0.52)]' : '[--tone:rgba(0,240,255,0.58)]'}`} />
                 <div className="flex items-center gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-surface-raised)/0.38)]">
-                    <Icon className={`h-4 w-4 ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-[hsl(var(--ve-accent-gold))]' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-[hsl(var(--ve-accent-cyan))]'}`} />
+                    <Icon className={`h-4 w-4 ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-vouch-amber' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-vouch-cyan'}`} />
                   </span>
                   <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(var(--ve-text-muted))]">{label}</span>
                 </div>
-                <div className={`mt-3 font-mono text-xl font-black ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-[hsl(var(--ve-accent-gold))]' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-[hsl(var(--ve-accent-cyan))]'}`}>{value}</div>
+                <div className={`mt-3 font-mono text-xl font-black ${tone === 'success' ? 'text-[hsl(var(--ve-success))]' : tone === 'gold' ? 'text-vouch-amber' : tone === 'danger' ? 'text-[hsl(var(--ve-danger))]' : 'text-vouch-cyan'}`}>{value}</div>
               </div>
             ))}
           </div>
         </section>
 
         <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-3 sm:p-4">
-          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.45),transparent)]" />
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.45),transparent)]" />
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="min-w-0">
               <div className="ve-chip ve-chip-primary px-2.5 py-1 text-[10px] uppercase tracking-wide">
@@ -611,9 +611,9 @@ export default function TeamMatchupLabPage() {
                 className={`shrink-0 rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-wide transition ${
                   labelFilter === label
                     ? label === 'ALL'
-                    ? 'border-[hsl(var(--ve-accent-cyan)/0.46)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))]'
+                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                       : labelClass(label)
-                    : 'border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-[hsl(var(--ve-accent-cyan)/0.26)] hover:bg-[hsl(var(--ve-surface-raised)/0.44)] hover:text-[hsl(var(--ve-text-primary))]'
+                    : 'border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] text-[hsl(var(--ve-text-muted))] hover:border-vouch-cyan/25 hover:bg-[hsl(var(--ve-surface-raised)/0.44)] hover:text-[hsl(var(--ve-text-primary))]'
                 }`}
               >
                 {label === 'ALL' ? 'All' : label.replace('LEAN OVER', 'Lean Over').replace('STRONG PLAY', 'Strong Play')}
@@ -637,7 +637,7 @@ export default function TeamMatchupLabPage() {
                 <span className={`hidden rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide sm:inline-flex ${
                   data.mode === 'enriched'
                     ? 'border-[hsl(var(--ve-success)/0.30)] bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))]'
-                    : 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))]'
+                    : 'border-vouch-cyan/30 bg-vouch-cyan/10 text-vouch-cyan'
                 }`}>
                   {data.mode === 'enriched' ? 'Enriched' : 'Live MLB'}
                 </span>
@@ -659,7 +659,7 @@ export default function TeamMatchupLabPage() {
             )}
 
             {!loading && !error && rows.length === 0 && (
-              <div className="m-3 rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.22)] bg-[hsl(var(--ve-accent-cyan)/0.08)] p-5 text-sm text-[hsl(var(--ve-text-secondary))]">
+              <div className="m-3 rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 p-5 text-sm text-[hsl(var(--ve-text-secondary))]">
                 No matchup rows are available for this date. Probable pitchers may not be posted yet, or the MLB schedule feed returned no games.
               </div>
             )}
@@ -722,11 +722,11 @@ export default function TeamMatchupLabPage() {
                               className="flex w-full items-center gap-3 rounded-2xl border border-transparent p-1.5 text-left transition hover:border-emerald-300/30 hover:bg-emerald-300/5"
                               title="Open pitcher matchup details"
                             >
-                              <div className="relative shrink-0 rounded-full bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.36),hsl(var(--ve-accent-gold)/0.18))] p-0.5 shadow-[0_0_22px_hsl(var(--ve-accent-cyan)/0.10)]">
+                              <div className="relative shrink-0 rounded-full bg-[linear-gradient(135deg,rgba(0,240,255,0.36),rgba(245,158,11,0.18))] p-0.5 shadow-[0_0_22px_rgba(0,240,255,0.10)]">
                                 <PlayerHeadshot name={row.pitcherName} playerId={row.pitcherId} size={46} />
                               </div>
                               <div className="min-w-0">
-                                <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-[hsl(var(--ve-accent-cyan))]">{row.pitcherName}</div>
+                                <div className="truncate font-black text-[hsl(var(--ve-text-primary))] group-hover:text-vouch-cyan">{row.pitcherName}</div>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   <span className="rounded-md border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] px-1.5 py-0.5 text-[10px] font-black uppercase text-[hsl(var(--ve-text-muted))]">
                                     {row.pitcherHand === 'U' ? 'Hand TBD' : `${row.pitcherHand}HP`}
@@ -766,7 +766,7 @@ export default function TeamMatchupLabPage() {
                                 event.stopPropagation();
                                 handleCopy(row);
                               }}
-                              className="inline-flex items-center gap-2 rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.26)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-3 py-2 text-xs font-black text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.44)]"
+                              className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-2 text-xs font-black text-vouch-cyan hover:border-vouch-cyan/45"
                             >
                               <ClipboardCopy className="h-3.5 w-3.5" />
                               {copiedKey === rowKey ? 'Copied' : 'Copy Research'}
@@ -779,7 +779,7 @@ export default function TeamMatchupLabPage() {
                 </table>
 
                 {(loading || enriching) && (
-                  <div className="border-t border-[hsl(var(--ve-border)/0.28)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[hsl(var(--ve-accent-cyan))]">
+                  <div className="border-t border-[hsl(var(--ve-border)/0.28)] px-4 py-3 text-xs font-black uppercase tracking-wide text-vouch-cyan">
                     Matrix live from current matchup slate
                   </div>
                 )}
@@ -804,7 +804,7 @@ export default function TeamMatchupLabPage() {
 
         <section className="grid gap-3 lg:grid-cols-2">
           <div className="ve-card relative overflow-hidden rounded-2xl p-4">
-            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.42),transparent)]" />
+            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,240,255,0.42),transparent)]" />
             <div className="text-sm font-black uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">Scoring Model</div>
             <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
               Score weights: 30% pitcher strikeout skill, 25% opponent strikeout weakness, 15% workload and innings safety,
@@ -813,9 +813,9 @@ export default function TeamMatchupLabPage() {
             </p>
           </div>
           <div className="ve-card relative overflow-hidden rounded-2xl p-4">
-            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-gold)/0.38),transparent)]" />
+            <span className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(245,158,11,0.38),transparent)]" />
             <div className="text-sm font-black uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">Best K Environment</div>
-            <p className="mt-3 font-mono text-xl font-black text-[hsl(var(--ve-accent-gold))]">{summary.bestKEnvironment}</p>
+            <p className="mt-3 font-mono text-xl font-black text-vouch-amber">{summary.bestKEnvironment}</p>
             <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
               Current version favors sourced pitcher skill, workload, control, recent logs, and lower run-environment context.
             </p>

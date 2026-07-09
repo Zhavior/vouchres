@@ -72,7 +72,7 @@ const BatterVsPitcherGraph: React.FC<{
       subtitle={pitcherName ? `Career vs ${pitcherName}` : 'Career head-to-head'}
       accent={ACCENT.matchup}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-pink)/0.28)] bg-[hsl(var(--ve-accent-pink)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-pink))]">
+        <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-emerald">
           {bvp.ab} AB
         </span>
       }
@@ -125,7 +125,7 @@ const VsTeamTrendsGraph: React.FC<{
       }
       accent={ACCENT.form}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-cyan))]">
+        <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-cyan">
           {games.reduce((s, g) => s + g.homeRuns, 0)} HR
         </span>
       }
@@ -267,7 +267,7 @@ const SprayProfileGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Rea
       subtitle={`Season batted balls · ${spray.bbe} BBE · Savant`}
       accent={ACCENT.power}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-gold)/0.28)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-gold))]">
+        <span className="rounded-full border border-vouch-amber/30 bg-vouch-amber/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-amber">
           {fmtPercent(spray.pullAirPct != null ? spray.pullAirPct / 100 : null)} pull air
         </span>
       }
@@ -321,7 +321,7 @@ const PitchMixGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = React.m
       accent={ACCENT.matchup}
       signals={signals}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-cyan))]">
+        <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-cyan">
           {mix.length} types
         </span>
       }
@@ -397,7 +397,7 @@ const Rolling14DayGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Rea
       subtitle={`Last ${rolling.games} games · MLB game log`}
       accent={ACCENT.final}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-gold)/0.28)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-gold))]">
+        <span className="rounded-full border border-vouch-amber/30 bg-vouch-amber/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-amber">
           {rolling.homeRuns} HR
         </span>
       }
@@ -474,7 +474,7 @@ const WeatherImpactGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Re
       subtitle={`${w.venue} · first pitch forecast`}
       accent={ACCENT.lineup}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-cyan))]">
+        <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-cyan">
           {w.status === 'retractable' ? 'Retractable roof' : 'Open air'}
         </span>
       }

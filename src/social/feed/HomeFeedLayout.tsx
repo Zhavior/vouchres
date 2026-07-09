@@ -106,8 +106,8 @@ export default function HomeFeedLayout({
 
   return (
     <div
-      className={`z8-layout-root font-z8 min-h-screen text-slate-100 flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
-        activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-obsidian-900 has-active-theme' : 'bg-obsidian-900'
+      className={`z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
+        activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-transparent has-active-theme' : 'bg-transparent'
       }`}
       style={activeTheme && activeTheme.id !== 'cyber-blue' ? (themeVars as React.CSSProperties) : undefined}
       id="vouchedge-container-root"
@@ -133,7 +133,7 @@ export default function HomeFeedLayout({
             {Array.from({ length: 42 }).map((_, i) => {
               const animDuration = `${0.5 + (i % 8) * 0.12}s`;
               const animDelay = `-${(i % 5) * 0.18}s`;
-              const barColor = i % 4 === 0 ? 'hsl(var(--ve-accent-cyan))' : i % 3 === 0 ? 'hsl(var(--ve-accent-pink))' : 'hsl(var(--ve-accent-gold))';
+              const barColor = i % 4 === 0 ? '#00F0FF' : i % 3 === 0 ? '#00FF9D' : '#FFB800';
               return (
                 <div 
                   key={i} 
@@ -199,10 +199,10 @@ export default function HomeFeedLayout({
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-obsidian-900 font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'border-r border-white/10 pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
           {/* Mobile compact header */}
           {!isPublicFrontPage && (
-            <header className="md:hidden sticky top-0 bg-obsidian-900/90 backdrop-blur-md glass-border border-b px-3 py-2.5 flex items-center justify-between gap-2 z-30 select-none font-z8">
+            <header className="md:hidden sticky top-0 bg-black/20 backdrop-blur-xl px-3 py-2.5 flex items-center justify-between gap-2 z-30 select-none font-z8">
               {/* Profile avatar (corner) — ring color = real subscription tier;
                   tapping it opens the X-style navigation drawer. */}
               <div className="flex items-center gap-2.5 min-w-0">

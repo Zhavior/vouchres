@@ -16,7 +16,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import {
@@ -25,7 +25,8 @@ import {
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { getActiveSport } from '../../sports/registry';
 import {
-  Z8_ACTIVE, Z8_IDLE, Z8_ICON_BOX, Z8_LABEL, Z8_PANEL, Z8_SURFACE, Z8_SIDEBAR_SHELL,
+  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
+  Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -51,11 +52,11 @@ export interface TierMeta {
 export function tierMeta(tier: CreatorProofProfile['subscriptionTier']): TierMeta {
   switch (tier) {
     case 'GOLD':
-      return { label: 'Pro', ring: '#00FF94', text: 'text-vouch-emerald', chipBg: 'bg-vouch-emerald/10 border-vouch-emerald/30' };
+      return { label: 'Pro', ring: '#00FF94', text: 'text-vouch-emerald', chipBg: 'bg-vouch-emerald/10 shadow-[0_0_10px_rgba(0,255,148,0.15)]' };
     case 'SELLER_PRO':
-      return { label: 'Capper', ring: '#00F0FF', text: 'text-vouch-cyan', chipBg: 'bg-vouch-cyan/10 border-vouch-cyan/30' };
+      return { label: 'Capper', ring: '#00F0FF', text: 'text-vouch-cyan', chipBg: 'bg-vouch-cyan/10 shadow-[0_0_10px_rgba(0,240,255,0.15)]' };
     default:
-      return { label: 'Basic', ring: 'rgba(255,255,255,0.25)', text: 'text-white/40', chipBg: 'bg-white/5 border-white/10' };
+      return { label: 'Basic', ring: 'rgba(255,255,255,0.25)', text: 'text-white/40', chipBg: 'bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]' };
   }
 }
 
@@ -147,21 +148,21 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
             onClick={onClose}
           />
           <motion.aside
-            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${Z8_SIDEBAR_SHELL} shadow-[4px_0_48px_rgba(0,0,0,0.95)]`}
+            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${Z8_SIDEBAR_SHELL} shadow-[4px_0_40px_rgba(0,0,0,0.45)]`}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Profile header — real token-identity data only */}
-            <div className="glass-border border-b border-vouch-cyan/20 px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
+            <div className="px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
               <div className="flex items-start justify-between pt-1">
                 <TierAvatar profile={profile} size={52} onClick={() => go('profile')} ariaLabel="Open profile" />
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="Close menu"
-                  className={`flex h-8 w-8 items-center justify-center border border-white/10 text-white/40 transition hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white ${Z8_SURFACE}`}
+                  className={`flex h-8 w-8 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -169,20 +170,20 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
               <button type="button" onClick={() => go('profile')} className="mt-2.5 block text-left">
                 <p className="flex items-center gap-1.5 text-base font-black text-white">
                   {profile.displayName}
-                  {profile.verified && <ShieldCheck className="h-3.5 w-3.5 text-vouch-cyan" />}
+                  {profile.verified && <Shield className="h-3.5 w-3.5 text-vouch-cyan fill-vouch-cyan/85" />}
                 </p>
                 <p className="text-xs text-white/40">@{profile.username}</p>
               </button>
               <div className="z8-accent-line mt-3 w-full" aria-hidden />
               <div className="mt-2 flex items-center gap-2">
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${meta.chipBg} ${meta.text}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${meta.chipBg} ${meta.text}`}>
                   {meta.label}
                 </span>
                 {profile.subscriptionTier !== 'SELLER_PRO' && (
                   <button
                     type="button"
                     onClick={() => go('premium')}
-                    className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-bold text-white/50 transition hover:border-vouch-emerald/40 hover:text-vouch-emerald"
+                    className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-white/50 transition hover:bg-vouch-emerald/10 hover:text-vouch-emerald hover:shadow-[0_0_10px_rgba(0,255,148,0.12)]"
                   >
                     Upgrade
                   </button>
@@ -203,8 +204,8 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
             {/* Nav groups — same registry as the desktop sidebar */}
             <nav className="flex-1 overflow-y-auto px-2 py-3">
               {groups.map(({ group, items }) => (
-                <div key={group} className={`mb-3 overflow-hidden glass-panel-strong ${Z8_PANEL}`}>
-                  <p className={`border-b border-vouch-cyan/20 px-3 py-2 ${Z8_LABEL} text-[9px] tracking-[0.18em] text-vouch-cyan`}>{group}</p>
+                <div key={group} className={`mb-3 overflow-hidden ${Z8_SIDEBAR_PANEL}`}>
+                  <p className={`px-3 py-2 ${Z8_LABEL} text-[9px] tracking-[0.18em] text-vouch-cyan`}>{group}</p>
                   <div className="px-1.5 py-1.5 space-y-0.5">
                     {items.map((item) => {
                       const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
@@ -217,8 +218,8 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
                           onClick={() => go(item.id)}
                           aria-current={isActive ? 'page' : undefined}
                           className={[
-                            'relative flex w-full items-center gap-3 border px-3 py-2.5 text-left text-sm transition-all font-z8',
-                            isActive ? Z8_ACTIVE : Z8_IDLE,
+                            'relative flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',
+                            isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
                           ].join(' ')}
                         >
                           {isActive && (
@@ -231,8 +232,8 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
                             className={[
                               'h-7 w-7 shrink-0 transition-all',
                               isActive
-                                ? 'flex items-center justify-center border border-vouch-cyan/60 bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
-                                : Z8_ICON_BOX,
+                                ? 'flex items-center justify-center bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
+                                : Z8_SIDEBAR_ICON_BOX,
                             ].join(' ')}
                           >
                             <Icon className="h-3.5 w-3.5" />
@@ -247,11 +248,11 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
             </nav>
 
             {/* Footer */}
-            <div className="glass-border border-t border-vouch-cyan/20 px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)]">
+            <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
               <button
                 type="button"
                 onClick={() => go('settings')}
-                className={`flex w-full items-center gap-3 border px-3 py-2.5 text-sm transition-all ${Z8_IDLE} ${Z8_LABEL}`}
+                className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings
               </button>

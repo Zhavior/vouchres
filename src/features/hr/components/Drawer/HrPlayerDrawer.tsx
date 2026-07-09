@@ -7,7 +7,7 @@
  *   Vegas     — Vegas edge, model vs book probability, odds
  *
  * Design rules:
- * - CSS tokens only — no hardcoded hex
+ * - Z8 vouch palette for accent tiers (no rainbow --ve-accent-*)
  * - Every layer bar is labelled with its weight (%) and an emoji signal
  * - Vegas tab shows the edge calculation transparently
  */
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWatch';
 import { HrStatsTab } from '../Stats/HrStatsTab';
+import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -35,10 +36,10 @@ type DrawerTab = 'overview' | 'layers' | 'vegas' | 'stats';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTierPalette(score: number): { text: string; bar: string; ring: string; border: string; token: string } {
-  if (score >= 97) return { text: 'text-[hsl(var(--ve-accent-gold))]', bar: 'bg-[hsl(var(--ve-accent-gold))]', ring: '#f59e0b', border: 'border-[hsl(var(--ve-accent-gold)/0.32)]', token: 've-accent-gold' };
-  if (score >= 92) return { text: 'text-[hsl(var(--ve-success))]',     bar: 'bg-[hsl(var(--ve-success))]',     ring: '#10b981', border: 'border-[hsl(var(--ve-success)/0.28)]',     token: 've-success' };
-  if (score >= 85) return { text: 'text-[hsl(var(--ve-accent-cyan))]', bar: 'bg-[hsl(var(--ve-accent-cyan))]', ring: '#22d3ee', border: 'border-[hsl(var(--ve-accent-cyan)/0.28)]', token: 've-accent-cyan' };
-  if (score >= 75) return { text: 'text-[hsl(var(--ve-accent-pink))]', bar: 'bg-[hsl(var(--ve-accent-pink))]', ring: '#818cf8', border: 'border-[hsl(var(--ve-accent-pink)/0.26)]', token: 've-accent-pink' };
+  if (score >= 97) return { text: 'text-vouch-amber', bar: 'bg-vouch-amber', ring: Z8_AMBER_HEX, border: 'border-vouch-amber/30', token: 'vouch-amber' };
+  if (score >= 92) return { text: 'text-[hsl(var(--ve-success))]', bar: 'bg-[hsl(var(--ve-success))]', ring: '#10b981', border: 'border-[hsl(var(--ve-success)/0.28)]', token: 've-success' };
+  if (score >= 85) return { text: 'text-vouch-cyan', bar: 'bg-vouch-cyan', ring: Z8_CYAN_HEX, border: 'border-vouch-cyan/30', token: 'vouch-cyan' };
+  if (score >= 75) return { text: 'text-vouch-emerald', bar: 'bg-vouch-emerald', ring: Z8_EMERALD_HEX, border: 'border-vouch-emerald/25', token: 'vouch-emerald' };
   return               { text: 'text-[hsl(var(--ve-text-muted))]',     bar: 'bg-[hsl(var(--ve-border))]',      ring: '#64748b', border: 'border-[hsl(var(--ve-border)/0.35)]',      token: 've-text-muted' };
 }
 
@@ -53,7 +54,7 @@ function tierLabel(score: number): string {
 function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNode; className: string } {
   switch (status) {
     case 'official':  return { label: 'Official',  icon: <ShieldCheck  className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))] ring-[hsl(var(--ve-success)/0.28)]' };
-    case 'projected': return { label: 'Projected', icon: <ShieldQuestion className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-accent-cyan)/0.10)] text-[hsl(var(--ve-accent-cyan))] ring-[hsl(var(--ve-accent-cyan)/0.24)]' };
+    case 'projected': return { label: 'Projected', icon: <ShieldQuestion className="h-3.5 w-3.5" />, className: 'bg-vouch-cyan/10 text-vouch-cyan ring-vouch-cyan/25' };
     case 'blocked':   return { label: 'Blocked',   icon: <ShieldAlert  className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))] ring-[hsl(var(--ve-danger)/0.25)]' };
     default:          return { label: '—',          icon: <ShieldOff    className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] ring-[hsl(var(--ve-border)/0.20)]' };
   }
@@ -130,11 +131,11 @@ const StatBox: React.FC<{ label: string; value: string; highlight?: boolean }> =
   <div className={[
     'rounded-xl border p-3',
     highlight
-      ? 'border-[hsl(var(--ve-accent-cyan)/0.30)] bg-[hsl(var(--ve-accent-cyan)/0.06)]'
+      ? 'border-vouch-cyan/30 bg-vouch-cyan/5'
       : 'border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.28)]',
   ].join(' ')}>
     <p className="text-[10px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.60)]">{label}</p>
-    <p className={`mt-1 text-lg font-extrabold ${highlight ? 'text-[hsl(var(--ve-accent-cyan))]' : 'text-[hsl(var(--ve-text-primary))]'}`}>{value}</p>
+    <p className={`mt-1 text-lg font-extrabold ${highlight ? 'text-vouch-cyan' : 'text-[hsl(var(--ve-text-primary))]'}`}>{value}</p>
   </div>
 );
 
@@ -272,7 +273,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             <div className="relative border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.40)] p-5">
               <button
                 onClick={onClose} aria-label="Close"
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:text-[hsl(var(--ve-accent-cyan))] hover:border-[hsl(var(--ve-accent-cyan)/0.35)]"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:text-vouch-cyan hover:border-vouch-cyan/35"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -366,13 +367,13 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                   key={t.id} onClick={() => setTab(t.id)}
                   className={`relative flex items-center gap-1.5 px-3 py-3 text-xs font-semibold uppercase tracking-wide transition-colors ${
                     tab === t.id
-                      ? 'text-[hsl(var(--ve-accent-cyan))]'
+                      ? 'text-vouch-cyan'
                       : 'text-[hsl(var(--ve-text-muted)/0.55)] hover:text-[hsl(var(--ve-text-muted))]'
                   }`}
                 >
                   {t.icon}{t.label}
                   {tab === t.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[hsl(var(--ve-accent-cyan))]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-vouch-cyan" />
                   )}
                 </button>
               ))}
@@ -429,11 +430,11 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                   {reasons.length > 0 && (
                     <div className="flex flex-col gap-2">
                       <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-muted)/0.55)]">
-                        <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--ve-accent-cyan))]" />Top Signals
+                        <Sparkles className="h-3.5 w-3.5 text-vouch-cyan" />Top Signals
                       </p>
                       {reasons.map((r, i) => (
                         <div key={i} className="flex items-start gap-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-3 text-sm text-[hsl(var(--ve-text-primary))]">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--ve-accent-cyan))]" />
+                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" />
                           <span>{r}</span>
                         </div>
                       ))}
@@ -469,7 +470,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                             weight={layer.weight}
                             value={layer.value}
                             barClass={i === 11
-                              ? 'bg-[hsl(var(--ve-accent-gold))]'
+                              ? 'bg-vouch-amber'
                               : palette.bar}
                             note={layer.note}
                           />

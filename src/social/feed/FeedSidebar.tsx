@@ -2,7 +2,7 @@
  * FeedSidebar — Z8 Obsidian rebuild
  *
  * Design rules:
- *  - Z8 tokens only: glass-panel/glass-border, vouch-emerald (primary), vouch-cyan (secondary)
+ *  - Z8 tokens only: vouch-emerald (primary), vouch-cyan (secondary), borderless depth
  *  - No per-group rainbow colors — every group and nav item shares the same two-accent system
  *  - Collapsible group sections (open by default, user preference persisted in localStorage)
  *  - Sport pill switcher (MLB / NBA / NFL) at top
@@ -14,7 +14,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Z8_ACTIVE, Z8_IDLE, Z8_ICON_BOX, Z8_LABEL, Z8_PANEL, Z8_SURFACE, Z8_SIDEBAR_SHELL,
+  Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
+  Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
 import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
@@ -103,8 +104,8 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
       aria-current={isActive ? 'page' : undefined}
       className={[
         'group relative w-full flex items-center justify-center xl:justify-start gap-3',
-        'border pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 text-sm uppercase tracking-wide transition-all outline-none font-z8',
-        isActive ? Z8_ACTIVE : Z8_IDLE,
+        'pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 text-sm uppercase tracking-wide transition-all outline-none font-z8',
+        isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
       ].join(' ')}
     >
       {isActive && (
@@ -117,8 +118,8 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
         className={[
           'relative z-10 h-7 w-7 shrink-0 transition-all',
           isActive
-            ? 'flex items-center justify-center border border-vouch-cyan/60 bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
-            : `${Z8_ICON_BOX} group-hover:border-vouch-cyan/45 group-hover:text-vouch-cyan group-hover:shadow-[0_0_10px_rgba(0,240,255,0.15)]`,
+            ? 'flex items-center justify-center bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
+            : `${Z8_SIDEBAR_ICON_BOX} group-hover:text-vouch-cyan group-hover:shadow-[0_0_10px_rgba(0,240,255,0.15)]`,
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
@@ -145,18 +146,18 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
-    <div className={['glass-panel-strong glass-border transition-all overflow-hidden', Z8_PANEL, hasActive ? 'border-vouch-cyan/45 shadow-[0_0_24px_rgba(0,240,255,0.08)]' : ''].join(' ')}>
+    <div className={['transition-all overflow-hidden', Z8_SIDEBAR_PANEL, hasActive ? 'shadow-[0_0_24px_rgba(0,240,255,0.08)]' : ''].join(' ')}>
       {/* Group header */}
       <button
         onClick={onToggle}
-        className={`w-full flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3 transition-colors hover:bg-vouch-cyan/5 outline-none ${Z8_LABEL}`}
+        className={`w-full flex items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-vouch-cyan/5 outline-none ${Z8_LABEL}`}
         aria-expanded={!collapsed}
       >
         <span className={['hidden xl:block', accentClass].join(' ')}>
           {group}
         </span>
         {/* Collapsed icon-only indicator */}
-        <span className="xl:hidden flex items-center justify-center w-5 h-5 border border-white/10 bg-black/30">
+        <span className="xl:hidden flex items-center justify-center w-5 h-5 bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <span className={['block w-1.5 h-1.5 bg-current', accentClass].join(' ')} />
         </span>
         <span className="hidden xl:flex items-center gap-1.5">
@@ -285,11 +286,11 @@ export default function FeedSidebar({
         <div className="relative">
           <button
             onClick={() => onSectionChange('feed')}
-            className={`group relative w-full flex items-center gap-3 ${Z8_SURFACE} p-2.5 cursor-pointer transition-all hover:border-vouch-cyan/55 hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
+            className={`group relative w-full flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
             id="brand-logo-id"
             aria-label="Go to Home Feed"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-vouch-cyan/50 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
               <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
             </div>
             <div className="hidden xl:block min-w-0 flex-1">
@@ -297,7 +298,7 @@ export default function FeedSidebar({
                 <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
                   VouchEdge
                 </span>
-                <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.15)]`}>
+                <span className={`${Z8_LABEL} bg-vouch-cyan/15 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.15)]`}>
                   Live
                 </span>
               </div>
@@ -312,19 +313,19 @@ export default function FeedSidebar({
         {/* Cmd+K hint — desktop only */}
         <button
           onClick={onOpenCmdK}
-          className={`hidden xl:flex w-full items-center gap-2 px-3 py-2 transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white ${Z8_SURFACE} ${Z8_LABEL} tracking-widest text-white/40`}
+          className={`hidden xl:flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${Z8_SIDEBAR_SURFACE} ${Z8_LABEL} tracking-widest text-white/40`}
           aria-label="Open command palette (⌘K)"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 text-left">Quick search…</span>
-          <span className={`flex items-center gap-0.5 border border-white/10 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40 ${Z8_LABEL}`}>
+          <span className={`flex items-center gap-0.5 bg-black/40 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${Z8_LABEL}`}>
             <Command className="h-2.5 w-2.5" />K
           </span>
         </button>
 
         {/* Sport Switcher pills */}
         <div
-          className={`flex flex-col xl:flex-row gap-1 p-1.5 ${Z8_SURFACE}`}
+          className={`flex flex-col xl:flex-row gap-1 p-1.5 ${Z8_SIDEBAR_SURFACE}`}
           id="sidebar-sport-switcher"
           role="group"
           aria-label="Sport selector"
@@ -339,18 +340,18 @@ export default function FeedSidebar({
                 title={sport.enabled ? `Switch to ${sport.label}` : `${sport.label} — coming soon`}
                 id={`sidebar-sport-${sport.id}`}
                 className={[
-                  'flex-1 flex items-center justify-center gap-1.5 border px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
+                  'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-black uppercase tracking-wide transition-all',
                   isActive
-                    ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
+                    ? 'bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.12)]'
                     : sport.enabled
-                      ? 'border-transparent text-white/40 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-white'
+                      ? 'text-white/40 hover:bg-vouch-cyan/5 hover:text-white hover:shadow-[0_0_12px_rgba(0,240,255,0.08)]'
                       : 'text-white/25 cursor-not-allowed opacity-70',
                 ].join(' ')}
               >
                 <span className="text-sm leading-none">{sport.emoji}</span>
                 <span className="hidden xl:inline">{sport.label}</span>
                 {!sport.enabled && (
-                  <span className={`hidden xl:inline-flex items-center border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 ${Z8_LABEL}`}>
+                  <span className={`hidden xl:inline-flex items-center bg-white/[0.04] px-1.5 py-0.5 text-[9px] tracking-widest text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${Z8_LABEL}`}>
                     Soon
                   </span>
                 )}
@@ -395,7 +396,7 @@ export default function FeedSidebar({
       {/* ── Bottom section ────────────────────────────────────────── */}
       <div className="relative z-10 mt-4 space-y-2.5">
         {/* Sync status pill — desktop only */}
-        <div className={`hidden xl:flex items-center justify-between gap-2 px-3.5 py-2.5 ${Z8_SURFACE}`}>
+        <div className={`hidden xl:flex items-center justify-between gap-2 px-3.5 py-2.5 ${Z8_SIDEBAR_SURFACE}`}>
           <div>
             <p className={`${Z8_LABEL} text-[9px] tracking-[0.28em] text-vouch-cyan`}>
               Sync
@@ -404,7 +405,7 @@ export default function FeedSidebar({
               Live data connected
             </p>
           </div>
-          <span className={`inline-flex shrink-0 items-center gap-1 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan ${Z8_LABEL}`}>
+          <span className={`inline-flex shrink-0 items-center gap-1 bg-vouch-cyan/10 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)] ${Z8_LABEL}`}>
             <span className="h-1.5 w-1.5 bg-vouch-cyan animate-pulse" />
             Online
           </span>
@@ -415,9 +416,9 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('customize')}
             className={[
-              'flex items-center justify-center xl:justify-start gap-2 border px-3 py-2 transition-all',
+              'flex items-center justify-center xl:justify-start gap-2 px-3 py-2 transition-all',
               Z8_LABEL, 'tracking-[0.12em]',
-              activeSection === 'customize' ? Z8_ACTIVE : Z8_IDLE,
+              activeSection === 'customize' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
             ].join(' ')}
             aria-label="Customize layout"
           >
@@ -427,9 +428,9 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('settings')}
             className={[
-              'flex items-center justify-center xl:justify-start gap-2 border px-3 py-2 transition-all',
+              'flex items-center justify-center xl:justify-start gap-2 px-3 py-2 transition-all',
               Z8_LABEL, 'tracking-[0.12em]',
-              activeSection === 'settings' ? Z8_ACTIVE : Z8_IDLE,
+              activeSection === 'settings' ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
             ].join(' ')}
             aria-label="Settings"
           >
@@ -441,7 +442,7 @@ export default function FeedSidebar({
         {/* Profile card */}
         <button
           onClick={() => onSectionChange('profile')}
-          className={`w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 ${Z8_SURFACE}`}
+          className={`w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${Z8_SIDEBAR_SURFACE}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >

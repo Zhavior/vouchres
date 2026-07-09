@@ -9,6 +9,7 @@ import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../li
 import type { Parlay, CreatorProofProfile } from '../../types';
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import WelcomeIntro from './WelcomeIntro';
+import { Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
 
 type TheEdgeMode = 'public' | 'dashboard';
 type TheEdgePresentation = 'page' | 'overlay';
@@ -21,7 +22,7 @@ type SignupStep = 'features' | 'account' | 'plan' | 'payment' | 'policy';
 
 type PlanId = 'free' | 'pro_trial' | 'pro_elite';
 
-const PLANS: Record<PlanId, { name: string; price: string; sub: string; perks: string[]; accent: 'cyan' | 'emerald' | 'violet'; badge?: string; paid: boolean }> = {
+const PLANS: Record<PlanId, { name: string; price: string; sub: string; perks: string[]; accent: 'cyan' | 'emerald'; badge?: string; paid: boolean }> = {
   free: {
     name: 'Free',
     price: '$0',
@@ -44,7 +45,7 @@ const PLANS: Record<PlanId, { name: string; price: string; sub: string; perks: s
     price: '$49.99/mo',
     sub: 'Deep research + sell your picks',
     perks: ['Everything in Pro', 'Deep research suite', 'Sell picks + Subscriber Clubs'],
-    accent: 'violet',
+    accent: 'emerald',
     badge: 'Top tier',
     paid: true,
   },
@@ -91,8 +92,8 @@ interface SlateGame {
 
 /* ── small shared primitives (one accent: cyan; emerald=proof, rose=loss, amber=live) ── */
 
-function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' | 'violet' }) {
-  const color = tone === 'cyan' ? 'text-vouch-cyan' : tone === 'emerald' ? 'text-vouch-emerald' : tone === 'rose' ? 'text-rose-300' : tone === 'violet' ? 'text-violet-300' : 'text-white';
+function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' }) {
+  const color = tone === 'cyan' ? 'text-vouch-cyan' : tone === 'emerald' ? 'text-vouch-emerald' : tone === 'rose' ? 'text-rose-300' : 'text-white';
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center font-z8">
       <div className={`text-2xl font-black ${color}`}>{value}</div>
@@ -406,26 +407,26 @@ export default function TheEdgeShell({
 
   return (
     <motion.main
-      className={`ve-theme-root relative isolate overflow-hidden bg-[hsl(var(--ve-bg-deep))] text-[hsl(var(--ve-text-primary))] ${shellClass}`}
+      className={`relative isolate overflow-hidden bg-obsidian-900 text-white font-z8 ${shellClass}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
     >
       {/* Stadium-floodlight backdrop — one clean layer, not stacked sci-fi space effects */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--ve-accent-cyan)/0.14),transparent_38%),linear-gradient(180deg,hsl(var(--ve-bg-deep)),hsl(var(--ve-bg-panel))_60%,hsl(var(--ve-bg-deep)))]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,rgba(0,240,255,0.12),transparent_38%),linear-gradient(180deg,#0a0a0f,#111118_60%,#0a0a0f)]" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className="edge-space-header border-b border-[hsl(var(--ve-border)/0.45)] bg-[hsl(var(--ve-surface)/0.58)] px-4 py-4 shadow-[0_18px_60px_hsl(var(--ve-shadow)/0.32)] backdrop-blur-2xl sm:px-6">
+        <header className={`${Z8_PANEL_PREMIUM} edge-space-header border-b border-white/10 rounded-none border-x-0 border-t-0 px-4 py-4 backdrop-blur-2xl sm:px-6`}>
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[hsl(var(--ve-border)/0.45)] bg-[hsl(var(--ve-surface-raised)/0.55)] text-[hsl(var(--ve-accent-cyan))] shadow-[0_0_22px_hsl(var(--ve-accent-cyan)/0.16)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-vouch-cyan shadow-[0_0_22px_rgba(0,240,255,0.16)]">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="text-sm font-black tracking-tight text-[hsl(var(--ve-text-primary))]">
-              Vouch<span className="text-[hsl(var(--ve-accent-cyan))]">Edge</span>
+            <span className="text-sm font-black tracking-tight text-white">
+              Vouch<span className="text-vouch-cyan">Edge</span>
             </span>
-            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))] sm:inline">
+            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-white/45 sm:inline">
               Trust-first MLB research
             </span>
           </div>
@@ -436,7 +437,7 @@ export default function TheEdgeShell({
                 <button onClick={() => setEdgeLayer('login')} className="ve-button-ghost px-3.5 py-2 text-xs font-black">
                   <span className="inline-flex items-center gap-1.5"><LogIn className="h-3.5 w-3.5" /> Login</span>
                 </button>
-                <button onClick={() => openSignup('pro_trial')} className="ve-button-primary hidden px-3.5 py-2 text-xs font-black text-slate-950 sm:inline-flex">
+                <button onClick={() => openSignup('pro_trial')} className="ve-button-primary hidden px-3.5 py-2 text-xs font-black text-obsidian-900 sm:inline-flex">
                   Get Started
                 </button>
               </>
@@ -447,7 +448,7 @@ export default function TheEdgeShell({
               </button>
             )}
             {(edgeLayer === 'dashboard' || edgeLayer === 'welcomeBack') && (
-              <button onClick={() => enterSite('feed')} className="ve-button-primary px-3.5 py-2 text-xs font-black text-slate-950">
+              <button onClick={() => enterSite('feed')} className="ve-button-primary px-3.5 py-2 text-xs font-black text-obsidian-900">
                 Enter VouchEdge Site
               </button>
             )}
@@ -491,12 +492,12 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -32 }}
                 transition={{ duration: 0.4, ease }}
-                className="ve-panel ve-panel-glow mx-auto max-w-md p-6"
+                className={`${Z8_PANEL_PREMIUM} mx-auto max-w-md rounded-[2rem] p-6`}
               >
                 <form onSubmit={handleLoginSubmit}>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Login</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Login</div>
                   <h2 className="mt-2 text-3xl font-black text-white">Welcome back.</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">Login happens right here — then you're straight into your dashboard.</p>
+                  <p className="mt-2 text-sm leading-6 text-white/45">Login happens right here — then you're straight into your dashboard.</p>
                   <div className="mt-6 grid gap-3">
                     <input
                       className="ve-input px-4 py-3 text-sm"
@@ -521,14 +522,14 @@ export default function TheEdgeShell({
                     </div>
                   )}
                   {authNotice && (
-                    <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                    <div className="mt-4 rounded-2xl border border-vouch-emerald/20 bg-vouch-emerald/10 px-4 py-3 text-xs font-bold leading-5 text-vouch-emerald">
                       {authNotice}
                     </div>
                   )}
                   <button type="submit" disabled={authBusy} className={`mt-6 w-full ${PRIMARY} ${authBusy ? 'cursor-wait opacity-70 hover:translate-y-0' : ''}`}>
                     {authBusy ? 'Logging in...' : 'Login → Enter Dashboard'}
                   </button>
-                  <button type="button" onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-slate-500 hover:text-slate-300">
+                  <button type="button" onClick={() => openSignup('pro_trial')} className="mt-3 w-full text-center text-xs font-bold text-white/40 hover:text-white/70">
                     New here? Start a free trial →
                   </button>
                 </form>
@@ -552,22 +553,22 @@ export default function TheEdgeShell({
                     const done = signupOrder.indexOf(signupStep) > i;
                     return (
                       <div key={s} className="flex flex-1 items-center gap-2">
-                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black ${active ? 'bg-cyan-400 text-slate-950' : done ? 'bg-emerald-400 text-slate-950' : 'border border-slate-700 bg-slate-900 text-slate-500'}`}>
+                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black ${active ? 'bg-vouch-cyan text-obsidian-900' : done ? 'bg-vouch-emerald text-obsidian-900' : 'border border-white/15 bg-black/40 text-white/40'}`}>
                           {done ? <Check className="h-3 w-3" /> : i + 1}
                         </div>
-                        {i < signupOrder.length - 1 && <div className={`h-px flex-1 ${done ? 'bg-emerald-400/60' : 'bg-slate-800'}`} />}
+                        {i < signupOrder.length - 1 && <div className={`h-px flex-1 ${done ? 'bg-vouch-emerald/60' : 'bg-white/10'}`} />}
                       </div>
                     );
                   })}
                 </div>
 
-                <div className="ve-panel ve-panel-glow p-6">
+                <div className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-6`}>
                   <AnimatePresence mode="wait">
 
                     {/* 1) FEATURES */}
                     {signupStep === 'features' && (
                       <motion.div key="s-features" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">What you unlock</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">What you unlock</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Built to make you sharper.</h2>
                         <div className="mt-5 grid gap-3 sm:grid-cols-2">
                           {[
@@ -578,10 +579,10 @@ export default function TheEdgeShell({
                           ].map(([Icon, title, body]) => {
                             const I = Icon as typeof ShieldCheck;
                             return (
-                              <div key={title as string} className="ve-card ve-card-hover p-4">
-                                <I className="h-5 w-5 text-cyan-300" />
+                              <div key={title as string} className={`${Z8_SURFACE} rounded-2xl p-4 transition hover:border-vouch-cyan/30`}>
+                                <I className="h-5 w-5 text-vouch-cyan" />
                                 <div className="mt-3 text-sm font-black text-white">{title as string}</div>
-                                <p className="mt-1 text-[11px] leading-5 text-slate-500">{body as string}</p>
+                                <p className="mt-1 text-[11px] leading-5 text-white/40">{body as string}</p>
                               </div>
                             );
                           })}
@@ -595,7 +596,7 @@ export default function TheEdgeShell({
                     {/* 2) ACCOUNT */}
                     {signupStep === 'account' && (
                       <motion.div key="s-account" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Create account</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Create account</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Your Edge profile.</h2>
                         <div className="mt-5 grid gap-3">
                           <input
@@ -628,12 +629,12 @@ export default function TheEdgeShell({
                           </div>
                         )}
                         {authNotice && (
-                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                          <div className="mt-4 rounded-2xl border border-vouch-emerald/20 bg-vouch-emerald/10 px-4 py-3 text-xs font-bold leading-5 text-vouch-emerald">
                             {authNotice}
                           </div>
                         )}
                         <div className="mt-6 flex items-center justify-between">
-                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupBack} className="text-xs font-black text-white/40 hover:text-white/70">Back</button>
                           <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Choose plan <ArrowRight className="h-4 w-4" /></span></button>
                         </div>
                       </motion.div>
@@ -642,32 +643,32 @@ export default function TheEdgeShell({
                     {/* 3) PLAN */}
                     {signupStep === 'plan' && (
                       <motion.div key="s-plan" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Pick your plan</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Pick your plan</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Start free, or go Pro.</h2>
                         <div className="mt-5 grid gap-3">
                           {(Object.entries(PLANS) as [PlanId, typeof PLANS[PlanId]][]).map(([id, p]) => {
                             const selected = plan === id;
                             const ring = selected
-                              ? p.accent === 'emerald' ? 'border-emerald-300/50 bg-emerald-300/[0.07]' : p.accent === 'violet' ? 'border-violet-300/50 bg-violet-300/[0.07]' : 'border-cyan-300/50 bg-cyan-300/[0.07]'
-                              : 'border-slate-800 bg-slate-900/50 hover:border-slate-700';
+                              ? p.accent === 'emerald' ? 'border-vouch-emerald/50 bg-vouch-emerald/[0.07]' : 'border-vouch-cyan/50 bg-vouch-cyan/[0.07]'
+                              : 'border-white/10 bg-black/40 hover:border-vouch-cyan/30';
                             return (
                               <button key={id} onClick={() => setPlan(id)} className={`relative rounded-2xl border p-4 text-left transition ${ring}`}>
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-base font-black text-white">{p.name}</span>
-                                      {p.badge && <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-300">{p.badge}</span>}
+                                      {p.badge && <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white/70">{p.badge}</span>}
                                     </div>
-                                    <div className="mt-0.5 text-[11px] text-slate-400">{p.sub}</div>
+                                    <div className="mt-0.5 text-[11px] text-white/45">{p.sub}</div>
                                     <ul className="mt-2 space-y-1">
                                       {p.perks.map((perk) => (
-                                        <li key={perk} className="flex items-center gap-1.5 text-[11px] text-slate-300"><Check className="h-3 w-3 text-emerald-300" /> {perk}</li>
+                                        <li key={perk} className="flex items-center gap-1.5 text-[11px] text-white/70"><Check className="h-3 w-3 text-vouch-emerald" /> {perk}</li>
                                       ))}
                                     </ul>
                                   </div>
                                   <div className="text-right">
                                     <div className="text-lg font-black text-white">{p.price}</div>
-                                    <div className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-cyan-300 bg-cyan-300 text-slate-950' : 'border-slate-600'}`}>
+                                    <div className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-vouch-cyan bg-vouch-cyan text-obsidian-900' : 'border-white/20'}`}>
                                       {selected && <Check className="h-3 w-3" />}
                                     </div>
                                   </div>
@@ -677,7 +678,7 @@ export default function TheEdgeShell({
                           })}
                         </div>
                         <div className="mt-6 flex items-center justify-between">
-                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupBack} className="text-xs font-black text-white/40 hover:text-white/70">Back</button>
                           <button onClick={signupNext} className={PRIMARY}>
                             <span className="inline-flex items-center gap-2">{PLANS[plan].paid ? 'Continue to payment' : 'Continue'} <ArrowRight className="h-4 w-4" /></span>
                           </button>
@@ -688,30 +689,30 @@ export default function TheEdgeShell({
                     {/* 4) PAYMENT (paid plans only) */}
                     {signupStep === 'payment' && (
                       <motion.div key="s-payment" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Payment</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Payment</div>
                         <h2 className="mt-2 text-3xl font-black text-white">
                           {plan === 'pro_trial' ? '1.5 weeks free, then $12.99/mo.' : `${PLANS[plan].name} — ${PLANS[plan].price}.`}
                         </h2>
-                        <p className="mt-2 text-sm leading-6 text-slate-400">
+                        <p className="mt-2 text-sm leading-6 text-white/45">
                           {plan === 'pro_trial'
                             ? 'You won’t be charged today. Your card holds your trial; cancel anytime before it ends.'
                             : 'Secure checkout. You can cancel your subscription anytime.'}
                         </p>
                         <div className="mt-5 grid gap-3">
-                          <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3">
-                            <CreditCard className="h-4 w-4 text-slate-500" />
-                            <input className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Card number" inputMode="numeric" />
+                          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/45 px-4 py-3">
+                            <CreditCard className="h-4 w-4 text-white/40" />
+                            <input className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" placeholder="Card number" inputMode="numeric" />
                           </div>
                           <div className="grid grid-cols-2 gap-3">
-                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="MM / YY" />
-                            <input className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/50" placeholder="CVC" />
+                            <input className="rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white outline-none focus:border-vouch-cyan/50" placeholder="MM / YY" />
+                            <input className="rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white outline-none focus:border-vouch-cyan/50" placeholder="CVC" />
                           </div>
                         </div>
-                        <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                          <Lock className="h-3.5 w-3.5 text-emerald-300" /> Encrypted checkout · processed by our payment provider
+                        <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-white/40">
+                          <Lock className="h-3.5 w-3.5 text-vouch-emerald" /> Encrypted checkout · processed by our payment provider
                         </div>
                         <div className="mt-6 flex items-center justify-between">
-                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupBack} className="text-xs font-black text-white/40 hover:text-white/70">Back</button>
                           <button onClick={signupNext} className={PRIMARY}><span className="inline-flex items-center gap-2">Review terms <ArrowRight className="h-4 w-4" /></span></button>
                         </div>
                       </motion.div>
@@ -720,9 +721,9 @@ export default function TheEdgeShell({
                     {/* 5) POLICY + AGREEMENT VERIFICATION */}
                     {signupStep === 'policy' && (
                       <motion.div key="s-policy" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
-                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Terms &amp; agreement</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Terms &amp; agreement</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Read &amp; agree to continue.</h2>
-                        <div className="mt-4 max-h-56 overflow-y-auto whitespace-pre-line rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-[11px] leading-5 text-slate-400">
+                        <div className="mt-4 max-h-56 overflow-y-auto whitespace-pre-line rounded-2xl border border-white/10 bg-black/45/80 p-4 text-[11px] leading-5 text-white/45">
                           {POLICY_TEXT}
                         </div>
                         <div className="mt-4 space-y-2.5">
@@ -731,21 +732,21 @@ export default function TheEdgeShell({
                             ['terms', 'I have read and agree to the Terms & Privacy Policy.'],
                             ['research', 'I understand VouchEdge is research/entertainment only — not betting advice.'],
                           ] as const).map(([key, label]) => (
-                            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 transition hover:border-slate-700">
+                            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-black/35 p-3 transition hover:border-vouch-cyan/30">
                               <button
                                 type="button"
                                 onClick={() => setAgree((a) => ({ ...a, [key]: !a[key] }))}
-                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition ${agree[key] ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-950'}`}
+                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border transition ${agree[key] ? 'border-vouch-emerald bg-vouch-emerald text-obsidian-900' : 'border-white/20 bg-black/45'}`}
                                 aria-pressed={agree[key]}
                               >
                                 {agree[key] && <Check className="h-3.5 w-3.5" />}
                               </button>
-                              <span className="text-xs leading-5 text-slate-300">{label}</span>
+                              <span className="text-xs leading-5 text-white/70">{label}</span>
                             </label>
                           ))}
                         </div>
                         <div className="mt-6 flex items-center justify-between gap-3">
-                          <button onClick={signupBack} className="text-xs font-black text-slate-500 hover:text-slate-300">Back</button>
+                          <button onClick={signupBack} className="text-xs font-black text-white/40 hover:text-white/70">Back</button>
                           <button
                             onClick={signupNext}
                             disabled={!allAgreed || authBusy}
@@ -760,11 +761,11 @@ export default function TheEdgeShell({
                           </div>
                         )}
                         {authNotice && (
-                          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-xs font-bold leading-5 text-emerald-100">
+                          <div className="mt-4 rounded-2xl border border-vouch-emerald/20 bg-vouch-emerald/10 px-4 py-3 text-xs font-bold leading-5 text-vouch-emerald">
                             {authNotice}
                           </div>
                         )}
-                        {!allAgreed && <p className="mt-2 text-right text-[10px] font-bold text-slate-600">Check all three boxes to continue.</p>}
+                        {!allAgreed && <p className="mt-2 text-right text-[10px] font-bold text-white/30">Check all three boxes to continue.</p>}
                       </motion.div>
                     )}
 
@@ -781,7 +782,7 @@ export default function TheEdgeShell({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease }}
-                className="glass-panel glass-border mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8"
+                className={`${Z8_PANEL_PREMIUM} mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl p-10 text-center font-z8`}
               >
                 <motion.div
                   className="flex h-16 w-16 items-center justify-center rounded-3xl bg-vouch-emerald/10 text-vouch-emerald"
@@ -807,7 +808,7 @@ export default function TheEdgeShell({
                 transition={{ duration: 0.45, ease }}
                 className="mx-auto max-w-6xl space-y-4 font-z8"
               >
-                <section className="glass-panel glass-border rounded-3xl p-5">
+                <section className={`${Z8_PANEL_PREMIUM} rounded-3xl p-5`}>
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
                       <div className="terminal-text text-vouch-emerald">Your Dashboard</div>
@@ -845,7 +846,7 @@ export default function TheEdgeShell({
                     <button
                       key={label}
                       onClick={() => enterSite(section)}
-                      className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
+                      className={`${Z8_PANEL_PREMIUM} group rounded-2xl p-4 text-left transition hover:-translate-y-0.5`}
                     >
                       <Icon className="h-5 w-5 text-vouch-emerald" />
                       <div className="mt-3 text-sm font-bold text-white">{label}</div>
@@ -857,7 +858,7 @@ export default function TheEdgeShell({
                 </section>
 
                 <section className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
-                  <div className="glass-panel glass-border rounded-2xl p-5">
+                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5`}>
                     <div className="flex items-center gap-2"><Bell className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">Pending picks</h3></div>
                     <div className="mt-4 space-y-2">
                       {savedParlays.filter((p) => p.status === 'PENDING').slice(0, 4).map((p) => (
@@ -874,7 +875,7 @@ export default function TheEdgeShell({
                     </div>
                   </div>
 
-                  <div className="glass-panel glass-border rounded-2xl p-5">
+                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5`}>
                     <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">AI Seat</h3></div>
                     <div className="mt-4 grid gap-2">
                       {['Explain today’s board', 'Compare players', 'Build parlay logic'].map((tool) => (

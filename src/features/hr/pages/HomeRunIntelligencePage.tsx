@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { VEButton } from '../../../components/ui/ve';
 import { RefreshCw, AlertOctagon, Inbox, Flame, Award, Eye, Moon } from 'lucide-react';
+import {
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_STAT_CHIP,
+} from '../../../theme/z8Tokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrToolbar } from '../components/Toolbar/HrToolbar';
@@ -20,9 +28,7 @@ interface MiniStatChipProps {
 }
 
 const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div
-    className={`flex items-center gap-2.5 border bg-black/25 px-3.5 py-2.5 font-mono transition duration-200 ${colorClasses} ${glowClasses}`}
-  >
+  <div className={`${Z8_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
     <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
     <div className="flex flex-col leading-tight">
       <span className="text-lg font-extrabold text-slate-50">{value}</span>
@@ -188,8 +194,8 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-0 bg-[#0A0A0A] px-4 py-6 pb-12 text-white md:px-8">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
+    <div className={`${Z8_PAGE} min-h-0 ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} pb-12`}>
+      <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
         <HrCommandCenter
           mode={vm.mode}
           viewMode={viewMode}

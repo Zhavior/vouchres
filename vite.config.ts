@@ -88,8 +88,8 @@ export default defineConfig(({ mode }) => {
             // Google AI SDK
             if (id.includes('@google/genai')) return 'ai-vendor';
 
-            // Google auth
-            if (id.includes('google-auth-library')) return 'ai-vendor';
+            // Graph layout — cytoscape + mermaid
+            if (id.includes('cytoscape') || id.includes('mermaid')) return 'graph-vendor';
           },
         },
       },

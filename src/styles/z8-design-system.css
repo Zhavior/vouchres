@@ -15,16 +15,22 @@
   --color-obsidian-600: #1A1A1A;
   --color-vouch-emerald: #00FF94;
   --color-vouch-cyan: #00F0FF;
+  --color-vouch-amber: #f59e0b;
   --background-image-glass-gradient: linear-gradient(110deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
   --background-image-vignette: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%);
+  --background-image-z8-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
   --font-z8: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --spacing-z8-page-x: 0.75rem;
+  --spacing-z8-page-y: 1rem;
+  --spacing-z8-page-gap: 1rem;
+  --spacing-z8-section-gap: 1.25rem;
 }
 
 @utility glass-panel {
-  background-color: rgba(10, 10, 10, 0.4);
-  backdrop-filter: blur(20px);
+  background-color: rgba(5, 5, 5, 0.22);
+  backdrop-filter: blur(16px) saturate(1.15);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
 }
 
 @utility glass-border {
@@ -47,20 +53,42 @@
   font-family: var(--font-z8);
 }
 
-/** Distinct obsidian glass shell for the app sidebar — visibly separate from main content. */
+/** Distinct obsidian glass shell for the app sidebar — depth via shadow, no border lines. */
 @utility z8-sidebar-shell {
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 10, 0.96) 0%,
-    rgba(5, 5, 5, 0.99) 55%,
-    rgba(5, 5, 5, 1) 100%
+    rgba(10, 10, 10, 0.32) 0%,
+    rgba(5, 5, 5, 0.24) 55%,
+    rgba(5, 5, 5, 0.18) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.25);
-  border-right: 1px solid rgba(0, 240, 255, 0.22);
+  backdrop-filter: blur(24px) saturate(1.2);
   box-shadow:
-    inset -1px 0 0 rgba(0, 240, 255, 0.14),
-    4px 0 48px rgba(0, 0, 0, 0.9),
-    0 0 32px rgba(0, 240, 255, 0.04);
+    4px 0 40px rgba(0, 0, 0, 0.45),
+    0 0 32px rgba(0, 240, 255, 0.08);
+}
+
+/** Borderless glass panel for sidebar nav groups. */
+@utility z8-sidebar-panel {
+  background-color: rgba(5, 5, 5, 0.28);
+  backdrop-filter: blur(20px) saturate(1.15);
+  box-shadow:
+    0 8px 28px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/** Borderless inner surface for sidebar controls. */
+@utility z8-sidebar-surface {
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/** Borderless icon box for sidebar nav items. */
+@utility z8-sidebar-icon {
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /** Cyan accent rule — matches HR board header treatment. */
@@ -76,10 +104,111 @@
 
 /** Brighter glass panel variant for sidebar groups. */
 @utility glass-panel-strong {
-  background-color: rgba(10, 10, 10, 0.72);
-  backdrop-filter: blur(24px);
+  background-color: rgba(5, 5, 5, 0.3);
+  backdrop-filter: blur(20px) saturate(1.15);
   border: 1px solid rgba(0, 240, 255, 0.14);
   box-shadow:
-    0 8px 32px 0 rgba(0, 0, 0, 0.85),
+    0 8px 28px 0 rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/** Z8 Premium — layered glass, grain overlay, inset rim light. */
+@utility glass-panel-premium {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(18, 18, 18, 0.42) 0%, rgba(8, 8, 8, 0.34) 55%, rgba(5, 5, 5, 0.38) 100%);
+  backdrop-filter: blur(24px) saturate(1.18);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow:
+    0 14px 48px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.28;
+    mix-blend-mode: overlay;
+    background-image: var(--background-image-z8-noise);
+    background-size: 128px 128px;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.08), transparent 60%);
+  }
+}
+
+/** Section header — eyebrow + display title + optional accent rule. */
+@utility z8-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/** Stat chip — compact metric cell with tabular numerals. */
+@utility z8-stat-chip {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.625rem 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/** Display typography scale for page titles. */
+@utility z8-display {
+  font-family: var(--font-z8);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #fff;
+  @media (width >= 40rem) {
+    font-size: 1.875rem;
+  }
+}
+
+/** Tabular numerals for stats / odds / scores. */
+@utility z8-tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/** Reduced-motion-safe hover lift + active press. */
+@utility z8-interactive {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  @media (prefers-reduced-motion: no-preference) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 240, 255, 0.06);
+    }
+    &:active {
+      transform: translateY(0) scale(0.995);
+    }
+  }
+}
+
+/** Consistent page shell rhythm — pairs with Z8_PAGE token. */
+@utility z8-page-shell {
+  min-width: 0;
+  padding-inline: var(--spacing-z8-page-x);
+  padding-block: var(--spacing-z8-page-y);
+  @media (width >= 40rem) {
+    --spacing-z8-page-x: 1rem;
+    --spacing-z8-page-y: 1.25rem;
+  }
+  @media (width >= 64rem) {
+    --spacing-z8-page-y: 1.5rem;
+  }
 }

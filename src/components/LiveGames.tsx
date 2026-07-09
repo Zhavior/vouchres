@@ -22,7 +22,7 @@ import {
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer } from '../types';
 import { logoByTeamName } from '../lib/teamLogos';
-import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_STAT_CHIP } from '../theme/z8Tokens';
 
 /** Small MLB team logo with graceful fallback when a team can't be matched. */
 function TeamLogo({ team, size = 22 }: { team: string; size?: number }) {
@@ -332,21 +332,21 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
       </div>
 
       {loading ? (
-        <div className="bg-slate-950 border border-slate-950/80 rounded-3xl p-20 text-center space-y-4" id="live-games-loading">
-          <RefreshCw className="w-12 h-12 text-sky-400 animate-spin mx-auto" />
+        <div className={`${Z8_PANEL_PREMIUM} p-20 text-center space-y-4`} id="live-games-loading">
+          <RefreshCw className="w-12 h-12 text-vouch-cyan animate-spin mx-auto" />
           <h4 className="text-white font-bold">Querying official Major League schedule...</h4>
-          <p className="text-slate-500 text-xs">Parsing team arrays, ballpark elevations, and starting pitchers.</p>
+          <p className="text-white/45 text-xs">Parsing team arrays, ballpark elevations, and starting pitchers.</p>
         </div>
       ) : games.length === 0 ? (
-        <div className="bg-slate-950 border border-slate-900 rounded-3xl p-16 text-center space-y-4" id="live-games-empty">
-          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
+        <div className={`${Z8_PANEL_PREMIUM} p-16 text-center space-y-4`} id="live-games-empty">
+          <AlertTriangle className="w-12 h-12 text-vouch-amber mx-auto" />
           <h4 className="text-white font-bold">No MLB Games Active at This Time</h4>
-          <p className="text-slate-500 text-sm max-w-md mx-auto">
+          <p className="text-white/45 text-sm max-w-md mx-auto">
             The MLB schedule is fully queryable. In case there are no matches on today's calendar, we will load our high-fidelity seed matrix.
           </p>
           <button
             onClick={fetchLiveGames}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-xl text-xs transition-colors"
+            className="bg-vouch-cyan/80 hover:bg-vouch-cyan text-white font-bold py-2 px-6 rounded-xl text-xs transition-colors"
           >
             Check Again
           </button>
@@ -357,15 +357,15 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
           {/* LEFT COLUMN: LIVE SCORES CATALOG (Col span 5) */}
           <div className="lg:col-span-5 space-y-4" id="live-games-list-column">
             <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-black text-slate-400 font-mono tracking-wider uppercase">
+              <h3 className="text-xs font-black text-white/50 font-mono tracking-wider uppercase">
                 ACTIVE BALLPARK BULLETINS ({games.length})
               </h3>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+              <div className="flex items-center gap-1.5 text-[10px] text-white/45 font-mono">
                 <span>Auto-simulate increments:</span>
                 <button
                   type="button"
                   onClick={() => setIsPollerActive(!isPollerActive)}
-                  className={`w-8 h-4 rounded-full transition-colors relative ${isPollerActive ? 'bg-emerald-500' : 'bg-slate-800'}`}
+                  className={`w-8 h-4 rounded-full transition-colors relative ${isPollerActive ? 'bg-vouch-emerald' : 'bg-black/40'}`}
                 >
                   <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isPollerActive ? 'right-0.5' : 'left-0.5'}`} />
                 </button>
@@ -383,30 +383,30 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                     onClick={() => setSelectedGameId(game.id)}
                     className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
                       isSelected 
-                        ? 'bg-slate-900 border-sky-500/80 shadow-md ring-1 ring-sky-500/20' 
-                        : 'bg-slate-950/80 border-slate-900/60 hover:border-slate-850 hover:bg-slate-900/40'
+                        ? `${Z8_ACTIVE} shadow-md`
+                        : `${Z8_IDLE} rounded-2xl`
                     }`}
                   >
-                    <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mb-2">
+                    <div className="flex justify-between items-center text-[10px] font-mono text-white/45 mb-2">
                       <span className="truncate max-w-[150px]">{game.venue}</span>
                       <span className={`px-2 py-0.5 rounded font-black uppercase text-[9px] flex items-center gap-1 ${
                         isLive 
                           ? 'bg-red-500/10 text-red-400 animate-pulse' 
                           : game.status === 'Final' 
-                            ? 'bg-slate-900 text-slate-450' 
-                            : 'bg-indigo-500/10 text-indigo-400'
+                            ? 'bg-black/45 text-white/40' 
+                            : 'bg-vouch-cyan/10 text-vouch-cyan'
                       }`}>
                         {isLive && <span className="w-1 h-1 rounded-full bg-red-500" />}
                         {game.status}
                       </span>
                     </div>
 
-                    <div className="space-y-2 pb-2.5 border-b border-slate-900/40">
+                    <div className="space-y-2 pb-2.5 border-b border-white/10/40">
                       {/* Away Team Line */}
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2 min-w-0">
                           <TeamLogo team={game.awayTeam} />
-                          <span className="text-slate-100 font-extrabold text-sm truncate">{game.awayTeam}</span>
+                          <span className="text-white font-extrabold text-sm truncate">{game.awayTeam}</span>
                         </span>
                         <span className="text-white font-mono font-black text-base">{game.awayScore}</span>
                       </div>
@@ -415,16 +415,16 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2 min-w-0">
                           <TeamLogo team={game.homeTeam} />
-                          <span className="text-slate-100 font-extrabold text-sm truncate">{game.homeTeam}</span>
+                          <span className="text-white font-extrabold text-sm truncate">{game.homeTeam}</span>
                         </span>
                         <span className="text-white font-mono font-black text-base">{game.homeScore}</span>
                       </div>
                     </div>
 
                     {/* Footer micro metrics preview */}
-                    <div className="pt-2 flex justify-between items-center text-[10px] font-mono text-slate-500">
+                    <div className="pt-2 flex justify-between items-center text-[10px] font-mono text-white/45">
                       <span>Win % Proj:</span>
-                      <span className="text-sky-400 font-bold">
+                      <span className="text-vouch-cyan font-bold">
                         {game.predictions.winningPct.home}% vs {game.predictions.winningPct.away}%
                       </span>
                     </div>
@@ -437,22 +437,22 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
           {/* RIGHT COLUMN: ANALYTICAL METRICS BOARD (Col span 7) */}
           <div className="lg:col-span-7" id="live-games-metrics-column">
             {activeSelectedGame ? (
-              <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6" id="analytical-metrics-board-card">
+              <div className={`${Z8_PANEL_PREMIUM} p-5 md:p-6 space-y-6`} id="analytical-metrics-board-card">
                 
                 {/* Board header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-900">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
                   <div>
-                    <span className="text-[10px] bg-sky-500/10 text-sky-400 font-bold px-2 py-0.5 rounded font-mono uppercase">
+                    <span className="text-[10px] bg-vouch-cyan/10 text-vouch-cyan font-bold px-2 py-0.5 rounded font-mono uppercase">
                       ACTIVE ADVANTAGE LEDGER
                     </span>
                     <h2 className="text-xl font-black text-white font-display mt-1 select-text">
                       {activeSelectedGame.awayTeam} @ {activeSelectedGame.homeTeam}
                     </h2>
-                    <p className="text-slate-400 text-xs mt-0.5 font-mono">{activeSelectedGame.venue}</p>
+                    <p className="text-white/50 text-xs mt-0.5 font-mono">{activeSelectedGame.venue}</p>
                   </div>
 
                   <div className="flex gap-2">
-                    <span className="bg-slate-900 border border-slate-800 text-[10.5px] font-sans text-slate-350 px-3 py-1 rounded-xl">
+                    <span className="bg-black/45 border border-white/10 text-[10.5px] font-sans text-white/55 px-3 py-1 rounded-xl">
                       {activeSelectedGame.id}
                     </span>
                   </div>
@@ -462,34 +462,34 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                 <div className="space-y-2">
                   <div className="flex justify-between items-end text-xs font-mono">
                     <div>
-                      <span className="flex items-center gap-1.5 text-[10px] text-slate-400"><TeamLogo team={activeSelectedGame.awayTeam} size={16} />{activeSelectedGame.awayTeam}</span>
-                      <span className="block text-base font-black text-slate-200 mt-0.5">{activeSelectedGame.predictions.winningPct.away}%</span>
+                      <span className="flex items-center gap-1.5 text-[10px] text-white/50"><TeamLogo team={activeSelectedGame.awayTeam} size={16} />{activeSelectedGame.awayTeam}</span>
+                      <span className="block text-base font-black text-white/90 mt-0.5">{activeSelectedGame.predictions.winningPct.away}%</span>
                     </div>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">PROJECTED MATCH WIN RATIOS</span>
+                    <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider">PROJECTED MATCH WIN RATIOS</span>
                     <div className="text-right">
-                      <span className="flex items-center justify-end gap-1.5 text-[10px] text-slate-400">{activeSelectedGame.homeTeam}<TeamLogo team={activeSelectedGame.homeTeam} size={16} /></span>
-                      <span className="block text-base font-black text-sky-400 mt-0.5">{activeSelectedGame.predictions.winningPct.home}%</span>
+                      <span className="flex items-center justify-end gap-1.5 text-[10px] text-white/50">{activeSelectedGame.homeTeam}<TeamLogo team={activeSelectedGame.homeTeam} size={16} /></span>
+                      <span className="block text-base font-black text-vouch-cyan mt-0.5">{activeSelectedGame.predictions.winningPct.home}%</span>
                     </div>
                   </div>
 
                   {/* High contrast progress bar segment */}
-                  <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden flex" id="winning-pct-progress-bar">
+                  <div className="h-3 w-full bg-black/40 rounded-full overflow-hidden flex" id="winning-pct-progress-bar">
                     <div 
-                      className="bg-indigo-600 transition-all duration-500" 
+                      className="bg-vouch-cyan/30 transition-all duration-500" 
                       style={{ width: `${activeSelectedGame.predictions.winningPct.away}%` }} 
                     />
                     <div 
-                      className="bg-sky-500 transition-all duration-500" 
+                      className="bg-vouch-cyan transition-all duration-500" 
                       style={{ width: `${activeSelectedGame.predictions.winningPct.home}%` }} 
                     />
                   </div>
                 </div>
 
                 {/* 2. SABERMETRIC TEAM METRIC SHIELD GAUGE BOX */}
-                <div className="bg-slate-900/35 border border-slate-900 p-5 rounded-2xl space-y-4" id="sabermetric-probability-scales">
-                  <div className="flex items-center gap-2 border-b border-slate-950 pb-2">
-                    <Flame className="w-4 h-4 text-emerald-450" />
-                    <h4 className="text-[10px] font-black text-slate-400 font-mono tracking-widest uppercase">
+                <div className={`${Z8_SURFACE} p-5 rounded-2xl space-y-4`} id="sabermetric-probability-scales">
+                  <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                    <Flame className="w-4 h-4 text-vouch-emerald" />
+                    <h4 className="text-[10px] font-black text-white/50 font-mono tracking-widest uppercase">
                       TEAM-LEVEL PROBABILITIES
                     </h4>
                   </div>
@@ -498,23 +498,23 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                     {/* Home Run likelihood */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-slate-400 text-[11px] font-bold">Likelihood to hit at least 1+ HR</span>
-                        <span className="text-emerald-400 font-bold">
+                        <span className="text-white/50 text-[11px] font-bold">Likelihood to hit at least 1+ HR</span>
+                        <span className="text-vouch-emerald font-bold">
                           {activeSelectedGame.predictions.hrPct.away}% (Away) vs {activeSelectedGame.predictions.hrPct.home}% (Home)
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3" id="hr-pct-gauge-bars">
                         {/* Away */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 rounded-full" style={{ width: `${activeSelectedGame.predictions.hrPct.away}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-white/25 rounded-full" style={{ width: `${activeSelectedGame.predictions.hrPct.away}%` }} />
                           </div>
-                          <span className="text-[10px] font-mono text-slate-300 font-bold">{activeSelectedGame.predictions.hrPct.away}%</span>
+                          <span className="text-[10px] font-mono text-white/70 font-bold">{activeSelectedGame.predictions.hrPct.away}%</span>
                         </div>
                         {/* Home */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-sky-500 rounded-full" style={{ width: `${activeSelectedGame.predictions.hrPct.home}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-vouch-cyan rounded-full" style={{ width: `${activeSelectedGame.predictions.hrPct.home}%` }} />
                           </div>
                           <span className="text-[10px] font-mono text-white font-bold">{activeSelectedGame.predictions.hrPct.home}%</span>
                         </div>
@@ -524,23 +524,23 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                     {/* Hits likelihood */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-slate-400 text-[11px] font-bold">Likelihood of team recording &gt;8 total Hits</span>
-                        <span className="text-sky-400 font-bold">
+                        <span className="text-white/50 text-[11px] font-bold">Likelihood of team recording &gt;8 total Hits</span>
+                        <span className="text-vouch-cyan font-bold">
                           {activeSelectedGame.predictions.hitsPct.away}% (Away) vs {activeSelectedGame.predictions.hitsPct.home}% (Home)
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3" id="hits-pct-gauge-bars">
                         {/* Away */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 rounded-full" style={{ width: `${activeSelectedGame.predictions.hitsPct.away}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-white/25 rounded-full" style={{ width: `${activeSelectedGame.predictions.hitsPct.away}%` }} />
                           </div>
-                          <span className="text-[10px] font-mono text-slate-300 font-bold">{activeSelectedGame.predictions.hitsPct.away}%</span>
+                          <span className="text-[10px] font-mono text-white/70 font-bold">{activeSelectedGame.predictions.hitsPct.away}%</span>
                         </div>
                         {/* Home */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-sky-500 rounded-full" style={{ width: `${activeSelectedGame.predictions.hitsPct.home}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-vouch-cyan rounded-full" style={{ width: `${activeSelectedGame.predictions.hitsPct.home}%` }} />
                           </div>
                           <span className="text-[10px] font-mono text-white font-bold">{activeSelectedGame.predictions.hitsPct.home}%</span>
                         </div>
@@ -550,23 +550,23 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                     {/* RBIs likelihood */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
-                        <span className="text-slate-400 text-[11px] font-bold">Likelihood of team driving &gt;4 home runs/RBIs</span>
-                        <span className="text-indigo-400 font-bold">
+                        <span className="text-white/50 text-[11px] font-bold">Likelihood of team driving &gt;4 home runs/RBIs</span>
+                        <span className="text-vouch-cyan font-bold">
                           {activeSelectedGame.predictions.rbisPct.away}% (Away) vs {activeSelectedGame.predictions.rbisPct.home}% (Home)
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3" id="rbis-pct-gauge-bars">
                         {/* Away */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 rounded-full" style={{ width: `${activeSelectedGame.predictions.rbisPct.away}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-white/25 rounded-full" style={{ width: `${activeSelectedGame.predictions.rbisPct.away}%` }} />
                           </div>
-                          <span className="text-[10px] font-mono text-slate-300 font-bold">{activeSelectedGame.predictions.rbisPct.away}%</span>
+                          <span className="text-[10px] font-mono text-white/70 font-bold">{activeSelectedGame.predictions.rbisPct.away}%</span>
                         </div>
                         {/* Home */}
-                        <div className="bg-slate-950 p-2 rounded-xl flex items-center gap-2 border border-slate-905">
-                          <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-                            <div className="h-full bg-sky-500 rounded-full" style={{ width: `${activeSelectedGame.predictions.rbisPct.home}%` }} />
+                        <div className="bg-black/55 p-2 rounded-xl flex items-center gap-2 border border-white/10">
+                          <div className="h-2 w-full bg-black/45 rounded-full overflow-hidden">
+                            <div className="h-full bg-vouch-cyan rounded-full" style={{ width: `${activeSelectedGame.predictions.rbisPct.home}%` }} />
                           </div>
                           <span className="text-[10px] font-mono text-white font-bold">{activeSelectedGame.predictions.rbisPct.home}%</span>
                         </div>
@@ -577,9 +577,9 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
 
                 {/* 3. TOP 3 HR PLAYERS TO WATCH (VITAL!) */}
                 <div className="space-y-3.5" id="top-3-hr-lookouts-section">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-slate-900">
-                    <Award className="w-5 h-5 text-amber-400" />
-                    <h4 className="text-xs font-black text-slate-300 font-mono tracking-wider uppercase">
+                  <div className="flex items-center gap-2 pb-1.5 border-b border-white/10">
+                    <Award className="w-5 h-5 text-vouch-amber" />
+                    <h4 className="text-xs font-black text-white/70 font-mono tracking-wider uppercase">
                       TOP 3 PLAYERS TO LOOK OUT FOR HR IN THIS MATCHUP
                     </h4>
                   </div>
@@ -593,7 +593,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                       return (
                         <div 
                           key={player.id} 
-                          className="bg-slate-905/60 border border-slate-900 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-slate-800 transition-colors"
+                          className="bg-black/50/60 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-white/10 transition-colors"
                         >
                           <div className="flex items-center gap-3.5">
                             <div className="relative">
@@ -601,9 +601,9 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                                 src={player.headshot} 
                                 alt={player.name}
                                 referrerPolicy="no-referrer"
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-800 bg-slate-950"
+                                className="w-12 h-12 rounded-xl object-cover border border-white/10 bg-black/55"
                               />
-                              <div className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-amber-500 border border-slate-900 flex items-center justify-center text-[10px] font-black text-slate-950 font-mono" title={`Ranked #${idx + 1}`}>
+                              <div className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-vouch-amber border border-white/10 flex items-center justify-center text-[10px] font-black text-obsidian-900 font-mono" title={`Ranked #${idx + 1}`}>
                                 #{idx + 1}
                               </div>
                             </div>
@@ -611,17 +611,17 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                             <div>
                               <div className="flex items-center gap-2">
                                 <h5 className="font-extrabold text-sm text-white">{player.name}</h5>
-                                <span className="text-[9px] text-slate-400 font-mono">
+                                <span className="text-[9px] text-white/50 font-mono">
                                   #{player.number} · {player.team}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-3 mt-1 text-[10.5px] text-slate-400">
+                              <div className="flex items-center gap-3 mt-1 text-[10.5px] text-white/50">
                                 <span>Season: <b className="text-white font-mono font-bold">{player.seasonStats.hr} HRs</b></span>
-                                <span className="text-slate-505">•</span>
-                                <span>OPS: <b className="text-slate-300 font-mono">{player.seasonStats.ops}</b></span>
-                                <span className="text-slate-505">•</span>
-                                <span>Statcast Score: <b className="text-emerald-400 font-mono font-bold">{ratingVal}%</b></span>
+                                <span className="text-white/35">•</span>
+                                <span>OPS: <b className="text-white/70 font-mono">{player.seasonStats.ops}</b></span>
+                                <span className="text-white/35">•</span>
+                                <span>Statcast Score: <b className="text-vouch-emerald font-mono font-bold">{ratingVal}%</b></span>
                               </div>
                             </div>
                           </div>
@@ -632,7 +632,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                                 localStorage.setItem('vouchedge_selected_research_player_id', player.id);
                                 onSectionChange('research');
                               }}
-                              className="flex-1 sm:flex-none text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 py-1.5 px-3 rounded-lg text-[10.5px] font-mono tracking-tight text-center"
+                              className="flex-1 sm:flex-none text-white/50 hover:text-white bg-black/45 border border-white/10 hover:border-vouch-cyan/30 py-1.5 px-3 rounded-lg text-[10.5px] font-mono tracking-tight text-center"
                             >
                               Scouting 🔬
                             </button>
@@ -642,7 +642,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                               className={`flex-1 sm:flex-none py-1.5 px-3.5 rounded-lg text-[10.5px] flex items-center justify-center gap-1.5 shadow active:scale-95 transition-all ${
                                 activeSelectedGame && activeSelectedGame.status.toLowerCase() === 'final'
                                   ? 'bg-red-950/40 text-red-400 border border-red-900/40 cursor-not-allowed opacity-60 font-bold'
-                                  : 'bg-gradient-to-r from-emerald-650 to-teal-555 hover:from-emerald-500 hover:to-teal-500 text-slate-100 font-extrabold'
+                                  : 'bg-gradient-to-r from-emerald-650 to-teal-555 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold'
                               }`}
                             >
                               {activeSelectedGame && activeSelectedGame.status.toLowerCase() === 'final' ? (
@@ -662,8 +662,8 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                 </div>
 
                 {/* Additional disclaimer context describing how predictions list works */}
-                <div className="bg-slate-900/10 border border-slate-900/60 p-3 rounded-xl flex gap-2 text-[10.5px] text-slate-500 leading-relaxed font-mono">
-                  <Info className="w-4 h-4 text-sky-400 flex-shrink-0" />
+                <div className="bg-black/45/10 border border-white/10/60 p-3 rounded-xl flex gap-2 text-[10.5px] text-white/45 leading-relaxed font-mono">
+                  <Info className="w-4 h-4 text-vouch-cyan flex-shrink-0" />
                   <p>
                     All live score predictions are updated continuously under client-side caching schemes. Free integration scales across many concurrent visitors.
                   </p>
@@ -671,7 +671,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
 
               </div>
             ) : (
-              <div className="bg-slate-950 border border-slate-900 rounded-3xl p-16 text-center text-slate-500 font-mono text-xs">
+              <div className={`${Z8_PANEL_PREMIUM} p-16 text-center text-white/50 font-mono text-xs`}>
                 Select a live game on the left menu to display deep advanced analytic cards.
               </div>
             )}

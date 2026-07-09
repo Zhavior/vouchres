@@ -1,7 +1,15 @@
 import { Activity, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { CreatorProofProfile } from '../../types';
-import { Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
+import {
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+} from '../../theme/z8Tokens';
 
 interface EdgeIslandShellProps {
   children: ReactNode;
@@ -16,8 +24,8 @@ function firstName(profile?: CreatorProofProfile | null): string {
 
 export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: EdgeIslandShellProps) {
   return (
-    <main className="mx-auto w-full max-w-[1500px] px-3 py-4 font-z8 text-white sm:px-5 lg:px-6">
-      <header className={`mb-4 rounded-[1.5rem] ${Z8_PANEL} px-4 py-4 sm:px-5`}>
+    <main className={`${Z8_PAGE} mx-auto w-full max-w-[1500px] ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <header className={`${Z8_SECTION_HEADER} mb-4 rounded-[1.5rem] ${Z8_PANEL_PREMIUM} px-4 py-4 sm:px-5`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/10 px-3 py-1.5">
@@ -33,12 +41,12 @@ export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: Ed
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
-              <div className="terminal-text">Mode</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className={`${Z8_LABEL} text-white/40`}>Mode</div>
               <div className="mt-1 text-sm font-black text-white">{isLoggedIn ? 'Personalized' : 'Public preview'}</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
-              <div className="terminal-text">Sync</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className={`${Z8_LABEL} text-white/40`}>Sync</div>
               <div className="mt-1 flex items-center gap-1.5 text-sm font-black text-white">
                 <ShieldCheck className="h-3.5 w-3.5 text-vouch-emerald" />
                 {updatedAt ? 'Live data' : 'Waiting'}

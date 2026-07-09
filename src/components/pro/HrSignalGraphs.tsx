@@ -50,7 +50,7 @@ const EdgeScoreBreakdown: React.FC<{ payload: NormalizedPlayerPayload }> = React
       subtitle="HR Engine Pro v2 live payload"
       accent={ACCENT.final}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-gold)/0.28)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-gold))]">
+        <span className="rounded-full border border-vouch-amber/30 bg-vouch-amber/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-amber">
           HR {fmtInt(player.hrEdge)}
         </span>
       }
@@ -95,7 +95,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
       subtitle={`Last ${f.gamesChecked ?? 0} games · live from HR Engine`}
       accent={ACCENT.form}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-pink)/0.28)] bg-[hsl(var(--ve-accent-pink)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-pink))]">
+        <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-emerald">
           PWR {fmtInt(f.recentPowerScore)}
         </span>
       }
@@ -148,7 +148,7 @@ const MatchupSignalMeter: React.FC<{ payload: NormalizedPlayerPayload }> = React
       subtitle="Pitcher / Park / Weather composite"
       accent={ACCENT.matchup}
       right={
-        <span className="rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] bg-[hsl(var(--ve-accent-cyan)/0.08)] px-2 py-0.5 font-mono text-[10px] font-black text-[hsl(var(--ve-accent-cyan))]">
+        <span className="rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2 py-0.5 font-mono text-[10px] font-black text-vouch-cyan">
           P.VULN {fmtInt(m.pitcherVulnerability)}
         </span>
       }

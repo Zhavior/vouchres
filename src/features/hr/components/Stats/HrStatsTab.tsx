@@ -8,7 +8,7 @@
  *   4. Recent Form Strip     — SIMULATED illustrative example, last 10 games personal sparkline (real data not fetchable client-side yet)
  *
  * Design:
- *   - CSS tokens only (--ve-* vars)
+ *   - Z8 vouch palette for accent highlights; semantic --ve-* for surfaces/text
  *   - Pure SVG for charts — zero external chart deps
  *   - Pro lock overlay on BvP and vs-Team (easy to strip when entitlements added)
  *   - Sections 2-4 carry a visible "Simulated" badge (SectionHeader `simulated`
@@ -17,6 +17,7 @@
 
 import React, { useMemo } from 'react';
 import { Lock, TrendingUp, TrendingDown, Minus, BarChart2, Target, Activity, Users } from 'lucide-react';
+import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
 import type { HrWatchRow } from '../../types/hrWatch';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -101,7 +102,7 @@ function generateRecentForm(playerName: string): GameLog[] {
 
 /** Micro sparkline for a series of 0–1 normalized values */
 const Sparkline: React.FC<{ values: number[]; width?: number; height?: number; color?: string }> = ({
-  values, width = 120, height = 32, color = 'hsl(var(--ve-accent-cyan))',
+  values, width = 120, height = 32, color = Z8_CYAN_HEX,
 }) => {
   if (values.length < 2) return null;
   const pad = 3;
@@ -225,18 +226,18 @@ interface LayerRankRow {
 
 function getLayerRows(p: HrWatchRow): LayerRankRow[] {
   return [
-    { id: 'power',   label: 'Hitter Power',       icon: '💪', weight: 25, value: p.hitterPower,          leagueAvg: 52, accentToken: 've-accent-gold', accentHex: '#f59e0b' },
+    { id: 'power',   label: 'Hitter Power',       icon: '💪', weight: 25, value: p.hitterPower,          leagueAvg: 52, accentToken: 'vouch-amber', accentHex: Z8_AMBER_HEX },
     { id: 'pitcher', label: 'Pitcher Vulnerability', icon: '⚾', weight: 20, value: p.pitcherVulnerability, leagueAvg: 48, accentToken: 've-danger',      accentHex: '#ef4444' },
-    { id: 'pitch',   label: 'Pitch Mix Advantage', icon: '🎯', weight: 15, value: p.pitchMix,             leagueAvg: 50, accentToken: 've-accent-pink', accentHex: '#818cf8' },
-    { id: 'park',    label: 'Park Factor',          icon: '🏟️', weight: 10, value: p.parkFactor,           leagueAvg: 50, accentToken: 've-accent-cyan', accentHex: '#22d3ee' },
+    { id: 'pitch',   label: 'Pitch Mix Advantage', icon: '🎯', weight: 15, value: p.pitchMix,             leagueAvg: 50, accentToken: 'vouch-emerald', accentHex: Z8_EMERALD_HEX },
+    { id: 'park',    label: 'Park Factor',          icon: '🏟️', weight: 10, value: p.parkFactor,           leagueAvg: 50, accentToken: 'vouch-cyan', accentHex: Z8_CYAN_HEX },
     { id: 'form',    label: 'Recent Form',           icon: '🔥', weight: 10, value: p.recentForm,           leagueAvg: 50, accentToken: 've-success',     accentHex: '#10b981' },
-    { id: 'weather', label: 'Weather',               icon: '🌬️', weight: 5,  value: p.weather,             leagueAvg: 55, accentToken: 've-accent-cyan', accentHex: '#22d3ee' },
-    { id: 'platoon', label: 'Platoon Split',          icon: '🤜', weight: 5,  value: p.platoon,             leagueAvg: 50, accentToken: 've-accent-gold', accentHex: '#f59e0b' },
+    { id: 'weather', label: 'Weather',               icon: '🌬️', weight: 5,  value: p.weather,             leagueAvg: 55, accentToken: 'vouch-cyan', accentHex: Z8_CYAN_HEX },
+    { id: 'platoon', label: 'Platoon Split',          icon: '🤜', weight: 5,  value: p.platoon,             leagueAvg: 50, accentToken: 'vouch-amber', accentHex: Z8_AMBER_HEX },
     { id: 'bullpen', label: 'Bullpen Risk',           icon: '🔄', weight: 3,  value: p.bullpen,             leagueAvg: 48, accentToken: 've-warning',     accentHex: '#f97316' },
-    { id: 'lineup',  label: 'Lineup Context',         icon: '📋', weight: 3,  value: p.lineupContext,        leagueAvg: 52, accentToken: 've-accent-pink', accentHex: '#818cf8' },
+    { id: 'lineup',  label: 'Lineup Context',         icon: '📋', weight: 3,  value: p.lineupContext,        leagueAvg: 52, accentToken: 'vouch-emerald', accentHex: Z8_EMERALD_HEX },
     { id: 'swing',   label: 'Swing Decisions',        icon: '🎪', weight: 2,  value: p.swingDecisions,      leagueAvg: 50, accentToken: 've-success',     accentHex: '#10b981' },
-    { id: 'bvp',     label: 'Batter vs Pitcher',      icon: '📊', weight: 2,  value: p.bvpScore,            leagueAvg: 50, accentToken: 've-accent-cyan', accentHex: '#22d3ee' },
-    { id: 'vegas',   label: 'Vegas Alignment',         icon: '💰', weight: 0,  value: p.vegasEdgeScore,      leagueAvg: 50, accentToken: 've-accent-gold', accentHex: '#f59e0b' },
+    { id: 'bvp',     label: 'Batter vs Pitcher',      icon: '📊', weight: 2,  value: p.bvpScore,            leagueAvg: 50, accentToken: 'vouch-cyan', accentHex: Z8_CYAN_HEX },
+    { id: 'vegas',   label: 'Vegas Alignment',         icon: '💰', weight: 0,  value: p.vegasEdgeScore,      leagueAvg: 50, accentToken: 'vouch-amber', accentHex: Z8_AMBER_HEX },
   ];
 }
 
@@ -253,7 +254,7 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?:
         {simulated && (
           <span
             className="rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em]"
-            style={{ background: 'hsl(var(--ve-accent-gold) / 0.14)', color: 'hsl(var(--ve-accent-gold))' }}
+            style={{ background: 'rgba(245,158,11,0.14)', color: Z8_AMBER_HEX }}
             title="Illustrative — real head-to-head/per-game history isn't available yet, this is a modeled example, not this player's actual record"
           >
             Simulated
@@ -283,11 +284,11 @@ const ProLock: React.FC<{ label: string }> = ({ label }) => (
     >
       <div
         className="flex h-9 w-9 items-center justify-center rounded-full ring-1"
-        style={{ background: 'hsl(var(--ve-accent-gold) / 0.12)', ['--tw-ring-color' as string]: 'hsl(var(--ve-accent-gold) / 0.35)' } as React.CSSProperties}
+        style={{ background: 'rgba(245,158,11,0.12)', ['--tw-ring-color' as string]: 'rgba(245,158,11,0.35)' } as React.CSSProperties}
       >
-        <Lock className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-gold))' }} />
+        <Lock className="h-4 w-4" style={{ color: Z8_AMBER_HEX }} />
       </div>
-      <p className="text-xs font-bold" style={{ color: 'hsl(var(--ve-accent-gold))' }}>PRO</p>
+      <p className="text-xs font-bold" style={{ color: Z8_AMBER_HEX }}>PRO</p>
       <p className="text-[10px] text-center px-4" style={{ color: 'hsl(var(--ve-text-muted))' }}>{label}</p>
     </div>
   </div>
@@ -368,7 +369,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
       {/* ── 2. 12-Layer Rankings ───────────────────────────────────────── */}
       <div>
         <SectionHeader
-          icon={<BarChart2 className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-cyan))' }} />}
+          icon={<BarChart2 className="h-4 w-4 text-vouch-cyan" />}
           title="Layer Rankings"
           subtitle="Score vs estimated league average (dashed line)"
         />
@@ -381,7 +382,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
             const isNull = val == null;
             const rankLabel = isNull ? '—' : val >= 75 ? 'Elite' : val >= 60 ? 'Above Avg' : val >= 40 ? 'Avg' : 'Below Avg';
             const rankColor = isNull ? 'hsl(var(--ve-text-muted))'
-              : val >= 75 ? `hsl(var(--${layer.accentToken}))`
+              : val >= 75 ? layer.accentHex
               : val >= 60 ? '#10b981'
               : val >= 40 ? 'hsl(var(--ve-text-muted))'
               : '#ef4444';
@@ -479,7 +480,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
       {/* ── 4. Batter vs. Pitcher ──────────────────────────────────────── */}
       <div>
         <SectionHeader
-          icon={<Target className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-pink))' }} />}
+          icon={<Target className="h-4 w-4 text-vouch-emerald" />}
           title={`vs. ${player.pitcherName ?? 'Pitcher'}`}
           subtitle="Career head-to-head history"
           simulated
@@ -534,8 +535,8 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
               className="grid grid-cols-6 gap-0 px-3 py-2.5"
               style={{ background: 'hsl(var(--ve-bg-deep))', borderTop: '1px solid hsl(var(--ve-border) / 0.4)' }}
             >
-              <span className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'hsl(var(--ve-accent-cyan))' }}>Career</span>
-              <span className="text-right text-xs font-bold tabular-nums" style={{ color: 'hsl(var(--ve-accent-cyan))' }}>{bvpTotals.pa}</span>
+              <span className="text-[10px] font-black uppercase tracking-wide text-vouch-cyan">Career</span>
+              <span className="text-right text-xs font-bold tabular-nums text-vouch-cyan">{bvpTotals.pa}</span>
               <span className="text-right text-xs font-bold tabular-nums" style={{ color: '#f59e0b' }}>{bvpTotals.hrs}</span>
               <span className="text-right text-xs font-bold tabular-nums" style={{ color: 'hsl(var(--ve-text-primary))' }}>{bvpTotals.avg}</span>
               <span className="text-right text-xs font-bold tabular-nums" style={{ color: 'hsl(var(--ve-text-primary))' }}>{bvpTotals.slg}</span>
@@ -574,7 +575,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
       {/* ── 5. vs. Team History ────────────────────────────────────────── */}
       <div>
         <SectionHeader
-          icon={<Users className="h-4 w-4" style={{ color: 'hsl(var(--ve-accent-gold))' }} />}
+          icon={<Users className="h-4 w-4 text-vouch-amber" />}
           title={`vs. ${player.opponent}`}
           subtitle="Last 5 matchups vs this team"
           simulated

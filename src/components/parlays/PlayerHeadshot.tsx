@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMlbHeadshotUrl, getPlayerInitials, normalizePlayerId } from '../../lib/mlbHeadshot';
+import { getMlbHeadshotUrl, getPlayerInitials, MLB_HEADSHOT_IMG_CLASS, normalizePlayerId } from '../../lib/mlbHeadshot';
 
 interface Props {
   /** Player display name (used for initials fallback + alt text). */
@@ -10,6 +10,8 @@ interface Props {
   headshotUrl?: string | null;
   /** Square size in px. Default 40. */
   size?: number;
+  /** When true, loads image eagerly (hero/selected player). Default false for lists. */
+  priority?: boolean;
 }
 
 /**
@@ -18,7 +20,7 @@ interface Props {
  * - Falls back to an initials avatar when there is no id OR the image fails to
  *   load — never a broken-image icon, and the layout size stays fixed.
  */
-export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40 }: Props) {
+export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40, priority = false }: Props) {
   const resolvedUrl = headshotUrl || getMlbHeadshotUrl(playerId, size * 2);
   const [failed, setFailed] = useState(false);
 
@@ -33,13 +35,13 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40 
 
   return (
     <div
-      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-700/80 bg-slate-800/80 shadow-[0_0_0_1px_rgba(56,189,248,0.12),0_2px_8px_rgba(2,6,23,0.6)]"
+      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/40 shadow-[0_0_0_1px_rgba(0,240,255,0.12),0_2px_8px_rgba(0,0,0,0.45)]"
       style={dim}
       aria-label={name || 'Player'}
     >
       {/* Initials sit underneath so they show instantly and on image failure. */}
       <span
-        className="select-none font-black uppercase tracking-tight text-slate-300"
+        className="select-none font-black uppercase tracking-tight text-white/70"
         style={{ fontSize: Math.max(10, Math.round(size * 0.34)) }}
       >
         {initials}
@@ -48,9 +50,11 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40 
         <img
           src={resolvedUrl!}
           alt={name || 'Player headshot'}
-          loading="eager" decoding="async" fetchPriority="high"
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'low'}
           referrerPolicy="no-referrer"
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 ${MLB_HEADSHOT_IMG_CLASS}`}
           onError={() => setFailed(true)}
         />
       )}

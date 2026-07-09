@@ -16,6 +16,12 @@ import { StatLeaderboardTable } from '../components/StatLeaderboardTable';
 import { StatResearchDrawer }  from '../components/StatResearchDrawer';
 import { useMlbStatHub }       from '../hooks/useMlbStatHub';
 import { STAT_CONFIG }         from '../engine/statHubConfig';
+import {
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_PAD_X,
+  Z8_PANEL_PREMIUM,
+} from '../../../theme/z8Tokens';
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
@@ -40,9 +46,10 @@ export default function MlbStatHubPage() {
     : 'overall career';
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[hsl(var(--ve-bg))]">
+    <div className={`flex h-full min-h-0 flex-col ${Z8_PAGE}`}>
       {/* Sticky top section */}
-      <div className="shrink-0 px-4 pt-4 sm:px-6 lg:px-8 bg-[hsl(var(--ve-bg)/0.97)] backdrop-blur-sm sticky top-0 z-30">
+      <div className={`sticky top-0 z-30 shrink-0 ${Z8_PAGE_PAD_X} pt-4 sm:px-6 lg:px-8`}>
+        <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5`}>
         <StatHubHeader
           activeStatType={hub.filters.statType}
           date={hub.filters.date}
@@ -63,7 +70,7 @@ export default function MlbStatHubPage() {
         <div
           role="tablist"
           aria-label="View mode"
-          className="flex gap-1 mt-3 border-b border-[hsl(var(--ve-border)/0.4)] overflow-x-auto pb-0"
+          className="mt-3 flex gap-1 overflow-x-auto border-b border-white/10 pb-0"
           style={{ scrollbarWidth: 'none' }}
         >
           {TABS.map(tab => {
@@ -75,12 +82,9 @@ export default function MlbStatHubPage() {
                 aria-selected={active}
                 onClick={() => hub.setViewTab(tab.id as typeof hub.filters.viewTab)}
                 className={[
-                  'flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap',
-                  'border-b-2 transition-all duration-[var(--ve-duration-fast)] -mb-px',
-                  'focus-visible:outline focus-visible:outline-2',
-                  active
-                    ? 'border-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))]'
-                    : 'border-transparent text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
+                  'flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-semibold',
+                  'border-b-2 -mb-px transition-all duration-200 focus-visible:outline focus-visible:outline-2',
+                  active ? 'border-vouch-cyan text-vouch-cyan' : 'border-transparent text-white/45 hover:text-white',
                 ].join(' ')}
               >
                 <span aria-hidden="true">{tab.icon}</span>
@@ -89,35 +93,36 @@ export default function MlbStatHubPage() {
             );
           })}
         </div>
+        </div>
       </div>
 
       {/* Beta banner for Phase 2 stats */}
       {isPhase2 && (
-        <div className="shrink-0 mx-4 mt-3 sm:mx-6 lg:mx-8 px-4 py-2.5 rounded-xl flex items-center gap-3 bg-[hsl(var(--ve-accent-pink)/0.08)] border border-[hsl(var(--ve-accent-pink)/0.3)]">
-          <span className="text-xs font-bold text-[hsl(var(--ve-accent-pink))] bg-[hsl(var(--ve-accent-pink)/0.15)] px-1.5 py-0.5 rounded border border-[hsl(var(--ve-accent-pink)/0.4)]">
+        <div className={`mx-4 mt-3 flex shrink-0 items-center gap-3 rounded-xl border border-vouch-amber/30 bg-vouch-amber/8 px-4 py-2.5 sm:mx-6 lg:mx-8`}>
+          <span className={`${Z8_LABEL} rounded border border-vouch-amber/40 bg-vouch-amber/15 px-1.5 py-0.5 text-vouch-amber`}>
             β BETA
           </span>
-          <p className="text-xs text-[hsl(var(--ve-text-muted))]">
-            <strong className="text-[hsl(var(--ve-accent-pink)/0.9)]">{config.label}</strong> scoring is Phase 2 — model not yet backtested. Use as a directional signal only.
+          <p className="text-xs text-white/45">
+            <strong className="text-vouch-amber/90">{config.label}</strong> scoring is Phase 2 — model not yet backtested. Use as a directional signal only.
           </p>
         </div>
       )}
 
       <div className={[
-        'shrink-0 mx-4 mt-3 sm:mx-6 lg:mx-8 px-4 py-2.5 rounded-xl flex items-center gap-3',
+        'mx-4 mt-3 flex shrink-0 items-center gap-3 rounded-xl px-4 py-2.5 sm:mx-6 lg:mx-8',
         hub.error
-          ? 'bg-[hsl(var(--ve-danger)/0.10)] border border-[hsl(var(--ve-danger)/0.32)]'
-          : 'bg-[hsl(var(--ve-accent-cyan)/0.08)] border border-[hsl(var(--ve-accent-cyan)/0.24)]',
+          ? 'border border-red-500/30 bg-red-500/10'
+          : `${Z8_PANEL_PREMIUM} border-vouch-cyan/20`,
       ].join(' ')}>
         <span className={[
-          'text-xs font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide',
+          `${Z8_LABEL} rounded border px-1.5 py-0.5 uppercase tracking-wide`,
           hub.error
-            ? 'text-[hsl(var(--ve-danger))] bg-[hsl(var(--ve-danger)/0.12)] border-[hsl(var(--ve-danger)/0.35)]'
-            : 'text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.12)] border-[hsl(var(--ve-accent-cyan)/0.30)]',
+            ? 'border-red-500/35 bg-red-500/12 text-red-400'
+            : 'border-vouch-cyan/30 bg-vouch-cyan/12 text-vouch-cyan',
         ].join(' ')}>
           MLB API
         </span>
-        <p className="text-xs text-[hsl(var(--ve-text-muted))]">
+        <p className="text-xs text-white/45">
           {hub.error
             ? `${hub.error}. No mock Stat Hub rows are being shown.`
             : hub.loading

@@ -2,7 +2,6 @@ import React, { Suspense, lazy, useState, useEffect, useRef, useTransition } fro
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import HrNotifications from './components/notifications/HrNotifications';
 import AppNotificationsHost from './components/notifications/AppNotificationsHost';
-import EdgeIslandCommandCenter from './components/theEdge/EdgeIslandCommandCenter';
 import { Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
 import { ThemeProvider } from './components/theme/ThemeProvider';
@@ -11,7 +10,6 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
-import ParlayCommandCenter from './components/parlay/ParlayCommandCenter';
 import { ProAccessGate } from './components/pro/ProAccessGate';
 import { resolveMarket } from './sports/markets';
 import { gradePendingParlays } from './lib/parlayGrading';
@@ -26,7 +24,6 @@ import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip }
 import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
-import NbaNflArena from './components/NbaNflArena';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
@@ -60,6 +57,9 @@ const PlayerEdgeLabPage = lazy(() => import('./pages/pro/PlayerEdgeLabPage'));
 const TeamMatchupLabPage = lazy(() => import('./pages/pro/TeamMatchupLabPage'));
 const HitterMatchupZonesPage = lazy(() => import('./pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('./pages/pro/ProGraphsLabPage'));
+const ParlayCommandCenter = lazy(() => import('./components/parlay/ParlayCommandCenter'));
+const EdgeIslandCommandCenter = lazy(() => import('./components/theEdge/EdgeIslandCommandCenter'));
+const NbaNflArena = lazy(() => import('./components/NbaNflArena'));
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -1945,13 +1945,15 @@ export default function App() {
         )}
 
         {showGlobalAppChrome && (
-          <EdgeIslandCommandCenter
-            open={edgeIslandOpen}
-            onClose={() => setEdgeIslandOpen(false)}
-            onSectionChange={navigateSection}
-            savedSlips={savedSlips}
-            profile={profile}
-          />
+          <Suspense fallback={null}>
+            <EdgeIslandCommandCenter
+              open={edgeIslandOpen}
+              onClose={() => setEdgeIslandOpen(false)}
+              onSectionChange={navigateSection}
+              savedSlips={savedSlips}
+              profile={profile}
+            />
+          </Suspense>
         )}
           </AppErrorBoundary>
         </div>

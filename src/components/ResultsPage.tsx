@@ -28,6 +28,20 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { isGuestMode } from '../lib/authDisplay';
 import { apiClient } from "../lib/apiClient";
 import { buildSaveParlayPayload, isImportableLiveLeg, normalizeLocalSlip } from "../lib/parlays/parlayBridge";
+import {
+  Z8_ACTIVE,
+  Z8_DISPLAY,
+  Z8_EMERALD,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+} from '../theme/z8Tokens';
 
 interface ResultsPageProps {
   posts: FeedPost[];
@@ -803,18 +817,18 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto min-h-screen bg-transparent" id="results-analytics-view">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-7xl min-h-screen`} id="results-analytics-view">
 
-      <section className="mb-4 rounded-3xl border border-cyan-300/20 bg-slate-950/70 p-4 shadow-lg shadow-black/20">
+      <section className={`${Z8_PANEL_PREMIUM} mb-4 rounded-3xl p-4`}>
         <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          <div className={Z8_SECTION_HEADER}>
+            <div className={`${Z8_LABEL} text-vouch-cyan`}>
               Backend Ledger
             </div>
-            <h3 className="mt-1 text-xl font-black text-white">
+            <h3 className={`${Z8_DISPLAY} text-xl sm:text-2xl`}>
               Results are now connected to account parlays
             </h3>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="text-sm text-white/45">
               {backendLedgerLoading
                 ? 'Loading your saved picks and parlays from the backend...'
                 : backendLedgerError
@@ -826,21 +840,21 @@ const getFriendlyParlayTitle = (parlay: any) => {
           </div>
 
           <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <div className="text-lg font-black text-white">{backendLedger?.summary.pending ?? 0}</div>
-              <div className="text-[10px] font-black uppercase text-slate-500">Pending</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className="text-lg font-black text-white z8-tabular-nums">{backendLedger?.summary.pending ?? 0}</div>
+              <div className={`${Z8_LABEL} text-white/40`}>Pending</div>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <div className="text-lg font-black text-emerald-300">{backendLedger?.summary.won ?? 0}</div>
-              <div className="text-[10px] font-black uppercase text-slate-500">Won</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className={`text-lg font-black ${Z8_EMERALD} z8-tabular-nums`}>{backendLedger?.summary.won ?? 0}</div>
+              <div className={`${Z8_LABEL} text-white/40`}>Won</div>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <div className="text-lg font-black text-red-300">{backendLedger?.summary.lost ?? 0}</div>
-              <div className="text-[10px] font-black uppercase text-slate-500">Lost</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className="text-lg font-black text-red-400 z8-tabular-nums">{backendLedger?.summary.lost ?? 0}</div>
+              <div className={`${Z8_LABEL} text-white/40`}>Lost</div>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2">
-              <div className="text-lg font-black text-cyan-300">{backendLedger?.summary.parlays ?? 0}</div>
-              <div className="text-[10px] font-black uppercase text-slate-500">Parlays</div>
+            <div className={Z8_STAT_CHIP}>
+              <div className={`text-lg font-black text-vouch-cyan z8-tabular-nums`}>{backendLedger?.summary.parlays ?? 0}</div>
+              <div className={`${Z8_LABEL} text-white/40`}>Parlays</div>
             </div>
           </div>
         </div>
@@ -857,30 +871,30 @@ const getFriendlyParlayTitle = (parlay: any) => {
       )}
 
       {/* Elegant Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-            <Medal className="w-5.5 h-5.5 text-emerald-400" />
+      <div className={`${Z8_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-4 sm:flex-row sm:items-center`}>
+        <div className={Z8_SECTION_HEADER}>
+          <h2 className={`${Z8_DISPLAY} flex items-center gap-2 text-xl sm:text-2xl`}>
+            <Medal className="h-5 w-5 text-vouch-emerald" />
             Performance Ledger & Graded Results
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-white/45">
             Browse real-time calculated outcomes, verified community submissions, and active AI-assisted parlay slips.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleImportLocalParlays}
-            className="px-3 py-1.5 bg-emerald-950/70 border border-emerald-400/30 text-emerald-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-emerald-900/80"
+            className={`${Z8_IDLE} inline-flex items-center gap-2 rounded-xl px-3 py-1.5 font-mono text-xs text-vouch-emerald`}
           >
-            <RefreshCw className="w-3.5 h-3.5 text-emerald-300" />
+            <RefreshCw className="h-3.5 w-3.5 text-vouch-emerald" />
             <span>IMPORT LOCAL PARLAYS</span>
           </button>
           <button
             onClick={handleSyncLiveHrResults}
-            className="px-3 py-1.5 bg-cyan-950/70 border border-cyan-400/30 text-cyan-200 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-cyan-900/80"
+            className={`${Z8_ACTIVE} inline-flex items-center gap-2 rounded-xl px-3 py-1.5 font-mono text-xs`}
           >
-            <RefreshCw className="w-3.5 h-3.5 text-cyan-300" />
+            <RefreshCw className="h-3.5 w-3.5 text-vouch-cyan" />
             <span>SYNC LIVE HR RESULTS</span>
           </button>
           {activeSubTab === 'ai_model' && (
@@ -1496,6 +1510,6 @@ const getFriendlyParlayTitle = (parlay: any) => {
         </div>
       )}
 
-    </div>
+    </main>
   );
 }

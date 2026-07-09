@@ -70,7 +70,7 @@ export function resolveDraftMode(
 export interface StatusMeta {
   icon:  string;
   label: string;
-  token: string;   // --ve-* CSS custom property suffix
+  token: string;   // legacy --ve-* or Z8 status token; resolve with z8StatusColor()
 }
 
 export const LEG_STATUS_META: Record<LegGradeStatus, StatusMeta> = {

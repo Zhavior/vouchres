@@ -34,6 +34,13 @@ export function getMlbHeadshotUrl(playerId?: number | string | null, size = 96):
   return `https://img.mlbstatic.com/mlb-photos/image/upload/w_${w},d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
 }
 
+/**
+ * Tailwind classes for rendering MLB portrait headshots without cropping
+ * foreheads or chins. `object-contain` keeps the full face visible inside
+ * square/circular frames; vertical position nudges toward the face center.
+ */
+export const MLB_HEADSHOT_IMG_CLASS = 'h-full w-full object-contain object-[center_18%]';
+
 /** Up to 2 uppercase initials from a player/selection name (fallback avatar). */
 export function getPlayerInitials(name?: string): string {
   if (!name) return '?';

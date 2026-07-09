@@ -8,7 +8,7 @@ import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
 import { VEButton } from './ui/ve';
-import { Z8_PAGE } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 import {
   Area,
   AreaChart,
@@ -142,7 +142,7 @@ export default function ProfilePage({
 
   return (
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
-      <div className={`p-4 md:p-6 max-w-[1120px] mx-auto ${Z8_PAGE} space-y-6`} id="profile-details-view">
+      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} max-w-[1120px] mx-auto ${Z8_PAGE_GAP}`} id="profile-details-view">
 
         <ProfileResume savedParlays={savedParlays} winRate={profile.winRate} />
 
@@ -392,21 +392,21 @@ export default function ProfilePage({
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-850">
+                  <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">True Win Rate</p>
                     <p className="font-mono text-base font-black text-sky-400 mt-1">{profile.winRate.toFixed(1)}%</p>
                   </div>
-                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-850">
+                  <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Net Returns</p>
                     <p className={`font-mono text-base font-black mt-1 ${profile.unitsNetProfit >= 0 ? 'text-emerald-400' : 'text-rose-455'}`}>
                       {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}U
                     </p>
                   </div>
-                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-850">
+                  <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Verified Picks</p>
                     <p className="font-mono text-base font-black text-slate-100 mt-1">{profile.totalPicks}</p>
                   </div>
-                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-850">
+                  <div className={`${Z8_STAT_CHIP} p-3`}>
                     <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Total Won</p>
                     <p className="font-mono text-base font-black text-emerald-400 mt-1">{profile.wonPicks}</p>
                   </div>
@@ -527,7 +527,7 @@ export default function ProfilePage({
 
               if (!hasGraphData) {
                 return (
-                  <div className="rounded-2xl border border-slate-850 bg-slate-950/40 p-5 text-center">
+                  <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5 text-center`}>
                     <p className="text-xs font-black uppercase tracking-widest text-slate-300">
                       Start tracking picks to unlock your performance graph.
                     </p>
@@ -540,7 +540,7 @@ export default function ProfilePage({
 
               return (
                 <div className="space-y-5">
-                  <div className="h-[190px] rounded-2xl border border-slate-850 bg-slate-950/35 p-3">
+                  <div className={`${Z8_PANEL_PREMIUM} h-[190px] p-3`}>
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Profit / Loss</span>
                       <span className="text-[10px] font-mono text-slate-500">Units by day</span>
@@ -559,7 +559,7 @@ export default function ProfilePage({
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="h-[190px] rounded-2xl border border-slate-850 bg-slate-950/35 p-3">
+                  <div className={`${Z8_PANEL_PREMIUM} h-[190px] p-3`}>
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Win Rate Trend</span>
                       <span className="text-[10px] font-mono text-slate-500">Settled plays</span>

@@ -65,7 +65,29 @@ import {
   type SlipGradeStatus,
   type DfsLegContext,
 } from './types/parlayHubTypes';
-import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
+import {
+  Z8_CYAN_HEX,
+  Z8_EMERALD_HEX,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+  Z8_SURFACE,
+  z8StatusColor,
+} from '../../theme/z8Tokens';
+import { withAlpha } from '../../theme/colors';
+
+function statusColorStyle(token: string) {
+  const color = z8StatusColor(token);
+  return {
+    color,
+    borderColor: withAlpha(color, 0.4),
+    background: withAlpha(color, 0.12),
+  };
+}
 
 const SmartAiEngine  = lazy(() => import('../SmartAiEngine'));
 const ResultsStudio  = lazy(() => import('../results/ResultsStudio'));
@@ -120,11 +142,7 @@ function StatusBadge({ status, size = 'sm' }: { status: LegGradeStatus | SlipGra
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border font-bold uppercase tracking-wide ${sz}`}
-      style={{
-        color:       `hsl(var(${meta.token}))`,
-        borderColor: `hsl(var(${meta.token})/0.4)`,
-        background:  `hsl(var(${meta.token})/0.12)`,
-      }}
+      style={statusColorStyle(meta.token)}
     >
       <span aria-hidden="true">{meta.icon}</span>
       {meta.label}
@@ -141,10 +159,10 @@ function LivePulseBars({ active }: { active: boolean }) {
       {[0, 1, 2, 3, 4].map((bar) => (
         <span
           key={bar}
-          className="w-[3px] rounded-full bg-[hsl(var(--ve-accent-cyan)/0.9)]"
+          className="w-[3px] rounded-full bg-vouch-cyan/90"
           style={{
             height: `${8 + (bar % 3) * 4}px`,
-            boxShadow: '0 0 8px hsl(var(--ve-accent-cyan)/0.5)',
+            boxShadow: '0 0 8px rgba(0,240,255,0.5)',
             animation: 've-cmd-live-bar 0.9s ease-in-out infinite',
             animationDelay: `${bar * 110}ms`,
           }}
@@ -158,11 +176,11 @@ function LivePulseBars({ active }: { active: boolean }) {
 
 function DfsStrip({ ctx }: { ctx: DfsLegContext }) {
   return (
-    <div className="flex items-center gap-2 mt-1.5 px-2 py-1 rounded-lg bg-[hsl(var(--ve-accent-gold)/0.07)] border border-[hsl(var(--ve-accent-gold)/0.2)]">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-accent-gold))]">DFS</span>
+    <div className="flex items-center gap-2 mt-1.5 px-2 py-1 rounded-lg bg-vouch-amber/10 border border-vouch-amber/20">
+      <span className="text-[9px] font-bold uppercase tracking-widest text-vouch-amber">DFS</span>
       <span className="text-[10px] text-[hsl(var(--ve-text-muted))]">
         Floor <b className="text-[hsl(var(--ve-text-primary))]">{ctx.floor}</b>
-        {' · '}Proj <b className="text-[hsl(var(--ve-accent-gold))]">{ctx.projection}</b>
+        {' · '}Proj <b className="text-vouch-amber">{ctx.projection}</b>
         {' · '}Ceil <b className="text-[hsl(var(--ve-success))]">{ctx.ceiling}</b>
       </span>
       {ctx.salaryTier && (
@@ -170,11 +188,11 @@ function DfsStrip({ ctx }: { ctx: DfsLegContext }) {
           className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase"
           style={{
             color: ctx.salaryTier === 'value' ? 'hsl(var(--ve-success))'
-              : ctx.salaryTier === 'premium' ? 'hsl(var(--ve-accent-pink))'
-              : 'hsl(var(--ve-accent-cyan))',
+              : ctx.salaryTier === 'premium' ? '#00FF94'
+              : '#00F0FF',
             background: ctx.salaryTier === 'value' ? 'hsl(var(--ve-success)/0.1)'
-              : ctx.salaryTier === 'premium' ? 'hsl(var(--ve-accent-pink)/0.1)'
-              : 'hsl(var(--ve-accent-cyan)/0.1)',
+              : ctx.salaryTier === 'premium' ? withAlpha(Z8_EMERALD_HEX, 0.1)
+              : withAlpha(Z8_CYAN_HEX, 0.1),
           }}
         >
           {ctx.salaryTier}
@@ -215,7 +233,7 @@ function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
       <button
         onClick={() => onRemove(leg.id)}
         aria-label={`Remove ${leg.selection || 'this leg'}`}
-        className="absolute right-2 top-2 flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded-lg text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]"
+        className="absolute right-2 top-2 flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded-lg text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
@@ -240,7 +258,7 @@ function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
             confidence >= 70
               ? 'text-[hsl(var(--ve-success))] bg-[hsl(var(--ve-success)/0.1)] border-[hsl(var(--ve-success)/0.3)]'
               : confidence >= 55
-                ? 'text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.1)] border-[hsl(var(--ve-accent-cyan)/0.25)]'
+                ? 'text-vouch-cyan bg-vouch-cyan/10 border-vouch-cyan/25'
                 : 'text-[hsl(var(--ve-warning))] bg-[hsl(var(--ve-warning)/0.1)] border-[hsl(var(--ve-warning)/0.3)]',
           ].join(' ')}>
             {Math.round(confidence)}% conf
@@ -271,11 +289,11 @@ function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
             aria-label={`Progress: ${liveProgress.current} of ${liveProgress.target}`}
             aria-valuenow={liveProgress.current} aria-valuemin={0} aria-valuemax={liveProgress.target}>
             <div
-              className="h-full rounded-full bg-[hsl(var(--ve-accent-cyan)/0.8)] transition-all"
+              className="h-full rounded-full bg-vouch-cyan/80 transition-all"
               style={{ width: `${Math.min(100, (liveProgress.current / liveProgress.target) * 100)}%` }}
             />
           </div>
-          <span className="text-[9px] font-mono text-[hsl(var(--ve-accent-cyan))]">
+          <span className="text-[9px] font-mono text-vouch-cyan">
             {liveProgress.current}/{liveProgress.target}
           </span>
         </div>
@@ -323,6 +341,7 @@ function JudgeVerdictDrawer({
     reject:    '--ve-danger',
   };
   const tierToken = tierColors[verdict.tier] ?? '--ve-text-muted';
+  const tierColor = z8StatusColor(tierToken);
 
   return (
     <div
@@ -338,16 +357,16 @@ function JudgeVerdictDrawer({
         aria-label={`Judge Verdict: ${verdict.tier}. ${open ? 'Collapse' : 'Expand'} details`}
         className={[
           'w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-t-xl border border-b-0',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
           'transition-colors min-h-[2.75rem]',
         ].join(' ')}
         style={{
-          background:  `hsl(var(${tierToken})/0.1)`,
-          borderColor: `hsl(var(${tierToken})/0.4)`,
+          background:  withAlpha(tierColor, 0.1),
+          borderColor: withAlpha(tierColor, 0.4),
         }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-extrabold uppercase tracking-widest" style={{ color: `hsl(var(${tierToken}))` }}>
+          <span className="text-xs font-extrabold uppercase tracking-widest" style={{ color: tierColor }}>
             {verdict.tier.toUpperCase()}
           </span>
           <span className="text-xs text-[hsl(var(--ve-text-muted))] truncate max-w-xs">
@@ -355,7 +374,7 @@ function JudgeVerdictDrawer({
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm font-extrabold" style={{ color: `hsl(var(${tierToken}))` }}>
+          <span className="text-sm font-extrabold" style={{ color: tierColor }}>
             {verdict.score}
           </span>
           {open ? (
@@ -373,12 +392,12 @@ function JudgeVerdictDrawer({
           role="region"
           aria-label="Judge Verdict detail"
           className="bg-[hsl(var(--ve-bg-panel))] border rounded-b-xl p-4 flex flex-col gap-3"
-          style={{ borderColor: `hsl(var(${tierToken})/0.3)` }}
+          style={{ borderColor: withAlpha(tierColor, 0.3) }}
         >
           <ul className="flex flex-col gap-1.5">
             {verdict.reasons.map((r, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-[hsl(var(--ve-text-primary)/0.85)]">
-                <span aria-hidden="true" className="mt-0.5 shrink-0" style={{ color: `hsl(var(${tierToken}))` }}>
+                <span aria-hidden="true" className="mt-0.5 shrink-0" style={{ color: tierColor }}>
                   {verdict.tier === 'excellent' || verdict.tier === 'solid' ? '✓' : '⚠'}
                 </span>
                 {r}
@@ -392,7 +411,7 @@ function JudgeVerdictDrawer({
                 <div key={i} className={[
                   'flex items-start gap-2 px-2.5 py-2 rounded-lg text-xs border',
                   c.flag === 'intentional_stack'
-                    ? 'bg-[hsl(var(--ve-accent-gold)/0.08)] border-[hsl(var(--ve-accent-gold)/0.3)] text-[hsl(var(--ve-accent-gold))]'
+                    ? 'bg-vouch-amber/10 border-vouch-amber/30 text-vouch-amber'
                     : 'bg-[hsl(var(--ve-warning)/0.08)] border-[hsl(var(--ve-warning)/0.3)] text-[hsl(var(--ve-warning))]',
                 ].join(' ')}>
                   <span aria-hidden="true">{c.flag === 'intentional_stack' ? '🔥' : '⚠'}</span>
@@ -431,7 +450,7 @@ function EmptyAiPicks() {
       </p>
       <div className="flex gap-1" aria-label="Loading">
         {[0,1,2].map((i) => (
-          <div key={i} className="w-2 h-2 rounded-full bg-[hsl(var(--ve-accent-cyan)/0.5)] animate-pulse"
+          <div key={i} className="w-2 h-2 rounded-full bg-vouch-cyan/50 animate-pulse"
             style={{ animationDelay: `${i * 150}ms` }} />
         ))}
       </div>
@@ -489,7 +508,7 @@ function StakePayout({
             value={stake}
             onChange={(e) => setStake(Math.max(1, Number(e.target.value)))}
             aria-label="Stake amount in dollars"
-            className="w-20 bg-transparent text-sm font-extrabold text-[hsl(var(--ve-text-primary))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ve-accent-cyan)/0.5)] rounded px-1"
+            className="w-20 bg-transparent text-sm font-extrabold text-[hsl(var(--ve-text-primary))] focus:outline-none focus:ring-1 focus:ring-vouch-cyan/50 rounded px-1"
           />
         </div>
       </div>
@@ -574,9 +593,9 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     <div className="flex flex-col gap-4 min-h-0 relative pb-32">
       {/* Draft mode indicator */}
       {draftMode === 'ai_locked' && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[hsl(var(--ve-accent-pink)/0.08)] border border-[hsl(var(--ve-accent-pink)/0.3)]">
-          <Bot className="h-3.5 w-3.5 text-[hsl(var(--ve-accent-pink))]" aria-hidden="true" />
-          <span className="text-xs text-[hsl(var(--ve-accent-pink))]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-vouch-emerald/10 border border-vouch-emerald/30">
+          <Bot className="h-3.5 w-3.5 text-vouch-emerald" aria-hidden="true" />
+          <span className="text-xs text-vouch-emerald">
             V.A.I Locked — this slip uses AI-selected legs only
           </span>
         </div>
@@ -587,6 +606,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         {(Object.keys(RISK_MODE_META) as ParlayRiskMode[]).map((m) => {
           const meta = RISK_MODE_META[m];
           const active = riskMode === m;
+          const modeColor = z8StatusColor(meta.token);
           return (
             <button
               key={m}
@@ -594,13 +614,14 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
               aria-pressed={active}
               className={[
                 'flex flex-col gap-0 px-3 py-2 rounded-xl border text-left transition-all min-h-[2.75rem]',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
                 active
-                  ? `bg-[hsl(var(${meta.token})/0.12)] border-[hsl(var(${meta.token})/0.5)]`
+                  ? ''
                   : 'border-[hsl(var(--ve-border)/0.5)] hover:border-[hsl(var(--ve-border))] bg-transparent',
               ].join(' ')}
+              style={active ? { borderColor: withAlpha(modeColor, 0.5), background: withAlpha(modeColor, 0.12) } : undefined}
             >
-              <span className="text-[10px] font-extrabold uppercase tracking-wide" style={{ color: active ? `hsl(var(${meta.token}))` : 'hsl(var(--ve-text-muted))' }}>
+              <span className="text-[10px] font-extrabold uppercase tracking-wide" style={{ color: active ? modeColor : 'hsl(var(--ve-text-muted))' }}>
                 {meta.label}
               </span>
               <span className="text-[9px] text-[hsl(var(--ve-text-muted))]">{meta.sub}</span>
@@ -656,7 +677,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
                 <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
                 <button
                   onClick={handleSave}
-                  className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]"
+                  className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
                 >
                   Retry
                 </button>
@@ -671,7 +692,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
                 type="checkbox"
                 checked={agreedSession}
                 onChange={(e) => setAgreedSession(e.target.checked)}
-                className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-[hsl(var(--ve-accent-cyan))] focus-visible:ring-2 focus-visible:ring-[hsl(var(--ve-accent-cyan))]"
+                className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
               />
               <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
                 I confirm this is for entertainment/research purposes. Bet responsibly.
@@ -687,9 +708,9 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
               aria-disabled={!canSave || !agreedSession}
               className={[
                 'flex-1 min-h-[2.75rem] rounded-xl text-xs font-extrabold uppercase tracking-wide transition-all',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
                 canSave && agreedSession
-                  ? 'bg-[hsl(var(--ve-accent-cyan)/0.18)] text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.5)] hover:bg-[hsl(var(--ve-accent-cyan)/0.25)]'
+                  ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/50 hover:bg-vouch-cyan/25'
                   : 'bg-[hsl(var(--ve-surface)/0.4)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.4)] cursor-not-allowed',
               ].join(' ')}
             >
@@ -698,7 +719,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
             <button
               onClick={() => { clearDraft(); announce('Draft cleared.'); }}
               aria-label="Clear all legs from draft"
-              className="min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]"
+              className="min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -754,7 +775,7 @@ function AiPicksPanel() {
                     'text-[9px] font-bold px-1.5 py-0.5 rounded-full border',
                     confidence >= 70
                       ? 'text-[hsl(var(--ve-success))] bg-[hsl(var(--ve-success)/0.1)] border-[hsl(var(--ve-success)/0.3)]'
-                      : 'text-[hsl(var(--ve-accent-cyan))] bg-[hsl(var(--ve-accent-cyan)/0.1)] border-[hsl(var(--ve-accent-cyan)/0.25)]',
+                      : 'text-vouch-cyan bg-vouch-cyan/10 border-vouch-cyan/25',
                   ].join(' ')}>
                     {Math.round(confidence)}%
                   </span>
@@ -776,7 +797,7 @@ function AiPicksPanel() {
                 announce(`Added ${pick.playerName || pick.selection} to slip.`);
               }}
               aria-label={`Add ${pick.playerName || pick.selection} to slip`}
-              className="shrink-0 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-[hsl(var(--ve-accent-cyan)/0.4)] bg-[hsl(var(--ve-accent-cyan)/0.12)] text-[hsl(var(--ve-accent-cyan))] hover:bg-[hsl(var(--ve-accent-cyan)/0.22)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]"
+              className="shrink-0 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center rounded-xl border border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan hover:bg-vouch-cyan/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
             >
               <span className="text-sm" aria-hidden="true">+</span>
             </button>
@@ -834,9 +855,9 @@ function TrackRecordPanel({
             onClick={() => onSectionChange('results')}
             className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
             style={{
-              background:  'hsl(var(--ve-accent-cyan)/0.12)',
-              border:      '1px solid hsl(var(--ve-accent-cyan)/0.3)',
-              color:       'hsl(var(--ve-accent-cyan))',
+              background:  'rgba(0,240,255,0.12)',
+              border:      '1px solid rgba(0,240,255,0.3)',
+              color:       '#00F0FF',
             }}
             aria-label="Open full Results page"
           >
@@ -877,13 +898,13 @@ function MyParlaysPanel({
 
   if (savedSlips.length === 0) return <EmptyLiveParlays />;
 
-  function Section({ title, slips, liveToken }: { title: string; slips: typeof savedSlips; liveToken?: string }) {
+  function Section({ title, slips, live }: { title: string; slips: typeof savedSlips; live?: boolean }) {
     if (slips.length === 0) return null;
     return (
       <section aria-label={title}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{title}</span>
-          {liveToken && <LivePulseBars active={true} />}
+          {live && <LivePulseBars active={true} />}
         </div>
         <div className="flex flex-col gap-2">
           {slips.map((slip) => {
@@ -914,11 +935,11 @@ function MyParlaysPanel({
                   const legMeta = LEG_STATUS_META[legStatus] ?? LEG_STATUS_META.pending;
                   return (
                     <div key={i} className="flex items-center gap-2 text-[10px] text-[hsl(var(--ve-text-muted))]">
-                      <span aria-hidden="true" style={{ color: `hsl(var(${legMeta.token}))` }}>{legMeta.icon}</span>
+                      <span aria-hidden="true" style={{ color: z8StatusColor(legMeta.token) }}>{legMeta.icon}</span>
                       <span className="truncate">{String(legRec.selection ?? legRec.playerName ?? 'Prop')}</span>
                       <span
                         className="ml-auto text-[9px] font-bold shrink-0"
-                        style={{ color: `hsl(var(${legMeta.token}))` }}
+                        style={{ color: z8StatusColor(legMeta.token) }}
                       >
                         {legMeta.label}
                       </span>
@@ -951,7 +972,7 @@ function MyParlaysPanel({
       <Suspense fallback={null}>
         <ParlayCorrelationGraph slips={savedSlips} />
       </Suspense>
-      <Section title="Live & Pending" slips={liveSlips} liveToken="--ve-accent-cyan" />
+      <Section title="Live & Pending" slips={liveSlips} live />
       <Section title="Graded Results" slips={gradedSlips} />
       <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />
     </div>
@@ -969,7 +990,7 @@ function CommunityPanel() {
       {/* Phase 2: PremiumFeed with TailButton */}
       <EmptyCommunity />
       <div className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-dashed border-[hsl(var(--ve-border)/0.5)]">
-        <Crown className="h-6 w-6 text-[hsl(var(--ve-accent-gold))]" aria-hidden="true" />
+        <Crown className="h-6 w-6 text-vouch-amber" aria-hidden="true" />
         <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))]">Community feed coming in Phase 2</p>
         <p className="text-[10px] text-[hsl(var(--ve-text-muted))] text-center max-w-xs">
           Post your slip to build a public track record. The tail mechanic launches with the community feed.
@@ -1084,8 +1105,8 @@ export default function ParlayCommandCenter({
         aria-label="Parlay Hub"
       >
         {/* Header */}
-        <div className="px-4 pt-5 pb-0 sm:px-6 lg:px-8 shrink-0">
-          <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+        <div className={`${Z8_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
+          <header className={`${Z8_PANEL_PREMIUM} ${Z8_SECTION_HEADER} mb-4 flex items-start justify-between gap-3 flex-wrap p-4 sm:p-5`}>
             <div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${Z8_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
@@ -1099,7 +1120,7 @@ export default function ParlayCommandCenter({
               </p>
             </div>
             <LivePulseBars active={liveCount > 0} />
-          </div>
+          </header>
 
           {/* Stats strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
@@ -1111,12 +1132,12 @@ export default function ParlayCommandCenter({
             ].map((stat) => (
               <div
                 key={stat.label}
-                className={`rounded-xl ${Z8_PANEL} p-3`}
+                className={`${Z8_STAT_CHIP} rounded-xl p-3`}
               >
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{stat.label}</p>
+                <p className={`${Z8_LABEL} text-white/40`}>{stat.label}</p>
                 <div className="mt-1.5 flex items-end justify-between gap-2">
-                  <span className="text-2xl font-extrabold text-[hsl(var(--ve-text-primary))]">{stat.value}</span>
-                  <span className="text-[9px] text-[hsl(var(--ve-text-muted))]">{stat.note}</span>
+                  <span className="text-2xl font-extrabold text-white">{stat.value}</span>
+                  <span className={`${Z8_LABEL} text-white/35`}>{stat.note}</span>
                 </div>
               </div>
             ))}
@@ -1145,9 +1166,9 @@ export default function ParlayCommandCenter({
                   onClick={() => setActivePanel(tab.id)}
                   className={[
                     'flex items-center gap-2 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 -mb-px transition-all',
-                    'min-h-[2.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--ve-accent-cyan))]',
+                    'min-h-[2.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
                     isActive
-                      ? 'border-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))]'
+                      ? 'border-vouch-cyan text-vouch-cyan'
                       : 'border-transparent text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))]',
                   ].join(' ')}
                 >

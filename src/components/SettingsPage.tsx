@@ -29,7 +29,7 @@ import {
   startStripeCheckout,
   tierToSubscriptionTier,
 } from '../lib/billingClient';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP } from '../theme/z8Tokens';
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -403,7 +403,7 @@ export default function SettingsPage({
             </ul>
 
             {/* Plan badge */}
-            <div className={`mt-8 rounded-xl ${Z8_PANEL} p-3`}>
+            <div className={`mt-8 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
               <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
               <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
@@ -429,7 +429,7 @@ export default function SettingsPage({
 
                 {/* Avatar + name */}
                 <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
-                  <div className="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+                  <div className={`${Z8_SURFACE} flex items-center gap-4 rounded-xl p-5`}>
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-bold text-white">
                       {initials}
                     </div>
@@ -624,7 +624,7 @@ export default function SettingsPage({
                 <Section title="Subscription" subtitle="Manage your plan and payment method.">
 
                   {/* Current plan row */}
-                  <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
+                  <div className={`${Z8_SURFACE} flex items-center justify-between rounded-xl px-5 py-4`}>
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
                         <Zap className="h-4 w-4" />

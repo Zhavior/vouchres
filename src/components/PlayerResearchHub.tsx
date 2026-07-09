@@ -24,6 +24,20 @@ import {
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
 import { apiUrl } from "../lib/apiBase";
+import {
+  Z8_ACTIVE,
+  Z8_DISPLAY,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_SURFACE,
+  Z8_WARNING,
+} from "../theme/z8Tokens";
 
 interface Markets {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
@@ -346,24 +360,25 @@ export default function PlayerResearchHub({
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#040810", color: "#e2e8f0" }}>
+    <main className={`${Z8_PAGE} min-h-screen`}>
       {/* ====== Header ====== */}
-      <header className="sticky top-0 z-40" style={{ background: "rgba(8,12,20,0.9)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <header className={`sticky top-0 z-40 ${Z8_PANEL_PREMIUM} rounded-none border-x-0 border-t-0`}>
+        <div className={`mx-auto flex h-14 max-w-7xl items-center justify-between ${Z8_PAGE_PAD_X}`}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
-              <Search className="w-4 h-4 text-slate-950" />
+            <div className={`${Z8_SURFACE} flex h-8 w-8 items-center justify-center rounded-lg border-vouch-cyan/30 bg-vouch-cyan/10`}>
+              <Search className="h-4 w-4 text-vouch-cyan" />
             </div>
-            <span className="font-bold text-white text-sm">Player Research</span>
-            <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
+            <span className="text-sm font-bold text-white">Player Research</span>
+            <span className={`${Z8_LABEL} text-white/40`}>
               {backendCount ?? players.length} players · {registryStatus === "ready" ? "backend registry" : registryStatus === "loading" ? "loading registry" : "fallback records"}
             </span>
-            {registryError && <span className="text-[10px] text-amber-400 font-mono hidden md:inline">{registryError}</span>}\n            <span className="text-[10px] text-cyan-300 font-mono uppercase tracking-widest hidden lg:inline">
+            {registryError && <span className={`${Z8_LABEL} hidden text-vouch-amber md:inline`}>{registryError}</span>}
+            <span className={`${Z8_LABEL} hidden text-vouch-cyan/80 lg:inline`}>
               Truth Lens · no fake odds · unknown prices show as TBD
             </span>
           </div>
           {/* Mode tabs */}
-          <div className="flex p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
             {([
               { id: "scout" as Mode, label: "Scout", icon: Crosshair },
               { id: "compare" as Mode, label: "Compare", icon: BarChart3 },
@@ -372,10 +387,9 @@ export default function PlayerResearchHub({
               <button
                 key={t.id}
                 onClick={() => setMode(t.id)}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  mode === t.id ? "text-slate-950" : "text-slate-500 hover:text-slate-300"
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
+                  mode === t.id ? Z8_ACTIVE : Z8_IDLE
                 }`}
-                style={mode === t.id ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : {}}
               >
                 <t.icon className="w-3 h-3" />
                 <span className="hidden sm:inline">{t.label}</span>
@@ -385,48 +399,45 @@ export default function PlayerResearchHub({
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className={`mx-auto max-w-7xl ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`}>
         {/* ====== SCOUT MODE ====== */}
         {mode === "scout" && (
           <>
             {/* Filter bar */}
-            <div className="flex flex-wrap items-center gap-3 mb-5">
-              <div className="relative flex-1 min-w-[200px] max-w-md">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <div className={`${Z8_PANEL_PREMIUM} mb-5 flex flex-wrap items-center gap-3 p-3`}>
+              <div className="relative min-w-[200px] max-w-md flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
                 <input
                   type="text"
                   placeholder="Search players, teams, positions..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl py-2 pl-9 pr-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none transition-all"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  className={`${Z8_SURFACE} w-full rounded-xl py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
                 />
               </div>
               <select
                 value={teamFilter}
                 onChange={(e) => setTeamFilter(e.target.value)}
-                className="rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+                className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none`}
               >
-                {teams.map((t) => <option key={t} value={t} style={{ background: "#0b1120" }}>{t === "ALL" ? "All Teams" : t}</option>)}
+                {teams.map((t) => <option key={t} value={t}>{t === "ALL" ? "All Teams" : t}</option>)}
               </select>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+                className={`${Z8_SURFACE} rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none`}
               >
-                <option value="batterScore" style={{ background: "#0b1120" }}>Sort: Batter Score</option>
-                <option value="hr" style={{ background: "#0b1120" }}>Sort: Home Runs</option>
-                <option value="avg" style={{ background: "#0b1120" }}>Sort: AVG</option>
-                <option value="ops" style={{ background: "#0b1120" }}>Sort: OPS</option>
-                <option value="name" style={{ background: "#0b1120" }}>Sort: Name</option>
+                <option value="batterScore">Sort: Batter Score</option>
+                <option value="hr">Sort: Home Runs</option>
+                <option value="avg">Sort: AVG</option>
+                <option value="ops">Sort: OPS</option>
+                <option value="name">Sort: Name</option>
               </select>
-              <div className="flex p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <button onClick={() => setListStyle("grid")} className={`p-1.5 rounded-md transition-all ${listStyle === "grid" ? "text-[var(--ve-accent)]" : "text-slate-600"}`}>
+              <div className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
+                <button onClick={() => setListStyle("grid")} className={`rounded-md p-1.5 transition-all ${listStyle === "grid" ? "text-vouch-cyan" : "text-white/35"}`}>
                   <LayoutGrid className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => setListStyle("table")} className={`p-1.5 rounded-md transition-all ${listStyle === "table" ? "text-[var(--ve-accent)]" : "text-slate-600"}`}>
+                <button onClick={() => setListStyle("table")} className={`rounded-md p-1.5 transition-all ${listStyle === "table" ? "text-vouch-cyan" : "text-white/35"}`}>
                   <Table2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -479,7 +490,7 @@ export default function PlayerResearchHub({
           />
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 }
 

@@ -1,4 +1,4 @@
-import { VECard } from '../../components/ui/ve';
+import { Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
 import React, { useState } from 'react';
 import { 
   Heart, 
@@ -28,11 +28,11 @@ import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
 
 const POST_TYPE_META: Record<string, { label: string; color: string }> = {
-  PARLAY:        { label: 'Parlay',     color: '#22d3ee' },
-  VOUCH:         { label: 'Pick',       color: '#34d399' },
-  AI_PICK:       { label: 'HR Alert',   color: '#fb923c' },
-  RESULT:        { label: 'Result',     color: '#a78bfa' },
-  RESEARCH_NOTE: { label: 'Lesson',     color: '#60a5fa' },
+  PARLAY:        { label: 'Parlay',     color: '#00F0FF' },
+  VOUCH:         { label: 'Pick',       color: '#00FF9D' },
+  AI_PICK:       { label: 'HR Alert',   color: '#FFB800' },
+  RESULT:        { label: 'Result',     color: '#00FF9D' },
+  RESEARCH_NOTE: { label: 'Lesson',     color: '#00F0FF' },
   DISCUSSION:    { label: 'Discussion', color: '#94a3b8' },
 };
 function PostTypeBadge({ post }: { post: FeedPost }) {
@@ -63,15 +63,15 @@ import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
   return (
-    <div className="mt-2 text-left p-3 rounded-2xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.34)] hover:border-[hsl(var(--ve-accent-cyan)/0.34)] transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm shadow-[hsl(var(--ve-shadow)/0.12)] select-none backdrop-blur-xl">
+    <div className="mt-2 text-left p-3 rounded-2xl border border-white/28 bg-black/34 hover:border-vouch-cyan/34 transition-colors flex flex-col gap-1.5 max-w-full mb-3 shadow-sm shadow-black/12 select-none backdrop-blur-xl">
       <div className="flex items-center gap-1.5 text-[11px]">
-        <div className="w-5 h-5 rounded-full bg-[hsl(var(--ve-surface-raised)/0.55)] border border-[hsl(var(--ve-border)/0.30)] font-bold text-[9px] text-[hsl(var(--ve-text-secondary))] flex items-center justify-center shrink-0">
+        <div className="w-5 h-5 rounded-full bg-black/55 border border-white/30 font-bold text-[9px] text-white/70 flex items-center justify-center shrink-0">
           {quotedPost.displayName.split(' ').map(n => n[0]).join('')}
         </div>
-        <span className="font-bold text-[hsl(var(--ve-text-primary))] truncate">{quotedPost.displayName}</span>
-        <span className="text-[hsl(var(--ve-text-muted))] text-[10px]">@{quotedPost.username}</span>
+        <span className="font-bold text-white truncate">{quotedPost.displayName}</span>
+        <span className="text-white/45 text-[10px]">@{quotedPost.username}</span>
       </div>
-      <p className="text-xs text-[hsl(var(--ve-text-secondary))] leading-normal line-clamp-3">
+      <p className="text-xs text-white/70 leading-normal line-clamp-3">
         {quotedPost.content}
       </p>
     </div>
@@ -90,7 +90,7 @@ interface FeedPostCardProps {
   onPostCreated?: (postData: Partial<FeedPost>) => void;
 }
 
-export default function FeedPostCard({
+function FeedPostCard({
   post,
   onLike,
   onVouchAction,
@@ -371,18 +371,18 @@ export default function FeedPostCard({
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
       <div 
-        className="bg-[hsl(var(--ve-surface)/0.72)] rounded-3xl border border-[hsl(var(--ve-border)/0.38)] p-3 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up flex flex-col gap-1.5 shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl" 
+        className="bg-black/72 rounded-3xl border border-white/38 p-3 hover:border-vouch-cyan/35 transition-all duration-200 animate-slide-up flex flex-col gap-1.5 shadow-xl shadow-black/18 backdrop-blur-xl" 
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
         
         {/* Reaction Bar */}
-        <div className="flex items-center justify-between pt-1 pb-1 text-[hsl(var(--ve-text-muted))] text-xs font-mono">
+        <div className="flex items-center justify-between pt-1 pb-1 text-white/45 text-xs font-mono">
           {/* Comment icon button */}
           <button 
             onClick={() => setShowComments(!showComments)}
-            className={`group flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-cyan))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] ${
-              showComments ? 'text-[hsl(var(--ve-accent-cyan))]' : ''
+            className={`group flex items-center gap-1.5 hover:text-vouch-cyan transition-colors p-1.5 rounded-lg hover:bg-vouch-cyan/8 ${
+              showComments ? 'text-vouch-cyan' : ''
             }`}
             title="Toggle comments"
             id={`comment-btn-${post.id}`}
@@ -394,8 +394,8 @@ export default function FeedPostCard({
           {/* Repost button */}
           <button 
             onClick={() => onRepost(post.id)}
-            className={`flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-pink))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-pink)/0.08)] ${
-              post.isReposted ? 'text-[hsl(var(--ve-accent-pink))] font-bold' : ''
+            className={`flex items-center gap-1.5 hover:text-vouch-emerald transition-colors p-1.5 rounded-lg hover:bg-vouch-emerald/8 ${
+              post.isReposted ? 'text-vouch-emerald font-bold' : ''
             }`}
             title="Repost"
             id={`repost-btn-${post.id}`}
@@ -428,13 +428,13 @@ export default function FeedPostCard({
           >
             <Zap className={`w-4 h-4 ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
             <span className="font-mono font-bold">Vouch</span>
-            <span className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">({post.vouchesCount})</span>
+            <span className="font-mono text-[10px] text-white/45">({post.vouchesCount})</span>
           </button>
         </div>
 
         {/* Comments drawer */}
         {showComments && (
-          <div className="pt-2 border-t border-[hsl(var(--ve-border)/0.28)] space-y-3.5" id={`comments-expanded-${post.id}`}>
+          <div className="pt-2 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
             {/* Create comment form */}
             <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
               <input 
@@ -442,13 +442,13 @@ export default function FeedPostCard({
                 placeholder="Post your reply..." 
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 text-xs bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.30)] rounded-xl px-3 py-2 outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
+                className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
                 required
                 id={`comment-input-${post.id}`}
               />
               <button 
                 type="submit"
-                className="p-2 bg-[hsl(var(--ve-accent-cyan)/0.14)] hover:bg-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-bg-deep))] rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
+                className="p-2 bg-vouch-cyan/14 hover:bg-vouch-cyan text-vouch-cyan hover:text-obsidian-900 rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
                 id={`comment-submit-${post.id}`}
               >
                 <Send className="w-4.5 h-4.5" />
@@ -459,16 +459,16 @@ export default function FeedPostCard({
             {post.comments && post.comments.length > 0 && (
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1.5 scrollbar-thin mt-2" id={`comments-feed-${post.id}`}>
                 {post.comments.map((comment) => (
-                  <div key={comment.id} className="bg-[hsl(var(--ve-surface-raised)/0.30)] backdrop-blur-xl p-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.24)] flex flex-col gap-1 text-left animate-slide-up">
-                    <div className="flex justify-between items-center text-[10px] text-[hsl(var(--ve-text-muted))] font-medium">
-                      <span className="font-bold text-[hsl(var(--ve-text-secondary))]">
-                        {comment.displayName} <span className="text-[hsl(var(--ve-text-muted))]">@{comment.username}</span>
+                  <div key={comment.id} className="bg-black/30 backdrop-blur-xl p-2.5 rounded-xl border border-white/24 flex flex-col gap-1 text-left animate-slide-up">
+                    <div className="flex justify-between items-center text-[10px] text-white/45 font-medium">
+                      <span className="font-bold text-white/70">
+                        {comment.displayName} <span className="text-white/45">@{comment.username}</span>
                       </span>
-                      <span className="font-mono text-[hsl(var(--ve-text-muted)/0.75)]">
+                      <span className="font-mono text-white/35">
                         {comment.timestamp && new Date(comment.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-xs text-[hsl(var(--ve-text-secondary))] leading-normal pl-0.5">
+                    <p className="text-xs text-white/70 leading-normal pl-0.5">
                       {comment.content}
                     </p>
                   </div>
@@ -482,8 +482,8 @@ export default function FeedPostCard({
   }
 
   return (
-    <VECard
-      className="p-4 hover:border-[hsl(var(--ve-accent-cyan)/0.35)] transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-[hsl(var(--ve-shadow)/0.18)] backdrop-blur-xl"
+    <div
+      className={`${Z8_PANEL_PREMIUM} rounded-3xl p-4 hover:border-vouch-cyan/35 transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-black/18 backdrop-blur-xl`}
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
@@ -501,15 +501,15 @@ export default function FeedPostCard({
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-[hsl(var(--ve-text-primary))] hover:underline cursor-pointer text-sm leading-tight truncate">
+              <span className="font-bold text-white hover:underline cursor-pointer text-sm leading-tight truncate">
                 {post.displayName}
               </span>
               {post.subscriptionTier === 'SELLER_PRO' ? (
-                <span className="text-[9px] bg-[hsl(var(--ve-accent-pink)/0.13)] font-extrabold text-[hsl(var(--ve-accent-pink))] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[hsl(var(--ve-accent-pink)/0.30)]">
+                <span className="text-[9px] bg-vouch-emerald/13 font-extrabold text-vouch-emerald px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-vouch-emerald/30">
                   💎 SELLER PRO
                 </span>
               ) : post.subscriptionTier === 'GOLD' ? (
-                <span className="text-[9px] bg-[hsl(var(--ve-accent-cyan)/0.13)] font-extrabold text-[hsl(var(--ve-accent-cyan))] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[hsl(var(--ve-accent-cyan)/0.30)]">
+                <span className="text-[9px] bg-vouch-cyan/13 font-extrabold text-vouch-cyan px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-vouch-cyan/30">
                   ✨ GOLD VERIFIED
                 </span>
               ) : post.isVerified ? (
@@ -520,30 +520,30 @@ export default function FeedPostCard({
               ) : null}
               <PostTypeBadge post={post} />
               <ResultStatusBadge post={post} />
-              <span className="text-[hsl(var(--ve-text-muted))] text-xs">@{post.username}</span>
-              <span className="text-[hsl(var(--ve-text-muted)/0.70)] text-xs">•</span>
-              <span className="text-[hsl(var(--ve-text-muted))] text-xs font-mono">{formatTime(post.timestamp)}</span>
+              <span className="text-white/45 text-xs">@{post.username}</span>
+              <span className="text-white/35 text-xs">•</span>
+              <span className="text-white/45 text-xs font-mono">{formatTime(post.timestamp)}</span>
             </div>
 
             {/* Badges bar */}
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {post.sportBadge && (
-                <span className="text-[9px] bg-[hsl(var(--ve-surface-raised)/0.42)] border border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] font-bold px-1.5 py-0.2 rounded font-mono uppercase">
+                <span className="text-[9px] bg-black/42 border border-white/28 text-white/45 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
                   {post.sportBadge}
                 </span>
               )}
               {post.sourceBadge && (
                 <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono uppercase ${
                   post.sourceBadge.includes('AI') 
-                    ? 'bg-[hsl(var(--ve-accent-pink)/0.12)] text-[hsl(var(--ve-accent-pink))] border border-[hsl(var(--ve-accent-pink)/0.28)]' 
+                    ? 'bg-vouch-emerald/12 text-vouch-emerald border border-vouch-emerald/28' 
                     : post.sourceBadge.includes('Vouch') 
                     ? 'bg-emerald-400/10 text-emerald-300 border border-emerald-300/25' 
-                    : 'bg-[hsl(var(--ve-surface-raised)/0.42)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.25)]'
+                    : 'bg-black/42 text-white/45 border border-white/25'
                 }`}>
                   {post.sourceBadge}
                 </span>
               )}
-              <span className="text-[10px] text-[hsl(var(--ve-text-muted))] bg-[hsl(var(--ve-surface-raised)/0.34)] font-semibold border border-[hsl(var(--ve-border)/0.25)] px-1.5 py-0.2 rounded font-mono">
+              <span className="text-[10px] text-white/45 bg-black/34 font-semibold border border-white/25 px-1.5 py-0.2 rounded font-mono">
                 {post.postType.replace('_', ' ')}
               </span>
             </div>
@@ -559,8 +559,8 @@ export default function FeedPostCard({
                 isFollowing
                   ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-900/40'
                   : isProTarget
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest hover:scale-[1.03] active:scale-95'
-                  : 'bg-[hsl(var(--ve-accent-cyan)/0.13)] hover:bg-[hsl(var(--ve-accent-cyan)/0.22)] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.30)] hover:border-[hsl(var(--ve-accent-cyan)/0.45)] hover:scale-[1.03]'
+                  ? 'bg-vouch-cyan/20 hover:bg-vouch-cyan/30 text-vouch-cyan border border-vouch-cyan/40 font-bold tracking-widest hover:scale-[1.03] active:scale-95'
+                  : 'bg-vouch-cyan/13 hover:bg-vouch-cyan/22 text-vouch-cyan hover:text-vouch-cyan border border-vouch-cyan/30 hover:border-vouch-cyan/45 hover:scale-[1.03]'
               }`}
               id={`follow-tail-btn-${post.id}`}
             >
@@ -568,20 +568,20 @@ export default function FeedPostCard({
             </button>
           )}
 
-          <button className="text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] p-1 rounded-full hover:bg-[hsl(var(--ve-surface-raised)/0.45)] transition-colors">
+          <button className="text-white/45 hover:text-white/70 p-1 rounded-full hover:bg-black/45 transition-colors">
             <MoreHorizontal className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Main post text content */}
-      <p className="text-[hsl(var(--ve-text-primary))] text-sm leading-relaxed mb-3 whitespace-pre-wrap">
+      <p className="text-white text-sm leading-relaxed mb-3 whitespace-pre-wrap">
         {post.content}
       </p>
 
       {/* Attached Media Render container with Hover Navigation Slides */}
       {post.mediaUrl && !post.boardConfig && (
-        <div className="mb-3.5 bg-[hsl(var(--ve-surface-raised)/0.28)] backdrop-blur-xl rounded-2xl overflow-hidden border border-[hsl(var(--ve-border)/0.28)] p-1 flex justify-center max-w-full relative group shadow-lg shadow-[hsl(var(--ve-shadow)/0.16)]">
+        <div className="mb-3.5 bg-black/28 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/28 p-1 flex justify-center max-w-full relative group shadow-lg shadow-black/16">
           {post.mediaType === 'video' ? (
             <video 
               src={post.mediaUrl} 
@@ -610,11 +610,11 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(0);
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-[hsl(var(--ve-surface)/0.88)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-text-primary))] rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-[hsl(var(--ve-shadow)/0.20)] cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/88 hover:bg-black/92 border border-white/34 text-white rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-black/20 cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Previous Image"
                       id={`slide-left-btn-${post.id}`}
                     >
-                      <ChevronLeft className="w-5.5 h-5.5 text-[hsl(var(--ve-accent-cyan))]" />
+                      <ChevronLeft className="w-5.5 h-5.5 text-vouch-cyan" />
                     </button>
                   )}
 
@@ -625,28 +625,28 @@ export default function FeedPostCard({
                         e.stopPropagation();
                         setActiveSlide(1);
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[hsl(var(--ve-surface)/0.88)] hover:bg-[hsl(var(--ve-surface-raised)/0.92)] border border-[hsl(var(--ve-border)/0.34)] text-[hsl(var(--ve-text-primary))] rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-[hsl(var(--ve-shadow)/0.20)] cursor-pointer z-20 flex items-center justify-center hover:scale-105"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/88 hover:bg-black/92 border border-white/34 text-white rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-xl shadow-black/20 cursor-pointer z-20 flex items-center justify-center hover:scale-105"
                       title="Next Image"
                       id={`slide-right-btn-${post.id}`}
                     >
-                      <ChevronRight className="w-5.5 h-5.5 text-[hsl(var(--ve-accent-cyan))]" />
+                      <ChevronRight className="w-5.5 h-5.5 text-vouch-cyan" />
                     </button>
                   )}
 
                   {/* Dot Indicators */}
-                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-[hsl(var(--ve-surface)/0.58)] backdrop-blur-xl px-2.5 py-1 rounded-full border border-[hsl(var(--ve-border)/0.28)]">
+                  <div className="absolute bottom-3 flex gap-1.5 z-10 bg-black/57 backdrop-blur-xl px-2.5 py-1 rounded-full border border-white/28">
                     <span 
                       onClick={() => setActiveSlide(0)}
-                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-150 ${activeSlide === 0 ? 'bg-[hsl(var(--ve-accent-cyan))] scale-125 shadow-glow' : 'bg-[hsl(var(--ve-text-muted)/0.65)] hover:bg-[hsl(var(--ve-text-secondary))]'}`}
+                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-150 ${activeSlide === 0 ? 'bg-vouch-cyan scale-125 shadow-glow' : 'bg-white/65 hover:bg-white/50'}`}
                     />
                     <span 
                       onClick={() => setActiveSlide(1)}
-                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-155 ${activeSlide === 1 ? 'bg-[hsl(var(--ve-accent-cyan))] scale-125 shadow-glow' : 'bg-[hsl(var(--ve-text-muted)/0.65)] hover:bg-[hsl(var(--ve-text-secondary))]'}`}
+                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-155 ${activeSlide === 1 ? 'bg-vouch-cyan scale-125 shadow-glow' : 'bg-white/65 hover:bg-white/50'}`}
                     />
                   </div>
 
                   {/* Page indicator tag (e.g. 1/2, 2/2) */}
-                  <div className="absolute top-3 right-3 bg-[hsl(var(--ve-surface)/0.88)] text-[hsl(var(--ve-text-secondary))] text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-[hsl(var(--ve-border)/0.35)] z-10">
+                  <div className="absolute top-3 right-3 bg-black/88 text-white/70 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-white/35 z-10">
                     {activeSlide + 1} / 2
                   </div>
                 </>
@@ -658,15 +658,15 @@ export default function FeedPostCard({
 
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-accent-cyan)/0.34)] text-[hsl(var(--ve-accent-cyan))] rounded-full text-[10px] font-black tracking-wide shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] z-50 animate-bounce flex items-center gap-1.5">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/92 border border-vouch-cyan/34 text-vouch-cyan rounded-full text-[10px] font-black tracking-wide shadow-xl shadow-black/22 z-50 animate-bounce flex items-center gap-1.5">
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Interactive Twitter Poll Render */}
       {localPoll && (
-        <div className="mb-3.5 bg-[hsl(var(--ve-surface)/0.72)] border border-[hsl(var(--ve-border)/0.34)] rounded-2xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up shadow-lg shadow-[hsl(var(--ve-shadow)/0.14)] backdrop-blur-xl">
-          <p className="font-bold text-[hsl(var(--ve-text-primary))] text-xs flex items-center gap-1.5">
+        <div className="mb-3.5 bg-black/72 border border-white/34 rounded-2xl p-3.5 space-y-3 font-sans text-xs text-left animate-slide-up shadow-lg shadow-black/14 backdrop-blur-xl">
+          <p className="font-bold text-white text-xs flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
             {localPoll.question || "Interactive Poll"}
           </p>
@@ -683,28 +683,28 @@ export default function FeedPostCard({
                 <div key={idx} className="relative overflow-hidden rounded-lg">
                   {isVoted ? (
                     // Voted / Show Results Mode
-                    <div className="w-full flex items-center justify-between p-2.5 bg-[hsl(var(--ve-surface-raised)/0.30)] backdrop-blur-xl border border-[hsl(var(--ve-border)/0.25)] rounded-lg relative overflow-hidden">
+                    <div className="w-full flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-xl border border-white/25 rounded-lg relative overflow-hidden">
                       {/* Animated Percentage background fill */}
                       <div 
-                        className={`absolute left-0 top-0 bottom-0 ${hasVotedThis ? 'bg-[hsl(var(--ve-accent-cyan)/0.10)]' : 'bg-[hsl(var(--ve-surface-raised)/0.20)]'} transition-all duration-500`}
+                        className={`absolute left-0 top-0 bottom-0 ${hasVotedThis ? 'bg-vouch-cyan/10' : 'bg-black/20'} transition-all duration-500`}
                         style={{ width: `${percentage}%` }}
                       />
-                      <span className="font-semibold text-[hsl(var(--ve-text-secondary))] z-10 flex items-center gap-1.5">
+                      <span className="font-semibold text-white/70 z-10 flex items-center gap-1.5">
                         {opt.text}
                         {hasVotedThis && (
-                          <span className="text-[9px] bg-[hsl(var(--ve-accent-cyan)/0.12)] font-extrabold text-[hsl(var(--ve-accent-cyan))] px-1.5 py-0.2 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.28)] flex items-center gap-0.5">
+                          <span className="text-[9px] bg-vouch-cyan/12 font-extrabold text-vouch-cyan px-1.5 py-0.2 rounded-full border border-vouch-cyan/28 flex items-center gap-0.5">
                             ✓ Your Vote
                           </span>
                         )}
                       </span>
-                      <span className="font-mono font-black text-[hsl(var(--ve-text-primary))] z-10">{percentage}%</span>
+                      <span className="font-mono font-black text-white z-10">{percentage}%</span>
                     </div>
                   ) : (
                     // Active voting mode button
                     <button
                       type="button"
                       onClick={() => handleVote(idx)}
-                      className="w-full text-left p-2.5 bg-[hsl(var(--ve-surface-raised)/0.36)] hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] border border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-accent-cyan))] hover:text-[hsl(var(--ve-accent-cyan))] font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
+                      className="w-full text-left p-2.5 bg-black/36 hover:bg-vouch-cyan/8 border border-white/28 text-vouch-cyan hover:text-vouch-cyan font-bold rounded-lg text-xs transition-all hover:translate-x-0.5"
                     >
                       {opt.text}
                     </button>
@@ -714,7 +714,7 @@ export default function FeedPostCard({
             })}
           </div>
 
-          <div className="flex justify-between items-center text-[9px] text-[hsl(var(--ve-text-muted))] font-mono pt-1">
+          <div className="flex justify-between items-center text-[9px] text-white/45 font-mono pt-1">
             <span>Total: {localPoll.totalVotes} votes</span>
             <span>Local Live Audit</span>
           </div>
@@ -789,12 +789,12 @@ export default function FeedPostCard({
       )}
 
       {/* 4. Social interaction reaction bar */}
-      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-[hsl(var(--ve-border)/0.28)] text-[hsl(var(--ve-text-muted))] text-xs relative select-none">
+      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-white/28 text-white/45 text-xs relative select-none">
         {/* Comment icon button */}
         <button 
           onClick={() => setShowComments(!showComments)}
-          className={`group flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-cyan))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-cyan)/0.08)] ${
-            showComments ? 'text-[hsl(var(--ve-accent-cyan))] font-bold' : ''
+          className={`group flex items-center gap-1.5 hover:text-vouch-cyan transition-colors p-1.5 rounded-lg hover:bg-vouch-cyan/8 ${
+            showComments ? 'text-vouch-cyan font-bold' : ''
           }`}
           title="Toggle comments"
           id={`comment-btn-${post.id}`}
@@ -807,8 +807,8 @@ export default function FeedPostCard({
         <div className="relative">
           <button 
             onClick={() => setShowRepostMenu(!showRepostMenu)}
-            className={`flex items-center gap-1.5 hover:text-[hsl(var(--ve-accent-pink))] transition-colors p-1.5 rounded-lg hover:bg-[hsl(var(--ve-accent-pink)/0.08)] ${
-              post.isReposted ? 'text-[hsl(var(--ve-accent-pink))] font-bold' : ''
+            className={`flex items-center gap-1.5 hover:text-vouch-emerald transition-colors p-1.5 rounded-lg hover:bg-vouch-emerald/8 ${
+              post.isReposted ? 'text-vouch-emerald font-bold' : ''
             }`}
             title="Repost options"
             id={`repost-btn-${post.id}`}
@@ -818,15 +818,15 @@ export default function FeedPostCard({
           </button>
 
           {showRepostMenu && (
-            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.32)] rounded-xl shadow-xl shadow-[hsl(var(--ve-shadow)/0.22)] p-1.5 z-40 animate-slide-up backdrop-blur-xl">
+            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-black/92 border border-white/32 rounded-xl shadow-xl shadow-black/22 p-1.5 z-40 animate-slide-up backdrop-blur-xl">
               <button
                 onClick={() => {
                   onRepost(post.id);
                   setShowRepostMenu(false);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-lg text-[hsl(var(--ve-text-secondary))] hover:text-[hsl(var(--ve-text-primary))] font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-black/52 rounded-lg text-white/70 hover:text-white font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <Repeat2 className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-pink))]" />
+                <Repeat2 className="w-3.5 h-3.5 text-vouch-emerald" />
                 <span>{post.isReposted ? 'Undo Repost' : 'Repost'}</span>
               </button>
               <button
@@ -834,9 +834,9 @@ export default function FeedPostCard({
                   setShowRepostMenu(false);
                   setShowQuoteModal(true);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-[hsl(var(--ve-surface-raised)/0.52)] rounded-lg text-[hsl(var(--ve-text-secondary))] hover:text-[hsl(var(--ve-text-primary))] font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-black/52 rounded-lg text-white/70 hover:text-white font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <Quote className="w-3.5 h-3.5 text-[hsl(var(--ve-accent-cyan))]" />
+                <Quote className="w-3.5 h-3.5 text-vouch-cyan" />
                 <span>Quote Vouch</span>
               </button>
             </div>
@@ -867,11 +867,11 @@ export default function FeedPostCard({
         >
           <Zap className={`w-4 h-4 ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
           <span className="font-mono font-bold">Vouch</span>
-          <span className="font-mono text-[10px] text-[hsl(var(--ve-text-muted))]">({post.vouchesCount})</span>
+          <span className="font-mono text-[10px] text-white/45">({post.vouchesCount})</span>
         </button>
 
         {/* Simulated Views indicator */}
-        <div className="flex items-center gap-1 text-[hsl(var(--ve-text-muted))] font-mono text-[10px] select-none" title="Views">
+        <div className="flex items-center gap-1 text-white/45 font-mono text-[10px] select-none" title="Views">
           <Eye className="w-3.5 h-3.5" />
           <span>{simulatedViews}</span>
         </div>
@@ -879,18 +879,18 @@ export default function FeedPostCard({
         {/* Bookmark button */}
         <button
           onClick={handleBookmarkToggle}
-          className={`p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl transition-colors ${
-            isBookmarked ? 'text-[hsl(var(--ve-accent-cyan))]' : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))]'
+          className={`p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl transition-colors ${
+            isBookmarked ? 'text-vouch-cyan' : 'text-white/45 hover:text-white/70'
           }`}
           title="Bookmark"
         >
-          {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-[hsl(var(--ve-accent-cyan))] text-[hsl(var(--ve-accent-cyan))]" /> : <Bookmark className="w-4 h-4" />}
+          {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-vouch-cyan text-vouch-cyan" /> : <Bookmark className="w-4 h-4" />}
         </button>
 
         {/* Share Copy button */}
         <button
           onClick={handleCopyLink}
-          className="p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-secondary))] transition-colors"
+          className="p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl text-white/45 hover:text-white/70 transition-colors"
           title="Copy Link to Clipboard"
         >
           <Share className="w-4 h-4" />
@@ -909,7 +909,7 @@ export default function FeedPostCard({
               href={xShareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-[hsl(var(--ve-surface-raised)/0.42)] backdrop-blur-xl text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-accent-cyan))] transition-colors flex items-center justify-center"
+              className="p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl text-white/45 hover:text-vouch-cyan transition-colors flex items-center justify-center"
               title="Share on X (Twitter)"
               id={`share-to-x-${post.id}`}
             >
@@ -921,57 +921,57 @@ export default function FeedPostCard({
 
       {/* Quote Vouch Modal overlay */}
       {showQuoteModal && (
-        <div className="fixed inset-0 bg-[hsl(var(--ve-bg-deep)/0.55)] backdrop-blur-xl z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-obsidian-900/55 backdrop-blur-xl z-50 flex items-center justify-center p-4">
           <form 
             onSubmit={handleQuoteSubmit} 
-            className="w-full max-w-lg bg-[hsl(var(--ve-surface)/0.92)] border border-[hsl(var(--ve-border)/0.36)] rounded-3xl p-5 shadow-2xl shadow-[hsl(var(--ve-shadow)/0.28)] space-y-4 animate-slide-up text-left backdrop-blur-xl"
+            className="w-full max-w-lg bg-black/92 border border-white/36 rounded-3xl p-5 shadow-2xl shadow-black/28 space-y-4 animate-slide-up text-left backdrop-blur-xl"
           >
-            <div className="flex justify-between items-center border-b border-[hsl(var(--ve-border)/0.28)] pb-2.5">
-              <span className="font-bold text-[hsl(var(--ve-text-primary))] text-sm uppercase tracking-wide flex items-center gap-1.5">
-                <Quote className="w-4 h-4 text-[hsl(var(--ve-accent-cyan))]" />
+            <div className="flex justify-between items-center border-b border-white/28 pb-2.5">
+              <span className="font-bold text-white text-sm uppercase tracking-wide flex items-center gap-1.5">
+                <Quote className="w-4 h-4 text-vouch-cyan" />
                 Quote Vouch Play
               </span>
               <button
                 type="button"
                 onClick={() => setShowQuoteModal(false)}
-                className="text-[hsl(var(--ve-text-muted))] hover:text-rose-300 font-mono text-xs font-black"
+                className="text-white/45 hover:text-rose-300 font-mono text-xs font-black"
               >
                 [CLOSE]
               </button>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-[hsl(var(--ve-text-muted))] font-mono">Your commentary / feedback analysis</label>
+              <label className="text-[10px] uppercase font-bold text-white/45 font-mono">Your commentary / feedback analysis</label>
               <textarea
                 placeholder="Why are you tailing/quoting this? Share your custom verified analysis..."
                 value={quoteText}
                 onChange={(e) => setQuoteText(e.target.value)}
                 rows={3}
-                className="w-full bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] rounded-xl p-3 text-[hsl(var(--ve-text-primary))] text-xs focus:outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-colors resize-none placeholder:text-[hsl(var(--ve-text-muted))] font-medium"
+                className="w-full bg-black/44 border border-white/30 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-vouch-cyan/75 transition-colors resize-none placeholder:text-white/45 font-medium"
                 required
               />
             </div>
 
             {/* Quoted play embedded preview */}
-            <div className="border border-[hsl(var(--ve-border)/0.28)] rounded-2xl p-3 bg-[hsl(var(--ve-surface-raised)/0.34)]">
-              <div className="flex items-center gap-1.5 text-[10px] text-[hsl(var(--ve-text-muted))] mb-1">
-                <span className="font-bold text-[hsl(var(--ve-text-secondary))]">{post.displayName}</span>
+            <div className="border border-white/28 rounded-2xl p-3 bg-black/34">
+              <div className="flex items-center gap-1.5 text-[10px] text-white/45 mb-1">
+                <span className="font-bold text-white/70">{post.displayName}</span>
                 <span>@{post.username}</span>
               </div>
-              <p className="text-[hsl(var(--ve-text-muted))] text-xs leading-normal line-clamp-2">{post.content}</p>
+              <p className="text-white/45 text-xs leading-normal line-clamp-2">{post.content}</p>
             </div>
 
             <div className="flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowQuoteModal(false)}
-                className="px-4 py-2 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] rounded-xl text-xs font-bold text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] transition-colors"
+                className="px-4 py-2 bg-black/42 hover:bg-black/62 rounded-xl text-xs font-bold text-white/45 hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 rounded-xl text-xs font-bold text-[hsl(var(--ve-bg-deep))] transition-all shadow-lg shadow-[hsl(var(--ve-accent-cyan)/0.22)] active:scale-95 flex items-center gap-1.5"
+                className="px-5 py-2 bg-vouch-cyan hover:brightness-110 rounded-xl text-xs font-bold text-obsidian-900 transition-all shadow-lg shadow-vouch-cyan/22 active:scale-95 flex items-center gap-1.5"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Publish Quote</span>
@@ -983,7 +983,7 @@ export default function FeedPostCard({
 
       {/* Extensible Comments area */}
       {showComments && (
-        <div className="mt-4 pt-3.5 border-t border-[hsl(var(--ve-border)/0.28)] space-y-3.5" id={`comments-expanded-${post.id}`}>
+        <div className="mt-4 pt-3.5 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
           {/* Create comment form */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
             <input 
@@ -991,13 +991,13 @@ export default function FeedPostCard({
               placeholder="Post your reply..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 text-xs bg-[hsl(var(--ve-surface-raised)/0.44)] text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.30)] rounded-xl px-3 py-2 outline-none focus:border-[hsl(var(--ve-accent-cyan)/0.75)] transition-all font-medium placeholder:text-[hsl(var(--ve-text-muted))]"
+              className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
               required
               id={`comment-input-${post.id}`}
             />
             <button 
               type="submit" 
-              className="p-2 bg-[hsl(var(--ve-accent-cyan))] hover:brightness-110 text-[hsl(var(--ve-bg-deep))] rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md shadow-[hsl(var(--ve-accent-cyan)/0.22)] active:scale-95"
+              className="p-2 bg-vouch-cyan hover:brightness-110 text-obsidian-900 rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md shadow-vouch-cyan/22 active:scale-95"
               id={`comment-submit-${post.id}`}
             >
               <Send className="w-3.5 h-3.5" />
@@ -1008,57 +1008,59 @@ export default function FeedPostCard({
           {post.comments && post.comments.length > 0 ? (
             <div className="space-y-2.5">
               {post.comments.map((comm) => (
-                <div key={comm.id} className="p-3 bg-[hsl(var(--ve-surface-raised)/0.32)] rounded-xl border border-[hsl(var(--ve-border)/0.25)] text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
-                  <div className="w-7 h-7 bg-[hsl(var(--ve-surface-raised)/0.56)] rounded-full font-bold text-[11px] text-[hsl(var(--ve-text-secondary))] flex items-center justify-center shrink-0 border border-[hsl(var(--ve-border)/0.24)]">
+                <div key={comm.id} className="p-3 bg-black/32 rounded-xl border border-white/25 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
+                  <div className="w-7 h-7 bg-black/56 rounded-full font-bold text-[11px] text-white/70 flex items-center justify-center shrink-0 border border-white/24">
                     {comm.displayName.split(' ').map(n=>n[0]).join('')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                      <span className="font-bold text-[hsl(var(--ve-text-primary))]">{comm.displayName}</span>
-                      <span className="text-[hsl(var(--ve-text-muted))] text-[10px]">@{comm.username}</span>
-                      <span className="text-[hsl(var(--ve-text-muted))] text-[9px]">• {formatTime(comm.timestamp)}</span>
+                      <span className="font-bold text-white">{comm.displayName}</span>
+                      <span className="text-white/45 text-[10px]">@{comm.username}</span>
+                      <span className="text-white/45 text-[9px]">• {formatTime(comm.timestamp)}</span>
                     </div>
-                    <p className="text-[hsl(var(--ve-text-secondary))] font-medium">{comm.content}</p>
+                    <p className="text-white/70 font-medium">{comm.content}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[11px] text-[hsl(var(--ve-text-muted))] py-1 font-mono text-center">No comments yet. Start the conversation!</p>
+            <p className="text-[11px] text-white/45 py-1 font-mono text-center">No comments yet. Start the conversation!</p>
           )}
         </div>
       )}
 
       {/* 5. Custom premium tail-lock subscription upgrade modal */}
       {showUpgradeModal && (
-        <div className="absolute inset-0 bg-[hsl(var(--ve-bg-deep)/0.94)] backdrop-blur-md rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-          <div className="w-12 h-12 bg-[hsl(var(--ve-accent-pink)/0.13)] rounded-full flex items-center justify-center border border-[hsl(var(--ve-accent-pink)/0.30)] mb-3 animate-pulse">
+        <div className="absolute inset-0 bg-obsidian-900/94 backdrop-blur-md rounded-3xl z-30 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+          <div className="w-12 h-12 bg-vouch-emerald/13 rounded-full flex items-center justify-center border border-vouch-emerald/30 mb-3 animate-pulse">
             <span className="text-xl">🛡️</span>
           </div>
           
-          <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-sm uppercase tracking-wide">
+          <h4 className="font-bold text-white text-sm uppercase tracking-wide">
             Lock: Subscribe & Tail Tier Required
           </h4>
-          <p className="text-[11px] text-[hsl(var(--ve-text-muted))] max-w-xs mt-1.5 leading-relaxed font-semibold">
+          <p className="text-[11px] text-white/45 max-w-xs mt-1.5 leading-relaxed font-semibold">
             To subscribe and tail @{post.username}'s transparent sports plays, you must upgrade your tracking account to a Premium Partner tier first!
           </p>
 
           <div className="flex items-center gap-2 mt-4 flex-wrap justify-center font-bold">
             <button
               onClick={handleInstantUpgrade}
-              className="px-4 py-1.5 bg-[hsl(var(--ve-accent-pink))] hover:brightness-110 border border-[hsl(var(--ve-accent-pink)/0.45)] text-[hsl(var(--ve-bg-deep))] font-black rounded-lg text-[10.5px] uppercase tracking-wider flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
+              className="px-4 py-1.5 bg-vouch-emerald hover:brightness-110 border border-vouch-emerald/45 text-obsidian-900 font-black rounded-lg text-[10.5px] uppercase tracking-wider flex items-center gap-1 transition-all hover:scale-105 active:scale-95"
             >
               💎 Instant Upgrade (Seller Pro)
             </button>
             <button
               onClick={() => setShowUpgradeModal(false)}
-              className="px-3.5 py-1.5 bg-[hsl(var(--ve-surface-raised)/0.42)] hover:bg-[hsl(var(--ve-surface-raised)/0.62)] text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] border border-[hsl(var(--ve-border)/0.28)] rounded-lg text-[10px] font-bold"
+              className="px-3.5 py-1.5 bg-black/42 hover:bg-black/62 text-white/45 hover:text-white border border-white/28 rounded-lg text-[10px] font-bold"
             >
               Cancel
             </button>
           </div>
         </div>
       )}
-    </VECard>
+    </div>
   );
 }
+
+export default React.memo(FeedPostCard);

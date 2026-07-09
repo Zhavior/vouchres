@@ -27,6 +27,19 @@ import {
 } from './smart-ai/smartAiEngine.logic';
 import { SmartAiDynamicCreator } from './smart-ai/SmartAiDynamicCreator';
 import { SmartAiDeepResearchPanel } from './smart-ai/SmartAiDeepResearchPanel';
+import {
+  Z8_DISPLAY,
+  Z8_EMERALD,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+  Z8_WARNING,
+} from '../theme/z8Tokens';
 
 /**
  * V.A.I Research Command Center.
@@ -361,22 +374,21 @@ export default function SmartAiEngine({
 
   if (!aiAgreementAccepted) {
     return (
-      <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-agreement-gate">
-        <div className="relative overflow-hidden rounded-[2rem] border border-sky-400/20 bg-slate-950/90 p-6 sm:p-8 shadow-2xl shadow-sky-950/20">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_35%)]" />
+      <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-agreement-gate">
+        <div className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-6 sm:p-8`}>
           <div className="relative space-y-6">
             <div className="flex items-start gap-4">
-              <div className="rounded-2xl border border-sky-300/25 bg-sky-400/10 p-3">
-                <Award className="h-6 w-6 text-sky-300" />
+              <div className="rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 p-3">
+                <Award className="h-6 w-6 text-vouch-cyan" />
               </div>
-              <div className="space-y-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-300">
+              <div className={`${Z8_SECTION_HEADER} space-y-2`}>
+                <p className={`${Z8_LABEL} text-vouch-cyan`}>
                   V.A.I Locked AI Made Parlays
                 </p>
-                <h1 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight">
+                <h1 className={Z8_DISPLAY}>
                   Research tool only — not betting advice.
                 </h1>
-                <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+                <p className="max-w-3xl text-sm leading-relaxed text-white/45">
                   V.A.I generates locked AI Made Parlays from available research signals. These picks can be wrong, player
                   status can change, odds are not guaranteed, and sportsbook markets may differ. Use this as research support,
                   verify every leg yourself, and never risk money you cannot afford to lose.
@@ -385,30 +397,30 @@ export default function SmartAiEngine({
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <CheckCircle2 className="mb-3 h-5 w-5 text-emerald-300" />
+              <div className={Z8_STAT_CHIP}>
+                <CheckCircle2 className={`mb-3 h-5 w-5 ${Z8_EMERALD}`} />
                 <h3 className="text-sm font-black text-white">Locked separation</h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                <p className="mt-1 text-xs leading-relaxed text-white/45">
                   AI Made Parlays stay separate from manual Build Parlay slips.
                 </p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <Database className="mb-3 h-5 w-5 text-sky-300" />
+              <div className={Z8_STAT_CHIP}>
+                <Database className="mb-3 h-5 w-5 text-vouch-cyan" />
                 <h3 className="text-sm font-black text-white">Research inputs</h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                <p className="mt-1 text-xs leading-relaxed text-white/45">
                   Candidate boards are informational and must be verified before use.
                 </p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <Gauge className="mb-3 h-5 w-5 text-indigo-300" />
+              <div className={Z8_STAT_CHIP}>
+                <Gauge className="mb-3 h-5 w-5 text-vouch-cyan/80" />
                 <h3 className="text-sm font-black text-white">No guarantees</h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                <p className="mt-1 text-xs leading-relaxed text-white/45">
                   Model confidence is not a promise, price, sportsbook line, or financial recommendation.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-100/90">
+            <div className="rounded-2xl border border-vouch-amber/25 bg-vouch-amber/10 p-4 text-xs leading-relaxed text-vouch-amber/90">
               By unlocking V.A.I, you understand that this feature is for sports research and entertainment only. You are
               responsible for your own choices and local rules.
             </div>
@@ -416,102 +428,102 @@ export default function SmartAiEngine({
             <button
               type="button"
               onClick={() => setAiAgreementAccepted(true)}
-              className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-sky-950/30 transition hover:from-sky-400 hover:to-emerald-400 active:scale-[0.99]"
+              className="w-full rounded-2xl border border-vouch-cyan/40 bg-vouch-cyan/15 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg transition hover:bg-vouch-cyan/25 active:scale-[0.99]"
             >
               I Understand — Unlock V.A.I
             </button>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="smart-ai-ledger-root">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-ledger-root">
 
       {/* HEADER HERO AREA */}
-      <div className="ve-hero p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="ai-banner-container">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <header className={`${Z8_PANEL_PREMIUM} relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-[2rem] p-6 sm:p-8 md:flex-row md:items-center`} id="ai-banner-container">
+        <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-vouch-cyan/5 blur-[120px] pointer-events-none" />
 
-        <div className="space-y-2 min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-0.5 rounded-full text-[10px] font-black font-mono tracking-widest uppercase">
+        <div className={`${Z8_SECTION_HEADER} min-w-0 flex-1`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`${Z8_LABEL} rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-3 py-0.5 text-vouch-emerald`}>
               Verified MLB data only
             </span>
-            <span className="bg-[#1e293b] text-slate-400 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
+            <span className={`${Z8_LABEL} rounded-full border border-white/10 bg-black/35 px-2.5 py-0.5 text-white/45`}>
               {candidatesLoading ? 'Loading board...' : `${boardStats.total} candidates today`}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white font-display select-text tracking-tight flex items-center gap-3">
-            <Cpu className="w-8 h-8 text-sky-400 animate-pulse" />
-            V.A.I <span className="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Research Command Center</span>
+          <h1 className={`${Z8_DISPLAY} mt-2 flex items-center gap-3`}>
+            <Cpu className="h-8 w-8 animate-pulse text-vouch-cyan" />
+            V.A.I <span className="text-vouch-cyan">Research Command Center</span>
           </h1>
-          <p className="text-slate-400 text-sm max-w-3xl">
+          <p className="max-w-3xl text-sm text-white/45">
             Build gradable parlays and research today&apos;s validated hitter board side by side. Every signal comes from real
             MLB season stats, probable pitchers, and sourced park factors — missing data is flagged, never invented.
           </p>
+          <div className="z8-accent-line mt-2 w-full max-w-md" />
         </div>
-      </div>
+      </header>
 
       {/* METRIC CARD BAR — real board stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="metric-analytics-bar">
-        <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4" id="metric-analytics-bar">
+        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Validated Candidates</span>
-            <span className="text-lg font-mono font-black text-white mt-1 block">
+            <span className={`${Z8_LABEL} block text-white/40`}>Validated Candidates</span>
+            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
               {candidatesLoading ? '—' : boardStats.total}
             </span>
           </div>
-          <Database className="w-5 h-5 text-sky-400" />
+          <Database className="h-5 w-5 text-vouch-cyan" />
         </div>
-        <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
+        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Confirmed Lineups</span>
-            <span className="text-lg font-mono font-black text-emerald-400 mt-1 block">
+            <span className={`${Z8_LABEL} block text-white/40`}>Confirmed Lineups</span>
+            <span className={`z8-tabular-nums mt-1 block text-lg font-mono font-black ${Z8_EMERALD}`}>
               {candidatesLoading ? '—' : boardStats.confirmed}
             </span>
           </div>
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <CheckCircle2 className={`h-5 w-5 ${Z8_EMERALD}`} />
         </div>
-        <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
+        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Games Covered</span>
-            <span className="text-lg font-mono font-black text-amber-400 mt-1 block">
+            <span className={`${Z8_LABEL} block text-white/40`}>Games Covered</span>
+            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
               {candidatesLoading ? '—' : boardStats.games}
             </span>
           </div>
-          <Activity className="w-5 h-5 text-amber-400" />
+          <Activity className="h-5 w-5 text-vouch-cyan/80" />
         </div>
-        <div className="bg-slate-950/80 border border-slate-900 rounded-2xl p-4 flex items-center justify-between">
+        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
           <div>
-            <span className="block text-[10px] text-slate-500 font-mono uppercase tracking-wider">Avg Data Confidence</span>
-            <span className="text-lg font-mono font-black text-indigo-400 mt-1 block">
+            <span className={`${Z8_LABEL} block text-white/40`}>Avg Data Confidence</span>
+            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-vouch-cyan">
               {candidatesLoading || boardStats.avgConfidence === null ? '—' : `${boardStats.avgConfidence}%`}
             </span>
           </div>
-          <Gauge className="w-5 h-5 text-indigo-400" />
+          <Gauge className="h-5 w-5 text-vouch-cyan/80" />
         </div>
       </div>
 
 
       {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
-      <div className="rounded-[2rem] border border-slate-800/80 bg-slate-950/80 p-4 sm:p-5 shadow-2xl shadow-black/30" id="vai-rooms-command-deck">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-sky-300">
+      <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-rooms-command-deck">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className={Z8_SECTION_HEADER}>
+            <div className={`${Z8_LABEL} flex items-center gap-2 text-vouch-cyan`}>
               <Crown className="h-3.5 w-3.5" />
               V.A.I Rooms
             </div>
-            <h2 className="mt-1 text-xl sm:text-2xl font-black text-white">
+            <h2 className={`${Z8_DISPLAY} mt-1 text-xl sm:text-2xl`}>
               Choose today&apos;s AI research room
             </h2>
-            <p className="mt-1 max-w-3xl text-xs sm:text-sm text-slate-400">
+            <p className="max-w-3xl text-xs text-white/45 sm:text-sm">
               All four rooms are visible. Pro unlocks one room per day. Research Seller Pro unlocks the full AI desk.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
+          <div className={`${Z8_STAT_CHIP} text-xs text-white/70`}>
             <span className="font-mono uppercase tracking-wider text-slate-500">Access</span>
             <div className="font-bold text-white">{vaiEntitlements.reason}</div>
 
@@ -601,7 +613,7 @@ export default function SmartAiEngine({
             );
           })}
         </div>
-      </div>
+      </section>
 
       <div className={`rounded-[2rem] border ${selectedVaiPersona.border} bg-slate-950/70 p-4 sm:p-5 shadow-2xl ${selectedVaiPersona.glow}`} id="vai-selected-room-panel">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -680,10 +692,10 @@ export default function SmartAiEngine({
       </div>
 
       {/* DISCLOSURE CARD SECTION */}
-      <div className="bg-slate-900/20 border border-slate-900 rounded-2xl p-5 flex items-start gap-3" id="scouting-policy-foot-note">
-        <Award className="w-5 h-5 text-sky-400 mt-0.5 flex-shrink-0" />
-        <div className="space-y-1 text-xs text-slate-400">
-          <h4 className="font-bold text-slate-200">Research Data Policy</h4>
+      <div className={`${Z8_PANEL_PREMIUM} flex items-start gap-3 rounded-2xl p-5`} id="scouting-policy-foot-note">
+        <Award className="mt-0.5 h-5 w-5 flex-shrink-0 text-vouch-cyan" />
+        <div className="space-y-1 text-xs text-white/45">
+          <h4 className="font-bold text-white">Research Data Policy</h4>
           <p className="leading-relaxed">
             Candidates come from the validated HR board pipeline: real MLB season stats, probable pitchers with confirmed
             throwing hand where posted, and sourced park factors. First-pitch weather is a real Open-Meteo forecast with roofed
@@ -695,7 +707,7 @@ export default function SmartAiEngine({
         </div>
       </div>
 
-    </div>
+    </main>
   );
 }
 

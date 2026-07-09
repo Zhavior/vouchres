@@ -382,4 +382,4 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
   );
 };
 
-export default HrPlayerCard;
+export default React.memo(HrPlayerCard);

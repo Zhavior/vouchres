@@ -12,7 +12,7 @@ import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
-import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -608,7 +608,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   return (
     <main className={`${Z8_PAGE} max-w-6xl mx-auto px-3 sm:px-4 py-5`}>
       {/* Header */}
-      <div className={`rounded-2xl ${Z8_PANEL} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-5 mb-5`}>
+      <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-5 mb-5`}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-vouch-cyan" /> Live Games Center</h1>
@@ -630,16 +630,16 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       {error && <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-sm text-red-300">{error}</div>}
 
       {loading && matchups.length === 0 && (
-        <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-52 rounded-2xl bg-slate-900/60 border border-slate-800 animate-pulse" />)}</div>
+        <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className={`h-52 rounded-2xl ${Z8_SURFACE} animate-pulse`} />)}</div>
       )}
 
       {!error && matchups.length > 0 && (
         shown.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500 font-mono rounded-2xl bg-slate-900/40 border border-slate-800">No active live games right now. Switch to “All games”.</div>
+          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/50 font-mono`}>No active live games right now. Switch to “All games”.</div>
         ) : (
           <div className="space-y-4">
             {activeGame && (
-              <div className={`relative overflow-hidden rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 shadow-2xl ${Z8_PANEL}`}>
+              <div className={`relative overflow-hidden rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 shadow-2xl ${Z8_PANEL_PREMIUM}`}>
                 <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
 
@@ -707,15 +707,15 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                 </div>
 
                 <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Game state</p>
                     <p className="text-sm font-black text-slate-100">{activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live now' : 'Scheduled'}</p>
                   </div>
-                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
                     <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
                   </div>
-                  <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
                     <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
                   </div>

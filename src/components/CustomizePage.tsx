@@ -41,7 +41,18 @@ import {
 } from "../lib/featureConfig";
 import { canAccessThemeStore } from "../lib/adminDevAccess";
 import type { CreatorProofProfile } from "../types";
-import { VEBadge, VEButton, VECard } from "./ui/ve";
+import {
+  Z8_ACTIVE,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_GAP,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_SURFACE,
+} from "../theme/z8Tokens";
 
 type CustomizePageProps = {
   profile?: CreatorProofProfile | null;
@@ -298,60 +309,58 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
   const previewItems = layout.mode === "pro" ? proPreview : beginnerPreview;
 
   return (
-    <div className="ve-page-shell min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl space-y-5">
-        <VECard tone="elevated" className="p-5">
+    <main className={`${Z8_PAGE} min-h-screen ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <div className={`mx-auto max-w-5xl ${Z8_PAGE_GAP}`}>
+        <header className={`${Z8_PANEL_PREMIUM} ${Z8_SECTION_HEADER} p-5`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <VEBadge tone="info" className="gap-2">
+              <span className={`inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3.5 w-3.5" />
                 Native Layout Studio
-              </VEBadge>
+              </span>
 
               <h1 className="mt-4 text-3xl font-black tracking-[-0.05em] text-white sm:text-4xl">
                 Customize VouchEdge
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
                 Choose how your command center behaves. Keep the product brain, but control the visible tools,
                 order, and research depth.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <VEButton
+              <button
                 type="button"
-                variant="secondary"
-                size="sm"
-                leftIcon={<RefreshCcw className="h-4 w-4" />}
                 onClick={handleReset}
+                className={`${Z8_IDLE} inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
               >
+                <RefreshCcw className="h-4 w-4" />
                 Reset
-              </VEButton>
+              </button>
 
-              <VEButton
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={() => onSectionChange("settings")}
+                className={`${Z8_IDLE} px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide`}
               >
                 Back to Settings
-              </VEButton>
+              </button>
             </div>
           </div>
-        </VECard>
+        </header>
 
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <VECard className="p-5">
+          <section className={`${Z8_PANEL_PREMIUM} p-5`}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <VEBadge tone="neutral">Research mode</VEBadge>
+                <span className={`${Z8_LABEL} text-white/40`}>Research mode</span>
                 <h2 className="mt-3 text-xl font-black text-white">Choose your UI depth</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-400">
+                <p className="mt-1 text-sm leading-6 text-white/50">
                   Beginner mode keeps the app clean. Pro mode exposes more model confidence and research context.
                 </p>
               </div>
-              <Zap className="h-5 w-5 text-cyan-300" />
+              <Zap className="h-5 w-5 text-vouch-cyan" />
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -360,12 +369,12 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("beginner")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "beginner"
-                    ? "border-cyan-300/40 bg-cyan-300/10"
-                    : "border-slate-800 bg-slate-950/45 hover:border-slate-600"
+                    ? `${Z8_ACTIVE} border-vouch-cyan/40`
+                    : `${Z8_IDLE} rounded-2xl`
                 }`}
               >
                 <div className="text-sm font-black text-white">Beginner</div>
-                <div className="mt-1 text-xs leading-5 text-slate-500">Cleaner cards, simpler labels.</div>
+                <div className="mt-1 text-xs leading-5 text-white/45">Cleaner cards, simpler labels.</div>
               </button>
 
               <button
@@ -373,28 +382,30 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                 onClick={() => handleModeChange("pro")}
                 className={`rounded-2xl border p-4 text-left transition ${
                   layout.mode === "pro"
-                    ? "border-emerald-300/40 bg-emerald-300/10"
-                    : "border-slate-800 bg-slate-950/45 hover:border-slate-600"
+                    ? "border-vouch-emerald/40 bg-vouch-emerald/10 text-white"
+                    : `${Z8_IDLE} rounded-2xl`
                 }`}
               >
                 <div className="text-sm font-black text-white">Pro</div>
-                <div className="mt-1 text-xs leading-5 text-slate-500">More detail, judge context, warnings.</div>
+                <div className="mt-1 text-xs leading-5 text-white/45">More detail, judge context, warnings.</div>
               </button>
             </div>
 
             <div className="mt-5">
-              <VEBadge tone={canUseThemes ? "success" : "warning"}>
+              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 ${Z8_LABEL} ${
+                canUseThemes ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald' : 'border-vouch-amber/30 bg-vouch-amber/10 text-vouch-amber'
+              }`}>
                 {canUseThemes ? "Theme Store unlocked" : "Theme Store locked"}
-              </VEBadge>
+              </span>
             </div>
-          </VECard>
+          </section>
 
-          <VECard className="p-5">
-            <VEBadge tone="info">Visible tools</VEBadge>
+          <section className={`${Z8_PANEL_PREMIUM} p-5`}>
+            <span className={`${Z8_LABEL} text-vouch-cyan`}>Visible tools</span>
             <h2 className="mt-3 text-xl font-black text-white">
               {visibleFeatures.length} tools active
             </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-400">
+            <p className="mt-1 text-sm leading-6 text-white/50">
               These are the tools currently visible in your app shell.
             </p>
 
@@ -402,27 +413,27 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
               {visibleFeatures.map((feature) => {
                 const meta = FEATURE_META[feature.id];
                 return (
-                  <VEBadge key={feature.id} tone="neutral">
+                  <span key={feature.id} className={`${Z8_SURFACE} rounded-full px-2.5 py-1 text-[10px] font-bold text-white/70`}>
                     {meta?.label ?? feature.id}
-                  </VEBadge>
+                  </span>
                 );
               })}
             </div>
-          </VECard>
+          </section>
         </div>
 
-        <VECard className="p-5">
+        <section className={`${Z8_PANEL_PREMIUM} p-5`}>
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <VEBadge tone="neutral">Sidebar order</VEBadge>
+              <span className={`${Z8_LABEL} text-white/40`}>Sidebar order</span>
               <h2 className="mt-3 text-xl font-black text-white">Reorder and toggle features</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-400">
+              <p className="mt-1 text-sm leading-6 text-white/50">
                 Locked tools stay visible because they protect navigation and customer trust.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 divide-y divide-slate-800/70">
+          <div className="mt-5 divide-y divide-white/10">
             {sortedFeatures.map((feature, index) => {
               const meta = FEATURE_META[feature.id];
               const Icon = meta?.icon ?? LayoutDashboard;
@@ -441,7 +452,7 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                       type="button"
                       onClick={() => handleMove(feature.id, "up")}
                       disabled={isFirst || (feature.locked && prevLocked)}
-                      className="rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-slate-500 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-25"
+                      className={`${Z8_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
                       aria-label={`Move ${meta?.label ?? feature.id} up`}
                     >
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -450,14 +461,14 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                       type="button"
                       onClick={() => handleMove(feature.id, "down")}
                       disabled={isLast || (feature.locked && nextLocked)}
-                      className="rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-slate-500 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-25"
+                      className={`${Z8_SURFACE} rounded-lg p-1 text-white/45 transition hover:text-vouch-cyan disabled:cursor-not-allowed disabled:opacity-25`}
                       aria-label={`Move ${meta?.label ?? feature.id} down`}
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/10 text-cyan-300">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-vouch-cyan/15 bg-vouch-cyan/10 text-vouch-cyan">
                     <Icon className="h-4 w-4" />
                   </div>
 
@@ -467,13 +478,13 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                         {meta?.label ?? feature.id}
                       </span>
                       {feature.locked && (
-                        <VEBadge tone="neutral" className="gap-1">
+                        <span className={`inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5 ${Z8_LABEL} text-white/50`}>
                           <Lock className="h-2.5 w-2.5" />
                           Always visible
-                        </VEBadge>
+                        </span>
                       )}
                     </div>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                    <p className="mt-1 text-xs leading-5 text-white/45">
                       {meta?.description ?? "Custom VouchEdge feature."}
                     </p>
                   </div>
@@ -484,14 +495,14 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
                     disabled={feature.locked}
                     className={`relative h-6 w-11 shrink-0 rounded-full border transition ${
                       feature.enabled
-                        ? "border-cyan-300/40 bg-cyan-400/25"
-                        : "border-slate-700 bg-slate-800/50"
+                        ? "border-vouch-cyan/40 bg-vouch-cyan/25"
+                        : "border-white/15 bg-black/40"
                     } ${feature.locked ? "cursor-not-allowed opacity-30" : "cursor-pointer"}`}
                     aria-label={`Toggle ${meta?.label ?? feature.id}`}
                   >
                     <span
                       className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition ${
-                        feature.enabled ? "left-5.5 bg-cyan-300" : "left-0.5 bg-slate-500"
+                        feature.enabled ? "left-5.5 bg-vouch-cyan" : "left-0.5 bg-white/40"
                       }`}
                     />
                   </button>
@@ -499,30 +510,30 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
               );
             })}
           </div>
-        </VECard>
+        </section>
 
-        <VECard tone="soft" className="p-5">
-          <VEBadge tone={layout.mode === "pro" ? "success" : "info"}>
+        <section className={`${Z8_PANEL_PREMIUM} border-vouch-cyan/15 bg-vouch-cyan/5 p-5`}>
+          <span className={`${Z8_LABEL} ${layout.mode === "pro" ? 'text-vouch-emerald' : 'text-vouch-cyan'}`}>
             {layout.mode === "pro" ? "Pro mode preview" : "Beginner mode preview"}
-          </VEBadge>
+          </span>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {previewItems.map((item) => (
-              <div key={item} className="flex items-start gap-2 text-xs leading-5 text-slate-400">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+              <div key={item} className="flex items-start gap-2 text-xs leading-5 text-white/50">
+                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-vouch-emerald" />
                 {item}
               </div>
             ))}
           </div>
-        </VECard>
+        </section>
 
         {toast && (
-          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-cyan-300/30 bg-slate-950/95 px-4 py-2.5 text-xs font-black text-white shadow-2xl shadow-black/30">
+          <div className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-vouch-cyan/30 bg-black/90 px-4 py-2.5 text-xs font-black text-white shadow-2xl shadow-black/30`}>
             {toast}
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 

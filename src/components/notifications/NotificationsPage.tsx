@@ -7,6 +7,17 @@ import {
   markAllRead,
   type AppNotification,
 } from '../../lib/appNotifications';
+import {
+  Z8_DISPLAY,
+  Z8_LABEL,
+  Z8_PAGE,
+  Z8_PAGE_PAD_X,
+  Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+  Z8_SURFACE,
+} from '../../theme/z8Tokens';
 import { VEButton, VECard, VEBadge, VEState } from '../ui/ve';
 
 type NotificationsPageProps = {
@@ -60,7 +71,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
         key={notification.id}
         tone={notification.read ? 'soft' : 'elevated'}
         interactive={Boolean(notification.section)}
-        className="group w-full p-4 text-left"
+        className={`group w-full p-4 text-left ${Z8_SURFACE}`}
         role={notification.section ? 'button' : undefined}
         tabIndex={notification.section ? 0 : undefined}
         onClick={() => notification.section && onSectionChange(notification.section)}
@@ -73,7 +84,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
         }}
       >
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/10 text-cyan-200">
+          <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-vouch-cyan/20 bg-vouch-cyan/10 text-vouch-cyan`}>
             <Icon className="h-4 w-4" />
           </div>
 
@@ -107,28 +118,30 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
   };
 
   return (
-    <div className="ve-page-shell min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
-        <VECard tone="elevated" className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-end">
-          <div>
-            <VEBadge tone="info" className="gap-2">
+    <main className={`${Z8_PAGE} min-h-screen ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <div className="mx-auto max-w-4xl space-y-6">
+        <header className={`${Z8_PANEL_PREMIUM} flex flex-col justify-between gap-4 rounded-2xl p-5 sm:flex-row sm:items-end`}>
+          <div className={Z8_SECTION_HEADER}>
+            <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 text-vouch-cyan`}>
               <Bell className="h-3.5 w-3.5" />
               Notification Center
-            </VEBadge>
+            </span>
 
-            <h1 className="mt-4 text-3xl font-black tracking-[-0.05em] text-white sm:text-4xl">
+            <h1 className={`${Z8_DISPLAY} mt-3`}>
               VouchEdge Alerts
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            <p className="max-w-2xl text-sm leading-6 text-white/45">
               Track saved parlays, grading events, AI signals, and account updates from one native inbox.
             </p>
+            <div className="z8-accent-line mt-2 w-full max-w-xs" />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <VEBadge tone={unread > 0 ? 'warning' : 'neutral'}>
-              {unread} unread
-            </VEBadge>
+            <span className={`${Z8_STAT_CHIP} ${unread > 0 ? 'border-vouch-amber/30 text-vouch-amber' : ''}`}>
+              <span className={`${Z8_LABEL} block text-white/40`}>Unread</span>
+              <span className="z8-tabular-nums text-lg font-bold text-white">{unread}</span>
+            </span>
 
             {list.length > 0 && (
               <VEButton
@@ -142,7 +155,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
               </VEButton>
             )}
           </div>
-        </VECard>
+        </header>
 
         {list.length === 0 ? (
           <div className="mt-8">
@@ -157,7 +170,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           <div className="mt-6 space-y-3">{list.map(renderNotification)}</div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 
