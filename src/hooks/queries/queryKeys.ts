@@ -8,6 +8,7 @@ export const queryKeys = {
   authMe: () => ['authMe'] as const,
   myParlays: () => ['myParlays'] as const,
   myVouches: () => ['myVouches'] as const,
+  feed: () => ['feed'] as const,
   hrFeedToday: () => ['hrFeedToday'] as const,
   appNotifications: () => ['appNotifications'] as const,
 };

@@ -101,7 +101,10 @@ export const globalLimiter = rateLimit({
   limit: 200,
   keyGenerator,
   handler,
-  skip: (req) => req.path === "/api/health" || req.path === "/api/health/backend",
+  skip: (req) =>
+    req.path === "/api/health"
+    || req.path === "/api/health/backend"
+    || req.path === "/api/health/metrics",
 });
 
 export const aiLimiter = rateLimit({

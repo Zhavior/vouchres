@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { feedRoutes } from "../server/routes/feedRoutes";
 
 vi.mock("../server/services/feed/composerOptionsService", () => ({
@@ -15,6 +16,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use("/api", feedRoutes);
   app.use("/api", apiErrorHandler);
 
@@ -55,6 +57,10 @@ describe("feed routes", () => {
       sport: "MLB",
       date: "2026-07-08",
       games: [],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 

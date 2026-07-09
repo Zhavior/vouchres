@@ -1,5 +1,9 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { CreatorProofProfile, FeedPost, Leg, Parlay, Vouch } from '../types';
+import { useFeedStore, selectPosts } from '../stores/feedStore';
+import { useSlipsStore, selectSavedSlips } from '../stores/slipsStore';
+import { useVouchesStore, selectSavedVouches } from '../stores/vouchesStore';
+import { useProfileStore, selectProfile } from '../stores/profileStore';
 
 export type AppShellState = {
   posts: FeedPost[];
@@ -31,4 +35,21 @@ export function useAppShell(): AppShellState {
     throw new Error('useAppShell must be used within AppShellProvider');
   }
   return ctx;
+}
+
+/** Selector hooks — subscribe to domain stores without full AppShell re-renders. */
+export function useAppPosts(): FeedPost[] {
+  return useFeedStore(selectPosts);
+}
+
+export function useAppSavedSlips(): Parlay[] {
+  return useSlipsStore(selectSavedSlips);
+}
+
+export function useAppSavedVouches(): Vouch[] {
+  return useVouchesStore(selectSavedVouches);
+}
+
+export function useAppProfile(): CreatorProofProfile {
+  return useProfileStore(selectProfile);
 }

@@ -1,8 +1,15 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useRef, useCallback, useMemo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import FeedTabs from './FeedTabs';
 import FeedComposer from './FeedComposer';
 import FeedPostCard from './FeedPostCard';
 import AdBanner from '../../components/AdBanner';
+import { useFeedScrollRoot } from '../../context/FeedScrollContext';
+import {
+  FEED_BATCH_SIZE,
+  nextVisiblePostCount,
+  shouldPrefetchServerFeedPage,
+} from './feedVirtualizerConfig';
 
 // Lazy: pulls in cytoscape (~300KB+) — keep it out of this already-lazy
 // page's initial chunk too, since HomeFeedPage itself can render before
@@ -46,6 +53,9 @@ interface HomeFeedPageProps {
   onDeletePost?: (postId: string) => void;
   profile?: CreatorProofProfile;
   onSectionChange?: (section: string) => void;
+  hasMoreServer?: boolean;
+  isFetchingServer?: boolean;
+  onLoadMoreServer?: () => void;
 }
 
 function HomeFeedPage({
@@ -62,6 +72,9 @@ function HomeFeedPage({
   onDeletePost,
   profile,
   onSectionChange,
+  hasMoreServer = false,
+  isFetchingServer = false,
+  onLoadMoreServer,
 }: HomeFeedPageProps) {
   const [activeTab, setActiveTab] = useState('for-you');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -101,12 +114,15 @@ function HomeFeedPage({
     };
   }, []);
 
-  const FEED_BATCH_SIZE = 8;
-  const feedSentinelRef = React.useRef<HTMLDivElement | null>(null);
-  const [visiblePostCount, setVisiblePostCount] = React.useState(FEED_BATCH_SIZE);
-  const [isLoadingMorePosts, setIsLoadingMorePosts] = React.useState(false);
+  const feedScrollRoot = useFeedScrollRoot();
+  const feedListRef = useRef<HTMLDivElement | null>(null);
+  const feedSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [visiblePostCount, setVisiblePostCount] = useState(FEED_BATCH_SIZE);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
 
-  const getPostAlgorithmScore = (post: FeedPost, index: number) => {
+  const getFeedScrollElement = useCallback(() => feedScrollRoot?.current ?? null, [feedScrollRoot]);
+
+  const getPostAlgorithmScore = useCallback((post: FeedPost, index: number) => {
     const createdAt = new Date(post.timestamp).getTime();
     const ageHours = Number.isFinite(createdAt)
       ? Math.max(0, (Date.now() - createdAt) / 36e5)
@@ -153,13 +169,11 @@ function HomeFeedPage({
       followingScore +
       smallRandomizer
     );
-  };
+  }, [followingList, selectedSport]);
 
-  // Handle Filtering based on Active Tab
-  const getFilteredPosts = () => {
+  const filteredPosts = useMemo(() => {
     let list = [...posts];
 
-    // Search query match helper
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -184,7 +198,6 @@ function HomeFeedPage({
         finalTabList = list;
         break;
       case 'following':
-        // Filter by authors in the following list only!
         finalTabList = list.filter((p) => followingList.includes(p.username));
         break;
       case 'mlb':
@@ -204,7 +217,6 @@ function HomeFeedPage({
         break;
     }
 
-    // Apply Premium Sharp Pro-Only Mode filter
     if (proOnlyMode) {
       finalTabList = finalTabList.filter(
         (p) => p.isVerified || p.sourceBadge === 'AI Pick' || p.sourceBadge === 'Partner Slips' || p.vouchesCount >= 3 || p.username.includes('model') || p.username === 'sharp_props'
@@ -212,31 +224,53 @@ function HomeFeedPage({
     }
 
     return finalTabList;
-  };
+  }, [posts, searchQuery, activeTab, selectedSport, selectedPostType, proOnlyMode, followingList]);
 
-  const filteredPosts = getFilteredPosts();
+  const algorithmPosts = useMemo(() => {
+    const chronological = [...filteredPosts].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 
-  // Sorting: user created posts appear first (descending timestamp or index)
-  // For You becomes algorithmic; other tabs stay closer to chronological.
-  const sortedPosts = [...filteredPosts].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+    if (activeTab !== 'for-you') {
+      return chronological;
+    }
 
-  const algorithmPosts =
-    activeTab === 'for-you'
-      ? [...sortedPosts].sort((a, b) => getPostAlgorithmScore(b, 0) - getPostAlgorithmScore(a, 0))
-      : sortedPosts;
+    const scored = chronological.map((post, index) => ({
+      post,
+      score: getPostAlgorithmScore(post, index),
+    }));
+
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.post.id.localeCompare(b.post.id);
+    });
+
+    return scored.map((entry) => entry.post);
+  }, [filteredPosts, activeTab, getPostAlgorithmScore]);
 
   const visiblePosts = algorithmPosts.slice(0, visiblePostCount);
-  const hasMorePosts = visiblePostCount < algorithmPosts.length;
+  const hasMorePosts = visiblePostCount < algorithmPosts.length || hasMoreServer;
+
+  const rowVirtualizer = useVirtualizer({
+    count: visiblePosts.length,
+    getScrollElement: getFeedScrollElement,
+    estimateSize: () => 320,
+    overscan: 4,
+  });
 
   React.useEffect(() => {
     setVisiblePostCount(FEED_BATCH_SIZE);
   }, [activeTab, selectedSport, selectedPostType, searchQuery, proOnlyMode, posts.length]);
 
   React.useEffect(() => {
+    rowVirtualizer.measure();
+  }, [activeTab, selectedSport, selectedPostType, searchQuery, proOnlyMode, visiblePosts.length]);
+
+  React.useEffect(() => {
     const node = feedSentinelRef.current;
     if (!node || !hasMorePosts || isLoadingMorePosts) return;
+
+    const scrollRoot = getFeedScrollElement();
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -245,15 +279,15 @@ function HomeFeedPage({
 
         setIsLoadingMorePosts(true);
         window.setTimeout(() => {
-          setVisiblePostCount((count) => Math.min(count + FEED_BATCH_SIZE, algorithmPosts.length));
+          setVisiblePostCount((count) => nextVisiblePostCount(count, algorithmPosts.length));
           setIsLoadingMorePosts(false);
         }, 220);
       },
       {
-        root: null,
+        root: scrollRoot,
         rootMargin: '720px 0px 900px 0px',
         threshold: 0.01,
-      }
+      },
     );
 
     observer.observe(node);
@@ -261,7 +295,25 @@ function HomeFeedPage({
     return () => {
       observer.disconnect();
     };
-  }, [hasMorePosts, isLoadingMorePosts, algorithmPosts.length]);
+  }, [algorithmPosts.length, feedScrollRoot, hasMorePosts, isLoadingMorePosts, visiblePostCount]);
+
+  React.useEffect(() => {
+    if (!shouldPrefetchServerFeedPage({
+      visiblePostCount,
+      loadedPostCount: algorithmPosts.length,
+      hasMoreServer,
+      isFetchingServer,
+    })) {
+      return;
+    }
+    onLoadMoreServer?.();
+  }, [
+    algorithmPosts.length,
+    hasMoreServer,
+    isFetchingServer,
+    onLoadMoreServer,
+    visiblePostCount,
+  ]);
 
   // Hand off to the real App-level handler (builds the post from the actual
   // signed-in profile and persists via syncPosts -> localStorage), then jump
@@ -431,22 +483,38 @@ function HomeFeedPage({
             body={`No active VouchEdge plays match your "${activeTab}" filter or search query. Create a post above to populate the feed!`}
           />
         ) : (
-          /* List of Posts — flat X-style stream */
-          <div className="divide-y divide-white/[0.08]" id="posts-feed-stream-container">
-            {visiblePosts.map((post) => (
-              <FeedPostCard
-                key={post.id}
-                post={post}
-                onLike={onLikePost}
-                onVouchAction={onVouchPost}
-                onRepost={onRepostPost}
-                onSaveVouch={onSaveVouch}
-                savedVouchIds={savedVouchIds}
-                onAddComment={onAddComment}
-                onDeletePost={onDeletePost}
-                onPostCreated={onPostCreated}
-              />
-            ))}
+          /* List of Posts — virtualized X-style stream */
+          <div
+            ref={feedListRef}
+            className="relative border-t border-white/[0.08]"
+            id="posts-feed-stream-container"
+            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const post = visiblePosts[virtualRow.index];
+              if (!post) return null;
+              return (
+                <div
+                  key={post.id}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  className="absolute left-0 top-0 w-full border-b border-white/[0.08]"
+                  style={{ transform: `translateY(${virtualRow.start}px)` }}
+                >
+                  <FeedPostCard
+                    post={post}
+                    onLike={onLikePost}
+                    onVouchAction={onVouchPost}
+                    onRepost={onRepostPost}
+                    onSaveVouch={onSaveVouch}
+                    savedVouchIds={savedVouchIds}
+                    onAddComment={onAddComment}
+                    onDeletePost={onDeletePost}
+                    onPostCreated={onPostCreated}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
         {/* Infinite Scroll Loader */}

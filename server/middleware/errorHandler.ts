@@ -57,7 +57,7 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
   });
 
   if (status >= 500) {
-    if (!isSentryEnabled()) {
+    if (isSentryEnabled()) {
       captureException(normalized.cause ?? normalized, {
         requestId,
         method: req.method,

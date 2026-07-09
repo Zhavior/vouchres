@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, requireStaff } from "../middleware/auth";
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
@@ -10,6 +11,7 @@ import { createPick, getLedger, gradePick } from "../services/persistence/pickSe
 import { joinWaitlist } from "../services/persistence/betaService";
 import { BetaSignupSchema, GradePickSchema, LegalConfirmSchema, type BetaSignupInput, type GradePickInput, type LegalConfirmInput } from "../validators/coreSchemas";
 import { CreatePickSchema, ListPicksQuerySchema, type CreatePickInput, type ListPicksQuery } from "../validators/pickSchemas";
+import type { RequestWithContext } from "../middleware/requestContext";
 
 export const coreRoutes = Router();
 
@@ -17,15 +19,14 @@ coreRoutes.post(
   "/beta/signup",
   betaSignupLimiter,
   validate({ body: BetaSignupSchema }),
-  asyncHandler(async (req, res: Response) => {
+  asyncHandler(async (req: RequestWithContext, res: Response) => {
     const { email } = req.body as BetaSignupInput;
     const signup = await joinWaitlist(email);
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       state: signup.state,
       message:
         "You're on the waitlist. We'll email you when your invite is ready.",
-    });
+    }));
   })
 );
 
@@ -51,7 +52,7 @@ coreRoutes.post(
       .eq("id", req.user!.id);
 
     if (error) throw error;
-    return res.json({ ok: true });
+    return res.json(apiOkFlat(req, {}));
   })
 );
 
@@ -97,7 +98,7 @@ coreRoutes.post(
       await incrementQuota(req.user!.id, q.key, q.day);
     }
 
-    return res.status(201).json({ ok: true, pick });
+    return res.status(201).json(apiOkFlat(req, { pick }));
   })
 );
 
@@ -129,7 +130,7 @@ coreRoutes.get(
       limit: query.limit,
       offset: query.offset,
     });
-    return res.json({ ok: true, picks, total, limit: query.limit, offset: query.offset });
+    return res.json(apiOkFlat(req, { picks, total, limit: query.limit, offset: query.offset }));
   })
 );
 
@@ -162,6 +163,6 @@ coreRoutes.post(
       });
     }
 
-    return res.json({ ok: true });
+    return res.json(apiOkFlat(req, {}));
   })
 );

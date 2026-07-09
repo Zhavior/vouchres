@@ -1,6 +1,7 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { asyncHandler } from "../../lib/asyncHandler";
+import { apiOkFlat } from "../../lib/apiResponse";
 import { assertCronAuthorized } from "../../lib/cronAuth";
 import { AppError } from "../../errors/AppError";
 import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators";
@@ -30,7 +31,7 @@ import {
  */
 export const parlayCronRoutes = Router();
 
-parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Request, res: Response) => {
+parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
   const date = optionalYmd(req.query.date);
@@ -41,14 +42,13 @@ parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Requ
   });
   const result = await applyLiveHrParlayMatches(date);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     mode: "cron_live_hr_sync",
     date: date ?? null,
     repair,
     ...result,
     checkedAt: new Date().toISOString(),
-  });
+  }));
 }));
 
 parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -75,8 +75,7 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
     errorCount: errors.length,
   }));
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     mode: "cron_grade_due",
     gradedParlays: settled.length,
     gradedLegs: result.graded.length,
@@ -85,10 +84,10 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
     warnings: summary.warnings,
     errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
     checkedAt: new Date().toISOString(),
-  });
+  }));
 }));
 
-parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request, res: Response) => {
+parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
   const supabaseAdmin = await getSupabaseAdmin();
 
@@ -135,8 +134,7 @@ parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request
     .filter(([key]) => key !== "pendingLegs")
     .reduce((sum, [, value]) => sum + Math.max(0, Number(value || 0)), 0);
 
-  return res.json({
-    ok: blockingIssueCount === 0,
+  const envelope = apiOkFlat(req, {
     scanner: "parlay_integrity_nose",
     checkedAt: new Date().toISOString(),
     issues,
@@ -148,9 +146,14 @@ parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request
         ? "Parlay grading identity looks clean."
         : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
   });
+
+  return res.json({
+    ...envelope,
+    ok: blockingIssueCount === 0,
+  });
 }));
 
-parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: Request, res: Response) => {
+parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
   const dryRun = boolQuery(req.query.dryRun, true);
@@ -161,14 +164,13 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
     externalProvider: "repair_identity",
   });
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     ...result,
     checkedAt: new Date().toISOString(),
-  });
+  }));
 }));
 
-parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: Request, res: Response) => {
+parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
   const dryRun = boolQuery(req.query.dryRun, true);
@@ -270,8 +272,7 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     });
   }
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     dryRun,
     scanned: picks?.length ?? 0,
     quarantinedCount: quarantined.length,
@@ -279,5 +280,5 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     quarantined: quarantined.slice(0, 20),
     skipped: skipped.slice(0, 20),
     checkedAt: new Date().toISOString(),
-  });
+  }));
 }));

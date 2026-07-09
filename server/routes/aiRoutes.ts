@@ -1,7 +1,9 @@
 /** AI explanation / daily report / learning note routes (Gemini backend-only). */
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { generateAiChatResponse } from "../services/ai/chatService";
 import { generateAiImage } from "../services/ai/imageGenerationService";
 import { generateAiTheme } from "../services/ai/themeGenerationService";
@@ -33,9 +35,9 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     validate({ body: AiChatRequestSchema }),
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateAiChatResponse(req.body as AiChatInput);
-      return res.json({ ok: true, ...result });
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 
@@ -44,9 +46,9 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     validate({ body: AiImageRequestSchema }),
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateAiImage(req.body as AiImageInput);
-      return res.json({ ok: true, ...result });
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 
@@ -55,9 +57,9 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     validate({ body: AiThemeRequestSchema }),
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateAiTheme(req.body as AiThemeInput);
-      return res.json({ ok: true, ...result });
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 
@@ -66,13 +68,13 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     validate({ body: PlayerResearchRequestSchema }),
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generatePlayerResearch(req.body as PlayerResearchInput);
-      return res.json({ ok: true, ...result });
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 
-  app.post("/api/ai/explain-pick", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.post("/api/ai/explain-pick", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const pick = req.body?.pick as PickCandidate;
     if (!pick) {
       throw new AppError({
@@ -82,14 +84,16 @@ export function registerAiRoutes(app: Express): void {
         details: [{ path: "pick", message: "Required." }],
       });
     }
-    res.json({ ok: true, ...(await explainPick(pick)) });
+    const result = await explainPick(pick);
+    res.json(apiOkFlat(req, result as Record<string, unknown>));
   }));
 
-  app.post("/api/ai/daily-report", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
-    res.json({ ok: true, ...(await getDailyReportNarrative(req.body?.date)) });
+  app.post("/api/ai/daily-report", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const result = await getDailyReportNarrative(req.body?.date);
+    res.json(apiOkFlat(req, result as Record<string, unknown>));
   }));
 
-  app.post("/api/ai/learning-note", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.post("/api/ai/learning-note", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
     if (!pickId || !result) {
       throw new AppError({
@@ -102,10 +106,8 @@ export function registerAiRoutes(app: Express): void {
         ],
       });
     }
-    res.json({
-      ok: true,
-      ...(await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened })),
-    });
+    const note = await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened });
+    res.json(apiOkFlat(req, note as Record<string, unknown>));
   }));
 
   app.post(
@@ -113,10 +115,10 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     validate({ body: ParlayEdgeRequestSchema }),
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateParlayEdgeReport(req.body as ParlayEdgeInput);
       assertParlayEdgeReportIsSafe(result.report);
-      return res.json({ ok: true, ...result });
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 }

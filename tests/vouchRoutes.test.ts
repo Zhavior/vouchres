@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { vouchRoutes } from "../server/routes/vouchRoutes";
 
 vi.mock("../server/middleware/auth", () => ({
@@ -28,6 +29,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api", vouchRoutes);
   app.use("/api", apiErrorHandler);
@@ -56,7 +58,14 @@ describe("vouch routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, vouches: [] });
+    expect(body).toMatchObject({
+      ok: true,
+      vouches: [],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 
   it("returns unified not_found envelope when hide misses", async () => {
@@ -99,6 +108,10 @@ describe("vouch routes", () => {
       ok: true,
       id: "vouch_1",
       market: "HR",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
     expect(listVouchesForUser).not.toHaveBeenCalled();
   });

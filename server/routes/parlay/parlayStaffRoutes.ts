@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { asyncHandler } from "../../lib/asyncHandler";
+import { apiOkFlat } from "../../lib/apiResponse";
 import { boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireStaff } from "../../middleware/auth";
@@ -13,7 +14,7 @@ import { repairLegacyParlayIdentityForSync } from "./parlayRepairHelpers";
 
 export const parlayStaffRoutes = Router();
 
-parlayStaffRoutes.post("/parlays/live-hr-sync", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayStaffRoutes.post("/parlays/live-hr-sync", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
   const date = optionalYmd(rawDate);
   const repair = await repairLegacyParlayIdentityForSync({
@@ -23,31 +24,29 @@ parlayStaffRoutes.post("/parlays/live-hr-sync", requireAuth, requireStaff, gradi
   });
   const result = await applyLiveHrParlayMatches(date);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     mode: "live_hr_sync",
     date: date ?? null,
     repair,
     ...result,
-  });
+  }));
 }));
 
-parlayStaffRoutes.post("/parlays/live-hr-preview", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayStaffRoutes.post("/parlays/live-hr-preview", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const rawDate = (req.body as { date?: string } | undefined)?.date ?? req.query.date;
   const date = optionalYmd(rawDate);
   const matches = await previewLiveHrParlayMatches(date);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     mode: "preview_only",
     date: date ?? null,
     matchCount: matches.length,
     matches,
-  });
+  }));
 }));
 
 /** Staff-only: systemwide grading mutates every user's pending picks. Cron uses /cron/*. */
-parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days;
   const days = boundedInt(rawDays, "days", 2, 1, 7);
   const result = await gradePendingPicks({ days });
@@ -90,8 +89,7 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
     }));
   }
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     mode: "grade_due",
     gradedParlays: settled.length,
     gradedLegs: result.graded.length,
@@ -100,5 +98,5 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
     warnings: summary.warnings,
     errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
     checkedAt: new Date().toISOString(),
-  });
+  }));
 }));

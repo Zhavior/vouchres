@@ -70,6 +70,38 @@ describe("API route smoke envelopes", () => {
     expect(response.body.error.requestId).toEqual(expect.any(String));
   });
 
+  it("exposes scrape-friendly route metrics snapshot", async () => {
+    await requestJson("/api/health");
+    const response = await requestJson("/api/health/metrics");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      ok: true,
+      service: "vouchedge-backend",
+      schema: "route_metrics_v1",
+      metrics: {
+        startedAt: expect.any(String),
+        uptimeMs: expect.any(Number),
+        totals: expect.objectContaining({
+          requests: expect.any(Number),
+        }),
+        latencyMs: expect.objectContaining({
+          avg: expect.any(Number),
+          p95: expect.any(Number),
+          max: expect.any(Number),
+        }),
+        statusClasses: expect.objectContaining({
+          "2xx": expect.any(Number),
+          "4xx": expect.any(Number),
+          "5xx": expect.any(Number),
+        }),
+        routes: expect.any(Array),
+        recent: expect.any(Array),
+      },
+    });
+    expect(response.body.metrics.totals.requests).toBeGreaterThan(0);
+  });
+
   it("exposes backend production health with route metrics", async () => {
     const coreHealth = await requestJson("/api/system/core-health");
     expect(coreHealth.status).toBe(200);

@@ -4,6 +4,7 @@ import { Home, Plus, Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
 import { useMyParlays } from './hooks/queries/useMyParlays';
 import { useMyVouches } from './hooks/queries/useMyVouches';
+import { useFeedQuery, flattenFeedPages } from './hooks/queries/useFeedQuery';
 import { fetchAuthMe } from './hooks/queries/useAuthMe';
 import { queryClient } from './lib/queryClient';
 import { queryKeys } from './hooks/queries/queryKeys';
@@ -13,17 +14,30 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 import MainViewRouter from './components/routing/MainViewRouter';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
-import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
+import { INITIAL_PROFILE } from './data/mockData';
 import { resolveMarket } from './sports/markets';
 import { isLive } from './lib/parlayLifecycle';
-import { canDeleteFeedPost } from './lib/postDeletePolicy';
 import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
 import { decimalToAmerican, decimalLabel } from './lib/odds';
 import { normalizePlayerId } from './lib/mlbHeadshot';
-import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from './lib/parlays/parlayBridge';
+import { type CanonicalParlaySlip } from './lib/parlays/parlayBridge';
 import { useParlayCommandStore } from './stores/parlayCommandStore';
+import { useFeedStore, selectPosts, selectSyncPosts } from './stores/feedStore';
+import { useSlipsStore, selectSavedSlips, selectSyncSlips } from './stores/slipsStore';
+import { useProfileStore, selectProfile, selectSyncProfile } from './stores/profileStore';
+import { useVouchesStore, selectSavedVouches, selectSyncVouches } from './stores/vouchesStore';
+import {
+  handleSaveVouch as saveVouchAction,
+} from './domain/vouchActions';
+import {
+  handleSaveParlaySlip as saveParlaySlipAction,
+  pushParlayToBackend,
+  pushAiParlaysToBackend,
+} from './domain/parlayActions';
+import { useAppCommandStore } from './stores/appCommandStore';
+import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
@@ -444,10 +458,6 @@ export default function App() {
   const [, setGradingLastChecked] = useState<Date | null>(null);
   const backendParlaySyncRef = useRef(false);
   const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
-  const savedSlipsRef = useRef<Parlay[]>([]);
-  const savedVouchesRef = useRef<Vouch[]>([]);
-  const postsRef = useRef<FeedPost[]>([]);
-  const profileRef = useRef<CreatorProofProfile | null>(null);
   const [isPendingRoute, startTransition] = useTransition();
 
   // The Edge Island — quick-launch popup dock, opened from the floating
@@ -508,6 +518,7 @@ export default function App() {
     } catch {
       // ignore storage failures
     }
+    void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
     navigateSection('welcome');
   }, [navigateSection]);
 
@@ -550,11 +561,15 @@ export default function App() {
     };
   }, []);
 
-  // Core synchronized states
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [savedSlips, setSavedSlips] = useState<Parlay[]>([]);
-  const [savedVouches, setSavedVouches] = useState<Vouch[]>([]);
-  const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
+  // Core synchronized states (posts/slips/profile live in domain stores)
+  const posts = useFeedStore(selectPosts);
+  const syncPosts = useFeedStore(selectSyncPosts);
+  const savedSlips = useSlipsStore(selectSavedSlips);
+  const syncSlips = useSlipsStore(selectSyncSlips);
+  const profile = useProfileStore(selectProfile);
+  const syncProfile = useProfileStore(selectSyncProfile);
+  const savedVouches = useVouchesStore(selectSavedVouches);
+  const syncVouches = useVouchesStore(selectSyncVouches);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
   const activeLegsRef = useRef<Leg[]>([]);
   const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection);
@@ -562,6 +577,11 @@ export default function App() {
   const liveGames = liveGamesPayload?.games ?? [];
   const { data: backendParlayRows } = useMyParlays();
   const { data: backendVouchRows } = useMyVouches();
+  const { data: backendFeedPages } = useFeedQuery();
+  const backendFeedPosts = useMemo(
+    () => flattenFeedPages(backendFeedPages),
+    [backendFeedPages],
+  );
   const canSeeThemeStore = canAccessThemeStore(profile);
 
   useEffect(() => {
@@ -570,48 +590,12 @@ export default function App() {
     }
   }, [activeSection, canSeeThemeStore, commitSection]);
 
-  // Initialize from LocalStorage
+  // Initialize domain stores from LocalStorage
   useEffect(() => {
-    try {
-      const storedPosts = localStorage.getItem('vouchedge_posts');
-      if (storedPosts) {
-        setPosts(JSON.parse(storedPosts));
-      } else {
-        setPosts(INITIAL_POSTS);
-        localStorage.setItem('vouchedge_posts', JSON.stringify(INITIAL_POSTS));
-      }
-
-      const storedSlips = localStorage.getItem('vouchedge_slips');
-      if (storedSlips) {
-        setSavedSlips(JSON.parse(storedSlips));
-      } else {
-        setSavedSlips([]);
-      }
-
-      const storedVouches = localStorage.getItem('vouchedge_vouches');
-      if (storedVouches) {
-        setSavedVouches(JSON.parse(storedVouches));
-      } else {
-        // Pre-extract seed vouches to board for dynamic engagement
-        const seeds = INITIAL_POSTS.filter(p => p.vouch).map(p => p.vouch!);
-        setSavedVouches(seeds);
-        localStorage.setItem('vouchedge_vouches', JSON.stringify(seeds));
-      }
-
-      const storedProfile = localStorage.getItem('vouchedge_profile');
-      if (storedProfile) {
-        const loaded = JSON.parse(storedProfile);
-        if (loaded.subscriptionTier !== 'SELLER_PRO') loaded.subscriptionTier = 'SELLER_PRO';
-        setProfile(loaded);
-      } else {
-        setProfile(INITIAL_PROFILE);
-        localStorage.setItem('vouchedge_profile', JSON.stringify(INITIAL_PROFILE));
-      }
-    } catch (e) {
-      console.error('LocalStorage load failed, using fallbacks', e);
-      setPosts(INITIAL_POSTS);
-      setProfile(INITIAL_PROFILE);
-    }
+    useFeedStore.getState().hydrateFromStorage();
+    useSlipsStore.getState().hydrateFromStorage();
+    useProfileStore.getState().hydrateFromStorage();
+    useVouchesStore.getState().hydrateFromStorage();
   }, []);
 
   // Merge backend parlays from React Query with local-only slips.
@@ -626,7 +610,7 @@ export default function App() {
         .map(String)
     );
 
-    const localSlips = savedSlipsRef.current;
+    const localSlips = useSlipsStore.getState().savedSlips;
     const localOnly = localSlips.filter((p) => {
       if (!p.backendPickId) return true;
       return !backendPickIds.has(String(p.backendPickId));
@@ -652,7 +636,7 @@ export default function App() {
       backendVouches.map((v) => v.backendVouchId || v.id).filter(Boolean).map(String)
     );
 
-    const localOnly = savedVouchesRef.current.filter((v) => {
+    const localOnly = useVouchesStore.getState().savedVouches.filter((v) => {
       if (!v.backendVouchId) return true;
       return !backendVouchIds.has(String(v.backendVouchId));
     });
@@ -666,30 +650,36 @@ export default function App() {
     });
 
     syncVouches(deduped);
-  }, [backendVouchRows]);
+  }, [backendVouchRows, syncVouches]);
 
-  // Sync state modifications helper
-  function syncPosts(newPosts: FeedPost[]) {
-    setPosts(newPosts);
-    localStorage.setItem('vouchedge_posts', JSON.stringify(newPosts));
-  }
+  // Merge backend feed posts with optimistic local-only writes.
+  useEffect(() => {
+    if (!backendFeedPosts?.length) return;
 
-  function syncSlips(newSlips: Parlay[]) {
-    savedSlipsRef.current = newSlips;
-    setSavedSlips(newSlips);
-    localStorage.setItem('vouchedge_slips', JSON.stringify(newSlips));
-  }
+    const backendIds = new Set(
+      backendFeedPosts
+        .map((post) => post.backendPostId || post.id)
+        .filter(Boolean)
+        .map(String),
+    );
 
-  function syncVouches(newVouches: Vouch[]) {
-    setSavedVouches(newVouches);
-    localStorage.setItem('vouchedge_vouches', JSON.stringify(newVouches));
-  }
+    const localPosts = useFeedStore.getState().posts;
+    const localOnly = localPosts.filter((post) => {
+      if (!post.backendPostId) return true;
+      return !backendIds.has(String(post.backendPostId));
+    });
 
-  function syncProfile(newProfile: CreatorProofProfile) {
-    profileRef.current = newProfile;
-    setProfile(newProfile);
-    localStorage.setItem('vouchedge_profile', JSON.stringify(newProfile));
-  }
+    const merged = [...backendFeedPosts, ...localOnly];
+    const seen = new Set<string>();
+    const deduped = merged.filter((post) => {
+      const key = post.backendPostId ? String(post.backendPostId) : post.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    syncPosts(deduped);
+  }, [backendFeedPosts, syncPosts]);
 
   const fetchBackendProfile = async (): Promise<BackendProfile | null> => {
     if (!isSupabaseConfigured) return null;
@@ -775,24 +765,6 @@ export default function App() {
     }
   };
 
-  // Keep refs fresh for the mount-once lifecycle heartbeat (avoids stale closures
-  // and prevents the interval from re-subscribing on every state change).
-  useEffect(() => {
-    savedSlipsRef.current = savedSlips;
-  }, [savedSlips]);
-
-  useEffect(() => {
-    savedVouchesRef.current = savedVouches;
-  }, [savedVouches]);
-
-  useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
-
-  useEffect(() => {
-    postsRef.current = posts;
-  }, [posts]);
-
   useEffect(() => {
     activeLegsRef.current = activeLegs;
   }, [activeLegs]);
@@ -806,226 +778,10 @@ export default function App() {
     backendParlaySyncRef.current = false;
   }, []);
 
-  // Interaction: Create post
-  const handlePostCreated = useCallback((postData: Partial<FeedPost>) => {
-    const profile = profileRef.current ?? INITIAL_PROFILE;
-    const posts = postsRef.current;
-    const savedVouches = savedVouchesRef.current;
-    const newPost: FeedPost = {
-      id: `post-user-${Date.now()}`,
-      userId: 'u-user-current',
-      displayName: profile.displayName,
-      username: profile.username,
-      isVerified: profile.verified,
-      subscriptionTier: profile.subscriptionTier,
-      timestamp: new Date().toISOString(),
-      likesCount: 0,
-      commentsCount: 0,
-      vouchesCount: 0,
-      repostsCount: 0,
-      comments: [],
-      content: postData.content || '',
-      postType: postData.postType || 'RESEARCH_NOTE',
-      sportBadge: postData.sportBadge,
-      sourceBadge: postData.sourceBadge || 'Community',
-      parlay: postData.parlay,
-      vouch: postData.vouch,
-      result: postData.result,
-      researchNote: postData.researchNote,
-      mediaUrl: postData.mediaUrl,
-      mediaType: postData.mediaType,
-      mediaUrl2: postData.mediaUrl2,
-      showSecondCard: postData.showSecondCard,
-      boardConfig: postData.boardConfig
-    };
-
-    const updatedPosts = [newPost, ...posts];
-    syncPosts(updatedPosts);
-
-    // If posting a vouch, auto-save/add to Vouch Board
-    let vouchForBackend: Vouch | undefined;
-    if (newPost.postType === 'VOUCH' && newPost.vouch) {
-      const exists = savedVouches.some((v) => v.id === newPost.vouch?.id);
-      if (!exists) {
-        vouchForBackend = { ...newPost.vouch, isSavedByUser: true };
-        syncVouches([...savedVouches, vouchForBackend]);
-      } else {
-        vouchForBackend = savedVouches.find((v) => v.id === newPost.vouch?.id);
-      }
-    }
-
-    // If posting a result, update profile statistics dynamically for real transparency!
-    if (newPost.postType === 'RESULT' && newPost.result) {
-      const res = newPost.result;
-      const isWin = res.status === 'WON';
-      const isLoss = res.status === 'LOST';
-
-      if (isWin || isLoss) {
-        const additionalProfit = isWin ? res.profit ?? 0.0 : -res.units;
-
-        const updatedProfile: CreatorProofProfile = {
-          ...profile,
-          totalPicks: profile.totalPicks + 1,
-          wonPicks: profile.wonPicks + (isWin ? 1 : 0),
-          unitsNetProfit: profile.unitsNetProfit + additionalProfit,
-          winRate: ((profile.wonPicks + (isWin ? 1 : 0)) / (profile.totalPicks + 1)) * 100
-        };
-        syncProfile(updatedProfile);
-      }
-    }
-
-    // Best-effort backend sync — never blocks the optimistic UI update above.
-    // Guests keep the existing local-only behavior (no network call, no error).
-    if (newPost.content.trim()) {
-      (async () => {
-        const backendVouchId = vouchForBackend ? await pushVouchToBackend(vouchForBackend) : undefined;
-        const token = await getAuthToken();
-        if (!token) return;
-        try {
-          const created = await apiClient.post<{ id?: string }>('/api/posts', {
-            body: newPost.content,
-            pick_id: newPost.parlay?.backendPickId,
-            vouch_id: backendVouchId,
-          });
-          if (created?.id) {
-            setPosts((prev) => {
-              const next = prev.map((p) =>
-                p.id === newPost.id ? { ...p, backendPostId: created.id } : p,
-              );
-              localStorage.setItem('vouchedge_posts', JSON.stringify(next));
-              return next;
-            });
-          }
-        } catch (err) {
-          console.warn('[posts] backend save failed (kept in localStorage)', err);
-        }
-      })();
-    }
-  }, []);
-
-  // Interaction: Like toggle
-  const handleLikePost = useCallback((postId: string) => {
-    const updated = postsRef.current.map((p) => {
-      if (p.id === postId) {
-        const isLiked = !p.isLiked;
-        return {
-          ...p,
-          isLiked,
-          likesCount: p.likesCount + (isLiked ? 1 : -1)
-        };
-      }
-      return p;
-    });
-    syncPosts(updated);
-  }, []);
-
-  // Interaction: Tailing pick (vouching)
-  const handleVouchPost = useCallback((postId: string) => {
-    const updated = postsRef.current.map((p) => {
-      if (p.id === postId) {
-        const isVouched = !p.isVouched;
-        return {
-          ...p,
-          isVouched,
-          vouchesCount: p.vouchesCount + (isVouched ? 1 : -1)
-        };
-      }
-      return p;
-    });
-    syncPosts(updated);
-  }, []);
-
-  // Interaction: Repost toggle
-  const handleRepostPost = useCallback((postId: string) => {
-    const updated = postsRef.current.map((p) => {
-      if (p.id === postId) {
-        const isReposted = !p.isReposted;
-        return {
-          ...p,
-          isReposted,
-          repostsCount: p.repostsCount + (isReposted ? 1 : -1)
-        };
-      }
-      return p;
-    });
-    syncPosts(updated);
-  }, []);
-
-  const handleDeletePost = useCallback((postId: string) => {
-    const posts = postsRef.current;
-    const target = posts.find((p) => p.id === postId);
-    if (!target || !canDeleteFeedPost(target)) return;
-    if (!window.confirm('Delete this post? This cannot be undone.')) return;
-
-    syncPosts(posts.filter((p) => p.id !== postId));
-
-    void (async () => {
-      const token = await getAuthToken();
-      const backendId = target.backendPostId;
-      if (!token || !backendId) return;
-      try {
-        await apiClient.delete(`/api/posts/${encodeURIComponent(backendId)}`);
-      } catch (err) {
-        console.warn('[posts] backend delete failed (removed locally)', err);
-      }
-    })();
-  }, []);
-
-  // Interaction: Save Vouch to Board (either from feed or right-hand matchups)
   const handleSaveVouch = useCallback((vouch: Vouch) => {
-    const savedVouches = savedVouchesRef.current;
-    const existing = savedVouches.find((v) => v.id === vouch.id);
-
-    if (existing) {
-      syncVouches(savedVouches.filter((v) => v.id !== vouch.id));
-      if (existing.backendVouchId) {
-        apiClient.delete(`/api/vouches/${encodeURIComponent(existing.backendVouchId)}`)
-          .catch((err) => console.warn('[vouches] backend hide failed', err));
-      }
-      return;
-    }
-
-    const newVouch: Vouch = { ...vouch, isSavedByUser: true };
-    syncVouches([...savedVouches, newVouch]);
-    void pushVouchToBackend(newVouch);
+    saveVouchAction(vouch);
   }, []);
 
-  const handleRemoveVouchFromBoard = useCallback((vouchId: string) => {
-    const existing = savedVouchesRef.current.find((v) => v.id === vouchId);
-    syncVouches(savedVouchesRef.current.filter((v) => v.id !== vouchId));
-    if (existing?.backendVouchId) {
-      apiClient.delete(`/api/vouches/${encodeURIComponent(existing.backendVouchId)}`)
-        .catch((err) => console.warn('[vouches] backend hide failed', err));
-    }
-  }, []);
-
-  // Interaction: Write comment
-  const handleAddComment = useCallback((postId: string, commentContent: string) => {
-    const profile = profileRef.current ?? INITIAL_PROFILE;
-    const updated = postsRef.current.map((p) => {
-      if (p.id === postId) {
-        const newComm = {
-          id: `c-user-${Date.now()}`,
-          postId,
-          userId: 'u-user-current',
-          displayName: profile.displayName,
-          username: profile.username,
-          timestamp: new Date().toISOString(),
-          content: commentContent,
-          likesCount: 0
-        };
-        return {
-          ...p,
-          commentsCount: p.commentsCount + 1,
-          comments: [...(p.comments || []), newComm]
-        };
-      }
-      return p;
-    });
-    syncPosts(updated);
-  }, []);
-
-  // Update saved parlay from Parlay Hub
   const _handleUpdateParlaySlip = (updatedParlay: Parlay) => {
     const updated = savedSlips.map((slip) =>
       slip.id === updatedParlay.id ? { ...slip, ...updatedParlay } : slip
@@ -1041,207 +797,12 @@ export default function App() {
     });
   };
 
-  // Save new parlay created in ParlayLab / ParlayStudio
-  // Push a single parlay to the backend (POST /api/me/parlays) and reflect the
-  // sync state back into savedSlips. Shared by save + retry. Best-effort:
-  // never throws — the parlay always survives in localStorage.
-  const pushParlayToBackend = async (parlay: Parlay): Promise<void> => {
-    if (!isSupabaseConfigured) return;
-
-    // Duplicate protection (client-side): never fire two saves for one parlay.
-    // If it is already synced or mid-save, do nothing. The backend also
-    // de-dupes on client_ref, so this is defense-in-depth.
-    const current = savedSlipsRef.current.find((p) => p.id === parlay.id);
-    if (current?.backendPickId && current?.backendSyncState === 'synced') {
-      return;
-    }
-    if (current?.backendSyncState === 'saving' && current !== parlay) {
-      return;
-    }
-
-    // Mark as saving so the card can show a spinner.
-    const markState = (state: Parlay['backendSyncState'], extra?: Partial<Parlay>) => {
-      syncSlips(
-        savedSlipsRef.current.map((p) =>
-          p.id === parlay.id ? { ...p, backendSyncState: state, ...extra } : p
-        )
-      );
-    };
-
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        markState('auth_required', {
-          backendSyncError: 'Sign in to save this parlay to your account.',
-        });
-        return;
-      }
-
-      markState('saving', { backendSyncError: undefined });
-
-      const canonicalSlip = normalizeParlaySlip(
-        {
-          ...parlay,
-          source: parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
-        },
-        parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
-      );
-      const payload = buildSaveParlayPayload(canonicalSlip);
-
-      const result = await apiClient.post<BackendParlay & { deduped?: boolean }>('/api/me/parlays', payload);
-
-      if (result?.id) {
-        const backendTruth = mapBackendParlay(result);
-        syncSlips(
-          savedSlipsRef.current.map((p) =>
-            p.id === parlay.id
-              ? {
-                  ...backendTruth,
-                  backendPickId: result.id,
-                  backendSyncedAt: new Date().toISOString(),
-                  backendSyncState: 'synced',
-                  backendSyncError: undefined,
-                }
-              : p
-          )
-        );
-      } else {
-        markState('failed', { backendSyncError: 'Backend did not return a parlay id.' });
-      }
-    } catch (err: any) {
-      // Non-fatal — parlay is preserved in localStorage
-      console.warn('[parlays] backend save failed (kept in localStorage)', err);
-      markState('failed', {
-        backendSyncError: err?.error || err?.message || 'Backend save failed.',
-      });
-    }
-  };
-
-  // Background backend sync for a saved vouch — mirrors pushParlayToBackend.
-  // Never throws: the vouch always survives in localStorage regardless of
-  // backend outcome. Returns the backend-assigned id on success.
-  const pushVouchToBackend = async (vouch: Vouch): Promise<string | undefined> => {
-    if (!isSupabaseConfigured) return undefined;
-
-    if (vouch.backendVouchId && vouch.backendSyncState === 'synced') {
-      return vouch.backendVouchId;
-    }
-
-    const markState = (state: Vouch['backendSyncState'], extra?: Partial<Vouch>) => {
-      setSavedVouches((prev) => {
-        const next = prev.map((v) =>
-          v.id === vouch.id ? { ...v, backendSyncState: state, ...extra } : v
-        );
-        localStorage.setItem('vouchedge_vouches', JSON.stringify(next));
-        return next;
-      });
-    };
-
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        markState('auth_required', {
-          backendSyncError: 'Sign in to sync this vouch to your account.',
-        });
-        return undefined;
-      }
-
-      markState('saving', { backendSyncError: undefined });
-
-      const payload = {
-        vouch_source: vouch.vouchSource,
-        user_note: vouch.userNote,
-        market: vouch.market,
-        sport: vouch.sport,
-        player_or_team: vouch.playerOrTeam,
-        game_name: vouch.gameName,
-        odds: vouch.odds,
-        line: vouch.line,
-        selection: vouch.selection,
-        ai_confidence: vouch.aiConfidence,
-        capper_confidence: vouch.capperConfidence,
-        risk_tier: vouch.riskTier,
-        longer_breakdown: vouch.longerBreakdown,
-        card_theme: vouch.cardTheme,
-        visibility: vouch.visibility,
-      };
-
-      const result = await apiClient.post<{ id: string }>('/api/vouches', payload);
-
-      if (result?.id) {
-        markState('synced', {
-          backendVouchId: result.id,
-          backendSyncedAt: new Date().toISOString(),
-        });
-        return result.id;
-      }
-
-      markState('failed', { backendSyncError: 'Backend did not return a vouch id.' });
-      return undefined;
-    } catch (err: any) {
-      console.warn('[vouches] backend save failed (kept in localStorage)', err);
-      markState('failed', {
-        backendSyncError: err?.error || err?.message || 'Backend save failed.',
-      });
-      return undefined;
-    }
-  };
-
   const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
-    const normalizedUiStatus =
-      newParlay.status === 'won'
-        ? 'WON'
-        : newParlay.status === 'lost'
-          ? 'LOST'
-          : newParlay.status === 'void'
-            ? 'VOID'
-            : 'PENDING';
-
-    const savedParlay: Parlay = {
-      id: newParlay.id || `parlay-${Date.now()}`,
-      title: newParlay.title,
-      legs: Array.isArray(newParlay.legs) ? (newParlay.legs as unknown as Leg[]) : [],
-      status: normalizedUiStatus,
-      mode: newParlay.mode || 'PRACTICE',
-      createdAt: newParlay.createdAt || new Date().toISOString(),
-      totalOdds: "totalOdds" in newParlay ? String(newParlay.totalOdds || "") : "",
-      oddsValue: "oddsValue" in newParlay ? Number(newParlay.oddsValue || 0) : 0,
-      riskTier: "riskTier" in newParlay ? newParlay.riskTier : "LOW",
-      lockNotified: false,
-      backendSyncState: 'saving',
-      aiGenerated: "aiGenerated" in newParlay ? Boolean(newParlay.aiGenerated) : false,
-    };
-
-    // Optimistic localStorage save — instant
-    const updated = [savedParlay, ...savedSlipsRef.current];
-    syncSlips(updated);
-
-    notify({
-      kind: 'success',
-      title: '✅ Parlay Saved',
-      body: `${savedParlay.title || 'Your parlay'} was saved to Parlay Hub.`,
-      section: 'live_parlays',
-    });
-
-    useParlayCommandStore.getState().setActivePanel('vai_ledger');
-    navigateSection('live_parlays');
-
-    // Background backend sync — non-blocking, best-effort
-    await pushParlayToBackend(savedParlay);
+    await saveParlaySlipAction(newParlay, navigateSection);
   }, [navigateSection]);
 
-  const pushAiParlaysToBackend = async (parlays: Parlay[]): Promise<void> => {
-    if (!isSupabaseConfigured) return;
-
-    for (const parlay of parlays) {
-      if (!parlay.aiGenerated) continue;
-      await pushParlayToBackend(parlay);
-    }
-  };
-
-  // Retry backend sync for a local-only or failed parlay.
   const _handleRetryParlaySync = async (parlayId: string) => {
-    const parlay = savedSlipsRef.current.find((p) => p.id === parlayId);
+    const parlay = useSlipsStore.getState().savedSlips.find((p) => p.id === parlayId);
     if (!parlay) return;
     await pushParlayToBackend(parlay);
   };
@@ -1255,7 +816,7 @@ export default function App() {
     setIsGrading(true);
     try {
       const { gradePendingParlays } = await import('./lib/parlayGrading');
-      const { parlays, newlySettled, changed } = await gradePendingParlays(savedSlipsRef.current);
+      const { parlays, newlySettled, changed } = await gradePendingParlays(useSlipsStore.getState().savedSlips);
       if (!changed) return;
       syncSlips(parlays);
       if (newlySettled.length) {
@@ -1271,7 +832,7 @@ export default function App() {
             section: 'results',
           });
         }
-        const cur = profileRef.current!;
+        const cur = useProfileStore.getState().profile!;
         const newTotal = cur.totalPicks + wins + losses;
         const newWon = cur.wonPicks + wins;
         syncProfile({
@@ -1311,7 +872,7 @@ export default function App() {
     localStorage.setItem('vouchedge_ai_gen_date', today);
     if (created.length === 0) return;
     // Dedupe: drop any prior still-pending AI parlays before adding the new slate.
-    const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
+    const kept = useSlipsStore.getState().savedSlips.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
     syncSlips([...created, ...kept]);
     void pushAiParlaysToBackend(created);
     notify({
@@ -1331,7 +892,7 @@ export default function App() {
       alert('No confirmed lineups are posted yet — check back closer to game time.');
       return;
     }
-    const kept = savedSlipsRef.current.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
+    const kept = useSlipsStore.getState().savedSlips.filter((p) => !p.aiGenerated || p.status !== 'PENDING');
     syncSlips([...created, ...kept]);
     void pushAiParlaysToBackend(created);
     notify({
@@ -1346,7 +907,7 @@ export default function App() {
   // lock time, and persist the flag so it doesn't repeat.
   const checkParlayLocks = () => {
     let changed = false;
-    const updated = savedSlipsRef.current.map((p) => {
+    const updated = useSlipsStore.getState().savedSlips.map((p) => {
       if (p.status !== 'PENDING' || p.lockNotified) return p;
       if (isLive(p)) {
         changed = true;
@@ -1380,27 +941,16 @@ export default function App() {
 
   // Update Profile Hub details
   const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
-    const cur = profileRef.current ?? INITIAL_PROFILE;
+    const cur = useProfileStore.getState().profile ?? INITIAL_PROFILE;
     syncProfile({ ...cur, ...updatedProfile });
   }, []);
 
   // Reset all local state to initial empty values
   const handleResetDatabase = useCallback(() => {
-    localStorage.removeItem('vouchedge_posts');
-    localStorage.removeItem('vouchedge_slips');
-    localStorage.removeItem('vouchedge_vouches');
-    localStorage.removeItem('vouchedge_profile');
-
-    const seeds = INITIAL_POSTS.filter(p => p.vouch).map(p => p.vouch!);
-    setPosts(INITIAL_POSTS);
-    setSavedSlips([]);
-    setSavedVouches(seeds);
-    setProfile(INITIAL_PROFILE);
-
-    localStorage.setItem('vouchedge_posts', JSON.stringify(INITIAL_POSTS));
-    localStorage.setItem('vouchedge_slips', JSON.stringify([]));
-    localStorage.setItem('vouchedge_vouches', JSON.stringify(seeds));
-    localStorage.setItem('vouchedge_profile', JSON.stringify(INITIAL_PROFILE));
+    useFeedStore.getState().resetPosts();
+    useSlipsStore.getState().resetSlips();
+    useVouchesStore.getState().resetVouches();
+    useProfileStore.getState().resetProfile();
   }, []);
 
   const savedVouchIds = useMemo(() => savedVouches.map((v) => v.id), [savedVouches]);
@@ -1601,7 +1151,7 @@ export default function App() {
   }, [liveGames]);
 
   const handleHideSavedParlay = useCallback(async (parlayId: string) => {
-    const target = savedSlipsRef.current.find((slip) => {
+    const target = useSlipsStore.getState().savedSlips.find((slip) => {
       const realId = String((slip as any).id ?? (slip as any).sourceId ?? '');
       const publicId = String((slip as any).publicId ?? '');
       return realId === String(parlayId) || publicId === String(parlayId);
@@ -1623,7 +1173,7 @@ export default function App() {
       await apiClient.delete(`/api/parlays/${encodeURIComponent(realId)}`);
     }
 
-    const nextSlips = savedSlipsRef.current.filter((slip) => {
+    const nextSlips = useSlipsStore.getState().savedSlips.filter((slip) => {
       const slipRealId = String((slip as any).id ?? (slip as any).sourceId ?? '');
       const slipPublicId = String((slip as any).publicId ?? '');
       return slipRealId !== realId && slipRealId !== String(parlayId) && slipPublicId !== String(parlayId);
@@ -1632,7 +1182,38 @@ export default function App() {
     syncSlips(nextSlips);
   }, []);
 
+  useEffect(() => {
+    useAppCommandStore.getState().bind({
+      navigateSection,
+      onLoginSuccess: handleLoginSuccess,
+      onClearProfileViewUser: handleClearProfileViewUser,
+      onSaveParlaySlip: handleSaveParlaySlip,
+      onHideSavedParlay: handleHideSavedParlay,
+      onAddLegFromResearch: handleAddLegFromResearch,
+      onUpdateProfile: handleUpdateProfile,
+      onResetDatabase: handleResetDatabase,
+      liveGames,
+    });
+  }, [
+    navigateSection,
+    handleLoginSuccess,
+    handleClearProfileViewUser,
+    handleSaveParlaySlip,
+    handleHideSavedParlay,
+    handleAddLegFromResearch,
+    handleUpdateProfile,
+    handleResetDatabase,
+    liveGames,
+  ]);
+
   const isLoggedIn = hasRealAuthToken();
+
+  useEffect(() => {
+    if (isLoggedIn) return;
+    if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
+    void warmGuestHrBoardCache();
+  }, [activeSection, isLoggedIn]);
+
   const isPublicFrontPage =
     (activeSection === 'welcome' && !isLoggedIn)
     || (activeSection === 'vouchedge_intro' && !isLoggedIn);
@@ -1676,24 +1257,9 @@ export default function App() {
             <MainViewRouter
               activeSection={activeSection}
               navigateSection={navigateSection}
-              liveGames={liveGames}
               isLoggedIn={isLoggedIn}
               profileViewUserId={profileViewUserId}
-              onClearProfileViewUser={handleClearProfileViewUser}
               canSeeThemeStore={canSeeThemeStore}
-              onLoginSuccess={handleLoginSuccess}
-              onPostCreated={handlePostCreated}
-              onLikePost={handleLikePost}
-              onVouchPost={handleVouchPost}
-              onRepostPost={handleRepostPost}
-              onDeletePost={handleDeletePost}
-              onAddComment={handleAddComment}
-              onRemoveVouchFromBoard={handleRemoveVouchFromBoard}
-              onSaveParlaySlip={handleSaveParlaySlip}
-              onHideSavedParlay={handleHideSavedParlay}
-              onAddLegFromResearch={handleAddLegFromResearch}
-              onUpdateProfile={handleUpdateProfile}
-              onResetDatabase={handleResetDatabase}
             />
           </Suspense>
         </HomeFeedLayout>

@@ -17,6 +17,17 @@ import {
   User, X,
 } from 'lucide-react';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PANEL } from '../../theme/z8Tokens';
+import { preloadSection } from '../../lib/routePreload';
+
+/** Likely next destinations — warmed when the palette opens. */
+const CMDK_PREFETCH_SECTIONS = [
+  'feed',
+  'hr_board',
+  'today',
+  'build',
+  'ai_engine',
+  'ai_pilot',
+] as const;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -80,14 +91,23 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Focus input when opened
+  // Focus input when opened + prefetch common lazy routes
   useEffect(() => {
     if (open) {
       setQuery('');
       setCursor(0);
+      for (const section of CMDK_PREFETCH_SECTIONS) {
+        preloadSection(section);
+      }
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
+
+  const handleInputFocus = useCallback(() => {
+    for (const section of CMDK_PREFETCH_SECTIONS) {
+      preloadSection(section);
+    }
+  }, []);
 
   // Global Cmd+K / Ctrl+K listener (this component handles its own open toggle when used standalone)
   // HomeFeedLayout owns the open state — this just closes on Escape
@@ -180,6 +200,7 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
             type="text"
             value={query}
             onChange={e => { setQuery(e.target.value); setCursor(0); }}
+            onFocus={handleInputFocus}
             onKeyDown={handleKeyDown}
             placeholder="Jump to any section…"
             className="flex-1 bg-transparent text-white placeholder:text-white/40 text-sm font-mono outline-none"

@@ -130,7 +130,7 @@ export function useSmartAiCandidates() {
     setCandidatesLoading(true);
 
     safeJsonFetch<{ candidates?: Record<string, unknown>[]; projectedCandidates?: Record<string, unknown>[]; rows?: Record<string, unknown>[] }>(
-      '/api/mlb/hr-board/today?limit=75',
+      '/api/mlb/hr-board/today?previewLimit=75',
       { fallbackData: { candidates: [] }, timeoutMs: 14000 },
     ).then((r) => {
       if (!alive) return;

@@ -4,7 +4,9 @@ import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../../middleware/a
 import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
 import { asyncHandler } from "../../lib/asyncHandler";
+import { apiOkFlat } from "../../lib/apiResponse";
 import { AppError } from "../../errors/AppError";
+import type { RequestWithContext } from "../../middleware/requestContext";
 import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../../services/grading/sportGraders";
 import { getFeedComposerOptions } from "../../services/feed/composerOptionsService";
@@ -35,7 +37,7 @@ import {
 /** User-facing parlay routes — save, list, grade preview, dashboard widgets. */
 export const parlayUserRoutes = Router();
 
-parlayUserRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayUserRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();
   const date = ymdFromValue(req.body?.date) ?? todayYmd();
   const options = await getFeedComposerOptions({ sport: "MLB", date }).catch((err) => {
@@ -44,20 +46,19 @@ parlayUserRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, as
   });
   const result = buildGeneratedAiParlays(options);
   console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     parlays: result.parlays,
     warnings: result.warnings,
     generatedAt: new Date().toISOString(),
     source: AI_PARLAY_SOURCE,
-  });
+  }));
 }));
 
 parlayUserRoutes.post(
   "/parlays/grade",
   gradingLimiter,
   validate({ body: GradeParlaySchema }),
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request & RequestWithContext, res: Response) => {
     const { legs, stakeUnits } = req.body as GradeParlayInput;
     const normalizedLegs = legs as GradableLeg[];
 
@@ -100,12 +101,11 @@ parlayUserRoutes.post(
       stakeUnits,
     );
 
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       legs: gradedLegs,
       parlay,
       gradedAt: new Date().toISOString(),
-    });
+    }));
   }),
 );
 
@@ -125,7 +125,7 @@ parlayUserRoutes.get(
   getParlayHandler,
 );
 
-parlayUserRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayUserRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const supabaseAdmin = await getSupabaseAdmin();
 
   const { data: picks, error } = await supabaseAdmin
@@ -182,8 +182,7 @@ parlayUserRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (r
       ? Math.min(100, Math.round((summary.won * 7 + summary.push * 2 + graded * 1.5)))
       : 0;
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     widgets: {
       savedPicks: summary.total,
       savedParlays: summary.parlays,
@@ -193,10 +192,10 @@ parlayUserRoutes.get("/me/dashboard-summary", requireAuth, asyncHandler(async (r
     },
     summary,
     recent: rows.slice(0, 8),
-  });
+  }));
 }));
 
-parlayUserRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+parlayUserRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const limit = boundedInt(req.query.limit, "limit", 100, 1, 200);
   const offset = boundedInt(req.query.offset, "offset", 0, 0, 100000);
   const status = typeof req.query.status === "string" ? req.query.status.toLowerCase() : undefined;
@@ -275,14 +274,13 @@ parlayUserRoutes.get("/me/ledger", requireAuth, asyncHandler(async (req: AuthedR
     { total: 0, pending: 0, won: 0, lost: 0, void: 0, push: 0, parlays: 0, singles: 0 },
   );
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     ledger,
     summary,
     total: count ?? 0,
     limit,
     offset,
-  });
+  }));
 }));
 
 parlayUserRoutes.get(

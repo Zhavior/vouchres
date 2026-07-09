@@ -21,7 +21,7 @@ type BoardState = {
   source: 'network' | 'fallback';
 };
 
-const HR_BOARD_URL = '/api/mlb/hr-board/today?limit=75';
+const HR_BOARD_URL = '/api/mlb/hr-board/today?previewLimit=75';
 
 export function useHrBoardProData(): BoardState & {
   rows: Record<string, any>[];

@@ -11,8 +11,10 @@ import {
 } from '../../components/notifications/UnifiedNotificationCenter';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
-import { BubbleField } from '../../components/vouchedge/ParticleFields';
-import { useAppShell } from '../../context/AppShellContext';
+import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
+import { useAppPosts, useAppProfile, useAppSavedSlips, useAppShell } from '../../context/AppShellContext';
+import { FeedScrollProvider } from '../../context/FeedScrollContext';
+import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -32,31 +34,21 @@ function HomeFeedLayout({
   isRouteSwitching = false,
   isPublicFrontPage = false,
 }: HomeFeedLayoutProps) {
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedSlips = useAppSavedSlips();
   const {
-    posts,
-    profile,
     savedVouchIds,
-    savedSlips,
     onSaveVouch,
     onAuthLoginSuccess,
     onAuthLogoutComplete,
   } = useAppShell();
   const { activeTheme, reduceMotion } = useTheme();
+  const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-  const [deferredChrome, setDeferredChrome] = React.useState(false);
   const previousSectionRef = React.useRef(activeSection);
-
-  React.useEffect(() => {
-    const ric = window.requestIdleCallback;
-    if (ric) {
-      const id = ric(() => setDeferredChrome(true), { timeout: 1200 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = window.setTimeout(() => setDeferredChrome(true), 0);
-    return () => window.clearTimeout(id);
-  }, []);
 
   const closeNavigationOverlays = React.useCallback(() => {
     setMobileDrawerOpen(false);
@@ -75,8 +67,7 @@ function HomeFeedLayout({
   // Reset inner scroll pane on section switch — avoids carrying feed scroll
   // position into other views and prevents sticky-header compositor jank.
   React.useEffect(() => {
-    const pane = document.getElementById('inner-view-slot');
-    if (pane) pane.scrollTop = 0;
+    resetScrollPane(scrollPaneRef.current);
   }, [activeSection]);
 
   React.useEffect(() => {
@@ -168,8 +159,8 @@ function HomeFeedLayout({
       )}
 
       {/* Drifting glass bubbles — deferred until idle to keep route switches snappy */}
-      {deferredChrome && activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
-        <BubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
+      {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
+        <DeferredBubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
@@ -245,9 +236,11 @@ function HomeFeedLayout({
           )}
 
           {/* Render Active Page Content */}
-          <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot">
-            {children}
-          </div>
+          <FeedScrollProvider scrollRef={scrollPaneRef}>
+            <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot" ref={scrollPaneRef}>
+              {children}
+            </div>
+          </FeedScrollProvider>
         </main>
 
         {/* Column 3: Right Sticky Rail (hidden on mobile, and only rendered on central feed for optimal focus) */}

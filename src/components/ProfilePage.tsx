@@ -6,7 +6,7 @@ import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
-import { BubbleField } from './vouchedge/ParticleFields';
+import { DeferredBubbleField } from './vouchedge/DeferredBubbleField';
 import { VEButton } from './ui/ve';
 import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
@@ -195,7 +195,7 @@ export default function ProfilePage({
 
               {/* Dynamic theme floating bubbles */}
               {profile.activeTheme && profile.activeTheme !== 'default' && (
-                <BubbleField count={8} mobileCount={3} variant="float" className="opacity-35 z-0" />
+                <DeferredBubbleField count={8} mobileCount={3} variant="float" className="opacity-35 z-0" />
               )}
 
               <div className={`h-28 sm:h-32 bg-gradient-to-r relative border-b border-vouch-cyan/15 z-10 ${

@@ -5,9 +5,12 @@ import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEn
 import { getLiveGames } from "../services/mlb/liveGamesService";
 import { TTL } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
 import { buildApiMeta } from "../lib/apiResponseMeta";
+import { structuredLog } from "../lib/structuredLog";
 import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
 import { getTodayLineups } from "../services/mlb/lineupService";
+import type { RequestWithContext } from "../middleware/requestContext";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -20,22 +23,41 @@ function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
 }
 
+function logEndpoint(req: RequestWithContext, route: string, start: number, extra?: Record<string, unknown>) {
+  structuredLog({
+    level: "info",
+    event: "endpoint",
+    requestId: req.requestId,
+    method: "GET",
+    route,
+    durationMs: Date.now() - start,
+    ...extra,
+  });
+}
+
 export function registerMlbRoutes(app: Express): void {
-  app.get("/api/health/mlb", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/health/mlb", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const report = await getMlbHealthReport(date);
-    res.status(report.status === "down" ? 503 : 200).json({ ok: report.status !== "down", ...report });
+    const status = report.status === "down" ? 503 : 200;
+    return res.status(status).json(apiOkFlat(req, report as Record<string, unknown>));
   }));
 
-  app.get("/api/mlb/live", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
-    res.json({ ok: true, ...(await getLiveGames(date)) });
+    const live = await getLiveGames(date);
+    return res.json(apiOkFlat(req, live as Record<string, unknown>));
   }));
 
-  app.get("/api/mlb/games/today", asyncHandler(async (_req: Request, res: Response) => {
+  app.get("/api/mlb/games/today", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
-    res.json({ ok: true, date: todayISO(), games: await getTodayGames(), warnings: [] });
-    console.log(`[endpoint] GET /api/mlb/games/today ${Date.now() - start}ms`);
+    const payload = apiOkFlat(req, {
+      date: todayISO(),
+      games: await getTodayGames(),
+      warnings: [],
+    });
+    res.json(payload);
+    logEndpoint(req, "/api/mlb/games/today", start);
   }));
 
   /** All lineups for today — powers the Daily Players board */
@@ -69,7 +91,13 @@ export function registerMlbRoutes(app: Express): void {
       console.error("[mlbRoutes] lineup/today failed:", message);
       throw upstreamUnavailable("Lineup data unavailable", err);
     } finally {
-      console.log(`[endpoint] GET /api/mlb/lineup/today ${Date.now() - start}ms`);
+      structuredLog({
+        level: "info",
+        event: "endpoint",
+        method: "GET",
+        route: "/api/mlb/lineup/today",
+        durationMs: Date.now() - start,
+      });
     }
   };
 
@@ -77,11 +105,11 @@ export function registerMlbRoutes(app: Express): void {
   app.get("/api/mlb/daily-player-board", asyncHandler(lineupTodayHandler));
   app.get("/api/daily-players", asyncHandler(lineupTodayHandler));
 
-  app.get("/api/mlb/games/date/:date", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/games/date/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
     const games = await getScheduleByDate(date);
-    res.json({
+    res.json(apiOkFlat(req, {
       date,
       games,
       warnings: [],
@@ -90,87 +118,96 @@ export function registerMlbRoutes(app: Express): void {
         dataQuality: games.length > 0 ? "official_mlb_schedule" : "limited",
         warnings: [],
       }),
-    });
-    console.log(`[endpoint] GET /api/mlb/games/date/:date ${Date.now() - start}ms`);
+    }));
+    logEndpoint(req, "/api/mlb/games/date/:date", start);
   }));
 
-  app.get("/api/mlb/game/:gamePk", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/game/:gamePk", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const gamePk = requiredPositiveIntParam(req.params.gamePk, "gamePk");
     const feed = await getGameFeed(gamePk);
     if (!feed) {
-      console.log(`[endpoint] GET /api/mlb/game/:gamePk ${Date.now() - start}ms`);
-      return res.json({ status: "limited", dataQuality: "limited", feed: null, warnings: ["Live game feed unavailable"] });
+      logEndpoint(req, "/api/mlb/game/:gamePk", start, { limited: true });
+      return res.json(apiOkFlat(req, {
+        status: "limited",
+        dataQuality: "limited",
+        feed: null,
+        warnings: ["Live game feed unavailable"],
+      }));
     }
-    res.json({ status: "success", feed, warnings: [] });
-    console.log(`[endpoint] GET /api/mlb/game/:gamePk ${Date.now() - start}ms`);
+    res.json(apiOkFlat(req, { status: "success", feed, warnings: [] }));
+    logEndpoint(req, "/api/mlb/game/:gamePk", start);
   }));
 
-  app.get("/api/mlb/probable-pitchers/:date", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/probable-pitchers/:date", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = requiredDateParam(req.params.date);
-    res.json({ date, pitchers: await getProbablePitchers(date), warnings: [] });
-    console.log(`[endpoint] GET /api/mlb/probable-pitchers/:date ${Date.now() - start}ms`);
+    res.json(apiOkFlat(req, {
+      date,
+      pitchers: await getProbablePitchers(date),
+      warnings: [],
+    }));
+    logEndpoint(req, "/api/mlb/probable-pitchers/:date", start);
   }));
 
-  app.get("/api/mlb/reports/daily", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/daily", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ ok: true, ...report });
+      res.json(apiOkFlat(req, report as Record<string, unknown>));
     } catch (err: any) {
       throw upstreamUnavailable("Daily report unavailable.", err);
     } finally {
-      console.log(`[endpoint] GET /api/mlb/reports/daily ${Date.now() - start}ms`);
+      logEndpoint(req, "/api/mlb/reports/daily", start);
     }
   }));
 
-  app.get("/api/mlb/reports/vulnerable-pitchers", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/vulnerable-pitchers", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ report: report.vulnerablePitchers, warnings: report.warnings });
+      res.json(apiOkFlat(req, { report: report.vulnerablePitchers, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Vulnerable pitchers unavailable.", err);
     }
   }));
 
-  app.get("/api/mlb/reports/hr-targets", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/hr-targets", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ targets: report.hrTargets, warnings: report.warnings });
+      res.json(apiOkFlat(req, { targets: report.hrTargets, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("HR targets unavailable.", err);
     }
   }));
 
-  app.get("/api/mlb/reports/sneaky-hr", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/sneaky-hr", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ sneaky: report.sneakyHr, warnings: report.warnings });
+      res.json(apiOkFlat(req, { sneaky: report.sneakyHr, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Sneaky HR unavailable.", err);
     }
   }));
 
-  app.get("/api/mlb/reports/rbi-targets", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/rbi-targets", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ ...report.rbi, warnings: report.warnings });
+      res.json(apiOkFlat(req, { ...report.rbi, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("RBI targets unavailable.", err);
     }
   }));
 
-  app.get("/api/mlb/reports/run-environments", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/mlb/reports/run-environments", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json({ environments: report.runEnvironments, warnings: report.warnings });
+      res.json(apiOkFlat(req, { environments: report.runEnvironments, warnings: report.warnings }));
     } catch (err: any) {
       throw upstreamUnavailable("Run environments unavailable.", err);
     }

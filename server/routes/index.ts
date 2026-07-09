@@ -29,6 +29,7 @@ import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
 import { getPublicVouch } from "../services/persistence/vouchService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
+import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
@@ -117,6 +118,17 @@ export function registerApiRoutes(app: Express): void {
   app.get("/api/health/backend", (_req: Request, res: Response) => {
     const report = getBackendHealthReport();
     res.json(report);
+  });
+
+  app.get("/api/health/metrics", (_req: Request, res: Response) => {
+    const metrics = getRouteMetricsSnapshot();
+    res.json({
+      ok: true,
+      service: "vouchedge-backend",
+      schema: "route_metrics_v1",
+      updatedAt: new Date().toISOString(),
+      metrics,
+    });
   });
 
   // Public share permalink — server-rendered (not the SPA) so X/Slack/iMessage

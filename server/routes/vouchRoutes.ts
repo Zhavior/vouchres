@@ -5,6 +5,7 @@ import { AuthedRequest, requireAuth, optionalAuth } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import { apiOkFlat } from "../lib/apiResponse";
 import { createVouch, listVouchesForUser, hideVouch } from "../services/persistence/vouchService";
 
 /**
@@ -35,7 +36,7 @@ const CreateVouchSchema = z.object({
 });
 
 vouchRoutes.get("/vouches", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
-  if (!req.user) return res.json({ ok: true, vouches: [] });
+  if (!req.user) return res.json(apiOkFlat(req, { vouches: [] }));
 
   const vouches = await listVouchesForUser(req.user.id).catch((error) => {
     console.error("[vouches] list failed", error);
@@ -47,7 +48,7 @@ vouchRoutes.get("/vouches", optionalAuth, asyncHandler(async (req: AuthedRequest
     });
   });
 
-  return res.json({ ok: true, vouches });
+  return res.json(apiOkFlat(req, { vouches }));
 }));
 
 vouchRoutes.post(
@@ -67,7 +68,7 @@ vouchRoutes.post(
       });
     });
 
-    return res.status(201).json({ ok: true, ...vouch });
+    return res.status(201).json(apiOkFlat(req, vouch as Record<string, unknown>));
   }),
 );
 
@@ -92,5 +93,5 @@ vouchRoutes.delete("/vouches/:id", requireAuth, asyncHandler(async (req: AuthedR
     });
   }
 
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));

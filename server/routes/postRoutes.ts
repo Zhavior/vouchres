@@ -5,6 +5,8 @@ import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../midd
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import {
   canDeleteParlayPost,
   PARLAY_POST_LOCKED_MESSAGE,
@@ -72,17 +74,20 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
     });
   }
 
-  return res.json({
-    ok: true,
-    posts: data ?? [],
-    total: count ?? 0,
+  const rows = data ?? [];
+  const total = count ?? rows.length;
+
+  return res.json(apiOkFlat(req, {
+    posts: rows,
+    total,
     limit,
     offset,
-    has_real_content: (data ?? []).some((p: any) => !p.is_demo),
-  });
+    has_more: offset + rows.length < total,
+    has_real_content: rows.some((p: any) => !p.is_demo),
+  }));
 }));
 
-postRoutes.get("/feed/discover", asyncHandler(async (_req, res: Response) => {
+postRoutes.get("/feed/discover", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from("posts")
     .select(`
@@ -104,7 +109,7 @@ postRoutes.get("/feed/discover", asyncHandler(async (_req, res: Response) => {
     });
   }
 
-  return res.json({ ok: true, posts: data ?? [] });
+  return res.json(apiOkFlat(req, { posts: data ?? [] }));
 }));
 
 const CreatePostSchema = z.object({
@@ -177,7 +182,7 @@ postRoutes.post(
       });
     }
 
-    return res.status(201).json({ ok: true, ...data });
+    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
   }),
 );
 
@@ -214,7 +219,7 @@ postRoutes.get("/posts/:id", optionalAuth, asyncHandler(async (req: AuthedReques
     liked_by_me = !!like;
   }
 
-  return res.json({ ok: true, ...data, liked_by_me });
+  return res.json(apiOkFlat(req, { ...data, liked_by_me }));
 }));
 
 postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -275,7 +280,7 @@ postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequ
     });
   }
 
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));
 
 postRoutes.post("/posts/:id/view", asyncHandler(async (req, res: Response) => {
@@ -284,7 +289,7 @@ postRoutes.post("/posts/:id/view", asyncHandler(async (req, res: Response) => {
   if (error) {
     return res.json({ ok: false });
   }
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));
 
 postRoutes.post("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -318,7 +323,7 @@ postRoutes.post("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedR
     });
   }
 
-  return res.json({ ok: true, liked: true });
+  return res.json(apiOkFlat(req, { liked: true }));
 }));
 
 postRoutes.delete("/posts/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -338,7 +343,7 @@ postRoutes.delete("/posts/:id/like", requireAuth, asyncHandler(async (req: Authe
     });
   }
 
-  return res.json({ ok: true, liked: false });
+  return res.json(apiOkFlat(req, { liked: false }));
 }));
 
 const CreateCommentSchema = z.object({
@@ -385,11 +390,11 @@ postRoutes.post(
       });
     }
 
-    return res.status(201).json({ ok: true, ...data });
+    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
   }),
 );
 
-postRoutes.get("/posts/:id/comments", asyncHandler(async (req, res: Response) => {
+postRoutes.get("/posts/:id/comments", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
@@ -413,7 +418,7 @@ postRoutes.get("/posts/:id/comments", asyncHandler(async (req, res: Response) =>
     });
   }
 
-  return res.json({ ok: true, comments: data ?? [] });
+  return res.json(apiOkFlat(req, { comments: data ?? [] }));
 }));
 
 postRoutes.delete("/comments/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -433,5 +438,5 @@ postRoutes.delete("/comments/:id", requireAuth, asyncHandler(async (req: AuthedR
     });
   }
 
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));

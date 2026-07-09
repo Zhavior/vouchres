@@ -55,6 +55,35 @@ afterAll(async () => {
 });
 
 describe("post routes", () => {
+  it("returns paginated home feed with has_more metadata", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        order: () => ({
+          range: () => ({
+            eq: async () => ({
+              data: [{ id: "post-1", body: "hello", is_demo: true }],
+              error: null,
+              count: 3,
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const response = await fetch(`${baseUrl}/api/feed?limit=1&offset=0`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      posts: [{ id: "post-1", body: "hello", is_demo: true }],
+      total: 3,
+      limit: 1,
+      offset: 0,
+      has_more: true,
+    });
+  });
+
   it("returns discover feed with ok envelope", async () => {
     fromMock.mockReturnValueOnce({
       select: () => ({
@@ -68,7 +97,14 @@ describe("post routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, posts: [] });
+    expect(body).toMatchObject({
+      ok: true,
+      posts: [],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 
   it("returns unified not_found for missing posts", async () => {
@@ -193,6 +229,12 @@ describe("post routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true });
+    expect(body).toMatchObject({
+      ok: true,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 });

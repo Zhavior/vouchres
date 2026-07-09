@@ -2,7 +2,10 @@ import { Router } from "express";
 import type { Response } from "express";
 import { AuthedRequest, requireAuth, requireStaff } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
+import type { RequestWithContext } from "../middleware/requestContext";
 import {
   deletePushSubscription,
   listNotifications,
@@ -15,35 +18,43 @@ import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 
 export const notificationRoutes = Router();
 
-notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const out = await listNotifications(req.user!.id, limit);
-  console.log(`[endpoint] GET /api/notifications ${Date.now() - start}ms count=${out.notifications.length} unread=${out.unreadCount}`);
-  return res.json({ ok: true, ...out });
+  structuredLog({
+    level: "info",
+    event: "endpoint",
+    requestId: req.requestId,
+    method: "GET",
+    route: "/api/notifications",
+    durationMs: Date.now() - start,
+    count: out.notifications.length,
+    unread: out.unreadCount,
+  });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
 
-notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const out = await listNotifications(req.user!.id, 1);
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     notifications: [],
     unreadCount: out.unreadCount,
     warnings: out.warnings,
-  });
+  }));
 }));
 
-notificationRoutes.post("/notifications/:id/read", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.post("/notifications/:id/read", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const out = await markNotificationRead(req.user!.id, req.params.id);
-  return res.json({ ok: true, ...out });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/read-all", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.post("/notifications/read-all", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const out = await markAllNotificationsRead(req.user!.id);
-  return res.json({ ok: true, ...out });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const body = req.body ?? {};
   if (typeof body.endpoint !== "string" || typeof body.keys?.p256dh !== "string" || typeof body.keys?.auth !== "string") {
     throw new AppError({
@@ -62,10 +73,10 @@ notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandl
       details: out,
     });
   }
-  return res.json({ ok: true, ...out });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const endpoint = String(req.body?.endpoint ?? "");
   if (!endpoint) {
     throw new AppError({
@@ -84,14 +95,23 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
       details: out,
     });
   }
-  return res.json({ ok: true, ...out });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
 
-notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asyncHandler(async (req: AuthedRequest, res: Response) => {
+notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();
   const date = typeof req.body?.date === "string" ? req.body.date : undefined;
   const feed = await getTodayHomeRuns(date);
   const out = await processHomeRunEvents(feed.events);
-  console.log(`[endpoint] POST /api/notifications/scan-hr ${Date.now() - start}ms scanned=${out.scanned} created=${out.created}`);
-  return res.json({ ok: true, ...out });
+  structuredLog({
+    level: "info",
+    event: "endpoint",
+    requestId: req.requestId,
+    method: "POST",
+    route: "/api/notifications/scan-hr",
+    durationMs: Date.now() - start,
+    scanned: out.scanned,
+    created: out.created,
+  });
+  return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));
