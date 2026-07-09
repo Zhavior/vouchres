@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
+
 import {
   PlayerSignalPanel,
   ProLockedCard,
@@ -7,6 +8,7 @@ import {
   VerifiedDataNotice,
   VerifiedGraphEmptyState,
 } from '../../components/pro';
+
 import {
   buildPlayerPayload,
   safeText,
@@ -173,7 +175,7 @@ export default function PlayerEdgeLabPage() {
 
         <section className="space-y-4">
           {playerPayload ? (
-            <PlayerSignalPanel payload={playerPayload} />
+            <PlayerIntelligenceCard payload={playerPayload} />
           ) : (
             <VerifiedGraphEmptyState
               variant="feed-required"
