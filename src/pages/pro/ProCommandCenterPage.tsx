@@ -13,8 +13,18 @@ import {
 } from "../../components/pro";
 
 import { Z8_PANEL } from "../../theme/z8Tokens";
+import { useSmartAiCandidates } from "../../components/smart-ai/useSmartAiCandidates";
 
 export default function ProCommandCenterPage() {
+  const {
+    realCandidates,
+    candidatesLoading,
+  } = useSmartAiCandidates();
+
+  const topEdges = [...realCandidates]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
   return (
     <div className="space-y-4">
       <ProPageHeader
@@ -58,20 +68,19 @@ export default function ProCommandCenterPage() {
           </div>
 
           <div className="mt-4 space-y-3">
-            <EdgeRow
-              player="Shohei Ohtani"
-              score="94"
-            />
-
-            <EdgeRow
-              player="Aaron Judge"
-              score="91"
-            />
-
-            <EdgeRow
-              player="Gunnar Henderson"
-              score="88"
-            />
+            {candidatesLoading ? (
+              <p className="text-sm text-white/50">
+                Loading today's intelligence...
+              </p>
+            ) : (
+              topEdges.map((player) => (
+                <EdgeRow
+                  key={player.playerName}
+                  player={player.playerName}
+                  score={String(player.score)}
+                />
+              ))
+            )}
           </div>
         </section>
 
@@ -131,14 +140,42 @@ function EdgeRow({
   score: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-3">
-      <span className="font-mono text-sm text-white">
-        {player}
-      </span>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+      <div className="flex items-center justify-between">
+        <span className="font-black text-white">
+          🔥 {player}
+        </span>
 
-      <span className="font-black text-vouch-cyan">
-        VE {score}
-      </span>
+        <span className="font-black text-vouch-cyan">
+          VE {score}
+        </span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg bg-black/20 p-2">
+          <span className="text-white/50">
+            HR Edge
+          </span>
+          <p className="font-bold text-white">
+            Elite
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-black/20 p-2">
+          <span className="text-white/50">
+            Confidence
+          </span>
+          <p className="font-bold text-white">
+            High
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 text-xs text-white/60">
+        ✓ Pitcher vulnerability<br />
+        ✓ Park advantage<br />
+        ✓ Recent power trend
+      </div>
     </div>
   );
 }
