@@ -606,16 +606,16 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   };
 
   return (
-    <main className={`${Z8_PAGE} max-w-6xl mx-auto px-3 sm:px-4 py-5`}>
+    <main className={`${Z8_PAGE} ve-page-shell min-w-0 overflow-x-hidden ve-safe-bottom max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5`}>
       {/* Header */}
-      <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-5 mb-5`}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-vouch-cyan" /> Live Games Center</h1>
+      <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-4 sm:p-5 mb-4 sm:mb-5`}>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-5 h-5 sm:w-6 sm:h-6 text-vouch-cyan shrink-0" /> Live Games Center</h1>
             <p className="text-xs text-white/50 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
             <p className={`mt-2 ${Z8_LABEL} text-vouch-cyan`}>{sourceNote}</p>
           </div>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan">
+          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan shrink-0 self-start sm:self-auto">
             <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching || liveGamesQuery.isFetching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
@@ -637,26 +637,26 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
         shown.length === 0 ? (
           <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/50 font-mono`}>No active live games right now. Switch to “All games”.</div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {activeGame && (
-              <div className={`relative overflow-hidden rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 shadow-2xl ${Z8_PANEL_PREMIUM}`}>
-                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl" />
-                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
+              <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-3 sm:p-4 md:p-5 shadow-2xl ${Z8_PANEL_PREMIUM}`}>
+                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
-                <div className="relative flex items-center justify-between gap-3 mb-5">
-                  <div>
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5 min-w-0">
+                  <div className="min-w-0">
                     <p className={`${Z8_LABEL} text-vouch-cyan`}>
                       Live Games Center
                     </p>
-                    <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">
                       {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-[11px] sm:text-xs text-slate-400 mt-1 truncate">
                       {activeGame.venue ?? 'Venue TBD'} · {activeGame.status ?? 'Game status unavailable'}
                     </p>
                   </div>
 
-                  <div className={`rounded-full px-3 py-1 text-[10px] font-black font-mono uppercase tracking-wider border ${
+                  <div className={`self-start sm:self-auto rounded-full px-3 py-1 text-[10px] font-black font-mono uppercase tracking-wider border shrink-0 ${
                     activeGame.isFinal
                       ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-300'
                       : activeGame.isLive
@@ -667,68 +667,68 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                 </div>
 
-                <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl border border-slate-700/70 bg-black/25 p-4">
-                  <div className="text-left">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={34} />
-                      <div>
-                        <p className="text-xs text-slate-400 font-mono">AWAY</p>
-                        <p className="text-lg font-black text-white">{activeGame.away.abbreviation}</p>
+                <div className="relative grid grid-cols-1 min-[400px]:grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-xl sm:rounded-2xl border border-slate-700/70 bg-black/25 p-3 sm:p-4 min-w-0">
+                  <div className="text-left min-w-0">
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                      <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={28} />
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-slate-400 font-mono">AWAY</p>
+                        <p className="text-base sm:text-lg font-black text-white">{activeGame.away.abbreviation}</p>
                       </div>
                     </div>
-                    <p className="text-[11px] text-slate-500 truncate">{activeGame.away.name}</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{activeGame.away.name}</p>
                   </div>
 
-                  <div className="text-center px-2">
-                    <div className="flex items-center gap-3 justify-center">
-                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                  <div className="text-center px-1 sm:px-2 order-first min-[400px]:order-none">
+                    <div className="flex items-center gap-2 sm:gap-3 justify-center">
+                      <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-mono text-white tabular-nums">
                         {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.away ?? 0) : '-'}
                       </span>
-                      <span className="text-slate-600 text-2xl font-black">–</span>
-                      <span className="text-5xl sm:text-6xl font-black font-mono text-white">
+                      <span className="text-slate-600 text-xl sm:text-2xl font-black">–</span>
+                      <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-mono text-white tabular-nums">
                         {(activeGame.isLive || activeGame.isFinal) ? (activeGame.score?.home ?? 0) : '-'}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 font-mono uppercase mt-2">
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono uppercase mt-1 sm:mt-2">
                       {activeGame.isFinal ? 'Final score' : activeGame.isLive ? 'Live score' : 'Pregame'}
                     </p>
                   </div>
 
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-2 mb-2">
-                      <div>
-                        <p className="text-xs text-slate-400 font-mono">HOME</p>
-                        <p className="text-lg font-black text-white">{activeGame.home.abbreviation}</p>
+                  <div className="text-right min-w-0">
+                    <div className="flex items-center justify-end gap-2 mb-1 sm:mb-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-slate-400 font-mono">HOME</p>
+                        <p className="text-base sm:text-lg font-black text-white">{activeGame.home.abbreviation}</p>
                       </div>
-                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={34} />
+                      <TeamLogo src={activeGame.home.logo} alt={activeGame.home.name} size={28} />
                     </div>
-                    <p className="text-[11px] text-slate-500 truncate">{activeGame.home.name}</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{activeGame.home.name}</p>
                   </div>
                 </div>
 
-                <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
+                <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-2 mt-3 sm:mt-4">
+                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Game state</p>
                     <p className="text-sm font-black text-slate-100">{activeGame.isFinal ? 'Final' : activeGame.isLive ? 'Live now' : 'Scheduled'}</p>
                   </div>
-                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
+                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
                     <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
                   </div>
-                  <div className={`${Z8_STAT_CHIP} rounded-2xl p-3`}>
+                  <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
                     <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
                   </div>
                   <button
                     onClick={() => setSelected(activeGame)}
-                    className="rounded-2xl bg-sky-500/15 border border-sky-500/40 p-3 text-left hover:bg-sky-500/25 transition"
+                    className="rounded-xl sm:rounded-2xl bg-sky-500/15 border border-sky-500/40 p-2.5 sm:p-3 text-left hover:bg-sky-500/25 transition min-w-0"
                   >
                     <p className="text-[10px] text-sky-300 font-mono uppercase">Details</p>
                     <p className="text-sm font-black text-sky-100">Open game room</p>
                   </button>
                 </div>
 
-                <div className="relative mt-4 grid sm:grid-cols-3 gap-2">
+                <div className="relative mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     'Stolen Base Tracker',
                     'RBI Opportunity Meter',
@@ -743,12 +743,12 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
               </div>
             )}
 
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 min-w-0">
               {shown.map((m) => (
                 <button
                   key={m.gamePk}
                   onClick={() => setActiveGamePk(m.gamePk)}
-                  className={`min-w-[180px] text-left rounded-xl border p-3 transition-all ${
+                  className={`min-w-[140px] sm:min-w-[180px] text-left rounded-xl border p-2.5 sm:p-3 transition-all shrink-0 ${
                     String(activeGame?.gamePk) === String(m.gamePk)
                       ? 'bg-sky-500/15 border-sky-500/50'
                       : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
@@ -763,10 +763,12 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
             {/* Pitch-by-pitch sweat screen for the selected live game */}
             {(activeGame?.isLive || activeGame?.isFinal) && activeGame.gamePk != null && (
-              <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+              <div className="min-w-0 max-w-4xl mx-auto w-full">
+                <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
+              </div>
             )}
 
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
               {shown.map((m) => (
                 <GameCard
                   key={m.gamePk}

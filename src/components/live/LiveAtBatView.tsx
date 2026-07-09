@@ -85,7 +85,7 @@ const StrikeZonePlot: React.FC<{ pitches: LiveAtBatPitch[] }> = ({ pitches }) =>
   const zy = sy(szTop), zh = sy(szBot) - sy(szTop);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Strike zone pitch locations" className="block max-w-[220px] mx-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Strike zone pitch locations" className="block w-full max-w-[160px] min-[380px]:max-w-[180px] sm:max-w-[200px] md:max-w-[220px] lg:max-w-[240px] mx-auto h-auto">
       <rect x={zx} y={zy} width={zw} height={zh} fill="rgba(255,255,255,0.03)" stroke={FAINT} strokeWidth={1.5} rx={2} />
       {[1, 2].map((i) => (
         <React.Fragment key={i}>
@@ -128,8 +128,8 @@ const SprayChart: React.FC<{
   const HOME_X = 125, HOME_Y = 199;
 
   return (
-    <div className={`relative min-w-0 ${hrCelebrating ? 've-hr-pulse plasma-shimmer rounded-xl' : ''}`}>
-      <svg viewBox="0 15 250 200" width="100%" role="img" aria-label="Batted ball landing spot and base runners" className="block max-w-[260px] mx-auto">
+    <div className={`relative min-w-0 max-w-full ${hrCelebrating ? 've-hr-pulse plasma-shimmer rounded-xl' : ''}`}>
+      <svg viewBox="0 15 250 200" width="100%" role="img" aria-label="Batted ball landing spot and base runners" className="block w-full max-w-[200px] min-[380px]:max-w-[220px] sm:max-w-[240px] md:max-w-[280px] lg:max-w-[320px] mx-auto h-36 min-[380px]:h-40 sm:h-48 md:h-52 lg:h-56">
         <path d={`M${HOME_X},${HOME_Y} L25,99 Q125,8 225,99 Z`} fill="rgba(0,255,148,0.05)" stroke={FAINT} strokeWidth={1.5} />
         <path d={`M${HOME_X},${HOME_Y} L163,161 L125,123 L87,161 Z`} fill="rgba(255,255,255,0.04)" stroke={FAINT} strokeWidth={1} />
         <path d="M73,147 Q125,95 177,147" fill="none" stroke={FAINT} strokeWidth={0.75} strokeDasharray="3 3" />
@@ -177,7 +177,7 @@ const BaseRunnersDiamond: React.FC<{ runners: LiveAtBatSnapshot['runners'] }> = 
   return (
     <div className="min-w-0">
       <p className="mb-1.5 text-center text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Runners on base</p>
-      <svg viewBox="0 15 250 200" width="100%" role="img" aria-label="Base runners" className="block max-w-[200px] mx-auto">
+      <svg viewBox="0 15 250 200" width="100%" role="img" aria-label="Base runners" className="block w-full max-w-[160px] min-[380px]:max-w-[180px] sm:max-w-[200px] md:max-w-[220px] mx-auto h-32 sm:h-36 md:h-40">
         <path d={`M${HOME_X},${HOME_Y} L163,161 L125,123 L87,161 Z`} fill="rgba(255,255,255,0.04)" stroke={FAINT} strokeWidth={1} />
         {BASE_COORDS.map(([x, y], i) => (
           <rect key={i} x={x - 2.5} y={y - 2.5} width={5} height={5} fill="rgba(255,255,255,0.35)" transform={`rotate(45 ${x} ${y})`} />
@@ -283,22 +283,22 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
     : null;
 
   return (
-    <div className="glass-panel glass-border rounded-2xl p-4 sm:p-5 min-w-0 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 font-mono text-sm font-bold text-white/90 min-w-0">
+    <div className="glass-panel glass-border rounded-2xl p-3 sm:p-4 md:p-5 min-w-0 overflow-x-hidden overflow-hidden">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs sm:text-sm font-bold text-white/90 min-w-0">
           <span>{snap.away.abbr} {snap.away.runs ?? '–'}</span>
           <span className="text-white/30">@</span>
           <span>{snap.home.abbr} {snap.home.runs ?? '–'}</span>
           {snap.inning != null && (
-            <span className="ml-1 text-[11px] font-semibold text-white/40">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-white/40">
               {snap.halfInning ?? ''} {snap.inning}{snap.outs != null ? ` · ${snap.outs} out${snap.outs !== 1 ? 's' : ''}` : ''}
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <CountDisplay balls={snap.count?.balls ?? null} strikes={snap.count?.strikes ?? null} strikeFlash={strikeFlash} />
           {snap.winProb && (
-            <span className="rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ background: 'rgba(0,240,255,0.08)', color: CYAN, border: '1px solid rgba(0,240,255,0.25)' }}>
+            <span className="rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold shrink-0" style={{ background: 'rgba(0,240,255,0.08)', color: CYAN, border: '1px solid rgba(0,240,255,0.25)' }}>
               {snap.winProb.homePct >= 50
                 ? `${snap.home.abbr} ${snap.winProb.homePct.toFixed(1)}%`
                 : `${snap.away.abbr} ${snap.winProb.awayPct.toFixed(1)}%`} win prob
@@ -310,15 +310,15 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
 
       {play ? (
         <>
-          <div className="mt-4 flex items-center gap-3 min-w-0">
+          <div className="mt-3 sm:mt-4 flex items-start gap-2.5 sm:gap-3 min-w-0">
             {play.batter.headshot && (
-              <img src={play.batter.headshot} alt={play.batter.name} className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10" loading="eager" decoding="async" fetchPriority="high" referrerPolicy="no-referrer" />
+              <img src={play.batter.headshot} alt={play.batter.name} className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10" loading="eager" decoding="async" fetchPriority="high" referrerPolicy="no-referrer" />
             )}
-            <div className="min-w-0">
-              <p className={`truncate text-base font-black text-white ${isHomeRun && hrCelebrating ? 'text-amber-300' : ''}`}>
+            <div className="min-w-0 flex-1">
+              <p className={`text-sm sm:text-base font-black text-white line-clamp-2 sm:truncate ${isHomeRun && hrCelebrating ? 'text-amber-300' : ''}`}>
                 {play.isComplete && play.description ? play.description : `${play.batter.name} at bat…`}
               </p>
-              <p className="mt-0.5 text-xs truncate" style={{ color: MUTED }}>
+              <p className="mt-0.5 text-[11px] sm:text-xs truncate" style={{ color: MUTED }}>
                 {play.batter.name}{play.batter.gameLine ? ` · ${play.batter.gameLine}` : ''}
                 <span className="mx-1.5 text-white/20">|</span>
                 {play.pitcher.name}{play.pitcher.gameLine ? ` · ${play.pitcher.gameLine}` : ''}
@@ -326,29 +326,29 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 min-w-0">
-            <div className="flex flex-col gap-1.5 min-w-0">
+          <div className="mt-3 sm:mt-4 grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 min-w-0">
+            <div className="flex flex-col gap-1 sm:gap-1.5 min-w-0 order-2 min-[380px]:order-1">
               <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Pitch Sequence</p>
               {pitches.length === 0 && (
-                <p className="py-4 text-xs" style={{ color: MUTED }}>Waiting for the first pitch…</p>
+                <p className="py-3 sm:py-4 text-xs" style={{ color: MUTED }}>Waiting for the first pitch…</p>
               )}
               {[...pitches].reverse().map((p) => {
                 const color = pitchColor(p);
                 return (
-                  <div key={p.number} className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 min-w-0" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black" style={{ background: color, color: '#050505' }}>
+                  <div key={p.number} className="flex items-center gap-2 sm:gap-2.5 rounded-lg sm:rounded-xl px-2 sm:px-2.5 py-1.5 sm:py-2 min-w-0" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black" style={{ background: color, color: '#050505' }}>
                       {p.number}
                     </span>
-                    <span className="text-sm font-bold text-white/90 truncate">{p.result}</span>
-                    <span className="ml-auto shrink-0 text-[11px] font-mono" style={{ color: MUTED }}>
+                    <span className="text-xs sm:text-sm font-bold text-white/90 truncate">{p.result}</span>
+                    <span className="ml-auto shrink-0 text-[10px] sm:text-[11px] font-mono" style={{ color: MUTED }}>
                       {p.pitchType ?? '—'}{p.velo != null ? ` · ${p.velo.toFixed(1)} mph` : ''}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <div className="min-w-0">
-              <p className="mb-1.5 text-center text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Strike Zone (catcher's view)</p>
+            <div className="min-w-0 order-1 min-[380px]:order-2">
+              <p className="mb-1 sm:mb-1.5 text-center text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Strike Zone (catcher's view)</p>
               <StrikeZonePlot pitches={pitches} />
             </div>
           </div>
@@ -360,10 +360,10 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
           )}
 
           {hit && (
-            <div className="mt-4 grid gap-4 border-t border-white/5 pt-4 sm:grid-cols-2 min-w-0">
+            <div className="mt-3 sm:mt-4 grid gap-3 sm:gap-4 lg:gap-6 border-t border-white/5 pt-3 sm:pt-4 grid-cols-1 md:grid-cols-2 min-w-0 lg:max-w-4xl lg:mx-auto w-full">
               {hasSpray && (
                 <div className="min-w-0">
-                  <p className="mb-1.5 text-center text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Batted Ball</p>
+                  <p className="mb-1 sm:mb-1.5 text-center text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: MUTED }}>Batted Ball</p>
                   <SprayChart
                     coordX={hit.coordX!}
                     coordY={hit.coordY!}
@@ -373,16 +373,16 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
                   />
                 </div>
               )}
-              <div className="grid grid-cols-3 content-center gap-2 min-w-0">
+              <div className={`grid grid-cols-2 md:grid-cols-3 content-center gap-2 min-w-0 ${hasSpray ? '' : 'md:col-span-2 max-w-md mx-auto w-full'}`}>
                 {[
                   { label: 'Exit Velo', value: hit.ev != null ? `${hit.ev.toFixed(1)}` : '—', unit: 'mph' },
                   { label: 'Launch', value: hit.la != null ? `${hit.la.toFixed(0)}°` : '—', unit: 'angle' },
                   { label: 'Distance', value: hit.distance != null ? `${hit.distance.toFixed(0)}` : '—', unit: 'feet' },
                 ].map((s) => (
-                  <div key={s.label} className="flex flex-col items-center gap-0.5 rounded-2xl px-2 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <span className="text-xl font-extrabold tabular-nums" style={{ color: isHomeRun ? '#fbbf24' : EMERALD }}>{s.value}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: MUTED }}>{s.unit}</span>
-                    <span className="text-[8px] uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>{s.label}</span>
+                  <div key={s.label} className="flex flex-col items-center gap-0.5 rounded-xl sm:rounded-2xl px-2 py-2 sm:py-3 min-w-0" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <span className="text-lg sm:text-xl font-extrabold tabular-nums" style={{ color: isHomeRun ? '#fbbf24' : EMERALD }}>{s.value}</span>
+                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide" style={{ color: MUTED }}>{s.unit}</span>
+                    <span className="text-[7px] sm:text-[8px] uppercase text-center" style={{ color: 'rgba(255,255,255,0.25)' }}>{s.label}</span>
                   </div>
                 ))}
               </div>
