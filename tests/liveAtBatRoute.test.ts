@@ -84,7 +84,8 @@ describe("live at-bat API route", () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       ok: true,
-      data: snapshot,
+      gamePk: snapshot.gamePk,
+      status: snapshot.status,
       meta: {
         source: "mlb_statsapi_live_feed",
         dataQuality: "official_mlb_live_feed",
