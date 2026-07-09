@@ -19,8 +19,9 @@ dotenv.config({ path: ".env.local", override: true });
 validateProductionEnvAtBoot();
 
 export async function createApp() {
+  validateProductionEnvAtBoot();
   const app = express();
-
+  
   initServerSentry(app);
 
   app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
