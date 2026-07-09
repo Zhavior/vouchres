@@ -40,7 +40,7 @@ const ALL_ITEMS: PaletteItem[] = [
   // Pro Labs
   { id: 'intel',           label: 'AI Edge Lab',           group: 'Pro Labs',      icon: Flame,           keywords: ['ai', 'edge', 'lab', 'intel', 'signals'] },
   { id: 'live_game_lab',   label: 'Live Game Lab',         group: 'Pro Labs',      icon: Radio,           keywords: ['live', 'game', 'lab', 'in-game'] },
-  { id: 'player_edge_lab', label: 'Player Edge Lab',       group: 'Pro Labs',      icon: UserRoundSearch, keywords: ['player', 'edge', 'breakdown', 'score'] },
+  { id: 'player_edge_lab', label: 'Player Intelligence Card',       group: 'Pro Labs',      icon: UserRoundSearch, keywords: ['player', 'edge', 'breakdown', 'score'] },
   { id: 'team_matchup_lab',label: 'Team Matchup Lab',      group: 'Pro Labs',      icon: Swords,          keywords: ['matchup', 'team', 'pitcher', 'k9', 'era', 'whip'] },
   { id: 'hitter_matchup_zones', label: 'Hitter Matchup Zones', group: 'Pro Labs', icon: LineChart,       keywords: ['hitter', 'zones', 'heatmap', 'matchup'] },
   { id: 'pro_graphs_lab',  label: 'Pro Graphs Lab',        group: 'Pro Labs',      icon: LineChart,       keywords: ['graphs', 'charts', 'trends', 'data'] },
