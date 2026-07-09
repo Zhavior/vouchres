@@ -79,6 +79,10 @@ describe("API route smoke envelopes", () => {
       ok: true,
       service: "vouchedge-backend",
       schema: "route_metrics_v1",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
       metrics: {
         startedAt: expect.any(String),
         uptimeMs: expect.any(Number),
@@ -109,6 +113,10 @@ describe("API route smoke envelopes", () => {
       ok: true,
       status: "ok",
       service: "vouchedge-core",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
 
     await requestJson("/api/health");

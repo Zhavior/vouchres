@@ -31,9 +31,10 @@ import { getPublicVouch } from "../services/persistence/vouchService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import type { RequestWithContext } from "../middleware/requestContext";
 
 function escapeHtml(value: unknown): string {
@@ -72,10 +73,12 @@ export function registerApiRoutes(app: Express): void {
   registerAiJudgeSocialRoutes(app);
 
   // Skills introspection + generic runner.
-  app.get("/api/skills", (_req: Request, res: Response) => res.json({ ok: true, skills: listSkills() }));
-  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/skills", asyncHandler(async (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, { skills: listSkills() }))
+  ));
+  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      res.json({ ok: true, result: await runSkill(req.params.id, req.body ?? {}) });
+      res.json(apiOkFlat(req, { result: await runSkill(req.params.id, req.body ?? {}) }));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Skill failed.";
       if (message.startsWith("Unknown skill:")) {
@@ -97,9 +100,8 @@ export function registerApiRoutes(app: Express): void {
   }));
 
   // Backend health.
-  app.get("/api/system/core-health", (_req: Request, res: Response) =>
-    res.json({
-      ok: true,
+  app.get("/api/system/core-health", asyncHandler(async (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, {
       status: "ok",
       service: "vouchedge-core",
       routes: {
@@ -108,28 +110,31 @@ export function registerApiRoutes(app: Express): void {
         playerRegistry: true,
       },
       time: new Date().toISOString(),
-    })
-  );
+    }))
+  ));
 
-  app.get("/api/health", (_req: Request, res: Response) =>
-    res.json({ ok: true, status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
-  );
+  app.get("/api/health", asyncHandler(async (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, {
+      status: "ok",
+      service: "vouchedge-backend",
+      time: new Date().toISOString(),
+    }))
+  ));
 
-  app.get("/api/health/backend", (_req: Request, res: Response) => {
+  app.get("/api/health/backend", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const report = getBackendHealthReport();
-    res.json(report);
-  });
+    res.json(apiOkFlat(req, report as Record<string, unknown>));
+  }));
 
-  app.get("/api/health/metrics", (_req: Request, res: Response) => {
+  app.get("/api/health/metrics", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
-    res.json({
-      ok: true,
+    res.json(apiOkFlat(req, {
       service: "vouchedge-backend",
       schema: "route_metrics_v1",
       updatedAt: new Date().toISOString(),
       metrics,
-    });
-  });
+    }));
+  }));
 
   // Public share permalink — server-rendered (not the SPA) so X/Slack/iMessage
   // crawlers, which don't execute JS, see the Open Graph tags. Must be
