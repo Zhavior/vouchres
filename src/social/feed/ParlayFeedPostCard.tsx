@@ -13,7 +13,7 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
     const parts = text.split(/\*\*(.*?)\*\*/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        return <strong key={i} className="text-white font-extrabold bg-[#1e293b]/70 px-1 py-0.5 rounded">{part}</strong>;
+        return <strong key={i} className="text-white font-extrabold bg-ve-surface-panel/70 px-1 py-0.5 rounded">{part}</strong>;
       }
       return part;
     });
@@ -104,9 +104,9 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
   };
 
   return (
-    <div className="bg-[#0b0f19] rounded-xl border border-slate-800/80 overflow-hidden shadow-inner my-2" id={`parlay-ticket-${parlay.id}`}>
+    <div className="bg-ve-graphite rounded-xl border border-slate-800/80 overflow-hidden shadow-inner my-2" id={`parlay-ticket-${parlay.id}`}>
       {/* Ticket Header */}
-      <div className="bg-[#121824] px-4 py-3 border-b border-slate-800/85 flex items-center justify-between">
+      <div className="bg-ve-storm px-4 py-3 border-b border-slate-800/85 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sliders className="w-4 h-4 text-sky-400" />
           <span className="font-bold text-slate-100 text-xs tracking-wide uppercase">{parlay.title || 'Slip Selection'}</span>
@@ -151,7 +151,7 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
       </div>
 
       {/* Ticket Footer / Summary */}
-      <div className="bg-[#121824]/50 px-4 py-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono font-bold">
+      <div className="bg-ve-storm/50 px-4 py-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono font-bold">
         <div className="flex items-center gap-1">
           <span className="text-slate-400 text-[10px]">BOOK:</span>
           <span className="text-slate-300 font-semibold bg-slate-850 px-1.5 py-0.5 rounded uppercase text-[9px]">{parlay.bookie || 'EXCHANGE'}</span>
@@ -182,7 +182,7 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
           </button>
           
           {showEdgeReport && (
-            <div className="p-4 border-t border-slate-900/65 bg-[#070b14]/90 space-y-3 animate-fade-in text-left">
+            <div className="p-4 border-t border-slate-900/65 bg-ve-graphite/90 space-y-3 animate-fade-in text-left">
               <div className="text-[10px] text-slate-500 font-mono font-semibold flex items-center justify-between border-b border-slate-905 pb-1.5 mb-2">
                 <span>Vouchedge AI-3.5 Engine Analysis</span>
                 <span>Verified Integrity Protocol v3.2</span>

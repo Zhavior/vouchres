@@ -40,7 +40,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
   };
 
   return (
-    <div className="bg-[#0b0f19]/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
+    <div className="bg-ve-graphite/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
       {/* Glow Layer matching theme Accent */}
       <div className={`absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-sky-500`} />
       <div className={`absolute -bottom-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 bg-indigo-600`} />

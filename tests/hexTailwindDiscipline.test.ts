@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 const SRC_ROOT = join(process.cwd(), 'src');
 
-/** Baseline after 9.5 sprint hex purge (was 513). */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 482;
+/** Baseline after 9.5 gap-close hex purge (was 482). */
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 399;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

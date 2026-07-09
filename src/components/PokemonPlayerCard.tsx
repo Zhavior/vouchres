@@ -220,7 +220,7 @@ export default function PokemonPlayerCard({
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none transform -skew-x-12 translate-x-1/2 scale-150" />
 
           {/* Top Row: Ribbon with Name, HP & Level */}
-          <div className="flex bg-[#0a0d16]/95 border border-slate-800 rounded-2xl p-2.5 items-center justify-between mb-4 relative z-10" id="card-ribbon-header">
+          <div className="flex bg-ve-obsidian/95 border border-slate-800 rounded-2xl p-2.5 items-center justify-between mb-4 relative z-10" id="card-ribbon-header">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-[10px] font-black font-mono text-yellow-400 shrink-0">BASIC</span>
               <h3 className="text-sm font-black text-white uppercase truncate font-mono tracking-wider">{activePlayer.name}</h3>

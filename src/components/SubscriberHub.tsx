@@ -481,14 +481,14 @@ export default function SubscriberHub({
               return (
                 <div 
                   key={capper.id}
-                  className="bg-[#121824]/45 backdrop-blur-md border border-slate-855 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-white/10 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20"
+                  className="bg-ve-storm/45 backdrop-blur-md border border-slate-855 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-white/10 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20"
                 >
                   {/* Visual Category badge */}
                   <div className="p-4 border-b border-slate-850/60 bg-obsidian-900/20 flex justify-between items-center">
                     <span className="text-[9px] bg-black/25 px-2.5 py-0.5 border border-slate-850 rounded font-black font-mono text-emerald-400 uppercase">
                       {capper.winRate.toFixed(1)}% WINRATE
                     </span>
-                    <span className="text-[9.5px] bg-[#1a1c30] text-vouch-cyan px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide">
+                    <span className="text-[9.5px] bg-ve-surface-panel text-vouch-cyan px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide">
                       {capper.badge}
                     </span>
                   </div>
@@ -560,7 +560,7 @@ export default function SubscriberHub({
         <div className="space-y-5" id="capper-chat-space">
           
           {/* Active room back row banner */}
-          <div className="bg-[#121824]/30 border border-slate-850 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+          <div className="bg-ve-storm/30 border border-slate-850 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSelectedCapperId(null)}
@@ -616,7 +616,7 @@ export default function SubscriberHub({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
             {/* Left Sidebar inside the active space: Capper Information Card */}
-            <div className="lg:col-span-1 border border-slate-855 rounded-2xl bg-[#121824]/30 p-5 space-y-4 text-left">
+            <div className="lg:col-span-1 border border-slate-855 rounded-2xl bg-ve-storm/30 p-5 space-y-4 text-left">
               <div>
                 <h4 className="text-[10px] font-bold text-vouch-cyan font-mono uppercase tracking-wider mb-2">CLUB IDENTITY CARD</h4>
                 <div className="w-12 h-12 rounded-full bg-indigo-950 flex items-center justify-center border border-indigo-900/50 text-vouch-cyan/80 font-bold mb-3">
@@ -658,7 +658,7 @@ export default function SubscriberHub({
               
               {/* RENDERING CHATROOM */}
               {chatInnerTab === 'chat' && (
-                <div className="bg-[#121824]/35 border border-slate-850 rounded-2xl flex flex-col justify-between h-[520px] overflow-hidden" id="tab-chatroom">
+                <div className="bg-ve-storm/35 border border-slate-850 rounded-2xl flex flex-col justify-between h-[520px] overflow-hidden" id="tab-chatroom">
                   
                   {/* Message displays body */}
                   <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 scroll-smooth">
@@ -759,7 +759,7 @@ export default function SubscriberHub({
               {/* RENDERING PREMIUM PARLAYS ONLY */}
               {chatInnerTab === 'parlays' && (
                 <div className="space-y-4" id="tab-premium-parlays">
-                  <div className="bg-[#121824]/30 border border-slate-855 p-4 rounded-xl text-left flex items-start gap-3">
+                  <div className="bg-ve-storm/30 border border-slate-855 p-4 rounded-xl text-left flex items-start gap-3">
                     <Award className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Capper Locked Premium Slips</h4>
@@ -779,7 +779,7 @@ export default function SubscriberHub({
                       {premiumParlays.map((parlay) => {
                         const reactions = parlayReactions[parlay.id] || { '🔥': 4, '🎯': 3, '👍': 5, '💰': 6 };
                         return (
-                          <div key={parlay.id} className="bg-[#121824]/40 border border-slate-850 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all">
+                          <div key={parlay.id} className="bg-ve-storm/40 border border-slate-850 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all">
                             {/* Parlay premium badge */}
                             <div className="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
                               <span className="text-[10px] font-bold text-emerald-400 font-mono tracking-wider flex items-center gap-1.5 uppercase">
@@ -796,7 +796,7 @@ export default function SubscriberHub({
                               {parlay.legs.map((leg) => (
                                 <div key={leg.id} className="p-2.5 bg-obsidian-900/40 rounded-xl border border-slate-850/50 flex justify-between items-center text-xs">
                                   <div className="space-y-0.5">
-                                    <span className="text-[8.5px] font-bold font-mono px-1.5 bg-[#171e30] border border-blue-900/30 text-sky-400 rounded uppercase">
+                                    <span className="text-[8.5px] font-bold font-mono px-1.5 bg-ve-surface-panel border border-blue-900/30 text-sky-400 rounded uppercase">
                                       {shouldShowPublicGameLabel(leg.game) ? cleanCustomerText(leg.game) : 'MLB'}
                                     </span>
                                     <p className="font-extrabold text-white/90 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
@@ -855,7 +855,7 @@ export default function SubscriberHub({
               {/* RENDERING ANNOUNCEMENTS ONLY */}
               {chatInnerTab === 'announcements' && (
                 <div className="space-y-4 text-left" id="tab-announcements">
-                  <div className="bg-[#121824]/30 border border-slate-860 p-4 rounded-xl text-left flex items-start gap-3">
+                  <div className="bg-ve-storm/30 border border-slate-860 p-4 rounded-xl text-left flex items-start gap-3">
                     <Megaphone className="w-5 h-5 text-vouch-cyan shrink-0 mt-0.5 animate-pulse" />
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
@@ -926,7 +926,7 @@ export default function SubscriberHub({
       {/* Subscription Settings Screen for the Cappers / channel owner */}
       {activeTab === 'channel_settings' && (
         <div className="space-y-6 text-left" id="hub-channel-settings">
-          <div className="bg-[#121824]/30 border border-slate-850 p-5 rounded-2xl space-y-2">
+          <div className="bg-ve-storm/30 border border-slate-850 p-5 rounded-2xl space-y-2">
             <h3 className="text-base font-black uppercase tracking-wide text-white/90 flex items-center gap-2">
               <Sliders className="w-5 h-5 text-vouch-cyan" />
               Customize Subscription Offerings
@@ -944,7 +944,7 @@ export default function SubscriberHub({
               return (
                 <div 
                   key={idx}
-                  className="bg-[#121824]/40 border border-slate-850 rounded-2xl p-5 space-y-4 relative flex flex-col justify-between"
+                  className="bg-ve-storm/40 border border-slate-850 rounded-2xl p-5 space-y-4 relative flex flex-col justify-between"
                 >
                   <div className="space-y-2.5">
                     {/* Visual Segment header */}
@@ -1022,7 +1022,7 @@ export default function SubscriberHub({
                           setEditPrice(plan.price);
                           setEditPerk(plan.savings || plan.perk || '');
                         }}
-                        className="w-full py-1.5 bg-[#171e30] border border-blue-900/40 hover:bg-indigo-600 text-sky-400 hover:text-white uppercase text-[10px] font-mono font-bold rounded-lg transition-all"
+                        className="w-full py-1.5 bg-ve-surface-panel border border-blue-900/40 hover:bg-indigo-600 text-sky-400 hover:text-white uppercase text-[10px] font-mono font-bold rounded-lg transition-all"
                       >
                         Edit Pricing Config
                       </button>
@@ -1039,7 +1039,7 @@ export default function SubscriberHub({
       {/* Choose Subscription Length Modal */}
       {showSubModal && selectedCapperForSub && (
         <div className="fixed inset-0 bg-obsidian-900/85 backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fade-in text-left" id="subscription-length-modal">
-          <div className="bg-[#0b0f19]/95 border border-white/10 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-white/90 relative">
+          <div className="bg-ve-graphite/95 border border-white/10 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-white/90 relative">
             
             {/* Header */}
             <div className="flex justify-between items-start border-b border-white/10 pb-4">
@@ -1066,7 +1066,7 @@ export default function SubscriberHub({
             </div>
 
             {/* Feature List (above pricing) */}
-            <div className="bg-[#121824]/45 border border-slate-850 p-4 rounded-xl space-y-3">
+            <div className="bg-ve-storm/45 border border-slate-850 p-4 rounded-xl space-y-3">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-205 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-sky-400" />
                 Full club access includes:
@@ -1122,7 +1122,7 @@ export default function SubscriberHub({
                 return (
                   <div 
                     key={idx}
-                    className="bg-[#121824]/50 border border-white/10 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group"
+                    className="bg-ve-storm/50 border border-white/10 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group"
                   >
                     {/* Full access badge */}
                     <div className="absolute -top-2 left-2 right-2 flex justify-center">

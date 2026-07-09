@@ -19,7 +19,8 @@ function includesAll(source: string, snippets: string[], label: string): void {
 
 const auth = read("server/middleware/auth.ts");
 const ownership = read("server/middleware/ownership.ts");
-const parlays = read("server/routes/parlayRoutes.ts");
+const parlayUserRoutes = read("server/routes/parlay/parlayUserRoutes.ts");
+const parlayController = read("server/controllers/parlayController.ts");
 const results = read("server/routes/resultRoutes.ts");
 const notifications = read("server/routes/notificationRoutes.ts");
 const notificationService = read("server/services/notifications/notificationService.ts");
@@ -87,17 +88,23 @@ includesAll(ownership, [
   "[ownership] rejected cross-user access",
 ], "ownership helper");
 
-includesAll(parlays, [
-  "parlayRoutes.post(\"/me/parlays\", requireAuth",
-  "parlayRoutes.get(\"/me/parlays\", requireAuth",
-  "parlayRoutes.get(\"/parlays/:id\", requireAuth",
-  "assertUserOwnsResource(req.user!.id, \"parlay\", id)",
+includesAll(parlayUserRoutes, [
+  '"/parlays/save"',
+  "requireAuth",
+  '"/me/parlays"',
+  '"/parlays/:id"',
+  "listMyParlaysHandler",
+  "saveMeParlayHandler",
+  "updateParlayHandler",
+  "hideParlayHandler",
   ".eq(\"user_id\", req.user!.id)",
-  "parlayRoutes.patch(\"/parlays/:id\", requireAuth",
-  "parlayRoutes.delete(\"/parlays/:id\", requireAuth",
-  ".eq(\"leg_type\", \"parlay\")",
-  "requestedUserId && requestedUserId !== userId",
 ], "parlay route ownership");
+
+includesAll(parlayController, [
+  "assertUserOwnsResource(req.user!.id, \"parlay\", req.params.id)",
+  "query.user_id && query.user_id !== req.user!.id",
+  "You cannot read another user's parlays.",
+], "parlay controller ownership");
 
 includesAll(notifications, [
   "notificationRoutes.get(\"/notifications\", requireAuth",
@@ -118,40 +125,40 @@ includesAll(notificationService, [
 ], "notification service ownership");
 
 includesAll(billing, [
-  "billingRoutes.post(",
-  "\"/checkout\"",
+  '"/checkout"',
+  '"/portal"',
   "requireAuth",
-  "billingRoutes.post(\"/portal\", requireAuth",
-  "billingRoutes.get(\"/status\", requireAuth, billingStatusHandler)",
-  "billingRoutes.get(\"/subscription\", requireAuth, billingStatusHandler)",
+  'billingRoutes.get("/status", requireAuth, billingStatusHandler)',
+  'billingRoutes.get("/subscription", requireAuth, billingStatusHandler)',
   ".eq(\"profile_id\", req.user!.id)",
 ], "billing auth scope");
 
 includesAll(results, [
-  "app.get(\"/api/results/ledger\", requireAuth",
-  "getLedger({ userId: authedReq.user!.id",
+  'app.get("/api/results/ledger", requireAuth',
+  "getLedger({ userId: req.user!.id",
   "if (capperId) {",
-  "!authedReq.user?.profile.is_staff",
-  "app.post(\"/api/results/grade\", requireAuth, requireStaff",
+  "!req.user?.profile.is_staff",
+  'app.post("/api/results/grade", requireAuth, requireStaff',
 ], "results scope and staff grade");
 
 includesAll(core, [
-  "coreRoutes.get(\"/picks\", requireAuth",
+  'coreRoutes.get(',
+  '"/picks"',
+  "requireAuth",
   "requestedUserId && requestedUserId !== req.user!.id && !req.user!.profile.is_staff",
   "capperId && !req.user!.profile.is_staff",
-  "coreRoutes.post(",
-  "\"/admin/grade\"",
+  '"/admin/grade"',
   "requireStaff",
 ], "core picks/admin authorization");
 
 includesAll(posts, [
-  "postRoutes.post(",
-  "\"/posts\"",
+  'postRoutes.post(',
+  '"/posts"',
   "requireAuth",
-  "pick.user_id !== (req as any).user!.id",
-  "postRoutes.delete(\"/posts/:id\", requireAuth",
-  ".eq(\"author_id\", (req as any).user!.id)",
-  "postRoutes.delete(\"/comments/:id\", requireAuth",
+  "pick.user_id !== req.user!.id",
+  'postRoutes.delete("/posts/:id", requireAuth',
+  '.eq("author_id", req.user!.id)',
+  'postRoutes.delete("/comments/:id", requireAuth',
 ], "feed post ownership");
 
 includesAll(pickService, [

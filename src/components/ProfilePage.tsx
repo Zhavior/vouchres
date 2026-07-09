@@ -81,7 +81,7 @@ export default function ProfilePage({
               category: match.category,
               badge: match.badge || '💎 AI_MINT',
               avatarAnimationClass: match.avatarAnimationClass || 'animate-pulse border-sky-400 shadow-md',
-              cardStyle: match.cardStyle || 'bg-[#121824] border-slate-800',
+              cardStyle: match.cardStyle || 'bg-ve-storm border-slate-800',
               glowColor: match.glowColor || 'from-sky-500 to-indigo-500',
               particleDemo: match.particleDemo || ['✨', '💎'],
               fontFamily: match.fontFamily || 'font-mono',
@@ -155,7 +155,7 @@ export default function ProfilePage({
 
   return (
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
-      <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} max-w-[1120px] mx-auto ${Z8_PAGE_GAP}`} id="profile-details-view">
+      <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 max-w-[1120px] mx-auto overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="profile-details-view">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
@@ -303,7 +303,7 @@ export default function ProfilePage({
                   {/* Slogan phrase or custom quote (Custom AI Theme extensibility) */}
                   {activeThemeData?.customAIPhrase && (
                     <div className="mt-2.5 p-2 bg-slate-950/55 rounded-xl border border-slate-850/60 flex items-center gap-2 max-w-fit shadow-inner">
-                      <span className="text-[8.5px] bg-[#1a0f35] text-indigo-400 font-mono font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide border border-indigo-900/30">
+                      <span className="text-[8.5px] bg-indigo-950/50 text-indigo-400 font-mono font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide border border-indigo-900/30">
                         {activeThemeData.badge ? activeThemeData.badge.toUpperCase() : 'THEM_AURA'}
                       </span>
                       <span className="text-[10px] text-slate-300 font-extrabold font-mono tracking-wider leading-none">
@@ -338,14 +338,14 @@ export default function ProfilePage({
               </div>
 
               {isEditing ? (
-                <form onSubmit={handleProfileSave} className="space-y-3.5 bg-[#0b0f19] p-4 rounded-xl border border-slate-850" id="profile-edit-subform">
+                <form onSubmit={handleProfileSave} className="space-y-3.5 bg-ve-graphite p-4 rounded-xl border border-slate-850" id="profile-edit-subform">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Display Name</label>
                     <input 
                       type="text" 
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full text-xs bg-[#121824] border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-sky-500"
+                      className="w-full text-xs bg-ve-storm border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-sky-500"
                       maxLength={30}
                       required
                     />
@@ -356,7 +356,7 @@ export default function ProfilePage({
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="w-full text-xs bg-[#121824] border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-sky-500 h-20 resize-none"
+                      className="w-full text-xs bg-ve-storm border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-sky-500 h-20 resize-none"
                       maxLength={160}
                     />
                   </div>
@@ -491,7 +491,7 @@ export default function ProfilePage({
             </div>
 
             {userPosts.length === 0 ? (
-              <div className="p-12 text-center bg-[#121824] rounded-2xl border border-slate-850 space-y-3">
+              <div className="p-12 text-center bg-ve-storm rounded-2xl border border-slate-850 space-y-3">
                 <MessageSquare className="w-10 h-10 text-slate-600 mx-auto animate-pulse" />
                 <div className="space-y-1">
                   <p className="text-xs text-slate-300 font-bold uppercase font-mono">No Posts Published Yet</p>
@@ -666,8 +666,8 @@ export default function ProfilePage({
                     onMouseLeave={() => setHoveredDayYmd(null)}
                     className={`relative p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
                       hasPlays 
-                        ? 'bg-slate-900/60 border-slate-800 hover:border-slate-600 hover:bg-[#1a2333]/45 shadow-sm' 
-                        : 'bg-[#121824]/40 border-slate-900/50 opacity-55 hover:opacity-100 transition-opacity'
+                        ? 'bg-slate-900/60 border-slate-800 hover:border-slate-600 hover:bg-ve-surface-panel/45 shadow-sm' 
+                        : 'bg-ve-storm/40 border-slate-900/50 opacity-55 hover:opacity-100 transition-opacity'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -717,17 +717,17 @@ export default function ProfilePage({
                           <div className="space-y-3">
                             {/* Winrate Stats Grid panel */}
                             <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                              <div className="bg-[#121824] p-1.5 rounded-md border border-slate-850">
+                              <div className="bg-ve-storm p-1.5 rounded-md border border-slate-850">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">Winrate</p>
                                 <p className="text-sky-455 font-mono font-bold text-xs mt-0.5 text-sky-400 font-black">
                                   {winRate !== null ? `${winRate.toFixed(0)}%` : '—'}
                                 </p>
                               </div>
-                              <div className="bg-[#121824] p-1.5 rounded-md border border-slate-850">
+                              <div className="bg-ve-storm p-1.5 rounded-md border border-slate-850">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">W / L</p>
                                 <p className="text-slate-200 font-mono font-bold text-xs mt-0.5">{wonCount}W - {lostCount}L</p>
                               </div>
-                              <div className="bg-[#121824] p-1.5 rounded-md border border-slate-850">
+                              <div className="bg-ve-storm p-1.5 rounded-md border border-slate-850">
                                 <p className="text-slate-400 uppercase font-black tracking-wider">Profit</p>
                                 <p className={`font-mono font-bold text-xs mt-0.5 ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-455'}`}>
                                   {netProfit >= 0 ? '+' : ''}{netProfit.toFixed(1)}U

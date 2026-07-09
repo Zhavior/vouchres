@@ -68,7 +68,7 @@ export default React.memo(function VouchCard({
     const parts = text.split(/\*\*(.*?)\*\*/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        return <strong key={i} className="text-white font-extrabold bg-[#1e293b]/70 px-1 py-0.5 rounded">{part}</strong>;
+        return <strong key={i} className="text-white font-extrabold bg-ve-surface-panel/70 px-1 py-0.5 rounded">{part}</strong>;
       }
       return part;
     });
@@ -446,7 +446,7 @@ export default React.memo(function VouchCard({
                 </button>
                 
                 {showVouchEdgeReport && (
-                  <div className="mt-2 p-3 bg-[#070b14]/90 border border-slate-900/80 rounded-xl space-y-2.5 animate-fade-in text-left">
+                  <div className="mt-2 p-3 bg-ve-graphite/90 border border-slate-900/80 rounded-xl space-y-2.5 animate-fade-in text-left">
                     <div className="text-[9px] text-slate-500 font-mono font-semibold flex items-center justify-between border-b border-slate-900 pb-1.5 mb-1">
                       <span>Vouchedge AI-3.5 Engine Analysis</span>
                       <span>Verified Integrity Protocol v3.2</span>
@@ -658,7 +658,7 @@ export default React.memo(function VouchCard({
       {/* TWITTER INTENT SHARE DIALOG MODAL */}
       {showShareModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in" id="twitter-intent-share-modal">
-          <div className="bg-[#0b0f19] border border-cyan-500/30 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-[0_0_50px_rgba(6,182,212,0.15)] animate-scale-in text-left">
+          <div className="bg-ve-graphite border border-cyan-500/30 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-[0_0_50px_rgba(6,182,212,0.15)] animate-scale-in text-left">
             <div className="flex justify-between items-center pb-2 border-b border-slate-850">
               <h3 className="font-black text-slate-100 text-sm tracking-wider uppercase flex items-center gap-2">
                 <Twitter className="w-5 h-5 text-sky-400 fill-sky-400" /> Share Verification Preview to X

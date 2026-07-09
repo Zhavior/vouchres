@@ -350,7 +350,7 @@ export default function SettingsPage({
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
   return (
-    <div className={`relative ${Z8_PAGE}`}>
+    <div className={`relative ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE}`}>
 
       {/* Toast */}
       {toast && (
@@ -367,7 +367,7 @@ export default function SettingsPage({
       )}
 
       {/* Page header */}
-      <div className="border-b border-white/10 bg-obsidian-900/95 px-6 py-5">
+      <div className="glass-command border-b border-ve-fuse/40 bg-ve-obsidian/95 px-4 py-5 sm:px-6">
         <div className="mx-auto max-w-5xl">
           <div className={`flex items-center gap-2 text-xs font-medium text-white/40 ${Z8_LABEL}`}>
             <Settings className="h-3.5 w-3.5" />

@@ -484,7 +484,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
             )}
 
             {/* Tabs for Navigation */}
-            <div className="flex bg-[#121824] p-1 rounded-xl border border-slate-900 text-xs my-1">
+            <div className="flex bg-ve-storm p-1 rounded-xl border border-slate-900 text-xs my-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('universal')}

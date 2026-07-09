@@ -35,11 +35,9 @@ jobs:
         run: npm test
 
       - name: Auth smoke (static audit)
-        continue-on-error: true
         run: npm run verify:auth-smoke
 
       - name: Billing hardening (static audit)
-        continue-on-error: true
         run: npm run verify:billing-hardening
 
       - name: Build
@@ -47,3 +45,6 @@ jobs:
 
       - name: Bundle gzip budget
         run: npm run bundle-budget
+
+      - name: Perf gate (CSS + JS)
+        run: npm run perf-check

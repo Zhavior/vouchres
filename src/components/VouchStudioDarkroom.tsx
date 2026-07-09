@@ -370,9 +370,9 @@ export default function VouchStudioDarkroom({
   const showPreviewPanel = !isCompactStudio || mobileStudioView === 'preview';
 
   return (
-    <div className="ve-studio-editor bg-[#090d16] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-0 lg:min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
+    <div className="ve-studio-editor bg-ve-obsidian border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-0 lg:min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
       {/* Top Lightroom Toolbar */}
-      <div className="bg-[#0d1220] border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-ve-graphite border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shrink-0" />
           <div className="leading-none text-left min-w-0">
@@ -450,7 +450,7 @@ export default function VouchStudioDarkroom({
       </div>
 
       {/* Mobile: swipe-friendly Preview / Edit tabs */}
-      <div className="lg:hidden grid grid-cols-2 gap-2 p-3 bg-[#0a0d16] border-b border-white/10" id="ve-studio-mobile-tabs">
+      <div className="lg:hidden grid grid-cols-2 gap-2 p-3 bg-ve-obsidian border-b border-white/10" id="ve-studio-mobile-tabs">
         {([
           { id: 'preview' as const, label: 'Preview', icon: Eye },
           { id: 'edit' as const, label: 'Customize', icon: SlidersHorizontal },
@@ -477,14 +477,14 @@ export default function VouchStudioDarkroom({
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 divide-y lg:divide-y-0 lg:divide-x divide-slate-900">
         
         {/* COLUMN 1: CONTROLS PANEL (LEFT) */}
-        <div className={`lg:col-span-4 bg-[#0a0d16] flex flex-col h-full overflow-y-auto lg:max-h-[850px] scrollbar-thin ${showControlsPanel ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`lg:col-span-4 bg-ve-obsidian flex flex-col h-full overflow-y-auto lg:max-h-[850px] scrollbar-thin ${showControlsPanel ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* ACCORDION 1: COLOR PROFILE & DESIGN LAYOUT */}
           <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionPreset(!studioSectionPreset)}
-              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
@@ -494,7 +494,7 @@ export default function VouchStudioDarkroom({
             </button>
 
             {studioSectionPreset && (
-              <div className="p-4 space-y-4 bg-[#07090f]/70 animate-fade-in text-left">
+              <div className="p-4 space-y-4 bg-ve-obsidian/70 animate-fade-in text-left">
                 {/* Presets Grid */}
                 <div className="space-y-1.5">
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Visual Preset Themes:</label>
@@ -640,7 +640,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionRoster(!studioSectionRoster)}
-              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-sky-400" />
@@ -650,7 +650,7 @@ export default function VouchStudioDarkroom({
             </button>
 
             {studioSectionRoster && (
-              <div className="p-4 space-y-4 bg-[#07090f]/70 animate-fade-in text-left">
+              <div className="p-4 space-y-4 bg-ve-obsidian/70 animate-fade-in text-left">
                 {/* Star list */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
@@ -1016,7 +1016,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionPromo(!studioSectionPromo)}
-              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Crown className="w-3.5 h-3.5 text-sky-400" />
@@ -1026,7 +1026,7 @@ export default function VouchStudioDarkroom({
             </button>
 
             {studioSectionPromo && (
-              <div className="p-4 space-y-3.5 bg-[#07090f]/70 animate-fade-in text-left">
+              <div className="p-4 space-y-3.5 bg-ve-obsidian/70 animate-fade-in text-left">
                 <span className="text-[7.5px] font-mono bg-red-950/40 text-red-400 border border-red-900/30 px-2 py-0.5 rounded font-bold uppercase block tracking-wider text-center">
                   ⚡ High Conversion Marketing Overlays
                 </span>
@@ -1218,7 +1218,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionRationale(!studioSectionRationale)}
-              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-ve-graphite/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-ve-graphite/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-3.5 h-3.5 text-sky-400" />
@@ -1228,7 +1228,7 @@ export default function VouchStudioDarkroom({
             </button>
 
             {studioSectionRationale && (
-              <div className="p-4 bg-[#07090f]/70 animate-fade-in text-left space-y-2.5">
+              <div className="p-4 bg-ve-obsidian/70 animate-fade-in text-left space-y-2.5">
                 <div className="space-y-1.5 text-left">
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Scouter Playbook reasoning:</label>
                   <textarea
@@ -1297,12 +1297,12 @@ export default function VouchStudioDarkroom({
         </div>
 
         {/* COLUMN 2: CANVAS EDITOR & PREVIEW STAGE (CENTER/RIGHT) */}
-        <div className={`lg:col-span-8 bg-[#06080e] flex flex-col h-full min-h-0 lg:min-h-[750px] relative ${showPreviewPanel ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`lg:col-span-8 bg-ve-obsidian flex flex-col h-full min-h-0 lg:min-h-[750px] relative ${showPreviewPanel ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* Canvas Header Toolbar */}
-          <div className="bg-[#0a0d16]/90 border-b border-white/10 px-3 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-10">
+          <div className="bg-ve-obsidian/90 border-b border-white/10 px-3 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-10">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-              <div className="flex bg-[#0f1424] p-0.5 rounded-lg border border-slate-850 shrink-0">
+              <div className="flex bg-ve-storm p-0.5 rounded-lg border border-slate-850 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowSecondCard(false)}
@@ -1379,7 +1379,7 @@ export default function VouchStudioDarkroom({
             >
               
               {/* Outer Artboard Frame simulating Home Feed Post dimensions */}
-              <div className="w-full max-w-[620px] bg-[#0c101b] border border-white/[0.06] p-3 sm:p-6 rounded-2xl sm:rounded-3xl shadow-2xl space-y-5 relative">
+              <div className="w-full max-w-[620px] bg-ve-graphite border border-white/[0.06] p-3 sm:p-6 rounded-2xl sm:rounded-3xl shadow-2xl space-y-5 relative">
                 
                 {/* Corner Tag: Design State Artboard */}
                 <div className="hidden sm:flex absolute top-4 left-4 bg-sky-950/40 border border-sky-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-sky-400 font-black uppercase tracking-wider items-center gap-1">
@@ -1640,7 +1640,7 @@ export default function VouchStudioDarkroom({
                               </div>
                               <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1">
                                 {selectedPlayers.map((ps, index) => (
-                                  <div key={ps.player.id} className="bg-[#05070c]/50 p-1.5 rounded-xl border border-white/[0.06] flex items-center justify-between gap-2">
+                                  <div key={ps.player.id} className="bg-ve-obsidian/50 p-1.5 rounded-xl border border-white/[0.06] flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                       <img src={ps.player.headshot} alt={ps.player.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-5.5 h-5.5 rounded-full object-cover shrink-0" />
                                       <div className="min-w-0 leading-none">
@@ -1976,7 +1976,7 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* Action Buttons Lightroom Slate Footer — sticky on mobile */}
-          <div className="ve-studio-sticky-actions bg-[#0a0d16] border-t border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-20">
+          <div className="ve-studio-sticky-actions bg-ve-obsidian border-t border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-20">
             <div className="text-left hidden sm:block">
               <span className="text-[8.5px] font-mono text-white/40 block uppercase font-bold">Creator Campaign Operations:</span>
               <p className="text-[10px] text-white/45 mt-0.5">Review, verify projections, and publish this Vouch Board directly to the main feed.</p>
