@@ -84,6 +84,8 @@ describe("mlb matchup routes", () => {
       updatedAt: expect.any(String),
       meta: expect.objectContaining({
         source: "mlb_statsapi_schedule_linescore",
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
       }),
     });
   });
@@ -99,6 +101,8 @@ describe("mlb matchup routes", () => {
       matchups: [{ gamePk: 777001 }],
       meta: expect.objectContaining({
         source: "sports_truth_hub",
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
       }),
     });
   });
@@ -112,6 +116,11 @@ describe("mlb matchup routes", () => {
       ok: true,
       weather: expect.any(Array),
       source: "open-meteo",
+      meta: expect.objectContaining({
+        source: "open-meteo",
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      }),
     });
   });
 });

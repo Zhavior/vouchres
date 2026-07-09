@@ -75,7 +75,7 @@ adminRoutes.post(
         details: { error: "not_in_waitlist_or_already_invited" },
       });
     }
-    return res.json({ ok: true, ...result });
+    return res.json(apiOkFlat(req, result as Record<string, unknown>));
   }),
 );
 
@@ -104,7 +104,7 @@ adminRoutes.post(
         results.push({ email, ok: false, error: err.message });
       }
     }
-    return res.json({ ok: true, results });
+    return res.json(apiOkFlat(req, { results }));
   }),
 );
 
@@ -126,7 +126,7 @@ adminRoutes.delete(
         cause: error,
       });
     }
-    return res.json({ ok: true });
+    return res.json(apiOkFlat(req, {}));
   }),
 );
 
@@ -141,14 +141,13 @@ adminRoutes.post(
     try {
       const { gradePendingPicks } = await import("../services/grading/gradingService");
       const result = await gradePendingPicks({ days, dryRun });
-      return res.json({
-        ok: true,
+      return res.json(apiOkFlat(req, {
         graded: result.graded.length,
         skipped: result.skipped.length,
         summary: result.summary,
         warnings: result.summary.warnings,
         details: result,
-      });
+      }));
     } catch (err: any) {
       console.error("[admin] grade-pending failed", err);
       throw new AppError({
@@ -191,7 +190,7 @@ adminRoutes.get(
       });
     }
 
-    return res.json({ ok: true, users: data ?? [], total: count ?? 0, limit, offset });
+    return res.json(apiOkFlat(req, { users: data ?? [], total: count ?? 0, limit, offset }));
   }),
 );
 
@@ -256,7 +255,7 @@ adminRoutes.patch(
       updates.reason ? `reason: ${updates.reason}` : "",
     );
 
-    return res.json({ ok: true, ...data });
+    return res.json(apiOkFlat(req, data as Record<string, unknown>));
   }),
 );
 
@@ -305,7 +304,7 @@ adminRoutes.post(
       score: 50.0,
     }, { onConflict: "subject_type,subject_id,scope" });
 
-    return res.status(201).json({ ok: true, ...data });
+    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
   }),
 );
 
@@ -313,7 +312,7 @@ adminRoutes.get(
   "/stats",
   requireAuth,
   requireStaff,
-  asyncHandler(async (_req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const [
       usersCount,
       betaWaitlist,
@@ -338,8 +337,7 @@ adminRoutes.get(
       supabaseAdmin.from("subscriptions").select("*", { count: "exact", head: true }).eq("tier", "seller_pro").eq("status", "active"),
     ]);
 
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       users: usersCount.count ?? 0,
       beta: {
         waitlist: betaWaitlist.count ?? 0,
@@ -357,6 +355,6 @@ adminRoutes.get(
         seller_pro: subsSellerPro.count ?? 0,
       },
       estimated_mrr: ((subsGold.count ?? 0) * 8) + ((subsSellerPro.count ?? 0) * 40),
-    });
+    }));
   }),
 );

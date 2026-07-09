@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { publicRoutes } from "../server/routes/publicRoutes";
 
 const fromMock = vi.fn();
@@ -50,6 +51,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api", publicRoutes);
   app.use("/api", apiErrorHandler);
@@ -92,7 +94,14 @@ describe("public routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, entries: [] });
+    expect(body).toMatchObject({
+      ok: true,
+      entries: [],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 
   it("returns unified not_found when capper is missing", async () => {
@@ -126,6 +135,10 @@ describe("public routes", () => {
     expect(body.agents).toHaveLength(1);
     expect(body.agents[0].id).toBe("data_scout");
     expect(body.extensionDocs).toContain("agentRegistry");
+    expect(body.meta).toMatchObject({
+      requestId: expect.any(String),
+      timestamp: expect.any(String),
+    });
   });
 
   it("rejects self-follow with unified bad_request envelope", async () => {

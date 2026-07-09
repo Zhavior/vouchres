@@ -3,6 +3,8 @@ import type { Response } from "express";
 import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 import {
@@ -22,11 +24,11 @@ publicRoutes.post(
   requireAuth,
   requireStaff,
   generationLimiter,
-  asyncHandler(async (_req, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     try {
       const { saveCurrentAiJudgePicksToLedger } = await import("../services/aiJudges/aiJudgePickLedgerService");
       const payload = await saveCurrentAiJudgePicksToLedger();
-      return res.json({ ok: true, ...payload });
+      return res.json(apiOkFlat(req, payload as Record<string, unknown>));
     } catch (error: any) {
       console.error("[ai-judges] save current picks failed", error?.message);
       throw new AppError({
@@ -40,18 +42,17 @@ publicRoutes.post(
   }),
 );
 
-publicRoutes.get("/ai-judges/registry", asyncHandler(async (_req, res: Response) => {
+publicRoutes.get("/ai-judges/registry", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const customSlotEnabled =
     process.env.AI_AGENT_PLUGINS_ENABLED === "true" ||
     process.env.NODE_ENV !== "production";
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     status: "ready",
     agents: listAgentMeta(),
     customSlotEnabled,
     extensionDocs: EXTENSION_DOCS_PATH,
-  });
+  }));
 }));
 
 publicRoutes.post(
@@ -59,7 +60,7 @@ publicRoutes.post(
   requireAuth,
   requireStaff,
   generationLimiter,
-  asyncHandler(async (req, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const agent = getAgent(req.params.id);
     if (!agent) {
       throw new AppError({
@@ -69,20 +70,19 @@ publicRoutes.post(
       });
     }
 
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       status: "stub",
       agentId: agent.id,
       message:
         "Extension point reserved. Wire external agent runners here via registerAgent() + staff auth.",
-    });
+    }));
   }),
 );
 
-publicRoutes.get("/ai-judges/leaderboard", asyncHandler(async (_req, res: Response) => {
+publicRoutes.get("/ai-judges/leaderboard", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const payload = await buildAiJudgeLeaderboard();
-    return res.json({ ok: true, ...payload });
+    return res.json(apiOkFlat(req, payload as Record<string, unknown>));
   } catch (error: any) {
     console.error("[ai-judges] leaderboard failed", error?.message);
     throw new AppError({
@@ -94,7 +94,7 @@ publicRoutes.get("/ai-judges/leaderboard", asyncHandler(async (_req, res: Respon
   }
 }));
 
-publicRoutes.get("/leaderboard", asyncHandler(async (req, res: Response) => {
+publicRoutes.get("/leaderboard", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const scope = (req.query.scope as string) ?? "overall";
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const minPicks = Number(req.query.min_picks ?? 20);
@@ -133,7 +133,7 @@ publicRoutes.get("/leaderboard", asyncHandler(async (req, res: Response) => {
   }
 
   if (!scores || scores.length === 0) {
-    return res.json({ ok: true, entries: [] });
+    return res.json(apiOkFlat(req, { entries: [] }));
   }
 
   const capperIds = scores.filter((s: any) => s.subject_type === "capper").map((s: any) => s.subject_id);
@@ -207,10 +207,10 @@ publicRoutes.get("/leaderboard", asyncHandler(async (req, res: Response) => {
     };
   });
 
-  return res.json({ ok: true, entries });
+  return res.json(apiOkFlat(req, { entries }));
 }));
 
-publicRoutes.get("/cappers", asyncHandler(async (_req, res: Response) => {
+publicRoutes.get("/cappers", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from("cappers")
     .select(`
@@ -262,10 +262,10 @@ publicRoutes.get("/cappers", asyncHandler(async (_req, res: Response) => {
     };
   });
 
-  return res.json({ ok: true, cappers });
+  return res.json(apiOkFlat(req, { cappers }));
 }));
 
-publicRoutes.get("/cappers/:id", asyncHandler(async (req, res: Response) => {
+publicRoutes.get("/cappers/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
 
   const { data: capper, error } = await supabaseAdmin
@@ -296,15 +296,14 @@ publicRoutes.get("/cappers/:id", asyncHandler(async (req, res: Response) => {
       .limit(20),
   ]);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     ...capper,
     trust_scores: scoresRes.data ?? [],
     recent_picks: picksRes.data ?? [],
-  });
+  }));
 }));
 
-publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req, res: Response) => {
+publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
@@ -329,10 +328,10 @@ publicRoutes.get("/cappers/:id/picks", asyncHandler(async (req, res: Response) =
     });
   }
 
-  return res.json({ ok: true, picks: data ?? [], total: count ?? 0, limit, offset });
+  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
 }));
 
-publicRoutes.get("/profile/:id", asyncHandler(async (req, res: Response) => {
+publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
 
   const { data: profile, error } = await supabaseAdmin
@@ -365,10 +364,10 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req, res: Response) => {
     });
   }
 
-  return res.json({ ok: true, ...profile });
+  return res.json(apiOkFlat(req, profile as Record<string, unknown>));
 }));
 
-publicRoutes.get("/profile/:id/stats", asyncHandler(async (req, res: Response) => {
+publicRoutes.get("/profile/:id/stats", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
 
   const [followers, following, posts] = await Promise.all([
@@ -386,16 +385,15 @@ publicRoutes.get("/profile/:id/stats", asyncHandler(async (req, res: Response) =
       .eq("author_id", id),
   ]);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     followers: followers.count ?? 0,
     following: following.count ?? 0,
     subscribers: 0,
     posts: posts.count ?? 0,
-  });
+  }));
 }));
 
-publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
@@ -428,10 +426,10 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
     });
   }
 
-  return res.json({ ok: true, picks: data ?? [], total: count ?? 0, limit, offset });
+  return res.json(apiOkFlat(req, { picks: data ?? [], total: count ?? 0, limit, offset }));
 }));
 
-publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { following_profile_id, following_capper_id } = req.body ?? {};
 
   if (!following_profile_id && !following_capper_id) {
@@ -478,10 +476,10 @@ publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest
     });
   }
 
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));
 
-publicRoutes.delete("/follow", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+publicRoutes.delete("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { following_profile_id, following_capper_id } = req.body ?? {};
 
   const { error } = await supabaseAdmin
@@ -502,10 +500,10 @@ publicRoutes.delete("/follow", requireAuth, asyncHandler(async (req: AuthedReque
     });
   }
 
-  return res.json({ ok: true });
+  return res.json(apiOkFlat(req, {}));
 }));
 
-publicRoutes.get("/following", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+publicRoutes.get("/following", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { data, error } = await supabaseAdmin
     .from("follows")
     .select("following_profile_id, following_capper_id, created_at")
@@ -521,5 +519,5 @@ publicRoutes.get("/following", requireAuth, asyncHandler(async (req: AuthedReque
     });
   }
 
-  return res.json({ ok: true, follows: data ?? [] });
+  return res.json(apiOkFlat(req, { follows: data ?? [] }));
 }));
