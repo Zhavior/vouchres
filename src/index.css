@@ -6258,6 +6258,7 @@ body,
   .ve-motion-orb-b {
     width: 88vw;
     height: 88vw;
+    animation: none !important;
   }
 
   .ve-motion-orb-c {
@@ -6560,29 +6561,117 @@ body,
     overscroll-behavior: contain;
     scroll-behavior: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    contain: layout style paint;
     transition: none !important;
     transform: none !important;
   }
 }
 
 @media (max-width: 1180px) {
-  #layout-inner-frame #center-main-content-column {
+  /* Keep app chrome (VOUCHEDGE header) pinned — scroll only the inner pane */
+  .z8-app-shell.ve-motion-shell:not(:has(.ve-layout-welcome)),
+  .ve-motion-content:not(:has(.ve-layout-welcome)),
+  #vouchedge-container-root.z8-layout-root:not(:has(.ve-layout-welcome)) {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame.ve-layout-frame,
+  #layout-inner-frame.ve-layout-feed,
+  #layout-inner-frame.ve-layout-wide {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #layout-inner-frame #center-main-content-column,
+  #layout-inner-frame.ve-layout-feed #center-main-content-column,
+  #layout-inner-frame.ve-layout-wide #center-main-content-column {
     display: flex !important;
     flex-direction: column !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
   }
 
   .ve-scroll-pane,
   #inner-view-slot {
     flex: 1 1 auto !important;
     height: auto !important;
-    max-height: none !important;
+    max-height: 100% !important;
     min-height: 0 !important;
-    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
     scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    contain: layout style paint;
+    transition: none !important;
+    transform: none !important;
   }
+
+  /* Public welcome page should still use natural document scroll */
+  #layout-inner-frame.ve-layout-welcome {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #layout-inner-frame.ve-layout-welcome #center-main-content-column {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #layout-inner-frame.ve-layout-welcome .ve-scroll-pane,
+  #layout-inner-frame.ve-layout-welcome #inner-view-slot {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .ve-edge-rail-left.ve-edge-rail-switching,
+  .ve-edge-rail-right.ve-edge-rail-switching {
+    filter: none;
+    transform: scale(0.992);
+    opacity: 0.88;
+    transition-duration: 120ms;
+  }
+
+  .ve-edge-rail {
+    transition-duration: 140ms;
+  }
+}
+
+/* Sticky headers — own compositor layer to avoid scroll jank */
+.home-feed-header,
+.ve-mobile-header {
+  contain: layout style;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.ve-bubble-field {
+  contain: strict;
+}
+
+#vouchedge-container-root[data-route-switching="true"] .ve-scroll-pane {
+  opacity: 0.96;
+  transition: opacity 100ms ease-out;
+}
+
+.ve-route-suspense-fallback {
+  min-height: 40vh;
+  contain: strict;
+  pointer-events: none;
 }
 
 /* ==========================================================
@@ -6631,12 +6720,32 @@ html {
   .ve-mobile-fab-cluster .ve-edge-island-trigger {
     min-height: 44px;
     min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ve-mobile-fab-cluster .ve-edge-island-trigger:active {
+    transform: scale(0.94);
+    transition: transform 80ms ease-out;
+  }
+
+  button,
+  a[href],
+  [role="button"],
+  .ve-nav-item {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .ve-mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
     padding-top: max(0.625rem, var(--ve-safe-top));
     padding-left: max(0.75rem, var(--ve-safe-left));
     padding-right: max(0.75rem, var(--ve-safe-right));
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
 }
 

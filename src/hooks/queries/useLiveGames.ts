@@ -21,6 +21,7 @@ export function useLiveGames(options?: { enabled?: boolean; refetchInterval?: nu
     queryKey: queryKeys.liveGames(),
     queryFn: () => vouchedgeApi.liveGames(),
     staleTime: 15_000,
+    refetchOnMount: true,
     refetchInterval: (query) => {
       if (options?.refetchInterval !== undefined) return options.refetchInterval;
       return hasLiveGames(query.state.data) ? LIVE_POLL_MS : IDLE_POLL_MS;

@@ -15,14 +15,19 @@ const BUBBLE_COLORS = [
 
 function useResponsiveCount(desktop: number, mobile: number) {
   const [count, setCount] = useState(desktop);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setCount(mq.matches ? mobile : desktop);
+    const update = () => {
+      const mobileViewport = mq.matches;
+      setIsMobile(mobileViewport);
+      setCount(mobileViewport ? mobile : desktop);
+    };
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, [desktop, mobile]);
-  return count;
+  return { count, isMobile };
 }
 
 type BubbleVariant = "drift" | "float" | "pulse";
@@ -39,7 +44,8 @@ export function BubbleField({
   className = "",
   variant = "drift",
 }: BubbleFieldProps) {
-  const effectiveCount = useResponsiveCount(count, mobileCount);
+  const { count: effectiveCount, isMobile } = useResponsiveCount(count, mobileCount);
+  const animateOnDevice = !isMobile;
 
   const bubbles = useMemo(
     () =>
@@ -62,15 +68,16 @@ export function BubbleField({
     [effectiveCount, variant]
   );
 
-  const animClass =
-    variant === "drift"
+  const animClass = animateOnDevice
+    ? variant === "drift"
       ? "animate-theme-drift"
       : variant === "pulse"
         ? "ve-bubble-pulse"
-        : "ve-bubble-float";
+        : "ve-bubble-float"
+    : "";
 
   return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none select-none ${className}`}>
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none select-none ve-bubble-field ${className}`}>
       {bubbles.map((b) => (
         <span
           key={b.id}

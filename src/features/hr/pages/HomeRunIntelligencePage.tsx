@@ -52,7 +52,7 @@ function formatRelativeTime(date: Date | null | undefined): string {
 }
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="grid grid-cols-2 auto-rows-[minmax(220px,42vh)] gap-2 md:auto-rows-auto md:grid-cols-2 md:gap-4 xl:grid-cols-4">
+  <div className="grid grid-cols-2 items-start gap-2 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
     {Array.from({ length: 4 }).map((_, colIdx) => (
       <div
         key={colIdx}

@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiClient } from '../../../lib/apiClient';
+import { useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchAuthMe } from '../../../hooks/queries/useAuthMe';
+import { queryKeys } from '../../../hooks/queries/queryKeys';
+import { isSupabaseConfigured } from '../../../lib/supabaseClient';
 
 export type CanonicalTier = 'free' | 'pro' | 'creator';
 export type DatabaseTier = 'free' | 'gold' | 'seller_pro';
@@ -45,78 +48,64 @@ function normalizeTier(tier: unknown): { tier: CanonicalTier; sourceTier: string
   return { tier: 'free', sourceTier, warnings };
 }
 
-function readTierFromAuthPayload(data: any): unknown {
+function readTierFromAuthPayload(data: unknown): unknown {
+  const payload = data as Record<string, unknown> | null | undefined;
+  const profile = payload?.profile as Record<string, unknown> | undefined;
+  const entitlements = payload?.entitlements as Record<string, unknown> | undefined;
+  const user = payload?.user as Record<string, unknown> | undefined;
+
   return (
-    data?.entitlements?.tier ??
-    data?.profile?.tier ??
-    data?.profile?.subscription_tier ??
-    data?.user?.tier ??
-    data?.tier ??
+    entitlements?.tier ??
+    profile?.tier ??
+    profile?.subscription_tier ??
+    user?.tier ??
+    payload?.tier ??
     'free'
   );
 }
 
-function readStaffFromAuthPayload(data: any): boolean {
+function readStaffFromAuthPayload(data: unknown): boolean {
+  const payload = data as Record<string, unknown> | null | undefined;
+  const profile = payload?.profile as Record<string, unknown> | undefined;
+  const user = payload?.user as Record<string, unknown> | undefined;
+
   return Boolean(
-    data?.isStaff ??
-      data?.is_staff ??
-      data?.profile?.is_staff ??
-      data?.profile?.isStaff ??
-      data?.user?.is_staff ??
-      data?.user?.isStaff ??
+    payload?.isStaff ??
+      payload?.is_staff ??
+      profile?.is_staff ??
+      profile?.isStaff ??
+      user?.is_staff ??
+      user?.isStaff ??
       false,
   );
 }
 
 export function useEntitlements(): FrontendEntitlements {
-  const [tier, setTier] = useState<CanonicalTier>('free');
-  const [sourceTier, setSourceTier] = useState<string | null>(null);
-  const [isStaff, setIsStaff] = useState(false);
-  const [warnings, setWarnings] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.authMe(),
+    queryFn: fetchAuthMe,
+    staleTime: 5 * 60_000,
+    gcTime: 15 * 60_000,
+    enabled: isSupabaseConfigured,
+  });
 
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // apiClient attaches the Supabase Bearer token — a raw cookie-only fetch
-      // always 401s here and silently locked every pro feature as "free".
-      const data = await apiClient.get<any>('/api/auth/me');
-      const normalized = normalizeTier(readTierFromAuthPayload(data));
-
-      setTier(normalized.tier);
-      setSourceTier(normalized.sourceTier);
-      setIsStaff(readStaffFromAuthPayload(data));
-      setWarnings(normalized.warnings);
-    } catch (err: any) {
-      setTier('free');
-      setSourceTier(null);
-      setIsStaff(false);
-      if (Number(err?.status) === 401) {
-        // Logged out — free tier is the correct, quiet answer.
-        setWarnings([]);
-      } else {
-        setWarnings(['Entitlements check failed; defaulted to free.']);
-        setError(err instanceof Error ? err.message : 'Failed to check entitlements');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.authMe() });
+    await refetch();
+  }, [queryClient, refetch]);
 
   return useMemo(() => {
+    const normalized = normalizeTier(readTierFromAuthPayload(data));
+    const tier = normalized.tier;
     const isPro = tier === 'pro' || tier === 'creator';
     const isCreator = tier === 'creator';
+    const isStaff = readStaffFromAuthPayload(data);
+    const queryError = error instanceof Error ? error.message : error ? 'Failed to check entitlements' : null;
 
     return {
       tier,
-      sourceTier,
+      sourceTier: normalized.sourceTier,
       isPro,
       isCreator,
       isStaff,
@@ -125,10 +114,10 @@ export function useEntitlements(): FrontendEntitlements {
       canUsePlayerEdgeLab: isPro,
       canSellPicks: isCreator,
       canAccessNotifications: true,
-      loading,
-      error,
-      warnings,
+      loading: isLoading,
+      error: queryError,
+      warnings: normalized.warnings,
       refresh,
     };
-  }, [tier, sourceTier, isStaff, loading, error, warnings, refresh]);
+  }, [data, isLoading, error, refresh]);
 }

@@ -15,16 +15,16 @@ interface HrColumnProps {
 
 export const HrColumn = React.memo(function HrColumn({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile, getHrResult }: HrColumnProps) {
   return (
-    <section className={`flex h-full min-h-0 flex-col overflow-hidden border ${borderClass} bg-black/25`}>
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-3 py-2 font-mono">
-        <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${colorClass}`}>
-          <span>{icon}</span>
-          <span>{title}</span>
+    <section className={`flex min-w-0 flex-col border ${borderClass} bg-black/25 md:h-full md:min-h-0 md:overflow-hidden`}>
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-2 py-1.5 font-mono md:px-3 md:py-2">
+        <div className={`flex min-w-0 items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] md:gap-2 md:text-xs md:tracking-[0.18em] ${colorClass}`}>
+          <span className="shrink-0">{icon}</span>
+          <span className="truncate">{title}</span>
         </div>
-        <span className="border border-white/10 bg-black/30 px-2 py-0.5 font-mono text-[11px] text-zinc-500">{players.length}</span>
+        <span className="shrink-0 border border-white/10 bg-black/30 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 md:px-2 md:text-[11px]">{players.length}</span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
+      <div className="flex flex-col gap-2 p-1.5 md:min-h-0 md:flex-1 md:overflow-y-auto md:p-2">
         {players.map((player) => (
           <HrPlayerCard
             key={player.stableId}

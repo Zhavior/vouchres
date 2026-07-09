@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { User, Shield, ShieldCheck, Mail, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
+import { Shield, ShieldCheck, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
-import ProfileResume from './profile/ProfileResume';
 import FeedPostCard from '../social/feed/FeedPostCard';
 import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
@@ -9,9 +8,9 @@ import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
 import { BubbleField } from './vouchedge/ParticleFields';
 import { VEButton } from './ui/ve';
-import { canCustomizeProfileHeader } from './pro/ProAccessGate';
+import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE, Z8_TABULAR } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
 import {
   Area,
   AreaChart,
@@ -156,20 +155,6 @@ export default function ProfilePage({
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
       <div className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} max-w-[1120px] mx-auto ${Z8_PAGE_GAP}`} id="profile-details-view">
 
-        <ProfileResume savedParlays={savedParlays} winRate={profile.winRate} />
-
-        {/* Title segment */}
-        <div className={Z8_SECTION_HEADER}>
-          <p className={`${Z8_LABEL} text-vouch-cyan/70`}>Creator identity</p>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2 mt-1">
-            <User className="w-5 h-5 text-vouch-cyan shrink-0" />
-            Profile & Proof Hub
-          </h2>
-          <p className="text-xs text-white/45 mt-1.5 max-w-2xl leading-relaxed">
-            Review your tracking statistics, win rates, and verify your proof handle credentials.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Left Column: Profile Card, Pro verification, & Activity feed */}
@@ -210,7 +195,7 @@ export default function ProfilePage({
 
               {/* Dynamic theme floating bubbles */}
               {profile.activeTheme && profile.activeTheme !== 'default' && (
-                <BubbleField count={12} mobileCount={6} variant="float" className="opacity-35 z-0" />
+                <BubbleField count={8} mobileCount={3} variant="float" className="opacity-35 z-0" />
               )}
 
               <div className={`h-28 sm:h-32 bg-gradient-to-r relative border-b border-vouch-cyan/15 z-10 ${
@@ -632,7 +617,7 @@ export default function ProfilePage({
             })()}
           </div>
 
-          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4.5 space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
+          <div className={`hidden md:block ${Z8_PANEL_PREMIUM} rounded-2xl p-4.5 space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
             <div className="flex items-center justify-between border-b border-slate-850 pb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />

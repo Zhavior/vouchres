@@ -8,7 +8,8 @@ export function useHrFeedToday(options?: { enabled?: boolean; refetchInterval?: 
   return useQuery({
     queryKey: queryKeys.hrFeedToday(),
     queryFn: () => vouchedgeApi.hrFeedToday(),
-    staleTime: 30_000,
+    staleTime: 90_000,
+    gcTime: 10 * 60_000,
     refetchInterval: options?.refetchInterval ?? HR_FEED_POLL_MS,
     enabled: options?.enabled ?? true,
   });

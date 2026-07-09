@@ -56,7 +56,18 @@ function HomeFeedLayoutInner({
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const [deferredChrome, setDeferredChrome] = React.useState(false);
   const previousSectionRef = React.useRef(activeSection);
+
+  React.useEffect(() => {
+    const ric = window.requestIdleCallback;
+    if (ric) {
+      const id = ric(() => setDeferredChrome(true), { timeout: 1200 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => setDeferredChrome(true), 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const closeNavigationOverlays = React.useCallback(() => {
     setMobileDrawerOpen(false);
@@ -72,14 +83,23 @@ function HomeFeedLayoutInner({
     closeNavigationOverlays();
   }, [activeSection, closeNavigationOverlays]);
 
+  // Reset inner scroll pane on section switch — avoids carrying feed scroll
+  // position into other views and prevents sticky-header compositor jank.
+  React.useEffect(() => {
+    const pane = document.getElementById('inner-view-slot');
+    if (pane) pane.scrollTop = 0;
+  }, [activeSection]);
+
   React.useEffect(() => {
     if (previousSectionRef.current === activeSection) return;
 
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
     setEdgeTransitioning(true);
+    const duration = reduceMotion ? 0 : isMobile ? 140 : 280;
     const timer = window.setTimeout(() => {
       setEdgeTransitioning(false);
       previousSectionRef.current = activeSection;
-    }, reduceMotion ? 0 : 360);
+    }, duration);
 
     return () => window.clearTimeout(timer);
   }, [activeSection, reduceMotion]);
@@ -158,9 +178,9 @@ function HomeFeedLayoutInner({
         </>
       )}
 
-      {/* Drifting glass bubbles */}
-      {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
-        <BubbleField count={15} mobileCount={8} variant="drift" className="z-0" />
+      {/* Drifting glass bubbles — deferred until idle to keep route switches snappy */}
+      {deferredChrome && activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
+        <BubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
@@ -184,7 +204,7 @@ function HomeFeedLayoutInner({
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           {/* Desktop slim header — notification bell on the right */}
           {!isPublicFrontPage && (
-            <header className="sticky top-0 z-30 hidden select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8">
+            <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
               <NotificationBellButton />
               <AuthStatusBadge
                 inline
@@ -196,7 +216,7 @@ function HomeFeedLayoutInner({
 
           {/* Mobile compact header */}
           {!isPublicFrontPage && (
-            <header className="ve-mobile-header sticky top-0 z-30 flex items-center justify-between gap-2 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 md:hidden">
+            <header className="ve-mobile-header sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 supports-[backdrop-filter]:bg-black/40 md:hidden">
               {/* Profile avatar (corner) — ring color = real subscription tier;
                   tapping it opens the X-style navigation drawer. */}
               <div className="flex items-center gap-2.5 min-w-0">

@@ -10,12 +10,27 @@ export interface AuthMeProfile {
   jurisdiction?: string | null;
 }
 
-async function fetchAuthMe(): Promise<AuthMeProfile | null> {
+/** Full /api/auth/me payload — shared by profile sync and entitlements. */
+export interface AuthMeResponse extends AuthMeProfile {
+  entitlements?: { tier?: string };
+  profile?: {
+    tier?: string;
+    subscription_tier?: string;
+    is_staff?: boolean;
+    isStaff?: boolean;
+  };
+  user?: { tier?: string; is_staff?: boolean; isStaff?: boolean };
+  isStaff?: boolean;
+  is_staff?: boolean;
+  tier?: string;
+}
+
+async function fetchAuthMe(): Promise<AuthMeResponse | null> {
   if (!isSupabaseConfigured) return null;
   const token = await getAuthToken();
   if (!token) return null;
   try {
-    return await apiClient.get<AuthMeProfile>('/api/auth/me');
+    return await apiClient.get<AuthMeResponse>('/api/auth/me');
   } catch {
     return null;
   }

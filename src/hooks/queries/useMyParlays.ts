@@ -20,7 +20,7 @@ export function useMyParlays(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.myParlays(),
     queryFn: fetchMyParlays,
-    staleTime: 60_000,
+    staleTime: 3 * 60_000,
     gcTime: 10 * 60_000,
     enabled: (options?.enabled ?? true) && isSupabaseConfigured,
   });

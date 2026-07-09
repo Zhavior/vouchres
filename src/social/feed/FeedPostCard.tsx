@@ -1065,4 +1065,46 @@ function FeedPostCard({
   );
 }
 
-export default React.memo(FeedPostCard);
+function feedPostCardPropsAreEqual(prev: FeedPostCardProps, next: FeedPostCardProps): boolean {
+  const prevPost = prev.post;
+  const nextPost = next.post;
+
+  if (prevPost !== nextPost) {
+    if (prevPost.id !== nextPost.id) return false;
+    if (
+      prevPost.isLiked !== nextPost.isLiked ||
+      prevPost.likesCount !== nextPost.likesCount ||
+      prevPost.isVouched !== nextPost.isVouched ||
+      prevPost.vouchesCount !== nextPost.vouchesCount ||
+      prevPost.isReposted !== nextPost.isReposted ||
+      prevPost.repostsCount !== nextPost.repostsCount ||
+      prevPost.commentsCount !== nextPost.commentsCount ||
+      prevPost.comments !== nextPost.comments
+    ) {
+      return false;
+    }
+  }
+
+  if (
+    prev.onLike !== next.onLike ||
+    prev.onVouchAction !== next.onVouchAction ||
+    prev.onRepost !== next.onRepost ||
+    prev.onSaveVouch !== next.onSaveVouch ||
+    prev.onAddComment !== next.onAddComment ||
+    prev.onPostCreated !== next.onPostCreated ||
+    prev.onDeletePost !== next.onDeletePost
+  ) {
+    return false;
+  }
+
+  const vouchId = prevPost.vouch?.id;
+  if (vouchId) {
+    const prevSaved = prev.savedVouchIds.includes(vouchId);
+    const nextSaved = next.savedVouchIds.includes(vouchId);
+    if (prevSaved !== nextSaved) return false;
+  }
+
+  return true;
+}
+
+export default React.memo(FeedPostCard, feedPostCardPropsAreEqual);

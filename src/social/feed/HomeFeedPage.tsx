@@ -48,7 +48,7 @@ interface HomeFeedPageProps {
   onSectionChange?: (section: string) => void;
 }
 
-export default function HomeFeedPage({
+function HomeFeedPage({
   posts,
   savedSlips,
   profileName,
@@ -471,3 +471,5 @@ export default function HomeFeedPage({
     </div>
   );
 }
+
+export default React.memo(HomeFeedPage);

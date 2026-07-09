@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect, useRef, useTransition } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useTransition, useCallback, useMemo } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
 import { Home, Plus, Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
@@ -166,6 +166,17 @@ const PUBLIC_SECTIONS = new Set([
 ]);
 
 const SIGNED_IN_HOME = 'today';
+
+/** Only poll live games while a view that consumes them is active. */
+const SECTIONS_USING_LIVE_GAMES = new Set([
+  'build',
+  'live_parlays',
+  'ai_engine',
+  'live_games',
+  'research',
+  'game_research',
+  'player_research',
+]);
 
 function getSavedActiveSection(): string | null {
   try {
@@ -471,8 +482,9 @@ export default function App() {
   const backendProfileRef = useRef<BackendProfile | null | undefined>(undefined);
   const savedSlipsRef = useRef<Parlay[]>([]);
   const savedVouchesRef = useRef<Vouch[]>([]);
+  const postsRef = useRef<FeedPost[]>([]);
   const profileRef = useRef<CreatorProofProfile | null>(null);
-  const [isPendingRoute] = useTransition();
+  const [isPendingRoute, startTransition] = useTransition();
 
   // The Edge Island — quick-launch popup dock, opened from the floating
   // launcher button (mounted globally, under the notification bell).
@@ -485,21 +497,26 @@ export default function App() {
     navigateSection('profile');
   };
 
-  const navigateSection = (section: string) => {
+  const commitSection = useCallback((target: string) => {
+    startTransition(() => {
+      saveActiveSection(target);
+      setActiveSection(target);
+    });
+  }, []);
+
+  const navigateSection = useCallback((section: string) => {
     if (section !== 'profile') {
       setProfileViewUserId(null);
     }
     const target = resolveAuthenticatedSection(section);
     if (target !== section) {
       replaceLandingUrl(target);
-      saveActiveSection(target);
-      setActiveSection(target);
+      commitSection(target);
       return;
     }
 
     if (PUBLIC_SECTIONS.has(target)) {
-      saveActiveSection(target);
-      setActiveSection(target);
+      commitSection(target);
       return;
     }
 
@@ -510,14 +527,12 @@ export default function App() {
         // ignore storage failures
       }
 
-      saveActiveSection('welcome');
-      setActiveSection('welcome');
+      commitSection('welcome');
       return;
     }
 
-    saveActiveSection(target);
-    setActiveSection(target);
-  }
+    commitSection(target);
+  }, [commitSection]);
 
   const handleLoginSuccess = () => {
     try {
@@ -531,10 +546,9 @@ export default function App() {
   const handleLogoutComplete = () => {
     setLoggingOut(true);
     window.setTimeout(() => {
-      saveActiveSection('welcome');
-      setActiveSection('welcome');
-      setLoggingOut(false);
       window.history.replaceState(null, '', '/');
+      commitSection('welcome');
+      setLoggingOut(false);
     }, 900);
   };
   
@@ -548,9 +562,8 @@ export default function App() {
     if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);
     replaceLandingUrl(next);
-    saveActiveSection(next);
-    setActiveSection(next);
-  }, [activeSection]);
+    commitSection(next);
+  }, [activeSection, commitSection]);
 
   useEffect(() => {
     const syncSectionFromLocation = () => {
@@ -575,7 +588,8 @@ export default function App() {
   const [savedVouches, setSavedVouches] = useState<Vouch[]>([]);
   const [profile, setProfile] = useState<CreatorProofProfile>(INITIAL_PROFILE);
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
-  const { data: liveGamesPayload } = useLiveGames();
+  const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection);
+  const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
   const liveGames = liveGamesPayload?.games ?? [];
   const { data: backendParlayRows } = useMyParlays();
   const { data: backendVouchRows } = useMyVouches();
@@ -583,9 +597,9 @@ export default function App() {
 
   useEffect(() => {
     if (activeSection === 'themestore' && !canSeeThemeStore) {
-      setActiveSection('profile');
+      commitSection('profile');
     }
-  }, [activeSection, canSeeThemeStore]);
+  }, [activeSection, canSeeThemeStore, commitSection]);
 
   // Initialize from LocalStorage
   useEffect(() => {
@@ -806,6 +820,10 @@ export default function App() {
     profileRef.current = profile;
   }, [profile]);
 
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
+
   // Legacy AI parlay auto-sync is intentionally quarantined.
   // New save truth must flow through pushParlayToBackend() -> /api/me/parlays
   // and consume the enriched backend response. Leaving this heartbeat active
@@ -816,7 +834,10 @@ export default function App() {
   }, []);
 
   // Interaction: Create post
-  const handlePostCreated = (postData: Partial<FeedPost>) => {
+  const handlePostCreated = useCallback((postData: Partial<FeedPost>) => {
+    const profile = profileRef.current ?? INITIAL_PROFILE;
+    const posts = postsRef.current;
+    const savedVouches = savedVouchesRef.current;
     const newPost: FeedPost = {
       id: `post-user-${Date.now()}`,
       userId: 'u-user-current',
@@ -907,11 +928,11 @@ export default function App() {
         }
       })();
     }
-  };
+  }, []);
 
   // Interaction: Like toggle
-  const handleLikePost = (postId: string) => {
-    const updated = posts.map((p) => {
+  const handleLikePost = useCallback((postId: string) => {
+    const updated = postsRef.current.map((p) => {
       if (p.id === postId) {
         const isLiked = !p.isLiked;
         return {
@@ -923,11 +944,11 @@ export default function App() {
       return p;
     });
     syncPosts(updated);
-  };
+  }, []);
 
   // Interaction: Tailing pick (vouching)
-  const handleVouchPost = (postId: string) => {
-    const updated = posts.map((p) => {
+  const handleVouchPost = useCallback((postId: string) => {
+    const updated = postsRef.current.map((p) => {
       if (p.id === postId) {
         const isVouched = !p.isVouched;
         return {
@@ -939,11 +960,11 @@ export default function App() {
       return p;
     });
     syncPosts(updated);
-  };
+  }, []);
 
   // Interaction: Repost toggle
-  const handleRepostPost = (postId: string) => {
-    const updated = posts.map((p) => {
+  const handleRepostPost = useCallback((postId: string) => {
+    const updated = postsRef.current.map((p) => {
       if (p.id === postId) {
         const isReposted = !p.isReposted;
         return {
@@ -955,9 +976,10 @@ export default function App() {
       return p;
     });
     syncPosts(updated);
-  };
+  }, []);
 
-  const handleDeletePost = (postId: string) => {
+  const handleDeletePost = useCallback((postId: string) => {
+    const posts = postsRef.current;
     const target = posts.find((p) => p.id === postId);
     if (!target || !canDeleteFeedPost(target)) return;
     if (!window.confirm('Delete this post? This cannot be undone.')) return;
@@ -974,10 +996,11 @@ export default function App() {
         console.warn('[posts] backend delete failed (removed locally)', err);
       }
     })();
-  };
+  }, []);
 
   // Interaction: Save Vouch to Board (either from feed or right-hand matchups)
-  const handleSaveVouch = (vouch: Vouch) => {
+  const handleSaveVouch = useCallback((vouch: Vouch) => {
+    const savedVouches = savedVouchesRef.current;
     const existing = savedVouches.find((v) => v.id === vouch.id);
 
     if (existing) {
@@ -992,7 +1015,7 @@ export default function App() {
     const newVouch: Vouch = { ...vouch, isSavedByUser: true };
     syncVouches([...savedVouches, newVouch]);
     void pushVouchToBackend(newVouch);
-  };
+  }, []);
 
   const handleRemoveVouchFromBoard = (vouchId: string) => {
     const existing = savedVouches.find((v) => v.id === vouchId);
@@ -1004,8 +1027,9 @@ export default function App() {
   };
 
   // Interaction: Write comment
-  const handleAddComment = (postId: string, commentContent: string) => {
-    const updated = posts.map((p) => {
+  const handleAddComment = useCallback((postId: string, commentContent: string) => {
+    const profile = profileRef.current ?? INITIAL_PROFILE;
+    const updated = postsRef.current.map((p) => {
       if (p.id === postId) {
         const newComm = {
           id: `c-user-${Date.now()}`,
@@ -1026,7 +1050,7 @@ export default function App() {
       return p;
     });
     syncPosts(updated);
-  };
+  }, []);
 
   // Update saved parlay from Parlay Hub
   const _handleUpdateParlaySlip = (updatedParlay: Parlay) => {
@@ -1407,7 +1431,7 @@ export default function App() {
     localStorage.setItem('vouchedge_profile', JSON.stringify(INITIAL_PROFILE));
   };
 
-  const savedVouchIds = savedVouches.map((v) => v.id);
+  const savedVouchIds = useMemo(() => savedVouches.map((v) => v.id), [savedVouches]);
 
   const resolvePlayerResearchMarket = (market: string, spec: string) => {
     const text = `${market} ${spec}`.toLowerCase();
@@ -1947,13 +1971,7 @@ export default function App() {
           isRouteSwitching={isPendingRoute}
           isPublicFrontPage={isPublicFrontPage}
         >
-          <Suspense
-            fallback={
-              <div className="flex min-h-[50vh] items-center justify-center p-8 text-sm font-bold text-slate-400">
-                Loading view...
-              </div>
-            }
-          >
+          <Suspense fallback={<div className="ve-route-suspense-fallback" aria-hidden="true" />}>
             {renderMainView()}
           </Suspense>
         </HomeFeedLayout>

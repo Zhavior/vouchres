@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../../theme/themeRegistry';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
-import { canCustomizeProfileHeader } from '../pro/ProAccessGate';
+import { canCustomizeProfileHeader } from '../pro/proAccessUtils';
 
 interface ThemeContextType {
   currentAppTheme: VisualTheme;

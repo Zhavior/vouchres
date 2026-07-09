@@ -26,7 +26,7 @@ import { useTheme } from './theme/ThemeProvider';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import { getFounderPointsLabel } from "../lib/founderAccess";
-import { canCustomizeProfileHeader } from './pro/ProAccessGate';
+import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
 
 interface ThemeStoreProps {
