@@ -468,7 +468,7 @@ export default function TheEdgeShell({
             {edgeLayer === 'intro' && (
               <motion.section
                 key="intro"
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}
@@ -488,7 +488,7 @@ export default function TheEdgeShell({
             {edgeLayer === 'login' && (
               <motion.section
                 key="login"
-                initial={{ opacity: 0, x: 32 }}
+                initial={{ x: 32 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -32 }}
                 transition={{ duration: 0.4, ease }}
@@ -540,7 +540,7 @@ export default function TheEdgeShell({
             {edgeLayer === 'signup' && (
               <motion.section
                 key="signup"
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.4, ease }}
@@ -567,7 +567,7 @@ export default function TheEdgeShell({
 
                     {/* 1) FEATURES */}
                     {signupStep === 'features' && (
-                      <motion.div key="s-features" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                      <motion.div key="s-features" initial={{ x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">What you unlock</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Built to make you sharper.</h2>
                         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -595,7 +595,7 @@ export default function TheEdgeShell({
 
                     {/* 2) ACCOUNT */}
                     {signupStep === 'account' && (
-                      <motion.div key="s-account" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                      <motion.div key="s-account" initial={{ x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Create account</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Your Edge profile.</h2>
                         <div className="mt-5 grid gap-3">
@@ -642,7 +642,7 @@ export default function TheEdgeShell({
 
                     {/* 3) PLAN */}
                     {signupStep === 'plan' && (
-                      <motion.div key="s-plan" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                      <motion.div key="s-plan" initial={{ x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Pick your plan</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Start free, or go Pro.</h2>
                         <div className="mt-5 grid gap-3">
@@ -688,7 +688,7 @@ export default function TheEdgeShell({
 
                     {/* 4) PAYMENT (paid plans only) */}
                     {signupStep === 'payment' && (
-                      <motion.div key="s-payment" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                      <motion.div key="s-payment" initial={{ x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Payment</div>
                         <h2 className="mt-2 text-3xl font-black text-white">
                           {plan === 'pro_trial' ? '1.5 weeks free, then $12.99/mo.' : `${PLANS[plan].name} — ${PLANS[plan].price}.`}
@@ -720,7 +720,7 @@ export default function TheEdgeShell({
 
                     {/* 5) POLICY + AGREEMENT VERIFICATION */}
                     {signupStep === 'policy' && (
-                      <motion.div key="s-policy" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
+                      <motion.div key="s-policy" initial={{ x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.32, ease }}>
                         <div className="text-[10px] font-black uppercase tracking-[0.22em] text-vouch-cyan">Terms &amp; agreement</div>
                         <h2 className="mt-2 text-3xl font-black text-white">Read &amp; agree to continue.</h2>
                         <div className="mt-4 max-h-56 overflow-y-auto whitespace-pre-line rounded-2xl border border-white/10 bg-black/45/80 p-4 text-[11px] leading-5 text-white/45">
@@ -778,7 +778,7 @@ export default function TheEdgeShell({
             {edgeLayer === 'welcomeBack' && (
               <motion.section
                 key="welcomeBack"
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={{ scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease }}
@@ -802,7 +802,7 @@ export default function TheEdgeShell({
             {edgeLayer === 'dashboard' && (
               <motion.section
                 key="dashboard"
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.45, ease }}

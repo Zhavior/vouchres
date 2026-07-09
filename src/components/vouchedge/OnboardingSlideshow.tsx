@@ -112,7 +112,7 @@ export default function OnboardingSlideshow({ onComplete, onSkip }: Props) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(2,4,10,0.92)", backdropFilter: "blur(20px)" }}>
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
+        initial={{ scale: 0.95 }}
         animate={{ scale: 1, opacity: 1 }}
         className="w-full max-w-lg rounded-3xl overflow-hidden"
         style={{ background: "rgba(8,12,20,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}
@@ -141,7 +141,7 @@ export default function OnboardingSlideshow({ onComplete, onSkip }: Props) {
           <AnimatePresence mode="wait">
             <motion.div
               key={slide}
-              initial={{ opacity: 0, x: 30 }}
+              initial={{ x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}

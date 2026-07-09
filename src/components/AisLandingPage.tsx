@@ -1183,7 +1183,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       {/* Cinematic Star Wars Header Container */}
       <section className="relative pt-16 pb-12 px-4 max-w-5xl mx-auto text-center z-10">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col items-center"
@@ -1215,7 +1215,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
               /* Already Signed In: Quick Commander clearance launch option */
               <motion.div
                 key="cleared_user"
-                initial={{ opacity: 0, scale: 0.98 }}
+                initial={{ scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 className="text-center py-4 font-mono"
@@ -1268,7 +1268,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
               /* Not Signed In: Show 2-Column Gateway Option: Continue without account VS Create account */
               <motion.div
                 key="authentication_gateways"
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
               >

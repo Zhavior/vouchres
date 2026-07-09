@@ -5,14 +5,11 @@ import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
 import CmdKPalette from './CmdKPalette';
 import { Sparkles } from 'lucide-react';
 import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
-import {
-  NotificationProvider,
-  NotificationBellButton,
-} from '../../components/notifications/UnifiedNotificationCenter';
+import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
-import { useAppPosts, useAppProfile, useAppSavedSlips, useAppSavedVouches } from '../../context/AppShellContext';
+import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/AppShellContext';
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
@@ -29,21 +26,6 @@ interface HomeFeedLayoutProps {
   onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
 }
-
-const NotificationShell = React.memo(function NotificationShell({
-  onNavigate,
-  children,
-}: {
-  onNavigate: (section: string) => void;
-  children: React.ReactNode;
-}) {
-  const savedSlips = useAppSavedSlips();
-  return (
-    <NotificationProvider savedSlips={savedSlips} onNavigate={onNavigate}>
-      {children}
-    </NotificationProvider>
-  );
-});
 
 const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
   activeSection,
@@ -395,16 +377,4 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   );
 });
 
-function HomeFeedLayout(props: HomeFeedLayoutProps) {
-  const handleSectionChange = React.useCallback((section: string) => {
-    props.onSectionChange(section);
-  }, [props.onSectionChange]);
-
-  return (
-    <NotificationShell onNavigate={handleSectionChange}>
-      <HomeFeedLayoutBody {...props} />
-    </NotificationShell>
-  );
-}
-
-export default React.memo(HomeFeedLayout);
+export default React.memo(HomeFeedLayoutBody);

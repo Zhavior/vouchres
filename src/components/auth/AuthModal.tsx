@@ -310,17 +310,17 @@ export default function AuthModal({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       <motion.div
         className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 font-z8"
-        initial={{ opacity: 0 }}
+        initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         style={{ background: 'rgba(2,4,10,0.82)', backdropFilter: 'blur(12px)' }}
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <motion.div
-          initial={{ opacity: 0, y: 18, scale: 0.97 }}
+          initial={{ y: 18, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.97 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}

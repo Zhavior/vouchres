@@ -11,6 +11,7 @@ import { queryKeys } from './hooks/queries/queryKeys';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import { NotificationProvider } from './components/notifications/UnifiedNotificationCenter';
 const MainViewRouter = lazy(() => import('./components/routing/MainViewRouter'));
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
@@ -1237,6 +1238,7 @@ export default function App() {
         <div className="ve-motion-content">
           {loggingOut && <GoodbyeScreen />}
           <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
+          <NotificationProvider savedSlips={savedSlips} onNavigate={navigateSection}>
         {/* Desktop only — on mobile this is rendered inline inside each page's
             own compact header (see HomeFeedLayout.tsx) instead of floating
             fixed over content, since a fixed corner badge collided with
@@ -1322,6 +1324,7 @@ export default function App() {
             />
           </Suspense>
         )}
+          </NotificationProvider>
           </AppErrorBoundary>
         </div>
         </div>
