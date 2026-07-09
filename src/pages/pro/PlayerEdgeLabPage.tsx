@@ -1,3 +1,4 @@
+import PlayerIntelligenceCard from "@/components/player/PlayerIntelligenceCard";
 import { useMemo, useState } from 'react';
 import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
 
@@ -208,7 +209,10 @@ export default function PlayerEdgeLabPage() {
 
         <section className="space-y-4">
           {playerPayload ? (
-            <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
+            <>
+              <PlayerIntelligenceCard payload={playerPayload} />
+              <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
+            </>
           ) : (
             <VerifiedGraphEmptyState
               variant="feed-required"
