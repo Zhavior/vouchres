@@ -78,6 +78,7 @@ export default function ProCommandCenterPage() {
                   key={player.playerName}
                   player={player.playerName}
                   score={String(player.score)}
+                  candidate={player}
                 />
               ))
             )}
@@ -135,9 +136,18 @@ export default function ProCommandCenterPage() {
 function EdgeRow({
   player,
   score,
+  candidate,
 }: {
   player: string;
   score: string;
+  candidate?: {
+    estimatedHrProbability?: number;
+    confidenceTier?: string;
+    pitcherVulnerability?: number;
+    parkFactor?: number;
+    reasons?: string[];
+    warnings?: string[];
+  };
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
@@ -154,10 +164,12 @@ function EdgeRow({
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-black/20 p-2">
           <span className="text-white/50">
-            HR Edge
+            HR Probability
           </span>
           <p className="font-bold text-white">
-            Elite
+            {candidate?.estimatedHrProbability
+              ? `${candidate.estimatedHrProbability}%`
+              : "N/A"}
           </p>
         </div>
 
@@ -166,15 +178,41 @@ function EdgeRow({
             Confidence
           </span>
           <p className="font-bold text-white">
-            High
+            {candidate?.confidenceTier ?? "Unknown"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg bg-black/20 p-2">
+          <span className="text-white/50">
+            Pitcher Risk
+          </span>
+          <p className="font-bold text-white">
+            {candidate?.pitcherVulnerability ?? 0}%
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-black/20 p-2">
+          <span className="text-white/50">
+            Park Factor
+          </span>
+          <p className="font-bold text-white">
+            {candidate?.parkFactor ?? 0}%
           </p>
         </div>
       </div>
 
       <div className="mt-3 text-xs text-white/60">
-        ✓ Pitcher vulnerability<br />
-        ✓ Park advantage<br />
-        ✓ Recent power trend
+        {(candidate?.reasons ?? [
+          "Pitcher vulnerability",
+          "Park advantage",
+          "Recent power trend",
+        ]).slice(0, 3).map((reason) => (
+          <div key={reason}>
+            ✓ {reason}
+          </div>
+        ))}
       </div>
     </div>
   );
