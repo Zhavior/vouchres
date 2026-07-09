@@ -37,16 +37,16 @@ import { CreatorProofProfile } from '../types';
 function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string) => void }) {
   return (
     <div 
-      className="flex flex-col items-center select-none cursor-pointer group py-12 px-6 sm:px-12 my-6 relative overflow-visible w-full max-w-4xl mx-auto rounded-3xl bg-[#090d16]/80 border border-slate-900/80 backdrop-blur-xl transition-all hover:border-slate-800/80 active:scale-98 duration-300 shadow-[0_32px_90px_rgba(0,0,0,0.85)]" 
+      className="flex flex-col items-center select-none cursor-pointer group py-12 px-6 sm:px-12 my-6 relative overflow-visible w-full max-w-4xl mx-auto rounded-3xl bg-[#090d16]/80 border border-white/[0.08] backdrop-blur-xl transition-all hover:border-white/[0.08] active:scale-98 duration-300 shadow-[0_32px_90px_rgba(0,0,0,0.85)]" 
       onClick={() => onSectionChange('feed')}
     >
       {/* Premium ambient background accents (no clunky astronaut, pure luxury glow) */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[130px] bg-gradient-to-r from-emerald-500/10 via-yellow-500/5 to-indigo-500/15 rounded-full blur-[70px] pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity duration-1000" />
       
       {/* Decorative top badge line */}
-      <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900/60 rounded-full border border-slate-800/85 mb-6 group-hover:border-emerald-500/30 transition-colors">
+      <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-black/30 rounded-full border border-white/[0.085] mb-6 group-hover:border-emerald-500/30 transition-colors">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        <span className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-extrabold font-mono font-sans">
+        <span className="text-[10px] uppercase tracking-[0.25em] text-white/45 font-extrabold font-mono font-sans">
           VOUCHEDGE PROFESSIONAL OS V1.4
         </span>
       </div>
@@ -62,7 +62,7 @@ function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string
       </div>
 
       {/* Luxury fine subtitle with high letter spacing */}
-      <p className="mt-8 text-xs sm:text-sm text-slate-405 font-mono tracking-[0.25em] uppercase text-center max-w-xl group-hover:text-slate-200 transition-colors duration-300 leading-relaxed font-sans">
+      <p className="mt-8 text-xs sm:text-sm text-slate-405 font-mono tracking-[0.25em] uppercase text-center max-w-xl group-hover:text-white/80 transition-colors duration-300 leading-relaxed font-sans">
         THE VERIFIED STANDARD FOR AI SPORTS RESEARCH
       </p>
 
@@ -600,7 +600,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
         return (
           <div className="w-full h-full flex flex-col justify-between bg-[#080d17] p-3 text-[10px] font-mono leading-tight">
             {/* Simulation Header */}
-            <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 text-slate-500 text-[8px]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LEDGER_REC_ACTIVE</span>
               <span>UTC ID: 8F2B1</span>
             </div>
@@ -612,45 +612,45 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               {simulationStep === 0 && (
                 <div className="absolute right-12 top-6 flex items-center gap-1 text-yellow-400 z-20 pointer-events-none transition-all duration-1000 animate-bounce">
                   <MousePointer2 className="w-3.5 h-3.5 text-sky-400 fill-sky-400" />
-                  <span className="bg-slate-900/95 border border-sky-400/30 text-[7px] px-1.5 py-0.5 rounded text-sky-300 font-bold uppercase">Click "Publish Slip"</span>
+                  <span className="bg-black/25/95 border border-sky-400/30 text-[7px] px-1.5 py-0.5 rounded text-sky-300 font-bold uppercase">Click "Publish Slip"</span>
                 </div>
               )}
 
               {/* Step representations */}
               {simulationStep === 0 ? (
-                <div className="space-y-1 bg-[#121824] p-2 rounded-lg border border-slate-900">
-                  <div className="text-slate-400 text-[8px] flex justify-between">
+                <div className="space-y-1 bg-[#121824] p-2 rounded-lg border border-white/10">
+                  <div className="text-white/45 text-[8px] flex justify-between">
                     <span>CAPPER HANDLE: @vouch_skywalker</span>
-                    <span className="text-indigo-400">DRAFT</span>
+                    <span className="text-vouch-cyan">DRAFT</span>
                   </div>
-                  <div className="text-slate-300 font-sans font-bold">New Parlay Selection: LAD ML + NYY -1.5</div>
-                  <div className="text-[8px] text-slate-500 mt-1 block">Tapping verification cryptography...</div>
+                  <div className="text-white/65 font-sans font-bold">New Parlay Selection: LAD ML + NYY -1.5</div>
+                  <div className="text-[8px] text-white/40 mt-1 block">Tapping verification cryptography...</div>
                 </div>
               ) : simulationStep === 1 ? (
                 <div className="space-y-1 bg-yellow-950/20 p-2 rounded-lg border border-yellow-500/20 animate-pulse">
                   <div className="text-yellow-400 text-[8px]">⚡ CRITICAL PROTOCOL ACTION IN PROGRESS</div>
-                  <div className="text-slate-200 text-[9px] font-bold">PROVING PROBABILITY COEFFICIENTS...</div>
-                  <div className="w-full bg-slate-900 h-1 rounded overflow-hidden">
+                  <div className="text-white/80 text-[9px] font-bold">PROVING PROBABILITY COEFFICIENTS...</div>
+                  <div className="w-full bg-black/25 h-1 rounded overflow-hidden">
                     <div className="bg-gradient-to-r from-yellow-400 to-amber-500 h-full w-2/3" />
                   </div>
                 </div>
               ) : simulationStep === 2 ? (
-                <div className="space-y-1 bg-slate-950 p-2 rounded-lg border border-teal-500/30">
+                <div className="space-y-1 bg-obsidian-900 p-2 rounded-lg border border-teal-500/30">
                   <div className="text-emerald-400 text-[8px] font-bold flex items-center gap-1">
                     <span>✓ LEDGER SECURED</span>
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                   </div>
                   <div className="text-white text-[11px] font-black">SLIP SEALED UNDER BLOCK #72109</div>
-                  <p className="text-[7px] text-slate-500">Un-deletable ROI & win-rate variables calculated instantly.</p>
+                  <p className="text-[7px] text-white/40">Un-deletable ROI & win-rate variables calculated instantly.</p>
                 </div>
               ) : (
-                <div className="space-y-1 bg-[#0f172a] p-2 rounded-lg border border-slate-900">
-                  <div className="flex justify-between text-slate-400 text-[8px]">
+                <div className="space-y-1 bg-[#0f172a] p-2 rounded-lg border border-white/10">
+                  <div className="flex justify-between text-white/45 text-[8px]">
                     <span className="text-emerald-400 uppercase font-black bg-emerald-950/80 px-1 rounded">VERIFIED WON</span>
                     <span>1 min ago</span>
                   </div>
                   <div className="text-white font-bold font-sans">LAD vs NYY Multi-Slip Ledger Entry</div>
-                  <div className="flex justify-between text-[8px] text-slate-500 font-mono">
+                  <div className="flex justify-between text-[8px] text-white/40 font-mono">
                     <span>Expected Return: +310%</span>
                     <span className="text-emerald-400 font-bold">+15.2 U</span>
                   </div>
@@ -659,7 +659,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
             </div>
 
             {/* Video footer stat display */}
-            <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
+            <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>ACTION STAGED: USER PUBLISHING SLIP LOOP</span>
               <span className="text-yellow-450 uppercase font-bold">STATUS: RESEARCH PREVIEW</span>
             </div>
@@ -669,50 +669,50 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       case 'ai_engine':
         return (
           <div className="w-full h-full flex flex-col justify-between bg-[#070b13] p-3 text-[10px] font-mono leading-tight">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 text-slate-500 text-[8px]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping" /> V.A.I PREDICTION MATRIX v3.0</span>
               <span className="text-cyan-400">LOCAL_GPU: LOADED</span>
             </div>
 
             <div className="flex-1 my-2 flex flex-col justify-center space-y-1.5 relative min-h-[90px]">
               {simulationStep === 0 ? (
-                <div className="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-900">
-                  <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Step 1: Selecting Research Matchups</div>
+                <div className="space-y-1 bg-obsidian-900 p-2 rounded-lg border border-white/10">
+                  <div className="text-[8px] text-white/45 font-bold uppercase tracking-wider">Step 1: Selecting Research Matchups</div>
                   <div className="grid grid-cols-2 gap-1 text-[8px]">
                     <div className="bg-cyan-950/30 border border-cyan-800/40 p-1 rounded font-bold text-cyan-300">✓ OHTANI (TOTAL BASES)</div>
-                    <div className="bg-slate-900 text-slate-500 p-1 rounded">PENDING SELECTION</div>
+                    <div className="bg-black/25 text-white/40 p-1 rounded">PENDING SELECTION</div>
                   </div>
                 </div>
               ) : simulationStep === 1 ? (
                 <div className="space-y-1">
                   <div className="text-[8px] text-cyan-300">Step 2: Processing 10,000 Sabermetric Simulations</div>
-                  <div className="text-[10px] text-slate-300 animate-pulse flex items-center gap-1.5">
+                  <div className="text-[10px] text-white/65 animate-pulse flex items-center gap-1.5">
                     <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
                     <span>COMPUTING SABERMETRIC VECTORS...</span>
                   </div>
-                  <div className="bg-[#121824] p-1.5 rounded text-[8px] text-slate-500">
+                  <div className="bg-[#121824] p-1.5 rounded text-[8px] text-white/40">
                     Confidence threshold set at: 85% Variance limit
                   </div>
                 </div>
               ) : simulationStep === 2 ? (
-                <div className="space-y-1 bg-slate-900/60 p-2 rounded-lg border border-cyan-500/30">
+                <div className="space-y-1 bg-black/30 p-2 rounded-lg border border-cyan-500/30">
                   <div className="text-cyan-400 text-[8px] font-bold">Step 3: Calculating Edge Index Potential</div>
-                  <div className="flex justify-between items-center bg-slate-950 p-1.5 rounded">
-                    <span className="text-slate-100 font-bold">BETTOR EDGE FOUND</span>
+                  <div className="flex justify-between items-center bg-obsidian-900 p-1.5 rounded">
+                    <span className="text-white/90 font-bold">BETTOR EDGE FOUND</span>
                     <span className="text-[#FFE81F] font-black text-xs">+14.86% EDGE</span>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-1 bg-cyan-950/20 p-2 rounded-lg border border-cyan-500/40">
                   <div className="text-[8px] text-[#FFE81F] font-black uppercase">V.A.I CERTIFIED SMART SLIP RECOMMENDED</div>
-                  <div className="text-slate-200 text-[9px] leading-tight font-sans">
+                  <div className="text-white/80 text-[9px] leading-tight font-sans">
                     Weigh confidence score: <span className="text-cyan-400 font-bold">94.2%</span> based on historical ballpark altitude adjustments.
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
+            <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>ACTIVE MODEL PROCESSOR LOOP</span>
               <span className="text-cyan-400 font-bold">RUNNING MATRIX</span>
             </div>
@@ -722,7 +722,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       case 'build':
         return (
           <div className="w-full h-full flex flex-col justify-between bg-[#090712] p-3 text-[10px] font-mono leading-tight">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 text-slate-500 text-[8px]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1">🎛️ MULTI-LEG ODDS COUNTER</span>
               <span>SLIP BUILDER CODES</span>
             </div>
@@ -730,9 +730,9 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
             <div className="flex-1 my-2 flex flex-col justify-center space-y-1.5 relative min-h-[90px]">
               
               {/* Virtual calculator widget */}
-              <div className="bg-slate-950 p-2 rounded-lg border border-purple-900/20 space-y-1.5">
+              <div className="bg-obsidian-900 p-2 rounded-lg border border-purple-900/20 space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] text-slate-500 uppercase">Interactive Stake</span>
+                  <span className="text-[8px] text-white/40 uppercase">Interactive Stake</span>
                   {simulationStep === 0 ? (
                     <span className="text-[#FFE81F] font-bold font-mono">$50.00</span>
                   ) : simulationStep === 1 ? (
@@ -744,7 +744,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                   )}
                 </div>
 
-                <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden relative">
+                <div className="w-full bg-black/25 h-1.5 rounded-full overflow-hidden relative">
                   <div 
                     className="bg-purple-650 h-full transition-all duration-700" 
                     style={{ 
@@ -753,14 +753,14 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-1.5 pt-1 text-[8px] text-slate-400">
-                  <div className="bg-slate-900 p-1 rounded">
+                <div className="grid grid-cols-2 gap-1.5 pt-1 text-[8px] text-white/45">
+                  <div className="bg-black/25 p-1 rounded">
                     <div>MULTIPLIER</div>
                     <div className="text-white font-bold font-mono">
                       {simulationStep === 0 ? 'x1.90' : simulationStep === 1 ? 'x3.40' : simulationStep === 2 ? 'x7.80' : 'x17.40'}
                     </div>
                   </div>
-                  <div className="bg-slate-900 p-1 rounded">
+                  <div className="bg-black/25 p-1 rounded">
                     <div>EST. PAYOUT</div>
                     <div className="text-emerald-400 font-bold font-mono">
                       {simulationStep === 0 ? '$95.00' : simulationStep === 1 ? '$340.00' : simulationStep === 2 ? '$1,950.00' : '$8,700.00'}
@@ -771,7 +771,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
             </div>
 
-            <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
+            <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>REALTIME COMPOUND CALCULATIONS</span>
               <span className="text-purple-400 font-bold">COMPOUND OK</span>
             </div>
@@ -781,14 +781,14 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       case 'live_games':
         return (
           <div className="w-full h-full flex flex-col justify-between bg-[#050e0f] p-3 text-[10px] font-mono leading-tight">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 text-slate-500 text-[8px]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" /> LIVE STREAMING STAGE</span>
               <span className="text-red-400">FPS: 60.0_DIRECT</span>
             </div>
 
             <div className="flex-1 my-2 grid grid-cols-12 gap-2 min-h-[90px]">
               {/* Virtual Webcam Viewer box (Grid Left) */}
-              <div className="col-span-7 bg-[#111625] border border-slate-800 rounded-lg p-1.5 relative flex flex-col justify-between overflow-hidden">
+              <div className="col-span-7 bg-[#111625] border border-white/10 rounded-lg p-1.5 relative flex flex-col justify-between overflow-hidden">
                 <div className="absolute inset-0 bg-radial-gradient from-slate-900/10 via-black/80 to-black pointer-events-none" />
                 
                 {/* Simulated Floating Fire emoji cards */}
@@ -798,25 +798,25 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                 </div>
 
                 <div className="my-auto text-center space-y-1">
-                  <Tv className="w-5 h-5 mx-auto text-slate-600 animate-bounce" />
-                  <span className="text-[7px] text-slate-400 block font-sans">Capper Streaming Live...</span>
+                  <Tv className="w-5 h-5 mx-auto text-white/35 animate-bounce" />
+                  <span className="text-[7px] text-white/45 block font-sans">Capper Streaming Live...</span>
                 </div>
 
-                <div className="flex justify-between items-center text-[6px] text-slate-500 font-sans">
+                <div className="flex justify-between items-center text-[6px] text-white/40 font-sans">
                   <span>🔴 OVERLAY_ON</span>
                   <span className="text-emerald-400 font-bold">148 TAILING SLIP</span>
                 </div>
               </div>
 
               {/* Chat Viewport (Grid Right) */}
-              <div className="col-span-5 bg-[#0a0f18] p-1 rounded-lg border border-slate-900 flex flex-col justify-between space-y-1 overflow-hidden">
-                <span className="text-slate-600 text-[6px] font-bold tracking-wider uppercase border-b border-slate-900 pb-0.5 text-center">LOBBY_CHAT</span>
+              <div className="col-span-5 bg-[#0a0f18] p-1 rounded-lg border border-white/10 flex flex-col justify-between space-y-1 overflow-hidden">
+                <span className="text-white/35 text-[6px] font-bold tracking-wider uppercase border-b border-white/10 pb-0.5 text-center">LOBBY_CHAT</span>
                 
                 <div className="flex-1 flex flex-col justify-end space-y-1 select-none">
-                  <div className="text-[6px] text-slate-400 scale-[0.95] origin-bottom-left leading-tight">
+                  <div className="text-[6px] text-white/45 scale-[0.95] origin-bottom-left leading-tight">
                     <span className="text-sky-400 font-bold">@v_capper:</span> Let's go MLB !
                   </div>
-                  <div className="text-[6px] text-slate-400 scale-[0.95] origin-bottom-left leading-tight">
+                  <div className="text-[6px] text-white/45 scale-[0.95] origin-bottom-left leading-tight">
                     <span className="text-pink-400 font-bold">@bet_babe:</span> Tailed +10U
                   </div>
                   <div className="text-[6px] text-yellow-400 scale-[0.95] origin-bottom-left leading-tight animate-pulse font-bold bg-yellow-950/30 rounded px-0.5">
@@ -826,7 +826,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
+            <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>COMMUNITY LIVECHAT MODERATOR STREAM</span>
               <span className="text-emerald-400 font-bold text-[6px] bg-emerald-950 px-1 rounded uppercase">PRO_STREAM</span>
             </div>
@@ -836,19 +836,19 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       case 'board':
         return (
           <div className="w-full h-full flex flex-col justify-between bg-[#0e0710] p-3 text-[10px] font-mono leading-tight">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 text-slate-500 text-[8px]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1">🎨 CUSTOM NEON CARD LAB</span>
               <span>RENDER ENGINE v2</span>
             </div>
 
-            <div className="flex-1 my-2 flex flex-col justify-center items-center space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-900 min-h-[90px] relative">
+            <div className="flex-1 my-2 flex flex-col justify-center items-center space-y-1 bg-obsidian-900 p-2 rounded-lg border border-white/10 min-h-[90px] relative">
               
               {/* Star Wars card deck editor simulation */}
               <div className="w-3/4 bg-[#111827] rounded-lg border border-pink-500/50 p-1.5 hover:shadow-[0_0_15px_rgba(236,72,153,0.3)] transition-all duration-700 select-none text-center transform rotate-1">
                 <span className="text-[6px] uppercase font-black text-rose-455 tracking-widest block font-sans">VERIFIED PUBLIC CONTRACT</span>
-                <span className="text-[10px] text-slate-100 font-black block leading-none uppercase my-1 font-mono tracking-widest text-[#FFE81F]">VOUCHEDGE HERO DECK</span>
+                <span className="text-[10px] text-white/90 font-black block leading-none uppercase my-1 font-mono tracking-widest text-[#FFE81F]">VOUCHEDGE HERO DECK</span>
                 
-                <div className="w-full bg-[#1e293b] p-1 rounded text-[5px] text-slate-400 flex justify-between uppercase">
+                <div className="w-full bg-[#1e293b] p-1 rounded text-[5px] text-white/45 flex justify-between uppercase">
                   <span>GLOW: 45PX</span>
                   <span className="text-pink-400 font-bold">SATURATION: MAX</span>
                 </div>
@@ -858,13 +858,13 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               {simulationStep === 2 && (
                 <div className="absolute bottom-1 right-8 flex items-center gap-1 text-pink-400 z-10 pointer-events-none transition-all duration-700 animate-pulse">
                   <MousePointer2 className="w-3 h-3 text-pink-500 fill-pink-500" />
-                  <span className="bg-slate-900 text-[5px] px-1 rounded border border-pink-500/20 uppercase font-sans">Adjust Neon</span>
+                  <span className="bg-black/25 text-[5px] px-1 rounded border border-pink-500/20 uppercase font-sans">Adjust Neon</span>
                 </div>
               )}
 
             </div>
 
-            <div className="flex items-center justify-between text-slate-600 text-[7px] pt-1 border-t border-slate-900 font-sans">
+            <div className="flex items-center justify-between text-white/35 text-[7px] pt-1 border-t border-white/10 font-sans">
               <span>COLOR SECTOR COLOR SCHEME PREVIEW</span>
               <span className="text-pink-404 font-bold text-[6px]">DECK COMPILER READY</span>
             </div>
@@ -877,10 +877,10 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
   };
 
   return (
-    <div className="mt-4 border border-slate-850 bg-slate-950 rounded-2xl overflow-hidden shadow-2xl relative select-none group/player">
+    <div className="mt-4 border border-slate-850 bg-obsidian-900 rounded-2xl overflow-hidden shadow-2xl relative select-none group/player">
       
       {/* Video Player Header Chrome */}
-      <div className="bg-[#0e1220] border-b border-slate-900 px-4 py-2 flex items-center justify-between text-[11px] font-mono text-slate-400">
+      <div className="bg-[#0e1220] border-b border-white/10 px-4 py-2 flex items-center justify-between text-[11px] font-mono text-white/45">
         
         {/* Left Side: Video source badge */}
         <div className="flex items-center gap-2">
@@ -890,13 +890,13 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
           ) : (
             <span className="w-2 h-2 rounded-full bg-slate-600 block" />
           )}
-          <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-300">
+          <span className="text-[9px] uppercase font-extrabold tracking-wider text-white/65">
              VOUCHEDGE_WALKTHROUGH_LOOP.MP4
           </span>
         </div>
 
         {/* Right Side: Quality tag */}
-        <div className="flex items-center gap-1.5 text-[8px] text-slate-500">
+        <div className="flex items-center gap-1.5 text-[8px] text-white/40">
           <span className="text-yellow-450 font-bold bg-yellow-950/40 px-1 py-0.2 rounded border border-yellow-800/30">720P FPS:60</span>
           <span>MUTED</span>
           <Volume2 className="w-2.5 h-2.5" />
@@ -914,7 +914,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center space-y-2 z-10"
+              className="absolute inset-0 bg-black/30 backdrop-blur-[2px] flex flex-col items-center justify-center space-y-2 z-10"
             >
               <button 
                 onClick={() => setIsPlaying(true)}
@@ -922,7 +922,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               >
                 <Play className="w-6 h-6 fill-slate-950 ml-1" />
               </button>
-              <span className="text-[9px] font-bold font-mono text-slate-300 uppercase tracking-widest bg-slate-900 px-2 py-0.5 rounded">
+              <span className="text-[9px] font-bold font-mono text-white/65 uppercase tracking-widest bg-black/25 px-2 py-0.5 rounded">
                 SIMULATION PAUSED
               </span>
             </motion.div>
@@ -931,18 +931,18 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       </div>
 
       {/* Video Player Bottom Timeline Scrubbed Console */}
-      <div className="bg-[#0b0f19] px-3.5 py-2.5 flex items-center gap-3 border-t border-slate-900 text-slate-400 text-[10px] font-mono">
+      <div className="bg-[#0b0f19] px-3.5 py-2.5 flex items-center gap-3 border-t border-white/10 text-white/45 text-[10px] font-mono">
         
         {/* Play/Pause Button */}
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
-          className="text-xs font-black uppercase text-slate-300 hover:text-white transition-colors flex-shrink-0 cursor-pointer outline-none"
+          className="text-xs font-black uppercase text-white/65 hover:text-white transition-colors flex-shrink-0 cursor-pointer outline-none"
         >
           {isPlaying ? 'PAUSE' : 'PLAY'}
         </button>
 
         {/* Progress Timeline bar */}
-        <div className="flex-1 bg-slate-900 h-1.5 rounded-full overflow-hidden relative cursor-pointer" onClick={handleRestart}>
+        <div className="flex-1 bg-black/25 h-1.5 rounded-full overflow-hidden relative cursor-pointer" onClick={handleRestart}>
           <div 
             className="bg-yellow-405 h-full relative" 
             style={{ width: `${(timelineSecs / 12) * 100}%` }}
@@ -950,7 +950,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
         </div>
 
         {/* Timeline timer indicator */}
-        <div className="text-[9px] text-slate-500 font-mono flex-shrink-0">
+        <div className="text-[9px] text-white/40 font-mono flex-shrink-0">
           <span>00:{timelineSecs < 10 ? `0${timelineSecs.toFixed(0)}` : timelineSecs.toFixed(0)}</span>
           <span className="mx-1">/</span>
           <span>00:12</span>
@@ -959,7 +959,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
         {/* Refresh loop trigger */}
         <button 
           onClick={handleRestart}
-          className="text-slate-500 hover:text-yellow-400 hover:scale-105 transition-all duration-200 outline-none flex-shrink-0"
+          className="text-white/40 hover:text-yellow-400 hover:scale-105 transition-all duration-200 outline-none flex-shrink-0"
           title="Restart screencast clip"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -1082,16 +1082,16 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
   ];
 
   return (
-    <div id="landing-page-elite-root" className="bg-transparent text-slate-100 min-h-screen relative overflow-y-auto overflow-x-hidden font-sans pb-24">
+    <div id="landing-page-elite-root" className="bg-transparent text-white/90 min-h-screen relative overflow-y-auto overflow-x-hidden font-sans pb-24">
       
       {/* Landing Navigation Header Header */}
-      <header className="sticky top-0 w-full z-50 bg-[#0b0f19]/85 backdrop-blur-md border-b border-slate-900/80 px-4 sm:px-6 py-4 flex items-center justify-between select-none max-w-7xl mx-auto rounded-b-2xl" id="vouchedge-main-nav-header">
+      <header className="sticky top-0 w-full z-50 bg-[#0b0f19]/85 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between select-none max-w-7xl mx-auto rounded-b-2xl" id="vouchedge-main-nav-header">
         <div 
           onClick={() => onSectionChange('welcome')} 
           className="flex items-center gap-3 cursor-pointer group transition-all"
           id="vouchedge-nav-brand-logo-trigger"
         >
-          <div className="w-9 h-9 rounded-xl bg-slate-950 border border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-bold text-sm shadow-[0_0_15px_rgba(255,232,31,0.25)] group-hover:scale-110 transition-transform">
+          <div className="w-9 h-9 rounded-xl bg-obsidian-900 border border-[#FFE81F]/70 flex items-center justify-center text-[#FFE81F] font-bold text-sm shadow-[0_0_15px_rgba(255,232,31,0.25)] group-hover:scale-110 transition-transform">
             ★
           </div>
           <div className="flex flex-col">
@@ -1104,7 +1104,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8 text-[11px] font-mono tracking-wider text-slate-400" id="vouchedge-navbar-navlinks">
+        <nav className="hidden md:flex items-center gap-8 text-[11px] font-mono tracking-wider text-white/45" id="vouchedge-navbar-navlinks">
           <button 
             type="button"
             onClick={() => {
@@ -1150,7 +1150,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           <button
             type="button"
             onClick={() => onSectionChange('feed')}
-            className="hidden sm:inline-block px-4 py-2 bg-slate-900/60 hover:bg-slate-850 hover:text-white text-slate-400 border border-slate-800 hover:border-slate-700 font-mono text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer outline-none"
+            className="hidden sm:inline-block px-4 py-2 bg-black/30 hover:bg-slate-850 hover:text-white text-white/45 border border-white/10 hover:border-white/10 font-mono text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer outline-none"
             id="nav-guest-entrance-btn"
           >
             Guest Entrance
@@ -1189,16 +1189,16 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           className="flex flex-col items-center"
         >
           {/* Trust Shield Badge - Luxurious Platinum Silver & Gold style */}
-          <span className="inline-flex items-center gap-1.5 bg-slate-950/60 border border-slate-800 rounded-full px-4 py-1 text-[10px] text-indigo-350 font-mono font-black uppercase tracking-widest mb-8 shadow-[0_0_15px_rgba(99,102,241,0.12)]">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+          <span className="inline-flex items-center gap-1.5 bg-obsidian-900/60 border border-white/10 rounded-full px-4 py-1 text-[10px] text-indigo-350 font-mono font-black uppercase tracking-widest mb-8 shadow-[0_0_15px_rgba(99,102,241,0.12)]">
+            <ShieldCheck className="w-3.5 h-3.5 text-vouch-cyan" />
             IMMUTABLE TRUST & TRANSPARENCY STANDARD
           </span>
 
           {/* Spaced Cinematic Editorial Title with Baunk styled experimental stencil typography */}
           <BaunkAnimatedTitle onSectionChange={onSectionChange} />
 
-          <p className="text-slate-400 text-[10px] sm:text-xs font-mono tracking-[0.16em] uppercase text-center max-w-2xl mx-auto mt-4 leading-relaxed">
-            THE GALACTIC PROTOCOL OF IMMUTABLE SPORTING EDGES <span className="text-indigo-400">•</span> ZERO REPACTED LOGS <span className="text-indigo-400">•</span> TOTAL AUDIT TRANSPARENCY
+          <p className="text-white/45 text-[10px] sm:text-xs font-mono tracking-[0.16em] uppercase text-center max-w-2xl mx-auto mt-4 leading-relaxed">
+            THE GALACTIC PROTOCOL OF IMMUTABLE SPORTING EDGES <span className="text-vouch-cyan">•</span> ZERO REPACTED LOGS <span className="text-vouch-cyan">•</span> TOTAL AUDIT TRANSPARENCY
           </p>
           <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent my-6" />
         </motion.div>
@@ -1206,7 +1206,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
 
       {/* SECURE IDENTITY GATEWAY: CONTINUE / SIGN IN / SIGN UP (TRUST PORTAL WITH CONTINUOUS BYPASS OPTION) */}
       <section id="security-identity-gateway-root" className="max-w-4xl mx-auto px-4 pb-16 relative z-10">
-        <div className="bg-gradient-to-b from-[#111625] to-[#0a0c14] border border-slate-900 rounded-3xl p-6 sm:p-8 md:p-10 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        <div className="bg-gradient-to-b from-[#111625] to-[#0a0c14] border border-white/10 rounded-3xl p-6 sm:p-8 md:p-10 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           {/* Glowing accent border */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-yellow-500/20 via-yellow-400/80 to-yellow-500/20" />
           
@@ -1232,17 +1232,17 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                   WELCOME BACK, COMMANDER <span className="text-[#FFE81F]">@{profile.username}</span>
                 </h3>
 
-                <p className="text-slate-400 text-xs mt-2 max-w-md mx-auto leading-relaxed font-sans">
+                <p className="text-white/45 text-xs mt-2 max-w-md mx-auto leading-relaxed font-sans">
                   Your customized profile is synchronized. Your active theme is <span className="text-sky-400 font-bold uppercase">{profile.activeTheme || 'Default Space'}</span> and currently auditing trust score parameters.
                 </p>
 
-                <div className="my-8 max-w-md mx-auto grid grid-cols-2 gap-3.5 text-left text-xs bg-slate-950/70 p-4 rounded-2xl border border-slate-900">
+                <div className="my-8 max-w-md mx-auto grid grid-cols-2 gap-3.5 text-left text-xs bg-black/30 p-4 rounded-2xl border border-white/10">
                   <div>
-                    <span className="text-slate-500 block uppercase text-[10px]">Display Alias:</span>
-                    <span className="text-slate-200 font-bold block mt-0.5">{profile.displayName}</span>
+                    <span className="text-white/40 block uppercase text-[10px]">Display Alias:</span>
+                    <span className="text-white/80 font-bold block mt-0.5">{profile.displayName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block uppercase text-[10px]">Verification Tier:</span>
+                    <span className="text-white/40 block uppercase text-[10px]">Verification Tier:</span>
                     <span className="text-yellow-404 font-bold block mt-0.5 uppercase">✨ {profile.subscriptionTier} LEVEL</span>
                   </div>
                 </div>
@@ -1258,7 +1258,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
 
                   <button
                     onClick={handleResetForNewAccount}
-                    className="text-[10px] text-slate-500 hover:text-yellow-400 font-bold uppercase tracking-wider underline mt-3 sm:mt-0 cursor-pointer"
+                    className="text-[10px] text-white/40 hover:text-yellow-400 font-bold uppercase tracking-wider underline mt-3 sm:mt-0 cursor-pointer"
                   >
                     Register as Another User Handle
                   </button>
@@ -1273,22 +1273,22 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                 className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
               >
                 {/* Column Left: Continue without account (Bypass) */}
-                <div className="lg:col-span-5 flex flex-col justify-between p-5 bg-slate-950/50 rounded-2xl border border-slate-900 text-left">
+                <div className="lg:col-span-5 flex flex-col justify-between p-5 bg-black/25 rounded-2xl border border-white/10 text-left">
                   <div className="space-y-3 font-mono">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-slate-900 px-2.5 py-0.5 rounded border border-slate-850">
+                    <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest bg-black/25 px-2.5 py-0.5 rounded border border-slate-850">
                       SECURE BYPASS
                     </span>
                     <h3 className="text-lg font-black text-white uppercase tracking-wider">
                       RAPID ENTRY GUEST
                     </h3>
-                    <p className="text-slate-400 text-xs leading-relaxed font-sans mt-2">
+                    <p className="text-white/45 text-xs leading-relaxed font-sans mt-2">
                       Bypass account establishment. Instantly transition directly to the central, active community social forum. You will use a default temporary anonymous owner handle to tail or vouch slips.
                     </p>
                   </div>
 
                   <button
                     onClick={() => onSectionChange('feed')}
-                    className="mt-6 w-full py-4 bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white border border-slate-800 hover:border-slate-700 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="mt-6 w-full py-4 bg-black/25 hover:bg-slate-850 text-white/80 hover:text-white border border-white/10 hover:border-white/10 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>BYPASS SECURITY GATE</span>
                     <ArrowRight className="w-3.5 h-3.5 text-yellow-400" />
@@ -1311,7 +1311,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                         <h3 className="text-lg font-black text-white uppercase tracking-wider mt-2.5">
                           CREATE PROTOCOL CREDENTIALS
                         </h3>
-                        <p className="text-slate-400 text-xs font-sans mt-1">
+                        <p className="text-white/45 text-xs font-sans mt-1">
                           Establish continuous trust logs. Save your custom sports slip history, earn verified status badges, and equip premium platform styles.
                         </p>
                       </div>
@@ -1325,21 +1325,21 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                             value={formData.displayName}
                             onChange={e => setFormData({ ...formData, displayName: e.target.value })}
                             placeholder="e.g. Captain Vouch Walker"
-                            className="w-full bg-slate-950 border border-slate-900 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-yellow-400/50"
+                            className="w-full bg-obsidian-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-yellow-400/50"
                           />
                         </div>
 
                         <div>
                           <label className="block text-slate-450 font-bold mb-1.5 uppercase text-[10px] tracking-wider">Unique Handle Username</label>
                           <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600">@</span>
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35">@</span>
                             <input
                               required
                               type="text"
                               value={formData.username}
                               onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().trim() })}
                               placeholder="vouch_skywalker"
-                              className="w-full bg-slate-950 border border-slate-900 rounded-xl pl-8 pr-3.5 py-2.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-yellow-400/50"
+                              className="w-full bg-obsidian-900 border border-white/10 rounded-xl pl-8 pr-3.5 py-2.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-yellow-400/50"
                             />
                           </div>
                         </div>
@@ -1353,27 +1353,27 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                               className={`p-2.5 rounded-xl border text-[11px] cursor-pointer transition-all ${
                                 formData.tierPreference === 'GOLD' 
                                   ? 'bg-yellow-950/30 border-[#FFE81F] text-yellow-350' 
-                                  : 'bg-slate-950 border-slate-900 text-slate-500'
+                                  : 'bg-obsidian-900 border-white/10 text-white/40'
                               }`}
                             >
                               <div className="flex justify-between items-center font-bold">
                                 <span>✨ GOLD VERIFIED</span>
                               </div>
-                              <p className="text-[9px] text-slate-400 mt-1 font-sans">Receive permanent gold check badge.</p>
+                              <p className="text-[9px] text-white/45 mt-1 font-sans">Receive permanent gold check badge.</p>
                             </div>
 
                             <div 
                               onClick={() => setFormData({ ...formData, tierPreference: 'SELLER_PRO' })}
                               className={`p-2.5 rounded-xl border text-[11px] cursor-pointer transition-all ${
                                 formData.tierPreference === 'SELLER_PRO' 
-                                  ? 'bg-indigo-950/35 border-indigo-505 text-indigo-300' 
-                                  : 'bg-slate-950 border-slate-900 text-slate-500'
+                                  ? 'bg-indigo-950/35 border-indigo-505 text-vouch-cyan/80' 
+                                  : 'bg-obsidian-900 border-white/10 text-white/40'
                               }`}
                             >
                               <div className="flex justify-between items-center font-bold">
                                 <span>💎 SELLER PRO</span>
                               </div>
-                              <p className="text-[9px] text-slate-400 mt-1 font-sans">Unlock storefront indicators.</p>
+                              <p className="text-[9px] text-white/45 mt-1 font-sans">Unlock storefront indicators.</p>
                             </div>
                           </div>
                         </div>
@@ -1385,9 +1385,9 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                             id="agreed_check"
                             checked={formData.agreedToTerms}
                             onChange={e => setFormData({ ...formData, agreedToTerms: e.target.checked })}
-                            className="mt-0.5 rounded border-slate-900 bg-slate-950 text-yellow-405 focus:ring-transparent"
+                            className="mt-0.5 rounded border-white/10 bg-obsidian-900 text-yellow-405 focus:ring-transparent"
                           />
-                          <label htmlFor="agreed_check" className="text-slate-500 text-[10px] leading-tight font-sans">
+                          <label htmlFor="agreed_check" className="text-white/40 text-[10px] leading-tight font-sans">
                             I verify that my logged sport outcomes are generated with transparent trust parameters.
                           </label>
                         </div>
@@ -1419,7 +1419,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                       </div>
                       
                       <h4 className="text-emerald-400 font-extrabold uppercase text-sm">LEDGER GENERATED SUCCESSFUL CHECK!</h4>
-                      <p className="text-slate-400 text-xs mt-2 leading-relaxed font-sans">
+                      <p className="text-white/45 text-xs mt-2 leading-relaxed font-sans">
                         Identity keys loaded. Handle <span className="text-yellow-400 font-bold">@{formData.username}</span> is equipped with <span className="text-sky-400 font-bold">{formData.tierPreference} AUTHORIZATION</span> level credentials.
                       </p>
 
@@ -1446,7 +1446,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
           <h2 className="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 uppercase tracking-wider mt-1">
             EXPLORE THE CORE INTEL CHANNELS
           </h2>
-          <p className="text-slate-400 text-xs sm:text-sm mt-3 leading-relaxed font-sans">
+          <p className="text-white/45 text-xs sm:text-sm mt-3 leading-relaxed font-sans">
             Every analytical workbench and live forum is linked seamlessly underneath the un-deletable VouchEdge ledger. Travel along the neural index, watch the live interactive workflows, and engage any module instantly.
           </p>
         </div>
@@ -1466,7 +1466,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                     <motion.div 
                       whileHover={{ y: -4, scale: 1.015 }}
                       transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                      className="bg-[#121824]/90 border border-slate-900 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
+                      className="bg-[#121824]/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
                     >
                       <div className={`absolute top-0 right-0 w-2 h-full bg-gradient-to-b ${feat.color}`} />
                       <div>
@@ -1484,7 +1484,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                           {feat.title}
                         </h3>
                         
-                        <p className="text-slate-400 text-xs mt-2.5 leading-relaxed font-sans">
+                        <p className="text-white/45 text-xs mt-2.5 leading-relaxed font-sans">
                           {feat.description}
                         </p>
 
@@ -1492,8 +1492,8 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                         <FeaturePreviewVideo featureId={feat.id} accentColor={feat.accentHexColor} />
                       </div>
 
-                      <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-between items-center text-[9px] font-mono">
-                         <span className="text-slate-500 font-bold uppercase tracking-wider">HASH VERIFIED ✓</span>
+                      <div className="mt-6 pt-4 border-t border-white/[0.08] flex justify-between items-center text-[9px] font-mono">
+                         <span className="text-white/40 font-bold uppercase tracking-wider">HASH VERIFIED ✓</span>
                          <button
                            onClick={() => onSectionChange(feat.id)}
                            className="text-[#FFE81F] font-black uppercase tracking-wider flex items-center gap-1 hover:underline active:scale-95 transition-all outline-none cursor-pointer"
@@ -1508,7 +1508,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
 
                 {/* Center Pin Column */}
                 <div className="absolute left-[12px] md:relative md:left-0 md:col-span-1 flex md:justify-center items-start pt-8 h-full z-20">
-                  <div className="w-8 h-8 rounded-full bg-slate-950 border-2 border-[#FFE81F] flex items-center justify-center text-[#FFE81F] timeline-dot-pulse shadow-[0_0_12px_rgba(255,232,31,0.8)]">
+                  <div className="w-8 h-8 rounded-full bg-obsidian-900 border-2 border-[#FFE81F] flex items-center justify-center text-[#FFE81F] timeline-dot-pulse shadow-[0_0_12px_rgba(255,232,31,0.8)]">
                     <IconComponent className="w-4 h-4" />
                   </div>
                 </div>
@@ -1520,7 +1520,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                     <motion.div 
                       whileHover={{ y: -4, scale: 1.015 }}
                       transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                      className="bg-[#121824]/90 border border-slate-900 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
+                      className="bg-[#121824]/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
                     >
                       <div className={`absolute top-0 left-0 w-2 h-full bg-gradient-to-b ${feat.color}`} />
                       <div>
@@ -1538,7 +1538,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                           {feat.title}
                         </h3>
                         
-                        <p className="text-slate-400 text-xs mt-2.5 leading-relaxed font-sans">
+                        <p className="text-white/45 text-xs mt-2.5 leading-relaxed font-sans">
                           {feat.description}
                         </p>
 
@@ -1546,8 +1546,8 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                         <FeaturePreviewVideo featureId={feat.id} accentColor={feat.accentHexColor} />
                       </div>
 
-                      <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-between items-center text-[9px] font-mono">
-                         <span className="text-slate-500 font-bold uppercase tracking-wider">HASH VERIFIED ✓</span>
+                      <div className="mt-6 pt-4 border-t border-white/[0.08] flex justify-between items-center text-[9px] font-mono">
+                         <span className="text-white/40 font-bold uppercase tracking-wider">HASH VERIFIED ✓</span>
                          <button
                            onClick={() => onSectionChange(feat.id)}
                            className="text-[#FFE81F] font-black uppercase tracking-wider flex items-center gap-1 hover:underline active:scale-95 transition-all outline-none cursor-pointer"
@@ -1567,7 +1567,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-900 mt-24 py-12 px-4 bg-slate-950 relative z-10 text-center font-mono text-[10px] text-slate-500">
+      <footer className="border-t border-white/10 mt-24 py-12 px-4 bg-obsidian-900 relative z-10 text-center font-mono text-[10px] text-white/40">
         <div className="max-w-4xl mx-auto space-y-4">
           <p className="tracking-widest uppercase text-yellow-450">
             VOUCHEDGE INTEGRITY CONTRACT CODES © ALL RIGHTS VERIFIED 2026.

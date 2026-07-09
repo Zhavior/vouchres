@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Cpu,
   Database,
   CheckCircle2,
-  Activity,
   Award,
   Gauge,
   Lock,
   Unlock,
   Crown,
   Bookmark,
+  ShieldCheck,
 } from 'lucide-react';
+import { motion } from '../lib/motion';
 import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
 import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
 
@@ -27,6 +28,11 @@ import {
 } from './smart-ai/smartAiEngine.logic';
 import { SmartAiDynamicCreator } from './smart-ai/SmartAiDynamicCreator';
 import { SmartAiDeepResearchPanel } from './smart-ai/SmartAiDeepResearchPanel';
+import { SmartAiStatsVerifiedPanel } from './smart-ai/SmartAiStatsVerifiedPanel';
+
+const VAI_PANELS = ['command', 'stats-verified'] as const;
+type VaiPanelId = (typeof VAI_PANELS)[number];
+const VAI_SWIPE_THRESHOLD = 56;
 import {
   Z8_DISPLAY,
   Z8_EMERALD,
@@ -166,6 +172,8 @@ export default function SmartAiEngine({
   const [builderCategory, setBuilderCategory] = useState<SmartAiBuilderCategory>('HITS');
   const [builderThreshold, setBuilderThreshold] = useState<number>(2);
   const [aiAgreementAccepted, setAiAgreementAccepted] = useState(false);
+  const [activePanel, setActivePanel] = useState<VaiPanelId>('command');
+  const touchStartX = useRef<number | null>(null);
 
   // Auto adjusting threshold bounds so that focus options make complete tactical sense
   useEffect(() => {
@@ -372,6 +380,23 @@ export default function SmartAiEngine({
     onSectionChange('research');
   };
 
+  const activeIndex = VAI_PANELS.indexOf(activePanel);
+
+  const onTouchStart = (clientX: number) => {
+    touchStartX.current = clientX;
+  };
+
+  const onTouchEnd = (clientX: number) => {
+    if (touchStartX.current === null) return;
+    const delta = clientX - touchStartX.current;
+    if (delta < -VAI_SWIPE_THRESHOLD && activeIndex < VAI_PANELS.length - 1) {
+      setActivePanel(VAI_PANELS[activeIndex + 1]);
+    } else if (delta > VAI_SWIPE_THRESHOLD && activeIndex > 0) {
+      setActivePanel(VAI_PANELS[activeIndex - 1]);
+    }
+    touchStartX.current = null;
+  };
+
   if (!aiAgreementAccepted) {
     return (
       <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-none animate-fade-in`} id="smart-ai-agreement-gate">
@@ -459,54 +484,83 @@ export default function SmartAiEngine({
             V.A.I <span className="text-vouch-cyan">Research Command Center</span>
           </h1>
           <p className="max-w-3xl text-sm text-white/45">
-            Build gradable parlays and research today&apos;s validated hitter board side by side. Every signal comes from real
-            MLB season stats, probable pitchers, and sourced park factors — missing data is flagged, never invented.
+            {activePanel === 'command'
+              ? 'Build gradable parlays and research today\'s validated hitter board side by side. Every signal comes from real MLB season stats, probable pitchers, and sourced park factors — missing data is flagged, never invented.'
+              : 'Verified stats, feed coverage, and data quality for today\'s board. Swipe or tap tabs — nothing is invented to fill gaps.'}
           </p>
           <div className="z8-accent-line mt-2 w-full max-w-md" />
         </div>
       </header>
 
-      {/* METRIC CARD BAR — real board stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4" id="metric-analytics-bar">
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
-          <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Validated Candidates</span>
-            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
-              {candidatesLoading ? '—' : boardStats.total}
-            </span>
-          </div>
-          <Database className="h-5 w-5 text-vouch-cyan" />
+      {/* Panel tab pills */}
+      <div className={`${Z8_PANEL_PREMIUM} flex flex-col items-center gap-3 rounded-[2rem] px-4 py-4 sm:px-6`} id="vai-panel-tabs">
+        <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="V.A.I Research panels">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePanel === 'command'}
+            onClick={() => setActivePanel('command')}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+              activePanel === 'command'
+                ? 'border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan'
+                : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+            }`}
+          >
+            <Gauge className="h-3.5 w-3.5" />
+            Command Center
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePanel === 'stats-verified'}
+            onClick={() => setActivePanel('stats-verified')}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+              activePanel === 'stats-verified'
+                ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
+                : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Stats Verified
+          </button>
         </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
-          <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Confirmed Lineups</span>
-            <span className={`z8-tabular-nums mt-1 block text-lg font-mono font-black ${Z8_EMERALD}`}>
-              {candidatesLoading ? '—' : boardStats.confirmed}
-            </span>
-          </div>
-          <CheckCircle2 className={`h-5 w-5 ${Z8_EMERALD}`} />
-        </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
-          <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Games Covered</span>
-            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-white">
-              {candidatesLoading ? '—' : boardStats.games}
-            </span>
-          </div>
-          <Activity className="h-5 w-5 text-vouch-cyan/80" />
-        </div>
-        <div className={`${Z8_STAT_CHIP} flex items-center justify-between`}>
-          <div>
-            <span className={`${Z8_LABEL} block text-white/40`}>Avg Data Confidence</span>
-            <span className="z8-tabular-nums mt-1 block text-lg font-mono font-black text-vouch-cyan">
-              {candidatesLoading || boardStats.avgConfidence === null ? '—' : `${boardStats.avgConfidence}%`}
-            </span>
-          </div>
-          <Gauge className="h-5 w-5 text-vouch-cyan/80" />
+
+        <div className="flex justify-center gap-1.5" aria-hidden>
+          {VAI_PANELS.map((panel, i) => (
+            <span
+              key={panel}
+              className={`h-1.5 rounded-full transition-all ${
+                i === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
-
+      {/* Swipeable panels */}
+      <div
+        className="touch-pan-y overflow-hidden"
+        onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
+        onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
+      >
+        <motion.div
+          className="flex"
+          style={{ width: `${VAI_PANELS.length * 100}%` }}
+          animate={{ x: `-${(activeIndex * 100) / VAI_PANELS.length}%` }}
+          transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.14}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -VAI_SWIPE_THRESHOLD && activeIndex < VAI_PANELS.length - 1) {
+              setActivePanel(VAI_PANELS[activeIndex + 1]);
+            } else if (info.offset.x > VAI_SWIPE_THRESHOLD && activeIndex > 0) {
+              setActivePanel(VAI_PANELS[activeIndex - 1]);
+            }
+          }}
+        >
+          {/* Page 0 — Command Center */}
+          <div className="shrink-0 space-y-6" style={{ width: `${100 / VAI_PANELS.length}%` }}>
       {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
       <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-rooms-command-deck">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -690,21 +744,17 @@ export default function SmartAiEngine({
           </div>
         )}
       </div>
+          </div>
 
-      {/* DISCLOSURE CARD SECTION */}
-      <div className={`${Z8_PANEL_PREMIUM} flex items-start gap-3 rounded-2xl p-5`} id="scouting-policy-foot-note">
-        <Award className="mt-0.5 h-5 w-5 flex-shrink-0 text-vouch-cyan" />
-        <div className="space-y-1 text-xs text-white/45">
-          <h4 className="font-bold text-white">Research Data Policy</h4>
-          <p className="leading-relaxed">
-            Candidates come from the validated HR board pipeline: real MLB season stats, probable pitchers with confirmed
-            throwing hand where posted, and sourced park factors. First-pitch weather is a real Open-Meteo forecast with roofed
-            venues flagged; batter-vs-pitcher history is real MLB career data; season Statcast quality (xwOBA, barrel rate,
-            hard-hit rate) comes from Baseball Savant leaderboards. Sportsbook odds are not connected and are never
-            estimated. Model HR probabilities are research estimates — not betting advice and not market prices. Verify player
-            detail in the <b>Player Research Console</b> before trusting any single signal.
-          </p>
-        </div>
+          {/* Page 1 — Stats Verified */}
+          <div className="shrink-0" style={{ width: `${100 / VAI_PANELS.length}%` }}>
+            <SmartAiStatsVerifiedPanel
+              candidates={realCandidates}
+              loading={candidatesLoading}
+              boardStats={boardStats}
+            />
+          </div>
+        </motion.div>
       </div>
 
     </main>

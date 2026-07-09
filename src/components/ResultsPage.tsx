@@ -901,7 +901,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
             <button
               onClick={handleReloadSabermetricFeeds}
               disabled={isRefreshing}
-              className="px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50"
+              className="px-3 py-1.5 bg-black/25 border border-white/10 text-white/65 hover:text-white rounded-xl text-xs font-mono flex items-center gap-2 transition-all hover:bg-black/35 disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? "SYNCING DATA..." : "CALCULATE NEW PARLAY"}</span>
@@ -910,7 +910,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
           <button
             onClick={handleResetAISystem}
-            className="text-[10px] font-mono text-slate-500 hover:text-slate-350 bg-slate-950 border border-slate-900 rounded-lg px-2.5 py-1.5 hover:border-slate-800 transition-all"
+            className="text-[10px] font-mono text-white/40 hover:text-slate-350 bg-obsidian-900 border border-white/10 rounded-lg px-2.5 py-1.5 hover:border-white/10 transition-all"
           >
             Reset Ledger
           </button>
@@ -918,7 +918,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
       </div>
 
       {/* Unified Tab Selector */}
-      <div className="flex bg-[#121824]/90 p-1 rounded-2xl border border-slate-900 shadow-sm" id="results-tab-belt">
+      <div className="flex bg-[#121824]/90 p-1 rounded-2xl border border-white/10 shadow-sm" id="results-tab-belt">
         <button
           onClick={() => {
             setActiveSubTab('ai_model');
@@ -926,8 +926,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'ai_model'
-              ? 'bg-[#1e293b] text-sky-400 border border-slate-800/80 shadow-md'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#1e293b] text-sky-400 border border-white/[0.08] shadow-md'
+              : 'text-white/45 hover:text-white/80'
           }`}
         >
           <Cpu className="w-4 h-4 text-sky-450" />
@@ -941,8 +941,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'community'
-              ? 'bg-[#1e293b] text-orange-400 border border-slate-800/80'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#1e293b] text-orange-400 border border-white/[0.08]'
+              : 'text-white/45 hover:text-white/80'
           }`}
         >
           <Medal className="w-4 h-4 text-orange-450" />
@@ -956,8 +956,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'personal'
-              ? 'bg-[#1e293b] text-emerald-400 border border-slate-800/80'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#1e293b] text-emerald-400 border border-white/[0.08]'
+              : 'text-white/45 hover:text-white/80'
           }`}
         >
           <ShieldCheck className="w-4 h-4 text-emerald-450" />
@@ -966,15 +966,15 @@ const getFriendlyParlayTitle = (parlay: any) => {
       </div>
 
       {/* Date timeline filter ribbon */}
-      <div className="bg-[#0e1422]/90 border border-slate-900 rounded-2xl p-4 gap-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between" id="calendar-timeline-hud">
+      <div className="bg-[#0e1422]/90 border border-white/10 rounded-2xl p-4 gap-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between" id="calendar-timeline-hud">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-xs font-mono font-black uppercase text-slate-300 tracking-wider">
+            <h3 className="text-xs font-mono font-black uppercase text-white/65 tracking-wider">
               Timezone Ledger Timeline
             </h3>
           </div>
-          <p className="text-[10px] text-slate-500 font-mono">
+          <p className="text-[10px] text-white/40 font-mono">
             {selectedDateYMD ? `Active Filter Date: ${selectedDateYMD}` : 'Select a calendar day below to inspect daily records:'}
           </p>
           {selectedDateYMD && (
@@ -993,8 +993,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
             onClick={() => setSelectedDateYMD(null)}
             className={`min-w-[55px] h-[64px] rounded-xl flex flex-col items-center justify-center border transition-all text-center flex-shrink-0 ${
               selectedDateYMD === null
-                ? 'bg-slate-900 text-emerald-400 border-emerald-500/30'
-                : 'bg-slate-950/80 text-slate-400 border-slate-900 hover:border-slate-800'
+                ? 'bg-black/25 text-emerald-400 border-emerald-500/30'
+                : 'bg-obsidian-900/80 text-white/45 border-white/10 hover:border-white/10'
             }`}
           >
             <span className="text-[8px] uppercase font-mono tracking-widest font-bold">ALL</span>
@@ -1046,7 +1046,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
             const dayNum = dateItem.getDate();
             
             let statusText = "No Plays";
-            let subColor = "text-slate-500";
+            let subColor = "text-white/40";
             
             if (aiWinRateForDate !== null) {
               statusText = `AI ${aiWinRateForDate.toFixed(0)}%`;
@@ -1073,14 +1073,14 @@ const getFriendlyParlayTitle = (parlay: any) => {
                 className={`min-w-[65px] h-[64px] rounded-xl flex flex-col items-center justify-between py-1.5 px-1 border transition-all text-center flex-shrink-0 relative ${
                   isSelected
                     ? 'bg-[#1e293b] border-emerald-500/40 border-2 text-emerald-300 shadow shadow-emerald-500/10'
-                    : 'bg-slate-950/60 border-slate-900 hover:border-slate-850 hover:bg-slate-950/90'
+                    : 'bg-obsidian-900/60 border-white/10 hover:border-slate-850 hover:bg-obsidian-900/90'
                 }`}
               >
-                <span className="text-[8px] uppercase tracking-wider font-mono text-slate-500 font-bold leading-none">
+                <span className="text-[8px] uppercase tracking-wider font-mono text-white/40 font-bold leading-none">
                   {dayName}
                 </span>
 
-                <span className={`text-xs font-black font-mono leading-none ${isSelected ? 'text-emerald-300' : 'text-slate-200'}`}>
+                <span className={`text-xs font-black font-mono leading-none ${isSelected ? 'text-emerald-300' : 'text-white/80'}`}>
                   {dayNum}
                 </span>
 
@@ -1089,7 +1089,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                 </span>
                 
                 {stats.totalCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-slate-900 border border-slate-800 text-slate-400 text-[7px] font-mono rounded px-1 scale-90">
+                  <span className="absolute -top-1 -right-1 bg-black/25 border border-white/10 text-white/45 text-[7px] font-mono rounded px-1 scale-90">
                     {stats.totalCount}
                   </span>
                 )}
@@ -1106,40 +1106,40 @@ const getFriendlyParlayTitle = (parlay: any) => {
           {/* Executive Performance Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             
-            <div className="bg-gradient-to-br from-[#121824] to-[#0e131d] border border-slate-900 rounded-2xl p-4.5 space-y-2 md:col-span-2">
+            <div className="bg-gradient-to-br from-[#121824] to-[#0e131d] border border-white/10 rounded-2xl p-4.5 space-y-2 md:col-span-2">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black">Accuracy Index</span>
+                <span className="text-[10px] font-mono text-white/45 uppercase tracking-widest font-black">Accuracy Index</span>
                 <span className="text-[9px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-900">VERIFIED HISTORICAL</span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl font-mono font-black text-emerald-400">{aiWinRate.toFixed(1)}%</span>
-                <span className="text-xs text-slate-400 font-mono">True Model Hit-Rate</span>
+                <span className="text-xs text-white/45 font-mono">True Model Hit-Rate</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-850/50">
+              <div className="h-1.5 w-full bg-black/25 rounded-full overflow-hidden border border-slate-850/50">
                 <div className="bg-emerald-400 h-full transition-all duration-500" style={{ width: `${aiWinRate}%` }} />
               </div>
-              <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+              <div className="flex justify-between text-[9px] text-white/40 font-mono mt-1">
                 <span>{aiWinsCount} Wins</span>
                 <span>{aiLossesCount} Losses</span>
               </div>
             </div>
 
-            <div className="bg-[#121824] border border-slate-900 rounded-2xl p-4.5 space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">Net Multi-Slip Return</span>
+            <div className="bg-[#121824] border border-white/10 rounded-2xl p-4.5 space-y-1">
+              <span className="text-[10px] font-mono text-white/45 uppercase tracking-widest block">Net Multi-Slip Return</span>
               <div className={`text-2xl font-mono font-black ${netAiWinnings >= 0 ? "text-emerald-400" : "text-rose-500"} pt-1`}>
                 ${netAiWinnings >= 0 ? '+' : ''}{netAiWinnings.toLocaleString()}
               </div>
-              <p className="text-[10.5px] text-slate-500 font-mono">
+              <p className="text-[10.5px] text-white/40 font-mono">
                 Total Placed: ${totalAiInvested} (${(totalAiInvested / (settledAiParlays.length || 1)).toFixed(0)} avg)
               </p>
             </div>
 
-            <div className="bg-[#121824] border border-slate-900 rounded-2xl p-4.5 space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">Average Yield</span>
+            <div className="bg-[#121824] border border-white/10 rounded-2xl p-4.5 space-y-1">
+              <span className="text-[10px] font-mono text-white/45 uppercase tracking-widest block">Average Yield</span>
               <div className={`text-2xl font-mono font-black ${netAiUnitsProfit >= 0 ? "text-emerald-400" : "text-rose-500"} pt-1`}>
                 {netAiUnitsProfit >= 0 ? '+' : ''}{netAiUnitsProfit.toFixed(2)}U
               </div>
-              <p className="text-[10.5px] text-slate-500 font-mono">
+              <p className="text-[10.5px] text-white/40 font-mono">
                 Confidence rating: Avg 91.2%
               </p>
             </div>
@@ -1154,10 +1154,10 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAiParlays.length === 0 ? (
-                <div className="py-12 text-center bg-slate-900/10 rounded-2xl border border-slate-900 font-mono text-xs w-full col-span-full">
-                  <AlertTriangle className="w-5.5 h-5.5 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-300 font-black uppercase">No active slips matching {selectedDateYMD}</p>
-                  <p className="text-[10px] text-slate-500 mt-1">Select other dates on the ribbon above or check out community ledger logs.</p>
+                <div className="py-12 text-center bg-black/25/10 rounded-2xl border border-white/10 font-mono text-xs w-full col-span-full">
+                  <AlertTriangle className="w-5.5 h-5.5 text-white/40 mx-auto mb-2" />
+                  <p className="text-white/65 font-black uppercase">No active slips matching {selectedDateYMD}</p>
+                  <p className="text-[10px] text-white/40 mt-1">Select other dates on the ribbon above or check out community ledger logs.</p>
                 </div>
               ) : (
                 filteredAiParlays.map((pick) => {
@@ -1177,15 +1177,15 @@ const getFriendlyParlayTitle = (parlay: any) => {
                       }`}
                     >
                       
-                      <div className="flex justify-between items-start pb-2.5 border-b border-slate-900/80">
+                      <div className="flex justify-between items-start pb-2.5 border-b border-white/[0.08]">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5 font-mono text-[9.5px]">
-                            <span className="bg-slate-900 px-1.5 py-0.5 border border-slate-800 rounded text-slate-400">
+                            <span className="bg-black/25 px-1.5 py-0.5 border border-white/10 rounded text-white/45">
                               {compactPublicTicketId(pick.id)}
                             </span>
                             <span className="text-sky-400 font-bold uppercase">{pick.bookie}</span>
                           </div>
-                          <h4 className="text-xs font-bold text-slate-100 font-mono mt-1.5">
+                          <h4 className="text-xs font-bold text-white/90 font-mono mt-1.5">
                             {cleanCustomerText(pick.title) || "VouchEdge Parlay"}
                           </h4>
                         </div>
@@ -1223,12 +1223,12 @@ const getFriendlyParlayTitle = (parlay: any) => {
                                   ? 'bg-emerald-950/20 border-emerald-900/50'
                                   : legLost
                                   ? 'bg-rose-950/20 border-rose-900/50'
-                                  : 'bg-slate-950/60 border-slate-900/60'
+                                  : 'bg-obsidian-900/60 border-white/[0.06]'
                               }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div className={`relative rounded-lg p-[1px] flex-shrink-0 ${
-                                  legWon ? 'bg-emerald-500/60' : legLost ? 'bg-rose-500/60' : 'bg-slate-800'
+                                  legWon ? 'bg-emerald-500/60' : legLost ? 'bg-rose-500/60' : 'bg-obsidian-700'
                                 }`}>
                                   <img
                                     src={leg.headshot || fallbackHeadshot}
@@ -1238,31 +1238,31 @@ const getFriendlyParlayTitle = (parlay: any) => {
                                       event.currentTarget.onerror = null;
                                       event.currentTarget.src = fallbackHeadshot;
                                     }}
-                                    className="w-8 h-8 rounded-lg object-cover bg-slate-900 border border-slate-950 flex-shrink-0"
+                                    className="w-8 h-8 rounded-lg object-cover bg-black/25 border border-slate-950 flex-shrink-0"
                                   />
                                   <span className={`absolute -right-1 -bottom-1 w-4 h-4 rounded-full border border-slate-950 flex items-center justify-center text-[9px] font-black ${
                                     legWon
                                       ? 'bg-emerald-500 text-slate-950'
                                       : legLost
                                       ? 'bg-rose-500 text-white'
-                                      : 'bg-slate-700 text-slate-300'
+                                      : 'bg-slate-700 text-white/65'
                                   }`}>
                                     {legWon ? '✓' : legLost ? '×' : '•'}
                                   </span>
                                 </div>
 
                                 <div className="min-w-0">
-                                  <h5 className="font-black text-slate-100 truncate">
-                                    {playerName} <span className="text-[8px] text-slate-500 font-bold">({team})</span>
+                                  <h5 className="font-black text-white/90 truncate">
+                                    {playerName} <span className="text-[8px] text-white/40 font-bold">({team})</span>
                                   </h5>
-                                  <span className="text-[9px] text-slate-400 truncate block mt-0.5">
+                                  <span className="text-[9px] text-white/45 truncate block mt-0.5">
                                     {spec}
                                   </span>
                                 </div>
                               </div>
 
                               <div className="text-right flex-shrink-0">
-                                <span className="text-[9.5px] font-bold text-slate-300">
+                                <span className="text-[9.5px] font-bold text-white/65">
                                   dec {Number(leg.odds || 1).toFixed(2)}
                                 </span>
                                 {legWon ? (
@@ -1270,7 +1270,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                                 ) : legLost ? (
                                   <span className="text-[8px] text-rose-300 font-black block uppercase">✕ Miss</span>
                                 ) : (
-                                  <span className="text-[8px] text-slate-500 font-bold block uppercase">Pending</span>
+                                  <span className="text-[8px] text-white/40 font-bold block uppercase">Pending</span>
                                 )}
                               </div>
                             </div>
@@ -1279,11 +1279,11 @@ const getFriendlyParlayTitle = (parlay: any) => {
                       </div>
 
                       {/* Odds metrics */}
-                      <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-900/40 grid grid-cols-2 gap-3 items-center">
+                      <div className="bg-black/30 p-3 rounded-xl border border-white/[0.04] grid grid-cols-2 gap-3 items-center">
                         <div>
-                          <span className="text-[8px] text-slate-500 font-mono block">PRACTICE MULTIPLIER</span>
+                          <span className="text-[8px] text-white/40 font-mono block">PRACTICE MULTIPLIER</span>
                           <strong className="text-sm font-black font-mono text-emerald-400">{pick.oddsDisplay}</strong>
-                          <span className="text-[8px] text-slate-500 font-mono ml-1">({pick.oddsValue.toFixed(2)}x)</span>
+                          <span className="text-[8px] text-white/40 font-mono ml-1">({pick.oddsValue.toFixed(2)}x)</span>
                         </div>
 
                         <div className="text-right font-mono">
@@ -1296,15 +1296,15 @@ const getFriendlyParlayTitle = (parlay: any) => {
                             </div>
                           ) : isLost ? (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">PRACTICE RESULT</span>
+                              <span className="text-[8px] text-white/40 block">PRACTICE RESULT</span>
                               <span className="text-xs font-black text-rose-500">
                                 -${pick.wager.toFixed(0)} (-1.00U)
                               </span>
                             </div>
                           ) : (
                             <div>
-                              <span className="text-[8px] text-slate-500 block">EST. PRACTICE SCORE</span>
-                              <span className="text-xs font-bold text-slate-300">
+                              <span className="text-[8px] text-white/40 block">EST. PRACTICE SCORE</span>
+                              <span className="text-xs font-bold text-white/65">
                                 ${pick.payout.toFixed(0)} @ 100
                               </span>
                             </div>
@@ -1318,19 +1318,19 @@ const getFriendlyParlayTitle = (parlay: any) => {
                           <button
                             type="button"
                             onClick={() => handleCloneParlayToBoard(pick)}
-                            className="flex-1 py-1.5 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-[10px] font-black rounded-xl text-slate-300 hover:text-emerald-400 transition-all flex items-center justify-center gap-1.5"
+                            className="flex-1 py-1.5 px-3 bg-obsidian-900 hover:bg-black/30 border border-white/10 text-[10px] font-black rounded-xl text-white/65 hover:text-emerald-400 transition-all flex items-center justify-center gap-1.5"
                           >
                             <Plus className="w-3.5 h-3.5 text-emerald-400" />
                             <span>TAIL PARLAY</span>
                           </button>
 
-                          <div className="py-1.5 px-2 bg-slate-950 text-[10px] rounded-xl border border-slate-900 font-bold text-slate-400">
+                          <div className="py-1.5 px-2 bg-obsidian-900 text-[10px] rounded-xl border border-white/10 font-bold text-white/45">
                             🎯 {pick.confidence}% Edge
                           </div>
                         </div>
 
                         {isUpcoming && (
-                          <div className="px-2.5 py-1.5 bg-slate-950/80 rounded-xl border border-dashed border-slate-800/80 text-[9px] font-bold text-slate-500">
+                          <div className="px-2.5 py-1.5 bg-obsidian-900/80 rounded-xl border border-dashed border-white/[0.08] text-[9px] font-bold text-white/40">
                             VERIFIED GRADING PENDING OFFICIAL RESULT SYNC
                           </div>
                         )}
@@ -1351,24 +1351,24 @@ const getFriendlyParlayTitle = (parlay: any) => {
         <div className="space-y-6" id="community-ledger-segment">
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Settled Parlays</span>
-              <span className="font-mono text-xl font-black text-slate-100 block mt-1">{totalCount}</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Settled Parlays</span>
+              <span className="font-mono text-xl font-black text-white/90 block mt-1">{totalCount}</span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Win Record</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Win Record</span>
               <span className="font-mono text-xl font-black text-emerald-400 block mt-1">
                 {winsCount}W - {lossesCount}L
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Net Practice Units</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Net Practice Units</span>
               <span className={`font-mono text-xl font-black block mt-1 ${totalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {totalUnitsProfit >= 0 ? '+' : ''}{totalUnitsProfit.toFixed(2)}U
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Verified Hit Rate</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Verified Hit Rate</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{realWinRate.toFixed(1)}%</span>
             </div>
           </div>
@@ -1379,8 +1379,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
             </h3>
 
             {filteredCommunityResults.length === 0 ? (
-              <div className="py-12 bg-slate-900/10 rounded-2xl border border-slate-900 text-center font-mono text-xs text-slate-500">
-                <Medal className="w-5.5 h-5.5 text-slate-600 mx-auto mb-2" />
+              <div className="py-12 bg-black/25/10 rounded-2xl border border-white/10 text-center font-mono text-xs text-white/40">
+                <Medal className="w-5.5 h-5.5 text-white/35 mx-auto mb-2" />
                 No verified community outcomes recorded on {selectedDateYMD || 'this timeframe'}.
               </div>
             ) : (
@@ -1391,24 +1391,24 @@ const getFriendlyParlayTitle = (parlay: any) => {
                     <div 
                       key={item.id} 
                       className={`bg-[#0d131f]/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
-                        isWon ? "border-emerald-950/60" : "border-slate-900"
+                        isWon ? "border-emerald-950/60" : "border-white/10"
                       }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-100 font-black">@{item.displayName}</span>
-                          <span className="text-[10px] text-slate-500">•</span>
-                          <span className="text-[10px] text-slate-450 text-slate-400">{new Date(item.timestamp).toLocaleDateString()}</span>
+                          <span className="text-xs text-white/90 font-black">@{item.displayName}</span>
+                          <span className="text-[10px] text-white/40">•</span>
+                          <span className="text-[10px] text-slate-450 text-white/45">{new Date(item.timestamp).toLocaleDateString()}</span>
                         </div>
-                        <p className="text-xs text-slate-300 leading-relaxed font-sans">{item.content}</p>
+                        <p className="text-xs text-white/65 leading-relaxed font-sans">{item.content}</p>
                       </div>
 
-                      <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 border-slate-900 pt-2.5 sm:pt-0 gap-1.5">
+                      <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 border-white/10 pt-2.5 sm:pt-0 gap-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={`text-[9.5px] px-2 py-0.5 font-bold rounded ${isWon ? "bg-emerald-950 text-emerald-400 border border-emerald-900" : "bg-slate-900 text-white border border-slate-800"}`}>
+                          <span className={`text-[9.5px] px-2 py-0.5 font-bold rounded ${isWon ? "bg-emerald-950 text-emerald-400 border border-emerald-900" : "bg-black/25 text-white border border-white/10"}`}>
                             {item.result.status}
                           </span>
-                          <span className="text-xs font-bold text-slate-200">@{(item.result as any).odds || item.parlay?.totalOdds || item.vouch?.odds || "+110"} Odds</span>
+                          <span className="text-xs font-bold text-white/80">@{(item.result as any).odds || item.parlay?.totalOdds || item.vouch?.odds || "+110"} Odds</span>
                         </div>
                         <div className="text-right">
                           <span className={`text-xs font-black ${isWon ? "text-emerald-400" : "text-rose-500"}`}>
@@ -1431,24 +1431,24 @@ const getFriendlyParlayTitle = (parlay: any) => {
         <div className="space-y-6" id="personal-ledger-segment">
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">My Placed Tickets</span>
-              <span className="font-mono text-xl font-black text-slate-100 block mt-1">{personalTotalCount}</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">My Placed Tickets</span>
+              <span className="font-mono text-xl font-black text-white/90 block mt-1">{personalTotalCount}</span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">My Record</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">My Record</span>
               <span className="font-mono text-xl font-black text-emerald-400 block mt-1">
                 {personalWinsCount}W - {personalLossesCount}L
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Personal Units Profit</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Personal Units Profit</span>
               <span className={`font-mono text-xl font-black block mt-1 ${personalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {personalUnitsProfit >= 0 ? '+' : ''}{personalUnitsProfit.toFixed(2)}U
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-slate-900">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Yield Accuracy</span>
+            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+              <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Yield Accuracy</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{personalWinRate.toFixed(1)}%</span>
             </div>
           </div>
@@ -1459,10 +1459,10 @@ const getFriendlyParlayTitle = (parlay: any) => {
             </h3>
 
             {filteredPersonalResults.length === 0 ? (
-              <div className="py-12 bg-slate-900/15 rounded-2xl border border-slate-900 text-center font-mono text-xs text-slate-500">
-                <ShieldCheck className="w-5.5 h-5.5 text-slate-600 mx-auto mb-2" />
+              <div className="py-12 bg-black/25/15 rounded-2xl border border-white/10 text-center font-mono text-xs text-white/40">
+                <ShieldCheck className="w-5.5 h-5.5 text-white/35 mx-auto mb-2" />
                 No personal graded parlays recorded for {selectedDateYMD || 'this timeframe'}.
-                <p className="text-[10px] text-slate-600 mt-1">Upload ticket outcomes in Vouch Board or Home Feed to populate your ledger.</p>
+                <p className="text-[10px] text-white/35 mt-1">Upload ticket outcomes in Vouch Board or Home Feed to populate your ledger.</p>
               </div>
             ) : (
               <div className="space-y-3.5">
@@ -1472,27 +1472,27 @@ const getFriendlyParlayTitle = (parlay: any) => {
                     <div 
                       key={item.id} 
                       className={`bg-[#0d131f]/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
-                        isWon ? "border-emerald-950/60" : "border-slate-900"
+                        isWon ? "border-emerald-950/60" : "border-white/10"
                       }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-100 font-extrabold flex items-center gap-1">
+                          <span className="text-xs text-white/90 font-extrabold flex items-center gap-1">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                             <span>My Slip Grade</span>
                           </span>
-                          <span className="text-[10px] text-slate-500">•</span>
-                          <span className="text-[10px] text-slate-450 text-slate-400">{new Date(item.timestamp).toLocaleDateString()}</span>
+                          <span className="text-[10px] text-white/40">•</span>
+                          <span className="text-[10px] text-slate-450 text-white/45">{new Date(item.timestamp).toLocaleDateString()}</span>
                         </div>
-                        <p className="text-xs text-slate-300 leading-relaxed font-sans">{item.content}</p>
+                        <p className="text-xs text-white/65 leading-relaxed font-sans">{item.content}</p>
                       </div>
 
-                      <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 border-slate-900 pt-2.5 sm:pt-0 gap-1.5">
+                      <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 border-t sm:border-t-0 border-white/10 pt-2.5 sm:pt-0 gap-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={`text-[9.5px] px-2 py-0.5 font-bold rounded ${isWon ? "bg-emerald-950 text-emerald-400 border border-emerald-900" : "bg-slate-900 text-white border border-slate-850"}`}>
+                          <span className={`text-[9.5px] px-2 py-0.5 font-bold rounded ${isWon ? "bg-emerald-950 text-emerald-400 border border-emerald-900" : "bg-black/25 text-white border border-slate-850"}`}>
                             {item.result.status}
                           </span>
-                          <span className="text-xs font-bold text-slate-200">@{(item.result as any).odds || item.parlay?.totalOdds || item.vouch?.odds || "+110"} Odds</span>
+                          <span className="text-xs font-bold text-white/80">@{(item.result as any).odds || item.parlay?.totalOdds || item.vouch?.odds || "+110"} Odds</span>
                         </div>
                         <div className="text-right">
                           <span className={`text-xs font-black ${isWon ? "text-emerald-400" : "text-rose-500"}`}>

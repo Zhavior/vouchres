@@ -272,34 +272,34 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     <div className="p-4 md:p-6 space-y-6 max-w-[1200px] mx-auto min-h-screen bg-transparent" id="theme-store-root">
       
       {/* Visual Header Banners */}
-      <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-slate-800/60 p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl" id="theme-banner">
+      <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-white/[0.06] p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl" id="theme-banner">
         <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="space-y-2 text-left z-10">
           <div className="flex items-center gap-2">
             <span className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 text-[10px] font-mono font-black px-2.5 py-0.5 rounded-full uppercase leading-none tracking-widest text-white shadow-sm">
               IDENTITY LOCKER & SHOP
             </span>
-            <span className="text-slate-500 text-[10px]">•</span>
+            <span className="text-white/40 text-[10px]">•</span>
             <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">ANIMATED PRESETS</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tight">
+          <h2 className="text-2xl font-black text-white/90 uppercase tracking-tight">
             VouchEdge Theme & Frame Manager
           </h2>
-          <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-xs text-white/45 max-w-2xl leading-relaxed">
             Customize your client application interface and configure your public profile identity. Your public profile page temporarily transforms to your selected theme for visiting followers, complete with custom avatar borders, badges, cards, and animations!
           </p>
         </div>
 
         {/* User Balance Desk */}
-        <div className="bg-slate-950/70 border border-slate-800/80 p-4 rounded-xl flex flex-col items-center gap-2 text-center shrink-0 min-w-[200px] shadow-inner" id="user-balance-desk">
-          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider font-mono">AVAILABLE REVENUE CREDITS</span>
+        <div className="bg-black/30 border border-white/[0.08] p-4 rounded-xl flex flex-col items-center gap-2 text-center shrink-0 min-w-[200px] shadow-inner" id="user-balance-desk">
+          <span className="text-[9px] text-white/40 font-bold uppercase tracking-wider font-mono">AVAILABLE REVENUE CREDITS</span>
           <div className="flex items-center gap-1.5 font-mono text-xl font-black text-amber-400">
             <DollarSign className="w-5 h-5 text-amber-500" />
             <span>{userCredits.toLocaleString()} pts</span>
           </div>
           <div
             title="Theme pts are allocated by your plan tier — 250 pts (Basic) or 750 pts (Gold / Seller Pro)"
-            className="w-full mt-1.5 py-1.5 px-3 flex items-center justify-center gap-1.5 bg-slate-800/60 border border-slate-700/60 text-slate-500 font-black text-[10px] rounded-lg tracking-wider uppercase cursor-not-allowed select-none"
+            className="w-full mt-1.5 py-1.5 px-3 flex items-center justify-center gap-1.5 bg-obsidian-700/60 border border-white/[0.06] text-white/40 font-black text-[10px] rounded-lg tracking-wider uppercase cursor-not-allowed select-none"
           >
             <Lock className="w-3 h-3 shrink-0" />
             Theme Pts Locked
@@ -317,13 +317,13 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
       {/* Route and Locker Toggles */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-850 pb-4">
-        <div className="flex bg-slate-950/70 p-1 rounded-xl border border-slate-850 self-start text-xs font-semibold">
+        <div className="flex bg-black/30 p-1 rounded-xl border border-slate-850 self-start text-xs font-semibold">
           <button
             onClick={() => setActiveTab('locker')}
             className={`px-4 py-2 rounded-lg font-black uppercase tracking-wide transition-all flex items-center gap-1.5 ${
               activeTab === 'locker'
                 ? 'bg-gradient-to-tr from-indigo-600 to-cyan-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-white/45 hover:text-white/80'
             }`}
           >
             <Layout className="w-4 h-4" />
@@ -335,7 +335,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             className={`px-4 py-2 rounded-lg font-black uppercase tracking-wide transition-all flex items-center gap-1.5 ${
               activeTab === 'shop'
                 ? 'bg-gradient-to-tr from-indigo-600 to-cyan-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-white/45 hover:text-white/80'
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
@@ -347,7 +347,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             className={`px-4 py-2 rounded-lg font-black uppercase tracking-wide transition-all flex items-center gap-1.5 ${
               activeTab === 'custom'
                 ? 'bg-gradient-to-tr from-indigo-600 to-cyan-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-white/45 hover:text-white/80'
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -357,7 +357,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
         <button
           onClick={handleResetToDefault}
-          className="px-3.5 py-2 border border-slate-850 hover:border-slate-700 bg-slate-900/20 text-slate-400 hover:text-slate-100 rounded-lg text-xs font-mono transition-all uppercase tracking-wide font-black"
+          className="px-3.5 py-2 border border-slate-850 hover:border-white/10 bg-black/25/20 text-white/45 hover:text-white/90 rounded-lg text-xs font-mono transition-all uppercase tracking-wide font-black"
         >
           Reset All to Default
         </button>
@@ -372,14 +372,14 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             
             {/* 1. VISUAL SETTING CONTROL PANEL */}
             <div className="bg-[#121824]/40 rounded-2xl border border-slate-850 p-5 space-y-4 shadow-xl">
-              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-850 pb-2.5">
+              <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-850 pb-2.5">
                 <Laptop className="w-4 h-4 text-cyan-400" />
                 Theme Engine Accessibility Options
               </h3>
-              <div className="flex items-center justify-between bg-slate-950/60 p-4 rounded-xl border border-slate-900">
+              <div className="flex items-center justify-between bg-obsidian-900/60 p-4 rounded-xl border border-white/10">
                 <div className="space-y-1 pr-4">
-                  <p className="text-xs font-bold text-slate-200 uppercase tracking-wide">Reduce Interface Motion</p>
-                  <p className="text-[11px] text-slate-400">Disable looping background particles, spinning rings, bounce effects, and custom text waves to optimize CPU & legibility.</p>
+                  <p className="text-xs font-bold text-white/80 uppercase tracking-wide">Reduce Interface Motion</p>
+                  <p className="text-[11px] text-white/45">Disable looping background particles, spinning rings, bounce effects, and custom text waves to optimize CPU & legibility.</p>
                 </div>
                 <button
                   onClick={() => setReduceMotion(!reduceMotion)}
@@ -396,8 +396,8 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
             {/* 2. THEMES IN MY CABINET */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 px-1">
-                <Layout className="w-4 h-4 text-indigo-400" />
+              <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5 px-1">
+                <Layout className="w-4 h-4 text-vouch-cyan" />
                 Unlocked Themes ({unlockedThemes.length})
               </h3>
               
@@ -415,7 +415,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           ? 'bg-cyan-950/20 border-cyan-400/40 shadow-[0_0_28px_rgba(34,211,238,0.12)]'
                           : previewThemeId === theme.id 
                             ? 'bg-indigo-950/20 border-indigo-400/60 shadow-[0_0_20px_rgba(99,102,241,0.16)]' 
-                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-slate-600'
+                            : 'bg-[#121824]/35 border-white/[0.08] hover:border-slate-600'
                       }`}
                     >
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -425,25 +425,25 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
                       <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-center gap-3">
-                          <span className="text-[9px] font-black uppercase font-mono px-2.5 py-1 bg-black/30 rounded-full border border-white/10 text-slate-200">
+                          <span className="text-[9px] font-black uppercase font-mono px-2.5 py-1 bg-black/30 rounded-full border border-white/10 text-white/80">
                             {theme.category}
                           </span>
                           <span className={`text-[9px] font-black font-mono px-2.5 py-1 rounded-full border ${
                             theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
                             theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
-                            'text-slate-300 bg-slate-800/70 border-slate-600/40'
+                            'text-white/65 bg-obsidian-700/70 border-slate-600/40'
                           }`}>
                             {theme.rarity}
                           </span>
                         </div>
 
                         <div>
-                          <h4 className="font-black text-slate-100 text-sm flex flex-wrap items-center gap-1.5">
+                          <h4 className="font-black text-white/90 text-sm flex flex-wrap items-center gap-1.5">
                             {theme.name}
                             {isAppTheme && <span className="text-[8px] bg-sky-400/15 border border-sky-300/25 text-sky-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT APP</span>}
                             {isProfileTheme && <span className="text-[8px] bg-purple-400/15 border border-purple-300/25 text-purple-200 px-2 py-0.5 rounded-full font-black font-mono">CURRENT PROFILE</span>}
                           </h4>
-                          <p className="text-[11px] text-slate-300/85 mt-1.5 leading-relaxed font-semibold line-clamp-2">
+                          <p className="text-[11px] text-white/65/85 mt-1.5 leading-relaxed font-semibold line-clamp-2">
                             {theme.description}
                           </p>
                         </div>
@@ -495,7 +495,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
             {/* 3. BORDERS IN MY CABINET */}
             <div className="space-y-3 pt-2">
-              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 px-1">
+              <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5 px-1">
                 <Shield className="w-4 h-4 text-emerald-400" />
                 Unlocked Profile Borders ({unlockedBorders.length})
               </h3>
@@ -513,7 +513,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           ? 'bg-emerald-950/20 border-emerald-400/45 shadow-[0_0_24px_rgba(16,185,129,0.13)]'
                           : previewBorderId === border.id 
                             ? 'bg-emerald-950/10 border-emerald-400/55 shadow-[0_0_18px_rgba(16,185,129,0.11)]' 
-                            : 'bg-[#121824]/35 border-slate-800/80 hover:border-emerald-400/30'
+                            : 'bg-[#121824]/35 border-white/[0.08] hover:border-emerald-400/30'
                       }`}
                     >
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-emerald-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -532,7 +532,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                         </div>
 
                         <div className="min-w-0">
-                          <h4 className="font-black text-slate-100 text-xs truncate flex items-center gap-1.5">
+                          <h4 className="font-black text-white/90 text-xs truncate flex items-center gap-1.5">
                             {border.name}
                             {isActive && (
                               <span className="text-[8px] bg-emerald-400/15 border border-emerald-300/25 text-emerald-200 px-2 py-0.5 rounded-full font-black font-mono">
@@ -540,7 +540,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                               </span>
                             )}
                           </h4>
-                          <p className="text-[10px] text-slate-300/80 mt-1 leading-snug line-clamp-2">
+                          <p className="text-[10px] text-white/65/80 mt-1 leading-snug line-clamp-2">
                             {border.description}
                           </p>
                         </div>
@@ -572,14 +572,14 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           {/* RIGHT COLUMN: PREVIEW OF CURRENT SELECTIONS */}
           <div className="lg:col-span-4 space-y-6">
             
-            <div className="group relative overflow-hidden bg-[#121824]/45 backdrop-blur-xl rounded-3xl border border-slate-800/80 p-5 space-y-5 shadow-2xl sticky top-4">
+            <div className="group relative overflow-hidden bg-[#121824]/45 backdrop-blur-xl rounded-3xl border border-white/[0.08] p-5 space-y-5 shadow-2xl sticky top-4">
               
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-80" />
               <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
 
               <div className="relative z-10 border-b border-white/10 pb-4">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-black text-slate-100 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                  <h3 className="font-black text-white/90 text-xs tracking-wider uppercase flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-cyan-300" />
                     Visual Identity Preview
                   </h3>
@@ -587,22 +587,22 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                     Live Look
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-semibold mt-1">See how your cards, borders, and typography appear.</p>
+                <p className="text-[10px] text-white/45 font-semibold mt-1">See how your cards, borders, and typography appear.</p>
               </div>
 
               {/* LIVE DEMO BLOCK COMPILING SELECTS */}
               <div className={`relative z-10 p-4 rounded-3xl border ${selectedPreviewTheme.cardStyle} space-y-4 shadow-xl`} id="preview-sandbox-card">
                 
                 {/* Header Row */}
-                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400 font-mono">
+                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-white/45 font-mono">
                   <span>Audit Preview</span>
-                  <span className={`${selectedPreviewTheme.accentText} bg-slate-950/45 px-2 py-0.5 rounded border ${selectedPreviewTheme.borderColor}`}>
+                  <span className={`${selectedPreviewTheme.accentText} bg-obsidian-900/45 px-2 py-0.5 rounded border ${selectedPreviewTheme.borderColor}`}>
                     {selectedPreviewTheme.badge}
                   </span>
                 </div>
 
                 {/* Avatar with selected border */}
-                <div className="flex items-center gap-3.5 border-b border-slate-800/40 pb-3">
+                <div className="flex items-center gap-3.5 border-b border-white/[0.04] pb-3">
                   <ProfileAvatarBorder 
                     borderId={selectedPreviewBorder.id}
                     displayName={profile.displayName}
@@ -613,8 +613,8 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                   />
 
                   <div className="min-w-0">
-                    <h4 className="font-extrabold text-slate-100 text-sm">{profile.displayName}</h4>
-                    <p className="text-xs text-slate-500">@{profile.username}</p>
+                    <h4 className="font-extrabold text-white/90 text-sm">{profile.displayName}</h4>
+                    <p className="text-xs text-white/40">@{profile.username}</p>
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-[9px] font-mono font-black text-teal-400 bg-teal-950/40 px-1.5 py-0.2 rounded">
                         {profile.winRate.toFixed(1)}% WR
@@ -625,16 +625,16 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
                 {/* Simulated Vouch Card */}
                 <div className={`p-3.5 rounded-xl border ${selectedPreviewTheme.vouchCardStyle} text-xs space-y-2.5`}>
-                  <div className="flex justify-between items-center text-[9px] font-mono font-bold text-slate-500">
+                  <div className="flex justify-between items-center text-[9px] font-mono font-bold text-white/40">
                     <span>MLB prop MATCHUP</span>
                     <span className="text-emerald-400">🔥 92% CONFIDENCE</span>
                   </div>
                   <div>
-                    <p className="font-extrabold text-slate-100">Shohei Ohtani Over 1.5 Total Bases</p>
-                    <p className="text-[10.5px] text-slate-400 leading-normal mt-1">Ohtani matches perfectly under Dodgers stadium lights tonight with massive wind blowing outward.</p>
+                    <p className="font-extrabold text-white/90">Shohei Ohtani Over 1.5 Total Bases</p>
+                    <p className="text-[10.5px] text-white/45 leading-normal mt-1">Ohtani matches perfectly under Dodgers stadium lights tonight with massive wind blowing outward.</p>
                   </div>
-                  <div className="flex justify-between items-center font-mono text-[10px] border-t border-slate-800/40 pt-2">
-                    <span className="text-slate-500">28 local vouches</span>
+                  <div className="flex justify-between items-center font-mono text-[10px] border-t border-white/[0.04] pt-2">
+                    <span className="text-white/40">28 local vouches</span>
                     <span className={`font-black ${selectedPreviewTheme.accentText}`}>Odds: -115</span>
                   </div>
                 </div>
@@ -647,23 +647,23 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
               </div>
 
               {/* Status details of the preview theme */}
-              <div className="relative z-10 bg-black/30 p-3.5 rounded-2xl border border-white/10 text-xs text-slate-400 space-y-2.5 shadow-inner">
-                <span className="text-[9.5px] font-mono font-black text-indigo-400 uppercase tracking-wider block">PREVIEW DETAILS:</span>
+              <div className="relative z-10 bg-black/30 p-3.5 rounded-2xl border border-white/10 text-xs text-white/45 space-y-2.5 shadow-inner">
+                <span className="text-[9.5px] font-mono font-black text-vouch-cyan uppercase tracking-wider block">PREVIEW DETAILS:</span>
                 <div className="space-y-1 text-[11px]">
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-white/40">
                     <span>Selected Theme:</span>
-                    <span className="text-slate-200 font-extrabold">{selectedPreviewTheme.name}</span>
+                    <span className="text-white/80 font-extrabold">{selectedPreviewTheme.name}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-white/40">
                     <span>Selected Frame:</span>
-                    <span className="text-slate-200 font-extrabold">{selectedPreviewBorder.name}</span>
+                    <span className="text-white/80 font-extrabold">{selectedPreviewBorder.name}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-white/40">
                     <span>Theme Rarity:</span>
                     <span className={`capitalize font-bold ${
                       selectedPreviewTheme.rarity === 'legendary' ? 'text-yellow-400' :
                       selectedPreviewTheme.rarity === 'epic' ? 'text-purple-400' :
-                      'text-slate-400'
+                      'text-white/45'
                     }`}>{selectedPreviewTheme.rarity}</span>
                   </div>
                 </div>
@@ -688,7 +688,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 className={`px-3 py-1.5 rounded-lg border text-xs font-extrabold uppercase tracking-wide transition-all ${
                   activeCategory === cat
                     ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white border-transparent'
-                    : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-200'
+                    : 'bg-black/25 border-white/10 text-white/45 hover:text-white/80'
                 }`}
               >
                 {cat}
@@ -697,8 +697,8 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           </div>
 
           <div className="space-y-4 text-left">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-              <ShoppingBag className="w-4 h-4 text-indigo-400" />
+            <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5">
+              <ShoppingBag className="w-4 h-4 text-vouch-cyan" />
               Locked Theme Catalog ({allThemes.filter(t => !unlockedThemes.includes(t.id)).length} Available)
             </h3>
 
@@ -710,18 +710,18 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={theme.id}
-                    className="group relative bg-[#121824]/30 backdrop-blur-xl rounded-3xl border border-slate-800/80 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
+                    className="group relative bg-[#121824]/30 backdrop-blur-xl rounded-3xl border border-white/[0.08] flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
                   >
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-cyan-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
                     <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
 
                     {/* Theme header with tags */}
-                    <div className="relative z-10 p-4 bg-slate-950/55 border-b border-white/10 flex justify-between items-center text-[10px] uppercase font-bold text-slate-300 font-mono select-none">
+                    <div className="relative z-10 p-4 bg-obsidian-900/55 border-b border-white/10 flex justify-between items-center text-[10px] uppercase font-bold text-white/65 font-mono select-none">
                       <span className="rounded-full bg-black/30 border border-white/10 px-2.5 py-1">{theme.category}</span>
                       <span className={`font-black px-2.5 py-1 rounded-full border ${
                         theme.rarity === 'legendary' ? 'text-yellow-200 bg-yellow-400/15 border-yellow-300/35' :
                         theme.rarity === 'epic' ? 'text-purple-200 bg-purple-400/15 border-purple-300/35' :
-                        'text-slate-300 bg-slate-800/70 border-slate-600/40'
+                        'text-white/65 bg-obsidian-700/70 border-slate-600/40'
                       }`}>
                         {theme.rarity}
                       </span>
@@ -729,14 +729,14 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
                     <div className="relative z-10 p-5 flex-1 flex flex-col justify-between gap-5 text-left">
                       <div className="space-y-3">
-                        <h4 className="font-black text-slate-100 text-base flex justify-between items-start gap-3">
+                        <h4 className="font-black text-white/90 text-base flex justify-between items-start gap-3">
                           <span className="leading-tight">{theme.name}</span>
                           <span className="shrink-0 text-[10px] text-cyan-300 font-black rounded-full bg-cyan-950/45 border border-cyan-400/20 px-2 py-1">
                             {theme.badge}
                           </span>
                         </h4>
 
-                        <p className="text-[11px] text-slate-300/85 leading-relaxed font-semibold line-clamp-2">
+                        <p className="text-[11px] text-white/65/85 leading-relaxed font-semibold line-clamp-2">
                           {theme.description}
                         </p>
 
@@ -777,7 +777,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
           {/* BORDERS LOCKS CATALOG */}
           <div className="space-y-4 pt-6 text-left border-t border-slate-850">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-emerald-400" />
               Locked Avatar Frames ({BORDER_REGISTRY.filter(b => !unlockedBorders.includes(b.id)).length} Available)
             </h3>
@@ -792,7 +792,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={border.id}
-                    className="bg-[#121824]/20 backdrop-blur-md rounded-2xl border border-slate-850 p-4 flex flex-col justify-between gap-4 shadow-xl hover:border-slate-700"
+                    className="bg-[#121824]/20 backdrop-blur-md rounded-2xl border border-slate-850 p-4 flex flex-col justify-between gap-4 shadow-xl hover:border-white/10"
                   >
                     <div className="flex gap-3 items-center min-w-0">
                       <ProfileAvatarBorder 
@@ -802,17 +802,17 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                         size="md" 
                       />
                       <div className="min-w-0">
-                        <h4 className="font-extrabold text-slate-200 text-xs truncate flex items-center gap-1">
+                        <h4 className="font-extrabold text-white/80 text-xs truncate flex items-center gap-1">
                           {border.name}
                           <span className={`text-[8px] font-black font-mono px-1 py-0.2 rounded uppercase ${
                             border.rarity === 'legendary' ? 'text-yellow-400 bg-yellow-950/40' :
                             border.rarity === 'epic' ? 'text-purple-400 bg-purple-950/40' :
-                            'text-slate-500'
+                            'text-white/40'
                           }`}>
                             {border.rarity}
                           </span>
                         </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                        <p className="text-[10px] text-white/45 mt-0.5 leading-snug line-clamp-2">
                           {border.description}
                         </p>
                       </div>
@@ -844,12 +844,12 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
         <div className="space-y-6">
           
           {/* AI GEMINI INTERACTIVE EXPERIMENT */}
-          <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-slate-800 p-6 text-left space-y-4">
-            <h3 className="text-sm font-black text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
-              <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+          <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-left space-y-4">
+            <h3 className="text-sm font-black text-white/90 uppercase tracking-tight flex items-center gap-1.5">
+              <Sparkles className="w-5 h-5 text-vouch-cyan animate-pulse" />
               Google AI Studio Custom Theme Synthesizer
             </h3>
-            <p className="text-xs text-slate-400 max-w-3xl leading-relaxed">
+            <p className="text-xs text-white/45 max-w-3xl leading-relaxed">
               Connect to our integrated Gemini capper models to synthesize, code, and list a brand-new, bespoke visual theme dynamically. Provide visual mood cues (e.g. "cyberpunk ballpark under storm", "liquid neon gold starfighter"), and watch the AI write the layout classes instantly!
             </p>
 
@@ -867,7 +867,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 placeholder="e.g. Retro arcade theme themed on Boston ballpark under green skies..."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
-                className="flex-1 bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-4 py-3.5 rounded-xl focus:outline-none placeholder-slate-650 font-medium"
+                className="flex-1 bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-4 py-3.5 rounded-xl focus:outline-none placeholder-slate-650 font-medium"
               />
               <button
                 type="submit"
@@ -890,31 +890,31 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           </div>
 
           {/* CREATOR MONETIZATION & SELLABLE THEME LAUNCHPAD */}
-          <div className="bg-[#121824]/35 backdrop-blur-md rounded-2xl border border-dashed border-slate-800 p-6 md:p-8 space-y-6 relative overflow-hidden" id="creator-licensing-launchpad">
+          <div className="bg-[#121824]/35 backdrop-blur-md rounded-2xl border border-dashed border-white/10 p-6 md:p-8 space-y-6 relative overflow-hidden" id="creator-licensing-launchpad">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-650/5 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
               <div className="space-y-1 text-left">
                 <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-[9px] font-mono font-black px-2 py-0.5 rounded-full text-slate-950 uppercase tracking-wider">
                   CAPPER ROYALTY ENGINE
                 </span>
-                <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight flex items-center gap-2">
+                <h3 className="text-lg font-black text-white/90 uppercase tracking-tight flex items-center gap-2">
                   💎 Sell Your Created Themes
                 </h3>
-                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                <p className="text-xs text-white/45 max-w-2xl leading-relaxed">
                   Generate custom cosmetic theme templates. Mint them directly onto the Vouch-ledger to sell to your fans and copy-bettors! Set your own price index and earn an instant <span className="text-emerald-400 font-extrabold">85% custom royalty share</span> on every user download.
                 </p>
               </div>
 
               {/* Interactive Seller Stats */}
-              <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-850 grid grid-cols-2 gap-4 font-mono text-center min-w-[240px] shadow-inner">
+              <div className="bg-obsidian-900/80 p-3.5 rounded-xl border border-slate-850 grid grid-cols-2 gap-4 font-mono text-center min-w-[240px] shadow-inner">
                 <div>
-                  <span className="text-[8px] text-slate-500 uppercase block font-bold">Total Sales</span>
+                  <span className="text-[8px] text-white/40 uppercase block font-bold">Total Sales</span>
                   <span className="text-xs text-emerald-400 font-extrabold">+18,450 pts</span>
                 </div>
                 <div>
-                  <span className="text-[8px] text-slate-500 uppercase block font-bold">Royalty Split</span>
-                  <span className="text-xs text-indigo-400 font-extrabold">85% Creator</span>
+                  <span className="text-[8px] text-white/40 uppercase block font-bold">Royalty Split</span>
+                  <span className="text-xs text-vouch-cyan font-extrabold">85% Creator</span>
                 </div>
               </div>
             </div>
@@ -924,23 +924,23 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
               <div className="lg:col-span-7 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Theme Display Name</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Theme Display Name</label>
                     <input 
                       type="text"
                       required
                       placeholder="e.g. Purrfect Golden Slips"
                       value={mName}
                       onChange={(e) => setMName(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Theme Category</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Theme Category</label>
                     <select 
                       value={mCategory}
                       onChange={(e) => setMCategory(e.target.value as any)}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-bold"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-bold"
                     >
                       <option value="Anime">Anime Aura</option>
                       <option value="Cartoon">Retro Cartoon</option>
@@ -952,20 +952,20 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Public Listing Description</label>
+                  <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Public Listing Description</label>
                   <textarea 
                     required
                     placeholder="Give details of your custom theme design. Describe the background animations, floating micro symbols, and premium avatar frame."
                     value={mDesc}
                     onChange={(e) => setMDesc(e.target.value)}
                     rows={2}
-                    className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium resize-none"
+                    className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium resize-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Sale Price (Credits)</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Sale Price (Credits)</label>
                     <input 
                       type="number"
                       required
@@ -973,30 +973,30 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                       max={2000}
                       value={mPrice}
                       onChange={(e) => setMPrice(parseInt(e.target.value, 10))}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-amber-400 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-amber-400 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Badge Label tag</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Badge Label tag</label>
                     <input 
                       type="text"
                       required
                       placeholder="e.g. 🐱 SPECIAL"
                       value={mBadge}
                       onChange={(e) => setMBadge(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black placeholder-slate-600"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black placeholder-slate-600"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Border Accent Glow Frame</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Border Accent Glow Frame</label>
                     <select 
                       value={mBorderColor}
                       onChange={(e) => setMBorderColor(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-300 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-semibold"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/65 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-semibold"
                     >
                       <option value="border-dashed border-rose-500">Dashed Cute Pink (Cat-like)</option>
                       <option value="border-emerald-500 border-2">Sleek Green Matrix</option>
@@ -1007,31 +1007,31 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-slate-400">Demo Floating Particles (Comma Sep)</label>
+                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Demo Floating Particles (Comma Sep)</label>
                     <input 
                       type="text"
                       placeholder="e.g. 🐱, 🐾, 💎, 🐈"
                       value={mParticleDemo}
                       onChange={(e) => setMParticleDemo(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 focus:border-indigo-500 text-xs text-slate-200 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Right panel live revenue payout splits and actions */}
-              <div className="lg:col-span-5 bg-slate-950/50 p-5 rounded-2xl border border-slate-850/80 flex flex-col justify-between gap-6" id="minting-live-calculator-panel">
+              <div className="lg:col-span-5 bg-black/25 p-5 rounded-2xl border border-slate-850/80 flex flex-col justify-between gap-6" id="minting-live-calculator-panel">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-mono font-black text-indigo-400 uppercase tracking-widest block">
+                  <span className="text-[10px] font-mono font-black text-vouch-cyan uppercase tracking-widest block">
                     ⚡ LIVE LEDGER SPLIT PROJECTIONS
                   </span>
 
                   {/* Fee transparent splits visualization */}
                   <div className="space-y-2 font-mono text-xs">
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-900 space-y-2">
-                      <div className="flex justify-between text-slate-400">
+                    <div className="p-3 bg-obsidian-900 rounded-xl border border-white/10 space-y-2">
+                      <div className="flex justify-between text-white/45">
                         <span>Listing Cost:</span>
-                        <span className="text-slate-100 font-black">{mPrice} Credits</span>
+                        <span className="text-white/90 font-black">{mPrice} Credits</span>
                       </div>
                       <div className="flex justify-between text-rose-505 text-[11px]">
                         <span>Platform Dev Fee (15%):</span>
@@ -1043,7 +1043,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                       </div>
                     </div>
 
-                    <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-900 space-y-1.5 text-[10.5px] text-slate-400 leading-normal">
+                    <div className="p-3 bg-obsidian-900/60 rounded-xl border border-white/10 space-y-1.5 text-[10.5px] text-white/45 leading-normal">
                       <span className="text-[#FBBC05] font-black block uppercase text-[9.5px]">💡 SELLER INSTRUCTIONS:</span>
                       <p>When user mints a layout, VouchEdge locks your configuration parameters in your web context. Other Bettors inspect your theme and can instantly unlock it via the store. Your credit balance will update dynamically!</p>
                     </div>

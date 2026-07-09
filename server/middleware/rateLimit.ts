@@ -143,6 +143,14 @@ export const pickLimiter = rateLimit({
   handler,
 });
 
+export const worldChatLimiter = rateLimit({
+  name: "world_chat",
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
 export const betaSignupLimiter = rateLimit({
   name: "beta_signup",
   windowMs: 60 * 60 * 1000,

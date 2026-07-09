@@ -481,14 +481,14 @@ export default function SubscriberHub({
               return (
                 <div 
                   key={capper.id}
-                  className="bg-[#121824]/45 backdrop-blur-md border border-slate-855 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-800 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20"
+                  className="bg-[#121824]/45 backdrop-blur-md border border-slate-855 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-white/10 transition-all text-left relative group hover:shadow-2xl hover:shadow-indigo-950/20"
                 >
                   {/* Visual Category badge */}
-                  <div className="p-4 border-b border-slate-850/60 bg-slate-950/20 flex justify-between items-center">
-                    <span className="text-[9px] bg-slate-900 px-2.5 py-0.5 border border-slate-850 rounded font-black font-mono text-emerald-400 uppercase">
+                  <div className="p-4 border-b border-slate-850/60 bg-obsidian-900/20 flex justify-between items-center">
+                    <span className="text-[9px] bg-black/25 px-2.5 py-0.5 border border-slate-850 rounded font-black font-mono text-emerald-400 uppercase">
                       {capper.winRate.toFixed(1)}% WINRATE
                     </span>
-                    <span className="text-[9.5px] bg-[#1a1c30] text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide">
+                    <span className="text-[9.5px] bg-[#1a1c30] text-vouch-cyan px-2.5 py-0.5 rounded-full border border-indigo-900/35 font-extrabold uppercase font-mono tracking-wide">
                       {capper.badge}
                     </span>
                   </div>
@@ -496,33 +496,33 @@ export default function SubscriberHub({
                   <div className="p-5 space-y-3 flex-1">
                     {/* Capper primary identity metadata */}
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-indigo-500/20 flex items-center justify-center text-sky-400 text-sm font-black shadow-md">
+                      <div className="w-12 h-12 rounded-full bg-obsidian-700 border-2 border-indigo-500/20 flex items-center justify-center text-sky-400 text-sm font-black shadow-md">
                         {capper.name.split(' ').map(n=>n[0]).join('')}
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-slate-100 text-sm flex items-center gap-1">
+                        <h4 className="font-extrabold text-white/90 text-sm flex items-center gap-1">
                           {capper.name}
                         </h4>
-                        <p className="text-slate-500 font-mono text-[10px]">@{capper.username}</p>
+                        <p className="text-white/40 font-mono text-[10px]">@{capper.username}</p>
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
+                    <p className="text-[11px] text-white/45 leading-relaxed font-semibold">
                       {capper.bio}
                     </p>
 
-                    <div className="flex items-center justify-between text-[11px] font-mono border-t border-slate-850/50 pt-2 text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] font-mono border-t border-slate-850/50 pt-2 text-white/45">
                       <span>Total Tracked: <strong>{capper.totalPicks}</strong></span>
                       <span>Subscribers: <strong className="text-white">{capper.subscriberCount}</strong></span>
                     </div>
                   </div>
 
                   {/* Actions Area */}
-                  <div className="p-4 bg-slate-950/35 border-t border-slate-850/40">
+                  <div className="p-4 bg-obsidian-900/35 border-t border-slate-850/40">
                     {isOwner ? (
                       <button
                         onClick={() => setSelectedCapperId(capper.id)}
-                        className="w-full py-2.5 bg-indigo-650 hover:bg-indigo-550 text-slate-100 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-2.5 bg-indigo-650 hover:bg-indigo-550 text-white/90 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <MessageSquare className="w-4 h-4" />
                         Enter Your Owner Chatroom
@@ -541,7 +541,7 @@ export default function SubscriberHub({
                           setSelectedCapperForSub(capper);
                           setShowSubModal(true);
                         }}
-                        className="w-full py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-slate-100 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-center flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+                        className="w-full py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white/90 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-center flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
                       >
                         <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300/20" />
                         Subscribe
@@ -564,7 +564,7 @@ export default function SubscriberHub({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSelectedCapperId(null)}
-                className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer"
+                className="p-1.5 bg-black/25 hover:bg-black/35 border border-white/10 rounded-lg text-white/45 hover:text-white transition-all cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -572,7 +572,7 @@ export default function SubscriberHub({
                 <span className="text-[8.5px] font-bold font-mono px-2 py-0.5 bg-emerald-905 text-emerald-400 border border-emerald-900/30 rounded uppercase tracking-wider">
                   ACTIVE_PREMIUM_SPACE
                 </span>
-                <h3 className="text-base font-black text-slate-100 uppercase tracking-tight">
+                <h3 className="text-base font-black text-white/90 uppercase tracking-tight">
                   {cappers.find(c => c.id === selectedCapperId)?.name} Exclusive Hub
                 </h3>
               </div>
@@ -604,7 +604,7 @@ export default function SubscriberHub({
                 onClick={() => setChatInnerTab('announcements')}
                 className={`px-3 py-1.5 rounded-lg font-black transition-all flex items-center gap-1 ${
                   chatInnerTab === 'announcements'
-                    ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                    ? 'bg-vouch-cyan/15 text-vouch-cyan border border-vouch-cyan/30'
                     : 'bg-transparent text-slate-420 hover:text-white'
                 }`}
               >
@@ -618,18 +618,18 @@ export default function SubscriberHub({
             {/* Left Sidebar inside the active space: Capper Information Card */}
             <div className="lg:col-span-1 border border-slate-855 rounded-2xl bg-[#121824]/30 p-5 space-y-4 text-left">
               <div>
-                <h4 className="text-[10px] font-bold text-indigo-400 font-mono uppercase tracking-wider mb-2">CLUB IDENTITY CARD</h4>
-                <div className="w-12 h-12 rounded-full bg-indigo-950 flex items-center justify-center border border-indigo-900/50 text-indigo-300 font-bold mb-3">
+                <h4 className="text-[10px] font-bold text-vouch-cyan font-mono uppercase tracking-wider mb-2">CLUB IDENTITY CARD</h4>
+                <div className="w-12 h-12 rounded-full bg-indigo-950 flex items-center justify-center border border-indigo-900/50 text-vouch-cyan/80 font-bold mb-3">
                   {cappers.find(c => c.id === selectedCapperId)?.name.split(' ').map(n=>n[0]).join('')}
                 </div>
-                <h3 className="font-extrabold text-slate-100 text-sm">
+                <h3 className="font-extrabold text-white/90 text-sm">
                   {cappers.find(c => c.id === selectedCapperId)?.name}
                 </h3>
-                <p className="text-[11px] text-slate-500">@{cappers.find(c => c.id === selectedCapperId)?.username}</p>
+                <p className="text-[11px] text-white/40">@{cappers.find(c => c.id === selectedCapperId)?.username}</p>
               </div>
 
-              <div className="space-y-2.5 text-xs text-slate-400">
-                <p className="font-semibold text-slate-300">
+              <div className="space-y-2.5 text-xs text-white/45">
+                <p className="font-semibold text-white/65">
                   {cappers.find(c => c.id === selectedCapperId)?.bio}
                 </p>
                 <div className="border-t border-slate-850/50 pt-2.5 space-y-1.5 font-mono text-[10px]">
@@ -648,7 +648,7 @@ export default function SubscriberHub({
                 </div>
               </div>
 
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-850 font-mono text-[9px] text-dashed text-slate-500 leading-normal">
+              <div className="bg-obsidian-900/40 p-3 rounded-lg border border-slate-850 font-mono text-[9px] text-dashed text-white/40 leading-normal">
                 🛡️ All subscription rooms are verified locally. Only owners can broadcast official announcements and exclusive slips.
               </div>
             </div>
@@ -664,7 +664,7 @@ export default function SubscriberHub({
                   <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 scroll-smooth">
                     {(messages[selectedCapperId] || []).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-slate-550 py-10 space-y-2">
-                        <MessageSquare className="w-8 h-8 text-slate-600 animate-pulse" />
+                        <MessageSquare className="w-8 h-8 text-white/35 animate-pulse" />
                         <span className="text-xs uppercase font-mono font-bold tracking-wider">No comments in this premium club yet</span>
                       </div>
                     ) : (
@@ -678,22 +678,22 @@ export default function SubscriberHub({
                             }`}
                           >
                             {msg.userId !== 'u-user-current' && (
-                              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center font-bold text-sky-450 text-[10px] shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-obsidian-700 border border-white/[0.06] flex items-center justify-center font-bold text-sky-450 text-[10px] shrink-0">
                                 {msg.displayName.split(' ').map(n=>n[0]).join('')}
                               </div>
                             )}
 
                             <div className="max-w-[75%] space-y-1">
                               <div className="flex items-center gap-1.5">
-                                <span className={`text-[10px] font-bold ${isCapperSender ? 'text-indigo-400 font-extrabold' : 'text-slate-350'}`}>
+                                <span className={`text-[10px] font-bold ${isCapperSender ? 'text-vouch-cyan font-extrabold' : 'text-slate-350'}`}>
                                   {msg.displayName}
                                 </span>
                                 {isCapperSender && (
-                                  <span className="text-[8px] bg-indigo-950 text-indigo-300 font-black border border-indigo-900/50 px-1 py-0.5 rounded leading-none shrink-0 font-mono">
+                                  <span className="text-[8px] bg-indigo-950 text-vouch-cyan/80 font-black border border-indigo-900/50 px-1 py-0.5 rounded leading-none shrink-0 font-mono">
                                     CREATOR
                                   </span>
                                 )}
-                                <span className="text-[9px] text-slate-600 font-mono">
+                                <span className="text-[9px] text-white/35 font-mono">
                                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
@@ -702,7 +702,7 @@ export default function SubscriberHub({
                                   ? 'bg-sky-600/90 text-[#121824] rounded-tr-none font-bold'
                                   : isCapperSender
                                   ? 'bg-indigo-950/40 border border-indigo-900/50 text-indigo-200 rounded-tl-none'
-                                  : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-850/60'
+                                  : 'bg-black/25 text-white/80 rounded-tl-none border border-slate-850/60'
                               }`}>
                                 {msg.text}
                               </div>
@@ -720,7 +720,7 @@ export default function SubscriberHub({
                   </div>
 
                   {/* Message sending & emoji controls inputs bar */}
-                  <form onSubmit={handlePostMessage} className="p-4 border-t border-slate-850 bg-slate-950/40 space-y-3">
+                  <form onSubmit={handlePostMessage} className="p-4 border-t border-slate-850 bg-obsidian-900/40 space-y-3">
                     {/* Fast emoji drawer */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 font-mono text-sm leading-none no-scrollbar">
                       {['🐐', '🔒', '🔥', '💰', '👍', '⚾', '🎯', '👑', '🚨', '🔮'].map(emoji => (
@@ -728,7 +728,7 @@ export default function SubscriberHub({
                           key={emoji}
                           type="button"
                           onClick={() => handleAddEmojiToInput(emoji)}
-                          className="p-1 px-2.5 bg-slate-900 hover:bg-slate-800 rounded-md border border-slate-850 hover:border-slate-800 text-xs transition-transform active:scale-90"
+                          className="p-1 px-2.5 bg-black/25 hover:bg-black/35 rounded-md border border-slate-850 hover:border-white/10 text-xs transition-transform active:scale-90"
                         >
                           {emoji}
                         </button>
@@ -741,7 +741,7 @@ export default function SubscriberHub({
                         value={newMsgText}
                         onChange={(e) => setNewMsgText(e.target.value)}
                         placeholder={`Message Premium Club as @${profile.username}...`}
-                        className="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-505 rounded-xl px-4 py-3 text-slate-100 text-xs focus:ring-1 focus:ring-indigo-500 placeholder-slate-550 outline-none transition-all font-semibold"
+                        className="flex-1 bg-obsidian-900 border border-white/10 focus:border-indigo-505 rounded-xl px-4 py-3 text-white/90 text-xs focus:ring-1 focus:ring-indigo-500 placeholder-slate-550 outline-none transition-all font-semibold"
                         maxLength={180}
                       />
                       <button
@@ -762,16 +762,16 @@ export default function SubscriberHub({
                   <div className="bg-[#121824]/30 border border-slate-855 p-4 rounded-xl text-left flex items-start gap-3">
                     <Award className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">Capper Locked Premium Slips</h4>
-                      <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Capper Locked Premium Slips</h4>
+                      <p className="text-[10px] text-white/40 leading-normal mt-0.5">
                         These premium correlated parlay slips have been programmed directly from the **Build Parlay** page with strict subscriber priority constraints enabled. Feel free to react with emojis.
                       </p>
                     </div>
                   </div>
 
                   {premiumParlays.length === 0 ? (
-                    <div className="p-12 text-center bg-slate-900/35 border border-dashed border-slate-850 rounded-2xl text-slate-500">
-                      <Sliders className="w-8 h-8 mx-auto text-slate-600 mb-2" />
+                    <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-white/40">
+                      <Sliders className="w-8 h-8 mx-auto text-white/35 mb-2" />
                       <p className="text-xs uppercase font-mono font-bold tracking-wider">No active premium parlays posted yet</p>
                     </div>
                   ) : (
@@ -779,14 +779,14 @@ export default function SubscriberHub({
                       {premiumParlays.map((parlay) => {
                         const reactions = parlayReactions[parlay.id] || { '🔥': 4, '🎯': 3, '👍': 5, '💰': 6 };
                         return (
-                          <div key={parlay.id} className="bg-[#121824]/40 border border-slate-850 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-slate-800 transition-all">
+                          <div key={parlay.id} className="bg-[#121824]/40 border border-slate-850 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all">
                             {/* Parlay premium badge */}
                             <div className="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
                               <span className="text-[10px] font-bold text-emerald-400 font-mono tracking-wider flex items-center gap-1.5 uppercase">
                                 <Ticket className="w-4 h-4 text-emerald-400 shrink-0" />
                                 {getPublicParlayTitle(parlay.title)}
                               </span>
-                              <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-mono px-2 py-0.5 rounded-full font-bold">
+                              <span className="text-[10px] bg-black/25 border border-white/10 text-white/45 font-mono px-2 py-0.5 rounded-full font-bold">
                                 Wager: {parlay.wagerAmount} units
                               </span>
                             </div>
@@ -794,12 +794,12 @@ export default function SubscriberHub({
                             {/* Legs checklist render */}
                             <div className="space-y-2.5">
                               {parlay.legs.map((leg) => (
-                                <div key={leg.id} className="p-2.5 bg-slate-950/40 rounded-xl border border-slate-850/50 flex justify-between items-center text-xs">
+                                <div key={leg.id} className="p-2.5 bg-obsidian-900/40 rounded-xl border border-slate-850/50 flex justify-between items-center text-xs">
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] font-bold font-mono px-1.5 bg-[#171e30] border border-blue-900/30 text-sky-400 rounded uppercase">
                                       {shouldShowPublicGameLabel(leg.game) ? cleanCustomerText(leg.game) : 'MLB'}
                                     </span>
-                                    <p className="font-extrabold text-slate-100 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
+                                    <p className="font-extrabold text-white/90 uppercase text-[11px] mt-1">{getPublicLegSelection(leg.selection)}</p>
                                   </div>
                                   <span className="font-mono text-[10px] font-black text-emerald-400">
                                     {(leg.odds > 0) ? `+${decimalToAmerican(leg.odds)}` : decimalToAmerican(leg.odds)}
@@ -809,34 +809,34 @@ export default function SubscriberHub({
                             </div>
 
                             {/* Risk Tier & Payout preview summary indicators block */}
-                            <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-950/20 p-3 rounded-xl border border-slate-850/50 font-mono text-[10px]">
+                            <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-obsidian-900/20 p-3 rounded-xl border border-slate-850/50 font-mono text-[10px]">
                               <div className="flex gap-4">
                                 <div>
-                                  <span className="block text-[8px] text-slate-500 uppercase">RISK TIER</span>
+                                  <span className="block text-[8px] text-white/40 uppercase">RISK TIER</span>
                                   <strong className={`${parlay.riskTier === 'HIGH' ? 'text-red-400' : parlay.riskTier === 'MEDIUM' ? 'text-amber-400' : 'text-emerald-400'} font-extrabold`}>
                                     {parlay.riskTier}
                                   </strong>
                                 </div>
                                 <div>
-                                  <span className="block text-[8px] text-slate-500 uppercase">COMBINED ODDS</span>
+                                  <span className="block text-[8px] text-white/40 uppercase">COMBINED ODDS</span>
                                   <strong className="text-white">x{parlay.oddsValue.toFixed(2)} ({parlay.totalOdds})</strong>
                                 </div>
                               </div>
                               <div className="text-left md:text-right">
-                                <span className="block text-[8px] text-slate-500 uppercase">ESTIMATED SUBSCRIBER PAYOUT</span>
+                                <span className="block text-[8px] text-white/40 uppercase">ESTIMATED SUBSCRIBER PAYOUT</span>
                                 <strong className="text-emerald-400 font-black text-sm">${parlay.payoutAmount?.toFixed(2)}</strong>
                               </div>
                             </div>
 
                             {/* Interactive Reactions list where sub can comment/upvote */}
                             <div className="mt-4 pt-3 border-t border-slate-850/50 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-                              <span className="text-[9px] text-slate-500 uppercase">REACTIONS FOR SUBSCRIBER VERIFIED SLIP</span>
+                              <span className="text-[9px] text-white/40 uppercase">REACTIONS FOR SUBSCRIBER VERIFIED SLIP</span>
                               <div className="flex items-center gap-2">
                                 {Object.entries(reactions).map(([reaction, qty]) => (
                                   <button
                                     key={reaction}
                                     onClick={() => handleReactToParlay(parlay.id, reaction)}
-                                    className="p-1 px-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-lg border border-slate-850/60 font-mono text-xs flex items-center gap-2 cursor-pointer transition-colors"
+                                    className="p-1 px-3.5 bg-black/35 hover:bg-black/35 rounded-lg border border-slate-850/60 font-mono text-xs flex items-center gap-2 cursor-pointer transition-colors"
                                   >
                                     <span>{reaction}</span>
                                     <span className="text-slate-350 font-black">{qty}</span>
@@ -856,10 +856,10 @@ export default function SubscriberHub({
               {chatInnerTab === 'announcements' && (
                 <div className="space-y-4 text-left" id="tab-announcements">
                   <div className="bg-[#121824]/30 border border-slate-860 p-4 rounded-xl text-left flex items-start gap-3">
-                    <Megaphone className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5 animate-pulse" />
+                    <Megaphone className="w-5 h-5 text-vouch-cyan shrink-0 mt-0.5 animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">Club Announcements Feed</h4>
-                      <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
+                      <p className="text-[10px] text-white/40 leading-normal mt-0.5">
                         These official announcements represent the dynamic vouchers and guidelines broadcasted by the capper to alert followers instantly about live value line updates.
                       </p>
                     </div>
@@ -872,9 +872,9 @@ export default function SubscriberHub({
                         handlePublishAnnouncement(e, target.value);
                         target.value = '';
                       }}
-                      className="p-4 bg-slate-900/60 border border-indigo-900/30 rounded-xl space-y-3"
+                      className="p-4 bg-black/30 border border-indigo-900/30 rounded-xl space-y-3"
                     >
-                      <label className="block text-[9px] text-indigo-400 font-mono font-black uppercase tracking-wider">
+                      <label className="block text-[9px] text-vouch-cyan font-mono font-black uppercase tracking-wider">
                         BROADCAST NEW OFFICIAL CLUB ANNOUNCEMENT
                       </label>
                       <div className="flex gap-2">
@@ -883,11 +883,11 @@ export default function SubscriberHub({
                           name="announcement_input"
                           type="text"
                           placeholder="Type official details or voucher allocation announcement here..."
-                          className="flex-1 bg-slate-950 border border-slate-850 focus:border-indigo-505 rounded-lg px-3 py-2 text-slate-100 text-xs placeholder-slate-550 outline-none"
+                          className="flex-1 bg-obsidian-900 border border-slate-850 focus:border-indigo-505 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none"
                         />
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-indigo-650 hover:bg-indigo-550 text-slate-100 text-xs font-mono font-black rounded-lg transition-all"
+                          className="px-4 py-2 bg-indigo-650 hover:bg-indigo-550 text-white/90 text-xs font-mono font-black rounded-lg transition-all"
                         >
                           BROADCAST
                         </button>
@@ -897,17 +897,17 @@ export default function SubscriberHub({
 
                   <div className="space-y-3">
                     {((announcements[selectedCapperId] || []).length === 0) ? (
-                      <div className="p-12 text-center bg-slate-900/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
+                      <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
                         No official announcements published yet
                       </div>
                     ) : (
                       (announcements[selectedCapperId] || []).map((ann, idx) => (
                         <div key={idx} className="p-4 bg-indigo-950/25 border border-indigo-900/30 rounded-xl text-xs relative overflow-hidden flex items-start gap-3 leading-relaxed font-semibold">
                           <div className="absolute top-0 bottom-0 left-0 w-1 bg-indigo-500" />
-                          <Megaphone className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <Megaphone className="w-4 h-4 text-vouch-cyan shrink-0 mt-0.5" />
                           <div className="space-y-1">
-                            <span className="text-[8.5px] font-mono font-black text-indigo-400">OFFICIAL CREATOR PROOF LINE</span>
-                            <p className="text-slate-200">{ann}</p>
+                            <span className="text-[8.5px] font-mono font-black text-vouch-cyan">OFFICIAL CREATOR PROOF LINE</span>
+                            <p className="text-white/80">{ann}</p>
                           </div>
                         </div>
                       ))
@@ -927,11 +927,11 @@ export default function SubscriberHub({
       {activeTab === 'channel_settings' && (
         <div className="space-y-6 text-left" id="hub-channel-settings">
           <div className="bg-[#121824]/30 border border-slate-850 p-5 rounded-2xl space-y-2">
-            <h3 className="text-base font-black uppercase tracking-wide text-slate-100 flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-base font-black uppercase tracking-wide text-white/90 flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-vouch-cyan" />
               Customize Subscription Offerings
             </h3>
-            <p className="text-xs text-slate-400 lines-normal">
+            <p className="text-xs text-white/45 lines-normal">
               Represent yourself as a high-frequency analyst. Owners have absolute freedom to configure months tiers, customize pricing in credits points to align with model performance indicators, and define exclusive unlockable incentives.
             </p>
           </div>
@@ -958,23 +958,23 @@ export default function SubscriberHub({
                     {isEditingThis ? (
                       <div className="space-y-3 pt-2">
                         <div>
-                          <label className="block text-[9px] text-slate-500 font-mono mb-1">PRICE IN POINTS</label>
+                          <label className="block text-[9px] text-white/40 font-mono mb-1">PRICE IN POINTS</label>
                           <input 
                             type="number"
                             value={editPrice}
                             min={1}
                             max={5000}
                             onChange={(e) => setEditPrice(Math.max(1, parseInt(e.target.value) || 0))}
-                            className="w-full bg-slate-950 border border-slate-800 p-2 text-slate-100 text-xs rounded-xl outline-none focus:border-indigo-505"
+                            className="w-full bg-obsidian-900 border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505"
                           />
                         </div>
                         <div>
-                          <label className="block text-[9px] text-slate-500 font-mono mb-1">SAVINGS / DISCOUNT LABEL</label>
+                          <label className="block text-[9px] text-white/40 font-mono mb-1">SAVINGS / DISCOUNT LABEL</label>
                           <input 
                             type="text"
                             value={editPerk}
                             onChange={(e) => setEditPerk(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 p-2 text-slate-100 text-xs rounded-xl outline-none focus:border-indigo-505"
+                            className="w-full bg-obsidian-900 border border-white/10 p-2 text-white/90 text-xs rounded-xl outline-none focus:border-indigo-505"
                             placeholder="e.g. Save 10%"
                           />
                         </div>
@@ -982,17 +982,17 @@ export default function SubscriberHub({
                     ) : (
                       <div className="space-y-2.5 pt-1 text-xs">
                         <div>
-                          <span className="block text-[8.5px] uppercase text-slate-500 font-mono">Subscription Access Value:</span>
+                          <span className="block text-[8.5px] uppercase text-white/40 font-mono">Subscription Access Value:</span>
                           <strong className="text-sky-400 font-bold text-base font-mono leading-none">{plan.price} pts</strong>
                         </div>
                         <div>
-                          <span className="block text-[8.5px] uppercase text-slate-500 font-mono">Discounts / Value Badge:</span>
-                          <span className="text-slate-300 font-extrabold flex items-center gap-1.5 leading-tight">
+                          <span className="block text-[8.5px] uppercase text-white/40 font-mono">Discounts / Value Badge:</span>
+                          <span className="text-white/65 font-extrabold flex items-center gap-1.5 leading-tight">
                             <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                             {plan.savings || plan.perk || 'Standard Rate'}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-500 italic mt-1 font-mono">
+                        <div className="text-[10px] text-white/40 italic mt-1 font-mono">
                           {plan.note || 'Full club access included'}
                         </div>
                       </div>
@@ -1010,7 +1010,7 @@ export default function SubscriberHub({
                         </button>
                         <button
                           onClick={() => setEditingIndex(null)}
-                          className="px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-400 uppercase text-[10px] rounded-lg cursor-pointer font-bold"
+                          className="px-3 py-1.5 bg-black/25 border border-white/10 text-white/45 uppercase text-[10px] rounded-lg cursor-pointer font-bold"
                         >
                           Cancel
                         </button>
@@ -1038,19 +1038,19 @@ export default function SubscriberHub({
 
       {/* Choose Subscription Length Modal */}
       {showSubModal && selectedCapperForSub && (
-        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fade-in text-left" id="subscription-length-modal">
-          <div className="bg-[#0b0f19]/95 border border-slate-800 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-slate-100 relative">
+        <div className="fixed inset-0 bg-obsidian-900/85 backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fade-in text-left" id="subscription-length-modal">
+          <div className="bg-[#0b0f19]/95 border border-white/10 p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(0,0,0,0.6)] space-y-6 text-white/90 relative">
             
             {/* Header */}
-            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+            <div className="flex justify-between items-start border-b border-white/10 pb-4">
               <div>
-                <span className="text-[9px] bg-indigo-950 text-indigo-400 font-extrabold font-mono px-2.5 py-0.5 rounded-full border border-indigo-900/40 uppercase tracking-widest">
+                <span className="text-[9px] bg-indigo-950 text-vouch-cyan font-extrabold font-mono px-2.5 py-0.5 rounded-full border border-indigo-900/40 uppercase tracking-widest">
                   Subscriber Club Access
                 </span>
                 <h3 className="text-lg md:text-xl font-black uppercase tracking-tight mt-1.5">
                   Subscribe to {selectedCapperForSub.name}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-white/45 mt-0.5">
                   Choose your subscription length to unlock premium club insights and tools.
                 </p>
               </div>
@@ -1059,7 +1059,7 @@ export default function SubscriberHub({
                   setShowSubModal(false);
                   setSelectedCapperForSub(null);
                 }}
-                className="text-slate-400 hover:text-slate-100 text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all uppercase cursor-pointer"
+                className="text-white/45 hover:text-white/90 text-xs font-bold font-mono px-2.5 py-1 rounded bg-black/25 border border-white/10 hover:bg-black/35 transition-all uppercase cursor-pointer"
               >
                 Close
               </button>
@@ -1071,7 +1071,7 @@ export default function SubscriberHub({
                 <Sparkles className="w-4 h-4 text-sky-400" />
                 Full club access includes:
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-white/65">
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-450 shrink-0" />
                   <span>premium picks</span>
@@ -1122,17 +1122,17 @@ export default function SubscriberHub({
                 return (
                   <div 
                     key={idx}
-                    className="bg-[#121824]/50 border border-slate-800 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group"
+                    className="bg-[#121824]/50 border border-white/10 hover:border-indigo-505/40 p-4 rounded-xl flex flex-col justify-between space-y-4 text-center transition-all duration-200 relative group"
                   >
                     {/* Full access badge */}
                     <div className="absolute -top-2 left-2 right-2 flex justify-center">
-                      <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-indigo-950 text-indigo-400 border border-indigo-900/60 rounded-full">
+                      <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-indigo-950 text-vouch-cyan border border-indigo-900/60 rounded-full">
                         Full Club Access Included
                       </span>
                     </div>
 
                     <div className="space-y-1 pt-2">
-                      <span className="block text-xs font-extrabold uppercase tracking-wider text-slate-200">
+                      <span className="block text-xs font-extrabold uppercase tracking-wider text-white/80">
                         {durationLabel}
                       </span>
                       
@@ -1144,7 +1144,7 @@ export default function SubscriberHub({
 
                       <div className="flex items-baseline justify-center gap-1 pt-1">
                         <span className="text-2xl font-black text-sky-400 font-mono">{plan.price}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">pts</span>
+                        <span className="text-[10px] text-white/40 font-mono">pts</span>
                       </div>
                     </div>
 
@@ -1159,7 +1159,7 @@ export default function SubscriberHub({
                           setShowSubModal(false);
                           setSelectedCapperForSub(null);
                         }}
-                        className="w-full py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-slate-100 font-bold text-xs rounded-lg transition-all transform hover:scale-[1.02] shadow-md cursor-pointer"
+                        className="w-full py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white/90 font-bold text-xs rounded-lg transition-all transform hover:scale-[1.02] shadow-md cursor-pointer"
                       >
                         Subscribe
                       </button>
@@ -1170,8 +1170,8 @@ export default function SubscriberHub({
             </div>
 
             {/* Disclaimer & Balance Indicator */}
-            <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 font-mono border-t border-slate-900 pt-4 gap-2">
-              <span>Your credit balance: <strong className="text-indigo-400 font-bold">{credits} pts</strong></span>
+            <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-white/40 font-mono border-t border-white/10 pt-4 gap-2">
+              <span>Your credit balance: <strong className="text-vouch-cyan font-bold">{credits} pts</strong></span>
               <span>All subscriptions are processed instantly</span>
             </div>
 

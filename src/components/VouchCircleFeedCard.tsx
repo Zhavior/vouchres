@@ -32,12 +32,12 @@ const cardStyleConfigs: any = {
     hubGlow: 'bg-[#0ea5e9]/10 group-hover:bg-[#0ea5e9]/25',
     hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
     hubText: 'text-sky-400',
-    nodeBorder: 'border-slate-800 group-hover:border-sky-450',
+    nodeBorder: 'border-white/10 group-hover:border-sky-450',
     nodeValueBg: 'bg-[#060b15] border border-sky-450 text-sky-400',
-    nodeTagBg: 'bg-slate-900 border-slate-850',
-    reasonsBg: 'bg-slate-900/60 border border-slate-900/80',
+    nodeTagBg: 'bg-black/25 border-slate-850',
+    reasonsBg: 'bg-black/30 border border-white/[0.08]',
     headerTitleColor: 'text-[#cbd5e1]',
-    headerSubTitleColor: 'text-slate-500',
+    headerSubTitleColor: 'text-white/40',
     brandBadge: 'bg-sky-950/60 border border-sky-900/40 text-sky-400',
     activeLineColor1: '#0ea5e9',
     activeLineColor2: '#f97316',
@@ -116,8 +116,8 @@ const cardStyleConfigs: any = {
     hubGlow: 'bg-slate-100 group-hover:bg-slate-200',
     hubVeBg: 'from-slate-800 to-slate-900 border-slate-450',
     hubText: 'text-slate-900',
-    nodeBorder: 'border-slate-300 group-hover:border-slate-800',
-    nodeValueBg: 'bg-white border border-slate-800 text-slate-900',
+    nodeBorder: 'border-slate-300 group-hover:border-white/10',
+    nodeValueBg: 'bg-white border border-white/10 text-slate-900',
     nodeTagBg: 'bg-slate-50 border-slate-250',
     reasonsBg: 'bg-slate-50/90 border border-slate-200',
     headerTitleColor: 'text-slate-800',
@@ -125,11 +125,11 @@ const cardStyleConfigs: any = {
     brandBadge: 'bg-slate-100 border border-slate-200 text-slate-800',
     activeLineColor1: '#1e293b',
     activeLineColor2: '#64748b',
-    ambientPingColor: 'bg-slate-900',
+    ambientPingColor: 'bg-black/25',
     labelText: 'Base Line',
     labelText2: 'Target Index',
-    footerUrlColor: 'text-slate-600',
-    footerPingColor: 'bg-slate-950',
+    footerUrlColor: 'text-white/35',
+    footerPingColor: 'bg-obsidian-900',
   },
   hologram: {
     bg: 'bg-[#0f0a1c] border-2 border-[#2b0e40] dark:bg-[#0f0a1c]',
@@ -251,13 +251,13 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff05_1px,transparent_1px)] bg-[size:10px_10px] opacity-65 pointer-events-none" />
 
           {/* Header */}
-          <div className="flex justify-between items-start relative z-10 border-b border-slate-800/60 pb-3">
+          <div className="flex justify-between items-start relative z-10 border-b border-white/[0.06] pb-3">
             <div className="text-left font-mono">
               <span className="text-[8px] tracking-widest text-[#a855f7] font-black uppercase block leading-none">JAVA STUDIO COMPILED</span>
               <span className="text-[12px] font-black tracking-tight text-white block mt-1">🎫 OWNED PRO CARD</span>
             </div>
             <div className="text-right font-mono flex flex-col items-end">
-              <span className="text-[8px] tracking-wider text-slate-500 uppercase block">MULTIPLE RATIO</span>
+              <span className="text-[8px] tracking-wider text-white/40 uppercase block">MULTIPLE RATIO</span>
               <span className="text-[11px] font-black text-emerald-400 block mt-0.5">EST. MULTIPLIER 2.95x</span>
             </div>
           </div>
@@ -265,16 +265,16 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           {/* Mid Details */}
           <div className="my-5 space-y-3 relative z-10 text-left font-mono">
             <div className="flex items-center gap-1.5">
-              <span className="text-[8px] bg-slate-950 px-2 py-0.5 rounded font-black border border-slate-800 text-sky-400 uppercase tracking-widest">
+              <span className="text-[8px] bg-obsidian-900 px-2 py-0.5 rounded font-black border border-white/10 text-sky-400 uppercase tracking-widest">
                 ⚾ MLB MATCHCHECK
               </span>
-              <span className="text-[9px] text-slate-500 truncate">{v.gameName}</span>
+              <span className="text-[9px] text-white/40 truncate">{v.gameName}</span>
             </div>
 
             <div className="py-2.5 px-3 bg-black/45 backdrop-blur-sm rounded-xl border border-slate-850/50 relative">
-              <span className="text-[8.5px] uppercase font-bold text-slate-500 block mb-0.5">Target Player Selection</span>
+              <span className="text-[8.5px] uppercase font-bold text-white/40 block mb-0.5">Target Player Selection</span>
               <p className="text-sm font-black tracking-tight text-white leading-tight">{v.playerOrTeam}</p>
-              <p className="text-[12px] font-semibold text-slate-300 mt-0.5 italic leading-none">{v.market}</p>
+              <p className="text-[12px] font-semibold text-white/65 mt-0.5 italic leading-none">{v.market}</p>
               
               {/* Odds */}
               <div className="absolute top-1/2 -translate-y-1/2 right-3 p-1.5 bg-sky-950/45 border border-sky-800 text-emerald-400 font-black text-xs rounded-lg">
@@ -284,7 +284,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           </div>
 
           {/* Analysis rational note */}
-          <div className="text-left font-sans text-[10.5px] leading-relaxed italic bg-black/30 p-3 rounded-xl border border-slate-800/40 relative z-10 text-slate-300">
+          <div className="text-left font-sans text-[10.5px] leading-relaxed italic bg-black/30 p-3 rounded-xl border border-white/[0.04] relative z-10 text-white/65">
             "{v.userNote}"
           </div>
 
@@ -299,14 +299,14 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 opacity: bc.stickerOpacity || 0.85,
               }}
             >
-              <div className="border-[2px] border-dashed border-red-500/70 bg-slate-950/95 text-red-400 text-[9px] font-mono font-black py-0.5 px-2.5 rounded shadow-lg uppercase tracking-wider">
+              <div className="border-[2px] border-dashed border-red-500/70 bg-obsidian-900/95 text-red-400 text-[9px] font-mono font-black py-0.5 px-2.5 rounded shadow-lg uppercase tracking-wider">
                 📌 {bc.stickerText}
               </div>
             </div>
           )}
 
           {/* Certification signature stamp footer */}
-          <div className="mt-4 pt-2.5 border-t border-slate-800/40 relative z-10 flex justify-between font-mono text-[8px] text-slate-500 uppercase">
+          <div className="mt-4 pt-2.5 border-t border-white/[0.04] relative z-10 flex justify-between font-mono text-[8px] text-white/40 uppercase">
             <span>★ JAVA SECURE TICKETING</span>
             <span>@{post.username} · MASTER PRO</span>
           </div>
@@ -334,7 +334,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           <div className={`absolute bottom-0 left-0 w-32 h-32 ${activeStyle.cornerLight2} rounded-full blur-3xl pointer-events-none`} />
 
           {/* Header segment */}
-          <div className={`flex justify-between items-center pb-3 border-b ${cardStyle === 'minimal' ? 'border-slate-205' : 'border-slate-900/80'} z-10 relative`}>
+          <div className={`flex justify-between items-center pb-3 border-b ${cardStyle === 'minimal' ? 'border-slate-205' : 'border-white/[0.08]'} z-10 relative`}>
             <div className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${activeStyle.hubVeBg} flex items-center justify-center text-white font-extrabold text-sm border shadow`}>
                 VE
@@ -351,7 +351,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
 
             <div className="text-right flex items-center gap-2">
               <div className="text-right leading-none">
-                <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                   {post.displayName}
                 </span>
                 <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
@@ -361,7 +361,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               <img 
                 src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                 alt={post.displayName} 
-                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-slate-950"
+                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -437,12 +437,12 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                       zIndex: 25 
                     }}
                   >
-                    <div className={`relative p-0.5 ${cardStyle === 'minimal' ? 'bg-white font-semibold' : 'bg-slate-950'} rounded-full border-2 ${activeStyle.nodeBorder} transition-colors shadow-lg`}>
+                    <div className={`relative p-0.5 ${cardStyle === 'minimal' ? 'bg-white font-semibold' : 'bg-obsidian-900'} rounded-full border-2 ${activeStyle.nodeBorder} transition-colors shadow-lg`}>
                       <img 
                         src={ps.player?.headshot || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50"} 
                         alt={ps.player?.name} 
                         referrerPolicy="no-referrer"
-                        className="w-10 h-10 rounded-full object-cover bg-slate-900"
+                        className="w-10 h-10 rounded-full object-cover bg-black/25"
                       />
                       <span className={`absolute -bottom-2 left-1/2 -translate-x-1/2 text-[7.5px] font-extrabold uppercase px-1 py-0.2 rounded-md ${activeStyle.nodeValueBg} border shadow-sm leading-none whitespace-nowrap z-30`}>
                         {ps.customVal || ps.statType}
@@ -456,20 +456,20 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
             /* Player of the Day Spotlight View */
             (() => {
               const ps = selectedPlayers[potdIndex] || selectedPlayers[0];
-              if (!ps) return <div className="text-center text-xs text-slate-500 select-none py-10">Empty Selection</div>;
+              if (!ps) return <div className="text-center text-xs text-white/40 select-none py-10">Empty Selection</div>;
               return (
-                <div className="my-3 py-3 px-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 flex items-center gap-4 relative z-10 text-left">
+                <div className="my-3 py-3 px-4 rounded-2xl bg-black/25 border border-white/[0.05] flex items-center gap-4 relative z-10 text-left">
                   <img 
                     src={ps.player?.headshot} 
                     alt={ps.player?.name} 
-                    className="w-16 h-16 rounded-full object-cover border-2 border-amber-500 bg-slate-950 shadow-large"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-amber-500 bg-obsidian-900 shadow-large"
                     referrerPolicy="no-referrer"
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-[8px] font-mono bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase inline-block mb-1">
                       PLAYER OF THE DAY
                     </span>
-                    <h3 className={`text-base font-black truncate uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-100'}`}>
+                    <h3 className={`text-base font-black truncate uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-white/90'}`}>
                       {ps.player?.name}
                     </h3>
                     <p className="text-[10px] text-sky-400 font-bold font-mono uppercase truncate mt-0.5">
@@ -484,17 +484,17 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           {/* Mini reasons index */}
           {config.showReasons !== false && (
             <div className="mt-1 relative z-10 text-left">
-              <span className={`text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-slate-500' : 'text-slate-400'} uppercase font-black block tracking-wider`}>
+              <span className={`text-[8px] font-mono ${cardStyle === 'minimal' ? 'text-white/40' : 'text-white/45'} uppercase font-black block tracking-wider`}>
                 VERIFIED SABERMETRICS FORECAST ANALYSIS:
               </span>
-              <p className={`text-[9.5px] ${cardStyle === 'minimal' ? 'text-slate-700' : 'text-slate-300'} font-medium italic mt-0.5 line-clamp-2`}>
+              <p className={`text-[9.5px] ${cardStyle === 'minimal' ? 'text-slate-700' : 'text-white/65'} font-medium italic mt-0.5 line-clamp-2`}>
                 "{reasonsText}"
               </p>
             </div>
           )}
 
           {/* Footer of card */}
-          <div className={`border-t ${activeStyle.cardBorder} pt-2.5 mt-3 flex justify-between items-center text-[8px] font-mono text-slate-500 z-10 relative`}>
+          <div className={`border-t ${activeStyle.cardBorder} pt-2.5 mt-3 flex justify-between items-center text-[8px] font-mono text-white/40 z-10 relative`}>
             <div>
               <span>WATERMARK ARCHIVE:</span>
               <span className={`${activeStyle.footerUrlColor} ml-1`}>vouchedge.ai/{post.username}</span>
@@ -512,7 +512,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 e.stopPropagation();
                 setActiveSlide(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
               title="Next Slide"
               id={`feed-next-slide-${post.id}`}
             >
@@ -522,7 +522,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
 
           {/* Card 1/2 metadata overlay label */}
           {showSecondCard && (
-            <div className="absolute top-14 right-4 bg-slate-950/85 rounded-full py-0.5 px-2.5 border border-slate-800/60 text-[8px] font-mono text-slate-400 font-bold z-30 shadow flex gap-1 items-center">
+            <div className="absolute top-14 right-4 bg-obsidian-900/85 rounded-full py-0.5 px-2.5 border border-white/[0.06] text-[8px] font-mono text-white/45 font-bold z-30 shadow flex gap-1 items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-450" />
               CARD 1 / 2
             </div>
@@ -546,7 +546,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           <div className={`absolute bottom-0 left-0 w-32 h-32 ${activeStyle.cornerLight2} rounded-full blur-3xl pointer-events-none`} />
 
           {/* Header segment */}
-          <div className={`flex justify-between items-center pb-3 border-b ${cardStyle === 'minimal' ? 'border-slate-205' : 'border-slate-900/80'} z-10 relative`}>
+          <div className={`flex justify-between items-center pb-3 border-b ${cardStyle === 'minimal' ? 'border-slate-205' : 'border-white/[0.08]'} z-10 relative`}>
             <div className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${activeStyle.hubVeBg} flex items-center justify-center text-white font-extrabold text-sm border shadow`}>
                 VE
@@ -563,7 +563,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
 
             <div className="text-right flex items-center gap-2">
               <div className="text-right leading-none">
-                <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-[10px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                   {post.displayName}
                 </span>
                 <span className="text-[8.5px] text-sky-400 font-mono tracking-tight block mt-0.5">
@@ -573,7 +573,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               <img 
                 src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                 alt={post.displayName} 
-                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-slate-950"
+                className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -620,7 +620,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
             {activeCardLayout === 'potd' ? (
               (() => {
                 const ps = selectedPlayers[potdIndex] || selectedPlayers[0];
-                if (!ps) return <div className="text-center text-xs text-slate-500 py-10">Empty Selection</div>;
+                if (!ps) return <div className="text-center text-xs text-white/40 py-10">Empty Selection</div>;
                 const aiConf = ps.aiConfidence ?? 94;
                 const pConf = ps.playerConfidence ?? 85;
                 const explanation = ps.customExplanation || "Extreme velocity projections verify launch coefficients.";
@@ -628,34 +628,34 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
 
                 return (
                   <div className="space-y-2.5">
-                    <div className="bg-black/30 p-2.5 rounded-xl border border-slate-900/60 flex items-center gap-2">
+                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/[0.06] flex items-center gap-2">
                       <img 
                         src={player.headshot} 
                         alt={player.name}
-                        className="w-10 h-10 rounded-full object-cover border border-amber-500 bg-slate-950"
+                        className="w-10 h-10 rounded-full object-cover border border-amber-500 bg-obsidian-900"
                         referrerPolicy="no-referrer"
                       />
                       <div className="leading-tight">
                         <span className={`text-xs font-black uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-400'}`}>
                           {player.name}
                         </span>
-                        <span className="text-[8px] font-mono text-slate-500 uppercase block">
+                        <span className="text-[8px] font-mono text-white/40 uppercase block">
                           {player.team} · #{player.number}
                         </span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[9px] font-mono">
-                      <div className="bg-black/20 p-2 rounded-lg border border-slate-900">
-                        <span className="text-slate-500 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Splits OPS</span>
-                        <div className="grid grid-cols-2 gap-x-1 text-slate-300">
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/10">
+                        <span className="text-white/40 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Splits OPS</span>
+                        <div className="grid grid-cols-2 gap-x-1 text-white/65">
                           <div>vsLHP: <span className="font-extrabold text-white">{player.splits?.vLHP?.ops || "----"}</span></div>
                           <div>vsRHP: <span className="font-extrabold text-white">{player.splits?.vRHP?.ops || "----"}</span></div>
                         </div>
                       </div>
 
-                      <div className="bg-black/20 p-2 rounded-lg border border-slate-900">
-                        <span className="text-slate-500 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Statcast Index</span>
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/10">
+                        <span className="text-white/40 uppercase text-[7.5px] font-black block border-b border-black/30 pb-0.5 mb-1">Statcast Index</span>
                         <div className="grid grid-cols-2 gap-x-1 text-slate-305">
                           <div>EVel: <span className="font-extrabold text-[#38bdf8]">{player.advanced?.exitVelocity || "92.4"}</span></div>
                           <div>HHit: <span className="font-extrabold text-rose-400">{player.advanced?.hardHitPercent ? `${player.advanced.hardHitPercent}%` : "51%"}</span></div>
@@ -664,13 +664,13 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     </div>
 
                     {/* Confidence Block */}
-                    <div className="grid grid-cols-2 gap-2 font-mono bg-black/15 p-1.5 rounded-lg border border-slate-900 text-[9px]">
+                    <div className="grid grid-cols-2 gap-2 font-mono bg-black/15 p-1.5 rounded-lg border border-white/10 text-[9px]">
                       <div className="flex justify-between px-1 border-r border-slate-950">
-                        <span className="text-slate-500">VAI CONF:</span>
+                        <span className="text-white/40">VAI CONF:</span>
                         <span className="font-extrabold text-sky-400">{aiConf}%</span>
                       </div>
                       <div className="flex justify-between px-1">
-                        <span className="text-slate-500">STABILITY:</span>
+                        <span className="text-white/40">STABILITY:</span>
                         <span className="font-extrabold text-amber-500">{pConf}%</span>
                       </div>
                     </div>
@@ -690,20 +690,20 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                         <img 
                           src={ps.player?.headshot} 
                           alt={ps.player?.name}
-                          className="w-6 h-6 rounded-full object-cover border border-slate-800 bg-slate-950"
+                          className="w-6 h-6 rounded-full object-cover border border-white/10 bg-obsidian-900"
                           referrerPolicy="no-referrer"
                         />
                         <div className="leading-none text-left">
                           <span className={`text-[10px] font-black block uppercase truncate w-24 ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-205'}`}>
                             {ps.player?.name}
                           </span>
-                          <span className="text-[7px] text-slate-500 font-mono">
+                          <span className="text-[7px] text-white/40 font-mono">
                             {ps.statType}: {ps.customVal}
                           </span>
                         </div>
                       </div>
 
-                      <div className="w-14 h-4 bg-black/15 rounded p-0.5 border border-slate-900/40 flex items-center justify-center">
+                      <div className="w-14 h-4 bg-black/15 rounded p-0.5 border border-white/[0.04] flex items-center justify-center">
                         <svg className="w-full h-full" viewBox="0 0 100 30">
                           <polyline fill="none" stroke={activeStyle.activeLineColor1} strokeWidth="1.5" points={mockSparkPoints} />
                           <circle cx="95" cy={mockSparkPoints.split(" ").pop()?.split(",")[1]} r="2" fill={activeStyle.activeLineColor1} />
@@ -711,13 +711,13 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[8px] font-mono bg-slate-950/40 px-1 py-0.5 rounded leading-none">
-                      <div className="flex justify-between pr-1.5 border-r border-slate-900">
-                        <span className="text-slate-500">VAI:</span>
+                    <div className="grid grid-cols-2 gap-2 text-[8px] font-mono bg-obsidian-900/40 px-1 py-0.5 rounded leading-none">
+                      <div className="flex justify-between pr-1.5 border-r border-white/10">
+                        <span className="text-white/40">VAI:</span>
                         <span className="font-bold text-sky-400">{aiConf}%</span>
                       </div>
                       <div className="flex justify-between pl-1.5">
-                        <span className="text-slate-500">COEF:</span>
+                        <span className="text-white/40">COEF:</span>
                         <span className="font-bold text-amber-500">{pConf}%</span>
                       </div>
                     </div>
@@ -730,7 +730,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           {/* Best Parlay or Coupon section */}
           {showBestParlay && bestParlayDesc && (
             <div className={`mt-1 p-2 rounded-xl border relative overflow-hidden text-left ${cardStyle === 'minimal' ? 'bg-amber-50/60 border-amber-250' : 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/30'}`}>
-              <span className="text-[7.5px] font-mono uppercase font-black text-slate-500 block mb-0.5">
+              <span className="text-[7.5px] font-mono uppercase font-black text-white/40 block mb-0.5">
                 🔥 RECOMMENDED CORRELATED PARLAY PICK:
               </span>
               <span className={`text-[10px] font-bold block leading-snug truncate ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-300'}`}>
@@ -745,7 +745,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               <div className="flex items-center gap-1.5">
                 <span className="text-[12px] leading-none">🎟️</span>
                 <div className="leading-none text-left">
-                  <span className={`text-[9px] font-black block ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>{couponText}</span>
+                  <span className={`text-[9px] font-black block ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>{couponText}</span>
                   <span className="text-[7px] text-sky-430 font-mono uppercase block mt-0.5">USE CODE ON PROFILE SUBSCRIPTION</span>
                 </div>
               </div>
@@ -756,7 +756,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           )}
 
           {/* Footer segment */}
-          <div className={`border-t ${activeStyle.cardBorder} pt-2.5 mt-2.5 flex justify-between items-center text-[8px] font-mono text-slate-500 z-10 relative`}>
+          <div className={`border-t ${activeStyle.cardBorder} pt-2.5 mt-2.5 flex justify-between items-center text-[8px] font-mono text-white/40 z-10 relative`}>
             <div>
               <span>COMPANION SECURE SEC:</span>
               <span className={`${activeStyle.footerUrlColor} ml-1`}>vouchedge.ai/{post.username}</span>
@@ -773,7 +773,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
               e.stopPropagation();
               setActiveSlide(0);
             }}
-            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
+            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-obsidian-900/85 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full opacity-0 group-hover/feed-slide:opacity-100 transition-all duration-200 shadow-xl cursor-pointer z-40 flex items-center justify-center hover:scale-105"
             title="Previous Slide"
             id={`feed-prev-slide-${post.id}`}
           >
@@ -781,7 +781,7 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
           </button>
 
           {/* Card 2/2 metadata overlay label */}
-          <div className="absolute top-14 right-4 bg-slate-950/85 rounded-full py-0.5 px-2.5 border border-slate-800/60 text-[8px] font-mono text-slate-400 font-bold z-30 shadow flex gap-1 items-center">
+          <div className="absolute top-14 right-4 bg-obsidian-900/85 rounded-full py-0.5 px-2.5 border border-white/[0.06] text-[8px] font-mono text-white/45 font-bold z-30 shadow flex gap-1 items-center">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             CARD 2 / 2
           </div>

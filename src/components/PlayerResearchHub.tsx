@@ -519,18 +519,18 @@ function PlayerCard({ player, index, onClick }: { player: MLBPlayer; index: numb
     >
       {/* Score badge */}
       <div className="absolute top-3 right-3 z-10 w-10 h-10 rounded-xl flex flex-col items-center justify-center" style={{ background: `${scoreColor}15`, border: `1px solid ${scoreColor}30` }}>
-        <span className="text-[7px] text-slate-500 font-mono uppercase">SCORE</span>
+        <span className="text-[7px] text-white/40 font-mono uppercase">SCORE</span>
         <span className="text-sm font-bold" style={{ color: scoreColor }}>{player.batterScore}</span>
       </div>
 
       {/* Headshot */}
-      <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3 bg-slate-800 border border-white/5">
+      <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3 bg-obsidian-700 border border-white/5">
         <img src={player.headshot} alt={player.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
       </div>
 
       {/* Name + team */}
       <div className="text-sm font-bold text-white truncate">{player.name}</div>
-      <div className="text-[10px] text-slate-500 truncate">{player.team} · #{player.number}</div>
+      <div className="text-[10px] text-white/40 truncate">{player.team} · #{player.number}</div>
 
       {/* Stats row */}
       <div className="flex items-center gap-2 mt-3">
@@ -540,20 +540,20 @@ function PlayerCard({ player, index, onClick }: { player: MLBPlayer; index: numb
           { label: "OPS", value: getOfficialSeasonStat(player, "ops") },
         ].map((s) => (
           <div key={s.label} className="flex-1 text-center py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <div className="text-[7px] text-slate-600 font-mono uppercase">{s.label}</div>
-            <div className="text-xs font-bold text-slate-300">{s.value}</div>
+            <div className="text-[7px] text-white/35 font-mono uppercase">{s.label}</div>
+            <div className="text-xs font-bold text-white/65">{s.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="mt-2 text-[8px] font-mono uppercase text-slate-600">
+      <div className="mt-2 text-[8px] font-mono uppercase text-white/35">
         {getSeasonStatSourceLabel(player)}
       </div>
 
       {/* Injury badge */}
       <div className="mt-2 flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full" style={{ background: injuryColor }} />
-        <span className="text-[9px] text-slate-500">{player.injuryStatus}</span>
+        <span className="text-[9px] text-white/40">{player.injuryStatus}</span>
       </div>
 
       {/* Hover arrow */}
@@ -572,7 +572,7 @@ function PlayerTable({ players, onRowClick, sortBy }: { players: MLBPlayer[]; on
         <thead>
           <tr className="border-b border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
             {["Player", "Team", "AVG", "HR", "RBI", "OPS", "Barrel%", "HardHit%", "Score", ""].map((h) => (
-              <th key={h} className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-3 py-2.5 text-left font-mono">{h}</th>
+              <th key={h} className="text-[9px] font-bold text-white/40 uppercase tracking-wider px-3 py-2.5 text-left font-mono">{h}</th>
             ))}
           </tr>
         </thead>
@@ -591,17 +591,17 @@ function PlayerTable({ players, onRowClick, sortBy }: { players: MLBPlayer[]; on
                     <span className="font-bold text-white text-xs">{p.name}</span>
                   </div>
                 </td>
-                <td className="px-3 py-2.5 text-xs text-slate-400">{p.team.split(" ").pop()}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "avg")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "hr")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-300">{getOfficialSeasonStat(p, "rbi")}</td>
+                <td className="px-3 py-2.5 text-xs text-white/45">{p.team.split(" ").pop()}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "avg")}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "hr")}</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-white/65">{getOfficialSeasonStat(p, "rbi")}</td>
                 <td className="px-3 py-2.5 text-xs font-mono text-[var(--ve-accent)]">{getOfficialSeasonStat(p, "ops")}</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-400">{p.advanced.barrelPercent?.toFixed(1)}%</td>
-                <td className="px-3 py-2.5 text-xs font-mono text-slate-400">{p.advanced.hardHitPercent?.toFixed(1)}%</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-white/45">{p.advanced.barrelPercent?.toFixed(1)}%</td>
+                <td className="px-3 py-2.5 text-xs font-mono text-white/45">{p.advanced.hardHitPercent?.toFixed(1)}%</td>
                 <td className="px-3 py-2.5">
                   <span className="text-xs font-bold font-mono" style={{ color: scoreColor }}>{p.batterScore}</span>
                 </td>
-                <td className="px-3 py-2.5"><ChevronRight className="w-3.5 h-3.5 text-slate-600" /></td>
+                <td className="px-3 py-2.5"><ChevronRight className="w-3.5 h-3.5 text-white/35" /></td>
               </tr>
             );
           })}
@@ -656,7 +656,7 @@ function ProTruthLensIntro() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6 overflow-hidden rounded-[2rem] border border-cyan-400/15 bg-slate-950/70 shadow-2xl shadow-cyan-950/20"
+      className="mb-6 overflow-hidden rounded-[2rem] border border-cyan-400/15 bg-black/30 shadow-2xl shadow-cyan-950/20"
     >
       <div className="relative p-5 sm:p-6">
         <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
@@ -669,19 +669,19 @@ function ProTruthLensIntro() {
             <h2 className="mt-2 text-2xl sm:text-3xl font-black text-white">
               Research the player before you build the slip.
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-white/45">
               Built for sourced player truth: official IDs, game context, Statcast availability,
               market readiness, and V.A.I fit. If VouchEdge cannot source a stat, it should say
               unavailable — never fake confidence or odds.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 text-xs text-slate-300 lg:min-w-[260px]">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-slate-500">
+          <div className="rounded-2xl border border-white/10 bg-black/25/70 p-3 text-xs text-white/65 lg:min-w-[260px]">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-white/40">
               Truth standard
             </div>
             <div className="mt-1 font-bold text-white">No fake odds · no fake stats</div>
-            <div className="mt-2 text-slate-400">Unknown pricing shows as Odds TBD.</div>
+            <div className="mt-2 text-white/45">Unknown pricing shows as Odds TBD.</div>
           </div>
         </div>
 
@@ -689,7 +689,7 @@ function ProTruthLensIntro() {
           {PLAYER_RESEARCH_PRO_TABS.map((tab) => (
             <span
               key={tab}
-              className="shrink-0 rounded-full border border-white/10 bg-slate-900/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-300"
+              className="shrink-0 rounded-full border border-white/10 bg-black/25/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white/65"
             >
               {tab}
             </span>
@@ -697,13 +697,13 @@ function ProTruthLensIntro() {
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+          <div className="rounded-2xl border border-white/10 bg-black/25/50 p-4">
             <div className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
               Truth rules
             </div>
             <div className="mt-3 grid gap-2">
               {PLAYER_RESEARCH_TRUTH_RULES.map((rule) => (
-                <div key={rule} className="flex gap-2 text-xs text-slate-300">
+                <div key={rule} className="flex gap-2 text-xs text-white/65">
                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
                   <span>{rule}</span>
                 </div>
@@ -711,13 +711,13 @@ function ProTruthLensIntro() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+          <div className="rounded-2xl border border-white/10 bg-black/25/50 p-4">
             <div className="text-[10px] font-black uppercase tracking-[0.22em] text-sky-300">
               Pro research layer
             </div>
             <div className="mt-3 grid gap-2">
               {PLAYER_RESEARCH_PRO_IDEAS.map((feature) => (
-                <div key={feature} className="flex gap-2 text-xs text-slate-300">
+                <div key={feature} className="flex gap-2 text-xs text-white/65">
                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />
                   <span>{feature}</span>
                 </div>
@@ -752,7 +752,7 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
       {compareA && compareB && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="grid grid-cols-3 border-b border-white/5" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <div className="p-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">Stat</div>
+            <div className="p-3 text-[10px] font-bold uppercase tracking-wider text-white/40 font-mono">Stat</div>
             <div className="p-3 text-center text-xs font-bold text-[var(--ve-accent)]">{compareA.name}</div>
             <div className="p-3 text-center text-xs font-bold text-pink-300">{compareB.name}</div>
           </div>
@@ -774,23 +774,23 @@ function CompareView({ players, compareA, compareB, onSelectA, onSelectB, onAddL
             const bWins = row.higher ? row.b > row.a : row.b < row.a;
             return (
               <div key={row.label} className="grid grid-cols-3 border-b border-white/3">
-                <div className="p-2.5 text-[11px] text-slate-500 font-mono">{row.label}</div>
-                <div className={`p-2.5 text-center text-sm font-bold font-mono ${aWins ? "text-[var(--ve-accent)]" : "text-slate-500"}`}>{typeof row.a === "number" ? row.a.toFixed(row.a % 1 !== 0 ? 3 : 0) : row.a}</div>
-                <div className={`p-2.5 text-center text-sm font-bold font-mono ${bWins ? "text-pink-300" : "text-slate-500"}`}>{typeof row.b === "number" ? row.b.toFixed(row.b % 1 !== 0 ? 3 : 0) : row.b}</div>
+                <div className="p-2.5 text-[11px] text-white/40 font-mono">{row.label}</div>
+                <div className={`p-2.5 text-center text-sm font-bold font-mono ${aWins ? "text-[var(--ve-accent)]" : "text-white/40"}`}>{typeof row.a === "number" ? row.a.toFixed(row.a % 1 !== 0 ? 3 : 0) : row.a}</div>
+                <div className={`p-2.5 text-center text-sm font-bold font-mono ${bWins ? "text-pink-300" : "text-white/40"}`}>{typeof row.b === "number" ? row.b.toFixed(row.b % 1 !== 0 ? 3 : 0) : row.b}</div>
               </div>
             );
           })}
 
           {/* Truth markets */}
           <div className="p-4 border-t border-white/5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Truth Markets</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Truth Markets</div>
             <div className="grid md:grid-cols-2 gap-3">
               {[compareA, compareB].map((p) => p && (
                 <div key={p.id} className="space-y-2">
                   <div className="text-xs font-bold text-white">{p.name}</div>
                   {p.propositions.map((prop) => (
                     <div key={prop.id} className="flex items-center justify-between p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                      <span className="text-[11px] text-slate-400">{prop.market}</span>
+                      <span className="text-[11px] text-white/45">{prop.market}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>
                         <button onClick={() => onAddLeg(p, prop)} className="text-[9px] font-bold uppercase px-2 py-1 rounded text-slate-950" style={{ background: "linear-gradient(135deg, #22d3ee, #2563eb)" }}>
@@ -824,16 +824,16 @@ function CompareSlot({ label, player, players, onSelect, accent }: {
           <img src={player.headshot} alt={player.name} className="w-12 h-12 rounded-xl object-cover" loading="lazy" decoding="async" />
           <div className="flex-1">
             <div className="text-sm font-bold text-white">{player.name}</div>
-            <div className="text-[10px] text-slate-500">{player.team} · {player.position}</div>
+            <div className="text-[10px] text-white/40">{player.team} · {player.position}</div>
           </div>
-          <button onClick={() => onSelect(null as any)} className="text-slate-600 hover:text-slate-400">
+          <button onClick={() => onSelect(null as any)} className="text-white/35 hover:text-white/45">
             <X className="w-4 h-4" />
           </button>
         </div>
       ) : (
         <select
           onChange={(e) => { const p = players.find((p) => p.id === e.target.value); if (p) onSelect(p); }}
-          className="w-full rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none"
+          className="w-full rounded-lg px-3 py-2 text-xs text-white/65 focus:outline-none"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
         >
           <option value="">Select a player...</option>
@@ -875,13 +875,13 @@ function BuildView({ players, onAddLeg, activeLegs }: {
     <div>
       <ProTruthLensIntro />
       <div className="flex items-center gap-3 mb-5">
-        <div className="text-sm text-slate-400">{filtered.length} markets available</div>
+        <div className="text-sm text-white/45">{filtered.length} markets available</div>
         <div className="flex gap-1.5">
           {["ALL", "Hits", "Base Types", "Run Production", "Speed", "Total Bases"].map((f) => (
             <button
               key={f}
               onClick={() => setPropFilter(f)}
-              className={`text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${propFilter === f ? "text-slate-950" : "text-slate-500"}`}
+              className={`text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
               style={propFilter === f ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : { background: "rgba(255,255,255,0.03)" }}
             >
               {f}
@@ -894,14 +894,14 @@ function BuildView({ players, onAddLeg, activeLegs }: {
         {groupedMarkets.map(({ group, items }) => (
           <section
             key={group}
-            className="rounded-2xl border border-white/10 bg-slate-950/40 p-3 sm:p-4"
+            className="rounded-2xl border border-white/10 bg-obsidian-900/40 p-3 sm:p-4"
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <div className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
                   {group}
                 </div>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-[11px] text-white/40">
                   {items.length} truth markets · odds stay TBD until a real feed is connected
                 </div>
               </div>
@@ -922,7 +922,7 @@ function BuildView({ players, onAddLeg, activeLegs }: {
                     <img src={player.headshot} alt={player.name} className="w-10 h-10 rounded-lg object-cover shrink-0" loading="lazy" decoding="async" />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-bold text-white truncate">{player.name}</div>
-                      <div className="text-[10px] text-slate-400 truncate">{prop.market}</div>
+                      <div className="text-[10px] text-white/45 truncate">{prop.market}</div>
                       {prop.truthLabel && (
                         <div className="mt-0.5 truncate text-[9px] uppercase tracking-wider text-cyan-300/75">
                           {prop.truthLabel}
@@ -996,15 +996,15 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
           <img src={player.headshot} alt={player.name} className="w-16 h-16 rounded-2xl object-cover" loading="lazy" decoding="async" />
           <div className="flex-1">
             <h2 className="text-xl font-bold text-white">{player.name}</h2>
-            <div className="text-xs text-slate-500">{player.team} · #{player.number} · {player.position} · B/T: {player.bats}/{player.throws}</div>
+            <div className="text-xs text-white/40">{player.team} · #{player.number} · {player.position} · B/T: {player.bats}/{player.throws}</div>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: player.batterScore >= 90 ? "rgba(52,211,153,0.12)" : "rgba(251,191,36,0.12)", color: player.batterScore >= 90 ? "#34d399" : "#fbbf24" }}>
                 Score: {player.batterScore}
               </span>
-              <span className="text-[10px] text-slate-500">{player.injuryStatus}</span>
+              <span className="text-[10px] text-white/40">{player.injuryStatus}</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-600 hover:text-white p-2"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-white/35 hover:text-white p-2"><X className="w-5 h-5" /></button>
         </div>
 
         {/* Tabs */}
@@ -1013,7 +1013,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
             <button
               key={t.id}
               onClick={() => onTabChange(t.id)}
-              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border-b-2 ${tab === t.id ? "text-[var(--ve-accent)] border-[var(--ve-accent)]" : "text-slate-500 border-transparent hover:text-slate-300"}`}
+              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border-b-2 ${tab === t.id ? "text-[var(--ve-accent)] border-[var(--ve-accent)]" : "text-white/40 border-transparent hover:text-white/65"}`}
             >
               <t.icon className="w-3.5 h-3.5" /> {t.label}
             </button>
@@ -1056,7 +1056,7 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
       <div className="grid grid-cols-4 gap-2">
         {stats.map((s) => (
           <div key={s.label} className="text-center p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-            <div className="text-[9px] text-slate-600 font-mono uppercase tracking-widest">{s.label}</div>
+            <div className="text-[9px] text-white/35 font-mono uppercase tracking-widest">{s.label}</div>
             <div className="text-2xl font-bold font-mono mt-1" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
@@ -1064,11 +1064,11 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
 
       {/* Advanced metrics with bars */}
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Advanced Metrics</div>
+        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Advanced Metrics</div>
         <div className="space-y-2">
           {adv.map((m) => (
             <div key={m.label} className="flex items-center gap-3">
-              <div className="w-24 text-[11px] text-slate-400 font-mono">{m.label}</div>
+              <div className="w-24 text-[11px] text-white/45 font-mono">{m.label}</div>
               <div className="flex-1 h-2 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }}>
                 <div className="h-full rounded-full" style={{ width: `${Math.min(100, (parseFloat(String(m.value)) / m.max) * 100)}%`, background: "linear-gradient(90deg, #22d3ee, #2563eb)" }} />
               </div>
@@ -1080,11 +1080,11 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
 
       {/* Scouting report */}
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Scouting Report</div>
-        <div className="space-y-2 text-xs text-slate-400 leading-relaxed">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Scouting Report</div>
+        <div className="space-y-2 text-xs text-white/45 leading-relaxed">
           <div><span className="text-emerald-400 font-bold">Power:</span> {player.scoutingReport.powerText}</div>
           <div><span className="text-[var(--ve-accent)] font-bold">Contact:</span> {player.scoutingReport.contactText}</div>
-          <div><span className="text-violet-400 font-bold">Discipline:</span> {player.scoutingReport.disciplineText}</div>
+          <div><span className="text-vouch-emerald font-bold">Discipline:</span> {player.scoutingReport.disciplineText}</div>
           <div className="pt-2 border-t border-white/5"><span className="text-amber-400 font-bold">Overall:</span> {player.scoutingReport.overallScouting}</div>
         </div>
       </div>
@@ -1092,7 +1092,7 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
       {/* Hot zones + risk */}
       <div className="flex items-center gap-4">
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1">Hot Zones</div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-1">Hot Zones</div>
           <div className="flex flex-wrap gap-1">
             {player.scoutingReport.hotZones.map((z) => (
               <span key={z} className="text-[10px] px-2 py-0.5 rounded-md text-emerald-300" style={{ background: "rgba(52,211,153,0.08)" }}>{z}</span>
@@ -1100,7 +1100,7 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
           </div>
         </div>
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1">Risk</div>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-white/35 mb-1">Risk</div>
           <span className="text-[10px] px-2 py-0.5 rounded-md font-bold" style={{ background: player.scoutingReport.riskFactor === "LOW" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)", color: player.scoutingReport.riskFactor === "LOW" ? "#34d399" : "#fbbf24" }}>{player.scoutingReport.riskFactor}</span>
         </div>
       </div>
@@ -1124,17 +1124,17 @@ function SplitsTab({ player }: { player: MLBPlayer }) {
           <thead>
             <tr className="border-b border-white/5">
               {["Split", "AVG", "OBP", "SLG", "OPS"].map((h) => (
-                <th key={h} className="text-[9px] font-bold text-slate-600 uppercase tracking-wider px-3 py-2 text-left font-mono">{h}</th>
+                <th key={h} className="text-[9px] font-bold text-white/35 uppercase tracking-wider px-3 py-2 text-left font-mono">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {splitData.map((s) => (
               <tr key={s.label} className="border-b border-white/3">
-                <td className="px-3 py-2 text-xs font-bold text-slate-300">{s.label}</td>
-                <td className="px-3 py-2 text-xs font-mono text-slate-400">{s.data.avg}</td>
-                <td className="px-3 py-2 text-xs font-mono text-slate-400">{s.data.obp}</td>
-                <td className="px-3 py-2 text-xs font-mono text-slate-400">{s.data.slg}</td>
+                <td className="px-3 py-2 text-xs font-bold text-white/65">{s.label}</td>
+                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.avg}</td>
+                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.obp}</td>
+                <td className="px-3 py-2 text-xs font-mono text-white/45">{s.data.slg}</td>
                 <td className="px-3 py-2 text-xs font-mono font-bold text-[var(--ve-accent)]">{s.data.ops}</td>
               </tr>
             ))}
@@ -1151,12 +1151,12 @@ function GameLogTab({ player }: { player: MLBPlayer }) {
     <div className="space-y-2">
       {player.gameLogs.map((g, i) => (
         <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-          <div className="text-[10px] text-slate-600 font-mono w-16">{g.date}</div>
-          <div className="text-xs text-slate-300 flex-1">vs {g.opponent}</div>
-          <div className="text-[10px] text-slate-500 font-mono">{g.result}</div>
+          <div className="text-[10px] text-white/35 font-mono w-16">{g.date}</div>
+          <div className="text-xs text-white/65 flex-1">vs {g.opponent}</div>
+          <div className="text-[10px] text-white/40 font-mono">{g.result}</div>
           <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-slate-400">{g.ab}AB</span>
-            <span className="text-slate-300">{g.h}H</span>
+            <span className="text-white/45">{g.ab}AB</span>
+            <span className="text-white/65">{g.h}H</span>
             {g.hr > 0 && <span className="text-amber-400 font-bold">{g.hr}HR</span>}
             {g.rbi > 0 && <span className="text-[var(--ve-accent)]">{g.rbi}RBI</span>}
           </div>
@@ -1178,10 +1178,10 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
           <Sparkles className="w-4 h-4 text-[var(--ve-accent)]" />
           <span className="text-xs font-bold text-[var(--ve-accent)] uppercase tracking-wider">AI Research Report</span>
         </div>
-        <div className="p-4 rounded-xl text-sm text-slate-300 leading-relaxed" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
+        <div className="p-4 rounded-xl text-sm text-white/65 leading-relaxed" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
           {report}
         </div>
-        <p className="text-[10px] text-slate-600">Probability-based research for entertainment — not betting advice.</p>
+        <p className="text-[10px] text-white/35">Probability-based research for entertainment — not betting advice.</p>
       </div>
     );
   }
@@ -1189,7 +1189,7 @@ function AITab({ player, report, researching, onRun }: { player: MLBPlayer; repo
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <Sparkles className="w-10 h-10 text-[var(--ve-accent)]/40 mb-4" />
-      <p className="text-sm text-slate-400 mb-4">Run AI research on {player.name}</p>
+      <p className="text-sm text-white/45 mb-4">Run AI research on {player.name}</p>
       <button
         onClick={onRun}
         disabled={researching}
@@ -1210,7 +1210,7 @@ function MarketsTab({ player, onAddLeg }: { player: MLBPlayer; onAddLeg: (player
         <div key={prop.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
           <div>
             <div className="text-sm font-bold text-white">{prop.market}</div>
-            <div className="text-[10px] text-slate-500">{prop.spec}</div>
+            <div className="text-[10px] text-white/40">{prop.spec}</div>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-lg font-mono font-bold text-[var(--ve-accent)]">{prop.odds == null ? 'Odds TBD' : prop.odds.toFixed(2)}</span>

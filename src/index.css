@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
 @import "./styles/z8-design-system.css";
 
@@ -32,7 +32,10 @@
 body {
   background-color: #050505;
   color: hsl(var(--ve-text-primary));
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-family: var(--font-z8);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
 }
 
@@ -46,10 +49,10 @@ body {
 [class*="bg-slate-950"],
 .bg-slate-900,
 .bg-slate-950 {
-  background-color: rgba(18, 24, 36, 0.42) !important;
-  backdrop-filter: blur(14px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(130%) !important;
-  border-color: rgba(255, 255, 255, 0.075) !important;
+  background-color: rgba(5, 5, 5, 0.42) !important;
+  backdrop-filter: blur(16px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.12) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   transition: background-color 0.4s ease, border-color 0.4s ease !important;
 }
 
@@ -57,7 +60,7 @@ body {
 button.bg-slate-900:hover,
 button.bg-slate-950:hover,
 [class*="bg-slate-900/40"]:hover {
-  background-color: rgba(99, 102, 241, 0.15) !important;
+  background-color: rgba(0, 240, 255, 0.1) !important;
 }
 
 /* ================== GLOBAL CSS MOVEMENT NEON LIGHT LINES ================== */
@@ -1083,6 +1086,120 @@ html:not([data-ve-theme]) {
   }
 }
 
+/* Floating Command Island launcher — obsidian glass + HD cyan/emerald glow */
+.ve-edge-island-trigger {
+  background: linear-gradient(
+    145deg,
+    rgba(12, 12, 14, 0.9) 0%,
+    rgba(5, 5, 8, 0.94) 55%,
+    rgba(4, 8, 10, 0.92) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.22);
+  border: 1px solid rgba(0, 240, 255, 0.38);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.72),
+    0 0 18px rgba(0, 240, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(0, 255, 148, 0.1);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.ve-edge-island-trigger-icon {
+  color: rgba(0, 240, 255, 0.82);
+  transition:
+    color 0.25s ease,
+    filter 0.25s ease,
+    transform 0.25s ease;
+}
+
+.ve-edge-island-trigger:focus-visible {
+  outline: 2px solid #00f0ff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ve-edge-island-trigger {
+    animation: veEdgeIslandTriggerPulse 3.6s ease-in-out infinite;
+  }
+
+  .ve-edge-island-trigger:hover {
+    animation: none;
+    transform: scale(1.12) translateY(-4px);
+    border-color: rgba(0, 240, 255, 0.92);
+    background: linear-gradient(
+      145deg,
+      rgba(0, 48, 56, 0.78) 0%,
+      rgba(6, 14, 18, 0.94) 55%,
+      rgba(4, 10, 12, 0.96) 100%
+    );
+    box-shadow:
+      0 14px 44px rgba(0, 0, 0, 0.8),
+      0 0 36px rgba(0, 240, 255, 0.5),
+      0 0 72px rgba(0, 240, 255, 0.2),
+      0 0 28px rgba(0, 255, 148, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 0 16px rgba(0, 240, 255, 0.12);
+  }
+
+  .ve-edge-island-trigger:hover .ve-edge-island-trigger-icon {
+    color: #00f0ff;
+    filter:
+      drop-shadow(0 0 6px rgba(0, 240, 255, 0.95))
+      drop-shadow(0 0 14px rgba(0, 255, 148, 0.5));
+    transform: scale(1.1);
+  }
+
+  .ve-edge-island-trigger:active {
+    transform: scale(1.06) translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-edge-island-trigger:hover {
+    border-color: rgba(0, 240, 255, 0.85);
+    background: linear-gradient(
+      145deg,
+      rgba(0, 40, 48, 0.8) 0%,
+      rgba(6, 12, 14, 0.94) 100%
+    );
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.72),
+      0 0 28px rgba(0, 240, 255, 0.38),
+      0 0 12px rgba(0, 255, 148, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .ve-edge-island-trigger:hover .ve-edge-island-trigger-icon {
+    color: #00f0ff;
+  }
+}
+
+@keyframes veEdgeIslandTriggerPulse {
+  0%,
+  100% {
+    border-color: rgba(0, 240, 255, 0.35);
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.72),
+      0 0 16px rgba(0, 240, 255, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 0 0 1px rgba(0, 255, 148, 0.08);
+  }
+
+  50% {
+    border-color: rgba(0, 240, 255, 0.55);
+    box-shadow:
+      0 10px 36px rgba(0, 0, 0, 0.72),
+      0 0 24px rgba(0, 240, 255, 0.2),
+      0 0 10px rgba(0, 255, 148, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 0 0 1px rgba(0, 255, 148, 0.14);
+  }
+}
+
 .ve-portal-welcome-exit {
   animation: vePortalWelcomeExit 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -1117,8 +1234,9 @@ html:not([data-ve-theme]) {
   --ve-border-subtle: 0 0% 100%;
   --ve-border-strong: 186 100% 50%;
   --ve-accent-cyan: 186 100% 50%;
-  --ve-accent-pink: 186 100% 50%;
-  --ve-accent-gold: 152 100% 50%;
+  --ve-accent-pink: 152 100% 50%;
+  --ve-accent-violet: 152 100% 50%;
+  --ve-accent-gold: 38 92% 50%;
   --ve-success: 152 100% 50%;
   --ve-danger: 0 84% 60%;
   --ve-warning: 38 92% 50%;
@@ -1128,6 +1246,9 @@ html:not([data-ve-theme]) {
   --ve-text-muted: 0 0% 45%;
   --ve-text: hsl(var(--ve-text-primary));
   --ve-muted: hsl(var(--ve-text-muted));
+  --z8-font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --z8-font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --z8-font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 html,
@@ -1297,6 +1418,64 @@ html {
   background:
     radial-gradient(circle at 50% -10%, rgba(0, 255, 148, 0.12), transparent 34rem),
     linear-gradient(180deg, #050505 0%, #050505 42%, #050505 100%);
+}
+
+/* Legacy Tailwind slate text → Z8 premium neutrals */
+.z8-app-shell :is(
+  .text-slate-50,
+  .text-slate-100,
+  [class*="text-slate-50"],
+  [class*="text-slate-100"]
+) {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.z8-app-shell :is(.text-slate-200, [class*="text-slate-200"]) {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.z8-app-shell :is(.text-slate-300, [class*="text-slate-300"]) {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.z8-app-shell :is(.text-slate-400, [class*="text-slate-400"]) {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.z8-app-shell :is(.text-slate-500, [class*="text-slate-500"]) {
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+
+.z8-app-shell :is(.text-slate-600, [class*="text-slate-600"]) {
+  color: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* Legacy slate borders → obsidian glass rim */
+.z8-app-shell :is(
+  .border-slate-700,
+  .border-slate-800,
+  .border-slate-900,
+  [class*="border-slate-700"],
+  [class*="border-slate-800"],
+  [class*="border-slate-900"]
+) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Display headings — premium weight + tracking */
+.z8-app-shell :is(h1, h2, h3, .z8-display) {
+  font-family: var(--z8-font-display, var(--font-z8));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.z8-app-shell :is(.font-mono, .terminal-text, [class*="font-mono"]) {
+  font-family: var(--z8-font-mono, ui-monospace, monospace);
+}
+
+.z8-app-shell :is(.z8-tabular-nums, [class*="tabular-nums"]) {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Z8 glass shell — single obsidian base; columns see through */

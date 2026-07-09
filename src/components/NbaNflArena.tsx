@@ -99,7 +99,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#02040a] overflow-hidden text-slate-100 flex flex-col font-sans select-none" id="epic-arena-comingsoon-page">
+    <div className="relative min-h-screen bg-[#02040a] overflow-hidden text-white/90 flex flex-col font-sans select-none" id="epic-arena-comingsoon-page">
       {/* Cinematic grid lines in the background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0e1526_1px,transparent_1px),linear-gradient(to_bottom,#0e1526_1px,transparent_1px)] bg-[size:40px_40px] opacity-35 z-0 pointer-events-none" />
       
@@ -110,10 +110,10 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
       </div>
 
       {/* Top Header Controls with Home button */}
-      <header className="relative z-50 px-6 py-4 border-b border-slate-900/60 bg-slate-950/70 backdrop-blur-xl flex items-center justify-between">
+      <header className="relative z-50 px-6 py-4 border-b border-white/[0.06] bg-black/30 backdrop-blur-xl flex items-center justify-between">
         <button
           onClick={() => onSectionChange('feed')}
-          className="flex items-center gap-2 px-4 py-2 bg-[#060913] hover:bg-slate-900 text-slate-300 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider border border-slate-800/80 transition-all cursor-pointer shadow-md hover:border-amber-400/30 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 animate-fade-in"
+          className="flex items-center gap-2 px-4 py-2 bg-[#060913] hover:bg-black/30 text-white/65 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider border border-white/[0.08] transition-all cursor-pointer shadow-md hover:border-amber-400/30 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 animate-fade-in"
           id="arena-back-btn"
         >
           <ArrowLeft className="w-4 h-4 text-amber-400" />
@@ -149,7 +149,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             damping: 18,
             mass: 0.8
           }}
-          className="relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-900/80 flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500"
+          className="relative overflow-hidden border-b md:border-b-0 md:border-r border-white/[0.08] flex flex-col justify-between p-6 md:p-8 cursor-pointer transition-colors duration-500"
           style={{
             background: hoveredSide === 'nba' 
               ? 'linear-gradient(180deg, rgba(16,22,46,0.98) 0%, rgba(5,7,16,0.99) 100%)'
@@ -179,18 +179,18 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold shadow-lg shrink-0 border ${
                   hoveredSide === 'nba' 
                     ? 'bg-orange-950/80 border-orange-400 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]' 
-                    : 'bg-slate-900/90 border-slate-800 text-slate-400 shadow-none'
+                    : 'bg-black/25/90 border-white/10 text-white/45 shadow-none'
                 }`}
               >
                 🏀
               </motion.div>
               <div className="flex flex-col">
                 <span className={`text-[10px] font-mono tracking-widest uppercase font-bold transition-colors duration-300 ${
-                  hoveredSide === 'nba' ? 'text-orange-400' : 'text-slate-500'
+                  hoveredSide === 'nba' ? 'text-orange-400' : 'text-white/40'
                 }`}>
                   COURT TELEMETRIES
                 </span>
-                <h4 className="text-sm font-black uppercase tracking-wider text-slate-100">NBA Analytics</h4>
+                <h4 className="text-sm font-black uppercase tracking-wider text-white/90">NBA Analytics</h4>
               </div>
             </div>
 
@@ -199,13 +199,13 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
               hoveredSide === 'nba' ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-4 scale-90 pointer-events-none hidden md:flex'
             }`}>
               <div className="text-right font-mono text-xs">
-                <span className="text-slate-500 block text-[9px] uppercase font-bold">Engine Trust</span>
+                <span className="text-white/40 block text-[9px] uppercase font-bold">Engine Trust</span>
                 <span className="text-orange-400 font-black">98.4% Acc</span>
               </div>
-              <div className="h-6 w-px bg-slate-800" />
+              <div className="h-6 w-px bg-obsidian-700" />
               <div className="text-right font-mono text-xs">
-                <span className="text-slate-500 block text-[9px] uppercase font-bold">Sim Rate</span>
-                <span className="text-slate-300 font-black">15K sim/m</span>
+                <span className="text-white/40 block text-[9px] uppercase font-bold">Sim Rate</span>
+                <span className="text-white/65 font-black">15K sim/m</span>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
           {/* Inactive Sleek Vertical Title (Displays when other side is focused) */}
           {hoveredSide === 'nfl' && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 animate-fade-in">
-              <span className="text-[11px] font-black tracking-[0.4em] text-slate-600 uppercase transform -rotate-90 origin-center whitespace-nowrap">
+              <span className="text-[11px] font-black tracking-[0.4em] text-white/35 uppercase transform -rotate-90 origin-center whitespace-nowrap">
                 🏀 HARDWOOD INSIGHTS
               </span>
             </div>
@@ -243,7 +243,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                   & COURT TRACKING
                 </span>
               </h2>
-              <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-medium max-w-xl">
+              <p className="text-xs md:text-sm text-white/45 leading-relaxed font-medium max-w-xl">
                 Synthesizing court floor pacing, physical stress indexes, load management markers, and dynamic shot trajectory curves to deliver high-probability edge outcomes on player props.
               </p>
             </div>
@@ -257,12 +257,12 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
               className={`relative rounded-2xl border transition-all duration-500 ${
                 hoveredSide === 'nba' 
                   ? 'border-orange-500/40 shadow-[0_0_35px_rgba(249,115,22,0.18)] bg-orange-950/10' 
-                  : 'border-slate-800/80 bg-slate-950/40'
+                  : 'border-white/[0.08] bg-obsidian-900/40'
               }`} 
               id="nba-cinematic-video-frame"
             >
               {/* Image element resembling video feed */}
-              <div className="relative aspect-video w-full rounded-[14px] overflow-hidden bg-slate-950">
+              <div className="relative aspect-video w-full rounded-[14px] overflow-hidden bg-obsidian-900">
                 {/* Dual Video Elements for Perfect Preloading and Hardware Cross-fading */}
                 <video 
                   ref={nbaVideo1Ref}
@@ -304,10 +304,10 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 )}
 
                 {/* Immersive Glassmorphic Coming Soon overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/20 backdrop-blur-[1px] z-10 pointer-events-none">
-                  <div className="bg-slate-950/90 backdrop-blur-md border border-rose-500/30 px-5 py-3 rounded-2xl flex flex-col items-center gap-1 shadow-[0_0_25px_rgba(244,63,94,0.15)] transform hover:scale-105 transition-all">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-obsidian-900/20 backdrop-blur-[1px] z-10 pointer-events-none">
+                  <div className="bg-obsidian-900/90 backdrop-blur-md border border-rose-500/30 px-5 py-3 rounded-2xl flex flex-col items-center gap-1 shadow-[0_0_25px_rgba(244,63,94,0.15)] transform hover:scale-105 transition-all">
                     <span className="text-[10px] font-mono tracking-[0.25em] font-black text-rose-400 uppercase animate-pulse">🏀 COMING SOON</span>
-                    <span className="text-[12px] font-black uppercase text-slate-200 tracking-wider">NBA HARDWOOD INSIGHTS</span>
+                    <span className="text-[12px] font-black uppercase text-white/80 tracking-wider">NBA HARDWOOD INSIGHTS</span>
                   </div>
                 </div>
 
@@ -316,9 +316,9 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                   {/* Top bar with telemetry */}
                   <div className="flex flex-col gap-2 font-mono text-[9px] w-full">
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-lg border border-white/5">
+                      <div className="flex items-center gap-1.5 bg-obsidian-900/80 backdrop-blur px-2.5 py-1 rounded-lg border border-white/5">
                         <span className={`w-1.5 h-1.5 rounded-full bg-red-500 ${isNbaPlaying ? 'animate-pulse' : ''}`} />
-                        <span className="text-slate-300 uppercase font-bold">
+                        <span className="text-white/65 uppercase font-bold">
                           FEED: LIVE MODEL CAM-0{activeNbaVid}
                         </span>
                       </div>
@@ -334,7 +334,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                         <span className="px-1.5 py-0.5 bg-orange-950/90 text-orange-400 text-[8px] font-mono font-bold uppercase rounded border border-orange-500/40">
                           PROBABILITY VECTORS ACQUIRED
                         </span>
-                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-indigo-400 text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
+                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
                           EST. MARGIN: +5.5
                         </span>
                       </div>
@@ -356,14 +356,14 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                       </button>
 
                       {/* Image selector toggles representing video presets */}
-                      <div className="flex items-center gap-1 bg-slate-950/80 backdrop-blur p-1 rounded-lg border border-white/5 pointer-events-auto">
+                      <div className="flex items-center gap-1 bg-obsidian-900/80 backdrop-blur p-1 rounded-lg border border-white/5 pointer-events-auto">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setActiveNbaVid(1);
                           }}
                           className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase font-mono transition-all ${
-                            activeNbaVid === 1 ? 'bg-orange-950 text-orange-400 border border-orange-900/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                            activeNbaVid === 1 ? 'bg-orange-950 text-orange-400 border border-orange-900/40 shadow-sm' : 'text-white/45 hover:text-white/80'
                           }`}
                         >
                           Real Game
@@ -374,7 +374,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                             setActiveNbaVid(2);
                           }}
                           className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase font-mono transition-all ${
-                            activeNbaVid === 2 ? 'bg-orange-950 text-orange-400 border border-orange-900/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                            activeNbaVid === 2 ? 'bg-orange-950 text-orange-400 border border-orange-900/40 shadow-sm' : 'text-white/45 hover:text-white/80'
                           }`}
                         >
                           Hoop Angle
@@ -382,8 +382,8 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                       </div>
                     </div>
 
-                    <div className="text-right font-mono text-[9px] text-slate-300">
-                      <span className="text-slate-500 uppercase mr-1">RUNNING:</span>
+                    <div className="text-right font-mono text-[9px] text-white/65">
+                      <span className="text-white/40 uppercase mr-1">RUNNING:</span>
                       <span className="font-extrabold text-orange-400">{liveNbaTime}</span>
                     </div>
                   </div>
@@ -396,37 +396,37 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nba' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className="bg-[#0b0e1a]/80 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 hover:border-orange-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
+              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-orange-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Activity className="w-3 h-3 text-orange-400" />
                   Hardwood Fatigue Map
                 </span>
-                <p className="text-xs font-black text-slate-200">Zone Load Metrics</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Weighing stamina drain on back-to-back schedules.</p>
+                <p className="text-xs font-black text-white/80">Zone Load Metrics</p>
+                <p className="text-[10px] text-white/45 leading-tight">Weighing stamina drain on back-to-back schedules.</p>
               </div>
 
-              <div className="bg-[#0b0e1a]/80 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 hover:border-indigo-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
-                  <Target className="w-3 h-3 text-indigo-400" />
+              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-indigo-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
+                  <Target className="w-3 h-3 text-vouch-cyan" />
                   Prop Shot Grid
                 </span>
-                <p className="text-xs font-black text-slate-200">Matchup Spacing</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Mapping high-precision scoring vectors live.</p>
+                <p className="text-xs font-black text-white/80">Matchup Spacing</p>
+                <p className="text-[10px] text-white/45 leading-tight">Mapping high-precision scoring vectors live.</p>
               </div>
 
-              <div className="bg-[#0b0e1a]/80 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-emerald-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
+              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-emerald-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-emerald-400" />
                   V.A.I Smart Overlay
                 </span>
-                <p className="text-xs font-black text-slate-200">Outcome Predictor</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Real-time basketball modeling running natively.</p>
+                <p className="text-xs font-black text-white/80">Outcome Predictor</p>
+                <p className="text-[10px] text-white/45 leading-tight">Real-time basketball modeling running natively.</p>
               </div>
             </div>
           </div>
 
           {/* Footer stats line */}
-          <div className={`relative z-20 border-t border-slate-900/60 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 font-mono gap-2 transition-all duration-500 ${
+          <div className={`relative z-20 border-t border-white/[0.06] pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-white/40 font-mono gap-2 transition-all duration-500 ${
             hoveredSide === 'nfl' ? 'opacity-0' : 'opacity-100'
           }`}>
             <span>AUDITED SYSTEM STATE: READY_TO_CODE</span>
@@ -484,18 +484,18 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold shadow-lg shrink-0 border ${
                   hoveredSide === 'nfl' 
                     ? 'bg-emerald-950/80 border-emerald-400 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-                    : 'bg-slate-900/90 border-slate-800 text-slate-400 shadow-none'
+                    : 'bg-black/25/90 border-white/10 text-white/45 shadow-none'
                 }`}
               >
                 🏈
               </motion.div>
               <div className="flex flex-col">
                 <span className={`text-[10px] font-mono tracking-widest uppercase font-bold transition-colors duration-300 ${
-                  hoveredSide === 'nfl' ? 'text-emerald-400' : 'text-slate-500'
+                  hoveredSide === 'nfl' ? 'text-emerald-400' : 'text-white/40'
                 }`}>
                   GRIDIRON TELEMETRY
                 </span>
-                <h4 className="text-sm font-black uppercase tracking-wider text-slate-100">NFL Analytics</h4>
+                <h4 className="text-sm font-black uppercase tracking-wider text-white/90">NFL Analytics</h4>
               </div>
             </div>
 
@@ -504,12 +504,12 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
               hoveredSide === 'nfl' ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-4 scale-90 pointer-events-none hidden md:flex'
             }`}>
               <div className="text-right font-mono text-xs">
-                <span className="text-slate-500 block text-[9px] uppercase font-bold">Engine Trust</span>
+                <span className="text-white/40 block text-[9px] uppercase font-bold">Engine Trust</span>
                 <span className="text-emerald-400 font-black">99.1% Confidence</span>
               </div>
-              <div className="h-6 w-px bg-slate-800" />
+              <div className="h-6 w-px bg-obsidian-700" />
               <div className="text-right font-mono text-xs">
-                <span className="text-slate-300 font-black">22K sim/m</span>
+                <span className="text-white/65 font-black">22K sim/m</span>
               </div>
             </div>
           </div>
@@ -517,7 +517,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
           {/* Inactive Sleek Vertical Title (Displays when other side is focused) */}
           {hoveredSide === 'nba' && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 animate-fade-in">
-              <span className="text-[11px] font-black tracking-[0.4em] text-slate-600 uppercase transform -rotate-90 origin-center whitespace-nowrap">
+              <span className="text-[11px] font-black tracking-[0.4em] text-white/35 uppercase transform -rotate-90 origin-center whitespace-nowrap">
                 🏈 GRIDIRON INSIGHTS
               </span>
             </div>
@@ -547,7 +547,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                   & REDZONE MODELER
                 </span>
               </h2>
-              <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-medium max-w-xl">
+              <p className="text-xs md:text-sm text-white/45 leading-relaxed font-medium max-w-xl">
                 Predict red-zone touchdowns before the ball is snapped. Integrating turf friction calculations, receiver vs CB sprint ratios, and gameflow pacing metrics.
               </p>
             </div>
@@ -561,12 +561,12 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
               className={`relative rounded-2xl border transition-all duration-500 ${
                 hoveredSide === 'nfl' 
                   ? 'border-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.18)] bg-emerald-950/10' 
-                  : 'border-slate-880 bg-slate-950/40'
+                  : 'border-slate-880 bg-obsidian-900/40'
               }`} 
               id="nfl-cinematic-video-frame"
             >
               {/* Image element resembling video feed */}
-              <div className="relative aspect-video w-full rounded-[14px] overflow-hidden bg-slate-950">
+              <div className="relative aspect-video w-full rounded-[14px] overflow-hidden bg-obsidian-900">
                 {/* Dual Video Elements for Perfect Preloading and Hardware Cross-fading */}
                 <video 
                   ref={nflVideo1Ref}
@@ -608,10 +608,10 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 )}
 
                 {/* Immersive Glassmorphic Coming Soon overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/20 backdrop-blur-[1px] z-10 pointer-events-none">
-                  <div className="bg-slate-950/90 backdrop-blur-md border border-rose-500/30 px-5 py-3 rounded-2xl flex flex-col items-center gap-1 shadow-[0_0_25px_rgba(244,63,94,0.15)] transform hover:scale-105 transition-all">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-obsidian-900/20 backdrop-blur-[1px] z-10 pointer-events-none">
+                  <div className="bg-obsidian-900/90 backdrop-blur-md border border-rose-500/30 px-5 py-3 rounded-2xl flex flex-col items-center gap-1 shadow-[0_0_25px_rgba(244,63,94,0.15)] transform hover:scale-105 transition-all">
                     <span className="text-[10px] font-mono tracking-[0.25em] font-black text-rose-400 uppercase animate-pulse">🏈 COMING SOON</span>
-                    <span className="text-[12px] font-black uppercase text-slate-200 tracking-wider">NFL GRIDIRON INSIGHTS</span>
+                    <span className="text-[12px] font-black uppercase text-white/80 tracking-wider">NFL GRIDIRON INSIGHTS</span>
                   </div>
                 </div>
 
@@ -620,9 +620,9 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                   {/* Top bar with telemetry */}
                   <div className="flex flex-col gap-2 font-mono text-[9px] w-full">
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur px-2.5 py-1 rounded-lg border border-white/5">
+                      <div className="flex items-center gap-1.5 bg-obsidian-900/80 backdrop-blur px-2.5 py-1 rounded-lg border border-white/5">
                         <span className={`w-1.5 h-1.5 rounded-full bg-red-500 ${isNflPlaying ? 'animate-pulse' : ''}`} />
-                        <span className="text-slate-300 uppercase font-bold">
+                        <span className="text-white/65 uppercase font-bold">
                           FEED: LIVE MODEL CAM-0{activeNflVid}
                         </span>
                       </div>
@@ -638,7 +638,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                         <span className="px-1.5 py-0.5 bg-emerald-950/90 text-emerald-400 text-[8px] font-mono font-bold uppercase rounded border border-emerald-500/40">
                           SEPARATION THRESHOLD GAINED
                         </span>
-                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-indigo-400 text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
+                        <span className="px-1.5 py-0.5 bg-indigo-950/90 text-vouch-cyan text-[8px] font-mono font-bold uppercase rounded border border-indigo-500/40">
                           TD CONVERSION CONFIDENCE: 92%
                         </span>
                       </div>
@@ -660,14 +660,14 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                       </button>
 
                       {/* Video selector toggles representing video presets */}
-                      <div className="flex items-center gap-1 bg-slate-950/80 backdrop-blur p-1 rounded-lg border border-white/5 pointer-events-auto">
+                      <div className="flex items-center gap-1 bg-obsidian-900/80 backdrop-blur p-1 rounded-lg border border-white/5 pointer-events-auto">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setActiveNflVid(1);
                           }}
                           className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase font-mono transition-all ${
-                            activeNflVid === 1 ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                            activeNflVid === 1 ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40 shadow-sm' : 'text-white/45 hover:text-white/80'
                           }`}
                         >
                           Catch Clip
@@ -678,7 +678,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                             setActiveNflVid(2);
                           }}
                           className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase font-mono transition-all ${
-                            activeNflVid === 2 ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                            activeNflVid === 2 ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/40 shadow-sm' : 'text-white/45 hover:text-white/80'
                           }`}
                         >
                           Sunset Turf
@@ -686,8 +686,8 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                       </div>
                     </div>
 
-                    <div className="text-right font-mono text-[9px] text-slate-300">
-                      <span className="text-slate-500 uppercase mr-1">RUNNING:</span>
+                    <div className="text-right font-mono text-[9px] text-white/65">
+                      <span className="text-white/40 uppercase mr-1">RUNNING:</span>
                       <span className="font-extrabold text-emerald-400">{liveNflTime}</span>
                     </div>
                   </div>
@@ -700,37 +700,37 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nfl' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className="bg-[#080d12]/85 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 hover:border-emerald-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
+              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-emerald-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Compass className="w-3 h-3 text-emerald-400" />
                   Redzone Target Heat
                 </span>
-                <p className="text-xs font-black text-slate-200">Convert Probability</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Predict snaps in the 20yd line using defensive scheme weights.</p>
+                <p className="text-xs font-black text-white/80">Convert Probability</p>
+                <p className="text-[10px] text-white/45 leading-tight">Predict snaps in the 20yd line using defensive scheme weights.</p>
               </div>
 
-              <div className="bg-[#080d12]/85 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 hover:border-amber-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
+              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-amber-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Zap className="w-3 h-3 text-amber-400" />
                   Sprint Acceleration
                 </span>
-                <p className="text-xs font-black text-slate-200">Sprinting Vectors</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Matching receiver burst speeds against CB coverage margins.</p>
+                <p className="text-xs font-black text-white/80">Sprinting Vectors</p>
+                <p className="text-[10px] text-white/45 leading-tight">Matching receiver burst speeds against CB coverage margins.</p>
               </div>
 
-              <div className="bg-[#080d12]/85 border border-slate-900/80 rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-indigo-500/20 transition-all">
-                <span className="text-[8px] font-bold font-mono uppercase text-slate-500 flex items-center gap-1">
-                  <Eye className="w-3 h-3 text-indigo-400" />
+              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-indigo-500/20 transition-all">
+                <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
+                  <Eye className="w-3 h-3 text-vouch-cyan" />
                   Endzone Camera
                 </span>
-                <p className="text-xs font-black text-slate-200">Interactive Focus</p>
-                <p className="text-[10px] text-slate-400 leading-tight">Tracking playbounds with precision zoom algorithms.</p>
+                <p className="text-xs font-black text-white/80">Interactive Focus</p>
+                <p className="text-[10px] text-white/45 leading-tight">Tracking playbounds with precision zoom algorithms.</p>
               </div>
             </div>
           </div>
 
           {/* Footer stats line */}
-          <div className={`relative z-20 border-t border-slate-900/60 pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 font-mono gap-2 transition-all duration-500 ${
+          <div className={`relative z-20 border-t border-white/[0.06] pt-4 flex flex-col sm:flex-row justify-between items-center text-[10px] text-white/40 font-mono gap-2 transition-all duration-500 ${
             hoveredSide === 'nba' ? 'opacity-0' : 'opacity-100'
           }`}>
             <span>AUDITED SYSTEM STATE: READY_TO_CODE</span>

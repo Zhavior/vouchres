@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -7,6 +7,7 @@ import {
   Brush,
   ClipboardList,
   Flame,
+  LayoutDashboard,
   LineChart,
   MessageSquare,
   Radar,
@@ -18,15 +19,23 @@ import {
   UserCircle,
   Users,
 } from 'lucide-react';
-import type { Parlay } from '../types';
+import type { CreatorProofProfile, Parlay } from '../types';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
+import { motion } from '../lib/motion';
 import { useMode } from '../lib/useMode';
+import PortfolioAnalyticsPanel from './PortfolioAnalyticsPanel';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
+
+const TODAY_PANELS = ['overview', 'portfolio'] as const;
+type TodayPanel = (typeof TODAY_PANELS)[number];
+const SWIPE_THRESHOLD = 56;
 
 interface Props {
   onSectionChange: (section: string) => void;
   savedSlips?: Parlay[];
+  profile?: CreatorProofProfile;
+  isLoggedIn?: boolean;
 }
 
 type DashboardCard = {
@@ -147,8 +156,10 @@ const ACCOUNT_TOOLS: DashboardCard[] = [
   },
 ];
 
-export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Props) {
+export default function TodayDashboard({ onSectionChange, savedSlips = [], profile, isLoggedIn = false }: Props) {
   const [mode, , toggleMode] = useMode();
+  const [activePanel, setActivePanel] = useState<TodayPanel>('overview');
+  const touchStartX = useRef<number | null>(null);
   const dailyReportQuery = useDailyReport();
   const report = dailyReportQuery.data ?? null;
   const loading = dailyReportQuery.isLoading;
@@ -162,10 +173,94 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
   const topEnvironment = report?.runEnvironments?.[0];
   const vulnerablePitcher = report?.vulnerablePitchers?.[0];
   const reportStatus = loading ? 'Syncing' : report ? report.dataQuality || 'Projected' : 'Limited';
+  const activeIndex = TODAY_PANELS.indexOf(activePanel);
+
+  const onTouchStart = (clientX: number) => {
+    touchStartX.current = clientX;
+  };
+
+  const onTouchEnd = (clientX: number) => {
+    if (touchStartX.current === null) return;
+    const delta = clientX - touchStartX.current;
+    if (delta < -SWIPE_THRESHOLD && activeIndex < TODAY_PANELS.length - 1) {
+      setActivePanel(TODAY_PANELS[activeIndex + 1]);
+    } else if (delta > SWIPE_THRESHOLD && activeIndex > 0) {
+      setActivePanel(TODAY_PANELS[activeIndex - 1]);
+    }
+    touchStartX.current = null;
+  };
 
   return (
     <main className={`${Z8_PAGE} ve-page-shell px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto max-w-[1320px] space-y-4">
+        <div className={`${Z8_PANEL} ve-premium-panel p-3 sm:p-4`}>
+          <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today dashboard pages">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activePanel === 'overview'}
+              onClick={() => setActivePanel('overview')}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+                activePanel === 'overview'
+                  ? 'border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan'
+                  : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+              }`}
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              Command Center
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activePanel === 'portfolio'}
+              onClick={() => setActivePanel('portfolio')}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+                activePanel === 'portfolio'
+                  ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
+                  : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+              }`}
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              Portfolio Analytics
+            </button>
+          </div>
+          <div className="mt-3 flex justify-center gap-1.5" aria-hidden>
+            {TODAY_PANELS.map((panel, i) => (
+              <span
+                key={panel}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-center text-[10px] font-mono text-white/35">
+            Swipe left/right or tap tabs to switch pages
+          </p>
+        </div>
+
+        <div
+          className="overflow-x-hidden touch-pan-y"
+          onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
+          onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
+        >
+          <motion.div
+            className="flex items-start"
+            style={{ width: `${TODAY_PANELS.length * 100}%` }}
+            animate={{ x: `-${(activeIndex * 100) / TODAY_PANELS.length}%` }}
+            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.14}
+            onDragEnd={(_, info) => {
+              if (info.offset.x < -SWIPE_THRESHOLD && activeIndex < TODAY_PANELS.length - 1) {
+                setActivePanel(TODAY_PANELS[activeIndex + 1]);
+              } else if (info.offset.x > SWIPE_THRESHOLD && activeIndex > 0) {
+                setActivePanel(TODAY_PANELS[activeIndex - 1]);
+              }
+            }}
+          >
+            <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
         <section className={`${Z8_PANEL} ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
@@ -306,6 +401,18 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
         <p className="pb-2 text-center text-[10px] font-medium text-[hsl(var(--ve-text-muted))]">
           Probability-based sports research. No guaranteed outcomes.
         </p>
+            </div>
+
+            <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
+              <PortfolioAnalyticsPanel
+                profile={profile}
+                savedSlips={savedSlips}
+                isLoggedIn={isLoggedIn}
+                onSectionChange={onSectionChange}
+              />
+            </div>
+          </motion.div>
+        </div>
       </div>
     </main>
   );

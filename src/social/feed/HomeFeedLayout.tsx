@@ -4,9 +4,14 @@ import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
 import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
-import { Sparkles, Bell } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import AisFeatureAgent from '../../components/AisFeatureAgent';
 import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
+import {
+  NotificationProvider,
+  NotificationBellButton,
+  useNotificationCenter,
+} from '../../components/notifications/UnifiedNotificationCenter';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 
@@ -29,7 +34,11 @@ interface HomeFeedLayoutProps {
   isPublicFrontPage?: boolean;
 }
 
-export default function HomeFeedLayout({
+export default function HomeFeedLayout(props: HomeFeedLayoutProps) {
+  return <HomeFeedLayoutInner {...props} />;
+}
+
+function HomeFeedLayoutInner({
   activeSection,
   onSectionChange,
   posts,
@@ -44,14 +53,26 @@ export default function HomeFeedLayout({
   onAuthLogoutComplete,
   isPublicFrontPage = false,
 }: HomeFeedLayoutProps) {
-  
   const { activeTheme, reduceMotion } = useTheme();
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-  // Placeholder: wire to real notification store when available
-  const unreadNotifications = 0;
+  const { unreadCount: unreadNotifications } = useNotificationCenter();
   const previousSectionRef = React.useRef(activeSection);
+
+  const closeNavigationOverlays = React.useCallback(() => {
+    setMobileDrawerOpen(false);
+    setCmdKOpen(false);
+  }, []);
+
+  const handleSectionChange = React.useCallback((section: string) => {
+    closeNavigationOverlays();
+    onSectionChange(section);
+  }, [closeNavigationOverlays, onSectionChange]);
+
+  React.useEffect(() => {
+    closeNavigationOverlays();
+  }, [activeSection, closeNavigationOverlays]);
 
   React.useEffect(() => {
     if (previousSectionRef.current === activeSection) return;
@@ -105,6 +126,7 @@ export default function HomeFeedLayout({
     : [];
 
   return (
+    <NotificationProvider savedSlips={savedSlips} onNavigate={handleSectionChange}>
     <div
       className={`z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
         activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-transparent has-active-theme' : 'bg-transparent'
@@ -190,7 +212,7 @@ export default function HomeFeedLayout({
           <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
             <FeedSidebar
               activeSection={activeSection}
-              onSectionChange={onSectionChange}
+              onSectionChange={handleSectionChange}
               profile={profile}
               onOpenCmdK={() => setCmdKOpen(true)}
               unreadNotifications={unreadNotifications}
@@ -200,9 +222,21 @@ export default function HomeFeedLayout({
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
+          {/* Desktop slim header — notification bell on the right */}
+          {!isPublicFrontPage && (
+            <header className="sticky top-0 z-30 hidden select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8">
+              <NotificationBellButton />
+              <AuthStatusBadge
+                inline
+                onLoginSuccess={onAuthLoginSuccess}
+                onLogoutComplete={onAuthLogoutComplete}
+              />
+            </header>
+          )}
+
           {/* Mobile compact header */}
           {!isPublicFrontPage && (
-            <header className="md:hidden sticky top-0 bg-black/20 backdrop-blur-xl px-3 py-2.5 flex items-center justify-between gap-2 z-30 select-none font-z8">
+            <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 md:hidden">
               {/* Profile avatar (corner) — ring color = real subscription tier;
                   tapping it opens the X-style navigation drawer. */}
               <div className="flex items-center gap-2.5 min-w-0">
@@ -212,28 +246,17 @@ export default function HomeFeedLayout({
                   onClick={() => setMobileDrawerOpen(true)}
                   ariaLabel="Open navigation menu"
                 />
-                <button type="button" onClick={() => onSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
+                <button type="button" onClick={() => handleSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
                   VOUCH<span className="text-vouch-cyan">EDGE</span>
                 </button>
               </div>
 
               <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
-                <button
-                  onClick={() => onSectionChange('notifications')}
-                  className="relative flex items-center justify-center w-8 h-8 rounded-full glass-panel glass-border text-white/50 active:text-white transition-all"
-                  aria-label="Notifications"
-                >
-                  <Bell className="w-3.5 h-3.5" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-vouch-emerald text-[7px] font-black text-black">
-                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                    </span>
-                  )}
-                </button>
+                <NotificationBellButton size="sm" />
 
                 {profile.subscriptionTier !== 'SELLER_PRO' && (
                   <button
-                    onClick={() => onSectionChange('premium')}
+                    onClick={() => handleSectionChange('premium')}
                     className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
                   >
                     <Sparkles className="w-3 h-3" />
@@ -279,7 +302,7 @@ export default function HomeFeedLayout({
           onClose={() => setMobileDrawerOpen(false)}
           profile={profile}
           activeSection={activeSection}
-          onSectionChange={onSectionChange}
+          onSectionChange={handleSectionChange}
         />
       )}
 
@@ -289,7 +312,7 @@ export default function HomeFeedLayout({
           profile={profile}
           savedSlips={savedSlips}
           activeLegs={activeLegs}
-          onSectionChange={onSectionChange}
+          onSectionChange={handleSectionChange}
         />
       )}
 
@@ -298,10 +321,11 @@ export default function HomeFeedLayout({
         <CmdKPalette
           open={cmdKOpen}
           onClose={() => setCmdKOpen(false)}
-          onNavigate={onSectionChange}
+          onNavigate={handleSectionChange}
         />
       )}
 
     </div>
+    </NotificationProvider>
   );
 }

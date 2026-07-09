@@ -154,7 +154,7 @@ export default function ParlayLab({
           }
           if (trimmed.startsWith('####')) {
             return (
-              <h5 key={idx} className="text-slate-300 text-[10px] font-bold font-mono mt-2.5 uppercase tracking-wide">
+              <h5 key={idx} className="text-white/65 text-[10px] font-bold font-mono mt-2.5 uppercase tracking-wide">
                 ▸ {trimmed.replace('####', '').replace(/\*/g, '').trim()}
               </h5>
             );
@@ -164,14 +164,14 @@ export default function ParlayLab({
             return (
               <div key={idx} className="flex items-start gap-2 ml-1">
                 <span className="text-emerald-405 font-bold mt-1 text-[8px]">■</span>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                <p className="text-[11px] text-white/65 leading-relaxed font-mono">
                   {renderInnerBold(rawBody)}
                 </p>
               </div>
             );
           }
           return (
-            <p key={idx} className="text-[11px] text-slate-300 leading-relaxed font-mono">
+            <p key={idx} className="text-[11px] text-white/65 leading-relaxed font-mono">
               {renderInnerBold(trimmed)}
             </p>
           );
@@ -449,16 +449,16 @@ export default function ParlayLab({
   };
 
   return (
-    <div className="ve-page-shell ve-panel ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen text-slate-100 font-sans" id="parlay-lab-view">
+    <div className="ve-page-shell ve-panel ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen text-white/90 font-sans" id="parlay-lab-view">
       
       {/* Title & Hubtown style subline */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/25 backdrop-blur-sm p-4 rounded-3xl border border-slate-900/50">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black/20 backdrop-blur-sm p-4 rounded-3xl border border-white/[0.05]">
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-emerald-950/80 border border-emerald-900 text-emerald-400 font-mono text-[9px] font-extrabold px-2 py-0.5 rounded-full tracking-wider">
               MLB.COM VERIFIED DATA SEEDS
             </span>
-            <span className="flex items-center gap-1 text-[10px] text-indigo-400 font-mono font-bold">
+            <span className="flex items-center gap-1 text-[10px] text-vouch-cyan font-mono font-bold">
               <Activity className="w-3 h-3 animate-pulse text-emerald-450" />
               LIVE ODDS GRAPHS
             </span>
@@ -467,7 +467,7 @@ export default function ParlayLab({
             <Calculator className="w-6 h-6 text-emerald-400" />
             MLB Pro Parlay Lab
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
+          <p className="text-xs text-white/45 mt-1 max-w-xl">
             Fully responsive baseball odds workstation. Inspect official injury reports, trace historical batting splits against different teams, and assemble modular slips.
           </p>
         </div>
@@ -475,7 +475,7 @@ export default function ParlayLab({
         {/* Action link block direct launcher of research console */}
         <button
           onClick={() => onSectionChange('research')}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-550 text-slate-100 font-semibold text-xs tracking-wide transition-all duration-200 flex items-center gap-2 shadow-lg shadow-sky-955/15 hover:scale-[1.02]"
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-450 hover:to-indigo-550 text-white/90 font-semibold text-xs tracking-wide transition-all duration-200 flex items-center gap-2 shadow-lg shadow-sky-955/15 hover:scale-[1.02]"
         >
           <Sliders className="w-3.5 h-3.5" />
           <span>OPEN IN-DEPTH PLAYER RESEARCH</span>
@@ -488,8 +488,8 @@ export default function ParlayLab({
       </Suspense>
 
       {/* Builder + single source-of-truth Results navigation */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-[#0f1524]/90 p-1 rounded-2xl border border-slate-900 shadow-xl" id="parlay-fuse-tabs">
-        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-[#1e293b] text-sky-400 border border-slate-800 shadow-md ring-1 ring-sky-500/10">
+      <div className="flex flex-col sm:flex-row gap-3 bg-[#0f1524]/90 p-1 rounded-2xl border border-white/10 shadow-xl" id="parlay-fuse-tabs">
+        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-[#1e293b] text-sky-400 border border-white/10 shadow-md ring-1 ring-sky-500/10">
           <Sliders className="w-4 h-4 text-sky-450" />
           <span>🔬 PARLAY SLIP CONSTRUCTOR</span>
         </div>
@@ -512,48 +512,48 @@ export default function ParlayLab({
           <>
           
           {/* Filters Toolbar */}
-          <div className="bg-slate-900/25 backdrop-blur-sm p-4 rounded-3xl border border-slate-900/50 space-y-3.5">
+          <div className="bg-black/20 backdrop-blur-sm p-4 rounded-3xl border border-white/[0.05] space-y-3.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <h3 className="text-xs font-mono font-bold text-white/45 uppercase tracking-widest flex items-center gap-1.5">
                 <Dribbble className="w-4 h-4 text-emerald-400" />
                 Filter Active MLB Rosters
               </h3>
-              <span className="text-[10px] font-mono text-slate-550 bg-slate-950/40 px-2 py-0.5 rounded border border-slate-850/40">
+              <span className="text-[10px] font-mono text-slate-550 bg-obsidian-900/40 px-2 py-0.5 rounded border border-slate-850/40">
                 {filteredPlayers.length} Players Available
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">MLB Franchise</label>
+                <label className="text-[10px] font-mono font-bold text-white/40 uppercase">MLB Franchise</label>
                 <select
                   value={selectedTeam}
                   onChange={(e) => setSelectedTeam(e.target.value)}
-                  className="w-full bg-slate-950/45 border border-slate-850/50 text-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-650 font-mono"
+                  className="w-full bg-obsidian-900/45 border border-slate-850/50 text-white/80 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-650 font-mono"
                 >
                   {MLB_TEAMS.map((team, idx) => (
-                    <option key={idx} value={team} className="bg-slate-950">{team === "ALL" ? "All MLB Teams" : team}</option>
+                    <option key={idx} value={team} className="bg-obsidian-900">{team === "ALL" ? "All MLB Teams" : team}</option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Search Player Name</label>
+                <label className="text-[10px] font-mono font-bold text-white/40 uppercase">Search Player Name</label>
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-3.5 h-3.5 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="e.g. Ohtani, Judge, Soto..."
-                    className="w-full bg-slate-950/45 border border-slate-850/50 text-slate-200 pl-9 pr-3.5 py-2.5 rounded-xl text-xs outline-none focus:border-indigo-650 font-mono"
+                    className="w-full bg-obsidian-900/45 border border-slate-850/50 text-white/80 pl-9 pr-3.5 py-2.5 rounded-xl text-xs outline-none focus:border-indigo-650 font-mono"
                   />
                 </div>
               </div>
             </div>
 
             {/* Quick Injury Dashboard Ribbon */}
-            <div className="pt-2 border-t border-slate-850/50 flex flex-wrap gap-2 items-center text-[10px] text-slate-500 font-mono">
+            <div className="pt-2 border-t border-slate-850/50 flex flex-wrap gap-2 items-center text-[10px] text-white/40 font-mono">
               <span className="text-[#a5b4fc] font-bold">INJURY BULLETIN BOARD:</span>
               <span className="bg-amber-950/40 text-amber-500 border border-amber-900/60 px-1.5 py-0.1 rounded">
                 Mookie Betts (Wrist D2D)
@@ -572,7 +572,7 @@ export default function ParlayLab({
 
           {/* Player Grid catalog */}
           {matchedPlayers.length > PLAYER_RENDER_CAP && (
-            <p className="text-[11px] text-slate-500 font-mono mb-2">
+            <p className="text-[11px] text-white/40 font-mono mb-2">
               Showing {PLAYER_RENDER_CAP} of {matchedPlayers.length} players · search a name or pick a team to narrow
             </p>
           )}
@@ -588,7 +588,7 @@ export default function ParlayLab({
               return (
                 <div
                   key={player.id}
-                  className="rounded-2xl border bg-slate-900/40 border-slate-900/80 hover:border-slate-800 p-4 transition-all flex flex-col justify-between gap-3 shadow-md"
+                  className="rounded-2xl border bg-black/25 border-white/[0.08] hover:border-white/10 p-4 transition-all flex flex-col justify-between gap-3 shadow-md"
                 >
                   <div className="flex gap-3.5 items-start">
                     <img
@@ -596,16 +596,16 @@ export default function ParlayLab({
                       alt={player.name}
                       referrerPolicy="no-referrer"
                       loading="lazy"
-                      className="w-12 h-12 rounded-xl object-cover border border-slate-800 shrink-0 bg-slate-900"
+                      className="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0 bg-black/25"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex justify-between items-start gap-1">
-                        <h4 className="text-xs font-black text-slate-100 truncate">{player.name}</h4>
-                        <span className="text-[9px] font-mono bg-slate-950 text-slate-400 px-1.5 rounded font-bold">
+                        <h4 className="text-xs font-black text-white/90 truncate">{player.name}</h4>
+                        <span className="text-[9px] font-mono bg-obsidian-900 text-white/45 px-1.5 rounded font-bold">
                           #{player.number}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-[10px] font-mono mt-0.5 truncate">{player.team}</p>
+                      <p className="text-white/45 text-[10px] font-mono mt-0.5 truncate">{player.team}</p>
                       
                       {/* Active Live Injury Status indicator & Concluded badge */}
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -632,14 +632,14 @@ export default function ParlayLab({
                   </div>
 
                   {/* Hotness score & quick mini statistics */}
-                  <div className="bg-slate-950 p-2 rounded-xl border border-slate-900 flex justify-between items-center text-[10px] font-mono">
+                  <div className="bg-obsidian-900 p-2 rounded-xl border border-white/10 flex justify-between items-center text-[10px] font-mono">
                     <div className="flex items-center gap-1">
-                      <span className="text-slate-500">Batter Score:</span>
-                      <span className={`font-black ${player.batterScore > 90 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                      <span className="text-white/40">Batter Score:</span>
+                      <span className={`font-black ${player.batterScore > 90 ? 'text-emerald-400' : 'text-white/65'}`}>
                         {player.batterScore}%
                       </span>
                     </div>
-                    <div className="text-slate-400">
+                    <div className="text-white/45">
                       AVG: <span className="text-white font-bold">{player.seasonStats.avg}</span> | OPS: <span className="text-emerald-400 font-bold">{player.seasonStats.ops}</span>
                     </div>
                   </div>
@@ -647,10 +647,10 @@ export default function ParlayLab({
                   {/* Player Propositions Catalog with bookmakers and averages */}
                   <div className="space-y-2 mt-1">
                     <div className="flex justify-between items-center px-1">
-                      <span className="text-[9px] font-black text-slate-500 font-mono uppercase tracking-wider">
+                      <span className="text-[9px] font-black text-white/40 font-mono uppercase tracking-wider">
                         Select Proposition Line
                       </span>
-                      <span className="text-[8px] bg-slate-950 text-sky-400 border border-slate-850 px-1.5 py-0.5 rounded font-mono">
+                      <span className="text-[8px] bg-obsidian-900 text-sky-400 border border-slate-850 px-1.5 py-0.5 rounded font-mono">
                         Active Choice: {bookie}
                       </span>
                     </div>
@@ -663,14 +663,14 @@ export default function ParlayLab({
                         const isExpanded = expandedComparePropId === p.id;
 
                         return (
-                          <div key={p.id} className="bg-slate-950/90 border border-slate-850/80 p-2 rounded-xl space-y-1.5 transition-all">
+                          <div key={p.id} className="bg-obsidian-900/90 border border-slate-850/80 p-2 rounded-xl space-y-1.5 transition-all">
                             {/* Standard Header Row */}
                             <div className="flex justify-between items-center gap-2">
                               <div className="min-w-0">
-                                <span className="text-[9.5px] font-bold text-slate-200 truncate block">
+                                <span className="text-[9.5px] font-bold text-white/80 truncate block">
                                   {p.market}
                                 </span>
-                                <span className="text-[8.5px] text-slate-500 font-mono block truncate">
+                                <span className="text-[8.5px] text-white/40 font-mono block truncate">
                                   {p.spec.replace(player.name, '').trim()}
                                 </span>
                               </div>
@@ -682,7 +682,7 @@ export default function ParlayLab({
                                   className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border transition-colors ${
                                     isExpanded 
                                       ? 'bg-sky-950/40 border-sky-800 text-sky-400' 
-                                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                                      : 'bg-black/25 border-white/10 text-white/45 hover:text-white/80'
                                   }`}
                                   title="Expand bet365/FanDuel/DraftKings comparisons"
                                 >
@@ -703,7 +703,7 @@ export default function ParlayLab({
                                       disabled={isAddedToParlay || isFinal}
                                       className={`p-1.5 rounded-lg transition-all ${
                                         isAddedToParlay 
-                                          ? 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-850' 
+                                          ? 'bg-black/25 text-white/40 cursor-not-allowed border border-slate-850' 
                                           : isFinal
                                           ? 'bg-red-950/40 text-red-400 border border-red-900/40 cursor-not-allowed text-[8.5px] font-bold px-1.5 py-0.5'
                                           : 'bg-emerald-600 hover:bg-emerald-500 text-white border border-transparent shadow-sm'
@@ -719,51 +719,51 @@ export default function ParlayLab({
 
                             {/* Collapsible Bookmaker Comparisons Details Panel */}
                             {isExpanded && (
-                              <div className="pt-2 border-t border-slate-900 space-y-1.5">
-                                <div className="text-[8px] text-indigo-400 font-mono font-black uppercase tracking-wider flex justify-between">
+                              <div className="pt-2 border-t border-white/10 space-y-1.5">
+                                <div className="text-[8px] text-vouch-cyan font-mono font-black uppercase tracking-wider flex justify-between">
                                   <span>APP / BOOKMAKER COMPARISON</span>
                                   <span className="text-emerald-400 font-bold">Best highlighted</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-1 text-[9px] font-mono">
                                   {/* Bet365 */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.bet365.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-slate-900'}`}>
-                                    <span className="text-slate-400">Bet365</span>
-                                    <strong className={comparison.bet365.isBest ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.bet365.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                    <span className="text-white/45">Bet365</span>
+                                    <strong className={comparison.bet365.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.bet365.oddsDecimal.toFixed(2)} ({comparison.bet365.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* FanDuel */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.fanduel.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-slate-900'}`}>
-                                    <span className="text-slate-400">FanDuel</span>
-                                    <strong className={comparison.fanduel.isBest ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.fanduel.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                    <span className="text-white/45">FanDuel</span>
+                                    <strong className={comparison.fanduel.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.fanduel.oddsDecimal.toFixed(2)} ({comparison.fanduel.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* DraftKings */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.draftkings.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-slate-900'}`}>
-                                    <span className="text-slate-400">DraftKings</span>
-                                    <strong className={comparison.draftkings.isBest ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.draftkings.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                    <span className="text-white/45">DraftKings</span>
+                                    <strong className={comparison.draftkings.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.draftkings.oddsDecimal.toFixed(2)} ({comparison.draftkings.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* Caesars */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.caesars.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-slate-900'}`}>
-                                    <span className="text-slate-400">Caesars</span>
-                                    <strong className={comparison.caesars.isBest ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.caesars.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                    <span className="text-white/45">Caesars</span>
+                                    <strong className={comparison.caesars.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.caesars.oddsDecimal.toFixed(2)} ({comparison.caesars.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* BetMGM */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.betmgm.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-slate-900'}`}>
-                                    <span className="text-slate-400">BetMGM</span>
-                                    <strong className={comparison.betmgm.isBest ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.betmgm.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                    <span className="text-white/45">BetMGM</span>
+                                    <strong className={comparison.betmgm.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.betmgm.oddsDecimal.toFixed(2)} ({comparison.betmgm.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* Market Average */}
                                   <div className="p-1 rounded flex justify-between items-center bg-indigo-950/20 border border-indigo-900/40">
-                                    <span className="text-indigo-300">MARKET AVG</span>
-                                    <strong className="text-indigo-400">
+                                    <span className="text-vouch-cyan/80">MARKET AVG</span>
+                                    <strong className="text-vouch-cyan">
                                       {comparison.marketAverageDecimal.toFixed(2)} ({comparison.marketAverageAmerican})
                                     </strong>
                                   </div>
@@ -784,7 +784,7 @@ export default function ParlayLab({
                         localStorage.setItem('vouchedge_selected_research_player_id', player.id);
                         onSectionChange('research');
                       }}
-                      className="py-1.5 bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-350 hover:text-sky-400 font-mono text-[9px] font-bold rounded-lg transition-all text-center block"
+                      className="py-1.5 bg-obsidian-900 hover:bg-black/30 border border-slate-850 hover:border-white/10 text-slate-350 hover:text-sky-400 font-mono text-[9px] font-bold rounded-lg transition-all text-center block"
                     >
                       Deeper Advanced Metrics scouting 🔬
                     </button>
@@ -800,17 +800,17 @@ export default function ParlayLab({
         {/* RIGHT SIDE: Active parlay slip with stake calculations & wager indicators */}
         <div className="lg:col-span-5 space-y-6">
           
-          <div className="bg-[#111827]/25 backdrop-blur-md p-5 rounded-3xl border border-slate-900/50 space-y-5" id="working-parlay-slip font-mono">
+          <div className="bg-[#111827]/25 backdrop-blur-md p-5 rounded-3xl border border-white/[0.05] space-y-5" id="working-parlay-slip font-mono">
             
             <div className="flex items-center justify-between border-b border-slate-850/80 pb-3">
               <div className="space-y-0.5">
                 <h3 className="font-extrabold text-xs text-white uppercase tracking-wider font-mono">
                   Parlay Slip Constructor
                 </h3>
-                <p className="text-[10px] text-slate-500">Add leg items from roster or player profiles</p>
+                <p className="text-[10px] text-white/40">Add leg items from roster or player profiles</p>
               </div>
 
-              <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-2 py-0.5 rounded font-mono font-black">
+              <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-vouch-cyan px-2 py-0.5 rounded font-mono font-black">
                 {legs.length} {legs.length === 1 ? 'LEG ACTIVE' : 'LEGS ACTIVE'}
               </span>
             </div>
@@ -827,9 +827,9 @@ export default function ParlayLab({
             />
 
             {legs.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl text-slate-500 text-xs py-12">
+              <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl text-white/40 text-xs py-12">
                 <Sliders className="w-10 h-10 mx-auto text-slate-700 mb-3 animate-bounce" />
-                <p className="font-bold text-slate-400">Your MLB Parlay is Empty</p>
+                <p className="font-bold text-white/45">Your MLB Parlay is Empty</p>
                 <p className="text-[10px] text-slate-650 mt-1 max-w-xs mx-auto text-slate-550 leading-relaxed">
                   Select a player name from roster on the left, or open <strong className="text-sky-400">Player Research</strong> to browse exact edge props. Press <strong className="text-emerald-400 font-bold">Wager</strong> on their edge props to construct your slip!
                 </p>
@@ -839,30 +839,30 @@ export default function ParlayLab({
                 {legs.map((leg) => (
                   <div 
                     key={leg.id}
-                    className="p-3.5 bg-slate-950 border border-slate-850/80 rounded-2xl flex items-center justify-between gap-3 relative overflow-hidden"
+                    className="p-3.5 bg-obsidian-900 border border-slate-850/80 rounded-2xl flex items-center justify-between gap-3 relative overflow-hidden"
                   >
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-mono font-bold uppercase mb-1">
-                        <span className="text-[9px] text-indigo-400 font-bold">{leg.sport}</span>
+                      <div className="flex items-center gap-1.5 text-[9px] text-white/40 font-mono font-bold uppercase mb-1">
+                        <span className="text-[9px] text-vouch-cyan font-bold">{leg.sport}</span>
                         <span>•</span>
                         <span className="truncate max-w-[150px]" title={leg.game}>{leg.game}</span>
                       </div>
                       <h4 className="text-xs font-black text-white truncate max-w-[180px]" title={leg.selection}>{leg.selection}</h4>
-                      <p className="text-[9.5px] text-slate-400 font-mono mt-0.5 truncate max-w-[180px]">{leg.market}</p>
+                      <p className="text-[9.5px] text-white/45 font-mono mt-0.5 truncate max-w-[180px]">{leg.market}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono px-2.5 py-1 rounded border flex flex-col items-center bg-[#0d1527] border-slate-800">
+                      <span className="text-xs font-mono px-2.5 py-1 rounded border flex flex-col items-center bg-[#0d1527] border-white/10">
                         <span className="text-emerald-400 font-extrabold text-[10.5px]">
                           {decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
                         </span>
-                        <span className="text-slate-500 text-[8.5px] font-mono mt-0.5">
+                        <span className="text-white/40 text-[8.5px] font-mono mt-0.5">
                           x{getLegOddsForSelectedBookie(leg, bookie).toFixed(2)}
                         </span>
                       </span>
                       <button 
                         onClick={() => handleRemoveLeg(leg.id)}
-                        className="text-slate-500 hover:text-red-400 hover:bg-slate-900 p-1.5 rounded-lg border border-transparent hover:border-slate-800 transition-colors"
+                        className="text-white/40 hover:text-red-400 hover:bg-black/30 p-1.5 rounded-lg border border-transparent hover:border-white/10 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -874,22 +874,22 @@ export default function ParlayLab({
 
             {/* Calculations & metadata configs card */}
             {legs.length > 0 && (
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-4">
+              <div className="bg-obsidian-900 p-4 rounded-2xl border border-white/10 space-y-4">
                 
                 {/* Text parameter configs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[9px] text-slate-500 font-mono uppercase mb-1">TICKET DISPLAY NAME</label>
+                    <label className="block text-[9px] text-white/40 font-mono uppercase mb-1">TICKET DISPLAY NAME</label>
                     <input 
                       type="text" 
                       value={ticketTitle}
                       onChange={(e) => setTicketTitle(e.target.value)}
                       placeholder="e.g. Sharp MLB Slip"
-                      className="w-full bg-[#0b0f19] border border-slate-850 text-slate-100 p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600"
+                      className="w-full bg-[#0b0f19] border border-slate-850 text-white/90 p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-slate-500 font-mono uppercase mb-1">PORTFOLIO BOOKMAKER</label>
+                    <label className="block text-[9px] text-white/40 font-mono uppercase mb-1">PORTFOLIO BOOKMAKER</label>
                     <select 
                       value={bookie}
                       onChange={(e) => setBookie(e.target.value)}
@@ -906,7 +906,7 @@ export default function ParlayLab({
                 </div>
 
                 <div className="pt-2">
-                  <label className="block text-[10px] text-slate-400 font-mono uppercase tracking-wider mb-2">🛡️ PORTFOLIO RISK ALLOCATION SQUARE</label>
+                  <label className="block text-[10px] text-white/45 font-mono uppercase tracking-wider mb-2">🛡️ PORTFOLIO RISK ALLOCATION SQUARE</label>
                   <div className="grid grid-cols-3 gap-2.5">
                     <button
                       type="button"
@@ -914,11 +914,11 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'LOW' 
                           ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400 ring-4 ring-emerald-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-slate-400 hover:border-slate-700'
+                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">🛡️ LOW</span>
-                      <span className="text-[8px] font-mono block text-slate-400 mt-0.5 leading-none">Core Model</span>
+                      <span className="text-[8px] font-mono block text-white/45 mt-0.5 leading-none">Core Model</span>
                     </button>
 
                     <button
@@ -927,11 +927,11 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'MEDIUM' 
                           ? 'bg-amber-950/40 border-amber-500 text-amber-400 ring-4 ring-amber-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-slate-400 hover:border-slate-700'
+                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">⚖️ MEDIUM</span>
-                      <span className="text-[8px] font-mono block text-slate-400 mt-0.5 leading-none font-bold">Balanced</span>
+                      <span className="text-[8px] font-mono block text-white/45 mt-0.5 leading-none font-bold">Balanced</span>
                     </button>
 
                     <button
@@ -940,18 +940,18 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'HIGH' 
                           ? 'bg-red-950/40 border-red-550 border-red-500 text-red-450 ring-4 ring-red-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-slate-400 hover:border-slate-700'
+                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">🎰 HIGH</span>
-                      <span className="text-[8px] font-mono block text-slate-400 mt-0.5 leading-none">Long Shot</span>
+                      <span className="text-[8px] font-mono block text-white/45 mt-0.5 leading-none">Long Shot</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 pt-3">
                   <div>
-                    <label className="block text-[9px] text-slate-500 font-mono uppercase mb-1">STAKE WAGER UNITS</label>
+                    <label className="block text-[9px] text-white/40 font-mono uppercase mb-1">STAKE WAGER UNITS</label>
                     <div className="flex items-center bg-[#0b0f19] border border-slate-850 p-1.5 rounded-xl text-xs">
                       <span className="text-slate-550 font-bold font-mono px-2 text-slate-555">$</span>
                       <input 
@@ -960,7 +960,7 @@ export default function ParlayLab({
                         max={1000}
                         value={wagerAmount}
                         onChange={(e) => setWagerAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                        className="w-full bg-transparent text-slate-100 outline-none font-mono text-center font-bold text-xs"
+                        className="w-full bg-transparent text-white/90 outline-none font-mono text-center font-bold text-xs"
                       />
                     </div>
                   </div>
@@ -968,7 +968,7 @@ export default function ParlayLab({
 
                 {/* Research behind the parlay */}
                 <div className="space-y-1 text-left pt-1">
-                  <label className="block text-[9px] text-indigo-400 font-mono font-black uppercase tracking-wider flex items-center gap-1">
+                  <label className="block text-[9px] text-vouch-cyan font-mono font-black uppercase tracking-wider flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5" />
                     Research Behind The Parlay
                   </label>
@@ -976,7 +976,7 @@ export default function ParlayLab({
                     value={researchText}
                     onChange={(e) => setResearchText(e.target.value)}
                     placeholder="Provide your edge analysis here (e.g. platoon stats, wind coefficients, umpire hitter-friendliness, bullpen exhaustions)..."
-                    className="w-full bg-[#0b0f19] border border-slate-850 text-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-505 h-20 resize-none font-medium text-left"
+                    className="w-full bg-[#0b0f19] border border-slate-850 text-white/80 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-505 h-20 resize-none font-medium text-left"
                     maxLength={220}
                   />
                 </div>
@@ -1003,7 +1003,7 @@ export default function ParlayLab({
                   {/* If not analyzed yet and not generating */}
                   {!edgeReport && !isAnalyzingEdge && (
                     <div className="p-3 bg-[#0d1222]/80 border border-slate-850/60 rounded-xl space-y-2 text-center">
-                      <p className="text-[10px] text-slate-400 leading-normal">
+                      <p className="text-[10px] text-white/45 leading-normal">
                         Verify matchup correlations, platoon variables, and stadium parameters across all active parlay legs instantly.
                       </p>
                       <button
@@ -1026,11 +1026,11 @@ export default function ParlayLab({
                         </span>
                       </div>
                       
-                      <div className="w-full bg-slate-900/60 rounded-full h-1 overflow-hidden relative border border-slate-800">
+                      <div className="w-full bg-black/30 rounded-full h-1 overflow-hidden relative border border-white/10">
                         <div className="bg-gradient-to-r from-emerald-400 via-sky-500 to-indigo-500 h-1 rounded-full animate-infinite-width-slider" style={{ width: '40%' }}></div>
                       </div>
 
-                      <p className="text-[9px] text-slate-500 leading-normal font-mono">
+                      <p className="text-[9px] text-white/40 leading-normal font-mono">
                         Validating against Statcast baseline splits, pitcher fatigue indices, and wind alignment profiles.
                       </p>
                     </div>
@@ -1043,7 +1043,7 @@ export default function ParlayLab({
                         <AlertTriangle className="w-3.5 h-3.5" />
                         <span>EDGE COMPUTATION ERROR</span>
                       </div>
-                      <p className="text-[9px] text-slate-400 leading-normal">{edgeError}</p>
+                      <p className="text-[9px] text-white/45 leading-normal">{edgeError}</p>
                       <button
                         onClick={handleGenerateEdgeReport}
                         className="text-[9px] text-sky-400 font-bold hover:underline"
@@ -1055,7 +1055,7 @@ export default function ParlayLab({
 
                   {/* If report compiled successfully */}
                   {edgeReport && !isAnalyzingEdge && (
-                    <div className="p-3 bg-slate-950/80 border border-emerald-900/30 rounded-xl space-y-3 relative overflow-hidden shadow-inner">
+                    <div className="p-3 bg-obsidian-900/80 border border-emerald-900/30 rounded-xl space-y-3 relative overflow-hidden shadow-inner">
                       {/* Edge Score display bar */}
                       <div className="flex items-center justify-between bg-emerald-950/15 border border-emerald-900/25 p-2 rounded-lg">
                         <div className="space-y-0.5">
@@ -1069,7 +1069,7 @@ export default function ParlayLab({
 
                         <div className="flex items-center gap-2">
                           {/* Mini visual gauge */}
-                          <div className="w-12 bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                          <div className="w-12 bg-black/25 rounded-full h-2 overflow-hidden border border-white/10">
                             <div 
                               className={`h-full rounded-full ${
                                 edgeReport.edgeScore >= 85 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 
@@ -1100,7 +1100,7 @@ export default function ParlayLab({
                       )}
 
                       {/* Rendered report output */}
-                      <div className="border-t border-slate-900 pt-2">
+                      <div className="border-t border-white/10 pt-2">
                         {renderMarkdownText(edgeReport.report)}
                       </div>
                     </div>
@@ -1108,13 +1108,13 @@ export default function ParlayLab({
                 </div>
 
                 {/* Subtotal payouts review row */}
-                <div className="border-t border-slate-900 pt-3 flex items-center justify-between text-xs font-mono">
-                  <div className="text-slate-500">
+                <div className="border-t border-white/10 pt-3 flex items-center justify-between text-xs font-mono">
+                  <div className="text-white/40">
                     <span className="block text-[9px] uppercase">COMBINED DEC ODDS</span>
                     <strong className="text-slate-350">x{totalOddsDecimal.toFixed(2)} ({totalOddsDisplay})</strong>
                   </div>
                   <div className="text-right">
-                    <span className="block text-[9px] text-slate-500 uppercase">ESTIMATED PAYOUT</span>
+                    <span className="block text-[9px] text-white/40 uppercase">ESTIMATED PAYOUT</span>
                     <strong className="text-emerald-400 font-black text-sm">${potentialPayout.toFixed(2)}</strong>
                   </div>
                 </div>
@@ -1122,9 +1122,9 @@ export default function ParlayLab({
                 {/* Subscriber-Only Toggle */}
                 <div className="p-3 bg-indigo-950/25 border border-indigo-900/30 rounded-xl flex items-center justify-between text-left">
                   <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <Lock className="w-4 h-4 text-vouch-cyan shrink-0" />
                     <div>
-                      <span className="block text-[10px] font-black text-indigo-400 font-mono uppercase tracking-wider">EXCLUSIVE SUBSCRIBERS LINK</span>
+                      <span className="block text-[10px] font-black text-vouch-cyan font-mono uppercase tracking-wider">EXCLUSIVE SUBSCRIBERS LINK</span>
                       <span className="block text-[9px] text-[#94a3b8]">Post only inside premium chats room</span>
                     </div>
                   </div>
@@ -1132,7 +1132,7 @@ export default function ParlayLab({
                     type="checkbox"
                     checked={isPremiumSubOnly}
                     onChange={(e) => setIsPremiumSubOnly(e.target.checked)}
-                    className="w-4.5 h-4.5 rounded text-indigo-600 focus:ring-indigo-505 bg-slate-950 border-slate-800 cursor-pointer"
+                    className="w-4.5 h-4.5 rounded text-indigo-600 focus:ring-indigo-505 bg-obsidian-900 border-white/10 cursor-pointer"
                   />
                 </div>
 
@@ -1148,7 +1148,7 @@ export default function ParlayLab({
 
                   <button
                     onClick={handleSaveParlaySlip}
-                    className="w-full py-2.5 bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 text-[10px] uppercase font-bold tracking-wider rounded-xl transition-all cursor-pointer"
+                    className="w-full py-2.5 bg-black/25 border border-white/10 text-white/45 hover:text-white/80 hover:border-white/10 text-[10px] uppercase font-bold tracking-wider rounded-xl transition-all cursor-pointer"
                   >
                     Save Parlay locally
                   </button>
@@ -1158,7 +1158,7 @@ export default function ParlayLab({
             )}
 
             {/* Micro warning indicator notice */}
-            <div className="flex items-start gap-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-900 font-mono text-[9.5px] text-slate-500 leading-normal">
+            <div className="flex items-start gap-2 bg-obsidian-900/40 p-3 rounded-2xl border border-white/10 font-mono text-[9.5px] text-white/40 leading-normal">
               <Info className="w-3.5 h-3.5 text-[#38bdf8] shrink-0 mt-0.5" />
               <span>
                 Saved Tickets generate verified proof identifiers automatically, permitting you to publish them directly into the VouchEdge community social home feed for tailing and verification reviews.
@@ -1173,24 +1173,24 @@ export default function ParlayLab({
 
       {/* ================= MODAL DIALOGS: INJURY RISK PROMPT ================= */}
       {injuryWarning.show && (
-        <div id="injury-modal-overlay" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+        <div id="injury-modal-overlay" className="fixed inset-0 bg-obsidian-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-black/25 border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-2.5 text-amber-500">
               <AlertTriangle className="w-6 h-6 animate-pulse" />
               <h3 className="text-sm font-black font-mono uppercase tracking-wider">ATHLETE INJURY ALERT</h3>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-white/65">
                 You are adding a proposition for <strong className="text-white">{injuryWarning.playerName}</strong>, who is currently managing an active health status:
               </p>
               
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-850 font-mono text-[11px] leading-relaxed text-slate-400">
+              <div className="bg-obsidian-900 p-3.5 rounded-2xl border border-slate-850 font-mono text-[11px] leading-relaxed text-white/45">
                 <span className="text-amber-500 font-bold block mb-1 uppercase">★ Status: {injuryWarning.status}</span>
                 {injuryWarning.notes}
               </div>
 
-              <p className="text-[10px] text-indigo-400 font-mono mt-2">
+              <p className="text-[10px] text-vouch-cyan font-mono mt-2">
                 ⚠ Betting on players with day-to-day strain risks is highly unpredictable. The system model recommends waiting for pre-game rosters matching (1 hour prior to batting).
               </p>
             </div>
@@ -1200,7 +1200,7 @@ export default function ParlayLab({
                 onClick={() => {
                   setInjuryWarning({ show: false, playerName: "", notes: "", status: "", pendingProp: null });
                 }}
-                className="py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-100 rounded-xl text-xs font-mono font-bold"
+                className="py-2.5 bg-obsidian-900 border border-slate-850 text-white/45 hover:text-white/90 rounded-xl text-xs font-mono font-bold"
               >
                 CANCEL LEG
               </button>

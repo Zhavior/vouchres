@@ -23,6 +23,7 @@ import { registerAiRoutes } from "./aiRoutes";
 import { registerTrustRoutes } from "./trustRoutes";
 import { registerResultRoutes } from "./resultRoutes";
 import { registerAiJudgeSocialRoutes } from "./aiJudgeSocialRoutes";
+import { worldChatRoutes } from "./worldChatRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
@@ -57,6 +58,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", notificationRoutes);
   app.use("/api", playerRegistryRoutes);
   app.use("/api", shareRoutes);
+  app.use("/api", worldChatRoutes);
 
   registerMlbRoutes(app);
   registerHrBoardRoutes(app);

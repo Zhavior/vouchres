@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Bell, BrainCircuit, Crown, FlaskConical, Flame, Gauge, Layers3, ScrollText, Shield,
+  Bell, BrainCircuit, Crown, FlaskConical, Flame, Gauge, Globe, Layers3, ScrollText, Shield,
   Sparkles, Trophy, X,
 } from "lucide-react";
 import { motion } from "../../lib/motion";
 import type { CreatorProofProfile, Parlay } from "../../types";
 import EdgeIslandAskAiPanel from "./EdgeIslandAskAiPanel";
+import WorldChatPanel from "./WorldChatPanel";
 
 /**
  * The Edge Island Command Center — a quick-launch popup dock.
@@ -16,7 +17,7 @@ import EdgeIslandAskAiPanel from "./EdgeIslandAskAiPanel";
  * (the Esc-key listener + body scroll lock) is registered and torn down in
  * the same effect every time `open` flips.
  *
- * Swipe left/right (or use tab pills) to switch between Command and Ask AI.
+ * Swipe left/right (or use tab pills) to switch between Command, Ask AI, and World Chat.
  *
  * Every number shown here comes from real props (profile, savedSlips) —
  * no invented stats, no fake daily-missions checklist, no placeholder
@@ -26,11 +27,13 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSectionChange?: (section: string) => void;
+  onNavigateProfile?: (userId: string) => void;
   savedSlips?: Parlay[];
   profile?: CreatorProofProfile;
+  isLoggedIn?: boolean;
 };
 
-const PANELS = ["command", "ask-ai"] as const;
+const PANELS = ["command", "ask-ai", "world-chat"] as const;
 type PanelId = (typeof PANELS)[number];
 
 const ZONES = [
@@ -50,7 +53,7 @@ const TIER_LABEL: Record<string, string> = {
 
 const SWIPE_THRESHOLD = 56;
 
-export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange, savedSlips = [], profile }: Props) {
+export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange, onNavigateProfile, savedSlips = [], profile, isLoggedIn = false }: Props) {
   const [activePanel, setActivePanel] = useState<PanelId>("command");
   const touchStartX = useRef<number | null>(null);
 
@@ -123,12 +126,16 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
               <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
                 {activePanel === "command"
                   ? firstName ? `Welcome back, ${firstName}.` : "Your command island."
-                  : "Ask your Command AI."}
+                  : activePanel === "ask-ai"
+                    ? "Ask your Command AI."
+                    : "World Chat lounge."}
               </h1>
               <p className="mt-1.5 text-sm text-white/40">
                 {activePanel === "command"
                   ? "A quick-launch dock for the routes you use most."
-                  : "Swipe or tap tabs — research help and quick jumps."}
+                  : activePanel === "ask-ai"
+                    ? "Swipe or tap tabs — research help and quick jumps."
+                    : "Customize your chat profile and talk with the community."}
               </p>
             </div>
             <button
@@ -169,6 +176,20 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             >
               <BrainCircuit className="h-3.5 w-3.5" />
               Ask AI
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activePanel === "world-chat"}
+              onClick={() => setActivePanel("world-chat")}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+                activePanel === "world-chat"
+                  ? "border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald"
+                  : "border border-white/10 bg-black/20 text-white/45 hover:text-white/70"
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              World Chat
             </button>
           </div>
 
@@ -292,6 +313,21 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
               <EdgeIslandAskAiPanel
                 profile={profile}
+                savedSlips={savedSlips}
+                onSectionChange={onSectionChange}
+                onClose={onClose}
+              />
+            </div>
+
+            {/* World Chat panel */}
+            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+              <WorldChatPanel
+                profile={profile}
+                isLoggedIn={isLoggedIn}
+                onNavigateProfile={(userId) => {
+                  onNavigateProfile?.(userId);
+                  onClose();
+                }}
                 onSectionChange={onSectionChange}
                 onClose={onClose}
               />

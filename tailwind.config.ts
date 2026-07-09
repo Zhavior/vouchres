@@ -7,13 +7,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        obsidian: '#0A0A0A',
-        slate: { 950: '#161616' },
-        emerald: { 400: '#00E5FF' },
+        obsidian: {
+          900: '#050505',
+          800: '#0A0A0A',
+          700: '#121212',
+          600: '#1A1A1A',
+        },
+        'vouch-cyan': '#00F0FF',
+        'vouch-emerald': '#00FF94',
+        'vouch-amber': '#f59e0b',
+        slate: { 950: '#0A0A0A' },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        z8: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },

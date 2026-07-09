@@ -401,7 +401,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                       </span>
                     </div>
 
-                    <div className="space-y-2 pb-2.5 border-b border-white/10/40">
+                    <div className="space-y-2 pb-2.5 border-b border-white/[0.04]">
                       {/* Away Team Line */}
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2 min-w-0">
@@ -662,7 +662,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                 </div>
 
                 {/* Additional disclaimer context describing how predictions list works */}
-                <div className="bg-black/45/10 border border-white/10/60 p-3 rounded-xl flex gap-2 text-[10.5px] text-white/45 leading-relaxed font-mono">
+                <div className="bg-black/45/10 border border-white/[0.06] p-3 rounded-xl flex gap-2 text-[10.5px] text-white/45 leading-relaxed font-mono">
                   <Info className="w-4 h-4 text-vouch-cyan flex-shrink-0" />
                   <p>
                     All live score predictions are updated continuously under client-side caching schemes. Free integration scales across many concurrent visitors.

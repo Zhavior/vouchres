@@ -139,12 +139,12 @@ const cardStyleConfigs = {
     hubGlow: 'bg-[#0ea5e9]/10 group-hover:bg-[#0ea5e9]/25',
     hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
     hubText: 'text-sky-400',
-    nodeBorder: 'border-slate-800 group-hover:border-sky-450',
+    nodeBorder: 'border-white/10 group-hover:border-sky-450',
     nodeValueBg: 'bg-[#060b15] border border-sky-450 text-sky-400',
-    nodeTagBg: 'bg-slate-900 border-slate-850',
-    reasonsBg: 'bg-slate-900/60 border border-slate-900/80',
+    nodeTagBg: 'bg-black/25 border-slate-850',
+    reasonsBg: 'bg-black/30 border border-white/[0.08]',
     headerTitleColor: 'text-[#cbd5e1]',
-    headerSubTitleColor: 'text-slate-500',
+    headerSubTitleColor: 'text-white/40',
     brandBadge: 'bg-sky-950/60 border border-sky-900/40 text-sky-400',
     activeLineColor1: '#0ea5e9',
     activeLineColor2: '#f97316',
@@ -223,20 +223,20 @@ const cardStyleConfigs = {
     hubGlow: 'bg-slate-100 group-hover:bg-slate-200',
     hubVeBg: 'from-slate-800 to-slate-900 border-slate-450',
     hubText: 'text-slate-900',
-    nodeBorder: 'border-slate-300 group-hover:border-slate-800',
-    nodeValueBg: 'bg-white border border-slate-800 text-slate-900',
+    nodeBorder: 'border-slate-300 group-hover:border-white/10',
+    nodeValueBg: 'bg-white border border-white/10 text-slate-900',
     nodeTagBg: 'bg-slate-50 border-slate-250',
     reasonsBg: 'bg-slate-50/90 border border-slate-200',
     headerTitleColor: 'text-slate-800',
-    headerSubTitleColor: 'text-slate-400',
+    headerSubTitleColor: 'text-white/45',
     brandBadge: 'bg-slate-100 border border-slate-200 text-slate-800',
     activeLineColor1: '#1e293b',
     activeLineColor2: '#64748b',
-    ambientPingColor: 'bg-slate-900',
+    ambientPingColor: 'bg-black/25',
     labelText: 'Base Line',
     labelText2: 'Target Index',
-    footerUrlColor: 'text-slate-600',
-    footerPingColor: 'bg-slate-950',
+    footerUrlColor: 'text-white/35',
+    footerPingColor: 'bg-obsidian-900',
   },
   hologram: {
     bg: 'bg-[#0f0a1c] border-2 border-[#2b0e40] dark:bg-[#0f0a1c]',
@@ -355,16 +355,16 @@ export default function VouchStudioDarkroom({
   const activeStyle = cardStyleConfigs[cardStyle];
 
   return (
-    <div className="bg-[#090d16] border border-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
+    <div className="bg-[#090d16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
       {/* Top Lightroom Toolbar */}
-      <div className="bg-[#0d1220] border-b border-slate-900 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#0d1220] border-b border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
           <div className="leading-none text-left">
-            <span className="text-xs font-mono font-black text-slate-100 uppercase tracking-widest block">
+            <span className="text-xs font-mono font-black text-white/90 uppercase tracking-widest block">
               VouchEdge Darkroom Editor <span className="text-[9px] text-sky-400 font-extrabold bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-900/30 ml-1.5">LIVE</span>
             </span>
-            <span className="text-[9.5px] font-mono text-slate-500 block uppercase mt-1">Professional Creator Slate · Real-time Rendering Console</span>
+            <span className="text-[9.5px] font-mono text-white/40 block uppercase mt-1">Professional Creator Slate · Real-time Rendering Console</span>
           </div>
         </div>
         
@@ -413,7 +413,7 @@ export default function VouchStudioDarkroom({
               setShowReasons(true);
               triggerToast("🔄 Canvas slate reset to Default Cyber Cobalt Profile.");
             }}
-            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Reset editor back to initial layout"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -425,7 +425,7 @@ export default function VouchStudioDarkroom({
             onClick={() => {
               triggerToast("💾 Rerendering board plates... Image exported as high-fidelity SVG/PNG bundle (Simulated).");
             }}
-            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Download high resolution cards"
           >
             <Download className="w-3.5 h-3.5" />
@@ -441,24 +441,24 @@ export default function VouchStudioDarkroom({
         <div className="lg:col-span-4 bg-[#0a0d16] flex flex-col h-full overflow-y-auto max-h-[850px] scrollbar-thin">
           
           {/* ACCORDION 1: COLOR PROFILE & DESIGN LAYOUT */}
-          <div className="border-b border-slate-900">
+          <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionPreset(!studioSectionPreset)}
               className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
-              <span className="text-[10px] font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
                 1. Profiles & Layouts
               </span>
-              <span className="text-slate-500 font-mono text-[9px] font-black">{studioSectionPreset ? '[-]' : '[+]'}</span>
+              <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionPreset ? '[-]' : '[+]'}</span>
             </button>
 
             {studioSectionPreset && (
               <div className="p-4 space-y-4 bg-[#07090f]/70 animate-fade-in text-left">
                 {/* Presets Grid */}
                 <div className="space-y-1.5">
-                  <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Visual Preset Themes:</label>
+                  <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Visual Preset Themes:</label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
                       { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', desc: 'Neon cyan & dark cobalt overlays', bg: 'bg-cyan-500' },
@@ -474,12 +474,12 @@ export default function VouchStudioDarkroom({
                         className={`group py-2 px-2.5 rounded-xl border text-left transition-all flex flex-col justify-between h-[52px] ${
                           cardStyle === styleOpt.id 
                             ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 ring-1 ring-sky-500/20 font-black' 
-                            : 'bg-slate-950/70 border-slate-900 text-slate-500 hover:text-slate-350 hover:bg-slate-900/40'
+                            : 'bg-black/30 border-white/10 text-white/40 hover:text-slate-350 hover:bg-black/25'
                         }`}
                       >
                         <span className="text-[10px] block font-semibold leading-none">{styleOpt.name}</span>
                         <div className="flex items-center justify-between w-full mt-1.5">
-                          <span className="text-[6.5px] font-mono text-slate-650 group-hover:text-slate-400 uppercase truncate max-w-[90px]">{styleOpt.id}</span>
+                          <span className="text-[6.5px] font-mono text-slate-650 group-hover:text-white/45 uppercase truncate max-w-[90px]">{styleOpt.id}</span>
                           <div className={`w-2 h-2 rounded-full ${styleOpt.bg}`} />
                         </div>
                       </button>
@@ -488,8 +488,8 @@ export default function VouchStudioDarkroom({
                 </div>
 
                 {/* Blueprints Grid */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-900">
-                  <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Blueprint Layout Mode:</label>
+                <div className="space-y-1.5 pt-2 border-t border-white/10">
+                  <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Blueprint Layout Mode:</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {[
                       { id: 'orbit', name: 'ORBIT', desc: 'Circular link map', activeStyle: 'bg-sky-500/10 border-sky-500/40 text-sky-300' },
@@ -506,20 +506,20 @@ export default function VouchStudioDarkroom({
                         className={`py-2 px-1 rounded-xl border text-center transition-all text-[9.5px] font-mono font-black flex flex-col items-center justify-center gap-1 ${
                           activeCardLayout === layoutOpt.id
                             ? `${layoutOpt.activeStyle} shadow-sm`
-                            : 'bg-slate-950/70 border-slate-900 text-slate-550 hover:text-slate-300 hover:bg-slate-900/25'
+                            : 'bg-black/30 border-white/10 text-slate-550 hover:text-white/65 hover:bg-black/20'
                         }`}
                       >
                         <span>{layoutOpt.name}</span>
-                        <span className="text-[6px] font-mono tracking-tight text-slate-600 uppercase font-normal">{layoutOpt.id}</span>
+                        <span className="text-[6px] font-mono tracking-tight text-white/35 uppercase font-normal">{layoutOpt.id}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Background photo & stadium presets */}
-                <div className="space-y-2 pt-2 border-t border-slate-900">
+                <div className="space-y-2 pt-2 border-t border-white/10">
                   <div className="flex justify-between items-center">
-                    <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Stadium Texture Plate:</label>
+                    <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Stadium Texture Plate:</label>
                     {customCardPhoto && (
                       <button 
                         onClick={() => { setCustomCardPhoto(""); setCustomCardPhotoLabel(""); }} 
@@ -539,7 +539,7 @@ export default function VouchStudioDarkroom({
                         triggerToast("Stadium background set to: Green Turf Field preset.");
                       }} 
                       className={`text-[9px] font-mono p-1.5 rounded-lg border leading-tight text-left truncate flex items-center gap-1 ${
-                        customCardPhotoLabel === "Green Turf Field" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-slate-950 border-slate-900 text-slate-405 hover:text-slate-205'
+                        customCardPhotoLabel === "Green Turf Field" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
                       }`}
                     >
                       <span>🌱</span> <span className="truncate">Green Turf Field</span>
@@ -552,14 +552,14 @@ export default function VouchStudioDarkroom({
                         triggerToast("Stadium background set to: Light Beams preset.");
                       }} 
                       className={`text-[9px] font-mono p-1.5 rounded-lg border leading-tight text-left truncate flex items-center gap-1 ${
-                        customCardPhotoLabel === "Stadium Light Beams" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-slate-950 border-slate-900 text-slate-405 hover:text-slate-205'
+                        customCardPhotoLabel === "Stadium Light Beams" ? 'bg-sky-950/30 border-sky-800 text-sky-300' : 'bg-obsidian-900 border-white/10 text-slate-405 hover:text-slate-205'
                       }`}
                     >
                       <span>🏟️</span> <span className="truncate">Stadium Lights</span>
                     </button>
                   </div>
 
-                  <label className="cursor-pointer bg-slate-950 hover:bg-slate-900/60 border border-dashed border-slate-900 hover:border-sky-500/20 py-2.5 px-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-center group">
+                  <label className="cursor-pointer bg-obsidian-900 hover:bg-black/30 border border-dashed border-white/10 hover:border-sky-500/20 py-2.5 px-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all text-center group">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -580,7 +580,7 @@ export default function VouchStudioDarkroom({
                       }}
                     />
                     <div className="flex items-center gap-1.5 justify-center">
-                      <Plus className="w-3 h-3 text-slate-500 group-hover:text-sky-400" />
+                      <Plus className="w-3 h-3 text-white/40 group-hover:text-sky-400" />
                       <span className="text-[8.5px] font-mono font-black text-slate-405 group-hover:text-slate-205 uppercase">Upload Custom Plate File</span>
                     </div>
                   </label>
@@ -597,17 +597,17 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* ACCORDION 2: ROSTER LINEUP & PLAYER TUNING */}
-          <div className="border-b border-slate-900">
+          <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionRoster(!studioSectionRoster)}
               className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
-              <span className="text-[10px] font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-sky-400" />
                 2. Roster & Player Tuning
               </span>
-              <span className="text-slate-500 font-mono text-[9px] font-black">{studioSectionRoster ? '[-]' : '[+]'}</span>
+              <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionRoster ? '[-]' : '[+]'}</span>
             </button>
 
             {studioSectionRoster && (
@@ -615,11 +615,11 @@ export default function VouchStudioDarkroom({
                 {/* Star list */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">
+                    <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">
                       {activeCardLayout === 'potd' ? "Featured Spotlight Player:" : "Active Roster Stars:"}
                     </label>
                     {activeCardLayout !== 'potd' && (
-                      <span className="text-[7.5px] font-mono font-extrabold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
+                      <span className="text-[7.5px] font-mono font-extrabold text-white/45 bg-obsidian-900 px-2 py-0.5 rounded border border-white/10">
                         {selectedPlayers.length} / 5 Stars
                       </span>
                     )}
@@ -632,11 +632,11 @@ export default function VouchStudioDarkroom({
                           src={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.headshot} 
                           alt={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name} 
                           referrerPolicy="no-referrer"
-                          className="w-7 h-7 rounded-full border border-slate-800 object-cover bg-slate-950 shrink-0" 
+                          className="w-7 h-7 rounded-full border border-white/10 object-cover bg-obsidian-900 shrink-0" 
                         />
                         <div className="min-w-0">
                           <span className="text-xs font-black text-amber-300 block truncate">{(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}</span>
-                          <span className="text-[7.5px] font-mono text-slate-500 uppercase block mt-0.5 leading-none">
+                          <span className="text-[7.5px] font-mono text-white/40 uppercase block mt-0.5 leading-none">
                             {(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.team.split(' ').pop()} · No. {(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.number}
                           </span>
                         </div>
@@ -646,12 +646,12 @@ export default function VouchStudioDarkroom({
                   ) : (
                     <div className="flex flex-wrap gap-1 py-1">
                       {selectedPlayers.map((ps, idx) => (
-                        <div key={ps.player.id} className="bg-slate-950 border border-slate-900 rounded-lg py-1 px-2.5 flex items-center gap-1.5 text-[10px] text-slate-205 font-mono font-bold">
-                          <img src={ps.player.headshot} alt={ps.player.name} referrerPolicy="no-referrer" className="w-4 h-4 rounded-full object-cover bg-slate-900 shrink-0" />
+                        <div key={ps.player.id} className="bg-obsidian-900 border border-white/10 rounded-lg py-1 px-2.5 flex items-center gap-1.5 text-[10px] text-slate-205 font-mono font-bold">
+                          <img src={ps.player.headshot} alt={ps.player.name} referrerPolicy="no-referrer" className="w-4 h-4 rounded-full object-cover bg-black/25 shrink-0" />
                           <span className="truncate max-w-[100px]">{ps.player.name.split(' ').pop()}</span>
                           <button 
                             onClick={() => handleRemovePlayerFromCircle(ps.player.id)}
-                            className="text-slate-500 hover:text-rose-400 font-bold transition-all p-0.5"
+                            className="text-white/40 hover:text-rose-400 font-bold transition-all p-0.5"
                             title="Remove"
                           >
                             <X className="w-3 h-3" />
@@ -663,10 +663,10 @@ export default function VouchStudioDarkroom({
 
                   {/* Dropdown for Add/Swap */}
                   <div className="space-y-1">
-                    <span className="text-[7.5px] text-slate-500 uppercase block font-mono">
+                    <span className="text-[7.5px] text-white/40 uppercase block font-mono">
                       {activeCardLayout === 'potd' ? "Swap featured spotlight player:" : "Quick add from rosters:"}
                     </span>
-                    <div className="max-h-[140px] overflow-y-auto bg-slate-950 rounded-xl border border-slate-900 p-1 space-y-1 scrollbar-thin">
+                    <div className="max-h-[140px] overflow-y-auto bg-obsidian-900 rounded-xl border border-white/10 p-1 space-y-1 scrollbar-thin">
                       {MLB_PLAYER_RECORDS.map((player) => {
                         const isActive = activeCardLayout === 'potd'
                           ? (selectedPlayers[potdIndex] || selectedPlayers[0])?.player.id === player.id
@@ -675,7 +675,7 @@ export default function VouchStudioDarkroom({
                           <div 
                             key={player.id} 
                             className={`flex items-center justify-between p-1.5 px-2 rounded-lg text-[9.5px] uppercase font-bold transition-all ${
-                              isActive ? 'bg-slate-900/60 text-slate-500 cursor-not-allowed' : 'hover:bg-slate-900 cursor-pointer text-slate-350 hover:text-slate-100'
+                              isActive ? 'bg-black/30 text-white/40 cursor-not-allowed' : 'hover:bg-black/30 cursor-pointer text-slate-350 hover:text-white/90'
                             }`}
                             onClick={() => {
                               if (activeCardLayout === 'potd') {
@@ -710,9 +710,9 @@ export default function VouchStudioDarkroom({
                                 src={player.headshot} 
                                 alt={player.name} 
                                 referrerPolicy="no-referrer"
-                                className="w-4 h-4 rounded bg-slate-900 border border-slate-800 object-cover shrink-0" 
+                                className="w-4 h-4 rounded bg-black/25 border border-white/10 object-cover shrink-0" 
                               />
-                              <span className="truncate">{player.name} <span className="text-[7.5px] text-slate-600 font-mono">({player.team.split(' ').pop()})</span></span>
+                              <span className="truncate">{player.name} <span className="text-[7.5px] text-white/35 font-mono">({player.team.split(' ').pop()})</span></span>
                             </div>
                             {isActive ? (
                               <span className="text-[7px] text-slate-650 font-mono">SELECTED</span>
@@ -727,31 +727,31 @@ export default function VouchStudioDarkroom({
                 </div>
 
                 {/* Fine-Tuning individual stats & projections */}
-                <div className="space-y-3 pt-2 border-t border-slate-900">
-                  <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Fine-Tune Stats & Coefficients:</label>
+                <div className="space-y-3 pt-2 border-t border-white/10">
+                  <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Fine-Tune Stats & Coefficients:</label>
                   <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                     {selectedPlayers
                       .map((ps, index) => ({ ps, originalIndex: index }))
                       .filter(({ originalIndex }) => activeCardLayout !== 'potd' || originalIndex === potdIndex)
                       .map(({ ps, originalIndex }) => (
-                        <div key={ps.player.id} className="bg-slate-950 p-3 rounded-xl border border-slate-900 space-y-2.5">
-                          <div className="flex justify-between items-center border-b border-slate-900 pb-1.5">
-                            <span className="font-bold text-[10.5px] text-slate-200 truncate flex items-center gap-1.5">
+                        <div key={ps.player.id} className="bg-obsidian-900 p-3 rounded-xl border border-white/10 space-y-2.5">
+                          <div className="flex justify-between items-center border-b border-white/10 pb-1.5">
+                            <span className="font-bold text-[10.5px] text-white/80 truncate flex items-center gap-1.5">
                               <span className="text-[8px] font-mono text-sky-400 bg-sky-950 px-1 py-0.2 rounded border border-sky-900">STAR</span>
                               {ps.player.name}
                             </span>
-                            <span className="text-[7.5px] font-mono text-slate-500 uppercase">
+                            <span className="text-[7.5px] font-mono text-white/40 uppercase">
                               {ps.player.team.split(' ').pop()} · No. {ps.player.number}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 text-[10.5px]">
                             <div className="space-y-1">
-                              <span className="text-[7.5px] uppercase font-mono text-slate-500 block">Metric Highlight</span>
+                              <span className="text-[7.5px] uppercase font-mono text-white/40 block">Metric Highlight</span>
                               <select
                                 value={ps.statType}
                                 onChange={(e) => handleStatTypeChange(originalIndex, e.target.value as CustomPlayerSelection['statType'])}
-                                className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[10px] p-1 rounded outline-none font-medium cursor-pointer"
+                                className="w-full bg-black/25 border border-white/10 text-white/80 text-[10px] p-1 rounded outline-none font-medium cursor-pointer"
                               >
                                 <option value="Homeruns">Homeruns (HR)</option>
                                 <option value="Runs">Runs Scored</option>
@@ -763,20 +763,20 @@ export default function VouchStudioDarkroom({
                             </div>
 
                             <div className="space-y-1">
-                              <span className="text-[7.5px] uppercase font-mono text-slate-500 block">Line Proj. Marker</span>
+                              <span className="text-[7.5px] uppercase font-mono text-white/40 block">Line Proj. Marker</span>
                               <input
                                 type="text"
                                 value={ps.customVal}
                                 onChange={(e) => handleCustomValChange(originalIndex, e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[10px] p-1 rounded outline-none font-mono font-bold"
+                                className="w-full bg-black/25 border border-white/10 text-white/80 text-[10px] p-1 rounded outline-none font-mono font-bold"
                                 placeholder="e.g. Over 0.5 HRs"
                               />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 text-[10.5px] pt-1.5 border-t border-slate-900/60">
+                          <div className="grid grid-cols-2 gap-3 text-[10.5px] pt-1.5 border-t border-white/[0.06]">
                             <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                              <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                 <span>VAI CONFID.</span>
                                 <span className="text-sky-400 font-bold">{ps.aiConfidence ?? 85}%</span>
                               </div>
@@ -790,12 +790,12 @@ export default function VouchStudioDarkroom({
                                   updated[originalIndex].aiConfidence = parseInt(e.target.value);
                                   setSelectedPlayers(updated);
                                 }}
-                                className="w-full accent-sky-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                                className="w-full accent-sky-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                              <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                 <span>PLAYER COEF.</span>
                                 <span className="text-amber-400 font-bold">{ps.playerConfidence ?? 80}%</span>
                               </div>
@@ -809,15 +809,15 @@ export default function VouchStudioDarkroom({
                                   updated[originalIndex].playerConfidence = parseInt(e.target.value);
                                   setSelectedPlayers(updated);
                                 }}
-                                className="w-full accent-amber-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                                className="w-full accent-amber-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                               />
                             </div>
                           </div>
 
                           <div className="space-y-1 text-left">
-                            <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                            <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                               <span>Narrative Insight Hook</span>
-                              <span className="text-[6.5px] text-slate-600 uppercase">Displays on Card 2</span>
+                              <span className="text-[6.5px] text-white/35 uppercase">Displays on Card 2</span>
                             </div>
                             <textarea
                               rows={2}
@@ -828,19 +828,19 @@ export default function VouchStudioDarkroom({
                                 setSelectedPlayers(updated);
                               }}
                               placeholder="Insights on launch rate, pitch matchup or historical batting averages..."
-                              className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[10px] p-1.5 rounded-lg outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
+                              className="w-full bg-black/25 border border-white/10 text-white/80 text-[10px] p-1.5 rounded-lg outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
                             />
                           </div>
 
                           {activeCardLayout === 'potd' && (
-                            <div className="mt-3 pt-3 border-t border-slate-900 space-y-2.5 text-left animate-fade-in">
+                            <div className="mt-3 pt-3 border-t border-white/10 space-y-2.5 text-left animate-fade-in">
                               <span className="text-[7.5px] font-mono uppercase font-black text-amber-500 block tracking-widest">
                                 🎯 SPOTLIGHT MATCHUP MATH
                               </span>
                               
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                  <label className="text-[7px] font-mono text-slate-500 uppercase">Pitcher Name</label>
+                                  <label className="text-[7px] font-mono text-white/40 uppercase">Pitcher Name</label>
                                   <input
                                     type="text"
                                     value={ps.pitcherName ?? ""}
@@ -850,11 +850,11 @@ export default function VouchStudioDarkroom({
                                       setSelectedPlayers(updated);
                                     }}
                                     placeholder="Luis Castillo"
-                                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
+                                    className="w-full bg-black/25 border border-white/10 text-white/80 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[7px] font-mono text-slate-500 uppercase">Throws</label>
+                                  <label className="text-[7px] font-mono text-white/40 uppercase">Throws</label>
                                   <select
                                     value={ps.pitcherHand ?? "RHP"}
                                     onChange={(e) => {
@@ -862,7 +862,7 @@ export default function VouchStudioDarkroom({
                                       updated[originalIndex].pitcherHand = e.target.value as 'RHP' | 'LHP';
                                       setSelectedPlayers(updated);
                                     }}
-                                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
+                                    className="w-full bg-black/25 border border-white/10 text-white/80 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
                                   >
                                     <option value="RHP">RHP</option>
                                     <option value="LHP">LHP</option>
@@ -872,7 +872,7 @@ export default function VouchStudioDarkroom({
 
                               <div className="grid grid-cols-3 gap-1.5">
                                 <div className="space-y-1">
-                                  <label className="text-[7px] font-mono text-slate-500 uppercase">Pitcher ERA</label>
+                                  <label className="text-[7px] font-mono text-white/40 uppercase">Pitcher ERA</label>
                                   <input
                                     type="number"
                                     step="0.01"
@@ -885,11 +885,11 @@ export default function VouchStudioDarkroom({
                                       setSelectedPlayers(updated);
                                     }}
                                     placeholder="3.55"
-                                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
+                                    className="w-full bg-black/25 border border-white/10 text-white/80 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
                                   />
                                 </div>
                                 <div className="space-y-1 col-span-2">
-                                  <label className="text-[7px] font-mono text-slate-500 uppercase">Favored Pitch Type Segment</label>
+                                  <label className="text-[7px] font-mono text-white/40 uppercase">Favored Pitch Type Segment</label>
                                   <input
                                     type="text"
                                     value={ps.pitchTypeFavored ?? ""}
@@ -899,13 +899,13 @@ export default function VouchStudioDarkroom({
                                       setSelectedPlayers(updated);
                                     }}
                                     placeholder="vs Sweeper Slider (.342 AVG)"
-                                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
+                                    className="w-full bg-black/25 border border-white/10 text-white/80 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 font-medium"
                                   />
                                 </div>
                               </div>
 
                               <div className="space-y-1">
-                                <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                                <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                   <span>10G HIT RATE</span>
                                   <span className="text-emerald-450 font-bold text-emerald-450">{ps.hitRateLast10 ?? 80}%</span>
                                 </div>
@@ -919,12 +919,12 @@ export default function VouchStudioDarkroom({
                                     updated[originalIndex].hitRateLast10 = parseInt(e.target.value);
                                     setSelectedPlayers(updated);
                                   }}
-                                  className="w-full accent-emerald-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                                  className="w-full accent-emerald-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                                <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                   <span>PLATE SECURITY (PLAY/START RATE)</span>
                                   <span className="text-sky-400 font-bold">{ps.playRatePercent ?? 95}%</span>
                                 </div>
@@ -938,12 +938,12 @@ export default function VouchStudioDarkroom({
                                     updated[originalIndex].playRatePercent = parseInt(e.target.value);
                                     setSelectedPlayers(updated);
                                   }}
-                                  className="w-full accent-sky-500 h-1 bg-slate-900 rounded-lg cursor-pointer"
+                                  className="w-full accent-sky-500 h-1 bg-black/25 rounded-lg cursor-pointer"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <div className="flex justify-between items-center text-[7.5px] font-mono text-slate-500">
+                                <div className="flex justify-between items-center text-[7.5px] font-mono text-white/40">
                                   <span>Sabermetric Proof Narrative</span>
                                 </div>
                                 <textarea
@@ -955,7 +955,7 @@ export default function VouchStudioDarkroom({
                                     setSelectedPlayers(updated);
                                   }}
                                   placeholder="E.g., Matchup modeling verifies +12.4% success corridor..."
-                                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 resize-none font-medium leading-normal"
+                                  className="w-full bg-black/25 border border-white/10 text-white/80 text-[9px] p-1.5 rounded-lg outline-none focus:border-amber-500/30 resize-none font-medium leading-normal"
                                 />
                               </div>
                             </div>
@@ -969,17 +969,17 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* ACCORDION 3: PROMO SUITE & SOCIAL STAMPS */}
-          <div className="border-b border-slate-900">
+          <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionPromo(!studioSectionPromo)}
               className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
-              <span className="text-[10px] font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Crown className="w-3.5 h-3.5 text-sky-400" />
                 3. Promotion & Stamp Overlays
               </span>
-              <span className="text-slate-500 font-mono text-[9px] font-black">{studioSectionPromo ? '[-]' : '[+]'}</span>
+              <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionPromo ? '[-]' : '[+]'}</span>
             </button>
 
             {studioSectionPromo && (
@@ -991,13 +991,13 @@ export default function VouchStudioDarkroom({
                 <div className="space-y-3.5">
                   {/* Win Rates Toggles */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showWinRate} 
                           onChange={(e) => setShowWinRate(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         SHOW WIN RATE
                       </label>
@@ -1006,17 +1006,17 @@ export default function VouchStudioDarkroom({
                         disabled={!showWinRate}
                         value={customWinRate}
                         onChange={(e) => setCustomWinRate(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-sky-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-sky-400 outline-none font-mono" 
                       />
                     </div>
 
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showDailyWinRate} 
                           onChange={(e) => setShowDailyWinRate(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         DAILY WIN RATE
                       </label>
@@ -1025,20 +1025,20 @@ export default function VouchStudioDarkroom({
                         disabled={!showDailyWinRate}
                         value={customDailyWinRate}
                         onChange={(e) => setCustomDailyWinRate(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-amber-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-amber-400 outline-none font-mono" 
                       />
                     </div>
                   </div>
 
                   {/* Monthly & Picks Toggles */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showMonthlyWinRate} 
                           onChange={(e) => setShowMonthlyWinRate(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         MONTHLY RATE
                       </label>
@@ -1047,17 +1047,17 @@ export default function VouchStudioDarkroom({
                         disabled={!showMonthlyWinRate}
                         value={customMonthlyWinRate}
                         onChange={(e) => setCustomMonthlyWinRate(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-rose-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-rose-400 outline-none font-mono" 
                       />
                     </div>
 
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showMlbPicks} 
                           onChange={(e) => setShowMlbPicks(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         MLB RUN PICKS
                       </label>
@@ -1066,20 +1066,20 @@ export default function VouchStudioDarkroom({
                         disabled={!showMlbPicks}
                         value={customMlbPicks}
                         onChange={(e) => setCustomMlbPicks(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-teal-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-teal-400 outline-none font-mono" 
                       />
                     </div>
                   </div>
 
                   {/* Pro Badge & Units Net Profit */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showProBadge} 
                           onChange={(e) => setShowProBadge(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         PRO LEVEL STAMP
                       </label>
@@ -1088,17 +1088,17 @@ export default function VouchStudioDarkroom({
                         disabled={!showProBadge}
                         value={customProTag}
                         onChange={(e) => setCustomProTag(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-fuchsia-400 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-fuchsia-400 outline-none font-mono" 
                       />
                     </div>
 
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showUnitsProfit} 
                           onChange={(e) => setShowUnitsProfit(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         UNITS NET PROFIT
                       </label>
@@ -1107,19 +1107,19 @@ export default function VouchStudioDarkroom({
                         disabled={!showUnitsProfit}
                         value={unitsProfitValue}
                         onChange={(e) => setUnitsProfitValue(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold text-emerald-450 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold text-emerald-450 outline-none font-mono" 
                       />
                     </div>
                   </div>
 
                   {/* Correlated Parlay Desc */}
-                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                    <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-400 font-black cursor-pointer select-none">
+                  <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                    <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/45 font-black cursor-pointer select-none">
                       <input 
                         type="checkbox" 
                         checked={showBestParlay} 
                         onChange={(e) => setShowBestParlay(e.target.checked)}
-                        className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                        className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                       />
                       BEST PARLAY PICK (HERO STICKER)
                     </label>
@@ -1128,19 +1128,19 @@ export default function VouchStudioDarkroom({
                       disabled={!showBestParlay}
                       value={bestParlayDesc}
                       onChange={(e) => setBestParlayDesc(e.target.value)}
-                      className="w-full bg-slate-900 disabled:opacity-40 border border-[#1e293b] rounded p-1.5 text-[10.5px] text-slate-200 outline-none font-mono" 
+                      className="w-full bg-black/25 disabled:opacity-40 border border-[#1e293b] rounded p-1.5 text-[10.5px] text-white/80 outline-none font-mono" 
                     />
                   </div>
 
                   {/* Promo coupon inputs */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-slate-500 font-bold cursor-pointer select-none">
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <label className="flex items-center gap-1.5 text-[8px] font-mono text-white/40 font-bold cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={showCoupon} 
                           onChange={(e) => setShowCoupon(e.target.checked)}
-                          className="rounded bg-slate-900 border-slate-800 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
+                          className="rounded bg-black/25 border-white/10 text-sky-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer" 
                         />
                         COUPON CODE
                       </label>
@@ -1149,18 +1149,18 @@ export default function VouchStudioDarkroom({
                         disabled={!showCoupon}
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10.5px] font-bold uppercase text-amber-500 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10.5px] font-bold uppercase text-amber-500 outline-none font-mono" 
                       />
                     </div>
 
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 space-y-1.5 text-left">
-                      <span className="text-[8px] font-mono text-slate-500 block">COUPON DESC TEXT</span>
+                    <div className="bg-obsidian-900 p-2.5 rounded-xl border border-white/10 space-y-1.5 text-left">
+                      <span className="text-[8px] font-mono text-white/40 block">COUPON DESC TEXT</span>
                       <input 
                         type="text" 
                         disabled={!showCoupon}
                         value={couponText}
                         onChange={(e) => setCouponText(e.target.value)}
-                        className="w-full bg-slate-900 disabled:opacity-40 border border-slate-800 rounded p-1 text-[10px] font-bold text-slate-300 outline-none font-mono" 
+                        className="w-full bg-black/25 disabled:opacity-40 border border-white/10 rounded p-1 text-[10px] font-bold text-white/65 outline-none font-mono" 
                       />
                     </div>
                   </div>
@@ -1171,29 +1171,29 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* ACCORDION 4: ANALYTICAL SCOUT REASONING */}
-          <div className="border-b border-slate-900">
+          <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionRationale(!studioSectionRationale)}
               className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
-              <span className="text-[10px] font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-3.5 h-3.5 text-sky-400" />
                 4. Analytical Scout Narrative
               </span>
-              <span className="text-slate-500 font-mono text-[9px] font-black">{studioSectionRationale ? '[-]' : '[+]'}</span>
+              <span className="text-white/40 font-mono text-[9px] font-black">{studioSectionRationale ? '[-]' : '[+]'}</span>
             </button>
 
             {studioSectionRationale && (
               <div className="p-4 bg-[#07090f]/70 animate-fade-in text-left space-y-2.5">
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[8.5px] uppercase font-mono font-bold text-slate-400 block tracking-wider">Scouter Playbook reasoning:</label>
+                  <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Scouter Playbook reasoning:</label>
                   <textarea
                     value={reasonsText}
                     onChange={(e) => setReasonsText(e.target.value)}
                     rows={3}
                     placeholder="Detail the primary sabermetric, wind speed, velocity coefficients or pitch leverage indexes..."
-                    className="w-full bg-slate-950 border border-slate-900 text-slate-200 text-xs p-2.5 rounded-xl outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
+                    className="w-full bg-obsidian-900 border border-white/10 text-white/80 text-xs p-2.5 rounded-xl outline-none focus:border-sky-500/30 resize-none font-medium leading-normal"
                   />
                 </div>
               </div>
@@ -1201,8 +1201,8 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* WATERMARKS & TOGGLES FOOTER BAR */}
-          <div className="p-4 bg-[#090c14] space-y-3.5 mt-auto border-t border-slate-900 text-left">
-            <span className="text-[8px] font-mono text-slate-500 uppercase block tracking-wider">Canvas Overlay Elements:</span>
+          <div className="p-4 bg-[#090c14] space-y-3.5 mt-auto border-t border-white/10 text-left">
+            <span className="text-[8px] font-mono text-white/40 uppercase block tracking-wider">Canvas Overlay Elements:</span>
             <div className="grid grid-cols-3 gap-1.5">
               <button
                 onClick={() => {
@@ -1212,7 +1212,7 @@ export default function VouchStudioDarkroom({
                 className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
                   showCharts 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
-                    : 'bg-slate-950 border-slate-900 text-slate-600'
+                    : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >
                 <span className="font-mono text-[7px] font-black uppercase">GAME CHARTS</span>
@@ -1227,7 +1227,7 @@ export default function VouchStudioDarkroom({
                 className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
                   showLogo 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
-                    : 'bg-slate-950 border-slate-900 text-slate-600'
+                    : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >
                 <span className="font-mono text-[7px] font-black uppercase">WATERMARK</span>
@@ -1242,7 +1242,7 @@ export default function VouchStudioDarkroom({
                 className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
                   showReasons 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
-                    : 'bg-slate-950 border-slate-900 text-slate-600'
+                    : 'bg-obsidian-900 border-white/10 text-white/35'
                 }`}
               >
                 <span className="font-mono text-[7px] font-black uppercase">RATIONALE TXT</span>
@@ -1257,14 +1257,14 @@ export default function VouchStudioDarkroom({
         <div className="lg:col-span-8 bg-[#06080e] flex flex-col h-full min-h-[750px] relative">
           
           {/* Canvas Header Toolbar */}
-          <div className="bg-[#0a0d16]/90 border-b border-slate-900 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 z-10">
+          <div className="bg-[#0a0d16]/90 border-b border-white/10 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 z-10">
             <div className="flex items-center gap-4">
               <div className="flex bg-[#0f1424] p-0.5 rounded-lg border border-slate-850">
                 <button
                   type="button"
                   onClick={() => setShowSecondCard(false)}
                   className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
-                    !showSecondCard ? 'bg-sky-950 text-sky-300 font-black' : 'text-slate-400 hover:text-slate-200'
+                    !showSecondCard ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
                   Single Card
@@ -1276,7 +1276,7 @@ export default function VouchStudioDarkroom({
                     setPostSideways(true);
                   }}
                   className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
-                    showSecondCard && postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-slate-400 hover:text-slate-200'
+                    showSecondCard && postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
                   Dual Deck (Grid)
@@ -1288,7 +1288,7 @@ export default function VouchStudioDarkroom({
                     setPostSideways(false);
                   }}
                   className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
-                    showSecondCard && !postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-slate-400 hover:text-slate-200'
+                    showSecondCard && !postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
                   Dual Slide Deck
@@ -1297,7 +1297,7 @@ export default function VouchStudioDarkroom({
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 font-mono text-[8.5px] text-slate-400">
+              <div className="flex items-center gap-1.5 font-mono text-[8.5px] text-white/45">
                 <span>ZOOM SCALE:</span>
                 <span className="text-sky-400 font-black bg-sky-950/40 border border-sky-900/30 px-1.5 rounded">{Math.round(previewScale * 100)}%</span>
               </div>
@@ -1308,12 +1308,12 @@ export default function VouchStudioDarkroom({
                 step="0.05" 
                 value={previewScale}
                 onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-                className="w-24 h-1 bg-slate-800 rounded-lg cursor-pointer accent-sky-500" 
+                className="w-24 h-1 bg-obsidian-700 rounded-lg cursor-pointer accent-sky-500" 
               />
               <div className="flex gap-1 shrink-0">
-                <button onClick={() => setPreviewScale(0.65)} className="px-1.5 py-0.5 text-[8px] font-mono bg-slate-900 border border-slate-800 rounded hover:text-slate-200">S</button>
-                <button onClick={() => setPreviewScale(0.85)} className="px-1.5 py-0.5 text-[8px] font-mono bg-slate-900 border border-slate-800 rounded hover:text-slate-200">M</button>
-                <button onClick={() => setPreviewScale(1.0)} className="px-1.5 py-0.5 text-[8px] font-mono bg-slate-900 border border-slate-800 rounded hover:text-slate-200">1:1</button>
+                <button onClick={() => setPreviewScale(0.65)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">S</button>
+                <button onClick={() => setPreviewScale(0.85)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">M</button>
+                <button onClick={() => setPreviewScale(1.0)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">1:1</button>
               </div>
             </div>
           </div>
@@ -1336,7 +1336,7 @@ export default function VouchStudioDarkroom({
             >
               
               {/* Outer Artboard Frame simulating Home Feed Post dimensions */}
-              <div className="w-full max-w-[620px] bg-[#0c101b] border border-slate-900/60 p-6 rounded-3xl shadow-2xl space-y-5 relative">
+              <div className="w-full max-w-[620px] bg-[#0c101b] border border-white/[0.06] p-6 rounded-3xl shadow-2xl space-y-5 relative">
                 
                 {/* Corner Tag: Design State Artboard */}
                 <div className="absolute top-4 left-4 bg-sky-950/40 border border-sky-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-sky-400 font-black uppercase tracking-wider flex items-center gap-1">
@@ -1346,7 +1346,7 @@ export default function VouchStudioDarkroom({
 
                 <div className="absolute top-4 right-4 flex gap-1.5">
                   {showSecondCard && !postSideways && (
-                    <div className="bg-slate-950/80 rounded-full py-0.5 px-2 text-[8px] font-mono text-slate-400 font-bold border border-slate-900">
+                    <div className="bg-obsidian-900/80 rounded-full py-0.5 px-2 text-[8px] font-mono text-white/45 font-bold border border-white/10">
                       {activePreviewCardIndex === 0 ? "CARD 1 / 2" : "CARD 2 / 2"}
                     </div>
                   )}
@@ -1363,7 +1363,7 @@ export default function VouchStudioDarkroom({
                     {/* CARD 1 RENDER */}
                     {(!showSecondCard || postSideways || activePreviewCardIndex === 0) && (
                       <div 
-                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-slate-900/40`}
+                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
                         style={customCardPhoto ? {
                           backgroundImage: `linear-gradient(${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.88)' : 'rgba(10, 15, 30, 0.85)'}, ${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.94)' : 'rgba(10, 15, 30, 0.95)'}), url(${customCardPhoto})`,
                           backgroundSize: 'cover',
@@ -1378,7 +1378,7 @@ export default function VouchStudioDarkroom({
                               e.stopPropagation();
                               setActivePreviewCardIndex(1);
                             }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                             title="Slide to Analytics Card"
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -1391,7 +1391,7 @@ export default function VouchStudioDarkroom({
                         <div className={`absolute bottom-0 left-0 w-28 h-28 ${activeStyle.cornerLight2} rounded-full blur-3xl pointer-events-none`} />
 
                         {/* CARD HEADER */}
-                        <div className={`flex justify-between items-center pb-3.5 border-b ${cardStyle === 'minimal' ? 'border-slate-200' : 'border-slate-900/80'} z-10 relative`}>
+                        <div className={`flex justify-between items-center pb-3.5 border-b ${cardStyle === 'minimal' ? 'border-slate-200' : 'border-white/[0.08]'} z-10 relative`}>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-7 h-7 rounded-lg bg-gradient-to-tr ${activeStyle.hubVeBg} flex items-center justify-center text-white font-black text-xs border`}>
                               VE
@@ -1404,7 +1404,7 @@ export default function VouchStudioDarkroom({
 
                           <div className="text-right flex items-center gap-2">
                             <div className="text-right leading-none">
-                              <span className={`text-[9px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
+                              <span className={`text-[9px] font-extrabold block uppercase ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                                 {profile?.displayName || "Zhavior"}
                               </span>
                               <span className="text-[8px] text-sky-400 font-mono tracking-tight block mt-0.5">
@@ -1414,7 +1414,7 @@ export default function VouchStudioDarkroom({
                             <img 
                               src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
                               alt={profile?.displayName || "Zhavior"} 
-                              className="w-6.5 h-6.5 rounded-full border border-sky-500/20 object-cover bg-slate-950 shadow-inner"
+                              className="w-6.5 h-6.5 rounded-full border border-sky-500/20 object-cover bg-obsidian-900 shadow-inner"
                               referrerPolicy="no-referrer"
                             />
                           </div>
@@ -1489,18 +1489,18 @@ export default function VouchStudioDarkroom({
                                       zIndex: 25 
                                     }}
                                   >
-                                    <div className={`relative p-0.5 ${cardStyle === 'minimal' ? 'bg-white' : 'bg-slate-950'} rounded-full border ${activeStyle.nodeBorder} shadow-lg`}>
+                                    <div className={`relative p-0.5 ${cardStyle === 'minimal' ? 'bg-white' : 'bg-obsidian-900'} rounded-full border ${activeStyle.nodeBorder} shadow-lg`}>
                                       <img 
                                         src={ps.player.headshot} 
                                         alt={ps.player.name} 
                                         referrerPolicy="no-referrer"
-                                        className="w-10 h-10 rounded-full object-cover bg-slate-900"
+                                        className="w-10 h-10 rounded-full object-cover bg-black/25"
                                       />
                                       <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${activeStyle.nodeValueBg} text-[6.5px] font-bold font-mono px-1 rounded-full shadow leading-none truncate max-w-[65px] text-center`}>
                                         {ps.customVal.split('(')[0].trim()}
                                       </div>
                                     </div>
-                                    <span className={`text-[7.5px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'} mt-1 font-mono uppercase px-1 py-0.2 rounded ${activeStyle.nodeTagBg} leading-none`}>
+                                    <span className={`text-[7.5px] font-black ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'} mt-1 font-mono uppercase px-1 py-0.2 rounded ${activeStyle.nodeTagBg} leading-none`}>
                                       {ps.player.name.split(' ').pop()}
                                     </span>
                                   </div>
@@ -1517,7 +1517,7 @@ export default function VouchStudioDarkroom({
                               };
                               const metrics = getPlayerSpotlightMetrics(featured);
                               return (
-                                <div className="h-44 relative flex items-center gap-3.5 z-10 p-3 rounded-2xl bg-black/55 border border-slate-900/60 backdrop-blur-md animate-fade-in text-left">
+                                <div className="h-44 relative flex items-center gap-3.5 z-10 p-3 rounded-2xl bg-black/55 border border-white/[0.06] backdrop-blur-md animate-fade-in text-left">
                                   <div className="relative flex-shrink-0">
                                     <div className={`absolute -inset-1.5 rounded-full bg-gradient-to-tr ${activeStyle.hubVeBg} opacity-80 blur group-hover:scale-105 transition-all animate-[spin_15s_linear_infinite]`} />
                                     <div className={`relative w-18 h-18 sm:w-20 sm:h-20 rounded-full p-0.5 bg-[#060b15] overflow-hidden border flex items-center justify-center shadow-lg ${activeStyle.nodeBorder}`}>
@@ -1525,13 +1525,13 @@ export default function VouchStudioDarkroom({
                                         src={featured.player.headshot}
                                         alt={featured.player.name}
                                         referrerPolicy="no-referrer"
-                                        className="w-full h-full rounded-full object-cover bg-slate-950"
+                                        className="w-full h-full rounded-full object-cover bg-obsidian-900"
                                       />
                                     </div>
                                     <span className={`absolute -top-1 -right-1 py-0.5 px-1.5 text-[6.5px] font-mono font-black rounded border whitespace-nowrap uppercase ${activeStyle.brandBadge}`}>
                                       {featured.player.team.split(' ').pop()}
                                     </span>
-                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 py-0.5 px-1.5 bg-[#060b15] text-[#cbd5e1] text-[7px] font-mono font-black rounded-full border border-slate-900 leading-none">
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 py-0.5 px-1.5 bg-[#060b15] text-[#cbd5e1] text-[7px] font-mono font-black rounded-full border border-white/10 leading-none">
                                       #{featured.player.number}
                                     </span>
                                   </div>
@@ -1543,31 +1543,31 @@ export default function VouchStudioDarkroom({
                                           <Crown className="w-2.5 h-2.5 text-amber-400" />
                                           <span className="text-[6px] font-mono font-black text-amber-400 uppercase tracking-widest">SPOTLIGHT HERO MATCHUP</span>
                                         </div>
-                                        <span className={`text-xs sm:text-sm font-black tracking-tight uppercase block leading-tight ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-100'}`}>
+                                        <span className={`text-xs sm:text-sm font-black tracking-tight uppercase block leading-tight ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-white/90'}`}>
                                           {featured.player.name}
                                         </span>
                                       </div>
                                       <div className="text-right">
-                                        <span className="text-[6px] font-mono uppercase text-slate-500 block leading-none">VAI EDGE</span>
+                                        <span className="text-[6px] font-mono uppercase text-white/40 block leading-none">VAI EDGE</span>
                                         <span className="text-[11px] font-mono font-black text-emerald-400">{metrics.edgeFactorVal}</span>
                                       </div>
                                     </div>
 
                                     <div className="flex gap-1.5 text-[7px] font-mono leading-none py-0.5">
-                                      <span className="bg-slate-900/60 text-slate-400 px-1 py-0.5 rounded border border-slate-800/40">
+                                      <span className="bg-black/30 text-white/45 px-1 py-0.5 rounded border border-white/[0.04]">
                                         10G HIT: <strong className="text-white">{metrics.hitRateLast10}%</strong>
                                       </span>
-                                      <span className="bg-slate-900/60 text-slate-400 px-1 py-0.5 rounded border border-slate-800/40">
+                                      <span className="bg-black/30 text-white/45 px-1 py-0.5 rounded border border-white/[0.04]">
                                         PA RATE: <strong className="text-white">{metrics.playRatePercent}%</strong>
                                       </span>
                                     </div>
 
                                     <div className={`p-1.5 rounded-lg border ${activeStyle.nodeTagBg} backdrop-blur-sm space-y-0.5`}>
-                                      <div className="flex justify-between items-center text-[6px] font-mono text-slate-500 font-bold leading-none">
+                                      <div className="flex justify-between items-center text-[6px] font-mono text-white/40 font-bold leading-none">
                                         <span>VS {metrics.pitcherName.toUpperCase()} ({metrics.pitcherHand} · ERA: {metrics.pitcherEra})</span>
                                         <span className="text-amber-400 text-[6.5px]">{metrics.pitchTypeFavored}</span>
                                       </div>
-                                      <span className={`text-[10px] font-mono font-black block leading-none ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-200'}`}>
+                                      <span className={`text-[10px] font-mono font-black block leading-none ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-white/80'}`}>
                                         {featured.customVal.split('(')[0].trim()}
                                       </span>
                                     </div>
@@ -1585,23 +1585,23 @@ export default function VouchStudioDarkroom({
                           ) : (
                             /* Combined parlay tickets layout */
                             <div className="space-y-1.5 animate-fade-in text-left">
-                              <div className="flex justify-between items-center bg-black/20 p-1.5 rounded-lg border border-slate-900 px-2">
+                              <div className="flex justify-between items-center bg-black/20 p-1.5 rounded-lg border border-white/10 px-2">
                                 <span className="text-[7px] font-mono text-slate-505 uppercase tracking-wider">Multi-correlated parlay voucher</span>
-                                <span className="text-[7.5px] font-mono text-indigo-400 font-bold bg-indigo-950/20 px-1 py-0.2 rounded border border-indigo-900/40 uppercase">PRO SELECTIONS</span>
+                                <span className="text-[7.5px] font-mono text-vouch-cyan font-bold bg-indigo-950/20 px-1 py-0.2 rounded border border-indigo-900/40 uppercase">PRO SELECTIONS</span>
                               </div>
                               <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1">
                                 {selectedPlayers.map((ps, index) => (
-                                  <div key={ps.player.id} className="bg-[#05070c]/50 p-1.5 rounded-xl border border-slate-900/60 flex items-center justify-between gap-2">
+                                  <div key={ps.player.id} className="bg-[#05070c]/50 p-1.5 rounded-xl border border-white/[0.06] flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                       <img src={ps.player.headshot} alt={ps.player.name} className="w-5.5 h-5.5 rounded-full object-cover shrink-0" />
                                       <div className="min-w-0 leading-none">
-                                        <span className="text-[9.5px] font-black text-slate-200 block uppercase truncate">{ps.player.name}</span>
-                                        <span className="text-[6.5px] font-mono text-slate-500">{ps.player.team.split(' ').pop()} · No. {ps.player.number}</span>
+                                        <span className="text-[9.5px] font-black text-white/80 block uppercase truncate">{ps.player.name}</span>
+                                        <span className="text-[6.5px] font-mono text-white/40">{ps.player.team.split(' ').pop()} · No. {ps.player.number}</span>
                                       </div>
                                     </div>
                                     <div className="text-right shrink-0">
                                       <span className="text-[9.5px] font-mono font-black text-emerald-400 block leading-none">{ps.customVal.split('(')[0].trim()}</span>
-                                      <span className="text-[6px] font-mono text-slate-500 block mt-0.5">STABILITY: {ps.playerConfidence ?? 80}%</span>
+                                      <span className="text-[6px] font-mono text-white/40 block mt-0.5">STABILITY: {ps.playerConfidence ?? 80}%</span>
                                     </div>
                                   </div>
                                 ))}
@@ -1613,10 +1613,10 @@ export default function VouchStudioDarkroom({
                         {/* CREATOR VERIFIED RATIONALE BOX */}
                         {showReasons && activeCardLayout !== 'parlay' && (
                           <div className={`${activeStyle.reasonsBg} rounded-xl p-2.5 z-10 relative space-y-1 text-left`}>
-                            <span className={`text-[7.5px] font-mono ${cardStyle === 'minimal' ? 'text-slate-500' : 'text-slate-400'} uppercase font-black block tracking-wider leading-none`}>
+                            <span className={`text-[7.5px] font-mono ${cardStyle === 'minimal' ? 'text-white/40' : 'text-white/45'} uppercase font-black block tracking-wider leading-none`}>
                               Verified Creator Analytical Rationale:
                             </span>
-                            <p className={`text-[8.5px] ${cardStyle === 'minimal' ? 'text-slate-700' : 'text-slate-300'} font-medium italic leading-relaxed`}>
+                            <p className={`text-[8.5px] ${cardStyle === 'minimal' ? 'text-slate-700' : 'text-white/65'} font-medium italic leading-relaxed`}>
                               "{reasonsText}"
                             </p>
                           </div>
@@ -1624,8 +1624,8 @@ export default function VouchStudioDarkroom({
 
                         {/* OPTIONAL HISTORIC PERFORMANCE GRAPH */}
                         {showCharts && activeCardLayout !== 'parlay' && (
-                          <div className={`${cardStyle === 'minimal' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950'} rounded-xl border ${activeStyle.cardBorder} p-2 z-10 relative mt-1.5`}>
-                            <div className="flex justify-between items-center text-[7px] font-mono text-slate-500 uppercase">
+                          <div className={`${cardStyle === 'minimal' ? 'bg-slate-50 border-slate-200' : 'bg-obsidian-900'} rounded-xl border ${activeStyle.cardBorder} p-2 z-10 relative mt-1.5`}>
+                            <div className="flex justify-between items-center text-[7px] font-mono text-white/40 uppercase">
                               <span>PERFORMANCE TRACKING INDEX</span>
                               <span className="text-sky-400 font-bold">Source: VAI Core</span>
                             </div>
@@ -1639,7 +1639,7 @@ export default function VouchStudioDarkroom({
                         )}
 
                         {/* FOOTER WATERMARK / BRAND */}
-                        <div className="mt-3.5 pt-3 border-t border-slate-900/80 flex items-center justify-between z-10 relative">
+                        <div className="mt-3.5 pt-3 border-t border-white/[0.08] flex items-center justify-between z-10 relative">
                           <span className="text-[7.5px] font-mono text-slate-550 tracking-tight leading-none uppercase">CERTIFICATE ID: #VOUCH-{formattedToday.split(',')[1]?.trim() || "OBT"}-OBT</span>
                           <div className="flex items-center gap-1.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${activeStyle.footerPingColor} animate-pulse`} />
@@ -1653,7 +1653,7 @@ export default function VouchStudioDarkroom({
                     {/* COMPANION CARD RENDER (CARD 2) */}
                     {showSecondCard && (postSideways || activePreviewCardIndex === 1) && (
                       <div 
-                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-slate-900/40`}
+                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
                         style={customCardPhoto ? {
                           backgroundImage: `linear-gradient(${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.90)' : 'rgba(10, 15, 30, 0.88)'}, ${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 15, 30, 0.96)'}), url(${customCardPhoto})`,
                           backgroundSize: 'cover',
@@ -1668,7 +1668,7 @@ export default function VouchStudioDarkroom({
                               e.stopPropagation();
                               setActivePreviewCardIndex(0);
                             }}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-obsidian-900/90 hover:bg-black/30 border border-white/10 text-sky-400 rounded-full transition-all duration-250 opacity-0 group-hover/studio-card:opacity-100 shadow-2xl cursor-pointer z-50 flex items-center justify-center hover:scale-105 active:scale-95"
                             title="Slide back to Circular Card"
                           >
                             <ChevronLeft className="w-5 h-5" />
@@ -1681,7 +1681,7 @@ export default function VouchStudioDarkroom({
                         <div className={`absolute bottom-0 left-0 w-28 h-28 ${activeStyle.cornerLight2} rounded-full blur-3xl pointer-events-none`} />
 
                         {/* COMPANION HEADER */}
-                        <div className={`flex justify-between items-center pb-3.5 border-b ${cardStyle === 'minimal' ? 'border-slate-200' : 'border-slate-900/80'} z-10 relative`}>
+                        <div className={`flex justify-between items-center pb-3.5 border-b ${cardStyle === 'minimal' ? 'border-slate-200' : 'border-white/[0.08]'} z-10 relative`}>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-7 h-7 rounded-lg bg-gradient-to-tr ${activeStyle.hubVeBg} flex items-center justify-center text-white font-black text-xs border`}>
                               VE
@@ -1748,20 +1748,20 @@ export default function VouchStudioDarkroom({
                                       <img 
                                         src={player.headshot} 
                                         alt={player.name}
-                                        className="w-10 h-10 rounded-full object-cover border border-slate-700 bg-slate-950"
+                                        className="w-10 h-10 rounded-full object-cover border border-white/10 bg-obsidian-900"
                                         referrerPolicy="no-referrer"
                                       />
                                       <div className="leading-tight">
                                         <span className={`text-xs font-black uppercase block ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-300'}`}>
                                           {player.name}
                                         </span>
-                                        <span className="text-[7.5px] font-mono text-slate-500 uppercase mt-0.5 block">
+                                        <span className="text-[7.5px] font-mono text-white/40 uppercase mt-0.5 block">
                                           {player.team} · #{player.number}
                                         </span>
                                       </div>
                                     </div>
                                     <div className="text-right">
-                                      <span className="text-[6.5px] font-mono text-slate-500 uppercase block leading-none">VAI SABER EDGE</span>
+                                      <span className="text-[6.5px] font-mono text-white/40 uppercase block leading-none">VAI SABER EDGE</span>
                                       <span className={`text-sm font-black font-mono tracking-tight uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-emerald-400'}`}>
                                         {metrics.edgeFactorVal} Index
                                       </span>
@@ -1770,36 +1770,36 @@ export default function VouchStudioDarkroom({
 
                                   {/* Pitcher Matchup Stats Grid */}
                                   <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-black/25 p-2 rounded-xl border border-slate-900/60 text-center font-mono">
-                                      <span className="text-[5.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">VS PITCHER ERA</span>
+                                    <div className="bg-black/25 p-2 rounded-xl border border-white/[0.06] text-center font-mono">
+                                      <span className="text-[5.5px] text-white/40 uppercase block tracking-wider leading-none mb-1">VS PITCHER ERA</span>
                                       <span className="text-rose-400 text-xs font-black block leading-none">{metrics.pitcherEra}</span>
                                       <span className="text-[5px] text-slate-650 block mt-1 uppercase truncate">{metrics.pitcherName}</span>
                                     </div>
-                                    <div className="bg-black/25 p-2 rounded-xl border border-slate-900/60 text-center font-mono">
-                                      <span className="text-[5.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">10G HIT RATE</span>
+                                    <div className="bg-black/25 p-2 rounded-xl border border-white/[0.06] text-center font-mono">
+                                      <span className="text-[5.5px] text-white/40 uppercase block tracking-wider leading-none mb-1">10G HIT RATE</span>
                                       <span className="text-emerald-400 text-xs font-black block leading-none">{metrics.hitRateLast10}%</span>
                                       <span className="text-[5px] text-slate-650 block mt-1 uppercase">LAST 10 MATCHUPS</span>
                                     </div>
-                                    <div className="bg-black/25 p-2 rounded-xl border border-slate-900/60 text-center font-mono">
-                                      <span className="text-[5.5px] text-slate-500 uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
+                                    <div className="bg-black/25 p-2 rounded-xl border border-white/[0.06] text-center font-mono">
+                                      <span className="text-[5.5px] text-white/40 uppercase block tracking-wider leading-none mb-1">PLAY/START RATE</span>
                                       <span className="text-sky-400 text-xs font-black block leading-none">{metrics.playRatePercent}%</span>
                                       <span className="text-[5px] text-slate-650 block mt-1 uppercase">PLATE SECURE</span>
                                     </div>
                                   </div>
 
                                   {/* Deep Splits Comparison */}
-                                  <div className="grid grid-cols-2 gap-2 text-[9px] font-mono bg-black/15 p-2 rounded-xl border border-slate-900/40">
+                                  <div className="grid grid-cols-2 gap-2 text-[9px] font-mono bg-black/15 p-2 rounded-xl border border-white/[0.04]">
                                     <div className="space-y-1">
-                                      <span className="text-[6.5px] font-black text-slate-550 uppercase block tracking-wider border-b border-slate-900 pb-0.5">PLAYER PLURALS</span>
-                                      <div className="space-y-0.5 text-slate-300">
+                                      <span className="text-[6.5px] font-black text-slate-550 uppercase block tracking-wider border-b border-white/10 pb-0.5">PLAYER PLURALS</span>
+                                      <div className="space-y-0.5 text-white/65">
                                         <div className="flex justify-between"><span>vs {metrics.pitcherHand}:</span><strong className="text-white">{metrics.pitcherHand === 'RHP' ? player.splits?.vRHP?.ops || "1.067" : player.splits?.vLHP?.ops || "0.958"} OPS</strong></div>
                                         <div className="flex justify-between"><span>Last 10 OPS:</span><strong className="text-emerald-400">{player.splits?.last10?.ops || "1.150"}</strong></div>
                                         <div className="flex justify-between"><span>Exit Vel:</span><strong className="text-sky-400">{player.advanced?.exitVelocity || "94.7"} mph</strong></div>
                                       </div>
                                     </div>
-                                    <div className="space-y-1 border-l border-slate-900/60 pl-2">
-                                      <span className="text-[6.5px] font-black text-slate-550 uppercase block tracking-wider border-b border-slate-900 pb-0.5">PITCHER BREAKS</span>
-                                      <div className="space-y-0.5 text-slate-300">
+                                    <div className="space-y-1 border-l border-white/[0.06] pl-2">
+                                      <span className="text-[6.5px] font-black text-slate-550 uppercase block tracking-wider border-b border-white/10 pb-0.5">PITCHER BREAKS</span>
+                                      <div className="space-y-0.5 text-white/65">
                                         <div className="flex justify-between"><span>ERA Baseline:</span><strong className="text-rose-400">{metrics.pitcherEra}</strong></div>
                                         <div className="flex justify-between"><span>Favored Mix:</span><strong className="text-amber-400 truncate max-w-[65px]" title={metrics.pitchTypeFavored}>{metrics.pitchTypeFavored.split('(')[0].replace('vs ', '')}</strong></div>
                                         <div className="flex justify-between"><span>Launch Target:</span><strong className="text-sky-400">{player.advanced?.launchAngle || "15.2"}°</strong></div>
@@ -1813,18 +1813,18 @@ export default function VouchStudioDarkroom({
                                       <Activity className="w-3 h-3 text-emerald-400 shrink-0" />
                                       <span>Sabermetric Modeling Equation:</span>
                                     </div>
-                                    <p className="text-slate-300 font-mono text-[8px] bg-black/35 px-1.5 py-0.5 rounded border border-slate-900/50">
+                                    <p className="text-white/65 font-mono text-[8px] bg-black/35 px-1.5 py-0.5 rounded border border-white/[0.05]">
                                       {metrics.mathFormula}
                                     </p>
-                                    <p className="text-slate-400 leading-normal text-[8px] italic">
+                                    <p className="text-white/45 leading-normal text-[8px] italic">
                                       {metrics.edgeMathProof}
                                     </p>
                                   </div>
 
                                   {/* Narrative explanation */}
                                   <div className={`p-2.5 rounded-xl border ${activeStyle.reasonsBg} text-left space-y-0.5`}>
-                                    <span className="text-[7px] font-mono uppercase font-black text-slate-400 block tracking-widest leading-none">Scouting Narrative & Matchup Splits:</span>
-                                    <p className={`text-[9px] italic leading-normal ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-slate-200'}`}>
+                                    <span className="text-[7px] font-mono uppercase font-black text-white/45 block tracking-widest leading-none">Scouting Narrative & Matchup Splits:</span>
+                                    <p className={`text-[9px] italic leading-normal ${cardStyle === 'minimal' ? 'text-slate-800' : 'text-white/80'}`}>
                                       "{explanation}"
                                     </p>
                                   </div>
@@ -1845,28 +1845,28 @@ export default function VouchStudioDarkroom({
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5">
-                                      <img src={ps.player.headshot} alt={ps.player.name} className="w-6 h-6 rounded-full object-cover border border-slate-700 bg-slate-950" />
+                                      <img src={ps.player.headshot} alt={ps.player.name} className="w-6 h-6 rounded-full object-cover border border-white/10 bg-obsidian-900" />
                                       <div className="leading-none text-left">
                                         <span className={`text-[10px] font-black uppercase block ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-105'}`}>
                                           {ps.player.name}
                                         </span>
-                                        <span className="text-[7px] font-mono text-slate-500 uppercase">{ps.player.team.split(' ').pop()} · No. {ps.player.number}</span>
+                                        <span className="text-[7px] font-mono text-white/40 uppercase">{ps.player.team.split(' ').pop()} · No. {ps.player.number}</span>
                                       </div>
                                     </div>
                                     
-                                    <div className="flex gap-2 text-[8px] font-mono bg-black/15 px-2 py-0.5 rounded border border-slate-900">
+                                    <div className="flex gap-2 text-[8px] font-mono bg-black/15 px-2 py-0.5 rounded border border-white/10">
                                       <div>
                                         <span className="text-slate-505">VAI: </span>
                                         <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-sky-600' : 'text-sky-405'}`}>{aiConf}%</span>
                                       </div>
-                                      <div className="border-l border-slate-900 pl-2">
+                                      <div className="border-l border-white/10 pl-2">
                                         <span className="text-slate-505">STB: </span>
                                         <span className={`font-extrabold ${cardStyle === 'minimal' ? 'text-amber-600' : 'text-amber-505'}`}>{pConf}%</span>
                                       </div>
                                     </div>
                                   </div>
 
-                                  <p className={`text-[8.5px] italic leading-tight ${cardStyle === 'minimal' ? 'text-slate-600' : 'text-slate-350'} truncate`}>
+                                  <p className={`text-[8.5px] italic leading-tight ${cardStyle === 'minimal' ? 'text-white/35' : 'text-slate-350'} truncate`}>
                                     "{explanation}"
                                   </p>
                                 </div>
@@ -1894,7 +1894,7 @@ export default function VouchStudioDarkroom({
                             <div className="flex items-center gap-1.5 leading-tight">
                               <span className="text-sm">🎟️</span>
                               <div>
-                                <span className="text-[6.5px] font-mono text-slate-500 block leading-none">PREMIUM SUBSCRIBER SPECIAL:</span>
+                                <span className="text-[6.5px] font-mono text-white/40 block leading-none">PREMIUM SUBSCRIBER SPECIAL:</span>
                                 <span className={`text-[9px] font-black ${cardStyle === 'minimal' ? 'text-slate-805' : 'text-slate-250'}`}>{couponText}</span>
                               </div>
                             </div>
@@ -1905,7 +1905,7 @@ export default function VouchStudioDarkroom({
                         )}
 
                         {/* COMPANION FOOTER */}
-                        <div className="mt-3.5 pt-3 border-t border-slate-900/80 flex items-center justify-between z-10 relative">
+                        <div className="mt-3.5 pt-3 border-t border-white/[0.08] flex items-center justify-between z-10 relative">
                           <span className="text-[7.5px] font-mono text-slate-550 tracking-tight leading-none uppercase">CERTIFICATE ID: #VOUCH-{formattedToday.split(',')[1]?.trim() || "ANL"}-ANL</span>
                           <div className="flex items-center gap-1.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${activeStyle.footerPingColor} animate-pulse`} />
@@ -1925,10 +1925,10 @@ export default function VouchStudioDarkroom({
           </div>
 
           {/* Action Buttons Lightroom Slate Footer */}
-          <div className="bg-[#0a0d16] border-t border-slate-900 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
+          <div className="bg-[#0a0d16] border-t border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
             <div className="text-left">
-              <span className="text-[8.5px] font-mono text-slate-500 block uppercase font-bold">Creator Campaign Operations:</span>
-              <p className="text-[10px] text-slate-400 mt-0.5">Review, verify projections, and publish this Vouch Board directly to the main feed.</p>
+              <span className="text-[8.5px] font-mono text-white/40 block uppercase font-bold">Creator Campaign Operations:</span>
+              <p className="text-[10px] text-white/45 mt-0.5">Review, verify projections, and publish this Vouch Board directly to the main feed.</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -1945,7 +1945,7 @@ export default function VouchStudioDarkroom({
                 disabled={isPublishingToFeed}
                 className={`py-2.5 px-4 font-mono font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase cursor-pointer ${
                   isPublishingToFeed 
-                    ? 'bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed'
+                    ? 'bg-black/25 border border-white/10 text-white/40 cursor-not-allowed'
                     : 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                 }`}
               >

@@ -26,8 +26,6 @@ import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 
-const HrNotifications = lazy(() => import('./components/notifications/HrNotifications'));
-const AppNotificationsHost = lazy(() => import('./components/notifications/AppNotificationsHost'));
 const ProAccessGate = lazy(() =>
   import('./components/pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
 );
@@ -476,8 +474,18 @@ export default function App() {
   // The Edge Island — quick-launch popup dock, opened from the floating
   // launcher button (mounted globally, under the notification bell).
   const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
+  const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
+
+  const navigateToUserProfile = (userId: string) => {
+    if (!userId) return;
+    setProfileViewUserId(userId);
+    navigateSection('profile');
+  };
 
   const navigateSection = (section: string) => {
+    if (section !== 'profile') {
+      setProfileViewUserId(null);
+    }
     const target = resolveAuthenticatedSection(section);
     if (target !== section) {
       replaceLandingUrl(target);
@@ -1578,7 +1586,7 @@ export default function App() {
     switch (activeSection) {
       case 'vouchedge_intro':
         if (hasRealAuthToken()) {
-          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} profile={profile} isLoggedIn={hasRealAuthToken()} />;
         }
         return (
           <VouchEdgeTerminalPage
@@ -1596,7 +1604,7 @@ export default function App() {
           />
         );
       case 'today':
-        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
+        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} profile={profile} isLoggedIn={hasRealAuthToken()} />;
       case 'feed':
         return (
           <HomeFeedPage
@@ -1756,6 +1764,8 @@ export default function App() {
             savedVouchIds={savedVouchIds}
             onAddComment={handleAddComment}
             savedParlays={savedSlips}
+            viewUserId={profileViewUserId}
+            onClearViewUser={() => setProfileViewUserId(null)}
           />
         );
       case 'nba_nfl':
@@ -1785,6 +1795,8 @@ export default function App() {
               savedVouchIds={savedVouchIds}
               onAddComment={handleAddComment}
               savedParlays={savedSlips}
+              viewUserId={profileViewUserId}
+              onClearViewUser={() => setProfileViewUserId(null)}
             />
           );
         }
@@ -1892,34 +1904,17 @@ export default function App() {
           >
             {renderMainView()}
           </Suspense>
-          {showGlobalAppChrome && (
-            <Suspense fallback={null}>
-              <HrNotifications savedSlips={savedSlips} />
-            </Suspense>
-          )}
         </HomeFeedLayout>
-        {showGlobalAppChrome && (
-          <Suspense fallback={null}>
-            <AppNotificationsHost onNavigate={navigateSection} />
-          </Suspense>
-        )}
-
-        {/* The Edge Island launcher — third button in the stack: app
-            notifications bell sits at bottom-44/40, HR notifications bell
-            at bottom-28/24 (see HrNotifications.tsx). On mobile there's
-            also a fixed bottom nav bar (~60px), leaving too little room
-            for a third full-size button between the HR bell and the nav
-            bar — so this one renders smaller on mobile only (w-10/h-10 vs
-            w-12/h-12 on desktop) to fit without overlapping either. */}
+        {/* The Edge Island launcher */}
         {showGlobalAppChrome && (
           <button
             type="button"
             onClick={() => setEdgeIslandOpen(true)}
             aria-label="Open The Edge Island"
             title="The Edge Island"
-            className="fixed bottom-16 md:bottom-8 right-6 md:right-8 z-[60] w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-xl shadow-cyan-950/30 hover:border-cyan-400/70 hover:bg-slate-800 transition-colors"
+            className="ve-edge-island-trigger z8-interactive fixed bottom-16 md:bottom-8 right-6 md:right-8 z-[60] flex h-10 w-10 items-center justify-center rounded-full md:h-12 md:w-12"
           >
-            <EdgeIslandIcon className="w-4 h-4 md:w-5 md:h-5 text-cyan-300" />
+            <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
           </button>
         )}
 
@@ -1929,8 +1924,10 @@ export default function App() {
               open={edgeIslandOpen}
               onClose={() => setEdgeIslandOpen(false)}
               onSectionChange={navigateSection}
+              onNavigateProfile={navigateToUserProfile}
               savedSlips={savedSlips}
               profile={profile}
+              isLoggedIn={hasRealAuthToken()}
             />
           </Suspense>
         )}
