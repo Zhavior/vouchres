@@ -4,7 +4,17 @@
  */
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { getBatterVsPitcher, getHitterStats } from "./statsClient";
-import { getStatcastBatterMap, type StatcastBatterQuality } from "./statcastClient";
+import {
+  getBattedBallProfileMap,
+  getPitchMixMap,
+  getPlateDisciplineMap,
+  getStatcastBatterMap,
+  type StatcastBatterQuality,
+  type StatcastBattedBallProfile,
+  type StatcastPitchMixRow,
+  type StatcastPlateDiscipline,
+} from "./statcastClient";
+import { getGameWeather, type GameWeather } from "./weatherService";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 const SEASON = new Date().getFullYear();
@@ -104,6 +114,36 @@ async function fetchFullGameLog(playerId: number): Promise<PlayerGameLogRow[]> {
     .reverse();
 }
 
+export interface Rolling14DayEdge {
+  games: number;
+  atBats: number;
+  homeRuns: number;
+  totalBases: number;
+  hits: number;
+  hrRate: number | null;
+  slugProxy: number | null;
+  avgHrPerGame: number | null;
+}
+
+function buildRolling14Day(gameLog: PlayerGameLogRow[]): Rolling14DayEdge | null {
+  const window = gameLog.slice(0, 14);
+  if (!window.length) return null;
+  const atBats = window.reduce((s, g) => s + g.ab, 0);
+  const homeRuns = window.reduce((s, g) => s + g.homeRuns, 0);
+  const totalBases = window.reduce((s, g) => s + g.totalBases, 0);
+  const hits = window.reduce((s, g) => s + g.hits, 0);
+  return {
+    games: window.length,
+    atBats,
+    homeRuns,
+    totalBases,
+    hits,
+    hrRate: atBats > 0 ? homeRuns / atBats : null,
+    slugProxy: atBats > 0 ? totalBases / atBats : null,
+    avgHrPerGame: window.length > 0 ? homeRuns / window.length : null,
+  };
+}
+
 export interface PlayerEdgeResearch {
   playerId: number;
   season: Awaited<ReturnType<typeof getHitterStats>>["season"];
@@ -112,6 +152,11 @@ export interface PlayerEdgeResearch {
   batterVsPitcher: Awaited<ReturnType<typeof getBatterVsPitcher>>;
   vsOpponent: PlayerGameLogRow[];
   statcast: StatcastBatterQuality | null;
+  sprayProfile: StatcastBattedBallProfile | null;
+  plateDiscipline: StatcastPlateDiscipline | null;
+  pitchMix: StatcastPitchMixRow[];
+  rolling14Day: Rolling14DayEdge | null;
+  weather: GameWeather | null;
   warnings: string[];
   dataSource: "official_mlb";
   updatedAt: string;
@@ -119,11 +164,11 @@ export interface PlayerEdgeResearch {
 
 export async function getPlayerEdgeResearch(
   playerId: number,
-  options?: { pitcherId?: number; opponentAbbr?: string },
+  options?: { pitcherId?: number; opponentAbbr?: string; gamePk?: number },
 ): Promise<PlayerEdgeResearch> {
   const warnings: string[] = [];
 
-  const [hitterStats, gameLog, statcastMap] = await Promise.all([
+  const [hitterStats, gameLog, statcastMap, sprayMap, disciplineMap, pitchMixMap] = await Promise.all([
     getHitterStats(playerId).catch((err) => {
       console.warn(`[playerEdgeResearch] hitter stats failed ${playerId}:`, (err as Error).message);
       warnings.push("Season hitting stats unavailable from MLB Stats API.");
@@ -138,6 +183,21 @@ export async function getPlayerEdgeResearch(
       console.warn("[playerEdgeResearch] statcast map failed:", (err as Error).message);
       warnings.push("Statcast season leaderboard unavailable.");
       return {} as Record<number, StatcastBatterQuality>;
+    }),
+    getBattedBallProfileMap().catch((err) => {
+      console.warn("[playerEdgeResearch] spray profile failed:", (err as Error).message);
+      warnings.push("Savant batted-ball spray profile unavailable.");
+      return {} as Record<number, StatcastBattedBallProfile>;
+    }),
+    getPlateDisciplineMap().catch((err) => {
+      console.warn("[playerEdgeResearch] plate discipline failed:", (err as Error).message);
+      warnings.push("Savant plate discipline leaderboard unavailable.");
+      return {} as Record<number, StatcastPlateDiscipline>;
+    }),
+    getPitchMixMap().catch((err) => {
+      console.warn("[playerEdgeResearch] pitch mix failed:", (err as Error).message);
+      warnings.push("Savant pitch-type breakdown unavailable.");
+      return {} as Record<number, StatcastPitchMixRow[]>;
     }),
   ]);
 
@@ -174,6 +234,41 @@ export async function getPlayerEdgeResearch(
     warnings.push("Statcast season quality unavailable (PA threshold or feed miss). Zone heatmaps are not fabricated.");
   }
 
+  const sprayProfile = sprayMap[playerId] ?? null;
+  if (!sprayProfile) {
+    warnings.push("Savant spray profile unavailable for this batter.");
+  }
+
+  const plateDiscipline = disciplineMap[playerId] ?? null;
+  if (!plateDiscipline) {
+    warnings.push("Savant plate discipline unavailable — not a strike-zone heatmap.");
+  }
+
+  const pitchMix = pitchMixMap[playerId] ?? [];
+  if (!pitchMix.length) {
+    warnings.push("No Savant pitch-type rows for this batter.");
+  }
+
+  const rolling14Day = buildRolling14Day(gameLog);
+  if (!rolling14Day) {
+    warnings.push("Rolling 14-day edge needs at least one game in the season log.");
+  }
+
+  let weather: GameWeather | null = null;
+  const gamePk = options?.gamePk;
+  if (gamePk && gamePk > 0) {
+    weather = await getGameWeather(gamePk).catch((err) => {
+      console.warn(`[playerEdgeResearch] weather failed gamePk=${gamePk}:`, (err as Error).message);
+      warnings.push("Game weather forecast unavailable.");
+      return null;
+    });
+    if (!weather) {
+      warnings.push("No verified weather row for this gamePk on today's slate.");
+    }
+  } else {
+    warnings.push("gamePk unavailable — weather impact needs today's scheduled game.");
+  }
+
   return {
     playerId,
     season: hitterStats?.season ?? null,
@@ -182,6 +277,11 @@ export async function getPlayerEdgeResearch(
     batterVsPitcher,
     vsOpponent,
     statcast,
+    sprayProfile,
+    plateDiscipline,
+    pitchMix,
+    rolling14Day,
+    weather,
     warnings,
     dataSource: "official_mlb",
     updatedAt: new Date().toISOString(),

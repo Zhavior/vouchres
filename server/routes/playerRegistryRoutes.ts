@@ -90,11 +90,14 @@ playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(as
     const playerId = positiveInt(req.params.playerId, "playerId");
     const pitcherRaw = queryString(req.query.pitcherId, 12);
     const opponentAbbr = queryString(req.query.opponent, 6);
+    const gamePkRaw = queryString(req.query.gamePk, 12);
     const pitcherId = pitcherRaw ? positiveInt(pitcherRaw, "pitcherId") : undefined;
+    const gamePk = gamePkRaw ? positiveInt(gamePkRaw, "gamePk") : undefined;
 
     const research = await getPlayerEdgeResearch(playerId, {
       pitcherId,
       opponentAbbr: opponentAbbr || undefined,
+      gamePk,
     });
 
     return res.json({ ok: true, ...research });

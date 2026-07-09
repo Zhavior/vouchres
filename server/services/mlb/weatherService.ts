@@ -224,3 +224,9 @@ export async function getTodayGamesWeather(date = todayISO()): Promise<GameWeath
 
   return results;
 }
+
+/** Weather for a single scheduled game (today by default). Returns null when not on the slate. */
+export async function getGameWeather(gamePk: number, date = todayISO()): Promise<GameWeather | null> {
+  const games = await getTodayGamesWeather(date);
+  return games.find((g) => g.gamePk === gamePk) ?? null;
+}

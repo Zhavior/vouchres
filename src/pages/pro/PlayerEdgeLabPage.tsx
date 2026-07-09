@@ -49,6 +49,12 @@ function getPitcherId(row: any): number | null {
   return parsed && parsed > 0 ? parsed : null;
 }
 
+function getGamePk(row: any): number | null {
+  const raw = row?.gamePk ?? row?.game_pk ?? row?.game_id;
+  const parsed = safeNumber(raw);
+  return parsed && parsed > 0 ? parsed : null;
+}
+
 export default function PlayerEdgeLabPage() {
   const { rows, loading, error, source } = useHrBoardProData();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,6 +62,7 @@ export default function PlayerEdgeLabPage() {
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
   const playerId = selectedRow ? getPlayerId(selectedRow, 0) : null;
   const pitcherId = selectedRow ? getPitcherId(selectedRow) : null;
+  const gamePk = selectedRow ? getGamePk(selectedRow) : null;
   const opponent = selectedRow ? safeText(selectedRow.opponent ?? selectedRow.opposingPitcherTeam, '') : '';
   const pitcherName = selectedRow
     ? safeText(selectedRow.opponentPitcherName ?? selectedRow.opposingPitcher ?? selectedRow.pitcherName, '')
@@ -69,6 +76,7 @@ export default function PlayerEdgeLabPage() {
   } = usePlayerEdgeResearch(playerId, {
     pitcherId,
     opponent: opponent || null,
+    gamePk,
   });
 
   return (
@@ -221,7 +229,7 @@ export default function PlayerEdgeLabPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div className={`${Z8_LABEL} text-white/40`}>MLB Research Graphs</div>
-                <div className="mt-1 text-sm font-black text-white">BvP, team trends, Statcast, HR edge</div>
+                <div className="mt-1 text-sm font-black text-white">BvP, spray, pitch mix, trends</div>
               </div>
               <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
                 {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}

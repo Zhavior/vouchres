@@ -167,3 +167,152 @@ export async function getStatcastBatterMap(year = seasonYear()): Promise<Record<
 }
 
 export const STATCAST_MIN_PA = MIN_PA;
+
+export interface StatcastBattedBallProfile {
+  playerId: number;
+  bbe: number | null;
+  pullPct: number | null;
+  straightPct: number | null;
+  oppoPct: number | null;
+  gbPct: number | null;
+  fbPct: number | null;
+  ldPct: number | null;
+  pullAirPct: number | null;
+}
+
+export interface StatcastPlateDiscipline {
+  playerId: number;
+  chasePct: number | null;
+  whiffPct: number | null;
+  kPct: number | null;
+  bbPct: number | null;
+}
+
+export interface StatcastPitchMixRow {
+  pitchType: string;
+  pitchName: string;
+  pitchUsage: number | null;
+  woba: number | null;
+  xwoba: number | null;
+  whiffPct: number | null;
+  hardHitPct: number | null;
+  pitches: number | null;
+}
+
+/** Season spray / batted-ball direction from Savant Batted Ball Profile leaderboard. */
+export async function getBattedBallProfileMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastBattedBallProfile>> {
+  const cacheKey = `battedBall:${year}`;
+  const cached = statcastCache.get(cacheKey);
+  if (cached !== undefined) return cached as Record<number, StatcastBattedBallProfile>;
+
+  try {
+    const rows = await fetchCsv(
+      `https://baseballsavant.mlb.com/leaderboard/batted-ball?type=batter&seasonStart=${year}&seasonEnd=${year}&gameType=Regular&minSwings=q&minGroupSwings=1&csv=true`,
+    );
+    const map: Record<number, StatcastBattedBallProfile> = {};
+    for (const row of rows) {
+      const playerId = num(row.id) ?? num(row.player_id);
+      if (!playerId) continue;
+      map[playerId] = {
+        playerId,
+        bbe: num(row.bbe),
+        pullPct: pct(row.pull_rate),
+        straightPct: pct(row.straight_rate),
+        oppoPct: pct(row.oppo_rate),
+        gbPct: pct(row.gb_rate),
+        fbPct: pct(row.fb_rate),
+        ldPct: pct(row.ld_rate),
+        pullAirPct: pct(row.pull_air_rate),
+      };
+    }
+    statcastCache.set(cacheKey, map);
+    return map;
+  } catch (err) {
+    console.warn("[statcastClient] batted-ball fetch failed:", (err as Error).message);
+    statcastCache.set(cacheKey, {}, 30 * 60_000);
+    return {};
+  }
+}
+
+/** Season plate discipline from Savant Percentile Rankings (raw values, not percentiles). */
+export async function getPlateDisciplineMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastPlateDiscipline>> {
+  const cacheKey = `plateDiscipline:${year}`;
+  const cached = statcastCache.get(cacheKey);
+  if (cached !== undefined) return cached as Record<number, StatcastPlateDiscipline>;
+
+  try {
+    const rows = await fetchCsv(
+      `https://baseballsavant.mlb.com/leaderboard/percentile-rankings?type=batter&year=${year}&csv=true`,
+    );
+    const map: Record<number, StatcastPlateDiscipline> = {};
+    for (const row of rows) {
+      const playerId = num(row.player_id);
+      if (!playerId) continue;
+      map[playerId] = {
+        playerId,
+        chasePct: num(row.chase_percent),
+        whiffPct: num(row.whiff_percent),
+        kPct: num(row.k_percent),
+        bbPct: num(row.bb_percent),
+      };
+    }
+    statcastCache.set(cacheKey, map);
+    return map;
+  } catch (err) {
+    console.warn("[statcastClient] plate-discipline fetch failed:", (err as Error).message);
+    statcastCache.set(cacheKey, {}, 30 * 60_000);
+    return {};
+  }
+}
+
+/** Season pitch-type breakdown per batter from Savant Pitch Arsenal Stats. */
+export async function getPitchMixMap(
+  year = seasonYear(),
+): Promise<Record<number, StatcastPitchMixRow[]>> {
+  const cacheKey = `pitchMix:${year}`;
+  const cached = statcastCache.get(cacheKey);
+  if (cached !== undefined) return cached as Record<number, StatcastPitchMixRow[]>;
+
+  try {
+    const rows = await fetchCsv(
+      `https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=batter&year=${year}&min=${MIN_PA}&csv=true`,
+    );
+    const map: Record<number, StatcastPitchMixRow[]> = {};
+    for (const row of rows) {
+      const playerId = num(row.player_id);
+      if (!playerId) continue;
+      const entry: StatcastPitchMixRow = {
+        pitchType: String(row.pitch_type ?? "").trim(),
+        pitchName: String(row.pitch_name ?? row.pitch_type ?? "Unknown").trim(),
+        pitchUsage: num(row.pitch_usage),
+        woba: num(row.woba),
+        xwoba: num(row.est_woba) ?? num(row.woba),
+        whiffPct: num(row.whiff_percent),
+        hardHitPct: num(row.hard_hit_percent),
+        pitches: num(row.pitches),
+      };
+      if (!map[playerId]) map[playerId] = [];
+      map[playerId].push(entry);
+    }
+    for (const playerId of Object.keys(map)) {
+      map[Number(playerId)].sort((a, b) => (b.pitchUsage ?? 0) - (a.pitchUsage ?? 0));
+    }
+    statcastCache.set(cacheKey, map);
+    return map;
+  } catch (err) {
+    console.warn("[statcastClient] pitch-mix fetch failed:", (err as Error).message);
+    statcastCache.set(cacheKey, {}, 30 * 60_000);
+    return {};
+  }
+}
+
+/** Convert 0–1 rate fields to 0–100 display percentages. */
+function pct(value: string | undefined): number | null {
+  const n = num(value);
+  if (n == null) return null;
+  return n <= 1 ? n * 100 : n;
+}

@@ -38,12 +38,72 @@ export type StatcastQuality = {
   avgExitVelo: number | null;
 };
 
+export type SprayProfile = {
+  playerId: number;
+  bbe: number | null;
+  pullPct: number | null;
+  straightPct: number | null;
+  oppoPct: number | null;
+  gbPct: number | null;
+  fbPct: number | null;
+  ldPct: number | null;
+  pullAirPct: number | null;
+};
+
+export type PlateDiscipline = {
+  playerId: number;
+  chasePct: number | null;
+  whiffPct: number | null;
+  kPct: number | null;
+  bbPct: number | null;
+};
+
+export type PitchMixRow = {
+  pitchType: string;
+  pitchName: string;
+  pitchUsage: number | null;
+  woba: number | null;
+  xwoba: number | null;
+  whiffPct: number | null;
+  hardHitPct: number | null;
+  pitches: number | null;
+};
+
+export type Rolling14DayEdge = {
+  games: number;
+  atBats: number;
+  homeRuns: number;
+  totalBases: number;
+  hits: number;
+  hrRate: number | null;
+  slugProxy: number | null;
+  avgHrPerGame: number | null;
+};
+
+export type GameWeatherSnapshot = {
+  gamePk: number;
+  venue: string;
+  gameTime: string;
+  status: 'forecast' | 'retractable' | 'indoor' | 'unavailable';
+  tempF: number | null;
+  windMph: number | null;
+  windCompass: string | null;
+  precipChancePct: number | null;
+  source: 'open-meteo' | null;
+  note: string;
+};
+
 export type PlayerEdgeResearchPayload = {
   playerId: number;
   gameLog: PlayerGameLogRow[];
   batterVsPitcher: BatterVsPitcherRow | null;
   vsOpponent: PlayerGameLogRow[];
   statcast: StatcastQuality | null;
+  sprayProfile: SprayProfile | null;
+  plateDiscipline: PlateDiscipline | null;
+  pitchMix: PitchMixRow[];
+  rolling14Day: Rolling14DayEdge | null;
+  weather: GameWeatherSnapshot | null;
   warnings: string[];
   dataSource: string;
   updatedAt: string;
@@ -62,6 +122,11 @@ const EMPTY: PlayerEdgeResearchPayload = {
   batterVsPitcher: null,
   vsOpponent: [],
   statcast: null,
+  sprayProfile: null,
+  plateDiscipline: null,
+  pitchMix: [],
+  rolling14Day: null,
+  weather: null,
   warnings: [],
   dataSource: 'official_mlb',
   updatedAt: '',
@@ -69,7 +134,7 @@ const EMPTY: PlayerEdgeResearchPayload = {
 
 export function usePlayerEdgeResearch(
   playerId: string | number | null | undefined,
-  options?: { pitcherId?: number | null; opponent?: string | null },
+  options?: { pitcherId?: number | null; opponent?: string | null; gamePk?: number | null },
 ) {
   const [state, setState] = useState<ResearchState>({
     data: null,
@@ -80,6 +145,7 @@ export function usePlayerEdgeResearch(
 
   const pitcherId = options?.pitcherId && options.pitcherId > 0 ? options.pitcherId : null;
   const opponent = options?.opponent?.trim() || null;
+  const gamePk = options?.gamePk && options.gamePk > 0 ? options.gamePk : null;
   const id = playerId != null && String(playerId).trim() !== '' ? String(playerId) : null;
 
   useEffect(() => {
@@ -92,6 +158,7 @@ export function usePlayerEdgeResearch(
     const params = new URLSearchParams();
     if (pitcherId) params.set('pitcherId', String(pitcherId));
     if (opponent) params.set('opponent', opponent);
+    if (gamePk) params.set('gamePk', String(gamePk));
     const qs = params.toString();
     const url = `/api/mlb/players/${encodeURIComponent(id)}/edge-research${qs ? `?${qs}` : ''}`;
 
@@ -113,7 +180,7 @@ export function usePlayerEdgeResearch(
     return () => {
       cancelled = true;
     };
-  }, [id, pitcherId, opponent]);
+  }, [id, pitcherId, opponent, gamePk]);
 
   return state;
 }

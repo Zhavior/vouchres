@@ -3,13 +3,13 @@
  * Replaces placeholder ProLockedCards with honest real/empty states.
  */
 import React, { useMemo } from 'react';
-import { Activity, Target, Users, Zap } from 'lucide-react';
+import { Activity, CloudRain, Crosshair, Grid3x3, Layers, MapPin, Target, Users, Zap } from 'lucide-react';
 import { ACCENT } from '../../theme/colors';
 import { ProGraphShell } from './ProGraphShell';
 import { ProSignalBar } from './ProSignalBar';
 import { SignalGraph } from './SignalGraph';
 import { VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
-import { StatChip, fmtDecimal, fmtInt } from '../ui/primitives';
+import { StatChip, fmtDecimal, fmtInt, fmtPercent } from '../ui/primitives';
 import type { PlayerEdgeResearchPayload } from '../../pages/pro/usePlayerEdgeResearch';
 
 export interface PlayerEdgeGraphsProps {
@@ -215,9 +215,9 @@ const HrEdgeTrendGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Reac
     return (
       <VerifiedGraphEmptyState
         variant="no-data"
-        sectionTitle="HR Edge Trend"
+        sectionTitle="Player Trend"
         title="No game trend data"
-        detail="Recent HR production trend requires MLB game logs."
+        detail="Recent production trend requires MLB game logs."
       />
     );
   }
@@ -229,8 +229,8 @@ const HrEdgeTrendGraph: React.FC<{ research: PlayerEdgeResearchPayload }> = Reac
   return (
     <ProGraphShell
       icon={Activity}
-      title="HR Edge Trend"
-      subtitle="Last 10 games · MLB game log"
+      title="Player Trend"
+      subtitle="Last 10 games · HR rate & power proxy"
       accent={ACCENT.final}
       footer={`${fmtDecimal(recent.reduce((s, g) => s + g.homeRuns, 0) / Math.max(1, recent.length))} HR/game avg over window. Derived from real box scores, not a proprietary model replay.`}
     >
@@ -306,7 +306,15 @@ export const PlayerEdgeGraphs: React.FC<PlayerEdgeGraphsProps> = React.memo(func
       <BatterVsPitcherGraph research={research} pitcherName={pitcherName} />
       <VsTeamTrendsGraph research={research} opponent={opponent} />
       <PowerQualityGraph research={research} />
-      <HrEdgeTrendGraph research={research} />
+      <PlayerTrendGraph research={research} />
+      <SprayProfileGraph research={research} />
+      <PitchMixGraph research={research} />
+      <PlateDisciplineGraph research={research} />
+      <Rolling14DayGraph research={research} />
+      <WeatherImpactGraph research={research} />
+      <div className="lg:col-span-2">
+        <ZoneHeatmapGraph />
+      </div>
     </div>
   );
 });
