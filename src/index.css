@@ -1,14 +1,13 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
+@source "../src/**/*.{js,ts,jsx,tsx}";
+@source "../components/**/*.{js,ts,jsx,tsx}";
+@source not "../src/**/*.test.{ts,tsx}";
+@source not "../src/**/*.bak";
+@source not "../vouchedge/**";
+@source not "../vouchedge-terminal/**";
+@source not "../tests/**";
 @import "./styles/z8-design-system.css";
-
-/* Baseball Team brand fonts */
-.baseball-script {
-  font-family: 'Playball', cursive, sans-serif !important;
-}
-
-.baseball-varsity {
-  font-family: 'Graduate', serif !important;
-}
 
 .scrollbar-none {
   scrollbar-width: none; /* Firefox */
@@ -249,56 +248,10 @@ button.bg-slate-950:hover,
 }
 
 /* Gokū luxury serif cinematic typography inspired by high fashion editorial display and serif contrast */
-.goku-cinematic-display {
-  font-family: 'Cinzel Decorative', 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
 .goku-serif-italic {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
   font-weight: 300;
-}
-
-/* ================== STAR WARS CINEMATIC TYPOGRAPHY & TIMELINE ================== */
-.starwars-font-crawl {
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #020617; /* Deep midnight void fill */
-  letter-spacing: 0.12em;
-  -webkit-text-stroke: 2px #FFE81F;
-  text-shadow: 0 0 10px rgba(255, 232, 31, 0.75), 0 0 25px rgba(217, 119, 6, 0.4);
-}
-
-.starwars-font-solid {
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #FFE81F;
-  letter-spacing: 0.18em;
-  text-shadow: 0 0 15px rgba(255, 232, 31, 0.95), 0 0 35px rgba(245, 158, 11, 0.6);
-}
-
-.starwars-logo-stacked {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 0.85;
-  transform: perspective(300px) rotateX(16deg);
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.starwars-logo-stacked:hover {
-  transform: perspective(300px) rotateX(8deg) scale(1.05);
-}
-
-.timeline-glow-line {
-  box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
 }
 
 .timeline-dot-pulse {
@@ -317,93 +270,6 @@ button.bg-slate-950:hover,
   }
 }
 
-/* ==========================================================================
-   EPIC STAR WARS & TRUST CINEMATIC CRAWL STYLINGS
-   ========================================================================== */
-
-/* Perspective context for cinematic crawls */
-.trust-crawl-perspective {
-  perspective: 350px;
-  transform-style: preserve-3d;
-}
-
-/* Rolling infinite 3D Star Wars Crawl Effect for theater and logs */
-@keyframes trust-infinite-scroll-crawl {
-  0% {
-    transform: rotateX(25deg) translateY(240px);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: rotateX(25deg) translateY(-320px);
-    opacity: 0;
-  }
-}
-
-.starwars-movie-crawl-active {
-  animation: trust-infinite-scroll-crawl 20s linear infinite;
-  transform-origin: 50% 100%;
-}
-
-/* Epic micro transitions for navigation items using 3D crawl values */
-.nav-link3d-crawl {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-style: preserve-3d;
-}
-
-.nav-link3d-crawl:hover {
-  transform: perspective(100px) rotateX(12deg) translateY(-2px) translateZ(5px);
-  text-shadow: 0 0 10px rgba(255, 232, 31, 0.95);
-  -webkit-text-stroke: 0.5px rgba(255, 232, 31, 0.7);
-  color: #FFE81F !important;
-}
-
-/* Majestic hover crawls for landing page section headings */
-.heading-epic-3dcrawl {
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-style: preserve-3d;
-}
-
-.heading-epic-3dcrawl:hover {
-  transform: perspective(300px) rotateX(14deg) translateY(-3px) scale(1.02);
-  text-shadow: 0 0 15px rgba(255, 232, 31, 0.8), 0 0 30px rgba(245, 158, 11, 0.5);
-  color: #FFE81F !important;
-}
-
-/* Star-space backdrop wrapper for the Trust Theater */
-.trust-theater-stars {
-  background-image: 
-    radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-    radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
-    radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
-  background-size: 550px 550px, 350px 350px, 250px 250px;
-  background-position: 0 0, 40px 60px, 130px 270px;
-}
-
-
-
-
-
-/* ===== Welcome Portal (spaceman landing) ===== */
-@keyframes ve-twinkle { 0%,100%{opacity:.25} 50%{opacity:1} }
-@keyframes ve-pulse-glow {
-  0%,100%{ filter: drop-shadow(0 0 10px rgba(100,200,255,.45)) drop-shadow(0 0 40px rgba(60,180,255,.25)); }
-  50%{ filter: drop-shadow(0 0 30px rgba(100,200,255,.9)) drop-shadow(0 0 90px rgba(60,180,255,.45)); }
-}
-.ve-star { position:absolute; border-radius:50%; background:#fff; animation: ve-twinkle var(--td,3s) ease-in-out infinite; animation-delay: var(--tdl,0s); }
-.ve-astro-glow { animation: ve-pulse-glow 3.5s ease-in-out infinite; }
-.ve-glass { background: rgba(255,255,255,.03); backdrop-filter: blur(12px); border:1px solid rgba(255,255,255,.08); transition: all .3s ease; }
-.ve-glass:hover { background: rgba(255,255,255,.06); border-color: rgba(100,200,255,.35); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.35), 0 0 30px rgba(100,200,255,.12); }
-.ve-nebula { background:
-  radial-gradient(ellipse at 18% 28%, rgba(88,28,135,.20) 0%, transparent 50%),
-  radial-gradient(ellipse at 82% 18%, rgba(14,116,144,.16) 0%, transparent 50%),
-  radial-gradient(ellipse at 50% 88%, rgba(30,64,175,.14) 0%, transparent 50%); }
-.ve-grad-text { background: linear-gradient(135deg,#60d0f0 0%,#a0e0ff 40%,#fff 60%,#80c0e0 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 
 /* ===== EPIC THEME SYSTEM — 3D depth, real textures, 4D animated backgrounds ===== */
 
@@ -621,97 +487,6 @@ button.bg-slate-950:hover,
 @keyframes ve-star-3d {
   0%, 100% { opacity: 0.2; transform: scale(0.6) translateZ(-50px); }
   50%      { opacity: 1; transform: scale(1.2) translateZ(50px); }
-}
-
-/* =================================================================
-   LANDING SPACE HERO — Premium cinematic astronaut hero
-   ================================================================= */
-
-.landing-space-hero {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 75% 25%, rgba(56,189,248,0.18), transparent 34%),
-    radial-gradient(circle at 20% 10%, rgba(59,130,246,0.12), transparent 30%),
-    radial-gradient(circle at 50% 80%, rgba(139,92,246,0.06), transparent 40%),
-    linear-gradient(180deg, #020617 0%, #06111f 58%, #040810 100%);
-}
-
-.landing-space-layer {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 70% 30%, rgba(34,211,238,0.08), transparent 60%),
-    radial-gradient(ellipse 50% 30% at 30% 20%, rgba(59,130,246,0.06), transparent 60%);
-  pointer-events: none;
-}
-
-.landing-stars-layer {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 15%, rgba(226,244,255,0.75), transparent),
-    radial-gradient(1px 1px at 25% 35%, rgba(226,244,255,0.5), transparent),
-    radial-gradient(1px 1px at 45% 10%, rgba(226,244,255,0.6), transparent),
-    radial-gradient(1px 1px at 65% 25%, rgba(226,244,255,0.75), transparent),
-    radial-gradient(1px 1px at 80% 40%, rgba(226,244,255,0.4), transparent),
-    radial-gradient(1px 1px at 15% 55%, rgba(226,244,255,0.6), transparent),
-    radial-gradient(1px 1px at 35% 70%, rgba(226,244,255,0.3), transparent),
-    radial-gradient(1px 1px at 55% 50%, rgba(226,244,255,0.5), transparent),
-    radial-gradient(1px 1px at 75% 65%, rgba(226,244,255,0.4), transparent),
-    radial-gradient(1px 1px at 90% 20%, rgba(226,244,255,0.6), transparent),
-    radial-gradient(2px 2px at 50% 30%, rgba(226,244,255,0.3), transparent),
-    radial-gradient(1px 1px at 5% 80%, rgba(226,244,255,0.2), transparent);
-  background-size: 100% 100%;
-  animation: landing-star-drift 30s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes landing-star-drift {
-  0%   { transform: translateY(0); opacity: 0.6; }
-  50%  { opacity: 1; }
-  100% { transform: translateY(-20px); opacity: 0.6; }
-}
-
-@keyframes landing-orbit-spin {
-  0%   { transform: translateY(-50%) rotate(0deg); }
-  100% { transform: translateY(-50%) rotate(360deg); }
-}
-
-.landing-astronaut-glow {
-  filter: blur(30px);
-  animation: landing-glow-pulse 4s ease-in-out infinite;
-}
-
-@keyframes landing-glow-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%      { opacity: 0.8; transform: scale(1.1); }
-}
-
-.landing-hero-fade {
-  background: linear-gradient(180deg, transparent 0%, #040810 100%);
-}
-
-.floating-proof-chip {
-  animation: landing-chip-float 4s ease-in-out infinite;
-}
-
-@keyframes landing-chip-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-
-@media (max-width: 768px) {
-  .landing-space-hero {
-    min-height: auto;
-  }
-  .landing-astronaut-wrap {
-    max-width: 280px !important;
-  }
-  .landing-astronaut-glow {
-    width: 280px !important;
-    height: 280px !important;
-  }
 }
 
 /* ============================================================
@@ -5234,162 +5009,6 @@ body,
   .ve-feed-load-state-empty {
     margin-left: 12px;
     margin-right: 12px;
-  }
-}
-
-
-/* =========================================================
-   HOME FEED — SOCIAL APP SCROLL BEHAVIOR
-   Middle feed scrolls like Twitter/Instagram.
-   Sidebars stay fixed. Empty feed still has scroll space.
-   ========================================================= */
-
-/* Desktop app shell: body should not be the main scroller */
-@media (min-width: 1181px) {
-  html,
-  body,
-  #root {
-    height: 100%;
-    min-height: 100%;
-    overflow: hidden !important;
-  }
-
-  #layout-inner-frame.ve-layout-feed,
-  #layout-inner-frame.ve-layout-wide {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    align-items: stretch !important;
-  }
-
-  /* Side rails do not create the main scroll */
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left,
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right,
-  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > *,
-  #layout-inner-frame.ve-layout-feed .ve-edge-rail-right > *,
-  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain;
-  }
-
-  /* Center column holds the feed scroll viewport */
-  #layout-inner-frame.ve-layout-feed #center-main-content-column,
-  #layout-inner-frame.ve-layout-wide #center-main-content-column {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* This is the actual social media scroll area */
-  #inner-view-slot {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 0 !important;
-    overflow-y: scroll !important;
-    overflow-x: hidden !important;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    padding-bottom: 120px !important;
-  }
-}
-
-/* Empty feeds need real vertical space so scrolling still feels possible */
-#inner-view-slot:has(.ve-feed-load-state-empty),
-#inner-view-slot:has(.ve-bottom-empty-state) {
-  min-height: 100dvh !important;
-}
-
-#inner-view-slot:has(.ve-feed-load-state-empty)::after,
-#inner-view-slot:has(.ve-bottom-empty-state)::after {
-  content: "";
-  display: block;
-  height: 42vh;
-  min-height: 260px;
-}
-
-/* Make the bottom empty state look like a real end-of-feed card */
-.ve-feed-load-state-empty {
-  min-height: 112px !important;
-  margin: 18px 24px 38px !important;
-  padding: 20px !important;
-  border: 1px solid rgba(45, 212, 191, 0.16) !important;
-  border-radius: 24px !important;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.12), transparent 42%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.95)) !important;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
-}
-
-.ve-bottom-empty-state::before {
-  content: "↓";
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  margin: 0 auto 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(45, 212, 191, 0.24);
-  background: rgba(45, 212, 191, 0.08);
-  color: hsl(var(--ve-accent-cyan));
-  font-size: 18px;
-  font-weight: 1000;
-}
-
-.ve-bottom-empty-state strong {
-  display: block;
-  color: hsl(var(--ve-text-primary));
-  font-size: 14px;
-  font-weight: 1000;
-}
-
-.ve-bottom-empty-state span {
-  display: block;
-  max-width: 430px;
-  margin-top: 5px;
-  color: rgba(203, 213, 225, 0.7);
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1.45;
-}
-
-/* Clean scrollbars */
-#inner-view-slot::-webkit-scrollbar {
-  width: 8px;
-}
-
-#inner-view-slot::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(45, 212, 191, 0.26);
-}
-
-#inner-view-slot::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Mobile should use natural document scroll */
-@media (max-width: 1180px) {
-  html,
-  body,
-  #root {
-    overflow: auto !important;
-  }
-
-  #inner-view-slot {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding-bottom: 80px !important;
   }
 }
 

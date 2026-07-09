@@ -32,6 +32,7 @@ import {
   MousePointer2
 } from 'lucide-react';
 import { motion, AnimatePresence } from '../lib/motion';
+import { loadDecorativeFonts } from '../lib/loadDecorativeFonts';
 import { CreatorProofProfile } from '../types';
 
 function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string) => void }) {
@@ -988,6 +989,10 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
 
   // Detect if verified account is already established
   const isRegistered = profile.username && profile.username !== 'anonymous_capper' && profile.username !== '';
+
+  useEffect(() => {
+    loadDecorativeFonts();
+  }, []);
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
