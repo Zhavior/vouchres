@@ -16,6 +16,7 @@ import { Z8_PANEL } from "../../theme/z8Tokens";
 import { useSmartAiCandidates } from "../../components/smart-ai/useSmartAiCandidates";
 import { AskVouchPanel } from "../../features/ai/components/AskVouchPanel";
 import { FeaturedEdgeCard } from "./FeaturedEdgeCard";
+import { AiMarketPulseCard } from "./AiMarketPulseCard";
 
 export default function ProCommandCenterPage() {
   const {
@@ -69,6 +70,9 @@ export default function ProCommandCenterPage() {
           reasons={topEdges[0].reasons}
         />
       )}
+
+      
+      <AiMarketPulseCard />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className={`${Z8_PANEL} ve-premium-panel rounded-3xl p-5 backdrop-blur-xl shadow-xl shadow-black/20`}>
