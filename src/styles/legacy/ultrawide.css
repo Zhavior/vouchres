@@ -1,0 +1,353 @@
+/* ==========================================================
+   VOUCHEDGE APP ALIGNMENT RULE
+   Sidebar + content stay one unit; on ultrawide the whole shell
+   caps and centers instead of stretching edge-to-edge.
+   ========================================================== */
+
+#layout-inner-frame.ve-layout-wide {
+  display: grid !important;
+  grid-template-columns: 286px minmax(0, 1fr) !important;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: min(1680px, 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  justify-content: center !important;
+}
+
+#layout-inner-frame.ve-layout-wide .ve-edge-rail-left {
+  width: 286px !important;
+  min-width: 286px !important;
+  max-width: 286px !important;
+}
+
+#layout-inner-frame.ve-layout-wide .ve-edge-rail-left > * {
+  width: 286px !important;
+  min-width: 286px !important;
+  max-width: 286px !important;
+}
+
+#layout-inner-frame.ve-layout-wide #center-main-content-column {
+  grid-column: 2 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-right: 0 !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .mx-auto,
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .max-w-7xl,
+#layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) > .max-w-\[1320px\] {
+  max-width: min(100%, 1320px) !important;
+}
+
+#layout-inner-frame.ve-layout-feed {
+  display: grid !important;
+  grid-template-columns: 260px 680px 320px !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 1308px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  justify-content: center !important;
+}
+
+/* Ultrawide: subtle side gutters so the shell floats centered in obsidian */
+@media (min-width: 1920px) {
+  .z8-layout-root {
+    padding-inline: clamp(20px, 3vw, 56px);
+  }
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left > * {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-switching {
+  opacity: 0.72 !important;
+  filter: blur(0.4px) !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-left.ve-edge-rail-switching {
+  transform: translateX(10px) scale(0.992) !important;
+}
+
+#layout-inner-frame.ve-layout-feed .ve-edge-rail-right.ve-edge-rail-switching {
+  transform: translateX(-10px) scale(0.992) !important;
+}
+
+.ve-sidebar,
+#layout-inner-frame .ve-sidebar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout-inner-frame .ve-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, hsl(var(--ve-bg-panel) / 0.18) 52%, transparent),
+    radial-gradient(circle at 90% 8%, hsl(var(--ve-accent-cyan) / 0.08), transparent 34%);
+  opacity: 0.72;
+}
+
+@media (max-width: 1180px) {
+  #layout-inner-frame.ve-layout-wide,
+  #layout-inner-frame.ve-layout-feed {
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  #layout-inner-frame.ve-layout-wide #inner-view-slot > :is(main, section, div) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* =========================================
+   VOUCHEDGE PREMIUM MOTION SYSTEM
+   ========================================= */
+:root {
+  --ve-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ve-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ve-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ve-duration-fast: 180ms;
+  --ve-duration-normal: 280ms;
+  --ve-duration-slow: 520ms;
+
+  --ve-motion-blur: 96px;
+  --ve-motion-grid-opacity: 0.035;
+  --ve-motion-orb-opacity: 0.32;
+  --ve-motion-noise-opacity: 0.035;
+}
+
+@keyframes veFloatSlow {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(3vw, -4vh, 0) scale(1.05); }
+  66% { transform: translate3d(-2vw, 3vh, 0) scale(0.96); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes veDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-4vw, 5vh, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes vePulseSoft {
+  0% { opacity: 0.55; transform: translate3d(0, 0, 0) scale(0.98); }
+  50% { opacity: 0.9; transform: translate3d(0, -1vh, 0) scale(1.02); }
+  100% { opacity: 0.55; transform: translate3d(0, 0, 0) scale(0.98); }
+}
+
+.ve-motion-shell {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  isolation: isolate;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 50% -10%, var(--ve-accent-glow), transparent 34rem),
+    linear-gradient(180deg, var(--ve-bg-soft) 0%, var(--ve-bg) 42%, var(--ve-bg) 100%);
+  color: var(--ve-text);
+}
+
+@supports not (overflow: clip) {
+  .ve-motion-shell {
+    overflow-x: hidden;
+  }
+}
+
+.ve-theme-transition,
+.ve-card,
+.ve-card-strong,
+.ve-panel,
+.ve-sidebar,
+.ve-input,
+.ve-button-primary,
+.ve-button-secondary,
+.ve-nav-item,
+.ve-nav-item-active {
+  transition:
+    background-color var(--ve-duration-slow) var(--ve-ease),
+    border-color var(--ve-duration-slow) var(--ve-ease),
+    color var(--ve-duration-normal) var(--ve-ease),
+    box-shadow var(--ve-duration-slow) var(--ve-ease),
+    transform var(--ve-duration-normal) var(--ve-ease-out);
+}
+
+.ve-motion-bg {
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  contain: layout paint style;
+}
+
+.ve-motion-grid {
+  position: absolute;
+  inset: 0;
+  opacity: var(--ve-motion-grid-opacity);
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--ve-text) 35%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--ve-text) 35%, transparent) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at 50% 20%, black 0%, black 28%, transparent 72%);
+  -webkit-mask-image: radial-gradient(circle at 50% 20%, black 0%, black 28%, transparent 72%);
+}
+
+.ve-motion-noise {
+  position: absolute;
+  inset: 0;
+  opacity: var(--ve-motion-noise-opacity);
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.75'/%3E%3C/svg%3E");
+}
+
+.ve-motion-spotlight {
+  position: absolute;
+  top: -12%;
+  left: 50%;
+  width: min(86vw, 980px);
+  height: 58vh;
+  transform: translateX(-50%);
+  opacity: 0.88;
+  background: radial-gradient(ellipse at top, var(--ve-accent-glow), transparent 68%);
+}
+
+.ve-motion-orb {
+  position: absolute;
+  border-radius: 999px;
+  opacity: var(--ve-motion-orb-opacity);
+  filter: blur(var(--ve-motion-blur));
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+.ve-motion-orb-a {
+  top: 4%;
+  left: -16%;
+  width: min(52vw, 720px);
+  height: min(52vw, 720px);
+  background: radial-gradient(circle, var(--ve-accent) 0%, transparent 68%);
+  animation: veFloatSlow 24s infinite alternate var(--ve-ease-in-out);
+}
+
+.ve-motion-orb-b {
+  right: -18%;
+  bottom: 4%;
+  width: min(48vw, 680px);
+  height: min(48vw, 680px);
+  background: radial-gradient(circle, var(--ve-accent-2) 0%, transparent 70%);
+  animation: veDrift 30s infinite alternate-reverse var(--ve-ease-in-out);
+}
+
+.ve-motion-orb-c {
+  top: 34%;
+  left: 38%;
+  width: min(32vw, 460px);
+  height: min(32vw, 460px);
+  background: radial-gradient(circle, var(--ve-accent-glow) 0%, transparent 64%);
+  animation: vePulseSoft 20s infinite var(--ve-ease-in-out);
+}
+
+.ve-motion-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --ve-motion-blur: 64px;
+    --ve-motion-orb-opacity: 0.22;
+    --ve-motion-grid-opacity: 0.025;
+  }
+
+  .ve-motion-bg {
+    inset: -18%;
+  }
+
+  .ve-motion-orb-a,
+  .ve-motion-orb-b {
+    width: 88vw;
+    height: 88vw;
+    animation: none !important;
+  }
+
+  .ve-motion-orb-c {
+    display: none;
+  }
+
+  .ve-motion-grid {
+    background-size: 34px 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-motion-orb,
+  .ve-theme-transition,
+  .ve-card,
+  .ve-card-strong,
+  .ve-panel,
+  .ve-sidebar,
+  .ve-input,
+  .ve-button-primary,
+  .ve-button-secondary,
+  .ve-nav-item,
+  .ve-nav-item-active {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .ve-motion-orb {
+    opacity: calc(var(--ve-motion-orb-opacity) * 0.55);
+  }
+}
+
+@keyframes veBootFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.015);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

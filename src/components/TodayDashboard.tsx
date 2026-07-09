@@ -191,9 +191,9 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-h-0 px-3 py-4 sm:px-4 lg:py-5`}>
+    <main className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian text-ve-flash px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto max-w-[1320px] space-y-4">
-        <div className={`${Z8_PANEL} ve-premium-panel p-3 sm:p-4`}>
+        <div className={`${Z8_PANEL} glass-command ve-premium-panel p-3 sm:p-4`}>
           <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today dashboard pages">
             <button
               type="button"
@@ -203,7 +203,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
                 activePanel === 'overview'
                   ? 'border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan'
-                  : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+                  : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
               }`}
             >
               <LayoutDashboard className="h-3.5 w-3.5" />
@@ -217,7 +217,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
                 activePanel === 'portfolio'
                   ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
-                  : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
+                  : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
               }`}
             >
               <BarChart3 className="h-3.5 w-3.5" />
@@ -261,7 +261,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-        <section className={`${Z8_PANEL} ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
+        <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-stretch">
@@ -272,12 +272,12 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
                     <Sparkles className="h-3.5 w-3.5" />
                     Today’s Research Command Center
                   </span>
-                  <span className={`border border-white/10 bg-black/25 px-3 py-1 ${Z8_LABEL} text-white/40`}>
+                  <span className={`border border-ve-fuse/40 bg-ve-graphite/30 px-3 py-1 ${Z8_LABEL} text-ve-ion/40`}>
                     {reportStatus}
                   </span>
                 </div>
 
-                <h1 className="max-w-4xl text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl font-mono uppercase">
+                <h1 className="max-w-4xl text-3xl font-black tracking-tight text-ve-flash sm:text-4xl lg:text-5xl font-mono uppercase">
                   VouchEdge Research Command Center
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55 sm:text-base font-mono">
@@ -370,7 +370,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             />
           </div>
 
-          <aside className="ve-premium-panel rounded-3xl p-4">
+          <aside className="glass-command ve-premium-panel rounded-3xl p-4">
             <div className="mb-3">
               <p className="ve-section-kicker">Account Status</p>
               <h2 className="mt-1 text-lg font-black">Workspace Controls</h2>

@@ -1,0 +1,99 @@
+/* =========================================================
+   HOME FEED — X / TWITTER STREAM UX
+   Flat single-column feed, thumb-friendly actions, 600px max.
+   ========================================================= */
+
+.home-feed-shell,
+.feed-main {
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#layout-inner-frame.ve-layout-feed #center-main-content-column,
+#layout-inner-frame.ve-layout-feed #inner-view-slot {
+  max-width: 600px !important;
+  width: 100% !important;
+}
+
+@media (min-width: 1181px) {
+  #layout-inner-frame.ve-layout-feed {
+    grid-template-columns: 260px minmax(0, 600px) 290px !important;
+    max-width: 1150px !important;
+  }
+}
+
+/* Flatten feed chrome — no glass cards */
+#inner-view-slot .home-feed-header,
+#inner-view-slot .home-feed-tabs,
+#inner-view-slot .feed-composer {
+  background: rgba(0, 0, 0, 0.82) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+}
+
+#inner-view-slot .feed-post {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#inner-view-slot .feed-post:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: transparent !important;
+}
+
+/* Thumb-friendly action buttons */
+.feed-action-btn,
+.feed-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border-radius: 9999px;
+  transition: color 150ms ease, background-color 150ms ease;
+  touch-action: manipulation;
+}
+
+.feed-action-btn:hover,
+.feed-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 767px) {
+  .feed-action-btn,
+  .feed-icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .feed-action-row {
+    max-width: 100% !important;
+    justify-content: space-between;
+  }
+}
+
+/* Composer collapsed state */
+#inner-view-slot .feed-composer button[type="button"] {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Load state — minimal */
+.ve-feed-load-state {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* Right rail: subtle on xl+ only */
+#feed-right-rail {
+  background: transparent !important;
+}
+

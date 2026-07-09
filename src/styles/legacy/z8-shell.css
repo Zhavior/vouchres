@@ -1,0 +1,358 @@
+/* ==========================================================
+   VOUCHEDGE BASE THEME RESET
+   Token-based foundation. Avoid broad wildcard color rewrites.
+   ========================================================== */
+
+:root {
+  --ve-bg: 222 47% 4%;
+  --ve-bg-deep: 222 50% 2%;
+  --ve-bg-panel: 222 40% 6%;
+  --ve-surface: 222 35% 7%;
+  --ve-surface-raised: 222 32% 9%;
+  --ve-surface-elevated: 222 28% 12%;
+  --ve-border: 0 0% 100%;
+  --ve-border-subtle: 0 0% 100%;
+  --ve-border-strong: 186 100% 50%;
+  --ve-accent-cyan: 186 100% 50%;
+  --ve-accent-pink: 152 100% 50%;
+  --ve-accent-violet: 152 100% 50%;
+  --ve-accent-gold: 38 92% 50%;
+  --ve-success: 152 100% 50%;
+  --ve-danger: 0 84% 60%;
+  --ve-warning: 38 92% 50%;
+  --ve-shadow: 0 0% 0%;
+  --ve-text-primary: 0 0% 98%;
+  --ve-text-secondary: 0 0% 65%;
+  --ve-text-muted: 0 0% 45%;
+  --ve-text: hsl(var(--ve-text-primary));
+  --ve-muted: hsl(var(--ve-text-muted));
+  --z8-font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --z8-font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --z8-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  color-scheme: dark;
+  background: hsl(var(--ve-bg));
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-z8);
+}
+
+#root {
+  min-height: 100vh;
+  font-family: var(--font-z8);
+}
+
+/* ==========================================================
+   Z8 GLOBAL APP BRIDGE
+   Converts legacy VouchEdge screens to the Z8 Obsidian shell
+   without rewriting each route/component.
+   ========================================================== */
+
+html {
+  background: #020617;
+}
+
+.z8-app-shell {
+  --ve-bg-soft: #020617;
+  --ve-motion-bg: #020617;
+  --ve-accent: #00ff94;
+  --ve-accent-2: #00f0ff;
+  --ve-accent-glow: rgba(0, 240, 255, 0.14);
+  --theme-accent-color: #00f0ff;
+  --theme-border-color: rgba(255, 255, 255, 0.10);
+  --theme-shadow-glow: rgba(0, 240, 255, 0.14);
+  --ve-accent-cyan: 186 100% 50%;
+  --ve-accent-pink: 186 100% 50%;
+  --ve-accent-gold: 152 100% 50%;
+  --ve-border-strong: 186 100% 50%;
+  --ve-text-primary: 0 0% 98%;
+  --ve-text-secondary: 0 0% 65%;
+  --ve-text-muted: 0 0% 45%;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -8%, rgba(0, 240, 255, 0.06), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(37, 99, 235, 0.05), transparent 50%),
+    #020617;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-z8);
+}
+
+.z8-app-shell .bg-obsidian-900,
+.z8-app-shell [class*="bg-obsidian-900"],
+.z8-app-shell [class*="bg-slate-950"],
+.z8-app-shell [class*="bg-slate-900"],
+.z8-app-shell [class*="bg-[#020617]"],
+.z8-app-shell [class*="bg-black"] {
+  background-color: rgba(2, 6, 23, 0.24) !important;
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+}
+
+.z8-app-shell .premium-card-bg,
+.z8-app-shell .ve-card,
+.z8-app-shell .ve-card-soft,
+.z8-app-shell .ve-stat-card,
+.z8-app-shell .ve-tool-card,
+.z8-app-shell .ve-surface-card,
+.z8-app-shell .ve-card-elevated,
+.z8-app-shell .ve-card-compact,
+.z8-app-shell .ve-premium-panel,
+.z8-app-shell [id^="panel-"],
+.z8-app-shell [class*="rounded-xl"][class*="border"],
+.z8-app-shell [class*="rounded-2xl"][class*="border"],
+.z8-app-shell [class*="rounded-3xl"][class*="border"],
+.z8-app-shell [class*="rounded-lg"][class*="border"] {
+  border-radius: 0 !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(10, 10, 10, 0.46) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.z8-app-shell .ve-btn,
+.z8-app-shell .ve-button-primary,
+.z8-app-shell .ve-button-secondary {
+  border-radius: 0 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.z8-app-shell .ve-button-primary {
+  border-color: rgba(0, 240, 255, 0.45) !important;
+  background: rgba(0, 240, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.z8-app-shell .ve-button-primary:hover {
+  border-color: rgba(0, 240, 255, 0.65) !important;
+  background: rgba(0, 240, 255, 0.18) !important;
+}
+
+.z8-app-shell .ve-button-secondary {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.z8-app-shell .ve-button-secondary:hover {
+  border-color: rgba(0, 240, 255, 0.35) !important;
+  color: #fff !important;
+}
+
+.z8-app-shell button,
+.z8-app-shell a,
+.z8-app-shell input,
+.z8-app-shell select,
+.z8-app-shell textarea {
+  font-family: var(--font-z8);
+}
+
+.z8-app-shell input,
+.z8-app-shell select,
+.z8-app-shell textarea {
+  background-color: rgba(2, 6, 23, 0.66);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.z8-app-shell ::selection {
+  color: #020617;
+  background: #00ff94;
+}
+
+.z8-app-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.z8-app-shell ::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+.z8-app-shell ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 255, 148, 0.58), rgba(0, 240, 255, 0.46));
+  border: 2px solid #020617;
+  border-radius: 999px;
+}
+
+.z8-app-shell .terminal-text,
+.z8-app-shell [class*="uppercase"][class*="tracking"] {
+  letter-spacing: 0.08em;
+}
+
+.z8-app-shell.ve-motion-shell {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.10), transparent 34rem),
+    radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.06), transparent 28rem),
+    linear-gradient(180deg, #020617 0%, #030a18 42%, #020617 100%);
+}
+
+/* Legacy Tailwind slate text → Z8 premium neutrals */
+.z8-app-shell :is(
+  .text-slate-50,
+  .text-slate-100,
+  [class*="text-slate-50"],
+  [class*="text-slate-100"]
+) {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.z8-app-shell :is(.text-slate-200, [class*="text-slate-200"]) {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.z8-app-shell :is(.text-slate-300, [class*="text-slate-300"]) {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.z8-app-shell :is(.text-slate-400, [class*="text-slate-400"]) {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.z8-app-shell :is(.text-slate-500, [class*="text-slate-500"]) {
+  color: rgba(255, 255, 255, 0.38) !important;
+}
+
+.z8-app-shell :is(.text-slate-600, [class*="text-slate-600"]) {
+  color: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* Legacy slate borders → obsidian glass rim */
+.z8-app-shell :is(
+  .border-slate-700,
+  .border-slate-800,
+  .border-slate-900,
+  [class*="border-slate-700"],
+  [class*="border-slate-800"],
+  [class*="border-slate-900"]
+) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Display headings — premium weight + tracking */
+.z8-app-shell :is(h1, h2, h3, .z8-display) {
+  font-family: var(--z8-font-display, var(--font-z8));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.z8-app-shell :is(.font-mono, .terminal-text, [class*="font-mono"]) {
+  font-family: var(--z8-font-mono, ui-monospace, monospace);
+}
+
+.z8-app-shell :is(.z8-tabular-nums, [class*="tabular-nums"]) {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Z8 glass shell — single obsidian base; columns see through */
+#layout-inner-frame.ve-layout-frame,
+#layout-inner-frame.ve-layout-feed,
+#layout-inner-frame.ve-layout-wide {
+  background: transparent;
+}
+
+#layout-inner-frame #center-main-content-column {
+  background: transparent !important;
+}
+
+#root > * {
+  max-width: 100vw;
+}
+
+#root section,
+#root article,
+#root header,
+#root footer {
+  max-width: 100%;
+}
+
+#root .w-screen,
+#root [class*="w-screen"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#root button,
+#root a {
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, opacity 180ms ease, color 180ms ease;
+}
+
+#root input,
+#root select,
+#root textarea {
+  color: hsl(var(--ve-text-primary));
+}
+
+#root input::placeholder,
+#root textarea::placeholder {
+  color: hsl(var(--ve-text-muted));
+}
+
+#root input:focus,
+#root select:focus,
+#root textarea:focus {
+  outline: none;
+  border-color: hsl(var(--ve-accent-cyan) / 0.56);
+  box-shadow: 0 0 0 3px hsl(var(--ve-accent-cyan) / 0.10);
+}
+
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ve-app-main,
+.ve-feed-main,
+.ve-page-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+.ve-sidebar {
+  background: linear-gradient(180deg, hsl(var(--ve-bg-panel) / 0.96), hsl(var(--ve-bg-deep) / 0.98));
+  border-color: hsl(var(--ve-border) / 0.36);
+  box-shadow: 20px 0 70px hsl(var(--ve-shadow) / 0.22);
+}
+
+.ve-sidebar button:hover,
+.ve-sidebar a:hover,
+.ve-sidebar .ve-nav-item-active,
+.ve-sidebar [aria-current="page"] {
+  background: hsl(var(--ve-surface-raised) / 0.44);
+  border-color: hsl(var(--ve-accent-cyan) / 0.28);
+}
+
+@media (max-width: 900px) {
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+

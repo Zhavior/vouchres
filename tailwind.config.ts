@@ -10,10 +10,10 @@ const config: Config = {
       colors: {
         obsidian: {
           DEFAULT: 'var(--bg-obsidian)',
-          900: '#050505',
-          800: '#0A0A0A',
-          700: '#121212',
-          600: '#1A1A1A',
+          900: 'var(--bg-obsidian)',
+          800: 'var(--bg-graphite)',
+          700: 'var(--bg-storm)',
+          600: 'var(--surface-panel)',
         },
         graphite: 'var(--bg-graphite)',
         storm: 'var(--bg-storm)',
@@ -22,10 +22,10 @@ const config: Config = {
         voltage: 'var(--voltage-green)',
         locked: 'var(--locked-slate)',
         'surface-panel': 'var(--surface-panel)',
-        'vouch-cyan': '#00F0FF',
-        'vouch-emerald': '#00FF94',
+        'vouch-cyan': 'var(--ion-core)',
+        'vouch-emerald': 'var(--voltage-green)',
         'vouch-amber': '#f59e0b',
-        slate: { 950: '#0A0A0A' },
+        slate: { 950: 'var(--bg-obsidian)' },
       },
       borderColor: {
         fuse: 'var(--border-fuse)',

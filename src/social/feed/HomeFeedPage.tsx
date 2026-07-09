@@ -337,20 +337,20 @@ function HomeFeedPage({
     .toUpperCase();
 
   return (
-    <div className="home-feed-shell flex flex-col min-h-full bg-transparent font-z8" id="home-feed-page-wrapper">
+    <div className="home-feed-shell flex flex-col min-h-full bg-ve-obsidian text-ve-flash font-z8" id="home-feed-page-wrapper">
 
       {/* Toast Notification System */}
       {toastMsg && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black/90 border border-white/10 text-vouch-emerald px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-2 shadow-lg">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-ve-obsidian/95 border border-ve-fuse text-vouch-emerald px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-2 shadow-lg">
           <Zap className="w-4 h-4 text-vouch-emerald" />
           <span>{toastMsg}</span>
         </div>
       )}
 
       {/* X-style sticky header */}
-      <header className="home-feed-header sticky top-0 z-20 border-b border-white/[0.08] bg-black/80 backdrop-blur-md">
+      <header className="home-feed-header sticky top-0 z-20 border-b border-ve-fuse/60 bg-ve-obsidian/90 backdrop-blur-md">
         <div className="flex items-center justify-between gap-3 px-4 h-[53px]">
-          <h1 className="text-[20px] font-extrabold text-white leading-none">
+          <h1 className="text-[20px] font-extrabold text-ve-flash leading-none">
             Home
             {proOnlyMode && (
               <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-vouch-emerald/15 px-2 py-0.5 text-[10px] font-bold text-vouch-emerald">

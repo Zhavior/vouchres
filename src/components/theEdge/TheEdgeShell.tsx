@@ -392,14 +392,14 @@ export default function TheEdgeShell({
 
   const shellClass =
     presentation === 'page'
-      ? 'edge-space-shell ve-page min-h-screen overflow-hidden text-white'
-      : 'edge-space-shell ve-page relative mx-auto flex h-[92vh] max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/10 text-white shadow-2xl shadow-black/40';
+      ? 'edge-space-shell ve-page min-h-screen overflow-hidden text-ve-flash'
+      : 'edge-space-shell ve-page glass-command relative mx-auto flex h-[92vh] max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-ve-fuse text-ve-flash shadow-2xl shadow-black/40';
 
   const isAuthLayer = edgeLayer === 'login' || edgeLayer === 'signup';
 
   return (
     <motion.main
-      className={`relative isolate overflow-hidden bg-obsidian-900 text-white font-z8 ${shellClass}`}
+      className={`relative isolate overflow-hidden bg-ve-obsidian text-ve-flash font-z8 ${shellClass}`}
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -409,7 +409,7 @@ export default function TheEdgeShell({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-10%,rgba(0,240,255,0.12),transparent_38%),linear-gradient(180deg,#0a0a0f,#111118_60%,#0a0a0f)]" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className={`${Z8_PANEL_PREMIUM} edge-space-header border-b border-white/10 rounded-none border-x-0 border-t-0 px-4 py-4 backdrop-blur-2xl sm:px-6`}>
+        <header className={`${Z8_PANEL_PREMIUM} glass-command edge-space-header border-b border-ve-fuse rounded-none border-x-0 border-t-0 px-4 py-4 backdrop-blur-2xl sm:px-6`}>
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-vouch-cyan shadow-[0_0_22px_rgba(0,240,255,0.16)]">

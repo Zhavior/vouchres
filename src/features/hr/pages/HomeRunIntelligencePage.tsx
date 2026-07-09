@@ -31,8 +31,8 @@ const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorCl
   <div className={`${Z8_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
     <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
     <div className="flex flex-col leading-tight">
-      <span className="text-lg font-extrabold text-slate-50">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">{label}</span>
+      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
     </div>
   </div>
 );
@@ -62,13 +62,13 @@ const LoadingSkeleton: React.FC = () => (
     {Array.from({ length: 4 }).map((_, colIdx) => (
       <div
         key={colIdx}
-        className={`flex flex-col gap-3 border border-white/10 bg-black/25 p-4 ${colIdx > 0 ? 'hidden md:flex' : ''}`}
+        className={`glass-command flex flex-col gap-3 border border-ve-fuse/40 p-4 ${colIdx > 0 ? 'hidden md:flex' : ''}`}
       >
         <div className="h-4 w-24 animate-pulse bg-white/[0.08]" />
         {Array.from({ length: 3 }).map((__, cardIdx) => (
           <div
             key={cardIdx}
-            className="flex flex-col gap-3 border border-white/10 bg-black/30 p-4"
+            className="glass-command flex flex-col gap-3 border border-ve-fuse/40 p-4"
           >
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 shrink-0 animate-pulse bg-white/[0.08]" />
@@ -97,13 +97,13 @@ interface ErrorStateProps {
 }
 
 const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
-  <div className="flex flex-col items-center justify-center gap-4 border border-red-500/25 bg-black/30 px-6 py-16 text-center">
+  <div className="glass-command flex flex-col items-center justify-center gap-4 border border-red-500/25 px-6 py-16 text-center">
     <div className="flex h-14 w-14 items-center justify-center border border-red-500/30 bg-red-500/10">
       <AlertOctagon className="h-7 w-7 text-red-400" />
     </div>
     <div>
-      <p className="text-base font-bold text-slate-100">Failed to load Home Run Intelligence</p>
-      <p className="mt-1 max-w-sm text-sm text-zinc-500">{message}</p>
+      <p className="text-base font-bold text-ve-flash">Failed to load Home Run Intelligence</p>
+      <p className="mt-1 max-w-sm text-sm text-ve-locked">{message}</p>
     </div>
     <button
       type="button"
@@ -126,16 +126,16 @@ const EmptyState: React.FC<{
 
   return (
     <div
-      className="flex flex-col items-center justify-center gap-4 border border-white/10 bg-black/25 px-6 py-16 text-center"
+      className="glass-command flex flex-col items-center justify-center gap-4 border border-ve-fuse/40 px-6 py-16 text-center"
     >
-      <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-black/30">
-        <Inbox className="h-7 w-7 text-zinc-500" />
+      <div className="flex h-14 w-14 items-center justify-center border border-ve-fuse/40 bg-ve-graphite/50">
+        <Inbox className="h-7 w-7 text-ve-locked" />
       </div>
       <div>
-        <p className="text-base font-bold text-slate-100">
+        <p className="text-base font-bold text-ve-flash">
           {noLineupsYet ? 'No confirmed lineups posted yet' : 'No players to show'}
         </p>
-        <p className="mt-1 max-w-sm text-sm text-zinc-500">
+        <p className="mt-1 max-w-sm text-sm text-ve-locked">
           {noLineupsYet
             ? `MLB hasn't posted official batting orders for today's games yet — we never fake a confirmed lineup. ${previewCount} preview candidates are already scored from projected lineups.`
             : 'There are no Home Run Intelligence candidates for the current filters or slate.'}
@@ -154,7 +154,7 @@ const EmptyState: React.FC<{
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-2 border border-white/10 bg-black/30 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-zinc-300 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
+          className="flex items-center gap-2 border border-ve-fuse/40 bg-ve-graphite/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-ve-ion/70 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
         >
           <RefreshCw className="h-4 w-4" />
           Refresh
@@ -200,7 +200,7 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className={`${Z8_PAGE} ve-page-shell min-h-0 ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <div className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
         <HrCommandCenter
           mode={vm.mode}

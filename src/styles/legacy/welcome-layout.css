@@ -1,0 +1,148 @@
+/* ===== Welcome front page: simple space theme + layout stickiness ===== */
+#root #center-main-content-column,
+#root #inner-view-slot,
+#root .edge-space-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#root .edge-space-shell {
+  min-height: 100vh;
+  background: #020617 !important;
+}
+
+#root .edge-space-shell .edge-space-backdrop {
+  background: transparent !important;
+}
+
+#root .edge-space-header {
+  border-color: rgba(255,255,255,0.09) !important;
+}
+
+#root .edge-space-hero {
+  min-height: min(760px, calc(100vh - 132px));
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: rgba(10, 10, 10, 0.4) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+}
+
+#root .edge-space-orbit,
+#root .edge-space-orbit-one,
+#root .edge-space-orbit-two {
+  display: none;
+}
+
+#root .edge-product-panel,
+#root .edge-space-module {
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  background: rgba(10, 10, 10, 0.4) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+#root .edge-space-module:hover {
+  border-color: rgba(0, 255, 148, 0.3) !important;
+}
+
+#root .edge-space-primary {
+  border: none !important;
+  background: #00FF94 !important;
+  color: #000 !important;
+  box-shadow: none !important;
+}
+
+#root .edge-space-secondary,
+#root .edge-space-ghost {
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  background: rgba(255,255,255,0.03) !important;
+  color: #f5f5f7 !important;
+  box-shadow: none !important;
+}
+
+#root .edge-slate-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.22) transparent;
+}
+
+#root .ve-sidebar {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 767px) {
+  #root .edge-space-hero {
+    min-height: auto;
+  }
+}
+
+/* ===== VouchEdge layout safety reset ===== */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.ve-public-shell,
+.ve-app-shell,
+.ve-shell,
+.ve-home-feed-layout {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ve-public-container {
+  width: min(100% - 48px, 1440px);
+  margin-inline: auto;
+}
+
+.ve-app-shell,
+.ve-shell {
+  display: flex;
+}
+
+.ve-app-main,
+.ve-page-main,
+.ve-feed-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0 !important;
+}
+
+.ve-right-rail,
+.ve-feed-right-rail {
+  min-width: 0;
+  max-width: 360px;
+}
+
+@media (max-width: 900px) {
+  .ve-public-container {
+    width: min(100% - 28px, 100%);
+  }
+
+  .ve-right-rail,
+  .ve-feed-right-rail {
+    max-width: 100%;
+  }
+}
+
