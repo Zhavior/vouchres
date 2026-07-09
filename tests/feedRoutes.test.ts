@@ -58,7 +58,7 @@ describe("feed routes", () => {
     });
   });
 
-  it("normalizes upstream failures to external_service_error", async () => {
+  it("normalizes upstream failures to upstream_unavailable", async () => {
     vi.mocked(getFeedComposerOptions).mockRejectedValueOnce(new Error("mlb down"));
 
     const response = await fetch(`${baseUrl}/api/feed/composer-options`);
@@ -68,7 +68,7 @@ describe("feed routes", () => {
     expect(body).toMatchObject({
       ok: false,
       error: {
-        code: "external_service_error",
+        code: "upstream_unavailable",
         message: "Composer options unavailable.",
       },
     });

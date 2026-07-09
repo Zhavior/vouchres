@@ -84,7 +84,6 @@ describe("live at-bat API route", () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       ok: true,
-      success: true,
       data: snapshot,
       meta: {
         source: "mlb_statsapi_live_feed",
@@ -95,6 +94,8 @@ describe("live at-bat API route", () => {
           strategy: "ttl_cache_with_last_good_snapshot",
           ttlMs: 60_000,
         },
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
       },
     });
   });

@@ -21,6 +21,9 @@ function runErrorHandler(error: unknown, overrides: { requestId?: string } = {})
     headersSent: false,
     statusCode: 200,
     body: null,
+    setHeader() {
+      return this;
+    },
     status(code: number) {
       this.statusCode = code;
       return this;
@@ -58,6 +61,10 @@ describe("api error handler", () => {
         message: "Missing resource.",
         requestId: "req_test_1",
       },
+      meta: {
+        requestId: "req_test_1",
+        timestamp: expect.any(String),
+      },
     });
     expect(captureException).not.toHaveBeenCalled();
   });
@@ -79,6 +86,10 @@ describe("api error handler", () => {
         code: "internal_server_error",
         message: "Internal server error.",
         requestId: "req_test_1",
+      },
+      meta: {
+        requestId: "req_test_1",
+        timestamp: expect.any(String),
       },
     });
     expect(captureException).toHaveBeenCalledTimes(1);
@@ -117,6 +128,10 @@ describe("api error handler", () => {
         code: "validation_error",
         message: "Request validation failed.",
         requestId: "req_zod_9",
+      },
+      meta: {
+        requestId: "req_zod_9",
+        timestamp: expect.any(String),
       },
     });
     expect(Array.isArray(res.body.error.details)).toBe(true);

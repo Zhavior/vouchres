@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { postRoutes } from "../server/routes/postRoutes";
 
 const fromMock = vi.fn();
@@ -30,6 +31,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api", postRoutes);
   app.use("/api", apiErrorHandler);
@@ -140,15 +142,24 @@ describe("post routes", () => {
       }),
     });
 
-    const response = await fetch(`${baseUrl}/api/posts/post-parlay`, { method: "DELETE" });
+    const response = await fetch(`${baseUrl}/api/posts/post-parlay`, {
+      method: "DELETE",
+      headers: { "x-request-id": "req_post_delete_locked" },
+    });
     const body = await response.json();
 
     expect(response.status).toBe(403);
+    expect(response.headers.get("x-request-id")).toBe("req_post_delete_locked");
     expect(body).toMatchObject({
       ok: false,
       error: {
         code: "parlay_post_locked",
         message: "Locked in your history after 30 minutes",
+        requestId: "req_post_delete_locked",
+      },
+      meta: {
+        requestId: "req_post_delete_locked",
+        timestamp: expect.any(String),
       },
     });
   });

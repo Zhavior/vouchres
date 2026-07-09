@@ -105,7 +105,7 @@ describe("agent routes", () => {
     expect(body).toMatchObject({
       ok: false,
       error: {
-        code: "external_service_error",
+        code: "upstream_unavailable",
         message: "Failed to generate picks — MLB data unavailable.",
       },
     });

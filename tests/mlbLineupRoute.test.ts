@@ -67,7 +67,7 @@ describe("mlb lineup routes", () => {
     expect(body).toMatchObject({
       ok: false,
       error: {
-        code: "external_service_error",
+        code: "upstream_unavailable",
         message: "Lineup data unavailable",
       },
     });
