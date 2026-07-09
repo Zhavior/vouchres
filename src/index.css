@@ -7,6 +7,9 @@
 @source not "../vouchedge/**";
 @source not "../vouchedge-terminal/**";
 @source not "../tests/**";
+@import "./styles/vouchedge-tokens.css";
+@import "./styles/vouchedge-utilities.css";
+@import "./styles/vouchedge-motion.css";
 @import "./styles/z8-design-system.css";
 
 .scrollbar-none {
