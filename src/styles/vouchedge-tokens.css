@@ -1,0 +1,21 @@
+/*
+ * Early obsidian / ion design tokens.
+ * Loaded before index.css so shell variables exist for the Tailwind build.
+ * Full VouchEdge theme tokens remain in index.css — do not duplicate here.
+ */
+:root {
+  --bg-obsidian: #060709;
+  --bg-graphite: #0c0e12;
+  --bg-storm: #13171f;
+  --surface-panel: #171c26;
+  --border-fuse: rgba(31, 38, 51, 0.7);
+  --border-charged: rgba(0, 229, 255, 0.3);
+  --ion-core: #00e5ff;
+  --lightning-flash: #e6faff;
+  --voltage-green: #00f5a0;
+  --locked-slate: #2b3344;
+
+  --ve-ion: var(--ion-core);
+  --ve-voltage: var(--voltage-green);
+  --ve-obsidian: var(--bg-obsidian);
+}
