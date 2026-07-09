@@ -408,7 +408,7 @@ export default function TheEdgeShell({
   return (
     <motion.main
       className={`relative isolate overflow-hidden bg-obsidian-900 text-white font-z8 ${shellClass}`}
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease }}
