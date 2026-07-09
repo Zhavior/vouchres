@@ -1,7 +1,9 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError, isAppError } from "../errors/AppError";
+import { buildApiErrorResponse } from "../lib/apiResponse";
 import { captureException, isSentryEnabled } from "../lib/sentry";
+import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "./requestContext";
 
 function statusFromUnknown(error: unknown): number {
@@ -42,18 +44,19 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
   const status = normalized.status >= 400 && normalized.status < 600 ? normalized.status : 500;
   const message = normalized.expose ? normalized.message : "Internal server error.";
 
-  const logPayload = {
+  structuredLog({
+    level: status >= 500 ? "error" : "warn",
+    event: status >= 500 ? "error" : "warn",
     requestId,
     method: req.method,
-    path: req.originalUrl,
+    route: req.originalUrl,
     status,
     code: normalized.code,
     message: normalized.message,
-    details: normalized.details,
-  };
+    ...(normalized.details !== undefined ? { details: normalized.details } : {}),
+  });
 
   if (status >= 500) {
-    console.error("[api:error]", JSON.stringify(logPayload));
     if (!isSentryEnabled()) {
       captureException(normalized.cause ?? normalized, {
         requestId,
@@ -62,18 +65,16 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
         code: normalized.code,
       });
     }
-  } else {
-    console.warn("[api:warn]", JSON.stringify(logPayload));
   }
 
-  return res.status(status).json({
-    ok: false,
-    error: {
+  res.setHeader("x-request-id", requestId);
+
+  return res.status(status).json(
+    buildApiErrorResponse({
       code: normalized.code,
       message,
-      details: normalized.details,
       requestId,
-    },
-  });
+      details: normalized.details,
+    }),
+  );
 };
-

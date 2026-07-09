@@ -76,7 +76,7 @@ export function boolQuery(value: unknown, fallback: boolean, field = "dryRun"): 
 export function upstreamUnavailable(message: string, cause: unknown): AppError {
   return new AppError({
     status: 503,
-    code: "external_service_error",
+    code: "upstream_unavailable",
     message,
     expose: true,
     cause,

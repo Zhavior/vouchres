@@ -91,8 +91,10 @@ export function useVouchResource<T>({
       return;
     }
 
+    const hasPriorData = resourceCache.has(cacheKey);
+
     if (mountedRef.current) {
-      setLoading(true);
+      if (!hasPriorData) setLoading(true);
       setError(null);
     }
 

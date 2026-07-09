@@ -1,18 +1,6 @@
-export type AppErrorCode =
-  | "bad_request"
-  | "validation_error"
-  | "missing_token"
-  | "invalid_token"
-  | "forbidden"
-  | "not_found"
-  | "conflict"
-  | "domain_state_error"
-  | "entitlement_required"
-  | "quota_exceeded"
-  | "rate_limited"
-  | "gone"
-  | "external_service_error"
-  | "internal_server_error";
+import type { ApiErrorCode } from "../lib/errorCodes";
+
+export type AppErrorCode = ApiErrorCode;
 
 export interface AppErrorOptions {
   status: number;
@@ -44,4 +32,3 @@ export class AppError extends Error {
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
-

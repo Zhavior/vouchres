@@ -87,6 +87,7 @@ const localValidatedHrBoardCache = new Map<string, ValidatedCacheEntry>();
 const localValidatedHrBoardBuilds = new Map<string, Promise<ValidatedHrBoardSnapshot>>();
 const lastGoodValidatedHrBoards = new Map<string, { board: ValidatedHrBoardSnapshot; storedAt: number }>();
 const LAST_GOOD_REDIS_PREFIX = "validated-hr-board:last-good";
+const VALIDATED_HOT_REDIS_PREFIX = "validated-hr-board:hot";
 
 type LastGoodEntry = { board: ValidatedHrBoardSnapshot; storedAt: number };
 
@@ -193,18 +194,99 @@ function deepKey(date?: string | null): string {
   return `deep-hr-board:${date ?? "today"}`;
 }
 
+async function persistValidatedHotToRedis(key: string, entry: ValidatedCacheEntry): Promise<void> {
+  if (!isUpstashEnabled()) return;
+
+  const redisKey = `${VALIDATED_HOT_REDIS_PREFIX}:${key}`;
+  const ttlSeconds = Math.max(1, Math.floor((entry.expiresAt - Date.now()) / 1000));
+  try {
+    await redisSetJson(redisKey, entry, ttlSeconds);
+  } catch (error) {
+    console.warn(
+      `[HR_BOARD_HUB] validated redis hot write failed key=${key}`,
+      (error as Error)?.message,
+    );
+  }
+}
+
+async function loadValidatedHotFromRedis(key: string): Promise<ValidatedCacheEntry | null> {
+  if (!isUpstashEnabled()) return null;
+
+  const redisKey = `${VALIDATED_HOT_REDIS_PREFIX}:${key}`;
+  try {
+    const remote = await redisGetJson<ValidatedCacheEntry>(redisKey);
+    if (!remote?.board || typeof remote.expiresAt !== "number") return null;
+    if (remote.expiresAt <= Date.now()) return null;
+
+    localValidatedHrBoardCache.set(key, remote);
+    console.log(`[HR_BOARD_HUB] validated redis hot hit key=${key}`);
+    return remote;
+  } catch (error) {
+    console.warn(
+      `[HR_BOARD_HUB] validated redis hot read failed key=${key}`,
+      (error as Error)?.message,
+    );
+    return null;
+  }
+}
+
+async function buildFreshValidatedBoard(
+  key: string,
+  date: string | null | undefined,
+  ttlSeconds: number,
+): Promise<ValidatedHrBoardResult> {
+  console.log(`[HR_BOARD_HUB] validated building key=${key}`);
+  const board = await buildValidatedHrBoard(date ?? undefined);
+  rememberLastGoodValidatedBoard(key, board);
+
+  const entry: ValidatedCacheEntry = {
+    expiresAt: Date.now() + ttlSeconds * 1000,
+    board,
+  };
+  localValidatedHrBoardCache.set(key, entry);
+  void persistValidatedHotToRedis(key, entry);
+
+  console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
+  return board;
+}
+
+function scheduleValidatedRefresh(
+  key: string,
+  date: string | null | undefined,
+  ttlSeconds: number,
+): void {
+  if (localValidatedHrBoardBuilds.has(key)) return;
+
+  const buildPromise = (async (): Promise<ValidatedHrBoardResult> => {
+    try {
+      return await buildFreshValidatedBoard(key, date, ttlSeconds);
+    } catch (err) {
+      const fallback = await serveLastGoodValidatedBoard(key, err);
+      if (fallback) return fallback;
+      throw err;
+    }
+  })();
+
+  localValidatedHrBoardBuilds.set(key, buildPromise);
+  void buildPromise.finally(() => {
+    localValidatedHrBoardBuilds.delete(key);
+  });
+}
+
 export async function getCachedValidatedHrBoard(date?: string | null): Promise<ValidatedHrBoardResult> {
   const key = validatedKey(date);
   const ttlSeconds = Number(process.env.VALIDATED_HR_BOARD_HUB_TTL_SECONDS ?? 900);
 
   const cached = localValidatedHrBoardCache.get(key);
-  if (cached && cached.expiresAt > Date.now()) {
-    console.log(`[HR_BOARD_HUB] validated local hit key=${key}`);
-    return cached.board;
-  }
-
   if (cached) {
-    localValidatedHrBoardCache.delete(key);
+    if (cached.expiresAt > Date.now()) {
+      console.log(`[HR_BOARD_HUB] validated local hit key=${key}`);
+      return cached.board;
+    }
+
+    console.log(`[HR_BOARD_HUB] validated stale hit key=${key} — refreshing in background`);
+    scheduleValidatedRefresh(key, date, ttlSeconds);
+    return cached.board;
   }
 
   const activeBuild = localValidatedHrBoardBuilds.get(key);
@@ -213,19 +295,14 @@ export async function getCachedValidatedHrBoard(date?: string | null): Promise<V
     return activeBuild;
   }
 
+  const redisHot = await loadValidatedHotFromRedis(key);
+  if (redisHot) {
+    return redisHot.board;
+  }
+
   const buildPromise = (async (): Promise<ValidatedHrBoardResult> => {
-    console.log(`[HR_BOARD_HUB] validated building key=${key}`);
     try {
-      const board = await buildValidatedHrBoard(date ?? undefined);
-
-      rememberLastGoodValidatedBoard(key, board);
-      localValidatedHrBoardCache.set(key, {
-        expiresAt: Date.now() + ttlSeconds * 1000,
-        board,
-      });
-
-      console.log(`[HR_BOARD_HUB] validated local set key=${key} ttl=${ttlSeconds}s`);
-      return board;
+      return await buildFreshValidatedBoard(key, date, ttlSeconds);
     } catch (err) {
       const fallback = await serveLastGoodValidatedBoard(key, err);
       if (fallback) return fallback;

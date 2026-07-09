@@ -5,6 +5,7 @@ import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../midd
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import { apiOkFlat } from "../lib/apiResponse";
 
 /**
  * Auth routes — minimal session/profile endpoints used by the frontend.
@@ -17,7 +18,7 @@ import { AppError } from "../errors/AppError";
 export const authRoutes = Router();
 
 authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
-  return res.json({ ok: true, ...req.user!.profile });
+  return res.json(apiOkFlat(req, { ...req.user!.profile }));
 }));
 
 authRoutes.post("/signout", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {

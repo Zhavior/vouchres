@@ -7,6 +7,8 @@ export function useHrBoardToday(previewLimit?: number) {
   return useQuery<HrBoardResponse>({
     queryKey: queryKeys.hrBoardToday(previewLimit),
     queryFn: () => vouchedgeApi.hrBoardToday(previewLimit),
-    staleTime: 60_000,
+    staleTime: 90_000,
+    gcTime: 10 * 60_000,
+    refetchOnMount: false,
   });
 }

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { isUpstashEnabled, redisIncr } from "../lib/upstashRedis";
+import { buildApiErrorResponse } from "../lib/apiResponse";
 import type { RequestWithContext } from "./requestContext";
 
 /**
@@ -53,15 +54,15 @@ function memoryHit(key: string, windowMs: number): number {
 
 function handler(req: RequestWithContext, res: Response) {
   const requestId = req.requestId ?? "unknown";
-  return res.status(429).json({
-    ok: false,
-    error: {
+  res.setHeader("x-request-id", requestId);
+  return res.status(429).json(
+    buildApiErrorResponse({
       code: "rate_limited",
       message: "Too many requests. Slow down or upgrade to a paid tier.",
       requestId,
       details: { retry_after_seconds: 60 },
-    },
-  });
+    }),
+  );
 }
 
 function rateLimit(options: RateLimitOptions) {

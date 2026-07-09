@@ -60,6 +60,34 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     resetValidatedHrBoardHubForTests();
   });
 
+  it("serves stale validated board immediately while refreshing after TTL expires", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.mocked(buildValidatedHrBoard)
+        .mockResolvedValueOnce(sampleBoard)
+        .mockResolvedValueOnce({
+          ...sampleBoard,
+          candidates: [{ ...sampleBoard.candidates[0], playerName: "Refreshed Player" }],
+        });
+
+      const first = await getCachedValidatedHrBoard();
+      expect(first.candidates[0]?.playerName).toBe("Aaron Judge");
+
+      vi.advanceTimersByTime(901_000);
+
+      const second = await getCachedValidatedHrBoard();
+      expect(second.candidates[0]?.playerName).toBe("Aaron Judge");
+
+      await vi.runAllTimersAsync();
+
+      const third = await getCachedValidatedHrBoard();
+      expect(third.candidates[0]?.playerName).toBe("Refreshed Player");
+    } finally {
+      vi.useRealTimers();
+      resetValidatedHrBoardHubForTests();
+    }
+  });
+
   it("serves last-good validated board when upstream build fails", async () => {
     vi.mocked(buildValidatedHrBoard)
       .mockResolvedValueOnce(sampleBoard)
@@ -90,6 +118,7 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
 
   it("serves last-good validated board from Redis when local L1 is empty", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    vi.mocked(redisGetJson).mockResolvedValue(null);
     vi.mocked(buildValidatedHrBoard)
       .mockResolvedValueOnce(sampleBoard)
       .mockRejectedValueOnce(new Error("MLB Stats API circuit open"));
@@ -101,7 +130,9 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     expireValidatedHrBoardHubCacheForTests();
 
     const storedAt = Date.now() - 5_000;
-    vi.mocked(redisGetJson).mockResolvedValueOnce({ board: sampleBoard, storedAt });
+    vi.mocked(redisGetJson)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ board: sampleBoard, storedAt });
 
     const fallback = await getCachedValidatedHrBoard();
     expect(fallback.servedFromLastGood).toBe(true);

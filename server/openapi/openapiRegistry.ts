@@ -14,8 +14,13 @@ const ErrorEnvelopeSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
+    requestId: z.string(),
     details: z.unknown().optional(),
   }),
+  meta: z.object({
+    requestId: z.string(),
+    timestamp: z.string().datetime(),
+  }).optional(),
 }).openapi("ErrorEnvelope");
 
 const HealthBackendSchema = z.object({
