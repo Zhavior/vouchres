@@ -11,6 +11,38 @@
   animation: ve-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.ve-strike-pop {
+  animation: ve-strike-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-hr-pulse {
+  animation: ve-hr-pulse 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ve-strike-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.55);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ve-hr-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @keyframes ve-slide-up {
   from {
     transform: translateY(12px);
@@ -52,6 +84,8 @@
 
   .ve-slide-up,
   .ve-scale-in,
+  .ve-strike-pop,
+  .ve-hr-pulse,
   .lazy-mount-fade,
   .plasma-shimmer::after,
   .lighting-pulse::before,

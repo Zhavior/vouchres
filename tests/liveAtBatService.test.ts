@@ -39,6 +39,12 @@ function feedWithPitch(gamePk: number) {
           away: { runs: 4 },
           home: { runs: 3 },
         },
+        offense: {
+          balls: 2,
+          strikes: 1,
+          first: { id: 30, fullName: "Runner One" },
+          third: { id: 31, fullName: "Runner Three" },
+        },
       },
       boxscore: {
         teams: {
@@ -102,8 +108,13 @@ describe("getLiveAtBat", () => {
     expect(first?.play?.batter.name).toBe("Test Batter");
     expect(first?.play?.pitcher.name).toBe("Test Pitcher");
     expect(first?.play?.pitches).toHaveLength(1);
+    expect(first?.count).toEqual({ balls: 2, strikes: 1 });
+    expect(first?.runners.first?.name).toBe("Runner One");
+    expect(first?.runners.first?.initials).toBe("RO");
+    expect(first?.runners.second).toBeNull();
+    expect(first?.runners.third?.name).toBe("Runner Three");
 
-    vi.advanceTimersByTime(13_000);
+    vi.advanceTimersByTime(6_000);
     mocks.getGameFeed.mockRejectedValueOnce(new Error("MLB feed timeout"));
 
     const fallback = await getLiveAtBat(1234);
@@ -122,7 +133,7 @@ describe("getLiveAtBat", () => {
     expect(redisSetJson).toHaveBeenCalled();
 
     resetLiveAtBatCachesForTests();
-    vi.advanceTimersByTime(13_000);
+    vi.advanceTimersByTime(6_000);
 
     const storedAt = Date.now() - 5_000;
     vi.mocked(redisGetJson).mockResolvedValueOnce({ snapshot: first, storedAt });

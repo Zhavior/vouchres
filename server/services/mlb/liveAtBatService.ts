@@ -40,12 +40,20 @@ export interface LiveAtBatHit {
   coordY: number | null;
 }
 
+export interface LiveAtBatRunner {
+  id: number | null;
+  name: string;
+  initials: string;
+}
+
 export interface LiveAtBatSnapshot {
   gamePk: number;
   status: string;
   inning: number | null;
   halfInning: string | null;
   outs: number | null;
+  count: { balls: number | null; strikes: number | null };
+  runners: { first: LiveAtBatRunner | null; second: LiveAtBatRunner | null; third: LiveAtBatRunner | null };
   away: { teamId: number | null; abbr: string; runs: number | null };
   home: { teamId: number | null; abbr: string; runs: number | null };
   winProb: { homePct: number; awayPct: number; lastSwingHomePct: number } | null;
@@ -60,7 +68,7 @@ export interface LiveAtBatSnapshot {
   updatedAt: string;
 }
 
-const cache = new TTLCache<LiveAtBatSnapshot | null>(12_000);
+const cache = new TTLCache<LiveAtBatSnapshot | null>(5_000);
 const lastGoodSnapshots = new Map<number, { snapshot: LiveAtBatSnapshot; expiresAt: number }>();
 const LAST_GOOD_TTL_MS = 2 * 60_000;
 const MAX_LAST_GOOD_SNAPSHOTS = 64;
@@ -128,6 +136,51 @@ export function resetLiveAtBatCachesForTests(): void {
 function num(v: unknown): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function runnerInitials(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "??";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function mapRunner(raw: unknown): LiveAtBatRunner | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const id = num(r.id);
+  const name = String(r.fullName ?? r.lastName ?? "").trim();
+  if (!name && id == null) return null;
+  return { id, name: name || "Runner", initials: runnerInitials(name || "??") };
+}
+
+function mapRunners(linescore: Record<string, unknown>): LiveAtBatSnapshot["runners"] {
+  const offense = (linescore?.offense ?? {}) as Record<string, unknown>;
+  return {
+    first: mapRunner(offense.first),
+    second: mapRunner(offense.second),
+    third: mapRunner(offense.third),
+  };
+}
+
+function mapCount(linescore: Record<string, unknown>, play: unknown): LiveAtBatSnapshot["count"] {
+  const offense = (linescore?.offense ?? {}) as Record<string, unknown>;
+  let balls = num(offense.balls);
+  let strikes = num(offense.strikes);
+
+  if (balls == null || strikes == null) {
+    const pitchEvents = ((play as Record<string, unknown>)?.playEvents as unknown[] ?? []).filter(
+      (e) => e && typeof e === "object" && (e as Record<string, unknown>).isPitch,
+    );
+    const last = pitchEvents[pitchEvents.length - 1] as Record<string, unknown> | undefined;
+    const count = last?.count as Record<string, unknown> | undefined;
+    if (count) {
+      balls = num(count.balls) ?? balls;
+      strikes = num(count.strikes) ?? strikes;
+    }
+  }
+
+  return { balls, strikes };
 }
 
 function boxscoreLine(box: any, playerId: number | null, kind: "batting" | "pitching"): string | null {
@@ -274,6 +327,8 @@ export async function getLiveAtBat(gamePk: number): Promise<LiveAtBatSnapshot | 
         inning: num(linescore.currentInning),
         halfInning: linescore.inningHalf ?? null,
         outs: num(linescore.outs),
+        count: mapCount(linescore, play),
+        runners: mapRunners(linescore),
         away: teamMeta("away"),
         home: teamMeta("home"),
         winProb: await fetchWinProb(gamePk),

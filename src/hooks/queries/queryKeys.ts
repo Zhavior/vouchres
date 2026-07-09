@@ -3,6 +3,7 @@ export const queryKeys = {
   hrBoard: (date: string, previewLimit?: number) =>
     ['hrBoard', date, previewLimit ?? 'default'] as const,
   liveGames: () => ['liveGames'] as const,
+  liveAtBat: (gamePk: number) => ['liveAtBat', gamePk] as const,
   aiJudgeLeaderboard: () => ['aiJudgeLeaderboard'] as const,
   aiAgentRegistry: () => ['aiAgentRegistry'] as const,
   authMe: () => ['authMe'] as const,

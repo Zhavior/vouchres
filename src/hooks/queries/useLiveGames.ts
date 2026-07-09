@@ -4,8 +4,8 @@ import { queryKeys } from './queryKeys';
 
 export type LiveGamesPayload = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>;
 
-const LIVE_POLL_MS = 20_000;
-const IDLE_POLL_MS = 60_000;
+const LIVE_POLL_MS = 8_000;
+const IDLE_POLL_MS = 45_000;
 
 function hasLiveGames(payload: LiveGamesPayload | undefined): boolean {
   if (!payload?.games?.length) return false;
@@ -20,8 +20,10 @@ export function useLiveGames(options?: { enabled?: boolean; refetchInterval?: nu
   return useQuery<LiveGamesPayload>({
     queryKey: queryKeys.liveGames(),
     queryFn: () => vouchedgeApi.liveGames(),
-    staleTime: 15_000,
+    staleTime: 6_000,
+    gcTime: 120_000,
     refetchOnMount: true,
+    placeholderData: (prev) => prev,
     refetchInterval: (query) => {
       if (options?.refetchInterval !== undefined) return options.refetchInterval;
       return hasLiveGames(query.state.data) ? LIVE_POLL_MS : IDLE_POLL_MS;
