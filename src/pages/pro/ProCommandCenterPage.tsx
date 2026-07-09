@@ -14,6 +14,7 @@ import {
 
 import { Z8_PANEL } from "../../theme/z8Tokens";
 import { useSmartAiCandidates } from "../../components/smart-ai/useSmartAiCandidates";
+import { AskVouchPanel } from "../../features/ai/components/AskVouchPanel";
 
 export default function ProCommandCenterPage() {
   const {
@@ -214,6 +215,14 @@ function EdgeRow({
           </div>
         ))}
       </div>
+
+      <AskVouchPanel
+        playerName={player}
+        score={Number(score)}
+        hrProbability={candidate?.estimatedHrProbability}
+        confidence={candidate?.confidenceTier}
+        reasons={candidate?.reasons}
+      />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
 import CmdKPalette from './CmdKPalette';
-import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
 import { Sparkles } from 'lucide-react';
 import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
 import {
@@ -13,45 +12,35 @@ import {
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 import { BubbleField } from '../../components/vouchedge/ParticleFields';
+import { useAppShell } from '../../context/AppShellContext';
 
 interface HomeFeedLayoutProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  posts: FeedPost[];
-  profile: CreatorProofProfile;
-  savedVouchIds: string[];
-  onSaveVouch: (vouch: Vouch) => void;
   children: React.ReactNode;
-  activeLegs?: Leg[];
-  savedSlips?: Parlay[];
   isRouteSwitching?: boolean;
-  onAuthLoginSuccess?: () => void;
-  onAuthLogoutComplete?: () => void;
   /** True only for the bare public front page (logged-out 'welcome') — hides
    * the sidebar/header/right-rail app chrome. Logged-in users landing on
    * 'welcome' (Edge Island) still get the normal app shell. */
   isPublicFrontPage?: boolean;
 }
 
-export default function HomeFeedLayout(props: HomeFeedLayoutProps) {
-  return <HomeFeedLayoutInner {...props} />;
-}
-
-function HomeFeedLayoutInner({
+function HomeFeedLayout({
   activeSection,
   onSectionChange,
-  posts,
-  profile,
-  savedVouchIds,
-  onSaveVouch,
   children,
-  activeLegs = [],
-  savedSlips = [],
   isRouteSwitching = false,
-  onAuthLoginSuccess,
-  onAuthLogoutComplete,
   isPublicFrontPage = false,
 }: HomeFeedLayoutProps) {
+  const {
+    posts,
+    profile,
+    savedVouchIds,
+    savedSlips,
+    onSaveVouch,
+    onAuthLoginSuccess,
+    onAuthLogoutComplete,
+  } = useAppShell();
   const { activeTheme, reduceMotion } = useTheme();
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
@@ -299,3 +288,5 @@ function HomeFeedLayoutInner({
     </NotificationProvider>
   );
 }
+
+export default React.memo(HomeFeedLayout);
