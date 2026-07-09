@@ -99,7 +99,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#02040a] overflow-hidden text-white/90 flex flex-col font-sans select-none" id="epic-arena-comingsoon-page">
+    <div className="relative min-h-screen bg-ve-obsidian overflow-hidden text-white/90 flex flex-col font-sans select-none" id="epic-arena-comingsoon-page">
       {/* Cinematic grid lines in the background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0e1526_1px,transparent_1px),linear-gradient(to_bottom,#0e1526_1px,transparent_1px)] bg-[size:40px_40px] opacity-35 z-0 pointer-events-none" />
       
@@ -113,7 +113,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
       <header className="relative z-50 px-6 py-4 border-b border-white/[0.06] bg-black/30 backdrop-blur-xl flex items-center justify-between">
         <button
           onClick={() => onSectionChange('feed')}
-          className="flex items-center gap-2 px-4 py-2 bg-[#060913] hover:bg-black/30 text-white/65 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider border border-white/[0.08] transition-all cursor-pointer shadow-md hover:border-amber-400/30 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 animate-fade-in"
+          className="flex items-center gap-2 px-4 py-2 bg-ve-graphite hover:bg-black/30 text-white/65 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider border border-white/[0.08] transition-all cursor-pointer shadow-md hover:border-amber-400/30 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)] active:scale-95 animate-fade-in"
           id="arena-back-btn"
         >
           <ArrowLeft className="w-4 h-4 text-amber-400" />
@@ -396,7 +396,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nba' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-orange-500/20 transition-all">
+              <div className="bg-ve-graphite/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-orange-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Activity className="w-3 h-3 text-orange-400" />
                   Hardwood Fatigue Map
@@ -405,7 +405,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Weighing stamina drain on back-to-back schedules.</p>
               </div>
 
-              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-indigo-500/20 transition-all">
+              <div className="bg-ve-graphite/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-indigo-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Target className="w-3 h-3 text-vouch-cyan" />
                   Prop Shot Grid
@@ -414,7 +414,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Mapping high-precision scoring vectors live.</p>
               </div>
 
-              <div className="bg-[#0b0e1a]/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-emerald-500/20 transition-all">
+              <div className="bg-ve-graphite/80 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-emerald-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-emerald-400" />
                   V.A.I Smart Overlay
@@ -700,7 +700,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
             <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-all duration-505 ${
               hoveredSide === 'nfl' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none hidden md:grid'
             }`}>
-              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-emerald-500/20 transition-all">
+              <div className="bg-ve-storm/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-emerald-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Compass className="w-3 h-3 text-emerald-400" />
                   Redzone Target Heat
@@ -709,7 +709,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Predict snaps in the 20yd line using defensive scheme weights.</p>
               </div>
 
-              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-amber-500/20 transition-all">
+              <div className="bg-ve-storm/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 hover:border-amber-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Zap className="w-3 h-3 text-amber-400" />
                   Sprint Acceleration
@@ -718,7 +718,7 @@ export default function NbaNflArena({ onSectionChange }: NbaNflArenaProps) {
                 <p className="text-[10px] text-white/45 leading-tight">Matching receiver burst speeds against CB coverage margins.</p>
               </div>
 
-              <div className="bg-[#080d12]/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-indigo-500/20 transition-all">
+              <div className="bg-ve-storm/85 border border-white/[0.08] rounded-xl p-3 text-left space-y-1 col-span-2 md:col-span-1 hover:border-indigo-500/20 transition-all">
                 <span className="text-[8px] font-bold font-mono uppercase text-white/40 flex items-center gap-1">
                   <Eye className="w-3 h-3 text-vouch-cyan" />
                   Endzone Camera

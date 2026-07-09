@@ -23,7 +23,14 @@ const TOP_FE_API_PATHS = [
   "/api/notifications",
   "/api/mlb/reports/daily",
   "/api/parlays/grade",
+  "/api/users/handle/{handle}",
+  "/api/auth/handle-check",
+  "/api/auth/username-check",
+  "/api/mlb/live",
+  "/api/health/backend",
 ] as const;
+
+const MIN_OPENAPI_PATHS = 20;
 
 let contractServer: Server;
 let contractBaseUrl: string;
@@ -197,6 +204,8 @@ describe("API contract over HTTP", () => {
   it("registers top frontend API paths in OpenAPI", () => {
     const doc = buildOpenApiDocument();
     const registered = Object.keys(doc.paths ?? {});
+
+    expect(registered.length).toBeGreaterThanOrEqual(MIN_OPENAPI_PATHS);
 
     for (const path of TOP_FE_API_PATHS) {
       expect(registered, `missing OpenAPI path ${path}`).toContain(path);

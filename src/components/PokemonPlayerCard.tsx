@@ -278,10 +278,10 @@ export default function PokemonPlayerCard({
           </div>
 
           {/* Foil Polaroid Illustration */}
-          <div className="bg-[#0b0e1a]/95 border border-slate-800 p-2.5 rounded-2xl relative select-none mb-4" id="pokemon-polaroid-box">
+          <div className="bg-ve-graphite/95 border border-slate-800 p-2.5 rounded-2xl relative select-none mb-4" id="pokemon-polaroid-box">
             {/* Hologram gradient mesh overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-yellow-505/10 to-indigo-505/10 pointer-events-none" />
-            <div className="border border-slate-800/80 rounded-xl overflow-hidden aspect-[16/10] bg-[#070a13] relative flex items-center justify-center">
+            <div className="border border-slate-800/80 rounded-xl overflow-hidden aspect-[16/10] bg-ve-obsidian relative flex items-center justify-center">
               
               {/* Halftone retro background dots */}
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FFF176_1px,transparent_1px)] bg-[size:12px_12px]" />
@@ -310,8 +310,8 @@ export default function PokemonPlayerCard({
           </div>
 
           {/* Pokédex description (Flavor text box representing scouts) */}
-          <div className="bg-[#0c0f1b] border border-slate-850 p-3 rounded-xl mb-4 relative font-mono text-[10px]" id="flavor-quote-report">
-            <span className="absolute -top-2 right-4 bg-[#13192b] border border-slate-850 px-2 py-0.5 text-[8px] font-black text-yellow-400 uppercase tracking-widest leading-none">
+          <div className="bg-ve-graphite border border-slate-850 p-3 rounded-xl mb-4 relative font-mono text-[10px]" id="flavor-quote-report">
+            <span className="absolute -top-2 right-4 bg-ve-storm border border-slate-850 px-2 py-0.5 text-[8px] font-black text-yellow-400 uppercase tracking-widest leading-none">
               CARD FLAVOR
             </span>
             <p className="text-slate-300 italic leading-relaxed text-center">
@@ -331,7 +331,7 @@ export default function PokemonPlayerCard({
               return (
                 <div 
                   key={prop.id}
-                  className="bg-[#090d18] border border-slate-800/80 rounded-xl p-2.5 flex items-center justify-between hover:border-yellow-400/20 transition-colors gap-2 text-xs"
+                  className="bg-ve-obsidian border border-slate-800/80 rounded-xl p-2.5 flex items-center justify-between hover:border-yellow-400/20 transition-colors gap-2 text-xs"
                 >
                   <div className="min-w-0 pr-1 flex items-start gap-2">
                     <span className="text-yellow-400 mt-0.5">⚔️</span>
@@ -453,10 +453,10 @@ export default function PokemonPlayerCard({
               </div>
 
               <div className="text-[9px] font-mono leading-normal text-slate-400 space-y-1 pr-1 shrink-0">
-                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" /> LHP: {activePlayer.splits.vLHP.ops}</div>
-                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" /> RHP: {activePlayer.splits.vRHP.ops}</div>
-                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" /> Home: {activePlayer.splits.home.ops}</div>
-                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" /> Away: {activePlayer.splits.away.ops}</div>
+                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> LHP: {activePlayer.splits.vLHP.ops}</div>
+                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> RHP: {activePlayer.splits.vRHP.ops}</div>
+                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Home: {activePlayer.splits.home.ops}</div>
+                <div className="flex items-center gap-1 min-w-[70px]"><span className="w-1.5 h-1.5 rounded-full bg-violet-500" /> Away: {activePlayer.splits.away.ops}</div>
               </div>
             </div>
           </div>

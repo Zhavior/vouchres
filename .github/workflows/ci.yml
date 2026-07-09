@@ -54,6 +54,7 @@ jobs:
             sleep 1
           done
           BASE_URL=http://127.0.0.1:3010 npm run staging-soak
+          BASE_URL=http://127.0.0.1:3010 npm run staging-soak:strict
           kill $SERVER_PID
 
       - name: Bundle gzip budget

@@ -23,6 +23,8 @@
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "perf-check": "node scripts/perf-check.mjs",
     "staging-soak": "node scripts/staging-soak.mjs",
+    "staging-soak:strict": "node scripts/staging-soak.mjs --strict --local-only",
+    "lighthouse-ci": "node scripts/lighthouse-ci.mjs",
     "typecheck": "tsc --noEmit",
     "quality": "npm run typecheck && npm run lint && npm run build",
     "lint:strict": "eslint src server tests --quiet",

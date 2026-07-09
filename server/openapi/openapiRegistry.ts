@@ -250,6 +250,13 @@ const UsernameCheckSchema = z.object({
   reason: z.string().optional(),
 }).openapi("UsernameCheckResponse");
 
+const HandleCheckSchema = z.object({
+  ok: z.literal(true),
+  available: z.boolean(),
+  handle: z.string().optional(),
+  reason: z.string().optional(),
+}).openapi("HandleCheckResponse");
+
 const BillingStatusSchema = z.object({
   ok: z.literal(true),
   tier: z.string(),
@@ -419,6 +426,7 @@ openapiRegistry.register("LiveAtBatSnapshot", LiveAtBatSchema);
 openapiRegistry.register("LiveAtBatResponse", LiveAtBatEnvelopeSchema);
 openapiRegistry.register("HrBoardPlayerResponse", HrBoardPlayerSchema);
 openapiRegistry.register("UsernameCheckResponse", UsernameCheckSchema);
+openapiRegistry.register("HandleCheckResponse", HandleCheckSchema);
 openapiRegistry.register("BillingStatusResponse", BillingStatusSchema);
 openapiRegistry.register("BillingCheckoutRequest", BillingCheckoutSchema);
 openapiRegistry.register("MlbGamesTodayResponse", MlbGamesTodaySchema);
@@ -760,6 +768,42 @@ openapiRegistry.registerPath({
     200: {
       description: "Availability result",
       content: { "application/json": { schema: UsernameCheckSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/auth/handle-check",
+  summary: "Public @handle availability check (query param)",
+  tags: ["Auth"],
+  request: {
+    query: z.object({
+      handle: z.string().min(3).max(24),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Handle availability result",
+      content: { "application/json": { schema: HandleCheckSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/users/handle/{handle}",
+  summary: "Public @handle availability check (path param)",
+  tags: ["Users"],
+  request: {
+    params: z.object({
+      handle: z.string().min(3).max(24),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Handle availability result",
+      content: { "application/json": { schema: HandleCheckSchema } },
     },
   },
 });

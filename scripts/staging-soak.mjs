@@ -17,12 +17,18 @@
  * Usage:
  *   BASE_URL=http://127.0.0.1:3000 npm run staging-soak
  *   BASE_URL=https://staging.example npm run staging-soak -- --strict
+ *   BASE_URL=http://127.0.0.1:3000 npm run staging-soak:strict
  *
  * Flags:
- *   --strict  Fail on HTTP 503 (default: accept honest upstream-unavailable envelopes)
+ *   --strict       Fail on HTTP 503 (default: accept honest upstream-unavailable envelopes)
+ *   --local-only   Run only checks that do not require live MLB upstream (CI strict gate)
+ *
+ * CI note: staging-soak:strict uses --local-only --strict against the built server on 127.0.0.1.
+ * Full --strict against a real staging host requires BASE_URL secret (e.g. GitHub Actions secret STAGING_BASE_URL).
  */
 const BASE_URL = (process.env.BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 const STRICT = process.argv.includes("--strict");
+const LOCAL_ONLY = process.argv.includes("--local-only");
 
 const MIN_OPENAPI_PATHS = 25;
 
@@ -84,11 +90,12 @@ function validateMlbRoute({ status, body, strict = STRICT, validate200, allow503
   return validate200(body);
 }
 
-/** @type {{ id: string; path: string; validate: (ctx: { status: number; body: unknown }) => string | null }} */
+/** @type {{ id: string; path: string; localOnly?: boolean; validate: (ctx: { status: number; body: unknown }) => string | null }} */
 const CHECKS = [
   {
     id: "health-backend",
     path: "/api/health/backend",
+    localOnly: true,
     validate({ status, body }) {
       if (status !== 200) return `expected HTTP 200, got ${status}`;
       const row = /** @type {Record<string, unknown>} */ (body);
@@ -196,6 +203,7 @@ const CHECKS = [
   {
     id: "openapi-json",
     path: "/api/openapi.json",
+    localOnly: true,
     validate({ status, body }) {
       if (status !== 200) return `expected HTTP 200, got ${status}`;
       const row = /** @type {Record<string, unknown>} */ (body);
@@ -208,6 +216,30 @@ const CHECKS = [
       if (pathCount < MIN_OPENAPI_PATHS) {
         return `path count ${pathCount} < ${MIN_OPENAPI_PATHS}`;
       }
+      return null;
+    },
+  },
+  {
+    id: "auth-username-check",
+    path: "/api/auth/username-check?username=soak_probe_user",
+    localOnly: true,
+    validate({ status, body }) {
+      if (status !== 200) return `expected HTTP 200, got ${status}`;
+      const row = /** @type {Record<string, unknown>} */ (body);
+      if (row.ok !== true) return "body.ok !== true";
+      if (typeof row.available !== "boolean") return "missing available boolean";
+      return null;
+    },
+  },
+  {
+    id: "auth-handle-check",
+    path: "/api/auth/handle-check?handle=soak_probe",
+    localOnly: true,
+    validate({ status, body }) {
+      if (status !== 200) return `expected HTTP 200, got ${status}`;
+      const row = /** @type {Record<string, unknown>} */ (body);
+      if (row.ok !== true) return "body.ok !== true";
+      if (typeof row.available !== "boolean") return "missing available boolean";
       return null;
     },
   },
@@ -270,12 +302,15 @@ function printResult(id, ok, detail) {
 }
 
 async function main() {
-  console.log(`[staging-soak] BASE_URL=${BASE_URL}${STRICT ? " strict=1" : ""}`);
+  const checks = LOCAL_ONLY ? CHECKS.filter((check) => check.localOnly) : CHECKS;
+  console.log(
+    `[staging-soak] BASE_URL=${BASE_URL}${STRICT ? " strict=1" : ""}${LOCAL_ONLY ? " local-only=1" : ""} checks=${checks.length}`,
+  );
 
   let hardFailures = 0;
   let skipped = false;
 
-  for (const check of CHECKS) {
+  for (const check of checks) {
     try {
       const result = await fetchJson(check.path);
       const error = check.validate(result);

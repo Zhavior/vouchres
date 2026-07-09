@@ -6,6 +6,7 @@
  *
  * Manual Lighthouse (optional):
  *   npm run build && npm run preview
+ *   npm run lighthouse-ci   # prints manual steps
  *   npx lighthouse http://localhost:4173 --only-categories=performance --quiet
  */
 import { spawnSync } from "node:child_process";
