@@ -61,6 +61,7 @@ const PlayerEdgeLabPage = lazy(() => import('./pages/pro/PlayerEdgeLabPage'));
 const TeamMatchupLabPage = lazy(() => import('./pages/pro/TeamMatchupLabPage'));
 const HitterMatchupZonesPage = lazy(() => import('./pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('./pages/pro/ProGraphsLabPage'));
+const ProCommandCenterPage = lazy(() => import('./pages/pro/ProCommandCenterPage'));
 const ParlayCommandCenter = lazy(() => import('./components/parlay/ParlayCommandCenter'));
 const EdgeIslandCommandCenter = lazy(() => import('./components/theEdge/EdgeIslandCommandCenter'));
 const NbaNflArena = lazy(() => import('./components/NbaNflArena'));
@@ -1686,6 +1687,16 @@ export default function App() {
         return (
           <ProAccessGate profile={profile} featureName="Live Game Lab" onNavigatePremium={() => navigateSection('premium')}>
             <LiveGameLabPage />
+          </ProAccessGate>
+        );
+      case 'pro_command_center':
+        return (
+          <ProAccessGate
+            profile={profile}
+            featureName="VouchEdge Pro Command Center"
+            onNavigatePremium={() => navigateSection('premium')}
+          >
+            <ProCommandCenterPage />
           </ProAccessGate>
         );
       case 'player_edge_lab':

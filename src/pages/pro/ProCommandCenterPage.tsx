@@ -10,9 +10,9 @@ import {
 import {
   ProPageHeader,
   ProSignalBar,
-} from "@/components/pro";
+} from "../../components/pro";
 
-import { Z8_PANEL } from "@/theme/z8Tokens";
+import { Z8_PANEL } from "../../theme/z8Tokens";
 
 export default function ProCommandCenterPage() {
   return (
