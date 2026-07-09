@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Response } from "express";
 import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
+import { structuredLog } from "../../lib/structuredLog";
 import { assertCronAuthorized } from "../../lib/cronAuth";
 import { AppError } from "../../errors/AppError";
 import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators";
@@ -65,7 +66,9 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
   const { settled, pending, errors, summary } = partitionGradeDueResult(result);
   const requestId = req.requestId ?? "unknown";
 
-  console.log("[parlays/grade-due]", JSON.stringify({
+  structuredLog({
+    level: "info",
+    event: "parlays_grade_due",
     requestId,
     mode: "cron_grade_due",
     days,
@@ -73,7 +76,7 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
     gradedLegs: result.graded.length,
     pendingLegs: pending.length,
     errorCount: errors.length,
-  }));
+  });
 
   return res.json(apiOkFlat(req, {
     mode: "cron_grade_due",

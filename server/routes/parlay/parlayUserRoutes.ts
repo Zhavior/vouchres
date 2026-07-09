@@ -5,6 +5,7 @@ import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
 import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
+import { structuredLog } from "../../lib/structuredLog";
 import { AppError } from "../../errors/AppError";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
@@ -45,7 +46,15 @@ parlayUserRoutes.post("/parlays/ai-generate", requireAuth, generationLimiter, as
     throw upstreamUnavailable("AI parlay generation unavailable.", err);
   });
   const result = buildGeneratedAiParlays(options);
-  console.log(`[parlays/ai-generate] date=${date} parlays=${result.parlays.length} warnings=${result.warnings.length} ${Date.now() - start}ms`);
+  structuredLog({
+    level: "info",
+    event: "parlays_ai_generate",
+    requestId: req.requestId,
+    date,
+    parlayCount: result.parlays.length,
+    warningCount: result.warnings.length,
+    durationMs: Date.now() - start,
+  });
   return res.json(apiOkFlat(req, {
     parlays: result.parlays,
     warnings: result.warnings,

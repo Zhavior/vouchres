@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Response } from "express";
 import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
+import { structuredLog } from "../../lib/structuredLog";
 import { boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { AuthedRequest, getSupabaseAdmin, requireAuth, requireStaff } from "../../middleware/auth";
@@ -53,7 +54,9 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
   const { settled, pending, errors, summary } = partitionGradeDueResult(result);
   const requestId = (req as AuthedRequest & RequestWithContext).requestId ?? "unknown";
 
-  console.log("[parlays/grade-due]", JSON.stringify({
+  structuredLog({
+    level: "info",
+    event: "parlays_grade_due",
     requestId,
     mode: "grade_due",
     days,
@@ -62,7 +65,7 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
     gradedLegs: result.graded.length,
     pendingLegs: pending.length,
     errorCount: errors.length,
-  }));
+  });
 
   try {
     const logRows = [

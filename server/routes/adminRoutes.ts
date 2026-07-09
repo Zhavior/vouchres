@@ -5,6 +5,7 @@ import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../midd
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { issueInvite } from "../services/persistence/betaService";
@@ -249,11 +250,15 @@ adminRoutes.patch(
       });
     }
 
-    console.log(
-      `[admin] staff ${req.user!.id} updated user ${id}:`,
-      safeUpdates,
-      updates.reason ? `reason: ${updates.reason}` : "",
-    );
+    structuredLog({
+      level: "info",
+      event: "admin_user_updated",
+      requestId: req.requestId,
+      staffUserId: req.user!.id,
+      targetUserId: id,
+      updates: safeUpdates,
+      ...(updates.reason ? { reason: updates.reason } : {}),
+    });
 
     return res.json(apiOkFlat(req, data as Record<string, unknown>));
   }),

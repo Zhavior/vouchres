@@ -6,6 +6,7 @@ import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { webhookLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
@@ -54,7 +55,11 @@ function getSafeFrontendOrigin(): string {
     return "http://localhost:3000";
   }
 
-  console.log("[billing] safeFrontendOrigin:", stripped);
+  structuredLog({
+    level: "info",
+    event: "billing_safe_frontend_origin",
+    message: stripped,
+  });
   return stripped;
 }
 

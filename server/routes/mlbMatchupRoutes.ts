@@ -10,6 +10,7 @@ import { isMlbFinalStatusText, isMlbLiveStatus } from "../services/mlb/gameStatu
 import { TTLCache } from "../lib/cache";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import { assertCronAuthorized } from "../lib/cronAuth";
 import { AppError } from "../errors/AppError";
@@ -93,7 +94,13 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = todayISO();
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
-      console.log(`[MATCHUPS_TODAY] served from SportsTruthHub date=${date}`);
+      structuredLog({
+        level: "info",
+        event: "matchups_today_served",
+        requestId: req.requestId,
+        date,
+        source: "sports_truth_hub",
+      });
       return res.json(apiOkFlat(req, {
         count: snapshot.matchups.length,
         matchups: snapshot.matchups,
@@ -116,7 +123,13 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = requiredDateParam(req.params.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
-      console.log(`[MATCHUPS_DATE] served from SportsTruthHub date=${date}`);
+      structuredLog({
+        level: "info",
+        event: "matchups_date_served",
+        requestId: req.requestId,
+        date,
+        source: "sports_truth_hub",
+      });
       return res.json(apiOkFlat(req, {
         count: snapshot.matchups.length,
         matchups: snapshot.matchups,
@@ -149,7 +162,13 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = dateQueryOrToday(req.query.date);
       const snapshot = await buildSportsTruthSnapshot({ sport: "mlb", date, live: true });
-      console.log(`[MATCHUP_MATRIX_LIVE] served from SportsTruthHub date=${date}`);
+      structuredLog({
+        level: "info",
+        event: "matchup_matrix_live_served",
+        requestId: req.requestId,
+        date,
+        source: "sports_truth_hub",
+      });
       return res.json(apiOkFlat(req, {
         ...snapshot.matchupMatrix,
         meta: buildApiMeta({
