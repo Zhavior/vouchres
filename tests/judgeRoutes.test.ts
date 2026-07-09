@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { registerJudgeRoutes } from "../server/routes/judgeRoutes";
 
 vi.mock("../server/middleware/auth", () => ({
@@ -31,6 +32,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   registerJudgeRoutes(app);
   app.use(apiErrorHandler);
@@ -66,7 +68,12 @@ describe("judge routes", () => {
     expect(body).toMatchObject({
       ok: true,
       verdict: { verdict: "pass" },
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
+    expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
   });
 
   it("rejects missing pick with unified validation envelope", async () => {

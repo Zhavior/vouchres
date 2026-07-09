@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { registerResultRoutes } from "../server/routes/resultRoutes";
 
 vi.mock("../server/middleware/auth", () => ({
@@ -35,6 +36,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   registerResultRoutes(app);
   app.use(apiErrorHandler);
@@ -67,7 +69,12 @@ describe("result routes", () => {
       ok: true,
       scope: "current_user",
       total: 1,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
+    expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
     expect(body.picks).toHaveLength(1);
   });
 
@@ -87,6 +94,10 @@ describe("result routes", () => {
     expect(body).toMatchObject({
       ok: true,
       pick: { id: "pick-1", status: "win" },
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 

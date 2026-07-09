@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { worldChatRoutes } from "../server/routes/worldChatRoutes";
 import {
   honestWinRate,
@@ -15,6 +16,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api", worldChatRoutes);
   app.use(apiErrorHandler);
@@ -77,9 +79,16 @@ describe("world chat routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.messages).toEqual([]);
-    expect(body.preview).toBe(true);
+    expect(body).toMatchObject({
+      ok: true,
+      messages: [],
+      preview: true,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+    expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
   });
 
   it("requires auth to post messages", async () => {

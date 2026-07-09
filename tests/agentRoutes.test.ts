@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { registerAgentRoutes } from "../server/routes/agentRoutes";
 
 vi.mock("../server/middleware/auth", () => ({
@@ -28,6 +29,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   registerAgentRoutes(app);
   app.use(apiErrorHandler);
@@ -60,7 +62,12 @@ describe("agent routes", () => {
       ok: true,
       cappers: [{ id: "alpha" }],
       judges: [{ id: "judge" }],
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
+    expect(response.headers.get("x-request-id")).toBe(body.meta.requestId);
   });
 
   it("returns agent details with ok envelope", async () => {
@@ -72,6 +79,10 @@ describe("agent routes", () => {
       ok: true,
       id: "alpha",
       name: "Alpha",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 

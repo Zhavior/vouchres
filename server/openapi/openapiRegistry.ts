@@ -7,6 +7,10 @@ export const openapiRegistry = new OpenAPIRegistry();
 
 const OkEnvelopeSchema = z.object({
   ok: z.literal(true),
+  meta: z.object({
+    requestId: z.string(),
+    timestamp: z.string().datetime(),
+  }).optional(),
 }).passthrough().openapi("OkEnvelope");
 
 const ErrorEnvelopeSchema = z.object({

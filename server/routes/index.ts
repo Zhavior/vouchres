@@ -31,6 +31,7 @@ import { getPublicVouch } from "../services/persistence/vouchService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
 import type { Request, Response } from "express";
@@ -72,10 +73,11 @@ export function registerApiRoutes(app: Express): void {
   registerAiJudgeSocialRoutes(app);
 
   // Skills introspection + generic runner.
-  app.get("/api/skills", (_req: Request, res: Response) => res.json({ ok: true, skills: listSkills() }));
-  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/skills", (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, { skills: listSkills() })));
+  app.post("/api/skills/:id/run", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      res.json({ ok: true, result: await runSkill(req.params.id, req.body ?? {}) });
+      res.json(apiOkFlat(req, { result: await runSkill(req.params.id, req.body ?? {}) }));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Skill failed.";
       if (message.startsWith("Unknown skill:")) {

@@ -95,6 +95,13 @@ describe("auth routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, available: true });
+    expect(body).toMatchObject({
+      ok: true,
+      available: true,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 });
