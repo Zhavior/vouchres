@@ -28,7 +28,7 @@ publicRoutes.post(
     try {
       const { saveCurrentAiJudgePicksToLedger } = await import("../services/aiJudges/aiJudgePickLedgerService");
       const payload = await saveCurrentAiJudgePicksToLedger();
-      return res.json(apiOkFlat(req, payload as Record<string, unknown>));
+      return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
     } catch (error: any) {
       console.error("[ai-judges] save current picks failed", error?.message);
       throw new AppError({
@@ -82,7 +82,7 @@ publicRoutes.post(
 publicRoutes.get("/ai-judges/leaderboard", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const payload = await buildAiJudgeLeaderboard();
-    return res.json(apiOkFlat(req, payload as Record<string, unknown>));
+    return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
   } catch (error: any) {
     console.error("[ai-judges] leaderboard failed", error?.message);
     throw new AppError({
@@ -364,7 +364,7 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, re
     });
   }
 
-  return res.json(apiOkFlat(req, profile as Record<string, unknown>));
+  return res.json(apiOkFlat(req, profile as unknown as Record<string, unknown>));
 }));
 
 publicRoutes.get("/profile/:id/stats", asyncHandler(async (req: RequestWithContext, res: Response) => {

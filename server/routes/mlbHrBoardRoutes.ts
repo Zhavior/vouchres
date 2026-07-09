@@ -143,7 +143,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/today/pool", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard();
-      res.json(apiOkFlat(req, result.pool as Record<string, unknown>));
+      res.json(apiOkFlat(req, result.pool as unknown as Record<string, unknown>));
     } catch (err: any) {
       console.error("[hr-board/today/pool] failed:", err?.message);
       throw upstreamUnavailable("Pool unavailable.", err);
@@ -154,7 +154,7 @@ export function registerHrBoardRoutes(app: Express): void {
   app.get("/api/mlb/hr-board/today/debug", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await getCachedValidatedHrBoard();
-      res.json(apiOkFlat(req, result.debug as Record<string, unknown>));
+      res.json(apiOkFlat(req, result.debug as unknown as Record<string, unknown>));
     } catch (err: any) {
       console.error("[hr-board/today/debug] failed:", err?.message);
       throw upstreamUnavailable("Debug unavailable.", err);
@@ -170,7 +170,7 @@ export function registerHrBoardRoutes(app: Express): void {
           setTimeout(() => reject(new Error("Deep board timed out after 20s")), 20000)
         ),
       ]);
-      res.json(apiOkFlat(req, result as Record<string, unknown>));
+      res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     } catch (err: any) {
       console.error("[hr-board/today/deep] failed:", err?.message);
       throw upstreamUnavailable("Deep HR board unavailable. Use /api/mlb/hr-board/today for the fast validated board.", err);

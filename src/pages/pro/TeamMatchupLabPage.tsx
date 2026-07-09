@@ -14,7 +14,7 @@ import {
 import { VerifiedDataNotice } from '../../components/pro';
 import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
-import { apiUrl } from '../../lib/apiBase';
+import { apiClient } from '../../lib/apiClient';
 import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
@@ -307,31 +307,8 @@ function matrixFromSchedule(data: ScheduleGamesResponse, requestedDate: string):
   };
 }
 
-async function fetchJsonResponse<T>(url: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(url, {
-    signal,
-    headers: { accept: 'application/json' },
-  });
-
-  const contentType = response.headers.get('content-type') ?? '';
-  const rawText = await response.text();
-
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status}): ${rawText.slice(0, 180) || response.statusText}`);
-  }
-
-  try {
-    return JSON.parse(rawText) as T;
-  } catch {
-    const preview = rawText
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 220);
-
-    throw new Error(
-      `Expected JSON but received ${contentType || 'unknown content-type'} from ${url}. Preview: ${preview || 'empty response'}`
-    );
-  }
+async function fetchJsonResponse<T>(path: string, signal: AbortSignal): Promise<T> {
+  return apiClient.get<T>(path, undefined, signal);
 }
 
 export default function TeamMatchupLabPage() {
@@ -359,19 +336,19 @@ export default function TeamMatchupLabPage() {
     async function loadMatrix() {
       try {
         const live = await fetchJsonResponse<MatchupMatrixResponse>(
-          apiUrl(`/api/mlb/matchup-matrix/live?date=${encodeURIComponent(date)}`),
+          `/api/mlb/matchup-matrix/live?date=${encodeURIComponent(date)}`,
           controller.signal
         ).catch(async () => {
           const schedulePath = date === todayISO()
             ? '/api/mlb/games/today'
             : `/api/mlb/games/date/${encodeURIComponent(date)}`;
           return matrixFromSchedule(
-            await fetchJsonResponse<ScheduleGamesResponse>(apiUrl(schedulePath), controller.signal),
+            await fetchJsonResponse<ScheduleGamesResponse>(schedulePath, controller.signal),
             date
           );
         }).catch(async () => {
           const fallback = await fetchJsonResponse<LegacyMatchupsResponse>(
-            apiUrl('/api/mlb/matchups/today'),
+            '/api/mlb/matchups/today',
             controller.signal
           );
           return fallbackMatrixFromMatchups(fallback, date);
@@ -383,7 +360,7 @@ export default function TeamMatchupLabPage() {
         setEnriching(true);
 
         const enriched = await fetchJsonResponse<MatchupMatrixResponse>(
-          apiUrl(`/api/mlb/matchup-matrix?date=${encodeURIComponent(date)}`),
+          `/api/mlb/matchup-matrix?date=${encodeURIComponent(date)}`,
           controller.signal
         );
 

@@ -139,7 +139,7 @@ export function registerMatchupRoutes(app: Express): void {
     try {
       const date = dateQueryOrToday(req.query.date);
       const matrix = await getMatchupMatrix(date);
-      return res.json(apiOkFlat(req, matrix as Record<string, unknown>));
+      return res.json(apiOkFlat(req, matrix as unknown as Record<string, unknown>));
     } catch (err) {
       rethrowOrUpstream(err, "Matchup matrix unavailable.");
     }
@@ -181,7 +181,7 @@ export function registerMatchupRoutes(app: Express): void {
       const date = optionalDateQuery(req.query.date);
       const result = await getPitcherMatchup(gamePk, pitcherId, date);
       if (!result) throw new AppError({ status: 404, code: "not_found", message: "Pitcher matchup not found." });
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     } catch (err) {
       rethrowOrUpstream(err, "Pitcher matchup unavailable.");
     }

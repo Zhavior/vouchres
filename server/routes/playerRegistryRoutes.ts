@@ -34,7 +34,7 @@ function queryString(value: unknown, maxLength: number): string {
 playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const count = await getPlayerCount();
-    return res.json(apiOkFlat(req, count as Record<string, unknown>));
+    return res.json(apiOkFlat(req, count as unknown as Record<string, unknown>));
   } catch (error) {
     throw registryUnavailable(error);
   }
@@ -99,7 +99,7 @@ playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(as
       gamePk,
     });
 
-    return res.json(apiOkFlat(req, research as Record<string, unknown>));
+    return res.json(apiOkFlat(req, research as unknown as Record<string, unknown>));
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw registryUnavailable(error);

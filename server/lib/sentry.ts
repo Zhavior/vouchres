@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response, NextFunction, ErrorRequestHandler } from "express";
 
 /**
  * Sentry integration for the Express server.
@@ -104,12 +104,18 @@ export const sentryErrorHandler = Sentry.expressErrorHandler;
 
 export function mountSentryExpressErrorHandler(app: Express): void {
   if (!initialized) return;
-  app.use(sentryErrorHandler());
+  app.use(sentryErrorHandler() as unknown as ErrorRequestHandler);
 }
 
 export type SentryCaptureContext = {
   extra?: Record<string, unknown>;
   tags?: Record<string, string>;
+  requestId?: string;
+  path?: string;
+  method?: string;
+  userId?: string;
+  code?: string;
+  vouchId?: string;
 };
 
 /**

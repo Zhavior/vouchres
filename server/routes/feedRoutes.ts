@@ -34,5 +34,5 @@ feedRoutes.get("/feed/composer-options", asyncHandler(async (req: RequestWithCon
     players: playerCount,
   });
 
-  return res.json(apiOkFlat(req, options as Record<string, unknown>));
+  return res.json(apiOkFlat(req, options as unknown as Record<string, unknown>));
 }));

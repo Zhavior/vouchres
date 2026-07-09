@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useMemo } from 'react';
 import type { ElementDefinition, StylesheetJson } from 'cytoscape';
 
 import type { PublicParlaySlip } from '../../../lib/parlayDisplay';

@@ -13,15 +13,7 @@ const INFRA_ALLOWLIST = new Set([
 ]);
 
 /** Known legacy call sites pending migration to apiClient. */
-const LEGACY_ALLOWLIST = new Set([
-  'components/auth/AuthModal.tsx',
-  'components/PlayerResearchConsole.tsx',
-  'components/PlayerResearchHub.tsx',
-  'components/ThemeStore.tsx',
-  'components/matchups/PitcherMatchupDrawer.tsx',
-  'pages/pro/HitterMatchupZonesPage.tsx',
-  'pages/pro/TeamMatchupLabPage.tsx',
-]);
+const LEGACY_ALLOWLIST = new Set<string>([]);
 
 const RAW_API_FETCH = /fetch\s*\(/;
 const BACKEND_API_HINT = /apiUrl\s*\(|['"`]\/api\//;

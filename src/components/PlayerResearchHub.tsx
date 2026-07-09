@@ -23,7 +23,7 @@ import {
 
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
-import { apiUrl } from "../lib/apiBase";
+import { apiClient } from "../lib/apiClient";
 import {
   Z8_ACTIVE,
   Z8_DISPLAY,
@@ -193,16 +193,7 @@ function mapBackendPlayer(player: BackendRegistryPlayer): MLBPlayer {
 }
 
 async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(apiUrl(path), {
-    headers: { Accept: "application/json" },
-    signal,
-  });
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    throw new Error(`Expected JSON from ${path}, received ${contentType || "unknown content type"}.`);
-  }
-  if (!response.ok) throw new Error(`Request failed ${response.status} for ${path}.`);
-  return response.json() as Promise<T>;
+  return apiClient.get<T>(path, undefined, signal);
 }
 
 const isSeedPlayerRecord = (player: MLBPlayer) => {

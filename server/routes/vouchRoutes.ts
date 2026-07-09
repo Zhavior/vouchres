@@ -69,7 +69,7 @@ vouchRoutes.post(
       });
     });
 
-    return res.status(201).json(apiOkFlat(req, vouch as Record<string, unknown>));
+    return res.status(201).json(apiOkFlat(req, vouch as unknown as Record<string, unknown>));
   }),
 );
 
@@ -77,7 +77,7 @@ vouchRoutes.delete("/vouches/:id", requireAuth, asyncHandler(async (req: AuthedR
   const { id } = req.params;
 
   const owned = await assertUserOwnsResource(req.user!.id, "vouch", id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({
         status: 404,

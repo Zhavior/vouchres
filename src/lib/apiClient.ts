@@ -24,7 +24,7 @@ export interface ApiError {
 async function request<T = any>(
   path: string,
   opts: {
-    method?: "GET" | "POST" | "PATCH" | "DELETE";
+    method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
     body?: any;
     query?: Record<string, string | number | boolean | undefined>;
     signal?: AbortSignal;
@@ -94,6 +94,8 @@ export const apiClient = {
     request<T>(path, { method: "POST", body }),
   patch: <T = any>(path: string, body?: any) =>
     request<T>(path, { method: "PATCH", body }),
+  put: <T = any>(path: string, body?: any) =>
+    request<T>(path, { method: "PUT", body }),
   delete: <T = any>(path: string) =>
     request<T>(path, { method: "DELETE" }),
 };

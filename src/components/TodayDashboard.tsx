@@ -468,7 +468,7 @@ function CommandButton({
           : `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
       }
     >
-      {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" strokeWidth={2.25} /> : null}
+      {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" /> : null}
       {label}
       <ArrowRight className="h-4 w-4" />
     </button>

@@ -6,7 +6,6 @@ import { headshotUrl } from "./mlbTypes";
 import { parseMlbPeopleResponse, parseMlbScheduleResponse, type MlbPlayer, type MlbScheduleGame } from "./mlbStatsApiSchemas";
 
 const MLB_BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
-const lineupCache = new TTLCache<LineupGame[]>(TTL.liveFeed, "mlb:lineups");
 
 const LAST_GOOD_TTL_MS = 5 * 60_000;
 const LAST_GOOD_WARNING =
@@ -44,6 +43,8 @@ export interface LineupPayload {
   warnings: string[];
   servedFromLastGood?: boolean;
 }
+
+const lineupCache = new TTLCache<LineupPayload>(TTL.liveFeed, "mlb:lineups");
 
 const lastGoodLineups = new Map<string, { lineups: LineupGame[]; storedAt: number }>();
 const LAST_GOOD_REDIS_PREFIX = "mlb-lineups:last-good";

@@ -90,7 +90,7 @@ authRoutes.patch(
       });
     }
 
-    return res.json(apiOkFlat(req, data as Record<string, unknown>));
+    return res.json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
 

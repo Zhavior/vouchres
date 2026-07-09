@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import { AlertTriangle, BarChart3, Database, History, ListOrdered, RotateCcw, ShieldCheck, SlidersHorizontal, X } from 'lucide-react';
 import PlayerHeadshot from '../parlays/PlayerHeadshot';
 import { apiUrl } from '../../lib/apiBase';
+import { apiClient } from '../../lib/apiClient';
 
 type BatterSide = 'L' | 'R' | 'S' | 'U';
 type PitcherHand = 'L' | 'R' | 'U';
@@ -330,9 +331,7 @@ async function activeRosterFallback({
   const schedulePath = date === new Date().toISOString().slice(0, 10)
     ? '/api/mlb/games/today'
     : `/api/mlb/games/date/${encodeURIComponent(date)}`;
-  const scheduleRes = await fetch(apiUrl(schedulePath), { headers: { accept: 'application/json' } });
-  if (!scheduleRes.ok) throw new Error('Schedule fallback unavailable');
-  const schedule = await scheduleRes.json();
+  const schedule = await apiClient.get<{ games?: ScheduleGame[]; matchups?: ScheduleGame[] }>(schedulePath);
   const games: ScheduleGame[] = schedule.games ?? schedule.matchups ?? [];
   const game = games.find((g) => Number(g.gamePk) === gamePk);
   if (!game) throw new Error('Game fallback unavailable');
@@ -438,14 +437,12 @@ export default function PitcherMatchupDrawer({
     setError(null);
     setLoading(true);
 
-    fetch(apiUrl(`/api/mlb/matchup-matrix/${gamePk}/pitcher/${pitcherId}?date=${encodeURIComponent(date)}`), {
-      signal: controller.signal,
-      headers: { accept: 'application/json' },
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Pitcher matchup failed (${response.status})`);
-        return response.json() as Promise<PitcherMatchupResponse>;
-      })
+    apiClient
+      .get<PitcherMatchupResponse>(
+        `/api/mlb/matchup-matrix/${gamePk}/pitcher/${pitcherId}`,
+        { date },
+        controller.signal,
+      )
       .then(setData)
       .catch(async (err) => {
         if (err.name !== 'AbortError') {

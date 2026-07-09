@@ -58,7 +58,7 @@ export default function ProCommandCenterPage() {
         ]}
       />
 
-      <ProSignalBar />
+      <ProSignalBar label="Signal composite" value="—" />
 
       {topEdges[0] && (
         <FeaturedEdgeCard

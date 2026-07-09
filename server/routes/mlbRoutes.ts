@@ -40,13 +40,13 @@ export function registerMlbRoutes(app: Express): void {
     const date = dateQueryOrToday(req.query.date);
     const report = await getMlbHealthReport(date);
     const status = report.status === "down" ? 503 : 200;
-    return res.status(status).json(apiOkFlat(req, report as Record<string, unknown>));
+    return res.status(status).json(apiOkFlat(req, report as unknown as Record<string, unknown>));
   }));
 
   app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const live = await getLiveGames(date);
-    return res.json(apiOkFlat(req, live as Record<string, unknown>));
+    return res.json(apiOkFlat(req, live as unknown as Record<string, unknown>));
   }));
 
   app.get("/api/mlb/games/today", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -158,7 +158,7 @@ export function registerMlbRoutes(app: Express): void {
     const date = optionalDateQuery(req.query.date);
     try {
       const report = await getSharedDailyReport(date);
-      res.json(apiOkFlat(req, report as Record<string, unknown>));
+      res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
     } catch (err: any) {
       throw upstreamUnavailable("Daily report unavailable.", err);
     } finally {

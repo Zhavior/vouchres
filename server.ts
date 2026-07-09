@@ -45,7 +45,7 @@ export async function createApp(httpServer?: http.Server) {
   registerApiRoutes(app);
   app.use("/api", apiNotFoundHandler);
   if (isSentryEnabled()) {
-    app.use("/api", sentryErrorHandler());
+    app.use("/api", sentryErrorHandler() as unknown as express.ErrorRequestHandler);
   }
   app.use("/api", apiErrorHandler);
 

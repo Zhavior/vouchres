@@ -438,10 +438,10 @@ export default function ParlayLab({
   };
 
   return (
-    <div className="ve-page-shell ve-panel ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto min-h-screen text-white/90 font-sans" id="parlay-lab-view">
+    <div className="ve-page-shell bg-ve-obsidian min-h-screen text-ve-flash ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto font-sans" id="parlay-lab-view">
       
       {/* Title & Hubtown style subline */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black/20 backdrop-blur-sm p-4 rounded-3xl border border-white/[0.05]">
+      <div className="glass-command ve-premium-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-ve-fuse/50 p-4 rounded-3xl shadow-[0_0_32px_rgba(0,229,255,0.08)]">
         <div>
           <div className="flex items-center gap-2">
             <span className="bg-emerald-950/80 border border-emerald-900 text-emerald-400 font-mono text-[9px] font-extrabold px-2 py-0.5 rounded-full tracking-wider">
@@ -477,8 +477,8 @@ export default function ParlayLab({
       </Suspense>
 
       {/* Builder + single source-of-truth Results navigation */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-[#0f1524]/90 p-1 rounded-2xl border border-white/10 shadow-xl" id="parlay-fuse-tabs">
-        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-[#1e293b] text-sky-400 border border-white/10 shadow-md ring-1 ring-sky-500/10">
+      <div className="flex flex-col sm:flex-row gap-3 glass-command border border-ve-fuse/45 p-1 rounded-2xl shadow-xl" id="parlay-fuse-tabs">
+        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-ve-graphite/60 text-ve-ion border border-ve-ion/35 shadow-md ring-1 ring-ve-ion/15">
           <Sliders className="w-4 h-4 text-sky-450" />
           <span>🔬 PARLAY SLIP CONSTRUCTOR</span>
         </div>

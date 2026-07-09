@@ -12,8 +12,8 @@ import {
   Sliders,
 } from "lucide-react";
 import { motion } from "../../lib/motion";
-import type { CreatorProofProfile } from "../types";
-import type { useVouchAiChat } from "../hooks/useVouchAiChat";
+import type { CreatorProofProfile } from "../../types";
+import type { useVouchAiChat } from "../../hooks/useVouchAiChat";
 
 type ChatState = ReturnType<typeof useVouchAiChat>;
 

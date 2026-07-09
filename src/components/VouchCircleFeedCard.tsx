@@ -20,7 +20,7 @@ interface VouchCircleFeedCardProps {
 
 const cardStyleConfigs: any = {
   cyberpunk: {
-    bg: 'bg-[#060b15] border-2 border-[#162540] dark:bg-[#060b15]',
+    bg: 'bg-ve-obsidian border-2 border-[#162540] dark:bg-ve-obsidian',
     cardBorder: 'border-sky-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(14,165,233,0.08),transparent_55%)]',
     cornerLight1: 'bg-cyan-500/10',
@@ -28,12 +28,12 @@ const cardStyleConfigs: any = {
     orbitStroke: 'stroke-sky-500/30',
     orbitDashed: 'border-dashed border-sky-500/20',
     orbitRing: 'border-slate-850/65',
-    hubBg: 'bg-[#0c1424] border-2 border-sky-500/30',
+    hubBg: 'bg-ve-graphite border-2 border-sky-500/30',
     hubGlow: 'bg-[#0ea5e9]/10 group-hover:bg-[#0ea5e9]/25',
     hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
     hubText: 'text-sky-400',
     nodeBorder: 'border-white/10 group-hover:border-sky-450',
-    nodeValueBg: 'bg-[#060b15] border border-sky-450 text-sky-400',
+    nodeValueBg: 'bg-ve-obsidian border border-sky-450 text-sky-400',
     nodeTagBg: 'bg-black/25 border-slate-850',
     reasonsBg: 'bg-black/30 border border-white/[0.08]',
     headerTitleColor: 'text-[#cbd5e1]',

@@ -114,6 +114,7 @@ export interface StatPlayerRow {
   reasons?:         string[];
   warnings?:        string[];
   sourceMode?:      'confirmed' | 'projected' | 'mock';
+  intelligence?:    { score: number; rank: number | null; confidence: number; prediction: number };
 }
 
 // ─── View / filter state ──────────────────────────────────────────────────────

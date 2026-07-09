@@ -34,11 +34,11 @@ type Props = {
 
 function MiniStatChip({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className="flex min-w-0 items-center gap-2 border border-white/10 bg-white/[0.03] px-2 py-2 font-mono sm:gap-2.5 sm:px-3.5 sm:py-2.5">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-white/10 bg-black/30 text-vouch-cyan sm:h-8 sm:w-8">{icon}</div>
+    <div className="glass-command flex min-w-0 items-center gap-2 border border-ve-fuse/45 px-2 py-2 font-mono shadow-[inset_0_0_16px_rgba(0,229,255,0.06)] sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-ve-ion/30 bg-ve-ion/10 text-ve-ion sm:h-8 sm:w-8">{icon}</div>
       <div className="min-w-0 flex flex-col leading-tight">
-        <span className="text-base font-extrabold text-slate-50 sm:text-lg">{value}</span>
-        <span className="truncate text-[9px] font-semibold uppercase tracking-widest text-white/40 sm:text-[10px]">{label}</span>
+        <span className="text-base font-extrabold text-ve-flash sm:text-lg">{value}</span>
+        <span className="truncate text-[9px] font-semibold uppercase tracking-widest text-ve-ion/50 sm:text-[10px]">{label}</span>
       </div>
     </div>
   );
@@ -46,9 +46,9 @@ function MiniStatChip({ label, value, icon }: { label: string; value: number; ic
 
 export function HrCommandCenter(props: Props) {
   return (
-    <div className="space-y-3 sm:space-y-5 lg:sticky lg:top-0 lg:z-30 lg:-mx-8 lg:space-y-5 lg:bg-[#0A0A0A]/95 lg:px-8 lg:py-2 lg:backdrop-blur-md">
+    <div className="space-y-3 sm:space-y-5 lg:sticky lg:top-0 lg:z-30 lg:-mx-8 lg:space-y-5 lg:bg-ve-obsidian/95 lg:px-8 lg:py-2 lg:backdrop-blur-md">
       {/* Mobile: header + toolbar stick together; desktop stats/toolbar scroll normally under lg sticky */}
-      <div className="sticky top-0 z-30 -mx-3 space-y-2 bg-[#0A0A0A]/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md sm:-mx-4 sm:space-y-3 sm:px-4 lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:pt-0 lg:backdrop-blur-none">
+      <div className="sticky top-0 z-30 -mx-3 space-y-2 bg-ve-obsidian/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md sm:-mx-4 sm:space-y-3 sm:px-4 lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:pt-0 lg:backdrop-blur-none">
         <HrHeader {...props} />
 
         {props.autoSwitchedToPreview && (

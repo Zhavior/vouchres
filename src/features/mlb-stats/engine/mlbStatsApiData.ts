@@ -1,4 +1,5 @@
 import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor } from '../types/statHubTypes';
+import type { SportsIntelligenceResult } from '../../../kernel/sports/intelligence';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
 import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction, createSportsIntelligenceResult } from '../../../kernel';

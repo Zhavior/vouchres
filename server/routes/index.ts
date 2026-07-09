@@ -122,7 +122,7 @@ export function registerApiRoutes(app: Express): void {
 
   app.get("/api/health/backend", (req: RequestWithContext, res: Response) => {
     const report = getBackendHealthReport();
-    res.json(apiOkFlat(req, report as Record<string, unknown>));
+    res.json(apiOkFlat(req, report as unknown as Record<string, unknown>));
   });
 
   app.get("/api/health/metrics", (req: RequestWithContext, res: Response) => {

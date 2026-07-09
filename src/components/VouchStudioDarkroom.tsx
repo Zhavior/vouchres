@@ -129,7 +129,7 @@ interface VouchStudioDarkroomProps {
 
 const cardStyleConfigs = {
   cyberpunk: {
-    bg: 'bg-[#060b15] border-2 border-[#162540] dark:bg-[#060b15]',
+    bg: 'bg-ve-obsidian border-2 border-[#162540] dark:bg-ve-obsidian',
     cardBorder: 'border-sky-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(14,165,233,0.08),transparent_55%)]',
     cornerLight1: 'bg-cyan-500/10',
@@ -137,12 +137,12 @@ const cardStyleConfigs = {
     orbitStroke: 'stroke-sky-500/30',
     orbitDashed: 'border-dashed border-sky-500/20',
     orbitRing: 'border-slate-850/65',
-    hubBg: 'bg-[#0c1424] border-2 border-sky-500/30',
+    hubBg: 'bg-ve-graphite border-2 border-sky-500/30',
     hubGlow: 'bg-[#0ea5e9]/10 group-hover:bg-[#0ea5e9]/25',
     hubVeBg: 'from-sky-600 to-indigo-600 border-sky-450/40',
     hubText: 'text-sky-400',
     nodeBorder: 'border-white/10 group-hover:border-sky-450',
-    nodeValueBg: 'bg-[#060b15] border border-sky-450 text-sky-400',
+    nodeValueBg: 'bg-ve-obsidian border border-sky-450 text-sky-400',
     nodeTagBg: 'bg-black/25 border-slate-850',
     reasonsBg: 'bg-black/30 border border-white/[0.08]',
     headerTitleColor: 'text-[#cbd5e1]',
@@ -1567,7 +1567,7 @@ export default function VouchStudioDarkroom({
                                 <div className="h-44 relative flex items-center gap-3.5 z-10 p-3 rounded-2xl bg-black/55 border border-white/[0.06] backdrop-blur-md animate-fade-in text-left">
                                   <div className="relative flex-shrink-0">
                                     <div className={`absolute -inset-1.5 rounded-full bg-gradient-to-tr ${activeStyle.hubVeBg} opacity-80 blur group-hover:scale-105 transition-all animate-[spin_15s_linear_infinite]`} />
-                                    <div className={`relative w-18 h-18 sm:w-20 sm:h-20 rounded-full p-0.5 bg-[#060b15] overflow-hidden border flex items-center justify-center shadow-lg ${activeStyle.nodeBorder}`}>
+                                    <div className={`relative w-18 h-18 sm:w-20 sm:h-20 rounded-full p-0.5 bg-ve-obsidian overflow-hidden border flex items-center justify-center shadow-lg ${activeStyle.nodeBorder}`}>
                                       <img
                                         src={featured.player.headshot}
                                         alt={featured.player.name}
@@ -1580,7 +1580,7 @@ export default function VouchStudioDarkroom({
                                     <span className={`absolute -top-1 -right-1 py-0.5 px-1.5 text-[6.5px] font-mono font-black rounded border whitespace-nowrap uppercase ${activeStyle.brandBadge}`}>
                                       {featured.player.team.split(' ').pop()}
                                     </span>
-                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 py-0.5 px-1.5 bg-[#060b15] text-[#cbd5e1] text-[7px] font-mono font-black rounded-full border border-white/10 leading-none">
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 py-0.5 px-1.5 bg-ve-obsidian text-[#cbd5e1] text-[7px] font-mono font-black rounded-full border border-white/10 leading-none">
                                       #{featured.player.number}
                                     </span>
                                   </div>

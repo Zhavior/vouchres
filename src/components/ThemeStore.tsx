@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiClient } from '../lib/apiClient';
 import {
   Sparkles,
   ShoppingBag,
@@ -143,15 +143,12 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     setAiError(null);
 
     try {
-      const response = await fetch(apiUrl('/api/ai/generate-theme'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt.trim() })
-      });
+      const data = await apiClient.post<{ status?: string; theme?: VisualTheme; error?: string }>(
+        '/api/ai/generate-theme',
+        { prompt: aiPrompt.trim() },
+      );
 
-      const data = await response.json();
-
-      if (response.ok && (data.status === 'success' || data.status === 'simulated')) {
+      if (data.status === 'success' || data.status === 'simulated') {
         const generatedTheme: VisualTheme = {
           ...data.theme,
           category: 'Flex',

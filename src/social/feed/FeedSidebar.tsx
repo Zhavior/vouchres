@@ -136,13 +136,13 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       className={[
         'group relative w-full flex items-center justify-center xl:justify-start gap-3',
         'pl-2 xl:pl-3.5 pr-2 xl:pr-3 py-2.5 text-sm uppercase tracking-wide transition-all outline-none font-z8',
-        isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
+        isActive ? `${Z8_SIDEBAR_ACTIVE} shadow-[0_0_28px_rgba(0,240,255,0.22)]` : Z8_SIDEBAR_IDLE,
       ].join(' ')}
     >
       {isActive && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1 left-0 w-px bg-vouch-cyan/80 shadow-[0_0_10px_rgba(0,240,255,0.9)]"
+          className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.95)]"
         />
       )}
       <span

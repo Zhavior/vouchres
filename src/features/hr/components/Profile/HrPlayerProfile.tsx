@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { fetchRealGameLog, lastNGames, gamesAgainstOpponent, type RealGameLog } from '../../utils/realGameLogs';
+import { Z8_LABEL } from '../../../../theme/z8Tokens';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -138,7 +139,7 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
         {value > 0 && <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 ${lge} 1 ${f.x} ${f.y}`} stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />}
         <text x={cx} y={cy + 5} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>{value > 0 ? Math.round(value) : '—'}</text>
       </svg>
-      <span className={z8Profile.label}>{label}</span>
+      <span className={Z8_LABEL}>{label}</span>
     </div>
   );
 };

@@ -849,7 +849,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                 <span className="text-[6px] uppercase font-black text-rose-455 tracking-widest block font-sans">VERIFIED PUBLIC CONTRACT</span>
                 <span className="text-[10px] text-white/90 font-black block leading-none uppercase my-1 font-mono tracking-widest text-[#FFE81F]">VOUCHEDGE HERO DECK</span>
                 
-                <div className="w-full bg-[#1e293b] p-1 rounded text-[5px] text-white/45 flex justify-between uppercase">
+                <div className="w-full bg-ve-graphite p-1 rounded text-[5px] text-white/45 flex justify-between uppercase">
                   <span>GLOW: 45PX</span>
                   <span className="text-pink-400 font-bold">SATURATION: MAX</span>
                 </div>

@@ -19,7 +19,7 @@ type ParlayReq = AuthedRequest & RequestWithContext;
 
 export const getParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
   const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
     }
@@ -42,7 +42,7 @@ export const listMyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Res
     limit: query.limit,
     offset: query.offset,
   });
-  return res.json(apiOkFlat(req, result as Record<string, unknown>));
+  return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
 });
 
 export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
@@ -56,7 +56,7 @@ export const listLegacyParlaysHandler = asyncHandler(async (req: ParlayReq, res:
     limit: query.limit,
     offset: query.offset,
   });
-  return res.json(apiOkFlat(req, result as Record<string, unknown>));
+  return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
 });
 
 export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
@@ -64,12 +64,12 @@ export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Resp
     userId: req.user!.id,
     body: req.body as SaveMeParlayInput,
   });
-  return res.status(result.statusCode).json(apiOkFlat(req, result.body as Record<string, unknown>));
+  return res.status(result.statusCode).json(apiOkFlat(req, result.body as unknown as Record<string, unknown>));
 });
 
 export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
   const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
     }
@@ -93,7 +93,7 @@ export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Resp
 
 export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
   const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({ status: 404, code: "not_found", message: "Parlay not found or already hidden." });
     }
@@ -106,5 +106,5 @@ export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Respon
   }
 
   const result = await hideUserParlay({ userId: req.user!.id, parlayId: req.params.id });
-  return res.json(apiOkFlat(req, result as Record<string, unknown>));
+  return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
 });

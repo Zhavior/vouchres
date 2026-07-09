@@ -38,10 +38,10 @@ const MODE_OPTIONS: { key: HrSourceMode; label: string }[] = [
 ];
 
 const TIER_ACTIVE_CLASSES: Record<string, string> = {
-  elite: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
-  strong: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
-  watch: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
-  sleeper: 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan',
+  elite: 'border-ve-ion/55 bg-ve-ion/12 text-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.18)]',
+  strong: 'border-vouch-emerald/45 bg-vouch-emerald/10 text-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.12)]',
+  watch: 'border-ve-fuse/55 bg-ve-graphite/50 text-ve-flash',
+  sleeper: 'border-vouch-amber/40 bg-vouch-amber/10 text-vouch-amber',
 };
 
 function csvEscape(value: string | number | null | undefined): string {
@@ -221,7 +221,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
 
   return (
     <>
-      <div className="flex flex-col gap-3 border border-white/10 bg-black/25 p-3 font-mono sm:p-4">
+      <div className="glass-command flex flex-col gap-3 border border-ve-fuse/45 p-3 font-mono sm:p-4">
         {/* Mobile: compact search row + filter sheet trigger */}
         <div className="flex items-center gap-2 md:hidden">
           <div className="relative min-w-0 flex-1">
@@ -373,7 +373,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col border-t border-white/10 bg-[#0A0A0A] shadow-2xl">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col border-t border-ve-fuse/50 bg-ve-obsidian shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
               <div className="flex items-center gap-2 font-mono text-sm font-bold uppercase tracking-wide text-white">
                 <SlidersHorizontal className="h-4 w-4 text-vouch-cyan" />

@@ -191,7 +191,7 @@ export function getBackendHealthReport(now = new Date()) {
 
   const warnings: string[] = [];
   if (missingProductionConfig.length > 0) {
-    warnings.push(`Missing required production config: ${missingProductionConfig.map((check) => check.name).join(", ")}.`);
+    warnings.push(`Missing required production config: ${missingProductionConfig.join(", ")}.`);
   }
   if (routes.statusClasses["5xx"] > 0) {
     warnings.push(`${routes.statusClasses["5xx"]} server-error API responses recorded since process start.`);
@@ -213,7 +213,7 @@ export function getBackendHealthReport(now = new Date()) {
     (check) => check.requiredForProductionProof && !check.configured,
   );
   if (env === "production" && missingProductionProof.length > 0) {
-    const alreadyCovered = new Set(missingProductionConfig.map((check) => check.name));
+    const alreadyCovered = new Set(missingProductionConfig);
     const proofOnly = missingProductionProof.filter((check) => !alreadyCovered.has(check.name));
     if (proofOnly.length > 0) {
       warnings.push(

@@ -1,6 +1,6 @@
 function statusText(status: unknown): string {
   if (typeof status === "object" && status !== null) {
-    const record = status as Record<string, unknown>;
+    const record = status as unknown as Record<string, unknown>;
     return [
       record.abstractGameState,
       record.detailedState,
@@ -17,7 +17,7 @@ function statusText(status: unknown): string {
 
 export function formatMlbStatus(status: unknown): string {
   if (typeof status === "object" && status !== null) {
-    const record = status as Record<string, unknown>;
+    const record = status as unknown as Record<string, unknown>;
     return `abstract=${record.abstractGameState ?? "unknown"}, detailed=${record.detailedState ?? "unknown"}, coded=${record.codedGameState ?? "unknown"}, statusCode=${record.statusCode ?? "unknown"}`;
   }
 

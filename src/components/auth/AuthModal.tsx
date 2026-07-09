@@ -30,6 +30,7 @@ import {
   isSupabaseConfigured,
 } from '../../lib/supabaseClient';
 import { apiUrl } from '../../lib/apiBase';
+import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
@@ -191,8 +192,7 @@ export default function AuthModal({
     setUsernameState('checking');
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(apiUrl(`/api/auth/username-check?username=${encodeURIComponent(value)}`));
-        const data = await res.json();
+        const data = await apiClient.get<{ available?: boolean }>('/api/auth/username-check', { username: value });
         setUsernameState(data.available ? 'available' : 'taken');
       } catch {
         // If the check endpoint is unreachable, don't block signup on it.

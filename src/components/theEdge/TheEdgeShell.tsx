@@ -1,3 +1,4 @@
+/** @deprecated Orphaned — live Edge Island uses `src/components/edgeIsland/EdgeIslandShell.tsx`. */
 import { AnimatePresence, motion } from '../../lib/motion';
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';

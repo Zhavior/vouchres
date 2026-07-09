@@ -33,7 +33,7 @@ notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: A
     count: out.notifications.length,
     unread: out.unreadCount,
   });
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
 notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -47,7 +47,7 @@ notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(
 
 notificationRoutes.post("/notifications/:id/read", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const owned = await assertUserOwnsResource(req.user!.id, "notification", req.params.id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({
         status: 404,
@@ -64,12 +64,12 @@ notificationRoutes.post("/notifications/:id/read", requireAuth, asyncHandler(asy
   }
 
   const out = await markNotificationRead(req.user!.id, req.params.id);
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
 notificationRoutes.post("/notifications/read-all", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const out = await markAllNotificationsRead(req.user!.id);
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
 notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -91,7 +91,7 @@ notificationRoutes.post("/notifications/push/subscribe", requireAuth, asyncHandl
       details: out,
     });
   }
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
 notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -122,7 +122,7 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
   }
 
   const owned = await assertUserOwnsResource(req.user!.id, "push_subscription", subscription.id);
-  if (!owned.ok) {
+  if (owned.ok === false) {
     if (owned.warning === "resource not found for authenticated user") {
       throw new AppError({
         status: 404,
@@ -147,7 +147,7 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
       details: out,
     });
   }
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));
 
 notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -165,5 +165,5 @@ notificationRoutes.post("/notifications/scan-hr", requireAuth, requireStaff, asy
     scanned: out.scanned,
     created: out.created,
   });
-  return res.json(apiOkFlat(req, out as Record<string, unknown>));
+  return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
 }));

@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 const SRC_ROOT = join(process.cwd(), 'src');
 
-/** Baseline from Phase 3 audit (513 total occurrences in src ts/tsx). */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 513;
+/** Baseline after 9.5 sprint hex purge (was 513). */
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 482;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

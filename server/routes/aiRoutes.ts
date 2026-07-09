@@ -50,7 +50,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiChatResponse(req.body as AiChatInput);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -63,7 +63,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiImage(req.body as AiImageInput);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -76,7 +76,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiTheme(req.body as AiThemeInput);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -89,7 +89,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generatePlayerResearch(req.body as PlayerResearchInput);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -110,7 +110,7 @@ export function registerAiRoutes(app: Express): void {
       }
       const result = await explainPick(pick);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -122,7 +122,7 @@ export function registerAiRoutes(app: Express): void {
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await getDailyReportNarrative(req.body?.date);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 
@@ -146,7 +146,7 @@ export function registerAiRoutes(app: Express): void {
       }
       const note = await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened });
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, note as Record<string, unknown>));
+      return res.json(apiOkFlat(req, note as unknown as Record<string, unknown>));
     })
   );
 
@@ -160,7 +160,7 @@ export function registerAiRoutes(app: Express): void {
       const result = await generateParlayEdgeReport(req.body as ParlayEdgeInput);
       assertParlayEdgeReportIsSafe(result.report);
       await incrementAiQuotaIfNeeded(req);
-      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+      return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
     })
   );
 }

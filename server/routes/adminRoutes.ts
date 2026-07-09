@@ -75,7 +75,7 @@ adminRoutes.post(
         details: { error: "not_in_waitlist_or_already_invited" },
       });
     }
-    return res.json(apiOkFlat(req, result as Record<string, unknown>));
+    return res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
   }),
 );
 
@@ -255,7 +255,7 @@ adminRoutes.patch(
       updates.reason ? `reason: ${updates.reason}` : "",
     );
 
-    return res.json(apiOkFlat(req, data as Record<string, unknown>));
+    return res.json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
 
@@ -304,7 +304,7 @@ adminRoutes.post(
       score: 50.0,
     }, { onConflict: "subject_type,subject_id,scope" });
 
-    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
+    return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
 

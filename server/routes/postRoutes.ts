@@ -26,7 +26,7 @@ async function denyUnlessOwns(
   const owned = await assertUserOwnsResource(userId, resourceType, resourceId);
   if (owned.ok) return;
 
-  if (owned.warning === "resource not found for authenticated user") {
+  if (owned.ok === false && owned.warning === "resource not found for authenticated user") {
     throw new AppError({
       status: options?.forbiddenMessage ? 403 : 404,
       code: options?.forbiddenMessage ? "forbidden" : "not_found",
@@ -39,7 +39,7 @@ async function denyUnlessOwns(
     status: 500,
     code: "internal_server_error",
     message: "Ownership check failed.",
-    details: { warning: owned.warning },
+    details: { warning: owned.ok === false ? owned.warning : "unknown" },
   });
 }
 
@@ -213,7 +213,7 @@ postRoutes.post(
       });
     }
 
-    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
+    return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
 
@@ -417,7 +417,7 @@ postRoutes.post(
       });
     }
 
-    return res.status(201).json(apiOkFlat(req, data as Record<string, unknown>));
+    return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
 

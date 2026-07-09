@@ -1,4 +1,4 @@
-import type { NormalizedPlayerPayload } from "@/adapters/normalized";
+import type { NormalizedPlayerPayload } from "@/src/adapters/normalized";
 
 interface Props {
   payload: NormalizedPlayerPayload;

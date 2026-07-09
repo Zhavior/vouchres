@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame } from 'lucide-react';
-import { apiUrl } from '../../lib/apiBase';
+import { apiClient } from '../../lib/apiClient';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { useTreemapLayout, type HierarchyDatum } from '../../lib/hierarchy/useHierarchyLayout';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
@@ -346,8 +346,8 @@ export default function HitterMatchupZonesPage() {
     setLoadingGames(true);
     setError(null);
     const path = isToday ? '/api/mlb/matchups/today' : `/api/mlb/matchups/date/${date}`;
-    fetch(apiUrl(path))
-      .then((r) => { if (!r.ok) throw new Error(`Matchups unavailable (${r.status})`); return r.json(); })
+    apiClient
+      .get<{ matchups?: GameMatchup[] }>(path)
       .then((data) => {
         if (!alive) return;
         const list: GameMatchup[] = data.matchups ?? [];
@@ -367,8 +367,8 @@ export default function HitterMatchupZonesPage() {
 
     const fetchSide = (pitcherId: number | undefined): Promise<PitcherMatchupResponse | null> => {
       if (!pitcherId) return Promise.resolve(null);
-      return fetch(apiUrl(`/api/mlb/matchup-matrix/${game.gamePk}/pitcher/${pitcherId}?date=${encodeURIComponent(date)}`))
-        .then((r) => (r.ok ? r.json() : null))
+      return apiClient
+        .get<PitcherMatchupResponse>(`/api/mlb/matchup-matrix/${game.gamePk}/pitcher/${pitcherId}`, { date })
         .catch(() => null);
     };
 

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiClient } from '../lib/apiClient';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -136,12 +136,10 @@ export default function PlayerResearchConsole({
     if (isResearching) return;
     setIsResearching(true);
     try {
-      const res = await fetch(apiUrl('/api/ai/player-research'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerData: player })
-      });
-      const data = await res.json();
+      const data = await apiClient.post<{ aiScore?: number; report?: string; status?: string; groundingMetadata?: { webSearchQueries?: string[] } }>(
+        '/api/ai/player-research',
+        { playerData: player },
+      );
       if (data.aiScore) {
         setAiReportCache(prev => ({
           ...prev,

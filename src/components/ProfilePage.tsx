@@ -36,6 +36,8 @@ interface ProfilePageProps {
   onDeletePost?: (postId: string) => void;
   savedParlays?: Parlay[];
   onSectionChange?: (section: string) => void;
+  viewUserId?: string;
+  onClearViewUser?: () => void;
 }
 
 export default function ProfilePage({ 

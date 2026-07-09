@@ -92,7 +92,7 @@ const cardStyleConfigs = {
     footerPingColor: 'bg-sky-500',
   },
   luxury: {
-    bg: 'bg-[#0f0d0a] border-2 border-[#332211] dark:bg-[#0f0d0a]',
+    bg: 'bg-ve-obsidian border-2 border-[#332211] dark:bg-ve-obsidian',
     cardBorder: 'border-amber-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(217,119,6,0.08),transparent_55%)]',
     cornerLight1: 'bg-amber-500/10',
@@ -100,12 +100,12 @@ const cardStyleConfigs = {
     orbitStroke: 'stroke-amber-500/30',
     orbitDashed: 'border-dashed border-amber-500/20',
     orbitRing: 'border-amber-950/40',
-    hubBg: 'bg-[#18140f] border-2 border-amber-500/40',
+    hubBg: 'bg-ve-graphite border-2 border-amber-500/40',
     hubGlow: 'bg-[#d97706]/10 group-hover:bg-[#d97706]/25',
     hubVeBg: 'from-amber-600 to-yellow-600 border-amber-450/40',
     hubText: 'text-amber-400',
     nodeBorder: 'border-[#332211] group-hover:border-amber-500',
-    nodeValueBg: 'bg-[#0f0d0a] border border-amber-500 text-amber-400',
+    nodeValueBg: 'bg-ve-obsidian border border-amber-500 text-amber-400',
     nodeTagBg: 'bg-[#1a1510] border-amber-950/40',
     reasonsBg: 'bg-[#1a1510]/85 border border-amber-950/40',
     headerTitleColor: 'text-[#f1f5f9]',
@@ -120,7 +120,7 @@ const cardStyleConfigs = {
     footerPingColor: 'bg-amber-500',
   },
   crimson: {
-    bg: 'bg-[#140507] border-2 border-[#450f14] dark:bg-[#140507]',
+    bg: 'bg-ve-obsidian border-2 border-[#450f14] dark:bg-ve-obsidian',
     cardBorder: 'border-red-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(239,68,68,0.08),transparent_55%)]',
     cornerLight1: 'bg-red-500/10',
@@ -128,12 +128,12 @@ const cardStyleConfigs = {
     orbitStroke: 'stroke-red-500/30',
     orbitDashed: 'border-dashed border-red-500/20',
     orbitRing: 'border-red-950/40',
-    hubBg: 'bg-[#1f070a] border-2 border-red-500/40',
+    hubBg: 'bg-ve-graphite border-2 border-red-500/40',
     hubGlow: 'bg-[#ef4444]/10 group-hover:bg-[#ef4444]/25',
     hubVeBg: 'from-red-600 to-rose-700 border-red-400/40',
     hubText: 'text-red-400',
     nodeBorder: 'border-[#450f14] group-hover:border-red-500',
-    nodeValueBg: 'bg-[#140507] border border-red-500 text-red-450',
+    nodeValueBg: 'bg-ve-obsidian border border-red-500 text-red-450',
     nodeTagBg: 'bg-[#220a0d] border-red-950/40',
     reasonsBg: 'bg-[#220a0d]/85 border border-red-950/40',
     headerTitleColor: 'text-[#fecdd3]',
@@ -176,7 +176,7 @@ const cardStyleConfigs = {
     footerPingColor: 'bg-slate-950',
   },
   hologram: {
-    bg: 'bg-[#0f0a1c] border-2 border-[#2b0e40] dark:bg-[#0f0a1c]',
+    bg: 'bg-ve-obsidian border-2 border-[#2b0e40] dark:bg-ve-obsidian',
     cardBorder: 'border-fuchsia-500/20',
     radialGrad: 'bg-[radial-gradient(circle_at_50%_40%,rgba(217,70,239,0.08),transparent_55%)]',
     cornerLight1: 'bg-fuchsia-500/10',
@@ -184,14 +184,14 @@ const cardStyleConfigs = {
     orbitStroke: 'stroke-purple-500/30',
     orbitDashed: 'border-dashed border-fuchsia-500/20',
     orbitRing: 'border-purple-950/40',
-    hubBg: 'bg-[#180a29] border-2 border-fuchsia-500/40',
+    hubBg: 'bg-ve-graphite border-2 border-fuchsia-500/40',
     hubGlow: 'bg-[#d946ef]/10 group-hover:bg-[#d946ef]/25',
     hubVeBg: 'from-fuchsia-600 to-purple-700 border-fuchsia-400/40',
     hubText: 'text-fuchsia-400',
     nodeBorder: 'border-[#2b0e40] group-hover:border-fuchsia-500',
-    nodeValueBg: 'bg-[#0f0a1c] border border-fuchsia-400 text-fuchsia-400',
-    nodeTagBg: 'bg-[#10061e] border-fuchsia-950/40',
-    reasonsBg: 'bg-[#10061e]/85 border border-fuchsia-950/40',
+    nodeValueBg: 'bg-ve-obsidian border border-fuchsia-400 text-fuchsia-400',
+    nodeTagBg: 'bg-ve-graphite border-fuchsia-950/40',
+    reasonsBg: 'bg-ve-graphite/85 border border-fuchsia-950/40',
     headerTitleColor: 'text-[#fae8ff]',
     headerSubTitleColor: 'text-purple-650/70',
     brandBadge: 'bg-fuchsia-950/60 border border-fuchsia-900/40 text-fuchsia-450',
@@ -485,7 +485,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen ve-page-shell`} id="vouch-hub-view">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen ve-page-shell bg-ve-obsidian text-ve-flash`} id="vouch-hub-view">
       
       {/* Toast HUD */}
       {visualToast && (
@@ -496,10 +496,10 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
       )}
 
       {/* Main header banner */}
-      <header className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative`}>
+      <header className={`glass-command ve-premium-panel overflow-hidden rounded-2xl sm:rounded-3xl border border-ve-fuse/50 p-4 sm:p-5 relative shadow-[0_0_40px_rgba(0,229,255,0.07)]`}>
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-vouch-cyan/10 blur-3xl pointer-events-none" />
         <div className={`relative ${Z8_SECTION_HEADER}`}>
-          <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-3 py-1 text-vouch-cyan`}>
+          <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-ve-ion/35 bg-ve-ion/10 px-3 py-1 text-ve-ion`}>
             <BookmarkCheck className="h-3.5 w-3.5" /> Vouch Workspace
           </span>
           <h2 className={`${Z8_DISPLAY} mt-1`}>

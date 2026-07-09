@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // @ts-expect-error vitest InlineConfig typing lags environmentMatchGlobs
     environmentMatchGlobs: [
       ["tests/**/*.test.tsx", "happy-dom"],
     ],

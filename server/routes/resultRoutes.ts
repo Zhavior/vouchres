@@ -49,6 +49,6 @@ export function registerResultRoutes(app: Express): void {
     }
     const out = await gradeAndLearn(pickId, result, whatActuallyHappened);
     if (!out.pick) throw new AppError({ status: 404, code: "not_found", message: "Pick not found." });
-    return res.json(apiOkFlat(req, out as Record<string, unknown>));
+    return res.json(apiOkFlat(req, out as unknown as Record<string, unknown>));
   }));
 }

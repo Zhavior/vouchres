@@ -87,12 +87,12 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
       {open && (
         <div className="fixed inset-0 z-[125] md:inset-auto md:bottom-40 md:right-20">
           <div className="absolute inset-0 bg-black/50 md:hidden" onClick={() => setOpen(false)} />
-          <div className="relative h-full md:h-auto md:w-96 md:max-h-[60vh] bg-[#0b1120] md:border border-slate-800 md:rounded-2xl shadow-2xl flex flex-col">
+          <div className="relative h-full md:h-auto md:w-96 md:max-h-[60vh] bg-ve-obsidian md:border border-slate-800 md:rounded-2xl shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
               <h3 className="text-sm font-black flex items-center gap-2 text-slate-100"><Bell className="w-4 h-4 text-cyan-400" /> Notifications</h3>
               <div className="flex items-center gap-2">
                 {list.length > 0 && (
-                  <button onClick={() => { clearNotifications(); setList([]); }} className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider">Clear</button>
+                  <button onClick={() => { clearNotifications(); }} className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider">Clear</button>
                 )}
                 <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
               </div>

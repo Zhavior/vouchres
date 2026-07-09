@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 type VEBadgeProps = {
   children: ReactNode;
   className?: string;
+  /** Legacy tone token — prefer className for styling. */
+  tone?: string;
+  style?: React.CSSProperties;
 };
 
 export function VEBadge({ children, className = '' }: VEBadgeProps) {

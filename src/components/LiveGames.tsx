@@ -22,7 +22,7 @@ import {
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer } from '../types';
 import { logoByTeamName } from '../lib/teamLogos';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_STAT_CHIP } from '../theme/z8Tokens';
+import { Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL, Z8_PANEL_PREMIUM, Z8_SURFACE, Z8_STAT_CHIP, Z8_ACTIVE, Z8_IDLE } from '../theme/z8Tokens';
 
 /** Small MLB team logo with graceful fallback when a team can't be matched. */
 function TeamLogo({ team, size = 22 }: { team: string; size?: number }) {

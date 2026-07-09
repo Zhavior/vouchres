@@ -218,6 +218,14 @@ export interface CreatorProofProfile {
   unlockedBorderIds?: string[];
   reduceMotion?: boolean;
   equippedAt?: string;
+  /** Optional staff/admin flags from auth metadata. */
+  role?: string;
+  userRole?: string;
+  isAdmin?: boolean;
+  admin?: boolean;
+  isStaff?: boolean;
+  staff?: boolean;
+  isDeveloper?: boolean;
 }
 
 export interface GameMarket {
