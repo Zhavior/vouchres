@@ -1,7 +1,7 @@
 import { HrBoardRepository } from '../../repositories/HrBoardRepository';
 import type { HrBoardContract } from '../contracts/hrBoard';
 
-const PREVIEW_LIMIT = 350;
+const PREVIEW_LIMIT = 120;
 
 export async function loadHrBoard(date: string): Promise<HrBoardContract> {
   const today = new Date().toISOString().slice(0, 10);
