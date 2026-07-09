@@ -80,6 +80,8 @@ import {
   z8StatusColor,
 } from '../../theme/z8Tokens';
 import { withAlpha } from '../../theme/colors';
+import type { Leg } from '../../types';
+import ParlayBuilderRail from './ParlayBuilderRail';
 
 function statusColorStyle(token: string) {
   const color = z8StatusColor(token);
@@ -538,6 +540,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const [saveError, setSaveError]            = useState<string | null>(null);
   const [riskMode, setRiskMode]              = useState<ParlayRiskMode>('balanced');
   const [verdictOpen, setVerdictOpen]        = useState(false);
+  const [stake, setStake]                    = useState(10);
   // One-time responsible agreement per session (Judge 10)
   const [agreedSession, setAgreedSession]   = useState(false);
 
@@ -572,7 +575,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         source: draftMode === 'ai_locked' ? 'vai_ai_made_parlay' : 'manual_builder',
         sport: 'mlb',
         status: 'pending',
-        wagerAmount: 10,
+        wagerAmount: stake,
         legs: draftLegs.map((l) => normalizeParlayLeg(l)),
         createdAt: new Date().toISOString(),
       });
@@ -629,102 +632,88 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         })}
       </div>
 
-      {/* Legs list or empty state */}
-      {draftLegs.length === 0 ? (
-        <EmptyBuildSlip />
-      ) : (
-        <div className="flex flex-col gap-2">
-          {draftLegs.map((leg) => (
-            <DraftLegCard
-              key={leg.id}
-              leg={leg}
-              isWeak={verdict.weakLegIds.includes(leg.id)}
-              onRemove={(id) => {
-                removeDraftLeg(id);
-                announce(`Leg removed.`);
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Slip summary */}
-      {draftLegs.length > 0 && (
-        <div className="flex flex-col gap-3 p-4 rounded-2xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]">
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'Legs',     value: draftLegs.length },
-              { label: 'Combined', value: combinedOdds?.american ?? '—' },
-              { label: 'Exposure', value: draftLegs.length <= 2 ? 'Focused' : draftLegs.length <= 4 ? 'Volatile' : 'High' },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col gap-0.5 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{item.label}</span>
-                <span className="text-sm font-extrabold text-[hsl(var(--ve-text-primary))]">{item.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Stake + payout (Judge 1) */}
-          <StakePayout combinedDecimalOdds={combinedOdds?.decimal ?? null} />
-
-          {/* Save error (Judge 9) */}
-          {saveError && (
-            <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
-              <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
-                <button
-                  onClick={handleSave}
-                  className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-                >
-                  Retry
-                </button>
-              </div>
+      <ParlayBuilderRail
+        legs={draftLegs as unknown as Leg[]}
+        legContent={
+          draftLegs.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {draftLegs.map((leg) => (
+                <DraftLegCard
+                  key={leg.id}
+                  leg={leg}
+                  isWeak={verdict.weakLegIds.includes(leg.id)}
+                  onRemove={(id) => {
+                    removeDraftLeg(id);
+                    announce('Leg removed.');
+                  }}
+                />
+              ))}
             </div>
-          )}
+          ) : undefined
+        }
+        onRemoveLeg={(id) => {
+          removeDraftLeg(id);
+          announce('Leg removed.');
+        }}
+        totalOdds={combinedOdds?.american ?? '—'}
+        stake={stake}
+        onStakeChange={setStake}
+        potentialPayout={
+          combinedOdds?.decimal != null && Number.isFinite(combinedOdds.decimal)
+            ? Math.round(stake * combinedOdds.decimal * 100) / 100
+            : null
+        }
+        onSaveParlay={handleSave}
+        saveLabel="Save Slip"
+        isSaving={isSaving}
+        saveDisabled={!agreedSession || !canSave}
+        showLiveIndicator={draftLegs.length > 0}
+        layout="inline"
+        footerExtra={(
+          <div className="space-y-3 mb-4">
+            {saveError ? (
+              <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
+                <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
-          {/* Session agreement (Judge 10: one-time, not per-save) */}
-          {!agreedSession && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreedSession}
-                onChange={(e) => setAgreedSession(e.target.checked)}
-                className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
-              />
-              <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
-                I confirm this is for entertainment/research purposes. Bet responsibly.
-              </span>
-            </label>
-          )}
+            {!agreedSession ? (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreedSession}
+                  onChange={(e) => setAgreedSession(e.target.checked)}
+                  className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+                />
+                <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
+                  I confirm this is for entertainment/research purposes. Bet responsibly.
+                </span>
+              </label>
+            ) : null}
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={!canSave || !agreedSession}
-              aria-disabled={!canSave || !agreedSession}
-              className={[
-                'flex-1 min-h-[2.75rem] rounded-xl text-xs font-extrabold uppercase tracking-wide transition-all',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan',
-                canSave && agreedSession
-                  ? 'bg-vouch-cyan/20 text-vouch-cyan border border-vouch-cyan/50 hover:bg-vouch-cyan/25'
-                  : 'bg-[hsl(var(--ve-surface)/0.4)] text-[hsl(var(--ve-text-muted))] border border-[hsl(var(--ve-border)/0.4)] cursor-not-allowed',
-              ].join(' ')}
-            >
-              {isSaving ? 'Saving…' : 'Save Slip'}
-            </button>
-            <button
-              onClick={() => { clearDraft(); announce('Draft cleared.'); }}
-              aria-label="Clear all legs from draft"
-              className="min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
+            {draftLegs.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => { clearDraft(); announce('Draft cleared.'); }}
+                aria-label="Clear all legs from draft"
+                className="w-full min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan text-xs font-bold uppercase tracking-wide"
+              >
+                Clear Draft
+              </button>
+            ) : null}
           </div>
-        </div>
-      )}
+        )}
+      />
 
       {/* Judge Verdict peek drawer (Judge 3) */}
       {draftLegs.length > 0 && (

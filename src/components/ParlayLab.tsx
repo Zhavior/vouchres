@@ -26,6 +26,7 @@ import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getAllMLBPlayerStubs } from '../utils/mlbApi';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../utils/oddsHelper';
 import ParlaySlipSummary, { BuilderMode } from './parlay/ParlaySlipSummary';
+import ParlayBuilderRail from './parlay/ParlayBuilderRail';
 import { getFounderPointsLabel } from "../lib/founderAccess";
 const RiskTierVisualization = lazy(() => import('./RiskTierVisualization'));
 
@@ -799,81 +800,33 @@ export default function ParlayLab({
 
         {/* RIGHT SIDE: Active parlay slip with stake calculations & wager indicators */}
         <div className="lg:col-span-5 space-y-6">
-          
-          <div className="bg-[#111827]/25 backdrop-blur-md p-5 rounded-3xl border border-white/[0.05] space-y-5" id="working-parlay-slip font-mono">
-            
-            <div className="flex items-center justify-between border-b border-slate-850/80 pb-3">
-              <div className="space-y-0.5">
-                <h3 className="font-extrabold text-xs text-white uppercase tracking-wider font-mono">
-                  Parlay Slip Constructor
-                </h3>
-                <p className="text-[10px] text-white/40">Add leg items from roster or player profiles</p>
-              </div>
+          <ParlaySlipSummary
+            legs={legs}
+            mode={builderMode}
+            setMode={setBuilderMode}
+            judgeScore={edgeReport?.edgeScore}
+            analyzing={isAnalyzingEdge}
+            onAnalyze={handleGenerateEdgeReport}
+            onSave={handleSaveParlaySlip}
+            onShare={handleShareToVouchPage}
+          />
 
-              <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-vouch-cyan px-2 py-0.5 rounded font-mono font-black">
-                {legs.length} {legs.length === 1 ? 'LEG ACTIVE' : 'LEGS ACTIVE'}
-              </span>
-            </div>
+          <ParlayBuilderRail
+            legs={legs}
+            onRemoveLeg={handleRemoveLeg}
+            onSaveParlay={handleSaveParlaySlip}
+            totalOdds={totalOddsDisplay}
+            stake={wagerAmount}
+            onStakeChange={setWagerAmount}
+            potentialPayout={legs.length > 0 ? potentialPayout : null}
+            saveLabel="Lock Slate"
+            showLiveIndicator={legs.length > 0}
+            formatLegOdds={(leg) => decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
+            layout="inline"
+          />
 
-            <ParlaySlipSummary
-              legs={legs}
-              mode={builderMode}
-              setMode={setBuilderMode}
-              judgeScore={edgeReport?.edgeScore}
-              analyzing={isAnalyzingEdge}
-              onAnalyze={handleGenerateEdgeReport}
-              onSave={handleSaveParlaySlip}
-              onShare={handleShareToVouchPage}
-            />
-
-            {legs.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-slate-850 rounded-2xl text-white/40 text-xs py-12">
-                <Sliders className="w-10 h-10 mx-auto text-slate-700 mb-3 animate-bounce" />
-                <p className="font-bold text-white/45">Your MLB Parlay is Empty</p>
-                <p className="text-[10px] text-slate-650 mt-1 max-w-xs mx-auto text-slate-550 leading-relaxed">
-                  Select a player name from roster on the left, or open <strong className="text-sky-400">Player Research</strong> to browse exact edge props. Press <strong className="text-emerald-400 font-bold">Wager</strong> on their edge props to construct your slip!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                {legs.map((leg) => (
-                  <div 
-                    key={leg.id}
-                    className="p-3.5 bg-obsidian-900 border border-slate-850/80 rounded-2xl flex items-center justify-between gap-3 relative overflow-hidden"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 text-[9px] text-white/40 font-mono font-bold uppercase mb-1">
-                        <span className="text-[9px] text-vouch-cyan font-bold">{leg.sport}</span>
-                        <span>•</span>
-                        <span className="truncate max-w-[150px]" title={leg.game}>{leg.game}</span>
-                      </div>
-                      <h4 className="text-xs font-black text-white truncate max-w-[180px]" title={leg.selection}>{leg.selection}</h4>
-                      <p className="text-[9.5px] text-white/45 font-mono mt-0.5 truncate max-w-[180px]">{leg.market}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono px-2.5 py-1 rounded border flex flex-col items-center bg-[#0d1527] border-white/10">
-                        <span className="text-emerald-400 font-extrabold text-[10.5px]">
-                          {decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
-                        </span>
-                        <span className="text-white/40 text-[8.5px] font-mono mt-0.5">
-                          x{getLegOddsForSelectedBookie(leg, bookie).toFixed(2)}
-                        </span>
-                      </span>
-                      <button 
-                        onClick={() => handleRemoveLeg(leg.id)}
-                        className="text-white/40 hover:text-red-400 hover:bg-black/30 p-1.5 rounded-lg border border-transparent hover:border-white/10 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Calculations & metadata configs card */}
-            {legs.length > 0 && (
+          {/* Calculations & metadata configs card */}
+          {legs.length > 0 && (
               <div className="bg-obsidian-900 p-4 rounded-2xl border border-white/10 space-y-4">
                 
                 {/* Text parameter configs */}
@@ -946,23 +899,6 @@ export default function ParlayLab({
                       <span className="text-[10px] font-black font-mono block">🎰 HIGH</span>
                       <span className="text-[8px] font-mono block text-white/45 mt-0.5 leading-none">Long Shot</span>
                     </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 pt-3">
-                  <div>
-                    <label className="block text-[9px] text-white/40 font-mono uppercase mb-1">STAKE WAGER UNITS</label>
-                    <div className="flex items-center bg-[#0b0f19] border border-slate-850 p-1.5 rounded-xl text-xs">
-                      <span className="text-slate-550 font-bold font-mono px-2 text-slate-555">$</span>
-                      <input 
-                        type="number" 
-                        min={1}
-                        max={1000}
-                        value={wagerAmount}
-                        onChange={(e) => setWagerAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                        className="w-full bg-transparent text-white/90 outline-none font-mono text-center font-bold text-xs"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -1157,14 +1093,12 @@ export default function ParlayLab({
               </div>
             )}
 
-            {/* Micro warning indicator notice */}
-            <div className="flex items-start gap-2 bg-obsidian-900/40 p-3 rounded-2xl border border-white/10 font-mono text-[9.5px] text-white/40 leading-normal">
-              <Info className="w-3.5 h-3.5 text-[#38bdf8] shrink-0 mt-0.5" />
-              <span>
-                Saved Tickets generate verified proof identifiers automatically, permitting you to publish them directly into the VouchEdge community social home feed for tailing and verification reviews.
-              </span>
-            </div>
-
+          {/* Micro warning indicator notice */}
+          <div className="flex items-start gap-2 bg-obsidian-900/40 p-3 rounded-2xl border border-white/10 font-mono text-[9.5px] text-white/40 leading-normal">
+            <Info className="w-3.5 h-3.5 text-[#38bdf8] shrink-0 mt-0.5" />
+            <span>
+              Saved Tickets generate verified proof identifiers automatically, permitting you to publish them directly into the VouchEdge community social home feed for tailing and verification reviews.
+            </span>
           </div>
 
         </div>
