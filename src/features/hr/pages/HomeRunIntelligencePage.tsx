@@ -4,6 +4,7 @@ import { RefreshCw, AlertOctagon, Inbox, Flame, Award, Eye, Moon } from 'lucide-
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
 import { HrHeader } from '../components/Header/HrHeader';
 import { HrToolbar } from '../components/Toolbar/HrToolbar';
+import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
@@ -187,99 +188,31 @@ const HomeRunIntelligencePage: React.FC = () => {
   return (
     <div className="min-h-0 bg-[#0A0A0A] px-4 py-6 pb-12 text-white md:px-8">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
-        <div className="sticky top-0 z-30 -mx-4 space-y-5 bg-[#0A0A0A]/95 px-4 py-2 backdrop-blur-md md:-mx-8 md:px-8">
-        <HrHeader
+        <HrCommandCenter
           mode={vm.mode}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
           onRefresh={handleRefresh}
           isRefreshing={vm.loading}
           lastUpdated={lastUpdated}
+          lastUpdatedLabel={lastUpdatedLabel}
           date={vm.date}
-          isToday={vm.isToday}
+          isToday={isToday}
           onDateChange={vm.setDate}
-        />
-
-        {vm.autoSwitchedToPreview && (
-          <div className="flex items-center gap-2 border border-vouch-cyan/25 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
-            <AlertOctagon className="h-4 w-4 shrink-0" />
-            No confirmed lineups posted yet — showing preview candidates from projected lineups instead. Switch back to the Confirmed tab anytime.
-          </div>
-        )}
-
-        {/* Stats bar row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <MiniStatChip
-              label="Elite"
-              value={eliteCount}
-              icon={<Flame className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-vouch-cyan/35"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
-            />
-            <MiniStatChip
-              label="Strong"
-              value={strongCount}
-              icon={<Award className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-vouch-cyan/35"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
-            />
-            <MiniStatChip
-              label="Watch"
-              value={watchCount}
-              icon={<Eye className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-vouch-cyan/35"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
-            />
-            <MiniStatChip
-              label="Sleepers"
-              value={sleeperCount}
-              icon={<Moon className="h-4 w-4" />}
-              colorClasses="border-white/10 hover:border-vouch-cyan/35"
-              glowClasses="hover:shadow-[0_0_20px_-8px_rgba(0,229,255,0.55)]"
-            />
-            <div
-              className="flex items-center gap-2.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3.5 py-2.5 font-mono"
-            >
-              <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-black/30">
-                <span className="text-xs font-black text-vouch-cyan">Σ</span>
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="text-lg font-extrabold text-slate-50">{totalCount}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Total</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-white/35">
-            <span>Last refreshed {lastUpdatedLabel}</span>
-            <VEButton
-              type="button"
-              onClick={handleRefresh}
-              aria-label="Refresh data"
-              disabled={vm.loading}
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 border-white/10 bg-black/30 text-zinc-400 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${vm.loading ? 'animate-spin' : ''}`} />
-            </VEButton>
-          </div>
-        </div>
-
-        <HrToolbar
+          autoSwitchedToPreview={autoSwitchedToPreview}
+          eliteCount={eliteCount}
+          strongCount={strongCount}
+          watchCount={watchCount}
+          sleeperCount={sleeperCount}
+          totalCount={totalCount}
           searchValue={vm.search}
           onSearchChange={vm.setSearch}
-          sourceMode={(vm.mode === 'curated' ? 'preview' : vm.mode) as 'confirmed' | 'preview' | 'all'}
           onSourceModeChange={(m) => vm.setMode(m === 'preview' ? 'curated' : m)}
           activeTiers={(vm.selectedTiers ?? []).map((t: string) => t.toLowerCase()) as ('elite' | 'strong' | 'watch' | 'sleeper')[]}
           onToggleTier={(t) => vm.onToggleTier(t.charAt(0).toUpperCase() + t.slice(1))}
           visibleCount={vm.rows?.length ?? totalCount}
-          rows={(vm.rows ?? []) as any}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
+          rows={(vm.rows ?? []) as unknown[]}
         />
-        </div>
 
         {vm.loading ? (
           <LoadingSkeleton />
