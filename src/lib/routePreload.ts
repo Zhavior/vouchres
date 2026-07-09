@@ -19,6 +19,12 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   ai_engine: () => import('../components/SmartAiEngine'),
   ai_pilot: () => import('../features/ai/pages/AiPilotPage'),
   notifications: () => import('../components/notifications/NotificationsPage'),
+  results: () => import('../components/results/ResultsStudio'),
+  leaderboard: () => import('../components/Leaderboard'),
+  settings: () => import('../components/SettingsPage'),
+  premium: () => import('../components/PremiumSubPage'),
+  live_game_lab: () => import('../pages/LiveGameLabPage'),
+  player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPage'),
 };
 
 export function preloadSection(section: string): void {

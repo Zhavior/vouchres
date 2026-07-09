@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useRef, useTransition, useCallback, useMemo } from 'react';
-import HomeFeedLayout from './social/feed/HomeFeedLayout';
+const HomeFeedLayout = lazy(() => import('./social/feed/HomeFeedLayout'));
 import { Home, Plus, Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
 import { useMyParlays } from './hooks/queries/useMyParlays';
@@ -11,7 +11,7 @@ import { queryKeys } from './hooks/queries/queryKeys';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
-import MainViewRouter from './components/routing/MainViewRouter';
+const MainViewRouter = lazy(() => import('./components/routing/MainViewRouter'));
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE } from './data/mockData';
@@ -1247,11 +1247,14 @@ export default function App() {
             onLogoutComplete={handleLogoutComplete}
           />
         </div>
+        <Suspense fallback={<RouteShellSkeleton />}>
         <HomeFeedLayout
           activeSection={activeSection}
           onSectionChange={navigateSection}
           isRouteSwitching={isPendingRoute}
           isPublicFrontPage={isPublicFrontPage}
+          onAuthLoginSuccess={handleLoginSuccess}
+          onAuthLogoutComplete={handleLogoutComplete}
         >
           <Suspense fallback={<RouteShellSkeleton />}>
             <MainViewRouter
@@ -1263,6 +1266,7 @@ export default function App() {
             />
           </Suspense>
         </HomeFeedLayout>
+        </Suspense>
         {/* Mobile Home + Edge Island launcher cluster */}
         {showGlobalAppChrome && (
           <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:bottom-8 md:right-8 md:gap-0">

@@ -50,7 +50,16 @@ function TeamIcon({ teamId, abbr }: { teamId?: number | null; abbr: string }) {
   if (!src || errored) {
     return <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[8px] font-black text-white/50">{abbr.slice(0, 2)}</span>;
   }
-  return <img src={src} alt={abbr} className="h-5 w-5 shrink-0 object-contain" onError={() => setErrored(true)} />;
+  return (
+    <img
+      src={src}
+      alt={abbr}
+      loading="lazy"
+      decoding="async"
+      className="h-5 w-5 shrink-0 object-contain"
+      onError={() => setErrored(true)}
+    />
+  );
 }
 
 function fadeUp(delay = 0) {

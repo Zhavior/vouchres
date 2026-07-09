@@ -72,6 +72,12 @@ export function useNotificationCenter() {
   return ctx;
 }
 
+/** Narrow hook for badge-only consumers — avoids pulling panel open/close state. */
+export function useNotificationUnreadCount(): number {
+  const ctx = useContext(NotificationContext);
+  return ctx?.unreadCount ?? 0;
+}
+
 type ProviderProps = {
   savedSlips?: Parlay[];
   onNavigate?: (section: string) => void;

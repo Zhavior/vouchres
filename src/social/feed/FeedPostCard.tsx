@@ -631,6 +631,8 @@ function FeedPostCard({
               <img 
                 src={activeSlide === 1 && post.mediaUrl2 ? post.mediaUrl2 : post.mediaUrl} 
                 alt={`Attached proof slide ${activeSlide + 1}`} 
+                loading="lazy"
+                decoding="async"
                 className="max-h-[380px] w-full object-contain rounded-lg hover:scale-[1.005] transition-all duration-200 cursor-pointer shadow-inner animate-fade-in" 
                 referrerPolicy="no-referrer"
               />

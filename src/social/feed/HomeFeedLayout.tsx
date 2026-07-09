@@ -12,9 +12,10 @@ import {
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
-import { useAppPosts, useAppProfile, useAppSavedSlips, useAppShell } from '../../context/AppShellContext';
+import { useAppPosts, useAppProfile, useAppSavedSlips, useAppSavedVouches } from '../../context/AppShellContext';
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
+import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -25,24 +26,180 @@ interface HomeFeedLayoutProps {
    * the sidebar/header/right-rail app chrome. Logged-in users landing on
    * 'welcome' (Edge Island) still get the normal app shell. */
   isPublicFrontPage?: boolean;
+  onAuthLoginSuccess?: () => void;
+  onAuthLogoutComplete?: () => void;
 }
 
-function HomeFeedLayout({
+const NotificationShell = React.memo(function NotificationShell({
+  onNavigate,
+  children,
+}: {
+  onNavigate: (section: string) => void;
+  children: React.ReactNode;
+}) {
+  const savedSlips = useAppSavedSlips();
+  return (
+    <NotificationProvider savedSlips={savedSlips} onNavigate={onNavigate}>
+      {children}
+    </NotificationProvider>
+  );
+});
+
+const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
+  activeSection,
+  onSectionChange,
+  onOpenCmdK,
+  edgeTransitioning,
+}: {
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+  onOpenCmdK: () => void;
+  edgeTransitioning: boolean;
+}) {
+  return (
+    <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+      <FeedSidebar
+        activeSection={activeSection}
+        onSectionChange={onSectionChange}
+        onOpenCmdK={onOpenCmdK}
+      />
+    </div>
+  );
+});
+
+const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
+  activeSection,
+  edgeTransitioning,
+}: {
+  activeSection: string;
+  edgeTransitioning: boolean;
+}) {
+  const posts = useAppPosts();
+  const profile = useAppProfile();
+  const savedVouches = useAppSavedVouches();
+  const savedVouchIds = React.useMemo(
+    () => savedVouches.map((vouch) => vouch.id),
+    [savedVouches],
+  );
+
+  if (activeSection !== 'feed') return null;
+
+  return (
+    <div className={`ve-edge-rail ve-edge-rail-right ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+      <FeedRightRail
+        posts={posts}
+        profile={profile}
+        savedVouchIds={savedVouchIds}
+        onSaveVouch={saveVouchAction}
+      />
+    </div>
+  );
+});
+
+const DesktopSlimHeader = React.memo(function DesktopSlimHeader({
+  onAuthLoginSuccess,
+  onAuthLogoutComplete,
+}: {
+  onAuthLoginSuccess?: () => void;
+  onAuthLogoutComplete?: () => void;
+}) {
+  return (
+    <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
+      <NotificationBellButton />
+      <AuthStatusBadge
+        inline
+        onLoginSuccess={onAuthLoginSuccess}
+        onLogoutComplete={onAuthLogoutComplete}
+      />
+    </header>
+  );
+});
+
+const MobileCompactHeader = React.memo(function MobileCompactHeader({
+  activeSection,
+  onSectionChange,
+  onOpenDrawer,
+  onAuthLoginSuccess,
+  onAuthLogoutComplete,
+}: {
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+  onOpenDrawer: () => void;
+  onAuthLoginSuccess?: () => void;
+  onAuthLogoutComplete?: () => void;
+}) {
+  const profile = useAppProfile();
+
+  return (
+    <header className="ve-mobile-header sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 supports-[backdrop-filter]:bg-black/40 md:hidden">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <TierAvatar
+          profile={profile}
+          size={36}
+          onClick={onOpenDrawer}
+          ariaLabel="Open navigation menu"
+        />
+        <button type="button" onClick={() => onSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
+          VOUCH<span className="text-vouch-cyan">EDGE</span>
+        </button>
+      </div>
+
+      <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
+        <NotificationBellButton size="sm" />
+
+        {profile.subscriptionTier !== 'SELLER_PRO' && (
+          <button
+            onClick={() => onSectionChange('premium')}
+            className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>UPGRADE</span>
+          </button>
+        )}
+
+        <AuthStatusBadge
+          inline
+          onLoginSuccess={onAuthLoginSuccess}
+          onLogoutComplete={onAuthLogoutComplete}
+        />
+      </div>
+    </header>
+  );
+});
+
+const MobileDrawerHost = React.memo(function MobileDrawerHost({
+  open,
+  onClose,
+  activeSection,
+  onSectionChange,
+}: {
+  open: boolean;
+  onClose: () => void;
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+}) {
+  const profile = useAppProfile();
+
+  return (
+    <MobileProfileDrawer
+      open={open}
+      onClose={onClose}
+      profile={profile}
+      activeSection={activeSection}
+      onSectionChange={onSectionChange}
+    />
+  );
+});
+
+const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   activeSection,
   onSectionChange,
   children,
   isRouteSwitching = false,
   isPublicFrontPage = false,
+  onAuthLoginSuccess,
+  onAuthLogoutComplete,
 }: HomeFeedLayoutProps) {
-  const posts = useAppPosts();
-  const profile = useAppProfile();
-  const savedSlips = useAppSavedSlips();
-  const {
-    savedVouchIds,
-    onSaveVouch,
-    onAuthLoginSuccess,
-    onAuthLogoutComplete,
-  } = useAppShell();
   const { activeTheme, reduceMotion } = useTheme();
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
@@ -60,12 +217,26 @@ function HomeFeedLayout({
     onSectionChange(section);
   }, [closeNavigationOverlays, onSectionChange]);
 
+  const handleOpenCmdK = React.useCallback(() => {
+    setCmdKOpen(true);
+  }, []);
+
+  const handleOpenMobileDrawer = React.useCallback(() => {
+    setMobileDrawerOpen(true);
+  }, []);
+
+  const handleCloseMobileDrawer = React.useCallback(() => {
+    setMobileDrawerOpen(false);
+  }, []);
+
+  const handleCloseCmdK = React.useCallback(() => {
+    setCmdKOpen(false);
+  }, []);
+
   React.useEffect(() => {
     closeNavigationOverlays();
   }, [activeSection, closeNavigationOverlays]);
 
-  // Reset inner scroll pane on section switch — avoids carrying feed scroll
-  // position into other views and prevents sticky-header compositor jank.
   React.useEffect(() => {
     resetScrollPane(scrollPaneRef.current);
   }, [activeSection]);
@@ -84,7 +255,6 @@ function HomeFeedLayout({
     return () => window.clearTimeout(timer);
   }, [activeSection, reduceMotion]);
 
-  // Global Cmd+K / Ctrl+K shortcut
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -108,7 +278,6 @@ function HomeFeedLayout({
   const themeVars = activeTheme ? getThemeVars(activeTheme) : null;
 
   return (
-    <NotificationProvider savedSlips={savedSlips} onNavigate={handleSectionChange}>
     <div
       className={`z8-layout-root font-z8 min-h-screen text-white flex justify-center w-full relative transition-colors duration-500 overflow-x-clip ${
         activeTheme && activeTheme.id !== 'cyber-blue' ? 'bg-transparent has-active-theme' : 'bg-transparent'
@@ -117,13 +286,10 @@ function HomeFeedLayout({
       id="vouchedge-container-root"
       data-route-switching={isRouteSwitching ? 'true' : 'false'}
     >
-
-      {/* Grid Overlay matching theme particles vibe */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && activeTheme.gridOverlay && (
         <div className={`absolute inset-0 pointer-events-none z-0 ${activeTheme.gridOverlay}`} />
       )}
 
-      {/* Immersive reactive Equalizer music beat lines for "music_beat_lines" theme */}
       {activeTheme?.id === 'music_beat_lines' && (
         <>
           <style>{`
@@ -139,8 +305,8 @@ function HomeFeedLayout({
               const animDelay = `-${(i % 5) * 0.18}s`;
               const barColor = i % 4 === 0 ? '#00F0FF' : i % 3 === 0 ? '#00FF9D' : '#FFB800';
               return (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="w-1.5 rounded-t-md origin-bottom"
                   style={{
                     background: barColor,
@@ -158,84 +324,41 @@ function HomeFeedLayout({
         </>
       )}
 
-      {/* Drifting glass bubbles — deferred until idle to keep route switches snappy */}
       {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
         <DeferredBubbleField count={12} mobileCount={4} variant="drift" className="z-0" />
       )}
-      
-      {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
+
       <div className={`ve-layout-frame w-full min-h-screen relative transition-all duration-300 z-10 ${
         isPublicFrontPage ? 've-layout-welcome' : activeSection === 'feed' ? 've-layout-feed' : 've-layout-wide'
       }`} id="layout-inner-frame">
 
-        {/* Column 1: Left Sticky Sidebar (hidden on mobile, responsive xl width) */}
         {!isPublicFrontPage && (
-          <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
-            <FeedSidebar
-              activeSection={activeSection}
-              onSectionChange={handleSectionChange}
-              profile={profile}
-              onOpenCmdK={() => setCmdKOpen(true)}
-            />
-          </div>
+          <DesktopSidebarRail
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
+            onOpenCmdK={handleOpenCmdK}
+            edgeTransitioning={edgeTransitioning}
+          />
         )}
 
-        {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
-          {/* Desktop slim header — notification bell on the right */}
           {!isPublicFrontPage && (
-            <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
-              <NotificationBellButton />
-              <AuthStatusBadge
-                inline
-                onLoginSuccess={onAuthLoginSuccess}
-                onLogoutComplete={onAuthLogoutComplete}
-              />
-            </header>
+            <DesktopSlimHeader
+              onAuthLoginSuccess={onAuthLoginSuccess}
+              onAuthLogoutComplete={onAuthLogoutComplete}
+            />
           )}
 
-          {/* Mobile compact header */}
           {!isPublicFrontPage && (
-            <header className="ve-mobile-header sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 supports-[backdrop-filter]:bg-black/40 md:hidden">
-              {/* Profile avatar (corner) — ring color = real subscription tier;
-                  tapping it opens the X-style navigation drawer. */}
-              <div className="flex items-center gap-2.5 min-w-0">
-                <TierAvatar
-                  profile={profile}
-                  size={36}
-                  onClick={() => setMobileDrawerOpen(true)}
-                  ariaLabel="Open navigation menu"
-                />
-                <button type="button" onClick={() => handleSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
-                  VOUCH<span className="text-vouch-cyan">EDGE</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
-                <NotificationBellButton size="sm" />
-
-                {profile.subscriptionTier !== 'SELLER_PRO' && (
-                  <button
-                    onClick={() => handleSectionChange('premium')}
-                    className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>UPGRADE</span>
-                  </button>
-                )}
-
-                {/* Login/guest state — rendered inline here (not as a fixed
-                    overlay) so it can't collide with page content below it. */}
-                <AuthStatusBadge
-                  inline
-                  onLoginSuccess={onAuthLoginSuccess}
-                  onLogoutComplete={onAuthLogoutComplete}
-                />
-              </div>
-            </header>
+            <MobileCompactHeader
+              activeSection={activeSection}
+              onSectionChange={handleSectionChange}
+              onOpenDrawer={handleOpenMobileDrawer}
+              onAuthLoginSuccess={onAuthLoginSuccess}
+              onAuthLogoutComplete={onAuthLogoutComplete}
+            />
           )}
 
-          {/* Render Active Page Content */}
           <FeedScrollProvider scrollRef={scrollPaneRef}>
             <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot" ref={scrollPaneRef}>
               {children}
@@ -243,42 +366,43 @@ function HomeFeedLayout({
           </FeedScrollProvider>
         </main>
 
-        {/* Column 3: Right Sticky Rail (hidden on mobile, and only rendered on central feed for optimal focus) */}
-        {activeSection === 'feed' && (
-          <div className={`ve-edge-rail ve-edge-rail-right ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
-            <FeedRightRail 
-              posts={posts} 
-              profile={profile} 
-              savedVouchIds={savedVouchIds} 
-              onSaveVouch={onSaveVouch} 
-            />
-          </div>
+        {!isPublicFrontPage && (
+          <FeedRightRailColumn
+            activeSection={activeSection}
+            edgeTransitioning={edgeTransitioning}
+          />
         )}
-        
       </div>
 
-      {/* X-style mobile navigation drawer (replaces the old bottom nav bar) */}
       {!isPublicFrontPage && (
-        <MobileProfileDrawer
+        <MobileDrawerHost
           open={mobileDrawerOpen}
-          onClose={() => setMobileDrawerOpen(false)}
-          profile={profile}
+          onClose={handleCloseMobileDrawer}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
         />
       )}
 
-      {/* Command Palette (Cmd+K) */}
       {!isPublicFrontPage && (
         <CmdKPalette
           open={cmdKOpen}
-          onClose={() => setCmdKOpen(false)}
+          onClose={handleCloseCmdK}
           onNavigate={handleSectionChange}
         />
       )}
-
     </div>
-    </NotificationProvider>
+  );
+});
+
+function HomeFeedLayout(props: HomeFeedLayoutProps) {
+  const handleSectionChange = React.useCallback((section: string) => {
+    props.onSectionChange(section);
+  }, [props.onSectionChange]);
+
+  return (
+    <NotificationShell onNavigate={handleSectionChange}>
+      <HomeFeedLayoutBody {...props} />
+    </NotificationShell>
   );
 }
 

@@ -419,7 +419,7 @@ function TeamVsTeamShowcase({ games }: { games: any[] }) {
               <div className="daily-team-versus">
                 <div className="daily-team-side">
                   <div className="daily-team-logo">
-                    {away.logo ? <img src={away.logo} alt="" /> : <span>{away.abbr.slice(0, 2)}</span>}
+                    {away.logo ? <img src={away.logo} alt="" loading="lazy" decoding="async" /> : <span>{away.abbr.slice(0, 2)}</span>}
                   </div>
                   <h3>{away.name}</h3>
                   <p>SP: {getPitcher(game, "away")}</p>
@@ -429,7 +429,7 @@ function TeamVsTeamShowcase({ games }: { games: any[] }) {
 
                 <div className="daily-team-side daily-team-side-right">
                   <div className="daily-team-logo">
-                    {home.logo ? <img src={home.logo} alt="" /> : <span>{home.abbr.slice(0, 2)}</span>}
+                    {home.logo ? <img src={home.logo} alt="" loading="lazy" decoding="async" /> : <span>{home.abbr.slice(0, 2)}</span>}
                   </div>
                   <h3>{home.name}</h3>
                   <p>SP: {getPitcher(game, "home")}</p>

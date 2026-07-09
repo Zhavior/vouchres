@@ -172,10 +172,10 @@ const MatchupStrip: React.FC<{
           }`}
         >
           <div className="flex items-center gap-1.5 text-sm font-bold text-white">
-            <img src={g.away.logo} alt={g.away.abbreviation} className="h-5 w-5 object-contain" />
+            <img src={g.away.logo} alt={g.away.abbreviation} className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
             <span>{g.away.abbreviation}</span>
             <span className="text-white/30">@</span>
-            <img src={g.home.logo} alt={g.home.abbreviation} className="h-5 w-5 object-contain" />
+            <img src={g.home.logo} alt={g.home.abbreviation} className="h-5 w-5 object-contain" loading="lazy" decoding="async" />
             <span>{g.home.abbreviation}</span>
           </div>
           <span className="text-[10px] font-semibold text-white/40">

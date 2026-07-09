@@ -1,8 +1,17 @@
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+
+/** Modern evergreen targets for LightningCSS vendor prefixing. */
+const LIGHTNINGCSS_TARGETS = {
+  chrome: 105 << 16,
+  edge: 105 << 16,
+  firefox: 104 << 16,
+  safari: (16 << 16) | 0,
+  ios_saf: (16 << 16) | 0,
+} as const;
 
 export default defineConfig(({ mode }) => {
   const disableHmr = process.env.DISABLE_HMR === 'true';
@@ -26,10 +35,17 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: {
+        targets: LIGHTNINGCSS_TARGETS,
+      },
+    },
     optimizeDeps: {
       include: ['@supabase/supabase-js'],
     },
     build: {
+      cssMinify: 'lightningcss',
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
@@ -94,6 +110,9 @@ export default defineConfig(({ mode }) => {
 
             // Graph layout — cytoscape + mermaid
             if (id.includes('cytoscape') || id.includes('mermaid')) return 'graph-vendor';
+
+            // Virtualization — feed lists
+            if (id.includes('@tanstack/react-virtual')) return 'virtual-vendor';
           },
         },
       },

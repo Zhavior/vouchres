@@ -10,7 +10,7 @@
  * Nav items come from the same featureConfig registry the desktop sidebar
  * uses, so the two menus can never drift apart.
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from '../../lib/motion';
 import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
@@ -103,10 +103,9 @@ interface MobileProfileDrawerProps {
   onSectionChange: (section: string) => void;
 }
 
-export default function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionChange }: MobileProfileDrawerProps) {
+function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionChange }: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
 
-  // Lock body scroll while the drawer is open.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -122,6 +121,7 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
   }, [open, onClose]);
 
   const groups = useMemo(() => {
+    if (!open) return [];
     const features = getSidebarFeatures(loadFeatureLayout(), {
       canAccessThemeStore: canAccessThemeStore(profile),
       activeSport: getActiveSport(),
@@ -131,10 +131,10 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
       .filter((g) => g.items.length > 0);
   }, [profile, open]);
 
-  const go = (section: string) => {
+  const go = useCallback((section: string) => {
     onSectionChange(section);
     onClose();
-  };
+  }, [onClose, onSectionChange]);
 
   return (
     <AnimatePresence>
@@ -263,3 +263,6 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
     </AnimatePresence>
   );
 }
+
+const MobileProfileDrawerMemo = React.memo(MobileProfileDrawer);
+export default MobileProfileDrawerMemo;

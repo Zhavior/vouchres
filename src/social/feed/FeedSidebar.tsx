@@ -12,7 +12,7 @@
  *  - All 18+ features preserved, just 2-level hierarchy
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -24,16 +24,17 @@ import {
   Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
   ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown,
 } from 'lucide-react';
-import { CreatorProofProfile } from '../../types';
-import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import {
-  ALL_FEATURES, getSidebarFeatures, loadFeatureLayout, saveFeatureLayout,
-  setViewMode, FeatureLayout,
+  ALL_FEATURES, getSidebarFeatures, loadFeatureLayout,
+  FeatureLayout,
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { preloadSection } from '../../lib/routePreload';
-import { useNotificationCenter } from '../../components/notifications/UnifiedNotificationCenter';
+import { useNotificationUnreadCount } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
+import { useProfileStore } from '../../stores/profileStore';
+import { useShallow } from 'zustand/react/shallow';
+import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -70,6 +71,23 @@ const GROUP_ACCENT: Record<string, string> = {
   Account: 'text-white/40',
 };
 
+const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>) => {
+  const profile = state.profile;
+  return {
+    displayName: profile.displayName,
+    verified: profile.verified,
+    winRate: profile.winRate,
+    profileBorderId: profile.profileBorderId,
+    role: profile.role,
+    userRole: profile.userRole,
+    isAdmin: profile.isAdmin,
+    admin: profile.admin,
+    isStaff: profile.isStaff,
+    staff: profile.staff,
+    isDeveloper: profile.isDeveloper,
+  };
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function loadCollapsedState(): Record<string, boolean> {
@@ -91,13 +109,17 @@ interface NavItemProps {
   label: string;
   icon: string;
   isActive: boolean;
-  onClick: () => void;
+  onNavigate: (id: string) => void;
   badge?: React.ReactNode;
 }
 
-function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
+const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, badge }: NavItemProps) {
   const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
+
+  const handleClick = useCallback(() => {
+    onNavigate(id);
+  }, [id, onNavigate]);
 
   const handleIntent = useCallback(() => {
     preloadSection(id);
@@ -106,7 +128,7 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
   return (
     <button
       key={id}
-      onClick={onClick}
+      onClick={handleClick}
       onMouseEnter={handleIntent}
       onFocus={handleIntent}
       id={`sidebar-link-${id}`}
@@ -139,24 +161,30 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
       {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
     </button>
   );
-}
+});
 
 interface SidebarGroupProps {
   group: string;
   items: Array<{ id: string; label: string; icon: string }>;
   activeSection: string;
-  onSectionChange: (id: string) => void;
+  onNavigate: (id: string) => void;
   collapsed: boolean;
   onToggle: () => void;
 }
 
-function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed, onToggle }: SidebarGroupProps) {
+const SidebarGroup = React.memo(function SidebarGroup({
+  group,
+  items,
+  activeSection,
+  onNavigate,
+  collapsed,
+  onToggle,
+}: SidebarGroupProps) {
   const accentClass = GROUP_ACCENT[group] || 'text-white/40';
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
     <div className={['transition-all overflow-hidden', Z8_SIDEBAR_PANEL, hasActive ? 'shadow-[0_0_24px_rgba(0,240,255,0.08)]' : ''].join(' ')}>
-      {/* Group header */}
       <button
         onClick={onToggle}
         className={`w-full flex items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-vouch-cyan/5 outline-none ${Z8_LABEL}`}
@@ -165,7 +193,6 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
         <span className={['hidden xl:block', accentClass].join(' ')}>
           {group}
         </span>
-        {/* Collapsed icon-only indicator */}
         <span className="xl:hidden flex items-center justify-center w-5 h-5 bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <span className={['block w-1.5 h-1.5 bg-current', accentClass].join(' ')} />
         </span>
@@ -182,7 +209,6 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
         </span>
       </button>
 
-      {/* Items */}
       <div
         className={[
           'overflow-hidden transition-all duration-300',
@@ -198,45 +224,60 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
               label={f.label}
               icon={f.icon}
               isActive={activeSection === f.id}
-              onClick={() => onSectionChange(f.id)}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
       </div>
     </div>
   );
-}
+});
+
+const SidebarNotificationBadge = React.memo(function SidebarNotificationBadge() {
+  const unreadCount = useNotificationUnreadCount();
+  if (unreadCount <= 0) return null;
+
+  return (
+    <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-vouch-cyan text-[8px] font-black text-black">
+      {unreadCount > 9 ? '9+' : unreadCount}
+    </span>
+  );
+});
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface FeedSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  profile: CreatorProofProfile;
   onOpenCmdK?: () => void;
 }
 
-export default function FeedSidebar({
+function FeedSidebar({
   activeSection,
   onSectionChange,
-  profile,
   onOpenCmdK,
 }: FeedSidebarProps) {
-  const { unreadCount: unreadNotifications } = useNotificationCenter();
+  const profile = useProfileStore(useShallow(selectSidebarProfile));
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
+  const previousSectionRef = useRef(activeSection);
 
-  // Reload layout when section changes (e.g. after CustomizePage saves)
-  useEffect(() => { setLayout(loadFeatureLayout()); }, [activeSection]);
+  // Reload layout only after leaving Customize — avoids localStorage reads on every nav click.
+  useEffect(() => {
+    const previous = previousSectionRef.current;
+    previousSectionRef.current = activeSection;
+    if (previous === 'customize' && activeSection !== 'customize') {
+      setLayout(loadFeatureLayout());
+    }
+  }, [activeSection]);
 
-  // Sync active sport from anywhere in the app
   useEffect(() => onSportChange(setActiveSportState), []);
 
-  const handleSportClick = (id: SportId) => {
+  const handleSportClick = useCallback((id: SportId) => {
     setActiveSport(id);
     setActiveSportState(id);
-  };
+  }, []);
 
   const toggleGroup = useCallback((group: string) => {
     setCollapsed(prev => {
@@ -246,12 +287,15 @@ export default function FeedSidebar({
     });
   }, []);
 
+  const handleNavigate = useCallback((id: string) => {
+    onSectionChange(id);
+  }, [onSectionChange]);
+
   const sidebarFeatures = useMemo(() => {
     const items = getSidebarFeatures(layout, {
       canAccessThemeStore: canAccessThemeStore(profile),
       activeSport,
     });
-    // Always include core Daily nav items even if a stale layout disabled them
     for (const id of ['today', 'hr_board', 'mlb_stats'] as const) {
       if (!items.some(f => f.id === id)) {
         const feature = ALL_FEATURES.find(f => f.id === id);
@@ -259,9 +303,7 @@ export default function FeedSidebar({
       }
     }
     return items
-      // Notifications live in the header — exclude from sidebar
       .filter(f => f.id !== 'notifications')
-      // BEGINNER/PRO toggle lives in Settings — exclude from sidebar
       .sort((a, b) => a.order - b.order);
   }, [layout, profile, activeSport]);
 
@@ -273,6 +315,11 @@ export default function FeedSidebar({
         items: sidebarFeatures.filter(f => f.group === group),
       })).filter(s => s.items.length > 0),
     [sidebarFeatures],
+  );
+
+  const profileInitials = useMemo(
+    () => profile.displayName.split(' ').map(n => n[0]).join(''),
+    [profile.displayName],
   );
 
   return (
@@ -287,13 +334,10 @@ export default function FeedSidebar({
         'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
       ].join(' ')}
     >
-      {/* ── Top section ───────────────────────────────────────────── */}
       <div className="relative z-10 space-y-4 flex-1">
-
-        {/* Brand logo */}
         <div className="relative">
           <button
-            onClick={() => onSectionChange('feed')}
+            onClick={() => handleNavigate('feed')}
             className={`group relative w-full flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
             id="brand-logo-id"
             aria-label="Go to Home Feed"
@@ -318,7 +362,6 @@ export default function FeedSidebar({
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
         </div>
 
-        {/* Cmd+K hint — desktop only */}
         <button
           onClick={onOpenCmdK}
           className={`hidden xl:flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${Z8_SIDEBAR_SURFACE} ${Z8_LABEL} tracking-widest text-white/40`}
@@ -331,7 +374,6 @@ export default function FeedSidebar({
           </span>
         </button>
 
-        {/* Sport Switcher pills */}
         <div
           className={`flex flex-col xl:flex-row gap-1 p-1.5 ${Z8_SIDEBAR_SURFACE}`}
           id="sidebar-sport-switcher"
@@ -368,9 +410,7 @@ export default function FeedSidebar({
           })}
         </div>
 
-        {/* Navigation */}
         <nav className="space-y-2.5" id="sidebar-nav-container" aria-label="Main navigation">
-          {/* Ungrouped (Edge Island, etc.) */}
           {ungrouped.length > 0 && (
             <div className="space-y-1">
               {ungrouped.map(f => (
@@ -380,20 +420,19 @@ export default function FeedSidebar({
                   label={f.label}
                   icon={f.icon}
                   isActive={activeSection === f.id}
-                  onClick={() => onSectionChange(f.id)}
+                  onNavigate={handleNavigate}
                 />
               ))}
             </div>
           )}
 
-          {/* Grouped sections */}
           {grouped.map(({ group, items }) => (
             <SidebarGroup
               key={group}
               group={group}
               items={items}
               activeSection={activeSection}
-              onSectionChange={onSectionChange}
+              onNavigate={handleNavigate}
               collapsed={!!collapsed[group]}
               onToggle={() => toggleGroup(group)}
             />
@@ -401,9 +440,7 @@ export default function FeedSidebar({
         </nav>
       </div>
 
-      {/* ── Bottom section ────────────────────────────────────────── */}
       <div className="relative z-10 mt-4 space-y-2.5">
-        {/* Sync status pill — desktop only */}
         <div className={`hidden xl:flex items-center justify-between gap-2 px-3.5 py-2.5 ${Z8_SIDEBAR_SURFACE}`}>
           <div>
             <p className={`${Z8_LABEL} text-[9px] tracking-[0.28em] text-vouch-cyan`}>
@@ -419,10 +456,9 @@ export default function FeedSidebar({
           </span>
         </div>
 
-        {/* Quick-action row: Customize + Settings */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5">
           <button
-            onClick={() => onSectionChange('customize')}
+            onClick={() => handleNavigate('customize')}
             className={[
               'flex items-center justify-center xl:justify-start gap-2 px-3 py-2 transition-all',
               Z8_LABEL, 'tracking-[0.12em]',
@@ -434,7 +470,7 @@ export default function FeedSidebar({
             <span className="hidden xl:inline">Customize</span>
           </button>
           <button
-            onClick={() => onSectionChange('settings')}
+            onClick={() => handleNavigate('settings')}
             className={[
               'flex items-center justify-center xl:justify-start gap-2 px-3 py-2 transition-all',
               Z8_LABEL, 'tracking-[0.12em]',
@@ -447,17 +483,16 @@ export default function FeedSidebar({
           </button>
         </div>
 
-        {/* Profile card */}
         <button
-          onClick={() => onSectionChange('profile')}
-          className={`w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${Z8_SIDEBAR_SURFACE}`}
+          onClick={() => handleNavigate('profile')}
+          className={`relative w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:bg-vouch-cyan/5 hover:shadow-[0_0_16px_rgba(0,240,255,0.06)] ${Z8_SIDEBAR_SURFACE}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >
           <ProfileAvatarBorder
             borderId={profile.profileBorderId}
             displayName={profile.displayName}
-            initials={profile.displayName.split(' ').map(n => n[0]).join('')}
+            initials={profileInitials}
             size="md"
             winRate={profile.winRate}
             isVerified={profile.verified}
@@ -477,14 +512,11 @@ export default function FeedSidebar({
                 : 'View profile'}
             </p>
           </div>
-          {/* Notification badge on avatar when collapsed */}
-          {unreadNotifications > 0 && (
-            <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-vouch-cyan text-[8px] font-black text-black">
-              {unreadNotifications > 9 ? '9+' : unreadNotifications}
-            </span>
-          )}
+          <SidebarNotificationBadge />
         </button>
       </div>
     </aside>
   );
 }
+
+export default React.memo(FeedSidebar);

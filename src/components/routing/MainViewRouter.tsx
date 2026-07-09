@@ -43,6 +43,10 @@ const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenter
 const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<RouteShellSkeleton />}>{children}</Suspense>;
+}
+
 export type MainViewRouterProps = {
   activeSection: string;
   navigateSection: (section: string) => void;
@@ -63,113 +67,227 @@ function MainViewRouter({
   switch (activeSection) {
     case 'vouchedge_intro':
       if (isLoggedIn) {
-        return <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />;
+        return (
+          <LazyRoute>
+            <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
+          </LazyRoute>
+        );
       }
-      return <VouchEdgeTerminalPage onAuthed={onLoginSuccess} />;
+      return (
+        <LazyRoute>
+          <VouchEdgeTerminalPage onAuthed={onLoginSuccess} />
+        </LazyRoute>
+      );
     case 'welcome':
     case 'island':
-      return <EdgeIslandShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />;
+      return (
+        <LazyRoute>
+          <EdgeIslandShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
+        </LazyRoute>
+      );
     case 'today':
-      return <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />;
+      return (
+        <LazyRoute>
+          <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
+        </LazyRoute>
+      );
     case 'feed':
-      return <FeedShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <FeedShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'build':
-      return <ParlayShell panel="build" navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <ParlayShell panel="build" navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'ai_pilot':
-      return <AiPilotShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <AiPilotShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'ai_engine':
-      return <AiEngineShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <AiEngineShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'intel':
-      return <IntelShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <IntelShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'daily_hr_watch_new':
     case 'hr_board':
-      return <HomeRunIntelligencePage />;
+      return (
+        <LazyRoute>
+          <HomeRunIntelligencePage />
+        </LazyRoute>
+      );
     case 'mlb_stats':
       return (
-        <Suspense fallback={<RouteShellSkeleton />}>
+        <LazyRoute>
           <MlbStatHubPage />
-        </Suspense>
+        </LazyRoute>
       );
     case 'daily_players':
-      return <DailyPlayersPage onSectionChange={navigateSection} />;
+      return (
+        <LazyRoute>
+          <DailyPlayersPage onSectionChange={navigateSection} />
+        </LazyRoute>
+      );
     case 'live_parlays':
-      return <ParlayShell key="live_parlays" panel="live" navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <ParlayShell key="live_parlays" panel="live" navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'live_game_lab':
       return (
-        <ProGateShell featureName="Live Game Lab" navigateSection={navigateSection}>
-          <LiveGameLabPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="Live Game Lab" navigateSection={navigateSection}>
+            <LiveGameLabPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'pro_command_center':
       return (
-        <ProGateShell featureName="VouchEdge Pro Command Center" navigateSection={navigateSection}>
-          <ProCommandCenterPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="VouchEdge Pro Command Center" navigateSection={navigateSection}>
+            <ProCommandCenterPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'player_edge_lab':
       return (
-        <ProGateShell featureName="Player Edge Lab" navigateSection={navigateSection}>
-          <PlayerEdgeLabPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="Player Edge Lab" navigateSection={navigateSection}>
+            <PlayerEdgeLabPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'team_matchup_lab':
       return (
-        <ProGateShell featureName="Team Matchup Lab" navigateSection={navigateSection}>
-          <TeamMatchupLabPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="Team Matchup Lab" navigateSection={navigateSection}>
+            <TeamMatchupLabPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'hitter_matchup_zones':
       return (
-        <ProGateShell featureName="Hitter Matchup Zones" navigateSection={navigateSection}>
-          <HitterMatchupZonesPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="Hitter Matchup Zones" navigateSection={navigateSection}>
+            <HitterMatchupZonesPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'pro_graphs_lab':
       return (
-        <ProGateShell featureName="Pro Graphs Lab" navigateSection={navigateSection}>
-          <ProGraphsLabPage />
-        </ProGateShell>
+        <LazyRoute>
+          <ProGateShell featureName="Pro Graphs Lab" navigateSection={navigateSection}>
+            <ProGraphsLabPage />
+          </ProGateShell>
+        </LazyRoute>
       );
     case 'live_games':
-      return <LiveGamesShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <LiveGamesShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'research':
-      return <ResearchShell />;
+      return (
+        <LazyRoute>
+          <ResearchShell />
+        </LazyRoute>
+      );
     case 'board':
-      return <BoardShell />;
+      return (
+        <LazyRoute>
+          <BoardShell />
+        </LazyRoute>
+      );
     case 'leaderboard':
-      return <LeaderboardShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <LeaderboardShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'results':
-      return <ResultsShell />;
+      return (
+        <LazyRoute>
+          <ResultsShell />
+        </LazyRoute>
+      );
     case 'notifications':
-      return <NotificationsPage onSectionChange={navigateSection} />;
+      return (
+        <LazyRoute>
+          <NotificationsPage onSectionChange={navigateSection} />
+        </LazyRoute>
+      );
     case 'profile':
       return (
-        <ProfileShell
-          profileViewUserId={profileViewUserId}
-          navigateSection={navigateSection}
-        />
+        <LazyRoute>
+          <ProfileShell
+            profileViewUserId={profileViewUserId}
+            navigateSection={navigateSection}
+          />
+        </LazyRoute>
       );
     case 'nba_nfl':
-      return <NbaNflArena onSectionChange={navigateSection} />;
+      return (
+        <LazyRoute>
+          <NbaNflArena onSectionChange={navigateSection} />
+        </LazyRoute>
+      );
     case 'premium':
-      return <PremiumShell />;
+      return (
+        <LazyRoute>
+          <PremiumShell />
+        </LazyRoute>
+      );
     case 'themestore':
       if (!canSeeThemeStore) {
         return (
-          <ProfileShell
-            profileViewUserId={profileViewUserId}
-          />
+          <LazyRoute>
+            <ProfileShell profileViewUserId={profileViewUserId} />
+          </LazyRoute>
         );
       }
-      return <ThemeStoreShell />;
+      return (
+        <LazyRoute>
+          <ThemeStoreShell />
+        </LazyRoute>
+      );
     case 'epic_themes':
-      return <EpicThemeShowcase />;
+      return (
+        <LazyRoute>
+          <EpicThemeShowcase />
+        </LazyRoute>
+      );
     case 'subscriber_hub':
-      return <SubscriberShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <SubscriberShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     case 'settings':
-      return <SettingsShell />;
+      return (
+        <LazyRoute>
+          <SettingsShell />
+        </LazyRoute>
+      );
     case 'customize':
-      return <CustomizeShell navigateSection={navigateSection} />;
+      return (
+        <LazyRoute>
+          <CustomizeShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
     default:
       return (
         <div className="p-8 text-center" id="unknown-view">

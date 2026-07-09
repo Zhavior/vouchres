@@ -491,7 +491,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                     style={{ background: `hsl(${hue} 45% 16%)`, ['--tw-ring-color' as string]: `hsl(${hue} 55% 30%)` } as React.CSSProperties}
                   >
                     {showImg ? (
-                      <img src={player.headshotUrl!} alt={player.playerName} className="h-full w-full object-cover" onError={() => setImgErr(true)} />
+                      <img src={player.headshotUrl!} alt={player.playerName} className="h-full w-full object-cover" loading="lazy" decoding="async" onError={() => setImgErr(true)} />
                     ) : (
                       <span className="text-3xl font-black lg:text-4xl" style={{ color: `hsl(${hue} 80% 75%)` }}>{initials(player.playerName)}</span>
                     )}
