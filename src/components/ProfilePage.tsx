@@ -9,6 +9,17 @@ import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
 import { VEButton } from './ui/ve';
 import { Z8_PAGE } from '../theme/z8Tokens';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface ProfilePageProps {
   profile: CreatorProofProfile;
@@ -476,6 +487,101 @@ export default function ProfilePage({
 
         {/* Right Sidebar: "My Outcomes" Private Calendar Win Rate Card */}
         <div className="lg:col-span-4 space-y-6">
+
+          <div className="bg-[#121824] rounded-2xl border border-slate-850 p-4.5 space-y-4 shadow-xl relative animate-slide-up" id="profile-performance-graphs-card">
+            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+              <div>
+                <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
+                  Performance Graphs
+                </h3>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                  Real ledger data from your settled outcomes.
+                </p>
+              </div>
+              <span className="text-[9px] font-mono font-black text-vouch-cyan bg-cyan-950/40 px-2 py-0.5 rounded-full border border-cyan-900/40 uppercase">
+                LIVE DATA
+              </span>
+            </div>
+
+            {(() => {
+              const graphRows = profileDays
+                .map((day) => {
+                  const ymd = getLocalYMD(day);
+                  const label = day.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                  const dayOutcomes = userResults.filter(r => getLocalYMD(r.timestamp) === ymd);
+                  const won = dayOutcomes.filter(r => r.result?.status === 'WON').length;
+                  const lost = dayOutcomes.filter(r => r.result?.status === 'LOST').length;
+                  const settled = won + lost;
+                  const winRate = settled > 0 ? Math.round((won / settled) * 100) : 0;
+                  const profit = Number(dayOutcomes.reduce((total, r) => {
+                    if (r.result?.status === 'WON') return total + (r.result?.profit || 0);
+                    if (r.result?.status === 'LOST') return total - (r.result?.units || 0);
+                    return total;
+                  }, 0).toFixed(2));
+
+                  return { ymd, label, won, lost, settled, winRate, profit };
+                })
+                .reverse();
+
+              const hasGraphData = graphRows.some(row => row.settled > 0);
+
+              if (!hasGraphData) {
+                return (
+                  <div className="rounded-2xl border border-slate-850 bg-slate-950/40 p-5 text-center">
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-300">
+                      Start tracking picks to unlock your performance graph.
+                    </p>
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Settled wins and losses will automatically populate your profile portfolio.
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-5">
+                  <div className="h-[190px] rounded-2xl border border-slate-850 bg-slate-950/35 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Profit / Loss</span>
+                      <span className="text-[10px] font-mono text-slate-500">Units by day</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height="88%">
+                      <AreaChart data={graphRows}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
+                        <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{ background: '#020617', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 12, color: '#e2e8f0' }}
+                          formatter={(value) => [`${Number(value).toFixed(2)}U`, 'Profit']}
+                        />
+                        <Area type="monotone" dataKey="profit" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.12} strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="h-[190px] rounded-2xl border border-slate-850 bg-slate-950/35 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Win Rate Trend</span>
+                      <span className="text-[10px] font-mono text-slate-500">Settled plays</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height="88%">
+                      <BarChart data={graphRows}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
+                        <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                        <Tooltip
+                          contentStyle={{ background: '#020617', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 12, color: '#e2e8f0' }}
+                          formatter={(value) => [`${Number(value).toFixed(0)}%`, 'Win rate']}
+                        />
+                        <Bar dataKey="winRate" fill="#10b981" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
           <div className="bg-[#121824] rounded-2xl border border-slate-850 p-4.5 space-y-4 shadow-xl relative animate-slide-up" id="profile-my-outcomes-sidemenu-card">
             <div className="flex items-center justify-between border-b border-slate-850 pb-3">
               <div className="flex items-center gap-1.5">
