@@ -143,57 +143,101 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
   );
 };
 
-/** BvP grouped bar chart — AVG + SLG per season */
-const BvPBarChart: React.FC<{ logs: BvPLog[]; w?: number; h?: number }> = ({ logs, w = 500, h = 140 }) => {
+/** BvP grouped bar chart — premium matchup trend */
+const BvPBarChart: React.FC<{ logs: BvPLog[]; w?: number; h?: number }> = ({ logs, w = 520, h = 170 }) => {
   if (!logs.length) return null;
-  const pad = { t: 16, r: 8, b: 32, l: 36 };
+
+  const pad = { t: 18, r: 18, b: 42, l: 42 };
   const iw = w - pad.l - pad.r;
   const ih = h - pad.t - pad.b;
-  const maxSlg = 0.900;
-  const bw = (iw / logs.length) * 0.38;
-  const gap = (iw / logs.length) * 0.12;
-  const yLines = [0, 0.100, 0.200, 0.300, 0.400, 0.500, 0.600];
+  const maxValue = Math.max(0.75, ...logs.flatMap((row) => [row.avg, row.slg, row.obp]));
+  const groupW = iw / logs.length;
+  const bw = Math.max(10, groupW * 0.18);
+  const yLines = [0, 0.2, 0.4, 0.6, 0.8].filter((v) => v <= maxValue + 0.05);
+
+  const yFor = (value: number) => pad.t + ih - (value / maxValue) * ih;
+
   return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%' }}>
-      {/* Y-axis grid */}
-      {yLines.map(v => {
-        const y = pad.t + ih - (v / maxSlg) * ih;
-        return (
-          <g key={v}>
-            <line x1={pad.l} y1={y} x2={w - pad.r} y2={y} stroke="rgba(255,255,255,0.18)" strokeWidth="1" strokeDasharray="3 3" />
-            <text x={pad.l - 4} y={y + 4} textAnchor="end" fontSize="8" fill="rgba(255,255,255,0.4)">{v.toFixed(1)}</text>
-          </g>
-        );
-      })}
-      {/* Bars */}
-      {logs.map((row, i) => {
-        const x = pad.l + i * (iw / logs.length) + gap;
-        const avgH = (row.avg / maxSlg) * ih;
-        const slgH = (row.slg / maxSlg) * ih;
-        return (
-          <g key={row.season}>
-            {/* AVG bar */}
-            <rect x={x} y={pad.t + ih - avgH} width={bw} height={avgH} rx={2} fill="#00F0FF" opacity="0.75" />
-            {/* SLG bar */}
-            <rect x={x + bw + 2} y={pad.t + ih - slgH} width={bw} height={slgH} rx={2} fill="#00F0FF" opacity="0.75" />
-            {/* HR dot */}
-            {row.hrs > 0 && (
-              <circle cx={x + bw + 1} cy={pad.t + ih - slgH - 8} r={5} fill="#fbbf24" opacity="0.9">
-                <title>{row.hrs} HR</title>
-              </circle>
-            )}
-            <text x={x + bw + 1} y={h - pad.b + 12} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.4)">{row.season}</text>
-          </g>
-        );
-      })}
-      {/* Legend */}
-      <rect x={pad.l} y={h - 8} width={8} height={4} rx={1} fill="#00F0FF" opacity="0.8" />
-      <text x={pad.l + 10} y={h - 4} fontSize="8" fill="rgba(255,255,255,0.4)">AVG</text>
-      <rect x={pad.l + 36} y={h - 8} width={8} height={4} rx={1} fill="#00F0FF" opacity="0.8" />
-      <text x={pad.l + 46} y={h - 4} fontSize="8" fill="rgba(255,255,255,0.4)">SLG</text>
-      <circle cx={pad.l + 76} cy={h - 5} r={4} fill="#fbbf24" opacity="0.9" />
-      <text x={pad.l + 82} y={h - 4} fontSize="8" fill="rgba(255,255,255,0.4)">HR</text>
-    </svg>
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/60">Pitcher matchup trend</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30">AVG / OBP / SLG by season</p>
+        </div>
+        <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-white/40">
+          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> AVG</span>
+          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> OBP</span>
+          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-amber-300" /> SLG</span>
+        </div>
+      </div>
+
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%' }}>
+        <defs>
+          <linearGradient id="avgBarGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="obpBarGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#059669" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="slgBarGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0.35" />
+          </linearGradient>
+        </defs>
+
+        {yLines.map((v) => {
+          const y = yFor(v);
+          return (
+            <g key={v}>
+              <line x1={pad.l} y1={y} x2={w - pad.r} y2={y} stroke="rgba(148,163,184,0.16)" strokeWidth="1" strokeDasharray="4 4" />
+              <text x={pad.l - 7} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(226,232,240,0.45)">{v.toFixed(1)}</text>
+            </g>
+          );
+        })}
+
+        {logs.map((row, i) => {
+          const x = pad.l + i * groupW + groupW / 2;
+          const avgH = (row.avg / maxValue) * ih;
+          const obpH = (row.obp / maxValue) * ih;
+          const slgH = (row.slg / maxValue) * ih;
+          const bars = [
+            { key: 'avg', value: row.avg, h: avgH, fill: 'url(#avgBarGradient)', dx: -bw - 3 },
+            { key: 'obp', value: row.obp, h: obpH, fill: 'url(#obpBarGradient)', dx: 0 },
+            { key: 'slg', value: row.slg, h: slgH, fill: 'url(#slgBarGradient)', dx: bw + 3 },
+          ];
+
+          return (
+            <g key={row.season}>
+              {bars.map((bar) => (
+                <rect
+                  key={bar.key}
+                  x={x + bar.dx - bw / 2}
+                  y={pad.t + ih - bar.h}
+                  width={bw}
+                  height={Math.max(2, bar.h)}
+                  rx={4}
+                  fill={bar.fill}
+                >
+                  <title>{row.season} {bar.key.toUpperCase()}: {bar.value.toFixed(3)}</title>
+                </rect>
+              ))}
+
+              {row.hrs > 0 && (
+                <g>
+                  <circle cx={x + bw + 3} cy={Math.max(10, yFor(row.slg) - 10)} r={6} fill="#fbbf24" opacity="0.95" />
+                  <text x={x + bw + 3} y={Math.max(13, yFor(row.slg) - 7)} textAnchor="middle" fontSize="7" fontWeight="900" fill="#020617">{row.hrs}</text>
+                </g>
+              )}
+
+              <text x={x} y={h - 18} textAnchor="middle" fontSize="10" fontWeight="800" fill="rgba(226,232,240,0.55)">{row.season}</text>
+              <text x={x} y={h - 5} textAnchor="middle" fontSize="8" fill="rgba(148,163,184,0.5)">{row.pa} PA</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 };
 
