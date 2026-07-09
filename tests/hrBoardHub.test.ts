@@ -116,6 +116,18 @@ describe("getCachedValidatedHrBoard last-good fallback", () => {
     await expect(getCachedValidatedHrBoard()).rejects.toThrow("MLB Stats API down");
   });
 
+  it("serves validated board from Redis hot cache when local L1 is empty", async () => {
+    vi.mocked(isUpstashEnabled).mockReturnValue(true);
+    const expiresAt = Date.now() + 600_000;
+    vi.mocked(redisGetJson).mockResolvedValueOnce({ board: sampleBoard, expiresAt });
+    vi.mocked(buildValidatedHrBoard).mockResolvedValue(sampleBoard);
+
+    const result = await getCachedValidatedHrBoard();
+    expect(result.candidates[0]?.playerName).toBe("Aaron Judge");
+    expect(buildValidatedHrBoard).not.toHaveBeenCalled();
+    expect(redisGetJson).toHaveBeenCalledWith("validated-hr-board:hot:validated-hr-board:today");
+  });
+
   it("serves last-good validated board from Redis when local L1 is empty", async () => {
     vi.mocked(isUpstashEnabled).mockReturnValue(true);
     vi.mocked(redisGetJson).mockResolvedValue(null);
