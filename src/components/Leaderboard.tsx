@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiClient } from '../lib/apiClient';
 import { 
   Trophy, 
   Award, 
@@ -92,9 +92,13 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
   useEffect(() => {
     const scope = SCOPE_MAP[activeRange] ?? 'overall';
     setLoading(true);
-    fetch(apiUrl(`/api/leaderboard?scope=${scope}&limit=50&min_picks=1&include_users=true`))
-      .then(r => r.json())
-      .then(data => {
+    apiClient.get<{ entries?: unknown[] }>('/api/leaderboard', {
+      scope,
+      limit: 50,
+      min_picks: 1,
+      include_users: true,
+    })
+      .then((data) => {
         const entries: any[] = data.entries ?? [];
         setAllCappers(entries.map(entryToCapper));
       })

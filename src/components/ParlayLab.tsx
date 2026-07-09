@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiClient } from '../lib/apiClient';
 import { 
   Plus, 
   Trash2, 
@@ -95,19 +95,7 @@ export default function ParlayLab({
     setEdgeError(null);
 
     try {
-      const response = await fetch(apiUrl('/api/ai/parlay-edge'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ legs })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to generate: Server returned status ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await apiClient.post<{ status?: string; error?: string; edgeScore?: number; report?: string }>('/api/ai/parlay-edge', { legs });
       if (data.status === 'error') {
         throw new Error(data.error);
       }

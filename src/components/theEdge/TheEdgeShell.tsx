@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Bell, Bot, Check, CreditCard, Crown, Home, Layers3, Lock, LogIn, Palette, Radio, ShieldCheck, Sparkles, TrendingUp, Trophy, Users, X } from 'lucide-react';
 import '../edgePortal/edgePortalTheme.css';
 import { safeJsonFetch } from '../../api/safeApiClient';
-import { apiUrl } from '../../lib/apiBase';
+import { apiClient } from '../../lib/apiClient';
 import { isSupabaseConfigured, signInWithEmail, signUpWithEmail } from '../../lib/supabaseClient';
 import type { Parlay, CreatorProofProfile } from '../../types';
 import { bootDataStore } from "../../lib/boot/bootDataStore";
@@ -257,15 +257,7 @@ export default function TheEdgeShell({
       try {
         setDashboardSummaryLoading(true);
 
-        const response = await fetch(apiUrl('/api/me/dashboard-summary'), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) return;
-
-        const payload = (await response.json()) as DashboardSummaryResponse;
+        const payload = await apiClient.get<DashboardSummaryResponse>('/api/me/dashboard-summary');
 
         if (!cancelled) {
           setDashboardSummary(payload);

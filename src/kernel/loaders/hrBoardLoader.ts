@@ -3,13 +3,13 @@ import type { HrBoardContract } from '../contracts/hrBoard';
 
 const PREVIEW_LIMIT = 120;
 
-export async function loadHrBoard(date: string): Promise<HrBoardContract> {
+export async function loadHrBoard(date: string, previewLimit = PREVIEW_LIMIT): Promise<HrBoardContract> {
   const today = new Date().toISOString().slice(0, 10);
 
   const response =
     date === today
-      ? await HrBoardRepository.getToday(PREVIEW_LIMIT)
-      : await HrBoardRepository.getByDate(date, PREVIEW_LIMIT);
+      ? await HrBoardRepository.getToday(previewLimit)
+      : await HrBoardRepository.getByDate(date, previewLimit);
 
   return {
     ...response,

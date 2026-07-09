@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiUrl } from '../lib/apiBase';
+import { apiClient } from '../lib/apiClient';
 import { ScanLine, Upload, Plus, X, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ScanLeg {
@@ -42,12 +42,9 @@ export default function VouchScan() {
     setAnalyzing(true);
     setReport(null);
     try {
-      const res = await fetch(apiUrl('/api/ai/parlay-edge'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ legs: legs.map((l) => ({ selection: l.selection, market: l.market, team: l.team })) }),
+      const data = await apiClient.post<{ edgeScore?: number; riskLevel?: string; report?: string }>('/api/ai/parlay-edge', {
+        legs: legs.map((l) => ({ selection: l.selection, market: l.market, team: l.team })),
       });
-      const data = await res.json();
       setReport({ edgeScore: data.edgeScore, riskLevel: data.riskLevel, report: data.report || 'No analysis returned.' });
     } catch {
       setReport({ report: 'VouchCheck unavailable — AI analysis requires the backend to be connected. Set VITE_API_BASE_URL to your deployed backend, or run npm run dev locally.' });

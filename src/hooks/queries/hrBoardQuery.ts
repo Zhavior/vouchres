@@ -1,5 +1,4 @@
 import { queryOptions } from "@tanstack/react-query";
-import { vouchedgeApi } from "../../api/vouchedgeApi";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
 import type { HrBoardResponse } from "../../types/hrBoard";
@@ -20,10 +19,8 @@ export function getHrBoardBootInitialUpdatedAt(date: string): number | undefined
 }
 
 async function fetchHrBoard(date: string, previewLimit: number): Promise<HrBoardResponse> {
-  if (date === todayISO()) {
-    return vouchedgeApi.hrBoardToday(previewLimit);
-  }
-  return vouchedgeApi.hrBoardByDate(date, previewLimit);
+  const { loadHrBoard } = await import('../../kernel/loaders/hrBoardLoader');
+  return loadHrBoard(date, previewLimit) as Promise<HrBoardResponse>;
 }
 
 export function hrBoardQueryOptions(date: string, previewLimit = 120) {

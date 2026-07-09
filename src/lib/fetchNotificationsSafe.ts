@@ -1,18 +1,11 @@
-import { apiUrl } from "./apiBase";
+import { apiClient } from "./apiClient";
 
 export async function fetchNotificationsSafe() {
   try {
-    const res = await fetch(apiUrl("/api/notifications"), {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-
-    if (res.status === 401) return [];
-    if (!res.ok) throw new Error(`Notifications failed: ${res.status}`);
-
-    const data = await res.json();
+    const data = await apiClient.get<unknown[]>("/api/notifications");
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (error: any) {
+    if (Number(error?.status) === 401) return [];
     return [];
   }
 }
