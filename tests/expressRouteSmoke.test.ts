@@ -193,6 +193,13 @@ describe("API route smoke envelopes", () => {
       message: "playerId must be a positive integer.",
       details: [{ path: "playerId", message: "Expected positive integer." }],
     });
+
+    const badEdgeResearchPitcher = await requestJson("/api/mlb/players/592450/edge-research?pitcherId=bad");
+    expect(badEdgeResearchPitcher.status).toBe(400);
+    expect(badEdgeResearchPitcher.body.error).toMatchObject({
+      code: "validation_error",
+      message: "pitcherId must be a positive integer.",
+    });
   });
 
   it("normalizes MLB player registry validation errors before upstream work", async () => {

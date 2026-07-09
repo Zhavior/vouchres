@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
 
-import PlayerIntelligenceCard from '../../components/player/PlayerIntelligenceCard';
-
 import {
-  ProLockedCard,
+  HrSignalGraphs,
+  PlayerEdgeGraphs,
   ProPageHeader,
   VerifiedDataNotice,
   VerifiedGraphEmptyState,
@@ -12,9 +11,11 @@ import {
 
 import {
   buildPlayerPayload,
+  safeNumber,
   safeText,
   useHrBoardProData,
 } from './proLabData';
+import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
 
 
@@ -42,11 +43,33 @@ function getSignalTags(row: any) {
   return tags.slice(0, 3);
 }
 
+function getPitcherId(row: any): number | null {
+  const raw = row?.opponentPitcherId ?? row?.opponent_pitcher_id ?? row?.pitcherId ?? row?.pitcher_id;
+  const parsed = safeNumber(raw);
+  return parsed && parsed > 0 ? parsed : null;
+}
+
 export default function PlayerEdgeLabPage() {
   const { rows, loading, error, source } = useHrBoardProData();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedRow = rows.find((row) => String(row.playerId ?? row.player_id ?? row.id) === selectedId) || rows[0] || null;
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
+  const playerId = selectedRow ? getPlayerId(selectedRow, 0) : null;
+  const pitcherId = selectedRow ? getPitcherId(selectedRow) : null;
+  const opponent = selectedRow ? safeText(selectedRow.opponent ?? selectedRow.opposingPitcherTeam, '') : '';
+  const pitcherName = selectedRow
+    ? safeText(selectedRow.opponentPitcherName ?? selectedRow.opposingPitcher ?? selectedRow.pitcherName, '')
+    : '';
+
+  const {
+    data: research,
+    loading: researchLoading,
+    error: researchError,
+    source: researchSource,
+  } = usePlayerEdgeResearch(playerId, {
+    pitcherId,
+    opponent: opponent || null,
+  });
 
   return (
     <main className={`${Z8_PAGE} px-3 py-4 sm:px-4 lg:py-5`}>
@@ -90,16 +113,18 @@ export default function PlayerEdgeLabPage() {
               <div className={`${Z8_PANEL} rounded-xl border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-2.5`}>
                 <div className={`flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}>
                   <Crown className="h-4 w-4" />
-                  Premium Mode
+                  MLB Graphs
                 </div>
-                <div className="mt-2 text-base font-black text-white">Headshots + Signals</div>
-                <div className="text-xs text-white/45">Cleaner Pro scouting cards</div>
+                <div className="mt-2 text-base font-black text-white">
+                  {researchSource === 'network' && research ? 'Live API' : 'Select player'}
+                </div>
+                <div className="text-xs text-white/45">BvP, trends, Statcast quality</div>
               </div>
             </div>
           </div>
 
           <VerifiedDataNotice
-            variant={source === 'network' ? 'coming-soon' : 'feed-required'}
+            variant={source === 'network' ? 'no-data' : 'feed-required'}
             title={loading ? 'Loading verified player feed' : source === 'network' ? 'Verified HR player feed' : 'Verified data feed required'}
             detail={error ? `${error}. No fake player data shown.` : 'Player panels use only the current production HR Board payload.'}
           />
@@ -175,27 +200,40 @@ export default function PlayerEdgeLabPage() {
 
         <section className="space-y-4">
           {playerPayload ? (
-            <PlayerIntelligenceCard payload={playerPayload} />
+            <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
           ) : (
             <VerifiedGraphEmptyState
               variant="feed-required"
               title="Verified data feed required"
-              detail="The Player Edge Lab needs HR board player rows before rendering the player intelligence card."
+              detail="The Player Edge Lab needs HR board player rows before rendering signal graphs."
             />
           )}
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <ProLockedCard
-              title="Batter vs Pitcher"
-              description="Head-to-head history unlocks when verified matchup data is connected."
-            />
-            <ProLockedCard
-              title="Vs Team Trends"
-              description="Hits, RBIs, runs, HRs, and extra-base trends require a verified opponent history feed."
-            />
-            <ProLockedCard
-              title="Hot / Cold Zone"
-              description="Zone heatmaps require a verified zone feed. No hot-zone data is faked."
+          {research?.warnings?.length ? (
+            <div className={`${Z8_SURFACE} rounded-xl border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-amber-100/90`}>
+              {research.warnings.slice(0, 4).map((warning) => (
+                <div key={warning}>{warning}</div>
+              ))}
+            </div>
+          ) : null}
+
+          <div className={`${Z8_PANEL} rounded-2xl p-4`}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className={`${Z8_LABEL} text-white/40`}>MLB Research Graphs</div>
+                <div className="mt-1 text-sm font-black text-white">BvP, team trends, Statcast, HR edge</div>
+              </div>
+              <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
+                {researchSource === 'network' && research ? 'Live MLB API' : researchLoading ? 'Loading…' : 'Select player'}
+              </span>
+            </div>
+
+            <PlayerEdgeGraphs
+              research={research}
+              loading={researchLoading}
+              error={researchError}
+              pitcherName={pitcherName || null}
+              opponent={opponent || null}
             />
           </div>
         </section>

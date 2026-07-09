@@ -292,7 +292,7 @@ export default function TheEdgeShell({
   }
 
   function finishAuth() {
-    localStorage.setItem('vouchedge_after_auth_mode', 'island');
+    localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
     localStorage.setItem('vouchedge_signup_plan', plan);
     localStorage.setItem('vouchedge_policy_agreed_at', new Date().toISOString());
 
@@ -300,8 +300,8 @@ export default function TheEdgeShell({
 
     window.setTimeout(() => {
       triggerEdgeIslandTransition();
-      onSectionChange('island');
-      window.dispatchEvent(new CustomEvent('vouchedge:navigate', { detail: { section: 'island' } }));
+      onSectionChange('welcome');
+      window.dispatchEvent(new CustomEvent('vouchedge:navigate', { detail: { section: 'welcome' } }));
       if (presentation === 'overlay') onClose?.();
     }, 900);
   }

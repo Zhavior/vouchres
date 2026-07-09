@@ -1,5 +1,6 @@
 export { default as GameSignalPanel } from './GameSignalPanel';
 export { default as HrSignalGraphs } from './HrSignalGraphs';
+export { default as PlayerEdgeGraphs } from './PlayerEdgeGraphs';
 export { default as PlayerSignalPanel } from './PlayerSignalPanel';
 export { default as ProGraphShell } from './ProGraphShell';
 export { default as ProLockedCard } from './ProLockedCard';
@@ -12,6 +13,7 @@ export { default as VerifiedGraphEmptyState } from './VerifiedGraphEmptyState';
 
 export type { GameSignalPanelProps } from './GameSignalPanel';
 export type { HrSignalGraphsProps } from './HrSignalGraphs';
+export type { PlayerEdgeGraphsProps } from './PlayerEdgeGraphs';
 export type { PlayerSignalPanelProps } from './PlayerSignalPanel';
 export type { ProGraphShellProps } from './ProGraphShell';
 export type { ProLockedCardProps } from './ProLockedCard';

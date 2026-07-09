@@ -13,6 +13,7 @@ import {
   refreshPlayerRegistry,
   searchPlayers,
 } from "../services/mlb/playerRegistryService";
+import { getPlayerEdgeResearch } from "../services/mlb/playerEdgeResearchService";
 
 export const playerRegistryRoutes = Router();
 
@@ -80,6 +81,25 @@ playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
+    throw registryUnavailable(error);
+  }
+}));
+
+playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const playerId = positiveInt(req.params.playerId, "playerId");
+    const pitcherRaw = queryString(req.query.pitcherId, 12);
+    const opponentAbbr = queryString(req.query.opponent, 6);
+    const pitcherId = pitcherRaw ? positiveInt(pitcherRaw, "pitcherId") : undefined;
+
+    const research = await getPlayerEdgeResearch(playerId, {
+      pitcherId,
+      opponentAbbr: opponentAbbr || undefined,
+    });
+
+    return res.json({ ok: true, ...research });
+  } catch (error) {
+    if (error instanceof AppError) throw error;
     throw registryUnavailable(error);
   }
 }));

@@ -171,9 +171,9 @@ function getSavedActiveSection(): string | null {
 /** Signed-in users must never land on the public intro terminal. */
 function resolveAuthenticatedSection(section: string): string {
   if (!hasRealAuthToken()) return section;
-  if (section !== 'vouchedge_intro' && section !== 'welcome') return section;
+  if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
-  if (saved && saved !== 'vouchedge_intro' && saved !== 'welcome') return saved;
+  if (saved && saved !== 'vouchedge_intro') return saved;
   return SIGNED_IN_HOME;
 }
 
@@ -188,7 +188,6 @@ function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
     hash === 'vouchedge_intro' ||
     hash === 'vouchedge' ||
     hash === 'vouchedge-intro' ||
-    hash === 'welcome' ||
     hash === '';
   if (onLandingPath) {
     window.history.replaceState(null, '', `/${homeSection}`);
@@ -285,8 +284,11 @@ function resolveDevSectionFromLocation() {
     return 'today';
   }
 
-  if (target === 'welcome' || target === '/welcome') {
-    return hasRealAuthToken() ? SIGNED_IN_HOME : 'welcome';
+  if (
+    target === 'welcome' || target === '/welcome' ||
+    target === 'island' || target === '/island'
+  ) {
+    return 'welcome';
   }
 
   if (
@@ -502,11 +504,11 @@ export default function App() {
 
   const handleLoginSuccess = () => {
     try {
-      localStorage.setItem('vouchedge_after_auth_mode', 'island');
+      localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
     } catch {
       // ignore storage failures
     }
-    navigateSection('island');
+    navigateSection('welcome');
   };
 
   const handleLogoutComplete = () => {
@@ -523,10 +525,10 @@ export default function App() {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
 
-  // Signed-in users must never stay on the public landing page.
+  // Signed-in users must never stay on the public intro terminal.
   useEffect(() => {
     if (!hasRealAuthToken()) return;
-    if (activeSection !== 'vouchedge_intro' && activeSection !== 'welcome') return;
+    if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);
     replaceLandingUrl(next);
     saveActiveSection(next);
@@ -1613,16 +1615,6 @@ export default function App() {
           />
         );
       case 'welcome':
-        if (hasRealAuthToken()) {
-          return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
-        }
-        return (
-          <VouchEdgeTerminalPage
-            onAuthed={handleLoginSuccess}
-          />
-        );
-      case 'today':
-        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
       case 'island':
         return (
           <EdgeIslandPage
@@ -1632,6 +1624,8 @@ export default function App() {
             isLoggedIn={hasRealAuthToken()}
           />
         );
+      case 'today':
+        return <TodayDashboard onSectionChange={navigateSection} savedSlips={savedSlips} />;
       case 'feed':
         return (
           <HomeFeedPage

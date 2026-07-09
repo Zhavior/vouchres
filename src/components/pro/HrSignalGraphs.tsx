@@ -20,6 +20,8 @@ import { StatChip, fmtInt, fmtDecimal, fmtPercent, isFiniteNumber } from '../ui/
 export interface HrSignalGraphsProps {
   payload: NormalizedPlayerPayload | null;
   showAll?: boolean;
+  /** @deprecated Locked future graphs moved to PlayerEdgeGraphs (MLB API). */
+  showLockedFutureGraphs?: boolean;
   className?: string;
 }
 
@@ -97,7 +99,7 @@ const RecentPowerSnapshot: React.FC<{ payload: NormalizedPlayerPayload }> = Reac
           PWR {fmtInt(f.recentPowerScore)}
         </span>
       }
-      footer={`Sample window: ${fmtInt(f.gamesChecked)} games · ${fmtInt(f.atBats)} AB · ${fmtInt(f.hits)} H · ${fmtDecimal(f.slugging)} SLG · ${fmtDecimal(f.recentHrRate)} HR/AB. Game-by-game trend graphs are locked for Pro matchup history.`}
+      footer={`Sample window: ${fmtInt(f.gamesChecked)} games · ${fmtInt(f.atBats)} AB · ${fmtInt(f.hits)} H · ${fmtDecimal(f.slugging)} SLG · ${fmtDecimal(f.recentHrRate)} HR/AB. Game-by-game MLB trends load in the MLB Research Graphs section below.`}
     >
       <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
         <StatChip label="G" value={fmtInt(f.gamesChecked)} color={ACCENT.form} />
@@ -265,8 +267,15 @@ const LockedFutureGraphs: React.FC = React.memo(function LockedFutureGraphs() {
 export const HrSignalGraphs: React.FC<HrSignalGraphsProps> = React.memo(function HrSignalGraphs({
   payload,
   showAll = true,
+  showLockedFutureGraphs = false,
   className = '',
 }) {
+  const lockedFutureSection = showLockedFutureGraphs ? (
+    <div className="lg:col-span-2">
+      <LockedFutureGraphs />
+    </div>
+  ) : null;
+
   if (!payload) {
     return (
       <div className={`grid gap-3 lg:grid-cols-2 ${className}`}>
@@ -274,9 +283,7 @@ export const HrSignalGraphs: React.FC<HrSignalGraphsProps> = React.memo(function
         <VerifiedGraphEmptyState variant="no-data" sectionTitle="Recent Power Snapshot" />
         <VerifiedGraphEmptyState variant="no-data" sectionTitle="Matchup Signal Meter" />
         <VerifiedGraphEmptyState variant="no-data" sectionTitle="Data Confidence" />
-        <div className="lg:col-span-2">
-          <LockedFutureGraphs />
-        </div>
+        {lockedFutureSection}
       </div>
     );
   }
@@ -296,9 +303,7 @@ export const HrSignalGraphs: React.FC<HrSignalGraphsProps> = React.memo(function
       <RecentPowerSnapshot payload={payload} />
       <MatchupSignalMeter payload={payload} />
       <DataConfidencePanel payload={payload} />
-      <div className="lg:col-span-2">
-        <LockedFutureGraphs />
-      </div>
+      {lockedFutureSection}
     </div>
   );
 });

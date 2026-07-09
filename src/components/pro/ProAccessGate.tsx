@@ -1,6 +1,8 @@
 import React from 'react';
 import { Lock, Zap, Star, Crown, MessageSquare, Store, Microscope } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
+import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
+import { isFounderEmail } from '../../lib/founderAccess';
 
 export type RequiredTier = 'GOLD' | 'SELLER_PRO';
 
@@ -29,6 +31,21 @@ export function hasTierAccess(
 /** Backwards-compatible helper: true for GOLD or SELLER_PRO. */
 export function isProUser(profile: Pick<CreatorProofProfile, 'subscriptionTier'>): boolean {
   return hasTierAccess(profile, 'GOLD');
+}
+
+function readSessionEmail(): string | null {
+  try {
+    const raw = localStorage.getItem('vouchedge.auth');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      currentSession?: { user?: { email?: string | null } };
+      user?: { email?: string | null };
+    };
+    const session = parsed.currentSession ?? parsed;
+    return session.user?.email ?? null;
+  } catch {
+    return null;
+  }
 }
 
 interface TierTheme {
@@ -82,7 +99,14 @@ export function ProAccessGate({
   onNavigatePremium,
   children,
 }: ProAccessGateProps) {
-  if (hasTierAccess(profile, requiredTier)) {
+  const entitlements = useEntitlements();
+
+  if (
+    hasTierAccess(profile, requiredTier) ||
+    entitlements.isPro ||
+    entitlements.isStaff ||
+    isFounderEmail(readSessionEmail())
+  ) {
     return <>{children}</>;
   }
 

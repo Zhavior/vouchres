@@ -21,7 +21,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, ChevronRight,
+  ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
@@ -50,7 +50,8 @@ const COLLAPSED_KEY = 've-sidebar-collapsed';
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
-  ShoppingBag, User, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
+  ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
+  CalendarDays, Grid3x3, Crown,
 };
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
@@ -241,15 +242,12 @@ export default function FeedSidebar({
       canAccessThemeStore: canAccessThemeStore(profile),
       activeSport,
     });
-    // Always include HR board
-    if (!items.some(f => f.id === 'hr_board')) {
-      const hr = ALL_FEATURES.find(f => f.id === 'hr_board');
-      if (hr) items.push(hr);
-    }
-    // Always include MLB Stat Hub
-    if (!items.some(f => f.id === 'mlb_stats')) {
-      const mlb = ALL_FEATURES.find(f => f.id === 'mlb_stats');
-      if (mlb) items.push(mlb);
+    // Always include core Daily nav items even if a stale layout disabled them
+    for (const id of ['today', 'hr_board', 'mlb_stats'] as const) {
+      if (!items.some(f => f.id === id)) {
+        const feature = ALL_FEATURES.find(f => f.id === id);
+        if (feature) items.push(feature);
+      }
     }
     return items
       // Notifications live in the header — exclude from sidebar
