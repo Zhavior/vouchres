@@ -1,7 +1,9 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { positiveInt, upstreamUnavailable } from "../lib/requestValidators";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
@@ -29,63 +31,60 @@ function queryString(value: unknown, maxLength: number): string {
   return text.slice(0, maxLength);
 }
 
-playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (_req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/count", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const count = await getPlayerCount();
-    return res.json({ ok: true, ...count });
+    return res.json(apiOkFlat(req, count as Record<string, unknown>));
   } catch (error) {
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/registry", asyncHandler(async (_req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/registry", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const players = await getPlayerRegistry();
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       count: players.length,
       players,
       dataSource: "official_mlb",
       updatedAt: new Date().toISOString(),
-    });
+    }));
   } catch (error) {
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/active", asyncHandler(async (_req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/active", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const players = await getActivePlayers();
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       count: players.length,
       players,
       dataSource: "official_mlb",
       updatedAt: new Date().toISOString(),
-    });
+    }));
   } catch (error) {
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/search", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const q = queryString(req.query.q, 80);
     const players = await searchPlayers(q);
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       query: q,
       count: players.length,
       players,
       dataSource: "official_mlb",
       updatedAt: new Date().toISOString(),
-    });
+    }));
   } catch (error) {
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(async (req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const playerId = positiveInt(req.params.playerId, "playerId");
     const pitcherRaw = queryString(req.query.pitcherId, 12);
@@ -100,14 +99,14 @@ playerRegistryRoutes.get("/mlb/players/:playerId/edge-research", asyncHandler(as
       gamePk,
     });
 
-    return res.json({ ok: true, ...research });
+    return res.json(apiOkFlat(req, research as Record<string, unknown>));
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.get("/mlb/players/:playerId", asyncHandler(async (req: Request, res: Response) => {
+playerRegistryRoutes.get("/mlb/players/:playerId", asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const playerId = positiveInt(req.params.playerId, "playerId");
     const player = await getPlayerById(String(playerId));
@@ -119,23 +118,22 @@ playerRegistryRoutes.get("/mlb/players/:playerId", asyncHandler(async (req: Requ
         details: { playerId, dataSource: "official_mlb" },
       });
     }
-    return res.json({ ok: true, player, dataSource: "official_mlb", updatedAt: new Date().toISOString() });
+    return res.json(apiOkFlat(req, { player, dataSource: "official_mlb", updatedAt: new Date().toISOString() }));
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw registryUnavailable(error);
   }
 }));
 
-playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, asyncHandler(async (_req: Request, res: Response) => {
+playerRegistryRoutes.post("/mlb/players/refresh", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
   try {
     const result = await refreshPlayerRegistry();
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       count: result.count,
       players: result.players,
       dataSource: "official_mlb",
       updatedAt: new Date().toISOString(),
-    });
+    }));
   } catch (error) {
     throw registryUnavailable(error);
   }

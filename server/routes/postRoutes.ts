@@ -7,10 +7,41 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { assertUserOwnsResource } from "../middleware/ownership";
 import {
   canDeleteParlayPost,
   PARLAY_POST_LOCKED_MESSAGE,
 } from "../lib/postDeletePolicy";
+
+async function denyUnlessOwns(
+  userId: string,
+  resourceType: "post" | "comment",
+  resourceId: string,
+  options?: {
+    forbiddenMessage?: string;
+    forbiddenDetails?: Record<string, unknown>;
+    notFoundMessage?: string;
+  },
+): Promise<void> {
+  const owned = await assertUserOwnsResource(userId, resourceType, resourceId);
+  if (owned.ok) return;
+
+  if (owned.warning === "resource not found for authenticated user") {
+    throw new AppError({
+      status: options?.forbiddenMessage ? 403 : 404,
+      code: options?.forbiddenMessage ? "forbidden" : "not_found",
+      message: options?.forbiddenMessage ?? options?.notFoundMessage ?? "Resource not found.",
+      ...(options?.forbiddenDetails ? { details: options.forbiddenDetails } : {}),
+    });
+  }
+
+  throw new AppError({
+    status: 500,
+    code: "internal_server_error",
+    message: "Ownership check failed.",
+    details: { warning: owned.warning },
+  });
+}
 
 /**
  * Posts routes — the social feed.
@@ -227,7 +258,7 @@ postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequ
 
   const { data: post, error: fetchError } = await supabaseAdmin
     .from("posts")
-    .select("id, author_id, created_at, pick_id")
+    .select("id, created_at, pick_id")
     .eq("id", id)
     .single();
 
@@ -239,14 +270,10 @@ postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequ
     });
   }
 
-  if (post.author_id !== req.user!.id) {
-    throw new AppError({
-      status: 403,
-      code: "forbidden",
-      message: "You can only delete your own posts.",
-      details: { error: "not_post_owner" },
-    });
-  }
+  await denyUnlessOwns(req.user!.id, "post", id, {
+    forbiddenMessage: "You can only delete your own posts.",
+    forbiddenDetails: { error: "not_post_owner" },
+  });
 
   if (post.pick_id) {
     const { data: pick } = await supabaseAdmin
@@ -423,6 +450,11 @@ postRoutes.get("/posts/:id/comments", asyncHandler(async (req: RequestWithContex
 
 postRoutes.delete("/comments/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+
+  await denyUnlessOwns(req.user!.id, "comment", id, {
+    notFoundMessage: "Comment not found.",
+  });
+
   const { error } = await supabaseAdmin
     .from("post_comments")
     .delete()

@@ -15,6 +15,45 @@ vi.mock("../server/services/billing/stripeService", () => ({
   syncSubscription: vi.fn(),
 }));
 
+vi.mock("../server/middleware/auth", () => ({
+  requireAuth: (req: any, _res: unknown, next: () => void) => {
+    req.user = {
+      id: "user_billing_1",
+      email: "billing@test.com",
+      profile: { tier: "free", id: "user_billing_1" },
+    };
+    next();
+  },
+  supabaseAdmin: {
+    from: vi.fn(() => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => ({
+              maybeSingle: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+    })),
+  },
+}));
+
+vi.mock("../server/services/billing/tierConfig", () => ({
+  getTierEntitlements: vi.fn(() => ({
+    tier: "free",
+    monthlyCustomizationPoints: 0,
+    canUseProGraphs: false,
+    canUseTeamMatchupLab: false,
+    canUsePlayerEdgeLab: false,
+    canAccessNotifications: false,
+    warnings: [],
+  })),
+  normalizeSubscriptionTier: vi.fn(() => ({ tier: "free", sourceTier: "free", warnings: [] })),
+  getStripePriceMatrix: vi.fn(() => ({})),
+  getStripePriceId: vi.fn(),
+}));
+
 let server: Server;
 let baseUrl: string;
 
@@ -47,6 +86,22 @@ afterAll(async () => {
 });
 
 describe("billing routes", () => {
+  it("returns ok envelope with request metadata for billing status", async () => {
+    const response = await fetch(`${baseUrl}/api/billing/status`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tier: "free",
+      status: "free",
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
+
   it("returns unified error envelope when Stripe is not configured for webhook", async () => {
     const response = await fetch(`${baseUrl}/api/billing/webhook`, {
       method: "POST",

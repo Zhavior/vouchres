@@ -4,6 +4,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import type { AuthedRequest } from "../middleware/auth";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { assertUserOwnsResource } from "../middleware/ownership";
 import {
   getUserParlay,
   hideUserParlay,
@@ -54,6 +55,19 @@ export const saveMeParlayHandler = asyncHandler(async (req: ParlayReq, res: Resp
 });
 
 export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
   const body = req.body as UpdateParlayInput;
   const parlay = await updateParlaySummary({
     userId: req.user!.id,
@@ -65,6 +79,19 @@ export const updateParlayHandler = asyncHandler(async (req: ParlayReq, res: Resp
 });
 
 export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found or already hidden." });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
   const result = await hideUserParlay({ userId: req.user!.id, parlayId: req.params.id });
   return res.json(apiOkFlat(req, result as Record<string, unknown>));
 });

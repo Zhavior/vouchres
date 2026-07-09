@@ -6,6 +6,7 @@ import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { assertUserOwnsResource } from "../middleware/ownership";
 import {
   deletePushSubscription,
   listNotifications,
@@ -45,6 +46,23 @@ notificationRoutes.get("/notifications/unread-count", requireAuth, asyncHandler(
 }));
 
 notificationRoutes.post("/notifications/:id/read", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const owned = await assertUserOwnsResource(req.user!.id, "notification", req.params.id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Notification not found.",
+      });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
   const out = await markNotificationRead(req.user!.id, req.params.id);
   return res.json(apiOkFlat(req, out as Record<string, unknown>));
 }));

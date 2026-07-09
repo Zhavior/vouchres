@@ -4,6 +4,8 @@ import { z } from "zod";
 import { AuthedRequest, requireAuth, requireStaff, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { issueInvite } from "../services/persistence/betaService";
 
@@ -28,7 +30,7 @@ adminRoutes.get(
   "/beta",
   requireAuth,
   requireStaff,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const state = req.query.state as string | undefined;
     const limit = Math.min(Number(req.query.limit ?? 100), 500);
     const offset = Number(req.query.offset ?? 0);
@@ -51,7 +53,7 @@ adminRoutes.get(
       });
     }
 
-    return res.json({ ok: true, signups: data ?? [], total: count ?? 0, limit, offset });
+    return res.json(apiOkFlat(req, { signups: data ?? [], total: count ?? 0, limit, offset }));
   }),
 );
 
@@ -62,7 +64,7 @@ adminRoutes.post(
   requireAuth,
   requireStaff,
   validate({ body: InviteSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const { email } = req.body as z.infer<typeof InviteSchema>;
     const result = await issueInvite(email);
     if (!result) {
@@ -86,7 +88,7 @@ adminRoutes.post(
   requireAuth,
   requireStaff,
   validate({ body: InviteBatchSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const { emails } = req.body as z.infer<typeof InviteBatchSchema>;
     const results: Array<{ email: string; ok: boolean; invite_code?: string; error?: string }> = [];
 
@@ -110,7 +112,7 @@ adminRoutes.delete(
   "/beta/:email",
   requireAuth,
   requireStaff,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const { email } = req.params;
     const { error } = await supabaseAdmin
       .from("beta_signups")
@@ -132,7 +134,7 @@ adminRoutes.post(
   "/grade-pending",
   requireAuth,
   requireStaff,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const days = Math.min(Number(req.body?.days ?? 3), 14);
     const dryRun = Boolean(req.body?.dryRun);
 
@@ -164,7 +166,7 @@ adminRoutes.get(
   "/users",
   requireAuth,
   requireStaff,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const limit = Math.min(Number(req.query.limit ?? 50), 200);
     const offset = Number(req.query.offset ?? 0);
     const search = req.query.search as string | undefined;
@@ -205,7 +207,7 @@ adminRoutes.patch(
   requireAuth,
   requireStaff,
   validate({ body: UserUpdateSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const { id } = req.params;
     const updates = req.body as z.infer<typeof UserUpdateSchema>;
 
@@ -271,7 +273,7 @@ adminRoutes.post(
   requireAuth,
   requireStaff,
   validate({ body: CapperCreateSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
     const body = req.body as z.infer<typeof CapperCreateSchema>;
     const { data, error } = await supabaseAdmin
       .from("cappers")

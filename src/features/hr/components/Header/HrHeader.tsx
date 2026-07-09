@@ -27,14 +27,14 @@ function isoAddDays(iso: string, delta: number): string {
 }
 
 const HrDateNav: React.FC<{ date: string; isToday: boolean; onChange: (date: string) => void }> = ({ date, isToday, onChange }) => (
-  <div className="flex items-center gap-1 border border-white/10 bg-black/25 px-1.5 py-1 font-mono">
+  <div className="flex items-center gap-1 border border-white/10 bg-black/25 px-1 py-1 font-mono sm:px-1.5">
     <button
       type="button"
       onClick={() => onChange(isoAddDays(date, -1))}
       aria-label="Previous day"
-      className="flex h-6 w-6 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-vouch-cyan"
+      className="flex h-11 w-11 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-vouch-cyan sm:h-6 sm:w-6"
     >
-      <ChevronLeft className="h-3.5 w-3.5" />
+      <ChevronLeft className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
     </button>
     <label className="relative flex cursor-pointer items-center gap-1.5 px-1.5">
       <Calendar className="h-3.5 w-3.5 text-vouch-cyan" />
@@ -53,9 +53,9 @@ const HrDateNav: React.FC<{ date: string; isToday: boolean; onChange: (date: str
       onClick={() => onChange(isoAddDays(date, 1))}
       disabled={isToday}
       aria-label="Next day"
-      className="flex h-6 w-6 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-vouch-cyan disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+      className="flex h-11 w-11 items-center justify-center border border-transparent text-zinc-400 transition-colors duration-150 hover:border-vouch-cyan/30 hover:bg-vouch-cyan/5 hover:text-vouch-cyan disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-400 sm:h-6 sm:w-6"
     >
-      <ChevronRight className="h-3.5 w-3.5" />
+      <ChevronRight className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
     </button>
   </div>
 );
@@ -122,22 +122,22 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
   const relativeTime = formatRelativeTime(lastUpdated);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border border-white/10 bg-black/25 px-5 py-4">
+    <header className="flex flex-col gap-3 border border-white/10 bg-black/25 px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
       {/* Left: brand */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
         <HrBrandIcon />
         <div className="min-w-0">
-          <h1 className="truncate font-mono text-lg font-extrabold uppercase tracking-tight text-white">
+          <h1 className="truncate font-mono text-sm font-extrabold uppercase tracking-tight text-white sm:text-lg">
             HOME RUN INTELLIGENCE
           </h1>
-          <p className="truncate font-mono text-[11px] font-medium uppercase tracking-widest text-white/40">
+          <p className="truncate font-mono text-[10px] font-medium uppercase tracking-widest text-white/40 sm:text-[11px]">
             MLB &middot; {isToday ? 'TODAY' : date} &middot; {mode}
           </p>
         </div>
       </div>
 
       {/* Center: date nav + live pulse */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {date && onDateChange && <HrDateNav date={date} isToday={isToday} onChange={onDateChange} />}
         <LivePulse active={!isRefreshing && isToday} />
         {relativeTime && isToday && (
@@ -149,46 +149,49 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
       </div>
 
       {/* Right: view toggle + refresh */}
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
         <div className="flex items-center border border-white/10 bg-black/25 p-1 font-mono">
           <button
             type="button"
             onClick={() => onViewModeChange('cards')}
-            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
+            className={`flex h-11 min-w-11 items-center justify-center gap-1.5 border px-2 text-xs font-bold uppercase tracking-wide transition duration-200 sm:h-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5 ${
               viewMode === 'cards'
                 ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                 : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'cards'}
+            title="Cards"
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            Cards
+            <LayoutGrid className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Cards</span>
           </button>
           <button
             type="button"
             onClick={() => onViewModeChange('table')}
-            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
+            className={`flex h-11 min-w-11 items-center justify-center gap-1.5 border px-2 text-xs font-bold uppercase tracking-wide transition duration-200 sm:h-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5 ${
               viewMode === 'table'
                 ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                 : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'table'}
+            title="Table"
           >
-            <Table2 className="h-3.5 w-3.5" />
-            Table
+            <Table2 className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Table</span>
           </button>
           <button
             type="button"
             onClick={() => onViewModeChange('treemap')}
-            className={`flex items-center gap-1.5 border px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
+            className={`flex h-11 min-w-11 items-center justify-center gap-1.5 border px-2 text-xs font-bold uppercase tracking-wide transition duration-200 sm:h-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5 ${
               viewMode === 'treemap'
                 ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                 : 'border-transparent text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'
             }`}
             aria-pressed={viewMode === 'treemap'}
+            title="Map"
           >
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            Map
+            <LayoutDashboard className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Map</span>
           </button>
         </div>
 
@@ -198,7 +201,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             aria-label="Refresh"
-            className="flex h-9 w-9 items-center justify-center border border-white/10 bg-black/25 text-zinc-400 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/10 bg-black/25 text-zinc-400 transition duration-200 hover:border-vouch-cyan/35 hover:text-vouch-cyan disabled:opacity-50 sm:h-9 sm:w-9"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>

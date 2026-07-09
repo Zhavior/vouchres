@@ -26,6 +26,10 @@ vi.mock("../server/middleware/validation", () => ({
   validate: () => (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
+vi.mock("../server/middleware/ownership", () => ({
+  assertUserOwnsResource: vi.fn(async () => ({ ok: true })),
+}));
+
 let server: Server;
 let baseUrl: string;
 

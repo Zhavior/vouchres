@@ -112,7 +112,7 @@ function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNo
     case 'official':
       return { label: 'Official', icon: <ShieldCheck className="h-3 w-3" />, className: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan' };
     case 'projected':
-      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan' };
+      return { label: 'Projected', icon: <ShieldQuestion className="h-3 w-3" />, className: 'border border-vouch-amber/35 bg-vouch-amber/10 text-vouch-amber' };
     case 'blocked':
       return { label: 'Blocked', icon: <ShieldAlert className="h-3 w-3" />, className: 'border border-red-500/30 bg-red-500/10 text-red-300' };
     default:
@@ -158,14 +158,14 @@ function topSignals(p: HrWatchRow): Array<{ label: string; value: number }> {
 
 // ─── Score Ring ───────────────────────────────────────────────────────────────
 
-const ScoreRing: React.FC<{ score: number; hexColor: string }> = ({ score, hexColor }) => {
-  const SIZE = 60;
-  const STROKE = 4.5;
+const ScoreRing: React.FC<{ score: number; hexColor: string; compact?: boolean }> = ({ score, hexColor, compact = false }) => {
+  const SIZE = compact ? 44 : 60;
+  const STROKE = compact ? 3.5 : 4.5;
   const r = (SIZE - STROKE) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (Math.max(0, Math.min(100, score)) / 100) * circ;
   return (
-    <div className="relative flex h-[60px] w-[60px] items-center justify-center">
+    <div className={`relative flex items-center justify-center ${compact ? 'h-11 w-11' : 'h-[60px] w-[60px]'}`}>
       <svg width={SIZE} height={SIZE} className="-rotate-90">
         <circle cx={SIZE / 2} cy={SIZE / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={STROKE} />
         <circle
@@ -175,7 +175,7 @@ const ScoreRing: React.FC<{ score: number; hexColor: string }> = ({ score, hexCo
           style={{ transition: 'stroke-dashoffset 500ms ease' }}
         />
       </svg>
-      <span className="absolute font-mono text-base font-extrabold text-[hsl(var(--ve-text-primary))]">{Math.round(score)}</span>
+      <span className={`absolute font-mono font-extrabold text-[hsl(var(--ve-text-primary))] ${compact ? 'text-sm' : 'text-base'}`}>{Math.round(score)}</span>
     </div>
   );
 };
@@ -204,9 +204,9 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       onClick={() => onClick?.(player)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(player); } }}
       className={[
-        'group relative flex w-full cursor-pointer flex-col gap-3 border',
+        'group relative flex w-full min-w-0 cursor-pointer flex-col gap-2 border sm:gap-3',
         tier.borderClass,
-        'bg-black/30 p-4 text-left',
+        'bg-black/30 p-2.5 text-left sm:p-4',
         'transition-all duration-[var(--ve-duration-normal)]',
         'hover:-translate-y-0.5 hover:bg-vouch-cyan/5',
         tier.borderHoverClass,
@@ -223,19 +223,19 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       )}
 
       {/* Row 1: identity + score ring */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex items-start justify-between gap-2 sm:items-center sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           {/* Avatar */}
           {player.headshotUrl && !imgError ? (
             <img
               src={player.headshotUrl}
               alt={player.playerName}
               onError={() => setImgError(true)}
-              className="h-11 w-11 shrink-0 border border-white/10 object-cover"
+              className="h-9 w-9 shrink-0 border border-white/10 object-cover sm:h-11 sm:w-11"
             />
           ) : (
             <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/10 font-mono text-xs font-bold text-[hsl(var(--ve-text-primary))]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 font-mono text-[10px] font-bold text-[hsl(var(--ve-text-primary))] sm:h-11 sm:w-11 sm:text-xs"
               style={{ backgroundColor: teamColor(player.team) }}
             >
               {initials(player.playerName)}
@@ -243,22 +243,27 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
           )}
           {/* Name / matchup */}
           <div className="min-w-0">
-            <p className="truncate font-mono text-sm font-bold uppercase tracking-wide text-[hsl(var(--ve-text-primary))]">{player.playerName}</p>
-            <p className="truncate font-mono text-xs uppercase tracking-wide text-[hsl(var(--ve-text-muted))]">
+            <p className="truncate font-mono text-xs font-bold uppercase tracking-wide text-[hsl(var(--ve-text-primary))] sm:text-sm">{player.playerName}</p>
+            <p className="truncate font-mono text-[10px] uppercase tracking-wide text-[hsl(var(--ve-text-muted))] sm:text-xs">
               {player.team || '—'} <span className="text-[hsl(var(--ve-text-muted)/0.45)]">vs</span> {player.opponent || '—'}
             </p>
             {player.pitcherName && (
-              <p className="truncate font-mono text-[11px] uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.55)]">
+              <p className="hidden truncate font-mono text-[11px] uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.55)] sm:block">
                 vs {player.pitcherName}
               </p>
             )}
           </div>
         </div>
         {/* Score ring + tier badge */}
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
-          <ScoreRing score={player.hrScore} hexColor={tier.ringHex} />
+        <div className="flex shrink-0 flex-col items-center gap-1 sm:gap-1.5">
+          <div className="sm:hidden">
+            <ScoreRing score={player.hrScore} hexColor={tier.ringHex} compact />
+          </div>
+          <div className="hidden sm:block">
+            <ScoreRing score={player.hrScore} hexColor={tier.ringHex} />
+          </div>
           <span className={[
-            'border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[0.14em]',
+            'border px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-[0.12em] sm:px-2 sm:text-[9px] sm:tracking-[0.14em]',
             tier.badgeClass,
           ].join(' ')}>
             {tier.label}
@@ -267,11 +272,16 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       </div>
 
       {/* Row 2: truth badge + HR result signal + rank */}
-      <div className="flex items-center justify-between gap-2">
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${badge.className}`}>
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${badge.className}`}>
           {badge.icon}
           {badge.label}
         </span>
+        {player.truthStatus === 'projected' && (
+          <span className="text-[9px] font-semibold uppercase tracking-wide text-vouch-amber/80 sm:text-[10px]" title="Official lineup not posted yet">
+            Lineup not confirmed
+          </span>
+        )}
         {hrResult === 'hit' && (
           <span
             className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide"
@@ -334,11 +344,11 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
       {/* Row 4: HR probability bar */}
       {player.hrProbability != null && (
         <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.55)]">
-              HR Probability
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.55)] sm:text-[10px]">
+              HR Prob
             </span>
-            <span className={`text-[11px] font-black ${tier.textClass}`}>
+            <span className={`text-[10px] font-black sm:text-[11px] ${tier.textClass}`}>
               {(player.hrProbability * 100).toFixed(1)}%
             </span>
           </div>
@@ -361,15 +371,15 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
         </div>
       )}
 
-      {/* Full Profile CTA */}
+      {/* Full Profile CTA — always visible on touch; hover reveal on desktop */}
       {onViewProfile && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onViewProfile(player); }}
           className={[
-            'mt-1 flex w-full items-center justify-center gap-1.5 border py-1.5',
+            'mt-0.5 flex min-h-11 w-full items-center justify-center gap-1.5 border py-2 sm:mt-1 sm:min-h-0 sm:py-1.5',
             'font-mono text-[10px] font-bold uppercase tracking-[0.14em] transition-all duration-150',
-            'opacity-0 group-hover:opacity-100',
+            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
             `border-[hsl(var(--${tier.tokenAccent})/0.28)] text-[hsl(var(--${tier.tokenAccent}))]`,
             `hover:bg-[hsl(var(--${tier.tokenAccent})/0.08)]`,
           ].join(' ')}

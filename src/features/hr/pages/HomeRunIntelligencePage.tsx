@@ -52,11 +52,17 @@ function formatRelativeTime(date: Date | null | undefined): string {
 }
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="grid grid-cols-2 items-start gap-2 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
+  <div className="flex flex-col gap-2 md:grid md:grid-cols-2 md:items-start md:gap-4 xl:grid-cols-4">
+    {/* Mobile tier tab skeleton */}
+    <div className="flex gap-1.5 overflow-hidden md:hidden">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-11 w-24 shrink-0 animate-pulse bg-white/[0.08]" />
+      ))}
+    </div>
     {Array.from({ length: 4 }).map((_, colIdx) => (
       <div
         key={colIdx}
-        className="flex flex-col gap-3 border border-white/10 bg-black/25 p-4"
+        className={`flex flex-col gap-3 border border-white/10 bg-black/25 p-4 ${colIdx > 0 ? 'hidden md:flex' : ''}`}
       >
         <div className="h-4 w-24 animate-pulse bg-white/[0.08]" />
         {Array.from({ length: 3 }).map((__, cardIdx) => (

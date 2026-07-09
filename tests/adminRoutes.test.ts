@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { adminRoutes } from "../server/routes/adminRoutes";
 
 const fromMock = vi.fn();
@@ -32,6 +33,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api/admin", adminRoutes);
   app.use("/api/admin", apiErrorHandler);
@@ -88,7 +90,17 @@ describe("admin routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, signups: [], total: 0, limit: 100, offset: 0 });
+    expect(body).toMatchObject({
+      ok: true,
+      signups: [],
+      total: 0,
+      limit: 100,
+      offset: 0,
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
   });
 
   it("blocks self demotion with unified bad_request", async () => {

@@ -54,7 +54,7 @@ function tierLabel(score: number): string {
 function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNode; className: string } {
   switch (status) {
     case 'official':  return { label: 'Official',  icon: <ShieldCheck  className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-success)/0.10)] text-[hsl(var(--ve-success))] ring-[hsl(var(--ve-success)/0.28)]' };
-    case 'projected': return { label: 'Projected', icon: <ShieldQuestion className="h-3.5 w-3.5" />, className: 'bg-vouch-cyan/10 text-vouch-cyan ring-vouch-cyan/25' };
+    case 'projected': return { label: 'Projected', icon: <ShieldQuestion className="h-3.5 w-3.5" />, className: 'bg-vouch-amber/10 text-vouch-amber ring-vouch-amber/30' };
     case 'blocked':   return { label: 'Blocked',   icon: <ShieldAlert  className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-danger)/0.10)] text-[hsl(var(--ve-danger))] ring-[hsl(var(--ve-danger)/0.25)]' };
     default:          return { label: '—',          icon: <ShieldOff    className="h-3.5 w-3.5" />, className: 'bg-[hsl(var(--ve-surface)/0.40)] text-[hsl(var(--ve-text-muted))] ring-[hsl(var(--ve-border)/0.20)]' };
   }
@@ -267,13 +267,13 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-deep)/0.97)] shadow-2xl scrollbar-none"
+            className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-deep)/0.97)] shadow-2xl sm:h-full"
           >
             {/* ── Header ────────────────────────────────────── */}
-            <div className="relative border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.40)] p-5">
+            <div className="relative shrink-0 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.40)] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
               <button
                 onClick={onClose} aria-label="Close"
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:text-vouch-cyan hover:border-vouch-cyan/35"
+                className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:border-vouch-cyan/35 hover:text-vouch-cyan sm:right-4 sm:top-4 sm:h-8 sm:w-8"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -322,7 +322,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             </div>
 
             {/* ── Score bar ────────────────────────────────── */}
-            <div className="border-b border-[hsl(var(--ve-border)/0.24)] p-5">
+            <div className="shrink-0 border-b border-[hsl(var(--ve-border)/0.24)] p-4 sm:p-5">
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.60)]">HR Score</p>
@@ -361,11 +361,11 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             </div>
 
             {/* ── Tabs ─────────────────────────────────────── */}
-            <div className="flex border-b border-[hsl(var(--ve-border)/0.24)] px-4">
+            <div className="flex shrink-0 overflow-x-auto border-b border-[hsl(var(--ve-border)/0.24)] px-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden">
               {TABS.map(t => (
                 <button
                   key={t.id} onClick={() => setTab(t.id)}
-                  className={`relative flex items-center gap-1.5 px-3 py-3 text-xs font-semibold uppercase tracking-wide transition-colors ${
+                  className={`relative flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-3 text-[11px] font-semibold uppercase tracking-wide transition-colors sm:min-h-0 sm:text-xs ${
                     tab === t.id
                       ? 'text-vouch-cyan'
                       : 'text-[hsl(var(--ve-text-muted)/0.55)] hover:text-[hsl(var(--ve-text-muted))]'
@@ -380,7 +380,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             </div>
 
             {/* ── Tab content ──────────────────────────────── */}
-            <div className="flex-1 p-5">
+            <div className="flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
 
               {/* OVERVIEW TAB */}
               {tab === 'overview' && (

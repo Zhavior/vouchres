@@ -5,6 +5,8 @@ import { z } from "zod";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { webhookLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
 import {
@@ -26,6 +28,8 @@ import {
 } from "../services/billing/tierConfig";
 
 export const billingRoutes = Router();
+
+type AuthedRequestWithContext = AuthedRequest & RequestWithContext;
 
 /**
  * Returns a validated, slash-stripped frontend origin for Stripe redirect URLs.
@@ -75,7 +79,7 @@ billingRoutes.post(
   "/checkout",
   requireAuth,
   validate({ body: CheckoutSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
     const { tier, interval } = req.body as z.infer<typeof CheckoutSchema>;
     const normalized = normalizeSubscriptionTier(tier);
     const checkoutTier = normalized.tier as PaidCanonicalTier;
@@ -123,14 +127,14 @@ billingRoutes.post(
       });
     });
 
-    return res.json({ ok: true, url: session.url, warnings: normalized.warnings });
+    return res.json(apiOkFlat(req, { url: session.url, warnings: normalized.warnings }));
   }),
 );
 
 billingRoutes.post(
   "/portal",
   requireAuth,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
     assertStripeConfigured();
 
     const safeOrigin = getSafeFrontendOrigin();
@@ -161,11 +165,11 @@ billingRoutes.post(
       });
     });
 
-    return res.json({ ok: true, url: session.url });
+    return res.json(apiOkFlat(req, { url: session.url }));
   }),
 );
 
-const billingStatusHandler = asyncHandler(async (req: AuthedRequest, res: Response) => {
+const billingStatusHandler = asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
   const { data: sub, error } = await supabaseAdmin
     .from("subscriptions")
     .select(
@@ -191,8 +195,7 @@ const billingStatusHandler = asyncHandler(async (req: AuthedRequest, res: Respon
   const entitlements = getTierEntitlements(profileTier);
   const normalized = normalizeSubscriptionTier(profileTier);
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     tier: entitlements.tier,
     legacyTier: normalized.sourceTier !== entitlements.tier ? normalized.sourceTier : null,
     monthlyCustomizationPoints: entitlements.monthlyCustomizationPoints,
@@ -207,7 +210,7 @@ const billingStatusHandler = asyncHandler(async (req: AuthedRequest, res: Respon
     subscription: sub ?? null,
     prices: getStripePriceMatrix(),
     warnings: entitlements.warnings,
-  });
+  }));
 });
 
 billingRoutes.get("/status", requireAuth, billingStatusHandler);

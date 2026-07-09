@@ -6,6 +6,7 @@ import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
+import { assertUserOwnsResource } from "../middleware/ownership";
 import { createVouch, listVouchesForUser, hideVouch } from "../services/persistence/vouchService";
 
 /**
@@ -74,6 +75,23 @@ vouchRoutes.post(
 
 vouchRoutes.delete("/vouches/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+
+  const owned = await assertUserOwnsResource(req.user!.id, "vouch", id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Vouch not found.",
+      });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
 
   const hidden = await hideVouch(id, req.user!.id).catch((error) => {
     console.error("[vouches] hide failed", error);

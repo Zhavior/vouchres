@@ -61,31 +61,33 @@ export function registerMlbRoutes(app: Express): void {
   }));
 
   /** All lineups for today — powers the Daily Players board */
-  const lineupTodayHandler = async (req: Request, res: Response) => {
+  const lineupTodayHandler = async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const date = dateQueryOrToday(req.query.date);
     try {
       const { lineups, warnings, servedFromLastGood } = await getTodayLineups(date);
       const totalPlayers = lineups.reduce((sum, g) => sum + g.totalPlayers, 0);
-      res.json({
-        ok: true,
+      const lineupWarnings = servedFromLastGood
+        ? [...warnings, "Lineup served from last-good cache snapshot."]
+        : warnings;
+      res.json(apiOkFlat(req, {
         date,
         games: lineups,
         totalGames: lineups.length,
         totalPlayers,
         source: servedFromLastGood ? "mlb_statsapi_lineups_last_good" : "mlb_statsapi_live",
         updatedAt: new Date().toISOString(),
-        warnings,
+        warnings: lineupWarnings,
         meta: buildApiMeta({
           source: servedFromLastGood ? "mlb_statsapi_lineups_last_good" : "mlb_statsapi_lineups",
-          dataQuality: servedFromLastGood ? "cached_official_mlb_lineup" : "official_mlb_lineup",
-          warnings,
+          dataQuality: "official_mlb_lineup",
+          warnings: lineupWarnings,
           cache: {
             strategy: servedFromLastGood ? "lineup_last_good_snapshot" : "ttl_cache",
             ttlMs: TTL.liveFeed,
           },
         }),
-      });
+      }));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Lineup data unavailable";
       console.error("[mlbRoutes] lineup/today failed:", message);
@@ -94,6 +96,7 @@ export function registerMlbRoutes(app: Express): void {
       structuredLog({
         level: "info",
         event: "endpoint",
+        requestId: req.requestId,
         method: "GET",
         route: "/api/mlb/lineup/today",
         durationMs: Date.now() - start,

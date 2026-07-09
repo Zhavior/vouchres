@@ -22,6 +22,10 @@ vi.mock("../server/services/persistence/vouchService", () => ({
   hideVouch: vi.fn(),
 }));
 
+vi.mock("../server/middleware/ownership", () => ({
+  assertUserOwnsResource: vi.fn(async () => ({ ok: true })),
+}));
+
 import { createVouch, hideVouch, listVouchesForUser } from "../server/services/persistence/vouchService";
 
 let server: Server;

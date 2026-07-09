@@ -1,7 +1,9 @@
 /** Trust score + verified record routes. */
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { getUserTrust, getCapperTrust } from "../services/trust/trustScoreService";
 import { getVerifiedRecord } from "../services/trust/verifiedRecordService";
 
@@ -19,17 +21,16 @@ function requirePathId(value: unknown, field: string): string {
 }
 
 export function registerTrustRoutes(app: Express): void {
-  app.get("/api/trust/user/:userId", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/trust/user/:userId", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const userId = requirePathId(req.params.userId, "userId");
-    return res.json({ ok: true, trust: getUserTrust(userId) });
+    return res.json(apiOkFlat(req, { trust: getUserTrust(userId) }));
   }));
 
-  app.get("/api/trust/capper/:capperId", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/trust/capper/:capperId", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const capperId = requirePathId(req.params.capperId, "capperId");
-    return res.json({
-      ok: true,
+    return res.json(apiOkFlat(req, {
       trust: getCapperTrust(capperId),
       verifiedRecord: getVerifiedRecord(capperId),
-    });
+    }));
   }));
 }

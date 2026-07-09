@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { registerTrustRoutes } from "../server/routes/trustRoutes";
 
 vi.mock("../server/services/trust/trustScoreService", () => ({
@@ -44,6 +45,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   registerTrustRoutes(app);
   app.use(apiErrorHandler);
@@ -78,6 +80,10 @@ describe("trust routes", () => {
         userTrustScore: 72,
         capperTrustBadge: "High Trust",
       },
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 
@@ -90,6 +96,10 @@ describe("trust routes", () => {
       ok: true,
       trust: { userTrustScore: 88 },
       verifiedRecord: { record: "10-1-0", trustScore: 88 },
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 

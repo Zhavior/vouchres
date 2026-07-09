@@ -6,6 +6,7 @@ import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 
 /**
  * Auth routes — minimal session/profile endpoints used by the frontend.
@@ -17,12 +18,14 @@ import { apiOkFlat } from "../lib/apiResponse";
  */
 export const authRoutes = Router();
 
-authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+type AuthedRequestWithContext = AuthedRequest & RequestWithContext;
+
+authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
   return res.json(apiOkFlat(req, { ...req.user!.profile }));
 }));
 
-authRoutes.post("/signout", requireAuth, asyncHandler(async (_req: AuthedRequest, res: Response) => {
-  return res.json({ ok: true });
+authRoutes.post("/signout", requireAuth, asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+  return res.json(apiOkFlat(req, {}));
 }));
 
 const ProfileUpdateSchema = z.object({
@@ -36,7 +39,7 @@ authRoutes.patch(
   "/profile",
   requireAuth,
   validate({ body: ProfileUpdateSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
     const updates = req.body as z.infer<typeof ProfileUpdateSchema>;
 
     const safeUpdates: Record<string, any> = {};
@@ -87,20 +90,20 @@ authRoutes.patch(
       });
     }
 
-    return res.json({ ok: true, ...data });
+    return res.json(apiOkFlat(req, data as Record<string, unknown>));
   }),
 );
 
 authRoutes.get(
   "/username-check",
   optionalAuth,
-  asyncHandler(async (req, res: Response) => {
+  asyncHandler(async (req: RequestWithContext, res: Response) => {
     const username = String(req.query.username ?? "").trim();
     if (username.length < 3 || username.length > 24) {
-      return res.json({ ok: true, available: false, reason: "invalid_length" });
+      return res.json(apiOkFlat(req, { available: false, reason: "invalid_length" }));
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.json({ ok: true, available: false, reason: "invalid_chars" });
+      return res.json(apiOkFlat(req, { available: false, reason: "invalid_chars" }));
     }
 
     const { data } = await supabaseAdmin
@@ -109,6 +112,6 @@ authRoutes.get(
       .eq("lower(username)", username.toLowerCase())
       .maybeSingle();
 
-    return res.json({ ok: true, available: !data });
+    return res.json(apiOkFlat(req, { available: !data }));
   }),
 );

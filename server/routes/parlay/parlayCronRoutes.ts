@@ -137,6 +137,8 @@ parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request
   const envelope = apiOkFlat(req, {
     scanner: "parlay_integrity_nose",
     checkedAt: new Date().toISOString(),
+    healthy: blockingIssueCount === 0,
+    blockingIssueCount,
     issues,
     cache: {
       gradedLegResults: cachedResults,
@@ -147,10 +149,7 @@ parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: Request
         : "Some legs are missing exact grading identity. New saves should use /api/parlays/save only; old rows may need repair/backfill.",
   });
 
-  return res.json({
-    ...envelope,
-    ok: blockingIssueCount === 0,
-  });
+  return res.json(envelope);
 }));
 
 parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: RequestWithContext, res: Response) => {

@@ -6,6 +6,7 @@ export type OwnedResourceType =
   | "notification"
   | "post"
   | "comment"
+  | "vouch"
   | "push_subscription"
   | "subscription";
 
@@ -22,6 +23,7 @@ const OWNERSHIP_LOOKUPS: Record<OwnedResourceType, OwnershipLookup> = {
   notification: { table: "notifications", ownerColumn: "user_id", idColumn: "id" },
   post: { table: "posts", ownerColumn: "author_id", idColumn: "id" },
   comment: { table: "post_comments", ownerColumn: "author_id", idColumn: "id" },
+  vouch: { table: "vouches", ownerColumn: "user_id", idColumn: "id" },
   push_subscription: { table: "push_subscriptions", ownerColumn: "user_id", idColumn: "id" },
   subscription: { table: "subscriptions", ownerColumn: "profile_id", idColumn: "id" },
 };

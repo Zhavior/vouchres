@@ -312,7 +312,9 @@ const NotificationsUnreadCountSchema = z.object({
 }).openapi("NotificationsUnreadCountResponse");
 
 const ParlayIntegritySchema = z.object({
-  ok: z.boolean(),
+  ok: z.literal(true),
+  healthy: z.boolean(),
+  blockingIssueCount: z.number().int().nonnegative(),
   scanner: z.literal("parlay_integrity_nose"),
   checkedAt: z.string().datetime(),
   issues: z.record(z.string(), z.number().int().nonnegative()),

@@ -1,6 +1,8 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { generationLimiter } from "../middleware/rateLimit";
 import {
@@ -12,13 +14,12 @@ import {
 } from "../services/aiJudges/socialDraftService";
 
 export function registerAiJudgeSocialRoutes(app: Express): void {
-  app.get("/api/ai-judge-social/judges", asyncHandler(async (_req: Request, res: Response) => {
-    res.json({
-      ok: true,
+  app.get("/api/ai-judge-social/judges", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    res.json(apiOkFlat(req, {
       status: "ready",
       mode: "safe_prototype",
       judges: listJudges(),
-    });
+    }));
   }));
 
   app.post(
@@ -26,18 +27,17 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       const result = await generateHrSocialDrafts({
         date: req.body?.date,
         scheduledFor: req.body?.scheduledFor,
       });
 
-      res.json({
-        ok: true,
+      res.json(apiOkFlat(req, {
         status: "ready",
         mode: "safe_prototype_no_real_x_posting",
         ...result,
-      });
+      }));
     }),
   );
 
@@ -45,13 +45,12 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     "/api/ai-judge-social/drafts",
     requireAuth,
     requireStaff,
-    asyncHandler(async (_req: Request, res: Response) => {
-      res.json({
-        ok: true,
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
+      res.json(apiOkFlat(req, {
         status: "ready",
         mode: "safe_prototype",
         drafts: listDrafts(),
-      });
+      }));
     }),
   );
 
@@ -60,14 +59,13 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       try {
         const draft = queueDraft(req.params.draftId);
-        res.json({
-          ok: true,
+        res.json(apiOkFlat(req, {
           status: "queued",
           draft,
-        });
+        }));
       } catch (error) {
         if (error instanceof Error && error.message === "Draft not found") {
           throw new AppError({ status: 404, code: "not_found", message: error.message });
@@ -82,15 +80,14 @@ export function registerAiJudgeSocialRoutes(app: Express): void {
     requireAuth,
     requireStaff,
     generationLimiter,
-    asyncHandler(async (req: Request, res: Response) => {
+    asyncHandler(async (req: RequestWithContext, res: Response) => {
       try {
         const draft = mockPostDraft(req.params.draftId);
-        res.json({
-          ok: true,
+        res.json(apiOkFlat(req, {
           status: "mock_posted",
           message: "Safe prototype only. Nothing was posted to X/Twitter.",
           draft,
-        });
+        }));
       } catch (error) {
         if (error instanceof Error && error.message === "Draft not found") {
           throw new AppError({ status: 404, code: "not_found", message: error.message });
