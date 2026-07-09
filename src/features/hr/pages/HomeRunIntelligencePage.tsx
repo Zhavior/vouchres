@@ -170,6 +170,7 @@ const HomeRunIntelligencePage: React.FC = () => {
 
   const isAllZero = totalCount === 0 && !vm.loading;
   const lastUpdatedLabel = formatRelativeTime(lastUpdated);
+  const isToday = vm.date === new Date().toISOString().slice(0, 10);
 
   const handleRefresh = React.useCallback(() => {
     vm.refresh?.();
