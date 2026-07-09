@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calendar, RefreshCw, Users } from 'lucide-react';
+import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { bootDataStore } from '../lib/boot/bootDataStore';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
@@ -59,6 +60,7 @@ type DailyBoardResponse = {
 
 interface DailyPlayersPageProps {
   onAddLegToParlay?: (player: any, prop: any) => void;
+  onSectionChange?: (section: string) => void;
 }
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -1492,7 +1494,7 @@ function getBootDailyPlayersBoard(): DailyBoardResponse | null {
   return null;
 }
 
-export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
+export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPageProps) {
   const bootBoard = getBootDailyPlayersBoard();
 
   const [data, setData] = useState<DailyBoardResponse | null>(() => bootBoard);
@@ -1609,14 +1611,26 @@ export default function DailyPlayersPage(_props: DailyPlayersPageProps) {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => fetchBoard()}
-              className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Refresh Board
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {onSectionChange && (
+                <button
+                  type="button"
+                  onClick={() => onSectionChange('hr_board')}
+                  className={`${Z8_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+                >
+                  <HrBrandIcon size="sm" />
+                  Home Run Intelligence
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => fetchBoard()}
+                className={`${Z8_ACTIVE} inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Refresh Board
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">

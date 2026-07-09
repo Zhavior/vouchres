@@ -1693,7 +1693,7 @@ export default function App() {
           </Suspense>
         );
       case 'daily_players':
-        return <DailyPlayersPage />;
+        return <DailyPlayersPage onSectionChange={navigateSection} />;
       case 'live_parlays':
         return (
           <ParlayCommandCenter

@@ -1,4 +1,5 @@
-import { ArrowRight, Clock3, Flame, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Clock3, ShieldCheck } from 'lucide-react';
+import { HrBrandIcon } from '../../features/hr/components/HrBrandIcon';
 import { VECard } from '../ui/ve';
 import type { EdgeBoardRow, EdgeIslandSectionProps } from './edgeIslandTypes';
 
@@ -72,9 +73,7 @@ export function TodaysEdgeBoard({ rows, loading, error, onSectionChange }: Today
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-vouch-emerald">
-                      <Flame className="h-4 w-4" />
-                    </div>
+                    <HrBrandIcon size="sm" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-black text-white">{row.playerName}</div>
                       <div className="truncate text-xs text-white/45">{row.team} vs {row.opponent}</div>

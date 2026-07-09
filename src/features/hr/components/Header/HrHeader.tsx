@@ -1,5 +1,6 @@
 import React from 'react';
-import { Flame, LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { HrBrandIcon } from '../HrBrandIcon';
 
 export type HrViewMode = 'cards' | 'table' | 'treemap';
 
@@ -124,10 +125,7 @@ export const HrHeader: React.FC<HrHeaderProps> = ({
     <header className="flex flex-wrap items-center justify-between gap-4 border border-white/10 bg-black/25 px-5 py-4">
       {/* Left: brand */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center border border-vouch-cyan/35 bg-vouch-cyan/10">
-          <Flame className="h-5 w-5 text-vouch-cyan" strokeWidth={2.25} />
-          <div className="absolute inset-0 bg-vouch-cyan/10 blur-md -z-10" />
-        </div>
+        <HrBrandIcon />
         <div className="min-w-0">
           <h1 className="truncate font-mono text-lg font-extrabold uppercase tracking-tight text-white">
             HOME RUN INTELLIGENCE

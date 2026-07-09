@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { Parlay } from '../types';
+import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { useMode } from '../lib/useMode';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
@@ -50,10 +51,10 @@ const TODAY_TOOLS: DashboardCard[] = [
   {
     icon: Flame,
     section: 'hr_board',
-    title: 'Daily HR Board',
+    title: 'Home Run Intelligence',
     eyebrow: 'Power',
     description: 'Ranked home run research with pitcher, park, form, and data status.',
-    accent: 'gold',
+    accent: 'cyan',
   },
   {
     icon: ShieldCheck,
@@ -191,7 +192,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <CommandButton label="Open Daily Players" section="daily_players" onSectionChange={onSectionChange} primary />
-                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} />
+                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} />
                 <CommandButton label="Build Parlay" section="build" onSectionChange={onSectionChange} />
               </div>
             </div>
@@ -211,7 +212,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [] }: Pro
                   label="Top HR Target"
                   value={topHr ? `${topHr.team} vs ${topHr.opposingPitcher}` : 'No HR target loaded'}
                   detail={topHr ? `HR score ${topHr.hrScore}` : 'Open the board when live data is available.'}
-                  accent="gold"
+                  accent="cyan"
                   loading={loading}
                   onClick={() => onSectionChange('hr_board')}
                 />
@@ -341,11 +342,13 @@ function CommandButton({
   label,
   section,
   primary,
+  icon: Icon,
   onSectionChange,
 }: {
   label: string;
   section: string;
   primary?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
   onSectionChange: (section: string) => void;
 }) {
   return (
@@ -358,6 +361,7 @@ function CommandButton({
           : `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
       }
     >
+      {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" strokeWidth={2.25} /> : null}
       {label}
       <ArrowRight className="h-4 w-4" />
     </button>
@@ -476,6 +480,7 @@ function FeatureCard({
 }) {
   const Icon = card.icon;
   const tone = accentClasses(card.accent);
+  const isHrBoard = card.section === 'hr_board';
 
   return (
     <button
@@ -484,9 +489,13 @@ function FeatureCard({
       className={`${Z8_PANEL} ve-tool-card group flex min-h-[154px] flex-col justify-between p-3.5 text-left font-z8 ${tone.hover}`}
     >
       <span className="flex items-start justify-between gap-3">
-        <span className={`flex h-11 w-11 items-center justify-center border ${tone.border} ${tone.bg}`}>
-          <Icon className={`h-5 w-5 ${tone.text}`} />
-        </span>
+        {isHrBoard ? (
+          <HrBrandIcon />
+        ) : (
+          <span className={`flex h-11 w-11 items-center justify-center border ${tone.border} ${tone.bg}`}>
+            <Icon className={`h-5 w-5 ${tone.text}`} />
+          </span>
+        )}
         <span className={`rounded-full border ${tone.border} ${tone.bg} px-2 py-1 text-[9px] font-black uppercase tracking-wide ${tone.text}`}>
           {card.eyebrow}
         </span>

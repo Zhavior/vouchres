@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import {
-  Bell, Crown, FlaskConical, Gauge, Layers3, ScrollText, Shield,
-  Sparkles, Target, Trophy, X,
+  Bell, Crown, FlaskConical, Flame, Gauge, Layers3, ScrollText, Shield,
+  Sparkles, Trophy, X,
 } from "lucide-react";
 import type { CreatorProofProfile, Parlay } from "../../types";
 
@@ -27,7 +27,7 @@ type Props = {
 };
 
 const ZONES = [
-  { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "hr_board", icon: Target, tag: "Start here" },
+  { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "hr_board", icon: Flame, tag: "Start here" },
   { title: "Parlay Dock", subtitle: "Build, save, and track parlays", section: "build", icon: Shield, tag: "Builder" },
   { title: "Research Lab", subtitle: "Player, pitcher, matchup research", section: "research", icon: FlaskConical, tag: "Deep dive" },
   { title: "Ledger Vault", subtitle: "Wins, losses, and full history", section: "results", icon: ScrollText, tag: "Proof" },
@@ -132,6 +132,7 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ZONES.map((zone) => {
               const Icon = zone.icon;
+              const isHrBoard = zone.section === 'hr_board';
               return (
                 <button
                   key={zone.title}
@@ -140,8 +141,8 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                   className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
                 >
                   <div className="mb-3 flex items-center justify-between">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
-                      <Icon className="h-4.5 w-4.5" />
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isHrBoard ? 'border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan' : 'bg-vouch-emerald/10 text-vouch-emerald'}`}>
+                      <Icon className="h-4.5 w-4.5" strokeWidth={isHrBoard ? 2.25 : undefined} />
                     </div>
                     <span className="terminal-text text-vouch-cyan">{zone.tag}</span>
                   </div>

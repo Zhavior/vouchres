@@ -21,6 +21,7 @@ import {
   Bell,
   Crown,
   FlaskConical,
+  Flame,
   GripVertical,
   Pencil,
   Radio,
@@ -28,10 +29,10 @@ import {
   ScrollText,
   Shield,
   Sparkles,
-  Target,
   Trophy,
   UserCircle,
 } from "lucide-react";
+import { HrBrandIcon } from "../../features/hr/components/HrBrandIcon";
 
 type Widget = {
   id: string;
@@ -39,7 +40,7 @@ type Widget = {
   subtitle: string;
   section: string;
   tag: string;
-  icon: typeof Target;
+  icon: typeof Flame;
 };
 
 type IslandWidgetGridProps = {
@@ -55,7 +56,7 @@ const DEFAULT_WIDGETS: Widget[] = [
     subtitle: "HR board, high-value edges, daily research cards",
     section: "hr_board",
     tag: "HR",
-    icon: Target,
+    icon: Flame,
   },
   {
     id: "daily-players",
@@ -170,6 +171,7 @@ function SortableWidget({
   } = useSortable({ id: widget.id });
 
   const Icon = widget.icon;
+  const isHrBoard = widget.section === 'hr_board';
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -212,9 +214,13 @@ function SortableWidget({
         className={`w-full text-left ${editMode ? "cursor-default" : ""}`}
       >
         <div className="mb-3 flex items-center justify-between gap-3 pr-12 sm:mb-4">
-          <div className="rounded-2xl bg-cyan-300/10 p-2.5 text-cyan-200 sm:p-3">
-            <Icon className="h-5 w-5" />
-          </div>
+          {isHrBoard ? (
+            <HrBrandIcon size="sm" />
+          ) : (
+            <div className="rounded-2xl bg-cyan-300/10 p-2.5 text-cyan-200 sm:p-3">
+              <Icon className="h-5 w-5" />
+            </div>
+          )}
           <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-300">
             {widget.tag}
           </span>

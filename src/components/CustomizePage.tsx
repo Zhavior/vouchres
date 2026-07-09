@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Flame,
   Home,
   LayoutDashboard,
   Lock,
@@ -63,13 +64,13 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     id: "hr_board",
     label: "Home Run Intelligence",
     description: "Home run board, power spots, and matchup context.",
-    icon: BarChart3,
+    icon: Flame,
   },
   dailyHrBoard: {
     id: "dailyHrBoard",
     label: "HR Board",
     description: "Home run board, power spots, and matchup context.",
-    icon: BarChart3,
+    icon: Flame,
   },
   aiPicks: {
     id: "aiPicks",

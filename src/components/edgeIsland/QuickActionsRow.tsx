@@ -1,9 +1,9 @@
-import { BarChart3, FlaskConical, Layers, Radio, ShieldCheck } from 'lucide-react';
+import { BarChart3, FlaskConical, Flame, Radio, ShieldCheck } from 'lucide-react';
 import { VECard } from '../ui/ve';
 import type { EdgeIslandSectionProps } from './edgeIslandTypes';
 
 const ACTIONS = [
-  { section: 'hr_board', label: 'HR Board', detail: 'Open today’s edge table', icon: Layers, tone: 'emerald' },
+  { section: 'hr_board', label: 'HR Board', detail: 'Open today’s edge table', icon: Flame, tone: 'cyan' },
   { section: 'player_edge_lab', label: 'Player Lab', detail: 'Deep player research', icon: FlaskConical, tone: 'cyan' },
   { section: 'live_parlays', label: 'Saved Picks', detail: 'Track pending slips', icon: ShieldCheck, tone: 'emerald' },
   { section: 'live_game_lab', label: 'Live Lab', detail: 'Game context board', icon: Radio, tone: 'cyan' },

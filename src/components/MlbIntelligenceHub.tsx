@@ -1,21 +1,22 @@
-import { cachedJsonFetch } from '../lib/clientApiCache';
-import { apiClient } from '../lib/apiClient';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
   Brain,
   Flame,
   RefreshCw,
-  ShieldCheck,
   Target,
   Zap,
 } from 'lucide-react';
+import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
+import { useAiJudgeLeaderboard } from '../hooks/queries/useAiJudgeLeaderboard';
+import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
+import type { HrBoardResponse } from '../types/hrBoard';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 
 type Props = {
   profile?: any;
-  [key: string]: any;
+  onSectionChange?: (section: string) => void;
 };
 
 type Candidate = {
@@ -127,28 +128,81 @@ const cleanName = (c: Candidate) => c.playerName || c.name || 'Unknown player';
 const cleanOpponent = (c: Candidate) => c.opponent || c.opponentTeam || 'TBD';
 const cleanPitcher = (c: Candidate) => c.opponentPitcherName || 'Pitcher TBD';
 
-async function loadHrBoardIntelligence(): Promise<IntelligenceReport> {
-  const res = await cachedJsonFetch<any>('/api/mlb/hr-board/today', {}, 45000);
-  if (!res.ok) throw new Error(`HR board request failed: ${res.status}`);
-
-  const raw = await res.json();
-  const payload = raw?.payload ?? raw ?? {};
-
-  const candidates = [
-    ...safeArray<Candidate>(payload.candidates),
-    ...safeArray<Candidate>(payload.projectedCandidates),
-  ];
-
+function normalizeBoardCandidate(raw: Record<string, unknown>): Candidate {
   return {
-    date: payload.date ?? raw.date ?? new Date().toISOString().slice(0, 10),
-    gameCount: num(payload.gameCount, 0),
-    dataQuality: payload.dataQuality ?? payload.data_quality ?? 'hr_board_projection',
-    disclaimer:
-      payload.disclaimer ??
-      'Premium MLB AI research powered by the HR Board engine. Track HR targets, pitcher pressure, game environments, judge rankings, and parlay-ready signals.',
-    candidates,
+    playerId: raw.playerId as number | string | undefined,
+    playerName: String(raw.playerName ?? raw.name ?? ''),
+    name: String(raw.name ?? raw.playerName ?? ''),
+    headshotUrl: (raw.headshotUrl ?? raw.headshot) as string | null | undefined,
+    headshot: raw.headshot as string | null | undefined,
+    team: String(raw.team ?? ''),
+    opponent: String(raw.opponent ?? raw.opponentTeam ?? ''),
+    opponentTeam: String(raw.opponentTeam ?? raw.opponent ?? ''),
+    opponentPitcherName: String(raw.opponentPitcherName ?? raw.opposingPitcher ?? ''),
+    venue: String(raw.venue ?? ''),
+    gamePk: raw.gamePk as number | string | undefined,
+    gameId: raw.gameId as number | string | undefined,
+    hrScore: num(raw.hrEdge ?? raw.hrScore ?? raw.score),
+    riskTier: String(raw.riskTier ?? raw.riskLabel ?? ''),
+    confidenceTier: String(raw.confidenceTier ?? ''),
+    estimatedHrProbability: num(raw.estimatedHrProb ?? raw.estimatedHrProbability),
+    reasons: safeArray<string>(raw.reasons),
+    warnings: safeArray<string>(raw.warnings),
+    scoreBreakdown: (raw.scoreBreakdown ?? {}) as Record<string, number>,
   };
 }
+
+function extractCandidatesFromBoard(board: HrBoardResponse): Candidate[] {
+  const rowsFromGames = Array.isArray(board.games)
+    ? board.games.flatMap((game) => (Array.isArray(game?.rows) ? game.rows : []))
+    : [];
+  const topRows = Array.isArray(board.rows) ? board.rows : [];
+  const confirmed = safeArray<Record<string, unknown>>(
+    board.confirmedCandidates ?? board.candidateBuckets?.confirmed,
+  );
+  const rawCandidates = safeArray<Record<string, unknown>>(board.candidates);
+  const projected = safeArray<Record<string, unknown>>(
+    board.projectedCandidates ?? board.candidateBuckets?.projected,
+  );
+
+  const seen = new Set<string>();
+  const merged: Candidate[] = [];
+
+  for (const raw of [...rowsFromGames, ...topRows, ...confirmed, ...rawCandidates, ...projected]) {
+    if (!raw || typeof raw !== 'object') continue;
+    const record = raw as Record<string, unknown>;
+    const name = String(record.playerName ?? record.name ?? '').trim();
+    if (!name) continue;
+
+    const key = `${String(record.playerId ?? '')}:${name}:${String(record.team ?? '')}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    merged.push(normalizeBoardCandidate(record));
+  }
+
+  return merged;
+}
+
+function buildIntelligenceReport(board: HrBoardResponse): IntelligenceReport {
+  return {
+    date: board.date ?? new Date().toISOString().slice(0, 10),
+    gameCount: num(board.gameCount, 0),
+    dataQuality: board.dataQuality ?? 'hr_board_projection',
+    disclaimer:
+      board.disclaimer ??
+      'Premium MLB AI research powered by the HR Board engine. Track HR targets, pitcher pressure, game environments, judge rankings, and parlay-ready signals.',
+    candidates: extractCandidatesFromBoard(board),
+  };
+}
+
+const OFFLINE_REPORT: IntelligenceReport = {
+  date: new Date().toISOString().slice(0, 10),
+  gameCount: 0,
+  dataQuality: 'offline',
+  disclaimer: 'AI Edge Lab is temporarily unavailable. No fake data shown.',
+  candidates: [],
+};
 
 function PixelAgentIcon({ code }: { code: string }) {
   const theme: Record<string, { main: string; glow: string; accent: string; active: number[] }> = {
@@ -265,10 +319,6 @@ function CandidateCard({ c, rank }: { c: Candidate; rank: number }) {
       )}
     </div>
   );
-}
-
-async function loadAiJudgeLeaderboard(): Promise<AiJudgeLeaderboard> {
-  return apiClient.get<AiJudgeLeaderboard>('/api/ai-judges/leaderboard');
 }
 
 function availabilityTone(status?: string) {
@@ -405,53 +455,36 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
   );
 }
 
-export default function MlbIntelligenceHub(_props: Props) {
+export default function MlbIntelligenceHub({ onSectionChange }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
-  const [report, setReport] = useState<IntelligenceReport | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [judgeBoard, setJudgeBoard] = useState<AiJudgeLeaderboard | null>(null);
-  const [judgeLoading, setJudgeLoading] = useState(false);
-  const [judgeError, setJudgeError] = useState<string | null>(null);
+  const hrBoardQuery = useHrBoardToday();
+  const judgeQuery = useAiJudgeLeaderboard();
 
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await loadHrBoardIntelligence();
-      setReport(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI Edge Lab unavailable.');
-      setReport({
-        date: new Date().toISOString().slice(0, 10),
-        gameCount: 0,
-        dataQuality: 'offline',
-        disclaimer: 'AI Edge Lab is temporarily unavailable. No fake data shown.',
-        candidates: [],
-      });
-    } finally {
-      setLoading(false);
-    }
+  const report = useMemo(() => {
+    if (hrBoardQuery.data) return buildIntelligenceReport(hrBoardQuery.data);
+    if (hrBoardQuery.isError) return OFFLINE_REPORT;
+    return null;
+  }, [hrBoardQuery.data, hrBoardQuery.isError]);
+
+  const loading = hrBoardQuery.isLoading;
+  const error = hrBoardQuery.isError
+    ? (hrBoardQuery.error instanceof Error ? hrBoardQuery.error.message : 'AI Edge Lab unavailable.')
+    : null;
+
+  const judgeBoard = (judgeQuery.data as AiJudgeLeaderboard | undefined) ?? null;
+  const judgeLoading = judgeQuery.isLoading;
+  const judgeError = judgeQuery.isError
+    ? (judgeQuery.error instanceof Error ? judgeQuery.error.message : 'AI Judge leaderboard unavailable.')
+    : null;
+
+  const load = () => {
+    void hrBoardQuery.refetch();
+    void judgeQuery.refetch();
   };
 
-  const loadJudges = async () => {
-    setJudgeLoading(true);
-    setJudgeError(null);
-    try {
-      const data = await loadAiJudgeLeaderboard();
-      setJudgeBoard(data);
-    } catch (err) {
-      setJudgeError(err instanceof Error ? err.message : 'AI Judge leaderboard unavailable.');
-      setJudgeBoard(null);
-    } finally {
-      setJudgeLoading(false);
-    }
+  const loadJudges = () => {
+    void judgeQuery.refetch();
   };
-
-  useEffect(() => {
-    void load();
-    void loadJudges();
-  }, []);
 
   const candidates = safeArray<Candidate>(report?.candidates);
 
@@ -510,28 +543,40 @@ export default function MlbIntelligenceHub(_props: Props) {
         <div className="absolute -bottom-24 -left-24 h-60 w-60 rounded-full bg-sky-500/10 blur-3xl" />
 
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-emerald-300" />
-              <p className="text-[10px] font-black font-mono uppercase tracking-[0.3em] text-emerald-300">
+          <div className="flex min-w-0 items-center gap-3">
+            <HrBrandIcon />
+            <div className="min-w-0">
+              <p className="mb-2 text-[10px] font-black font-mono uppercase tracking-[0.3em] text-emerald-300">
                 AI game room
               </p>
+              <h1 className="text-3xl font-black tracking-tight text-white">
+                VouchEdge AI Edge Lab
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
+              </p>
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white">
-              VouchEdge AI Edge Lab
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-400">
-              A safer AI scouting room powered by the working HR Board engine. It converts today’s hitter pool into game reads, pitcher pressure, HR threats, sneaky edges, and Pro-style intelligence.
-            </p>
           </div>
 
-          <button
-            onClick={load}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-200 hover:bg-emerald-400/15"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {onSectionChange && (
+              <button
+                type="button"
+                onClick={() => onSectionChange('hr_board')}
+                className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-cyan-400/35 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-200 hover:bg-cyan-400/15"
+              >
+                <HrBrandIcon size="sm" />
+                Home Run Intelligence
+              </button>
+            )}
+            <button
+              onClick={load}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-200 hover:bg-emerald-400/15"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="relative mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -597,13 +642,13 @@ export default function MlbIntelligenceHub(_props: Props) {
         })}
       </div>
 
-      {loading && (
+      {loading && tab !== 'judges' && (
         <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-8 text-center text-slate-400">
           Loading AI Edge Lab…
         </div>
       )}
 
-      {!loading && candidates.length === 0 && (
+      {!loading && candidates.length === 0 && tab !== 'judges' && (
         <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-8 text-center">
           <p className="text-lg font-black text-white">No intelligence rows available yet.</p>
           <p className="mt-2 text-sm text-slate-400">
@@ -687,7 +732,7 @@ export default function MlbIntelligenceHub(_props: Props) {
         </div>
       )}
 
-      {!loading && tab === 'judges' && (
+      {tab === 'judges' && (
         <section className="space-y-5">
           <div className="rounded-3xl border border-sky-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/20 p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
