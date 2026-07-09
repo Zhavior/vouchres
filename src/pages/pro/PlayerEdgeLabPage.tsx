@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
 
+import PlayerIntelligenceCard from '../../components/player/PlayerIntelligenceCard';
+
 import {
   PlayerSignalPanel,
   ProLockedCard,
