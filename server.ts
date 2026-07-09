@@ -1,3 +1,4 @@
+import http from "http";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -18,7 +19,7 @@ dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
 validateProductionEnvAtBoot();
 
-export async function createApp() {
+export async function createApp(httpServer?: http.Server) {
   validateProductionEnvAtBoot();
   const app = express();
   
@@ -51,7 +52,10 @@ export async function createApp() {
   // Serve static assets with Vite dev server middleware compatibility
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        ...(httpServer ? { hmr: { server: httpServer } } : {}),
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -88,10 +92,12 @@ return app;
 }
 
 async function startServer() {
-  const app = await createApp();
+  const httpServer = http.createServer();
+  const app = await createApp(httpServer);
+  httpServer.on("request", app);
   const PORT = Number(process.env.PORT) || 3000;
 
-  app.listen(PORT, "0.0.0.0", () => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Express custom server running on http://0.0.0.0:${PORT}`);
   });
 }

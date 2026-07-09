@@ -11,6 +11,7 @@ import helmet from "helmet";
  */
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
+  "http://localhost:3005",
   "http://localhost:5173",
   "https://vouchres.vercel.app",
 ];
