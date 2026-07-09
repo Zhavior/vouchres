@@ -10,7 +10,7 @@ import { queryClient } from './lib/queryClient';
 import { queryKeys } from './hooks/queries/queryKeys';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
-import AppErrorBoundary from './components/AppErrorBoundary';
+import { AppErrorBoundary } from './components/system/AppErrorBoundary';
 import { NotificationProvider } from './components/notifications/UnifiedNotificationCenter';
 const MainViewRouter = lazy(() => import('./components/routing/MainViewRouter'));
 

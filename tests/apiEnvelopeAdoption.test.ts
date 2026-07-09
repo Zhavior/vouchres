@@ -9,8 +9,6 @@ const RAW_OK_PATTERN = /res\.json\(\s*\{\s*ok:\s*true/;
 const ALLOWLIST: Array<{ file: string; lineIncludes?: string[] }> = [
   // Stripe webhook ack shape is intentionally frozen.
   { file: "billingRoutes.ts", lineIncludes: ["received: true"] },
-  // Health/metrics probes — deferred to index.ts apiOkFlat consolidation.
-  { file: "index.ts", lineIncludes: ['service: "vouchedge', 'schema: "route_metrics', "routes: {"] },
 ];
 
 function listRouteFiles(dir: string): string[] {
@@ -72,7 +70,6 @@ describe("api envelope adoption guard", () => {
   it("reports envelope adoption coverage for server/routes", () => {
     const routeFiles = listRouteFiles(ROUTES_ROOT);
     let enveloped = 0;
-    let rawAllowed = 0;
     let rawViolations = 0;
 
     for (const filePath of routeFiles) {
@@ -85,16 +82,16 @@ describe("api envelope adoption guard", () => {
 
       for (const line of lines) {
         if (!RAW_OK_PATTERN.test(line)) continue;
-        if (isAllowlisted(relativePath, line)) rawAllowed += 1;
-        else rawViolations += 1;
+        if (isAllowlisted(relativePath, line)) continue;
+        rawViolations += 1;
       }
     }
 
-    const total = enveloped + rawAllowed + rawViolations;
+    const total = enveloped + rawViolations;
     const adoptionPct = total === 0 ? 100 : Math.round((enveloped / total) * 1000) / 10;
 
     expect(rawViolations).toBe(0);
-    expect(adoptionPct).toBeGreaterThanOrEqual(95);
+    expect(adoptionPct).toBe(100);
     expect(enveloped).toBeGreaterThan(100);
   });
 });

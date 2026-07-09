@@ -34,7 +34,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
 import { captureException } from "../lib/sentry";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import type { RequestWithContext } from "../middleware/requestContext";
 
 function escapeHtml(value: unknown): string {
@@ -99,9 +99,8 @@ export function registerApiRoutes(app: Express): void {
   }));
 
   // Backend health.
-  app.get("/api/system/core-health", (_req: Request, res: Response) =>
-    res.json({
-      ok: true,
+  app.get("/api/system/core-health", (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, {
       status: "ok",
       service: "vouchedge-core",
       routes: {
@@ -110,27 +109,30 @@ export function registerApiRoutes(app: Express): void {
         playerRegistry: true,
       },
       time: new Date().toISOString(),
-    })
+    }))
   );
 
-  app.get("/api/health", (_req: Request, res: Response) =>
-    res.json({ ok: true, status: "ok", service: "vouchedge-backend", time: new Date().toISOString() })
+  app.get("/api/health", (req: RequestWithContext, res: Response) =>
+    res.json(apiOkFlat(req, {
+      status: "ok",
+      service: "vouchedge-backend",
+      time: new Date().toISOString(),
+    }))
   );
 
-  app.get("/api/health/backend", (_req: Request, res: Response) => {
+  app.get("/api/health/backend", (req: RequestWithContext, res: Response) => {
     const report = getBackendHealthReport();
-    res.json(report);
+    res.json(apiOkFlat(req, report as Record<string, unknown>));
   });
 
-  app.get("/api/health/metrics", (_req: Request, res: Response) => {
+  app.get("/api/health/metrics", (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
-    res.json({
-      ok: true,
+    res.json(apiOkFlat(req, {
       service: "vouchedge-backend",
       schema: "route_metrics_v1",
       updatedAt: new Date().toISOString(),
       metrics,
-    });
+    }));
   });
 
   // Public share permalink — server-rendered (not the SPA) so X/Slack/iMessage

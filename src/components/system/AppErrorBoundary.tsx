@@ -2,6 +2,8 @@ import React from 'react';
 
 type AppErrorBoundaryProps = {
   children: React.ReactNode;
+  resetKey?: string;
+  onBackHome?: () => void;
 };
 
 type AppErrorBoundaryState = {
@@ -25,6 +27,15 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
     };
   }
 
+  componentDidUpdate(prevProps: AppErrorBoundaryProps) {
+    if (
+      prevProps.resetKey !== this.props.resetKey
+      && this.state.hasError
+    ) {
+      this.setState({ hasError: false, errorMessage: null });
+    }
+  }
+
   componentDidCatch(error: unknown, errorInfo: unknown) {
     console.error('[VouchEdge Stability Shield]', error, errorInfo);
   }
@@ -33,12 +44,15 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
     window.location.reload();
   };
 
-  handleGoHrBoard = () => {
+  handleBackHome = () => {
+    if (this.props.onBackHome) {
+      this.props.onBackHome();
+      this.setState({ hasError: false, errorMessage: null });
+      return;
+    }
+
     window.location.hash = '#hr-board';
-    this.setState({
-      hasError: false,
-      errorMessage: null,
-    });
+    this.setState({ hasError: false, errorMessage: null });
   };
 
   render() {
@@ -73,10 +87,10 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
 
               <button
                 type="button"
-                onClick={this.handleGoHrBoard}
+                onClick={this.handleBackHome}
                 className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-black text-slate-100 hover:border-sky-400/50"
               >
-                Go to HR Board
+                {this.props.onBackHome ? 'Back Home' : 'Go to HR Board'}
               </button>
             </div>
 
