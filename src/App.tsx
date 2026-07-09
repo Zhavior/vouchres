@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
-import { Sparkles as EdgeIslandIcon } from 'lucide-react';
+import { Home, Plus, Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
 import { useMyParlays } from './hooks/queries/useMyParlays';
 import { useMyVouches } from './hooks/queries/useMyVouches';
@@ -15,6 +15,7 @@ import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
 import { resolveMarket } from './sports/markets';
 import { isLive } from './lib/parlayLifecycle';
+import { canDeleteFeedPost } from './lib/postDeletePolicy';
 import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from './lib/supabaseClient';
@@ -53,6 +54,7 @@ const EpicThemeShowcase = lazy(() =>
 const SubscriberHub = lazy(() => import('./components/SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('./pages/LiveGameLabPage'));
 const HomeRunIntelligencePage = lazy(() => import('./features/hr/pages/HomeRunIntelligencePage'));
+const AiPilotPage = lazy(() => import('./features/ai/pages/AiPilotPage'));
 const MlbStatHubPage = lazy(() => import('./features/mlb-stats/pages/MlbStatHubPage'));
 const DailyPlayersPage = lazy(() => import('./pages/DailyPlayersPage'));
 const LiveGamesPro = lazy(() => import('./components/LiveGamesPro'));
@@ -886,11 +888,20 @@ export default function App() {
         const token = await getAuthToken();
         if (!token) return;
         try {
-          await apiClient.post('/api/posts', {
+          const created = await apiClient.post<{ id?: string }>('/api/posts', {
             body: newPost.content,
             pick_id: newPost.parlay?.backendPickId,
             vouch_id: backendVouchId,
           });
+          if (created?.id) {
+            setPosts((prev) => {
+              const next = prev.map((p) =>
+                p.id === newPost.id ? { ...p, backendPostId: created.id } : p,
+              );
+              localStorage.setItem('vouchedge_posts', JSON.stringify(next));
+              return next;
+            });
+          }
         } catch (err) {
           console.warn('[posts] backend save failed (kept in localStorage)', err);
         }
@@ -944,6 +955,25 @@ export default function App() {
       return p;
     });
     syncPosts(updated);
+  };
+
+  const handleDeletePost = (postId: string) => {
+    const target = posts.find((p) => p.id === postId);
+    if (!target || !canDeleteFeedPost(target)) return;
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+
+    syncPosts(posts.filter((p) => p.id !== postId));
+
+    void (async () => {
+      const token = await getAuthToken();
+      const backendId = target.backendPostId;
+      if (!token || !backendId) return;
+      try {
+        await apiClient.delete(`/api/posts/${encodeURIComponent(backendId)}`);
+      } catch (err) {
+        console.warn('[posts] backend delete failed (removed locally)', err);
+      }
+    })();
   };
 
   // Interaction: Save Vouch to Board (either from feed or right-hand matchups)
@@ -1619,6 +1649,7 @@ export default function App() {
             onSaveVouch={handleSaveVouch}
             savedVouchIds={savedVouchIds}
             onAddComment={handleAddComment}
+            onDeletePost={handleDeletePost}
             profile={profile}
             onSectionChange={navigateSection}
           />
@@ -1635,6 +1666,13 @@ export default function App() {
             initialPanel="build"
             onSaveParlay={handleSaveParlaySlip}
             onHideParlay={handleHideSavedParlay}
+          />
+        );
+      case 'ai_pilot':
+        return (
+          <AiPilotPage
+            onSectionChange={navigateSection}
+            onSaveParlay={handleSaveParlaySlip}
           />
         );
       case 'ai_engine':
@@ -1774,9 +1812,11 @@ export default function App() {
             onSaveVouch={handleSaveVouch}
             savedVouchIds={savedVouchIds}
             onAddComment={handleAddComment}
+            onDeletePost={handleDeletePost}
             savedParlays={savedSlips}
             viewUserId={profileViewUserId}
             onClearViewUser={() => setProfileViewUserId(null)}
+            onSectionChange={navigateSection}
           />
         );
       case 'nba_nfl':
@@ -1805,6 +1845,7 @@ export default function App() {
               onSaveVouch={handleSaveVouch}
               savedVouchIds={savedVouchIds}
               onAddComment={handleAddComment}
+              onDeletePost={handleDeletePost}
               savedParlays={savedSlips}
               viewUserId={profileViewUserId}
               onClearViewUser={() => setProfileViewUserId(null)}
@@ -1916,17 +1957,41 @@ export default function App() {
             {renderMainView()}
           </Suspense>
         </HomeFeedLayout>
-        {/* The Edge Island launcher */}
+        {/* Mobile Home + Edge Island launcher cluster */}
         {showGlobalAppChrome && (
-          <button
-            type="button"
-            onClick={() => setEdgeIslandOpen(true)}
-            aria-label="Open The Edge Island"
-            title="The Edge Island"
-            className="ve-edge-island-trigger z8-interactive fixed bottom-16 md:bottom-8 right-6 md:right-8 z-[60] flex h-10 w-10 items-center justify-center rounded-full md:h-12 md:w-12"
-          >
-            <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
-          </button>
+          <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:bottom-8 md:right-8 md:gap-0">
+            <button
+              type="button"
+              onClick={() => navigateSection('feed')}
+              aria-label="Go to Home Feed"
+              title="Home Feed"
+              className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
+                activeSection === 'feed' ? 'border-vouch-emerald/70' : ''
+              }`}
+            >
+              <Home className="ve-edge-island-trigger-icon h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateSection('board')}
+              aria-label="Go to Vouch Board"
+              title="Vouch Board"
+              className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
+                activeSection === 'board' ? 'border-vouch-emerald/70' : ''
+              }`}
+            >
+              <Plus className="ve-edge-island-trigger-icon h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setEdgeIslandOpen(true)}
+              aria-label="Open The Edge Island"
+              title="The Edge Island"
+              className="ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12"
+            >
+              <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
+            </button>
+          </div>
         )}
 
         {showGlobalAppChrome && (

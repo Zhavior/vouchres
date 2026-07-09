@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Cpu,
   Database,
@@ -8,31 +8,16 @@ import {
   Lock,
   Unlock,
   Crown,
-  Bookmark,
-  ShieldCheck,
 } from 'lucide-react';
-import { motion } from '../lib/motion';
 import { VAI_PERSONAS, type VaiPersonaId } from '../lib/vai/vaiPersonas';
 import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlements';
 
-import { MLBPlayer, Leg, FeedPost, Parlay } from '../types';
-import { normalizeParlaySlip } from '../lib/parlays/parlayBridge';
+import { MLBPlayer, FeedPost } from '../types';
 import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
-import { safeJsonFetch } from '../api/safeApiClient';
-import { resolveMarket } from '../sports/markets';
-import {
-  americanToDecimalOdds,
-  buildSmartAiDynamicParlay,
-  type RealCandidate,
-  type SmartAiBuilderCategory,
-} from './smart-ai/smartAiEngine.logic';
-import { SmartAiDynamicCreator } from './smart-ai/SmartAiDynamicCreator';
 import { SmartAiDeepResearchPanel } from './smart-ai/SmartAiDeepResearchPanel';
-import { SmartAiStatsVerifiedPanel } from './smart-ai/SmartAiStatsVerifiedPanel';
+import { useSmartAiCandidates } from './smart-ai/useSmartAiCandidates';
+import type { RealCandidate } from './smart-ai/smartAiEngine.logic';
 
-const VAI_PANELS = ['command', 'stats-verified'] as const;
-type VaiPanelId = (typeof VAI_PANELS)[number];
-const VAI_SWIPE_THRESHOLD = 56;
 import {
   Z8_DISPLAY,
   Z8_EMERALD,
@@ -72,153 +57,11 @@ interface SmartAiEngineProps {
 }
 
 
-type SmartAiRawCandidate = {
-  playerId?: string | number;
-  player_id?: string | number;
-  id?: string | number;
-  playerName?: string;
-  player_name?: string;
-  name?: string;
-  gamePk?: string | number;
-  gameId?: string | number;
-  team?: string;
-  teamAbbrev?: string;
-  opponent?: string;
-  opponentTeam?: string;
-  probablePitcher?: {
-    name?: string;
-    throws?: string;
-    vulnerability?: number;
-  } | null;
-  opponentPitcherName?: string | null;
-  opponentPitcherId?: number | null;
-  opponentPitcherHand?: string | null;
-  opposingPitcher?: string | null;
-  pitcherHand?: string;
-  opposingPitcherHand?: string;
-  batSide?: string;
-  injuryStatus?: string;
-  pitcherVulnerability?: number;
-  parkFactor?: number;
-  venue?: string;
-  ballpark?: string;
-  lineupStatus?: string;
-  lineup_status?: string;
-  confidenceTier?: string;
-  riskTier?: string;
-  estimatedHrProbability?: number;
-  dataConfidence?: number;
-  battingOrder?: number;
-  dataQuality?: string;
-  reasons?: unknown[];
-  warnings?: unknown[];
-  scoreBreakdown?: Record<string, unknown> | null;
-  score?: number;
-  hrScore?: number;
-  edge?: number;
-  impliedOdds?: number;
-  odds?: number;
-};
-
-/** Minimal MLBPlayer shim for leg transfer. The transfer path only reads
- *  id/name/team; the remaining fields are type-required placeholders and must
- *  NOT be rendered as verified data (bats/throws cannot express "unknown" yet). */
-function buildTransferPlayerShim(id: string, name: string, team: string, note: string): MLBPlayer {
-  return {
-    id,
-    name,
-    team,
-    position: 'Batter',
-    number: '',
-    headshot: '',
-    injuryStatus: 'Unknown',
-    injurySeverity: 'NONE',
-    injuryNotes: 'Injury status is not verified in this transfer context.',
-    batterScore: 0,
-    seasonStats: { avg: '', hr: '', rbi: '', ops: '', obp: '', slg: '' },
-    gameLogs: [],
-    propositions: [],
-    bats: 'R',
-    throws: 'R',
-    height: '',
-    weight: '',
-    birthdate: '',
-    advanced: {} as MLBPlayer['advanced'],
-    splits: {
-      vLHP: { avg: '', obp: '', slg: '', ops: '' },
-      vRHP: { avg: '', obp: '', slg: '', ops: '' },
-      home: { avg: '', obp: '', slg: '', ops: '' },
-      away: { avg: '', obp: '', slg: '', ops: '' },
-      last10: { avg: '', obp: '', slg: '', ops: '' },
-    },
-    scoutingReport: {
-      powerText: note,
-      contactText: 'Transfer display profile only.',
-      disciplineText: 'No expanded discipline profile available in this context.',
-      overallScouting: note,
-      hotZones: [],
-      riskFactor: 'MEDIUM',
-    },
-  };
-}
-
 export default function SmartAiEngine({
   onSectionChange,
-  onAddLegToParlay,
-  onSaveParlay,
 }: SmartAiEngineProps) {
-  // Dynamic parlay parameters (2, 3, 4, 5 Legs, based on AI confidence & physical evidence)
-  const [builderLegs, setBuilderLegs] = useState<number>(3);
-  const [builderCategory, setBuilderCategory] = useState<SmartAiBuilderCategory>('HITS');
-  const [builderThreshold, setBuilderThreshold] = useState<number>(2);
   const [aiAgreementAccepted, setAiAgreementAccepted] = useState(false);
-  const [activePanel, setActivePanel] = useState<VaiPanelId>('command');
-  const touchStartX = useRef<number | null>(null);
-
-  // Auto adjusting threshold bounds so that focus options make complete tactical sense
-  useEffect(() => {
-    if (builderCategory === 'HITS') {
-      setBuilderThreshold(2);
-    } else if (builderCategory === 'RBIS') {
-      setBuilderThreshold(2);
-    } else if (builderCategory === 'RUNS') {
-      setBuilderThreshold(2);
-    } else if (builderCategory === 'SB') {
-      setBuilderThreshold(1);
-    } else if (builderCategory === 'HR') {
-      setBuilderThreshold(1);
-    }
-  }, [builderCategory]);
-
-  // ── Real candidates from the live HR Board (carry gamePk → gradable) ──
-  const [realCandidates, setRealCandidates] = useState<RealCandidate[]>([]);
-  const [candidatesLoading, setCandidatesLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setCandidatesLoading(true);
-    safeJsonFetch<any>('/api/mlb/hr-board/today?limit=75', { fallbackData: { candidates: [] }, timeoutMs: 14000 })
-      .then((r) => {
-        if (!alive) return;
-        // Use confirmed candidates when available, else fall back to projected
-        // candidates (pre-lineup), so the vault always has real players to build
-        // from instead of showing "no eligible players".
-        const confirmed: Record<string, unknown>[] = Array.isArray(r.data?.candidates) ? r.data.candidates : [];
-        const projected: Record<string, unknown>[] = Array.isArray(r.data?.projectedCandidates) ? r.data.projectedCandidates : [];
-        const rows: Record<string, unknown>[] = Array.isArray(r.data?.rows) ? r.data.rows : [];
-        const raw: Record<string, unknown>[] = confirmed.length ? confirmed : projected.length ? projected : rows;
-        const mapped: RealCandidate[] = raw
-          .filter(isSmartAiRawCandidateWithGame)
-          .map(normalizeSmartAiCandidate);
-        setRealCandidates(mapped);
-        setCandidatesLoading(false);
-      });
-  
-
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const { realCandidates, candidatesLoading } = useSmartAiCandidates();
 
   // V.A.I Rooms shell: frontend/dev adapter for now.
   // Final paid access enforcement should move to the server route.
@@ -259,17 +102,6 @@ export default function SmartAiEngine({
 
   const isSelectedVaiRoomUnlocked = vaiEntitlements.allowedPersonaIds.includes(selectedVaiPersona.id);
 
-  const dynamicParlay = useMemo(
-    () =>
-      buildSmartAiDynamicParlay({
-        realCandidates,
-        builderLegs,
-        builderCategory,
-        builderThreshold,
-      }),
-    [builderLegs, builderCategory, builderThreshold, realCandidates],
-  );
-
   // Real header stats — computed from today's actual board, never hardcoded.
   const boardStats = useMemo(() => {
     const confirmed = realCandidates.filter((c) => String(c.lineupStatus ?? '').toLowerCase() === 'confirmed').length;
@@ -283,89 +115,6 @@ export default function SmartAiEngine({
     return { total: realCandidates.length, confirmed, games, avgConfidence };
   }, [realCandidates]);
 
-  const toDynamicParlayMLBPlayer = (leg: NonNullable<typeof dynamicParlay>['legs'][number]): MLBPlayer => {
-    const source = realCandidates.find((candidate) => candidate.playerId === leg.playerId);
-    const shim = buildTransferPlayerShim(
-      leg.playerId,
-      leg.playerName,
-      leg.team,
-      source
-        ? `${source.playerName} is included from today's verified Smart AI candidate pool.`
-        : `${leg.playerName} is included from the current dynamic parlay.`,
-    );
-    shim.batterScore = source?.score ?? 0;
-    return shim;
-  };
-
-  const handleAddCustomParlayToSlip = () => {
-    alert('V.A.I parlays are locked and cannot be transferred into the manual builder. Save this as an AI Made Parlay so results stay separate and trustworthy.');
-  };
-
-  // Save the current AI parlay directly as a gradable Parlay → Results grades it
-  // from the MLB boxscore. Each leg carries gamePk + marketCode + threshold.
-  const handleSaveGradableParlay = () => {
-    if (!dynamicParlay || !onSaveParlay) return;
-    const legs: Leg[] = dynamicParlay.legs.map((leg) => {
-      const { marketCode, threshold } = resolveMarket('mlb', leg.marketName, leg.customSpec);
-      const gameId = String(leg.gamePk || '');
-      const playerId = String(leg.playerId || '');
-      const statTarget = Number(threshold || 1);
-      const comparator = '>=';
-      const eventKey = ['MLB', gameId, playerId, marketCode, statTarget, 'GTE'].join('_');
-      const popularityKey = ['MLB', playerId, marketCode, statTarget, 'GTE'].join('_');
-
-      return {
-        id: `ai-leg-${gameId}-${playerId}-${marketCode}-${statTarget}`,
-        sport: 'MLB',
-        game: `${leg.team} vs opp`,
-        market: leg.marketName,
-        selection: leg.customSpec,
-        odds: leg.odds,
-        status: 'PENDING',
-        gamePk: gameId,
-        gameId,
-        playerId,
-        marketCode,
-        statTarget,
-        threshold: statTarget,
-        comparator,
-        eventKey,
-        popularityKey,
-        externalProvider: 'mlb_statsapi',
-      };
-    });
-    const parlay: Parlay = {
-      id: `ai-parlay-${Date.now()}`,
-      title: `V.A.I ${builderLegs}-Leg ${builderCategory} Parlay`,
-      legs,
-      totalOdds: dynamicParlay.totalOdds,
-      oddsValue: dynamicParlay.oddsValue ?? 0, // Parlay contract: 0 = odds unknown ("Odds TBD")
-      riskTier: (dynamicParlay.riskTier === 'LOW' ? 'LOW' : dynamicParlay.riskTier === 'HIGH' ? 'HIGH' : 'MEDIUM'),
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      wagerAmount: 1,
-      edgeScore: dynamicParlay.aiConfidenceScore,
-      aiGenerated: true,
-      source: 'vai_ai_made_parlay',
-      parlayType: 'AI_MADE',
-      locked: true,
-      canEditLegs: false,
-      resultBucket: 'ai_made_parlays',
-    } as Parlay & {
-      source: 'vai_ai_made_parlay';
-      parlayType: 'AI_MADE';
-      locked: boolean;
-      canEditLegs: boolean;
-      resultBucket: 'ai_made_parlays';
-    };
-    onSaveParlay(normalizeParlaySlip(parlay, 'vai_ai_made_parlay'));
-    const gradable = legs.filter((l) => l.gamePk).length;
-    alert(`✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`);
-    onSectionChange('results');
-  };
-
-  // Deep Research → Build Slip. Model probability is NOT a market price, so the
-  // transferred leg carries odds: null ("Odds TBD") — grading is boxscore-based.
   const handleAddCandidateToSlip = (_candidate: RealCandidate) => {
     alert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
   };
@@ -378,23 +127,6 @@ export default function SmartAiEngine({
       // ignore storage failures
     }
     onSectionChange('research');
-  };
-
-  const activeIndex = VAI_PANELS.indexOf(activePanel);
-
-  const onTouchStart = (clientX: number) => {
-    touchStartX.current = clientX;
-  };
-
-  const onTouchEnd = (clientX: number) => {
-    if (touchStartX.current === null) return;
-    const delta = clientX - touchStartX.current;
-    if (delta < -VAI_SWIPE_THRESHOLD && activeIndex < VAI_PANELS.length - 1) {
-      setActivePanel(VAI_PANELS[activeIndex + 1]);
-    } else if (delta > VAI_SWIPE_THRESHOLD && activeIndex > 0) {
-      setActivePanel(VAI_PANELS[activeIndex - 1]);
-    }
-    touchStartX.current = null;
   };
 
   if (!aiAgreementAccepted) {
@@ -484,83 +216,21 @@ export default function SmartAiEngine({
             V.A.I <span className="text-vouch-cyan">Research Command Center</span>
           </h1>
           <p className="max-w-3xl text-sm text-white/45">
-            {activePanel === 'command'
-              ? 'Build gradable parlays and research today\'s validated hitter board side by side. Every signal comes from real MLB season stats, probable pitchers, and sourced park factors — missing data is flagged, never invented.'
-              : 'Verified stats, feed coverage, and data quality for today\'s board. Swipe or tap tabs — nothing is invented to fill gaps.'}
+            Explore V.A.I research rooms and today&apos;s validated hitter board. Build locked parlays in{' '}
+            <button
+              type="button"
+              onClick={() => onSectionChange('ai_pilot')}
+              className="font-bold text-vouch-cyan underline-offset-2 hover:underline"
+            >
+              V.A.I Dynamic Creator
+            </button>
+            . Every signal comes from real MLB season stats — missing data is flagged, never invented.
           </p>
           <div className="z8-accent-line mt-2 w-full max-w-md" />
         </div>
       </header>
 
-      {/* Panel tab pills */}
-      <div className={`${Z8_PANEL_PREMIUM} flex flex-col items-center gap-3 rounded-[2rem] px-4 py-4 sm:px-6`} id="vai-panel-tabs">
-        <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="V.A.I Research panels">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activePanel === 'command'}
-            onClick={() => setActivePanel('command')}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-              activePanel === 'command'
-                ? 'border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan'
-                : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
-            }`}
-          >
-            <Gauge className="h-3.5 w-3.5" />
-            Command Center
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activePanel === 'stats-verified'}
-            onClick={() => setActivePanel('stats-verified')}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-              activePanel === 'stats-verified'
-                ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
-                : 'border border-white/10 bg-black/20 text-white/45 hover:text-white/70'
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Stats Verified
-          </button>
-        </div>
-
-        <div className="flex justify-center gap-1.5" aria-hidden>
-          {VAI_PANELS.map((panel, i) => (
-            <span
-              key={panel}
-              className={`h-1.5 rounded-full transition-all ${
-                i === activeIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Swipeable panels */}
-      <div
-        className="touch-pan-y overflow-hidden"
-        onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
-        onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
-      >
-        <motion.div
-          className="flex"
-          style={{ width: `${VAI_PANELS.length * 100}%` }}
-          animate={{ x: `-${(activeIndex * 100) / VAI_PANELS.length}%` }}
-          transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.14}
-          onDragEnd={(_, info) => {
-            if (info.offset.x < -VAI_SWIPE_THRESHOLD && activeIndex < VAI_PANELS.length - 1) {
-              setActivePanel(VAI_PANELS[activeIndex + 1]);
-            } else if (info.offset.x > VAI_SWIPE_THRESHOLD && activeIndex > 0) {
-              setActivePanel(VAI_PANELS[activeIndex - 1]);
-            }
-          }}
-        >
-          {/* Page 0 — Command Center */}
-          <div className="shrink-0 space-y-6" style={{ width: `${100 / VAI_PANELS.length}%` }}>
+      <div className="space-y-6">
       {/* V.A.I ROOMS — one-page locked/unlocked room selector */}
       <section className={`${Z8_PANEL_PREMIUM} rounded-[2rem] p-4 sm:p-5`} id="vai-rooms-command-deck">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -691,30 +361,13 @@ export default function SmartAiEngine({
         {isSelectedVaiRoomUnlocked ? (
           <>
 
-      {/* DUAL WORKSPACE LAYOUT: builder left, research board right */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6" id="ai-workspace-container">
-        <div className="xl:col-span-5 space-y-6" id="ai-dynamic-creator-column">
-          <SmartAiDynamicCreator
-            builderLegs={builderLegs}
-            builderCategory={builderCategory}
-            builderThreshold={builderThreshold}
-            dynamicParlay={dynamicParlay}
-            onBuilderLegsChange={setBuilderLegs}
-            onBuilderCategoryChange={setBuilderCategory}
-            onBuilderThresholdChange={setBuilderThreshold}
-            onSaveGradableParlay={handleSaveGradableParlay}
-            onAddCustomParlayToSlip={handleAddCustomParlayToSlip}
-          />
-        </div>
-
-        <div className="xl:col-span-7 space-y-6" id="ai-deep-research-column">
+      <div className="space-y-6" id="ai-deep-research-column">
           <SmartAiDeepResearchPanel
             candidates={realCandidates}
             loading={candidatesLoading}
             onAddToSlip={handleAddCandidateToSlip}
             onOpenResearch={handleOpenResearch}
           />
-        </div>
       </div>
 
           </>
@@ -744,87 +397,8 @@ export default function SmartAiEngine({
           </div>
         )}
       </div>
-          </div>
-
-          {/* Page 1 — Stats Verified */}
-          <div className="shrink-0" style={{ width: `${100 / VAI_PANELS.length}%` }}>
-            <SmartAiStatsVerifiedPanel
-              candidates={realCandidates}
-              loading={candidatesLoading}
-              boardStats={boardStats}
-            />
-          </div>
-        </motion.div>
       </div>
 
     </main>
   );
-}
-
-
-function isSmartAiRawCandidateWithGame(value: Record<string, unknown>): value is SmartAiRawCandidate {
-  return value != null && (value.gamePk != null || value.gameId != null);
-}
-
-function normalizeScoreBreakdown() {
-  return {
-    hitterPower: 0,
-    pitcherVulnerability: 0,
-    parkContext: 0,
-    lineupVolume: 0,
-    weatherContext: 0,
-    oddsValue: 0,
-    recentForm: 0,
-    handednessEdge: 0,
-    penalties: 0,
-  };
-}
-
-function normalizeSmartAiCandidate(c: SmartAiRawCandidate): RealCandidate {
-  return {
-    playerId: String(c.playerId ?? c.player_id ?? c.id ?? c.playerName),
-    playerName: toStringOrNull(c.playerName ?? c.player_name ?? c.name) ?? 'Unknown',
-    gamePk: String(c.gamePk ?? c.gameId),
-    team: toStringOrNull(c.team ?? c.teamAbbrev) ?? 'MLB',
-    opponent: toStringOrNull(c.opponent ?? c.opponentTeam ?? c.opponentPitcherName) ?? 'opponent',
-    oddsDecimal: americanToDecimalOdds(c.impliedOdds ?? c.odds),
-    score: Number(c.hrScore ?? c.score ?? c.edge ?? 0),
-    opponentPitcherName: toStringOrNull(c.opponentPitcherName ?? c.opposingPitcher ?? c.probablePitcher?.name),
-    opponentPitcherId: typeof c.opponentPitcherId === 'number' && c.opponentPitcherId > 0 ? c.opponentPitcherId : null,
-    pitcherHand: toStringOrNull(c.opponentPitcherHand ?? c.pitcherHand ?? c.opposingPitcherHand ?? c.probablePitcher?.throws),
-    batSide: c.batSide === 'L' || c.batSide === 'R' || c.batSide === 'S' ? c.batSide : null,
-    injuryStatus: toStringOrNull(c.injuryStatus),
-    pitcherVulnerability:
-      typeof c.pitcherVulnerability === 'number'
-        ? c.pitcherVulnerability
-        : typeof c.probablePitcher?.vulnerability === 'number'
-          ? c.probablePitcher.vulnerability
-          : null,
-    parkFactor: typeof c.parkFactor === 'number' ? c.parkFactor : null,
-    venue: toStringOrNull(c.venue ?? c.ballpark),
-    lineupStatus: toStringOrNull(c.lineupStatus ?? c.lineup_status),
-    confidenceTier: normalizeConfidenceTier(c.confidenceTier),
-    riskLabel: toStringOrNull(c.riskTier),
-    estimatedHrProbability: typeof c.estimatedHrProbability === 'number' ? c.estimatedHrProbability : null,
-    dataConfidence: typeof c.dataConfidence === 'number' ? c.dataConfidence : null,
-    battingOrder: typeof c.battingOrder === 'number' ? c.battingOrder : null,
-    dataQuality: toStringOrNull(c.dataQuality),
-    reasons: Array.isArray(c.reasons) ? c.reasons.map(String) : [],
-    boardWarnings: Array.isArray(c.warnings) ? c.warnings.map(String) : [],
-    scoreBreakdown: normalizeScoreBreakdown(),
-  };
-}
-
-function toStringOrNull(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
-}
-
-function normalizeConfidenceTier(value: unknown): "thin" | "elite" | "strong" | "watchlist" | "avoid" {
-  return value === "thin" ||
-    value === "elite" ||
-    value === "strong" ||
-    value === "watchlist" ||
-    value === "avoid"
-    ? value
-    : "thin";
 }

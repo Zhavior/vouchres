@@ -1,4 +1,4 @@
-import { Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import { Z8_SURFACE } from '../../theme/z8Tokens';
 import React, { useState } from 'react';
 import { 
   Heart, 
@@ -13,7 +13,6 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Eye,
   BarChart2,
   Share,
   Check,
@@ -21,9 +20,15 @@ import {
   Quote,
   Plus,
   Award,
-  Twitter
+  Trash2,
+  Lock,
 } from 'lucide-react';
 import { FeedPost, Vouch } from '../../types';
+import {
+  canDeleteFeedPost,
+  isParlayFeedPost,
+  parlayPostDeleteLockedReason,
+} from '../../lib/postDeletePolicy';
 import { StatusBadge } from '../../components/ui/primitives';
 import ParlayFeedPostCard from './ParlayFeedPostCard';
 
@@ -88,6 +93,7 @@ interface FeedPostCardProps {
   savedVouchIds: string[];
   onAddComment: (postId: string, commentContent: string) => void;
   onPostCreated?: (postData: Partial<FeedPost>) => void;
+  onDeletePost?: (postId: string) => void;
 }
 
 function FeedPostCard({
@@ -99,23 +105,14 @@ function FeedPostCard({
   savedVouchIds,
   onAddComment,
   onPostCreated,
+  onDeletePost,
 }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
-
-  // Simulated Views count
-  const simulatedViews = React.useMemo(() => {
-    const seed = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const multiplier = 15 + (seed % 85);
-    const base = (post.likesCount * 14) + (post.commentsCount * 28) + (post.vouchesCount * 22) + 5;
-    const finalVal = base * multiplier + (seed % 140) + 24;
-    if (finalVal >= 1000) {
-      return (finalVal / 1000).toFixed(1) + 'K';
-    }
-    return finalVal.toString();
-  }, [post.id, post.likesCount, post.commentsCount, post.vouchesCount]);
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const postMenuRef = React.useRef<HTMLDivElement | null>(null);
 
   // Bookmarks
   const [isBookmarked, setIsBookmarked] = useState(() => {
@@ -362,6 +359,67 @@ function FeedPostCard({
 
   const isSelf = userProfile && post.username === userProfile.username;
   const showFollowAction = !isSelf && post.userId !== 've-alg-1';
+  const postDeleteAllowed = isSelf && canDeleteFeedPost(post);
+  const parlayPostLocked = isSelf && isParlayFeedPost(post) && !canDeleteFeedPost(post);
+
+  React.useEffect(() => {
+    if (!showPostMenu) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (postMenuRef.current && !postMenuRef.current.contains(event.target as Node)) {
+        setShowPostMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showPostMenu]);
+
+  const handleDeleteClick = () => {
+    if (!postDeleteAllowed || !onDeletePost) return;
+    setShowPostMenu(false);
+    onDeletePost(post.id);
+  };
+
+  const renderPostActionsMenu = () => {
+    if (!isSelf) return null;
+    return (
+      <div className="relative" ref={postMenuRef}>
+        <button
+          type="button"
+          onClick={() => setShowPostMenu((open) => !open)}
+          className="feed-icon-btn p-1.5 rounded-full text-white/45 hover:text-white hover:bg-white/[0.06] transition-colors"
+          aria-label="Post actions"
+          aria-expanded={showPostMenu}
+          id={`post-menu-btn-${post.id}`}
+        >
+          <MoreHorizontal className="w-5 h-5" />
+        </button>
+        {showPostMenu && (
+          <div className="absolute right-0 top-9 w-56 bg-black/95 border border-white/15 rounded-xl shadow-xl p-1 z-40">
+            {postDeleteAllowed && onDeletePost ? (
+              <button
+                type="button"
+                onClick={handleDeleteClick}
+                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-rose-300 font-medium flex items-center gap-2"
+                id={`delete-post-btn-${post.id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete post
+              </button>
+            ) : parlayPostLocked ? (
+              <div
+                className="px-3 py-2 text-[12px] text-white/45 flex items-start gap-2"
+                title={parlayPostDeleteLockedReason()}
+                id={`locked-post-indicator-${post.id}`}
+              >
+                <Lock className="w-4 h-4 shrink-0 mt-0.5 text-white/35" />
+                <span>{parlayPostDeleteLockedReason()}</span>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const isProTarget = post.subscriptionTier === 'SELLER_PRO';
   const followButtonText = isFollowing 
@@ -370,18 +428,18 @@ function FeedPostCard({
 
   if (post.boardConfig && post.boardConfig.gradient) {
     return (
-      <div 
-        className="bg-black/72 rounded-3xl border border-white/38 p-3 hover:border-vouch-cyan/35 transition-all duration-200 animate-slide-up flex flex-col gap-1.5 shadow-xl shadow-black/18 backdrop-blur-xl" 
+      <article 
+        className="feed-post px-4 py-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-2" 
         id={`feed-post-card-${post.id}`}
       >
         <VouchCircleFeedCard post={post} />
         
         {/* Reaction Bar */}
-        <div className="flex items-center justify-between pt-1 pb-1 text-white/45 text-xs font-mono">
+        <div className="feed-action-row flex items-center justify-between max-w-[425px] text-white/45 text-[13px] -ml-2">
           {/* Comment icon button */}
           <button 
             onClick={() => setShowComments(!showComments)}
-            className={`group flex items-center gap-1.5 hover:text-vouch-cyan transition-colors p-1.5 rounded-lg hover:bg-vouch-cyan/8 ${
+            className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
               showComments ? 'text-vouch-cyan' : ''
             }`}
             title="Toggle comments"
@@ -394,7 +452,7 @@ function FeedPostCard({
           {/* Repost button */}
           <button 
             onClick={() => onRepost(post.id)}
-            className={`flex items-center gap-1.5 hover:text-vouch-emerald transition-colors p-1.5 rounded-lg hover:bg-vouch-emerald/8 ${
+            className={`feed-action-btn flex items-center gap-1 hover:text-vouch-emerald transition-colors ${
               post.isReposted ? 'text-vouch-emerald font-bold' : ''
             }`}
             title="Repost"
@@ -407,7 +465,7 @@ function FeedPostCard({
           {/* Like button */}
           <button 
             onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 hover:text-rose-500 transition-colors p-1.5 rounded-lg hover:bg-rose-950/20 ${
+            className={`feed-action-btn flex items-center gap-1 hover:text-rose-500 transition-colors ${
               post.isLiked ? 'text-rose-500 font-bold' : ''
             }`}
             title="Like"
@@ -420,7 +478,7 @@ function FeedPostCard({
           {/* Vouch / Zap Action */}
           <button 
             onClick={() => onVouchAction(post.id)}
-            className={`flex items-center gap-1.5 hover:text-amber-400 transition-colors p-1.5 rounded-lg hover:bg-amber-950/20 ${
+            className={`feed-action-btn flex items-center gap-1 hover:text-amber-400 transition-colors ${
               post.isVouched ? 'text-amber-400 font-semibold' : ''
             }`}
             title="Vouch / Tail pick"
@@ -477,107 +535,84 @@ function FeedPostCard({
             )}
           </div>
         )}
-      </div>
+      </article>
     );
   }
 
   return (
-    <div
-      className={`${Z8_PANEL_PREMIUM} rounded-3xl p-4 hover:border-vouch-cyan/35 transition-all duration-200 animate-slide-up relative overflow-hidden shadow-xl shadow-black/18 backdrop-blur-xl`}
+    <article
+      className="feed-post px-4 py-3 hover:bg-white/[0.02] transition-colors relative"
       id={`feed-post-card-${post.id}`}
     >
       {/* Upper header segment: User details & metadata badges */}
-      <div className="flex items-start justify-between gap-3 mb-2.5">
-        <div className="flex gap-3">
-          {/* Avatar or custom initials */}
-          <ProfileAvatarBorder 
-            borderId={post.profileBorderId}
-            displayName={post.displayName}
-            initials={post.displayName.split(' ').map(n=>n[0]).join('')}
-            size="md"
-            winRate={post.winRate || 58.3}
-            isVerified={post.isVerified}
-          />
+      <div className="flex items-start gap-3">
+        <ProfileAvatarBorder 
+          borderId={post.profileBorderId}
+          displayName={post.displayName}
+          initials={post.displayName.split(' ').map(n=>n[0]).join('')}
+          size="md"
+          winRate={post.winRate || 58.3}
+          isVerified={post.isVerified}
+        />
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-white hover:underline cursor-pointer text-sm leading-tight truncate">
-                {post.displayName}
-              </span>
-              {post.subscriptionTier === 'SELLER_PRO' ? (
-                <span className="text-[9px] bg-vouch-emerald/13 font-extrabold text-vouch-emerald px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-vouch-emerald/30">
-                  💎 SELLER PRO
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 flex-wrap leading-tight">
+                <span className="font-bold text-[15px] text-white hover:underline cursor-pointer truncate">
+                  {post.displayName}
                 </span>
-              ) : post.subscriptionTier === 'GOLD' ? (
-                <span className="text-[9px] bg-vouch-cyan/13 font-extrabold text-vouch-cyan px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-vouch-cyan/30">
-                  ✨ GOLD VERIFIED
-                </span>
-              ) : post.isVerified ? (
-                <span className="text-[9px] bg-emerald-955 font-extrabold text-emerald-455 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-emerald-900/40 text-emerald-400">
-                  <Shield className="w-2.5 h-2.5 fill-emerald-400 text-emerald-400" />
-                  PRO
-                </span>
-              ) : null}
-              <PostTypeBadge post={post} />
-              <ResultStatusBadge post={post} />
-              <span className="text-white/45 text-xs">@{post.username}</span>
-              <span className="text-white/35 text-xs">•</span>
-              <span className="text-white/45 text-xs font-mono">{formatTime(post.timestamp)}</span>
+                {post.isVerified && (
+                  <Shield className="w-4 h-4 text-vouch-emerald shrink-0" />
+                )}
+                <span className="text-white/45 text-[15px] truncate">@{post.username}</span>
+                <span className="text-white/35 text-[15px]">·</span>
+                <span className="text-white/45 text-[15px] hover:underline cursor-pointer shrink-0">{formatTime(post.timestamp)}</span>
+              </div>
+
+              {/* Compact badges */}
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <PostTypeBadge post={post} />
+                <ResultStatusBadge post={post} />
+                {parlayPostLocked && (
+                  <span
+                    className="inline-flex items-center gap-1 text-[9px] font-bold font-mono uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-white/20 text-white/45 bg-white/[0.04]"
+                    title={parlayPostDeleteLockedReason()}
+                  >
+                    <Lock className="w-3 h-3" />
+                    Locked
+                  </span>
+                )}
+                {post.sportBadge && (
+                  <span className="text-[11px] text-white/40 font-medium">
+                    {post.sportBadge}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Badges bar */}
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {post.sportBadge && (
-                <span className="text-[9px] bg-black/42 border border-white/28 text-white/45 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
-                  {post.sportBadge}
-                </span>
+            <div className="flex items-center gap-1 shrink-0">
+              {showFollowAction && (
+                <button
+                  onClick={handleFollowToggle}
+                  className={`rounded-full px-3 py-1 text-[13px] font-bold transition-colors ${
+                    isFollowing
+                      ? 'border border-white/20 text-white/70 hover:border-rose-500/50 hover:text-rose-400'
+                      : 'bg-white text-black hover:bg-white/90'
+                  }`}
+                  id={`follow-tail-btn-${post.id}`}
+                >
+                  {followButtonText}
+                </button>
               )}
-              {post.sourceBadge && (
-                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono uppercase ${
-                  post.sourceBadge.includes('AI') 
-                    ? 'bg-vouch-emerald/12 text-vouch-emerald border border-vouch-emerald/28' 
-                    : post.sourceBadge.includes('Vouch') 
-                    ? 'bg-emerald-400/10 text-emerald-300 border border-emerald-300/25' 
-                    : 'bg-black/42 text-white/45 border border-white/25'
-                }`}>
-                  {post.sourceBadge}
-                </span>
-              )}
-              <span className="text-[10px] text-white/45 bg-black/34 font-semibold border border-white/25 px-1.5 py-0.2 rounded font-mono">
-                {post.postType.replace('_', ' ')}
-              </span>
+              {renderPostActionsMenu()}
             </div>
           </div>
-        </div>
 
-        {/* Action Toggle Follow/Tail & more menu buttons */}
-        <div className="flex items-center gap-2">
-          {showFollowAction && (
-            <button
-              onClick={handleFollowToggle}
-              className={`px-3 py-1 rounded-lg text-[10px] font-black tracking-wide uppercase transition-all flex items-center gap-1 ${
-                isFollowing
-                  ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-900/40'
-                  : isProTarget
-                  ? 'bg-vouch-cyan/20 hover:bg-vouch-cyan/30 text-vouch-cyan border border-vouch-cyan/40 font-bold tracking-widest hover:scale-[1.03] active:scale-95'
-                  : 'bg-vouch-cyan/13 hover:bg-vouch-cyan/22 text-vouch-cyan hover:text-vouch-cyan border border-vouch-cyan/30 hover:border-vouch-cyan/45 hover:scale-[1.03]'
-              }`}
-              id={`follow-tail-btn-${post.id}`}
-            >
-              {followButtonText}
-            </button>
-          )}
-
-          <button className="text-white/45 hover:text-white/70 p-1 rounded-full hover:bg-black/45 transition-colors">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main post text content */}
-      <p className="text-white text-sm leading-relaxed mb-3 whitespace-pre-wrap">
-        {post.content}
-      </p>
+          {/* Main post text content */}
+          <p className="text-white text-[15px] leading-normal mt-1 mb-2 whitespace-pre-wrap">
+            {post.content}
+          </p>
 
       {/* Attached Media Render container with Hover Navigation Slides */}
       {post.mediaUrl && !post.boardConfig && (
@@ -787,136 +822,103 @@ function FeedPostCard({
       {post.postType === 'AI_PICK' && post.researchNote && (
         <ResearchNotePostCard researchNote={post.researchNote} />
       )}
+        </div>
+      </div>
 
-      {/* 4. Social interaction reaction bar */}
-      <div className="flex items-center justify-between pt-3 mt-1.5 border-t border-white/28 text-white/45 text-xs relative select-none">
-        {/* Comment icon button */}
+      {/* Social interaction reaction bar — X-style */}
+      <div className="feed-action-row flex items-center justify-between max-w-[425px] mt-2 text-white/45 text-[13px] -ml-2 relative select-none">
         <button 
           onClick={() => setShowComments(!showComments)}
-          className={`group flex items-center gap-1.5 hover:text-vouch-cyan transition-colors p-1.5 rounded-lg hover:bg-vouch-cyan/8 ${
+          className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
             showComments ? 'text-vouch-cyan font-bold' : ''
           }`}
-          title="Toggle comments"
+          title="Reply"
           id={`comment-btn-${post.id}`}
         >
-          <MessageSquare className="w-4 h-4" />
-          <span className="font-mono">{post.commentsCount}</span>
+          <MessageSquare className="w-[18px] h-[18px]" />
+          {post.commentsCount > 0 && <span>{post.commentsCount}</span>}
         </button>
 
-        {/* Repost button with dropdown Menu */}
         <div className="relative">
           <button 
             onClick={() => setShowRepostMenu(!showRepostMenu)}
-            className={`flex items-center gap-1.5 hover:text-vouch-emerald transition-colors p-1.5 rounded-lg hover:bg-vouch-emerald/8 ${
+            className={`feed-action-btn flex items-center gap-1 hover:text-vouch-emerald transition-colors ${
               post.isReposted ? 'text-vouch-emerald font-bold' : ''
             }`}
-            title="Repost options"
+            title="Repost"
             id={`repost-btn-${post.id}`}
           >
-            <Repeat2 className={`w-4 h-4 ${post.isReposted ? 'rotate-180 transition-transform duration-300' : ''}`} />
-            <span className="font-mono">{post.repostsCount}</span>
+            <Repeat2 className={`w-[18px] h-[18px] ${post.isReposted ? 'rotate-180' : ''}`} />
+            {post.repostsCount > 0 && <span>{post.repostsCount}</span>}
           </button>
 
           {showRepostMenu && (
-            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-36 bg-black/92 border border-white/32 rounded-xl shadow-xl shadow-black/22 p-1.5 z-40 animate-slide-up backdrop-blur-xl">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-36 bg-black/95 border border-white/15 rounded-xl shadow-xl p-1 z-40">
               <button
                 onClick={() => {
                   onRepost(post.id);
                   setShowRepostMenu(false);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-black/52 rounded-lg text-white/70 hover:text-white font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-white font-medium flex items-center gap-2"
               >
-                <Repeat2 className="w-3.5 h-3.5 text-vouch-emerald" />
-                <span>{post.isReposted ? 'Undo Repost' : 'Repost'}</span>
+                <Repeat2 className="w-4 h-4 text-vouch-emerald" />
+                {post.isReposted ? 'Undo Repost' : 'Repost'}
               </button>
               <button
                 onClick={() => {
                   setShowRepostMenu(false);
                   setShowQuoteModal(true);
                 }}
-                className="w-full text-left px-2.5 py-1.5 text-[11px] hover:bg-black/52 rounded-lg text-white/70 hover:text-white font-semibold flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] rounded-lg text-white font-medium flex items-center gap-2"
               >
-                <Quote className="w-3.5 h-3.5 text-vouch-cyan" />
-                <span>Quote Vouch</span>
+                <Quote className="w-4 h-4 text-vouch-cyan" />
+                Quote
               </button>
             </div>
           )}
         </div>
 
-        {/* Like button */}
         <button 
           onClick={() => onLike(post.id)}
-          className={`flex items-center gap-1.5 hover:text-rose-500 transition-colors p-1.5 rounded-lg hover:bg-rose-950/20 ${
+          className={`feed-action-btn flex items-center gap-1 hover:text-rose-500 transition-colors ${
             post.isLiked ? 'text-rose-500 font-bold' : ''
           }`}
           title="Like"
           id={`like-btn-${post.id}`}
         >
-          <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-rose-500 text-rose-500 animate-pulse' : ''}`} />
-          <span className="font-mono">{post.likesCount}</span>
+          <Heart className={`w-[18px] h-[18px] ${post.isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+          {post.likesCount > 0 && <span>{post.likesCount}</span>}
         </button>
 
-        {/* Vouch / Zap Action */}
         <button 
           onClick={() => onVouchAction(post.id)}
-          className={`flex items-center gap-1.5 hover:text-amber-400 transition-colors p-1.5 rounded-lg hover:bg-amber-950/20 ${
+          className={`feed-action-btn flex items-center gap-1 hover:text-amber-400 transition-colors ${
             post.isVouched ? 'text-amber-400 font-semibold' : ''
           }`}
-          title="Vouch / Tail pick"
+          title="Vouch"
           id={`vouch-action-btn-${post.id}`}
         >
-          <Zap className={`w-4 h-4 ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
-          <span className="font-mono font-bold">Vouch</span>
-          <span className="font-mono text-[10px] text-white/45">({post.vouchesCount})</span>
+          <Zap className={`w-[18px] h-[18px] ${post.isVouched ? 'fill-amber-400 text-amber-400' : ''}`} />
+          {post.vouchesCount > 0 && <span>{post.vouchesCount}</span>}
         </button>
 
-        {/* Simulated Views indicator */}
-        <div className="flex items-center gap-1 text-white/45 font-mono text-[10px] select-none" title="Views">
-          <Eye className="w-3.5 h-3.5" />
-          <span>{simulatedViews}</span>
-        </div>
-
-        {/* Bookmark button */}
         <button
           onClick={handleBookmarkToggle}
-          className={`p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl transition-colors ${
-            isBookmarked ? 'text-vouch-cyan' : 'text-white/45 hover:text-white/70'
+          className={`feed-action-btn transition-colors ${
+            isBookmarked ? 'text-vouch-cyan' : 'hover:text-vouch-cyan'
           }`}
           title="Bookmark"
         >
-          {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-vouch-cyan text-vouch-cyan" /> : <Bookmark className="w-4 h-4" />}
+          {isBookmarked ? <BookmarkCheck className="w-[18px] h-[18px] fill-vouch-cyan text-vouch-cyan" /> : <Bookmark className="w-[18px] h-[18px]" />}
         </button>
 
-        {/* Share Copy button */}
         <button
           onClick={handleCopyLink}
-          className="p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl text-white/45 hover:text-white/70 transition-colors"
-          title="Copy Link to Clipboard"
+          className="feed-action-btn hover:text-vouch-cyan transition-colors"
+          title="Share"
         >
-          <Share className="w-4 h-4" />
+          <Share className="w-[18px] h-[18px]" />
         </button>
-
-        {/* Share to X button */}
-        {(() => {
-          const bodyText = post.vouch 
-            ? `Backed ${post.vouch.playerOrTeam} - ${post.vouch.market} (${post.vouch.odds})`
-            : post.content;
-          const tweetText = `Just verified a sports vouch on VouchEdge! 🎯\n\n"${bodyText.substring(0, 110)}${bodyText.length > 110 ? '...' : ''}"\n\nCheck it out here:`;
-          const tweetUrl = `${window.location.origin}/post/${post.id}`;
-          const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
-          return (
-            <a
-              href={xShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-black/42 backdrop-blur-xl text-white/45 hover:text-vouch-cyan transition-colors flex items-center justify-center"
-              title="Share on X (Twitter)"
-              id={`share-to-x-${post.id}`}
-            >
-              <Twitter className="w-4 h-4 fill-current" />
-            </a>
-          );
-        })()}
       </div>
 
       {/* Quote Vouch Modal overlay */}
@@ -1059,7 +1061,7 @@ function FeedPostCard({
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
 

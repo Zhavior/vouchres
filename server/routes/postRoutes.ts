@@ -5,6 +5,10 @@ import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../midd
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
+import {
+  canDeleteParlayPost,
+  PARLAY_POST_LOCKED_MESSAGE,
+} from "../lib/postDeletePolicy";
 
 /**
  * Posts routes — the social feed.
@@ -215,6 +219,47 @@ postRoutes.get("/posts/:id", optionalAuth, asyncHandler(async (req: AuthedReques
 
 postRoutes.delete("/posts/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
+
+  const { data: post, error: fetchError } = await supabaseAdmin
+    .from("posts")
+    .select("id, author_id, created_at, pick_id")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !post) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Post not found.",
+    });
+  }
+
+  if (post.author_id !== req.user!.id) {
+    throw new AppError({
+      status: 403,
+      code: "forbidden",
+      message: "You can only delete your own posts.",
+      details: { error: "not_post_owner" },
+    });
+  }
+
+  if (post.pick_id) {
+    const { data: pick } = await supabaseAdmin
+      .from("picks")
+      .select("leg_type")
+      .eq("id", post.pick_id)
+      .maybeSingle();
+
+    if (pick?.leg_type === "parlay" && !canDeleteParlayPost(post.created_at)) {
+      throw new AppError({
+        status: 403,
+        code: "parlay_post_locked",
+        message: PARLAY_POST_LOCKED_MESSAGE,
+        details: { error: "parlay_post_locked" },
+      });
+    }
+  }
+
   const { error } = await supabaseAdmin
     .from("posts")
     .delete()

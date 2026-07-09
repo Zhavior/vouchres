@@ -1,6 +1,5 @@
-import { BrainCircuit, ExternalLink, Sparkles } from "lucide-react";
+import { BrainCircuit, Sparkles } from "lucide-react";
 import type { CreatorProofProfile, Parlay } from "../../types";
-import { openVouchAiAgent } from "../../lib/vouchAiChat";
 import { useVouchAiChat } from "../../hooks/useVouchAiChat";
 import VouchAiChatSurface from "../vouchAi/VouchAiChatSurface";
 
@@ -58,14 +57,6 @@ export default function EdgeIslandAskAiPanel({
           </div>
           <p className="text-[10px] text-white/40">⚡ FEATURE &amp; PARLAY COMPANION</p>
         </div>
-        <button
-          type="button"
-          onClick={() => openVouchAiAgent({ messages: chat.messages })}
-          className="glass-panel glass-border inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-vouch-cyan transition hover:border-vouch-cyan/40"
-        >
-          <ExternalLink className="h-3 w-3" />
-          Full agent
-        </button>
       </div>
 
       <VouchAiChatSurface variant="island" profile={profile} onSectionChange={navigate} chat={chat} />

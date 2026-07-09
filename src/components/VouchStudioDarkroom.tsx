@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   SlidersHorizontal, 
   Layers, 
@@ -16,12 +16,14 @@ import {
   FileText, 
   Info,
   Flame,
-  Award
+  Award,
+  Eye,
 } from 'lucide-react';
 import { MLBPlayer, Vouch } from '../types';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { getPlayerSpotlightMetrics } from '../utils/spotlightMath';
 import { getFounderPointsLabel } from "../lib/founderAccess";
+import { Z8_ACTIVE, Z8_IDLE } from '../theme/z8Tokens';
 
 export interface CustomPlayerSelection {
   player: MLBPlayer;
@@ -353,23 +355,36 @@ export default function VouchStudioDarkroom({
   setStudioSectionRationale
 }: VouchStudioDarkroomProps) {
   const activeStyle = cardStyleConfigs[cardStyle];
+  const [mobileStudioView, setMobileStudioView] = useState<'preview' | 'edit'>('preview');
+  const [isCompactStudio, setIsCompactStudio] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const sync = () => setIsCompactStudio(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  const showControlsPanel = !isCompactStudio || mobileStudioView === 'edit';
+  const showPreviewPanel = !isCompactStudio || mobileStudioView === 'preview';
 
   return (
-    <div className="bg-[#090d16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
+    <div className="ve-studio-editor bg-[#090d16] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-0 lg:min-h-[820px] w-full text-left" id="lightroom-darkroom-studio">
       {/* Top Lightroom Toolbar */}
-      <div className="bg-[#0d1220] border-b border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-          <div className="leading-none text-left">
-            <span className="text-xs font-mono font-black text-white/90 uppercase tracking-widest block">
-              VouchEdge Darkroom Editor <span className="text-[9px] text-sky-400 font-extrabold bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-900/30 ml-1.5">LIVE</span>
+      <div className="bg-[#0d1220] border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shrink-0" />
+          <div className="leading-none text-left min-w-0">
+            <span className="text-[11px] sm:text-xs font-mono font-black text-white/90 uppercase tracking-widest block truncate">
+              Vouch Editor <span className="text-[9px] text-sky-400 font-extrabold bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-900/30 ml-1">LIVE</span>
             </span>
-            <span className="text-[9.5px] font-mono text-white/40 block uppercase mt-1">Professional Creator Slate · Real-time Rendering Console</span>
+            <span className="hidden sm:block text-[9.5px] font-mono text-white/40 uppercase mt-1">Creator slate · real-time preview</span>
           </div>
         </div>
         
         {/* Quick Presets and Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => {
@@ -385,11 +400,11 @@ export default function VouchStudioDarkroom({
               setSelectedPlayers(updated);
               triggerToast("🔮 V.A.I Smart Optimize applied: Projections matched with highest historical hit coefficients!");
             }}
-            className="px-2.5 py-1.5 bg-sky-950/60 border border-sky-900/65 text-sky-400 hover:text-sky-300 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="ve-studio-touch-btn flex-1 sm:flex-none px-3 py-2.5 min-h-11 bg-sky-950/60 border border-sky-900/65 text-sky-400 hover:text-sky-300 rounded-xl text-[10px] font-mono font-extrabold uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             title="Use AI model to set ideal projections & confidence intervals"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Smart Optimize</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span className="truncate">AI Optimize</span>
           </button>
 
           <button
@@ -413,11 +428,11 @@ export default function VouchStudioDarkroom({
               setShowReasons(true);
               triggerToast("🔄 Canvas slate reset to Default Cyber Cobalt Profile.");
             }}
-            className="px-2.5 py-1.5 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="ve-studio-touch-btn px-3 py-2.5 min-h-11 min-w-11 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-xl text-[10px] font-mono font-extrabold uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             title="Reset editor back to initial layout"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Slate</span>
+            <RotateCcw className="w-4 h-4" />
+            <span className="hidden sm:inline">Reset</span>
           </button>
 
           <button
@@ -425,27 +440,51 @@ export default function VouchStudioDarkroom({
             onClick={() => {
               triggerToast("💾 Rerendering board plates... Image exported as high-fidelity SVG/PNG bundle (Simulated).");
             }}
-            className="px-2.5 py-1.5 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-lg text-[10px] font-mono font-extrabold uppercase flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="ve-studio-touch-btn hidden sm:flex px-3 py-2.5 min-h-11 bg-black/25 hover:bg-black/35 border border-white/10 text-white/45 hover:text-slate-205 rounded-xl text-[10px] font-mono font-extrabold uppercase items-center gap-1.5 transition-colors cursor-pointer"
             title="Download high resolution cards"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export Plate</span>
+            <Download className="w-4 h-4" />
+            <span>Export</span>
           </button>
         </div>
+      </div>
+
+      {/* Mobile: swipe-friendly Preview / Edit tabs */}
+      <div className="lg:hidden grid grid-cols-2 gap-2 p-3 bg-[#0a0d16] border-b border-white/10" id="ve-studio-mobile-tabs">
+        {([
+          { id: 'preview' as const, label: 'Preview', icon: Eye },
+          { id: 'edit' as const, label: 'Customize', icon: SlidersHorizontal },
+        ]).map((tab) => {
+          const active = mobileStudioView === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setMobileStudioView(tab.id)}
+              className={`ve-studio-touch-btn flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold transition-all ${
+                active ? Z8_ACTIVE : Z8_IDLE
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Main 2-column Lightroom grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 divide-y lg:divide-y-0 lg:divide-x divide-slate-900">
         
         {/* COLUMN 1: CONTROLS PANEL (LEFT) */}
-        <div className="lg:col-span-4 bg-[#0a0d16] flex flex-col h-full overflow-y-auto max-h-[850px] scrollbar-thin">
+        <div className={`lg:col-span-4 bg-[#0a0d16] flex flex-col h-full overflow-y-auto lg:max-h-[850px] scrollbar-thin ${showControlsPanel ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* ACCORDION 1: COLOR PROFILE & DESIGN LAYOUT */}
           <div className="border-b border-white/10">
             <button
               type="button"
               onClick={() => setStudioSectionPreset(!studioSectionPreset)}
-              className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
@@ -459,7 +498,7 @@ export default function VouchStudioDarkroom({
                 {/* Presets Grid */}
                 <div className="space-y-1.5">
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Visual Preset Themes:</label>
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {[
                       { id: 'cyberpunk', name: '🕹️ Cyber Cobalt', desc: 'Neon cyan & dark cobalt overlays', bg: 'bg-cyan-500' },
                       { id: 'luxury', name: '👑 Gold Prestige', desc: 'Obsidian & gold prestige', bg: 'bg-amber-400' },
@@ -471,7 +510,7 @@ export default function VouchStudioDarkroom({
                         key={styleOpt.id}
                         type="button"
                         onClick={() => setCardStyle(styleOpt.id as any)}
-                        className={`group py-2 px-2.5 rounded-xl border text-left transition-all flex flex-col justify-between h-[52px] ${
+                        className={`group py-2.5 px-2.5 min-h-11 rounded-xl border text-left transition-all flex flex-col justify-between ${
                           cardStyle === styleOpt.id 
                             ? 'bg-sky-500/10 border-sky-500/40 text-sky-300 ring-1 ring-sky-500/20 font-black' 
                             : 'bg-black/30 border-white/10 text-white/40 hover:text-slate-350 hover:bg-black/25'
@@ -490,7 +529,7 @@ export default function VouchStudioDarkroom({
                 {/* Blueprints Grid */}
                 <div className="space-y-1.5 pt-2 border-t border-white/10">
                   <label className="text-[8.5px] uppercase font-mono font-bold text-white/45 block tracking-wider">Blueprint Layout Mode:</label>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {[
                       { id: 'orbit', name: 'ORBIT', desc: 'Circular link map', activeStyle: 'bg-sky-500/10 border-sky-500/40 text-sky-300' },
                       { id: 'potd', name: 'SPOTLIGHT', desc: 'Single featured spot', activeStyle: 'bg-amber-500/10 border-amber-500/40 text-amber-300' },
@@ -503,7 +542,7 @@ export default function VouchStudioDarkroom({
                           setActiveCardLayout(layoutOpt.id as any);
                           triggerToast(`Layout changed to: ${layoutOpt.name}`);
                         }}
-                        className={`py-2 px-1 rounded-xl border text-center transition-all text-[9.5px] font-mono font-black flex flex-col items-center justify-center gap-1 ${
+                        className={`py-2.5 px-2 min-h-11 rounded-xl border text-center transition-all text-[9.5px] font-mono font-black flex flex-col items-center justify-center gap-1 ${
                           activeCardLayout === layoutOpt.id
                             ? `${layoutOpt.activeStyle} shadow-sm`
                             : 'bg-black/30 border-white/10 text-slate-550 hover:text-white/65 hover:bg-black/20'
@@ -530,7 +569,7 @@ export default function VouchStudioDarkroom({
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button 
                       type="button" 
                       onClick={() => {
@@ -601,7 +640,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionRoster(!studioSectionRoster)}
-              className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Activity className="w-3.5 h-3.5 text-sky-400" />
@@ -973,7 +1012,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionPromo(!studioSectionPromo)}
-              className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <Crown className="w-3.5 h-3.5 text-sky-400" />
@@ -1175,7 +1214,7 @@ export default function VouchStudioDarkroom({
             <button
               type="button"
               onClick={() => setStudioSectionRationale(!studioSectionRationale)}
-              className="w-full px-4 py-3 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
+              className="w-full px-4 py-3 min-h-11 bg-[#0d1220]/45 flex items-center justify-between text-left border-b border-slate-950 hover:bg-[#0d1220]/75 transition-colors"
             >
               <span className="text-[10px] font-mono font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-3.5 h-3.5 text-sky-400" />
@@ -1203,13 +1242,13 @@ export default function VouchStudioDarkroom({
           {/* WATERMARKS & TOGGLES FOOTER BAR */}
           <div className="p-4 bg-[#090c14] space-y-3.5 mt-auto border-t border-white/10 text-left">
             <span className="text-[8px] font-mono text-white/40 uppercase block tracking-wider">Canvas Overlay Elements:</span>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 onClick={() => {
                   setShowCharts(!showCharts);
                   triggerToast(`Game charts overlay: ${!showCharts ? 'ENABLED' : 'DISABLED'}`);
                 }}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
+                className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showCharts 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
@@ -1224,7 +1263,7 @@ export default function VouchStudioDarkroom({
                   setShowLogo(!showLogo);
                   triggerToast(`VouchEdge Watermark overlay: ${!showLogo ? 'ENABLED' : 'DISABLED'}`);
                 }}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
+                className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showLogo 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
@@ -1239,7 +1278,7 @@ export default function VouchStudioDarkroom({
                   setShowReasons(!showReasons);
                   triggerToast(`Scout rationale text block: ${!showReasons ? 'ENABLED' : 'DISABLED'}`);
                 }}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl outline-none border transition-all ${
+                className={`ve-studio-touch-btn flex flex-col items-center justify-center min-h-11 p-2.5 rounded-xl outline-none border transition-all ${
                   showReasons 
                     ? 'bg-sky-950/20 border-sky-850 text-sky-400 font-black' 
                     : 'bg-obsidian-900 border-white/10 text-white/35'
@@ -1254,16 +1293,16 @@ export default function VouchStudioDarkroom({
         </div>
 
         {/* COLUMN 2: CANVAS EDITOR & PREVIEW STAGE (CENTER/RIGHT) */}
-        <div className="lg:col-span-8 bg-[#06080e] flex flex-col h-full min-h-[750px] relative">
+        <div className={`lg:col-span-8 bg-[#06080e] flex flex-col h-full min-h-0 lg:min-h-[750px] relative ${showPreviewPanel ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* Canvas Header Toolbar */}
-          <div className="bg-[#0a0d16]/90 border-b border-white/10 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 z-10">
-            <div className="flex items-center gap-4">
-              <div className="flex bg-[#0f1424] p-0.5 rounded-lg border border-slate-850">
+          <div className="bg-[#0a0d16]/90 border-b border-white/10 px-3 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-10">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+              <div className="flex bg-[#0f1424] p-0.5 rounded-lg border border-slate-850 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowSecondCard(false)}
-                  className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
+                  className={`ve-studio-touch-btn px-3 py-2 min-h-11 text-[9px] sm:text-[8.5px] font-mono font-bold rounded transition-all ${
                     !showSecondCard ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
@@ -1275,11 +1314,11 @@ export default function VouchStudioDarkroom({
                     setShowSecondCard(true);
                     setPostSideways(true);
                   }}
-                  className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
+                  className={`ve-studio-touch-btn px-3 py-2 min-h-11 text-[9px] sm:text-[8.5px] font-mono font-bold rounded transition-all ${
                     showSecondCard && postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
-                  Dual Deck (Grid)
+                  Dual Grid
                 </button>
                 <button
                   type="button"
@@ -1287,18 +1326,18 @@ export default function VouchStudioDarkroom({
                     setShowSecondCard(true);
                     setPostSideways(false);
                   }}
-                  className={`px-2 py-1 text-[8.5px] font-mono font-bold rounded transition-all ${
+                  className={`ve-studio-touch-btn px-3 py-2 min-h-11 text-[9px] sm:text-[8.5px] font-mono font-bold rounded transition-all ${
                     showSecondCard && !postSideways ? 'bg-sky-950 text-sky-300 font-black' : 'text-white/45 hover:text-white/80'
                   }`}
                 >
-                  Dual Slide Deck
+                  Dual Slide
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 font-mono text-[8.5px] text-white/45">
-                <span>ZOOM SCALE:</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden sm:flex items-center gap-1.5 font-mono text-[8.5px] text-white/45">
+                <span>ZOOM:</span>
                 <span className="text-sky-400 font-black bg-sky-950/40 border border-sky-900/30 px-1.5 rounded">{Math.round(previewScale * 100)}%</span>
               </div>
               <input 
@@ -1308,19 +1347,19 @@ export default function VouchStudioDarkroom({
                 step="0.05" 
                 value={previewScale}
                 onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-                className="w-24 h-1 bg-obsidian-700 rounded-lg cursor-pointer accent-sky-500" 
+                className="flex-1 sm:w-24 min-h-11 sm:min-h-0 bg-obsidian-700 rounded-lg cursor-pointer accent-sky-500" 
               />
               <div className="flex gap-1 shrink-0">
-                <button onClick={() => setPreviewScale(0.65)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">S</button>
-                <button onClick={() => setPreviewScale(0.85)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">M</button>
-                <button onClick={() => setPreviewScale(1.0)} className="px-1.5 py-0.5 text-[8px] font-mono bg-black/25 border border-white/10 rounded hover:text-white/80">1:1</button>
+                <button onClick={() => setPreviewScale(0.65)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">S</button>
+                <button onClick={() => setPreviewScale(0.85)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">M</button>
+                <button onClick={() => setPreviewScale(1.0)} className="ve-studio-touch-btn min-h-11 min-w-11 px-2 text-[9px] font-mono bg-black/25 border border-white/10 rounded-lg hover:text-white/80">1:1</button>
               </div>
             </div>
           </div>
 
           {/* Dynamic Lightroom Checkered Background Canvas Stage */}
           <div 
-            className="flex-1 p-6 sm:p-10 overflow-y-auto max-h-[750px] flex items-center justify-center relative select-none scrollbar-none"
+            className="ve-studio-canvas flex-1 p-3 sm:p-6 lg:p-10 overflow-y-auto lg:max-h-[750px] flex items-center justify-center relative select-none scrollbar-none"
             style={{
               backgroundImage: `radial-gradient(rgba(14, 165, 233, 0.02) 1px, transparent 1px), radial-gradient(rgba(14, 165, 233, 0.01) 1px, transparent 1px)`,
               backgroundSize: '24px 24px',
@@ -1336,10 +1375,10 @@ export default function VouchStudioDarkroom({
             >
               
               {/* Outer Artboard Frame simulating Home Feed Post dimensions */}
-              <div className="w-full max-w-[620px] bg-[#0c101b] border border-white/[0.06] p-6 rounded-3xl shadow-2xl space-y-5 relative">
+              <div className="w-full max-w-[620px] bg-[#0c101b] border border-white/[0.06] p-3 sm:p-6 rounded-2xl sm:rounded-3xl shadow-2xl space-y-5 relative">
                 
                 {/* Corner Tag: Design State Artboard */}
-                <div className="absolute top-4 left-4 bg-sky-950/40 border border-sky-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-sky-400 font-black uppercase tracking-wider flex items-center gap-1">
+                <div className="hidden sm:flex absolute top-4 left-4 bg-sky-950/40 border border-sky-900/40 rounded-full px-2.5 py-0.5 text-[8px] font-mono text-sky-400 font-black uppercase tracking-wider items-center gap-1">
                   <span className="w-1 h-1 rounded-full bg-sky-400 animate-ping" />
                   Social Feed Post Frame Size (Max-W: 620px)
                 </div>
@@ -1363,7 +1402,7 @@ export default function VouchStudioDarkroom({
                     {/* CARD 1 RENDER */}
                     {(!showSecondCard || postSideways || activePreviewCardIndex === 0) && (
                       <div 
-                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
+                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[420px] sm:min-h-[520px] lg:min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
                         style={customCardPhoto ? {
                           backgroundImage: `linear-gradient(${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.88)' : 'rgba(10, 15, 30, 0.85)'}, ${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.94)' : 'rgba(10, 15, 30, 0.95)'}), url(${customCardPhoto})`,
                           backgroundSize: 'cover',
@@ -1653,7 +1692,7 @@ export default function VouchStudioDarkroom({
                     {/* COMPANION CARD RENDER (CARD 2) */}
                     {showSecondCard && (postSideways || activePreviewCardIndex === 1) && (
                       <div 
-                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
+                        className={`relative group/studio-card ${activeStyle.bg} rounded-3xl p-6 overflow-hidden shadow-2xl flex flex-col justify-between aspect-[3/4.2] min-h-[420px] sm:min-h-[520px] lg:min-h-[580px] max-w-[420px] w-full flex-1 transition-all duration-300 border border-white/[0.04]`}
                         style={customCardPhoto ? {
                           backgroundImage: `linear-gradient(${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.90)' : 'rgba(10, 15, 30, 0.88)'}, ${cardStyle === 'minimal' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 15, 30, 0.96)'}), url(${customCardPhoto})`,
                           backgroundSize: 'cover',
@@ -1924,33 +1963,33 @@ export default function VouchStudioDarkroom({
             </div>
           </div>
 
-          {/* Action Buttons Lightroom Slate Footer */}
-          <div className="bg-[#0a0d16] border-t border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4 z-10">
-            <div className="text-left">
+          {/* Action Buttons Lightroom Slate Footer — sticky on mobile */}
+          <div className="ve-studio-sticky-actions bg-[#0a0d16] border-t border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 z-20">
+            <div className="text-left hidden sm:block">
               <span className="text-[8.5px] font-mono text-white/40 block uppercase font-bold">Creator Campaign Operations:</span>
               <p className="text-[10px] text-white/45 mt-0.5">Review, verify projections, and publish this Vouch Board directly to the main feed.</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3 w-full lg:w-auto">
               <button
                 onClick={handleSimulateXPost}
-                className="py-2.5 px-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01] flex items-center justify-center gap-2 font-mono uppercase cursor-pointer animate-fade-in"
+                className="ve-studio-touch-btn min-h-11 py-2.5 px-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 font-mono uppercase cursor-pointer"
               >
-                <Share2 className="w-4 h-4 text-white" />
-                <span>Publish to Twitter / X</span>
+                <Share2 className="w-4 h-4 text-white shrink-0" />
+                <span className="truncate">Share to X</span>
               </button>
 
               <button
                 onClick={handlePublishAsFeedPost}
                 disabled={isPublishingToFeed}
-                className={`py-2.5 px-4 font-mono font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase cursor-pointer ${
+                className={`ve-studio-touch-btn min-h-11 py-2.5 px-4 font-mono font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase cursor-pointer ${
                   isPublishingToFeed 
                     ? 'bg-black/25 border border-white/10 text-white/40 cursor-not-allowed'
                     : 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                 }`}
               >
-                <Tv className="w-4 h-4 text-white" />
-                <span>{isPublishingToFeed ? 'Publishing...' : 'Publish to Vouch Feed'}</span>
+                <Tv className="w-4 h-4 text-white shrink-0" />
+                <span className="truncate">{isPublishingToFeed ? 'Publishing...' : 'Publish to Feed'}</span>
               </button>
             </div>
           </div>

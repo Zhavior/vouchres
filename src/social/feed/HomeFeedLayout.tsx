@@ -5,15 +5,14 @@ import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
 import CmdKPalette from './CmdKPalette';
 import { FeedPost, CreatorProofProfile, Vouch, Parlay, Leg } from '../../types';
 import { Sparkles } from 'lucide-react';
-import AisFeatureAgent from '../../components/AisFeatureAgent';
 import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
 import {
   NotificationProvider,
   NotificationBellButton,
-  useNotificationCenter,
 } from '../../components/notifications/UnifiedNotificationCenter';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
+import { BubbleField } from '../../components/vouchedge/ParticleFields';
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -57,7 +56,6 @@ function HomeFeedLayoutInner({
   const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-  const { unreadCount: unreadNotifications } = useNotificationCenter();
   const previousSectionRef = React.useRef(activeSection);
 
   const closeNavigationOverlays = React.useCallback(() => {
@@ -102,28 +100,12 @@ function HomeFeedLayoutInner({
     return {
       '--theme-border-color': theme.borderColor || 'rgba(6,182,212,0.2)',
       '--theme-shadow-glow': theme.accentText.includes('cyan') ? 'rgba(6,182,212,0.15)' : 'rgba(99,102,241,0.15)',
-      '--theme-card-bg-gradient': 'linear-gradient(135deg, rgba(20, 15, 45, 0.82) 0%, rgba(10, 10, 25, 0.88) 100%)',
+      '--theme-card-bg-gradient': 'linear-gradient(135deg, rgba(8, 20, 48, 0.84) 0%, rgba(2, 6, 23, 0.90) 100%)',
       '--theme-accent-color': theme.accentText.includes('cyan') ? '#22d3ee' : theme.accentText.includes('orange') ? '#f97316' : theme.accentText.includes('emerald') ? '#10b981' : theme.accentText.includes('rose') ? '#e11d48' : '#eab308',
     };
   };
 
   const themeVars = activeTheme ? getThemeVars(activeTheme) : null;
-
-  // Stagger 15 beautiful drifting particle elements
-  const driftingParticles = activeTheme && !reduceMotion
-    ? Array.from({ length: 15 }).map((_, i) => {
-        const symbols = activeTheme.particleDemo || ['✨'];
-        const symbol = symbols[i % symbols.length];
-        const left = `${((i * 19) % 90) + 5}%`;
-        const size = `${((i * 9) % 18) + 14}px`;
-        const delay = `-${(i * 2.5) % 20}s`;
-        const duration = `${((i * 6) % 15) + 18}s`;
-        const driftX = `${((i * 27) % 120) - 60}px`;
-        const driftRot = `${((i * 53) % 240) - 120}deg`;
-        const opacity = i % 3 === 0 ? '0.22' : '0.12';
-        return { symbol, left, size, delay, duration, driftX, driftRot, opacity };
-      })
-    : [];
 
   return (
     <NotificationProvider savedSlips={savedSlips} onNavigate={handleSectionChange}>
@@ -176,30 +158,9 @@ function HomeFeedLayoutInner({
         </>
       )}
 
-      {/* Drifting theme particles */}
-      {activeTheme && activeTheme.id !== 'cyber-blue' && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-          {driftingParticles.map((p, idx) => (
-            <span 
-              key={idx} 
-              className="animate-theme-drift select-none block text-center"
-              style={{
-                left: p.left,
-                fontSize: p.size,
-                '--drift-delay': p.delay,
-                '--drift-duration': p.duration,
-                '--drift-x': p.driftX,
-                '--drift-rot': p.driftRot,
-                '--theme-particle-opacity': p.opacity,
-                filter: 'blur(0.5px)',
-                width: '32px',
-                height: '32px',
-              } as React.CSSProperties}
-            >
-              {p.symbol}
-            </span>
-          ))}
-        </div>
+      {/* Drifting glass bubbles */}
+      {activeTheme && activeTheme.id !== 'cyber-blue' && !reduceMotion && (
+        <BubbleField count={15} mobileCount={8} variant="drift" className="z-0" />
       )}
       
       {/* Structural Container - max 1300px for feed, expand to 1580px for widescreen analytical interfaces */}
@@ -215,13 +176,12 @@ function HomeFeedLayoutInner({
               onSectionChange={handleSectionChange}
               profile={profile}
               onOpenCmdK={() => setCmdKOpen(true)}
-              unreadNotifications={unreadNotifications}
             />
           </div>
         )}
 
         {/* Column 2: Center Main Content (scrollable feed or other active tabs) */}
-        <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'pb-[env(safe-area-inset-bottom)] md:pb-0'}`} id="center-main-content-column">
+        <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           {/* Desktop slim header — notification bell on the right */}
           {!isPublicFrontPage && (
             <header className="sticky top-0 z-30 hidden select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8">
@@ -236,7 +196,7 @@ function HomeFeedLayoutInner({
 
           {/* Mobile compact header */}
           {!isPublicFrontPage && (
-            <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 md:hidden">
+            <header className="ve-mobile-header sticky top-0 z-30 flex items-center justify-between gap-2 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 md:hidden">
               {/* Profile avatar (corner) — ring color = real subscription tier;
                   tapping it opens the X-style navigation drawer. */}
               <div className="flex items-center gap-2.5 min-w-0">
@@ -302,16 +262,6 @@ function HomeFeedLayoutInner({
           onClose={() => setMobileDrawerOpen(false)}
           profile={profile}
           activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-        />
-      )}
-
-      {/* Globally Floating VouchEdge AI Agent */}
-      {!isPublicFrontPage && (
-        <AisFeatureAgent
-          profile={profile}
-          savedSlips={savedSlips}
-          activeLegs={activeLegs}
           onSectionChange={handleSectionChange}
         />
       )}

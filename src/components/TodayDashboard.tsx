@@ -191,7 +191,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell px-3 py-4 sm:px-4 lg:py-5`}>
+    <main className={`${Z8_PAGE} ve-page-shell min-h-0 px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto max-w-[1320px] space-y-4">
         <div className={`${Z8_PANEL} ve-premium-panel p-3 sm:p-4`}>
           <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today dashboard pages">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Shield, ShieldCheck, Mail, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share } from 'lucide-react';
+import { User, Shield, ShieldCheck, Mail, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import ProfileResume from './profile/ProfileResume';
 import FeedPostCard from '../social/feed/FeedPostCard';
@@ -7,8 +7,11 @@ import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
+import { BubbleField } from './vouchedge/ParticleFields';
 import { VEButton } from './ui/ve';
-import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import { canCustomizeProfileHeader } from './pro/ProAccessGate';
+import { useEntitlements } from '../features/hr/hooks/useEntitlements';
+import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE, Z8_TABULAR } from '../theme/z8Tokens';
 import {
   Area,
   AreaChart,
@@ -31,7 +34,9 @@ interface ProfilePageProps {
   onSaveVouch?: (vouch: Vouch) => void;
   savedVouchIds?: string[];
   onAddComment?: (postId: string, commentContent: string) => void;
+  onDeletePost?: (postId: string) => void;
   savedParlays?: Parlay[];
+  onSectionChange?: (section: string) => void;
 }
 
 export default function ProfilePage({ 
@@ -44,13 +49,20 @@ export default function ProfilePage({
   onSaveVouch = () => {},
   savedVouchIds = [],
   onAddComment = () => {},
-  savedParlays = []
+  onDeletePost,
+  savedParlays = [],
+  onSectionChange,
 }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio);
   const [hoveredDayYmd, setHoveredDayYmd] = useState<string | null>(null);
+  const entitlements = useEntitlements();
+  const canEditHeader = canCustomizeProfileHeader(profile, {
+    isPro: entitlements.isPro,
+    isStaff: entitlements.isStaff,
+  });
 
   const getActiveThemeData = () => {
     const themeToFind = profile.profileThemeId || profile.activeTheme || 'cyber-blue';
@@ -147,12 +159,13 @@ export default function ProfilePage({
         <ProfileResume savedParlays={savedParlays} winRate={profile.winRate} />
 
         {/* Title segment */}
-        <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2 font-z8">
-            <User className="w-5 h-5 text-vouch-cyan" />
-            Real Profile Guard & Proof Hub
+        <div className={Z8_SECTION_HEADER}>
+          <p className={`${Z8_LABEL} text-vouch-cyan/70`}>Creator identity</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2 mt-1">
+            <User className="w-5 h-5 text-vouch-cyan shrink-0" />
+            Profile & Proof Hub
           </h2>
-          <p className="text-xs text-white/45 mt-1 font-z8">
+          <p className="text-xs text-white/45 mt-1.5 max-w-2xl leading-relaxed">
             Review your tracking statistics, win rates, and verify your proof handle credentials.
           </p>
         </div>
@@ -163,10 +176,8 @@ export default function ProfilePage({
           <div className="lg:col-span-8 space-y-6">
             
             {/* Main card */}
-            <div className={`rounded-2xl border overflow-hidden relative transition-all duration-300 ${
+            <div className={`${Z8_PANEL_PREMIUM} rounded-2xl overflow-hidden relative transition-all duration-300 ${
               activeThemeData ? activeThemeData.fontFamily || 'font-sans' : 'font-sans'
-            } ${
-              activeThemeData ? activeThemeData.cardStyle : 'bg-[#121824] border-slate-850'
             }`} id="profile-primary-card">
               
               {/* Cats around the borders of the profile card (Google Cats Theme) */}
@@ -197,32 +208,44 @@ export default function ProfilePage({
                 </>
               )}
 
-              {/* Dynamic theme floating elements */}
+              {/* Dynamic theme floating bubbles */}
               {profile.activeTheme && profile.activeTheme !== 'default' && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-35 flex justify-around items-center z-0 select-none">
-                  {Array.from({ length: 12 }).map((_, i) => {
-                    const themeSymbols = activeThemeData && activeThemeData.particleDemo ? activeThemeData.particleDemo : ['✨'];
-                    const sym = themeSymbols[i % themeSymbols.length];
-                    return (
-                      <span 
-                        key={i} 
-                        className="animate-pulse text-xs"
-                        style={{
-                          animationDelay: `${i * 150}ms`,
-                          transform: `translateY(${Math.sin(i) * 20}px) rotate(${i * 30}deg)`
-                        }}
-                      >
-                        {sym}
-                      </span>
-                    );
-                  })}
-                </div>
+                <BubbleField count={12} mobileCount={6} variant="float" className="opacity-35 z-0" />
               )}
 
-              <div className={`h-24 bg-gradient-to-r relative border-b border-slate-850/60 z-10 ${
+              <div className={`h-28 sm:h-32 bg-gradient-to-r relative border-b border-vouch-cyan/15 z-10 ${
                 activeThemeData ? activeThemeData.coverBg || 'from-sky-600/25 to-indigo-600/25' : 'from-sky-600/25 to-indigo-600/25'
               }`}>
-                <div className="absolute -bottom-10 left-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
+
+                {/* Header customization — Gold+ only */}
+                <div className="absolute top-3 right-3 z-20">
+                  {canEditHeader ? (
+                    <button
+                      type="button"
+                      onClick={() => onSectionChange?.('themestore')}
+                      className="flex items-center gap-1.5 rounded-full border border-vouch-cyan/30 bg-black/45 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-vouch-cyan backdrop-blur-sm transition-colors hover:border-vouch-cyan/55 hover:bg-black/60"
+                      id="customize-profile-header-btn"
+                    >
+                      <Palette className="w-3.5 h-3.5" />
+                      Customize Header
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onSectionChange?.('premium')}
+                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white/55 backdrop-blur-sm transition-colors hover:border-vouch-amber/35 hover:text-vouch-amber"
+                      id="locked-profile-header-btn"
+                      title="Upgrade to Gold to customize your profile header"
+                    >
+                      <Lock className="w-3.5 h-3.5 text-vouch-amber/80" />
+                      Upgrade to customize header
+                    </button>
+                  )}
+                </div>
+
+                <div className="absolute -bottom-10 left-6 z-10">
                   
                   {/* Cute Kitten Ears & Whiskers on image border for Google Cats Theme */}
                   {profile.activeTheme === 'google_cats' && (
@@ -252,41 +275,41 @@ export default function ProfilePage({
                 </div>
               </div>
 
-            <div className="p-6 pt-11 space-y-4">
+            <div className="p-6 pt-12 space-y-4">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-black text-slate-100 tracking-tight">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
                       {displayName}
                     </h3>
                     {profile.verified && (
-                      <span className="text-[10px] bg-emerald-955 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-950/50 flex items-center gap-1">
+                      <span className="text-[10px] bg-vouch-emerald/10 text-vouch-emerald px-2 py-0.5 rounded-full font-bold border border-vouch-emerald/25 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5" />
                         PRO VERIFIED
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400">@{profile.username}</p>
+                  <p className={`${Z8_LABEL} text-white/40 mt-0.5 normal-case tracking-normal font-medium`}>@{profile.username}</p>
                   
                   {/* Dynamic Followers and Tailing count belt */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-400 font-medium font-mono">
+                  <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-white/45 font-medium ${Z8_TABULAR}`}>
                     <div className="whitespace-nowrap">
-                      <strong className="text-slate-200">
+                      <strong className="text-white/90">
                         {profile.subscriptionTier === 'SELLER_PRO' ? '241' : '38'}
                       </strong>{' '}
-                      <span className="text-slate-500">followers</span>
+                      <span className="text-white/35">followers</span>
                     </div>
                     <div className="whitespace-nowrap">
-                      <strong className="text-slate-200 font-bold">
+                      <strong className="text-white/90 font-bold">
                         {profile.subscriptionTier === 'SELLER_PRO' ? '156' : '15'}
                       </strong>{' '}
-                      <span className="text-slate-500">
+                      <span className="text-white/35">
                         {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers (tails)' : 'subscribers'}
                       </span>
                     </div>
                     <div className="whitespace-nowrap">
-                      <strong className="text-slate-200">{followingCount}</strong>{' '}
-                      <span className="text-slate-500">following</span>
+                      <strong className="text-white/90">{followingCount}</strong>{' '}
+                      <span className="text-white/35">following</span>
                     </div>
                   </div>
 
@@ -373,68 +396,94 @@ export default function ProfilePage({
                   </div>
                 </form>
               ) : (
-                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                <p className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap font-medium">
                   "{profile.bio}"
                 </p>
               )}
 
               {/* Joined date */}
-              <div className="flex items-center gap-1.5 text-slate-500 text-[10px] font-medium font-mono pb-2.5 border-b border-slate-850/60">
+              <div className="flex items-center gap-1.5 text-white/35 text-[10px] font-medium font-mono pb-2.5 border-b border-white/10">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Member registered verification: June 19, 2026</span>
               </div>
 
               {/* Verified Metrics Strip Grid */}
               <div className="space-y-3.5 pt-1">
-                <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1">
-                  <Shield className="w-4 h-4 text-emerald-400" />
+                <h4 className={`${Z8_LABEL} text-white/55 flex items-center gap-1.5`}>
+                  <Shield className="w-4 h-4 text-vouch-emerald" />
                   Verified Sports Tracker Analytics
                 </h4>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+                <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs ${Z8_TABULAR}`}>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
-                    <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">True Win Rate</p>
-                    <p className="font-mono text-base font-black text-sky-400 mt-1">{profile.winRate.toFixed(1)}%</p>
+                    <p className={`${Z8_LABEL} text-white/35`}>True Win Rate</p>
+                    <p className="font-mono text-base font-black text-vouch-cyan mt-1">{profile.winRate.toFixed(1)}%</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
-                    <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Net Returns</p>
-                    <p className={`font-mono text-base font-black mt-1 ${profile.unitsNetProfit >= 0 ? 'text-emerald-400' : 'text-rose-455'}`}>
+                    <p className={`${Z8_LABEL} text-white/35`}>Net Returns</p>
+                    <p className={`font-mono text-base font-black mt-1 ${profile.unitsNetProfit >= 0 ? 'text-vouch-emerald' : 'text-rose-400'}`}>
                       {profile.unitsNetProfit >= 0 ? '+' : ''}{profile.unitsNetProfit.toFixed(1)}U
                     </p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
-                    <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Verified Picks</p>
-                    <p className="font-mono text-base font-black text-slate-100 mt-1">{profile.totalPicks}</p>
+                    <p className={`${Z8_LABEL} text-white/35`}>Verified Picks</p>
+                    <p className="font-mono text-base font-black text-white mt-1">{profile.totalPicks}</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} p-3`}>
-                    <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wide font-mono">Total Won</p>
-                    <p className="font-mono text-base font-black text-emerald-400 mt-1">{profile.wonPicks}</p>
+                    <p className={`${Z8_LABEL} text-white/35`}>Total Won</p>
+                    <p className="font-mono text-base font-black text-vouch-emerald mt-1">{profile.wonPicks}</p>
                   </div>
                 </div>
               </div>
 
               {/* Sub-tier Badge Details */}
-              <div className="flex items-center justify-between p-3.5 bg-[#0b0f19]/60 rounded-xl border border-slate-850/60 text-xs">
+              <div className={`flex items-center justify-between p-3.5 rounded-xl border text-xs ${
+                profile.subscriptionTier === 'SELLER_PRO'
+                  ? 'border-vouch-cyan/25 bg-vouch-cyan/5'
+                  : profile.subscriptionTier === 'GOLD'
+                    ? 'border-vouch-emerald/25 bg-vouch-emerald/5'
+                    : 'border-white/10 bg-black/25'
+              }`}>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className={`w-4 h-4 ${
+                    profile.subscriptionTier === 'SELLER_PRO' ? 'text-vouch-cyan' :
+                    profile.subscriptionTier === 'GOLD' ? 'text-vouch-emerald' : 'text-white/40'
+                  }`} />
                   <div>
-                    <span className="text-slate-400 block text-[10px] font-mono leading-tight uppercase font-black">Subscription Tier</span>
-                    <span className="font-extrabold text-slate-100 text-xs tracking-wide">
+                    <span className={`${Z8_LABEL} text-white/35 block leading-tight`}>Subscription Tier</span>
+                    <span className="font-extrabold text-white text-xs tracking-wide">
                       {profile.subscriptionTier === 'SELLER_PRO' ? '💎 SELLER PRO MONETIZED' : profile.subscriptionTier === 'GOLD' ? '✨ VEDGE GOLD' : '🛡️ VEdge BASIC PARTNER'}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-500 block">Status</span>
-                  <span className="text-emerald-400 text-xs font-black font-mono">ACTIVE GRADER</span>
+                  <span className={`${Z8_LABEL} text-white/35 block`}>Status</span>
+                  <span className="text-vouch-emerald text-xs font-black font-mono">ACTIVE GRADER</span>
                 </div>
               </div>
+
+              {!canEditHeader && (
+                <div className="flex items-start gap-2 rounded-xl border border-vouch-amber/20 bg-vouch-amber/5 px-3.5 py-2.5 text-[11px] text-white/55">
+                  <Lock className="w-3.5 h-3.5 text-vouch-amber shrink-0 mt-0.5" />
+                  <p>
+                    Profile header themes are a <span className="text-vouch-emerald font-bold">Gold</span> perk.
+                    {' '}
+                    <button
+                      type="button"
+                      onClick={() => onSectionChange?.('premium')}
+                      className="text-vouch-cyan font-bold hover:underline"
+                    >
+                      Upgrade to customize header
+                    </button>
+                  </p>
+                </div>
+              )}
 
             </div>
           </div>
 
           {/* Verification disclosure */}
-          <div className="p-3.5 bg-[#121824] rounded-2xl border border-slate-850 flex items-start gap-2.5">
+          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3.5 flex items-start gap-2.5`}>
             <Info className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
             <div className="text-[11px] text-slate-400 leading-relaxed font-semibold">
               <span className="text-slate-350 block mb-1">PRO VERIFICATION RULES:</span>
@@ -477,6 +526,7 @@ export default function ProfilePage({
                     onSaveVouch={onSaveVouch}
                     savedVouchIds={savedVouchIds}
                     onAddComment={onAddComment}
+                    onDeletePost={onDeletePost}
                   />
                 ))}
               </div>
@@ -488,7 +538,7 @@ export default function ProfilePage({
         {/* Right Sidebar: "My Outcomes" Private Calendar Win Rate Card */}
         <div className="lg:col-span-4 space-y-6">
 
-          <div className="bg-[#121824] rounded-2xl border border-slate-850 p-4.5 space-y-4 shadow-xl relative animate-slide-up" id="profile-performance-graphs-card">
+          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4.5 space-y-4 shadow-xl relative animate-slide-up`} id="profile-performance-graphs-card">
             <div className="flex items-center justify-between border-b border-slate-850 pb-3">
               <div>
                 <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
@@ -582,7 +632,7 @@ export default function ProfilePage({
             })()}
           </div>
 
-          <div className="bg-[#121824] rounded-2xl border border-slate-850 p-4.5 space-y-4 shadow-xl relative animate-slide-up" id="profile-my-outcomes-sidemenu-card">
+          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4.5 space-y-4 shadow-xl relative animate-slide-up`} id="profile-my-outcomes-sidemenu-card">
             <div className="flex items-center justify-between border-b border-slate-850 pb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />

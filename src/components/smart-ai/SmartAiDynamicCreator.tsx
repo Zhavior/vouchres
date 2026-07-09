@@ -1,13 +1,28 @@
 import type { SmartAiBuilderCategory } from './smartAiEngine.logic';
-import { Bookmark, Cpu, Plus } from 'lucide-react';
+import { Bookmark, Cpu, Loader2 } from 'lucide-react';
 import { SmartAiResearchDecisionPanel } from './SmartAiResearchDecisionPanel';
 import { SmartAiLegCardList } from './SmartAiLegCardList';
+import {
+  Z8_ACTIVE,
+  Z8_DISPLAY,
+  Z8_EMERALD,
+  Z8_IDLE,
+  Z8_LABEL,
+  Z8_PANEL_PREMIUM,
+  Z8_SECTION_HEADER,
+  Z8_STAT_CHIP,
+  Z8_TABULAR,
+  Z8_WARNING,
+} from '../../theme/z8Tokens';
 
 interface SmartAiDynamicCreatorProps {
   builderLegs: number;
   builderCategory: SmartAiBuilderCategory;
   builderThreshold: number;
   dynamicParlay: any;
+  candidatesLoading?: boolean;
+  usingProjectedPreview?: boolean;
+  saveDisabled?: boolean;
   onBuilderLegsChange: (legs: number) => void;
   onBuilderCategoryChange: (category: SmartAiBuilderCategory) => void;
   onBuilderThresholdChange: (threshold: number) => void;
@@ -15,245 +30,208 @@ interface SmartAiDynamicCreatorProps {
   onAddCustomParlayToSlip: () => void;
 }
 
+const MARKET_OPTIONS: Array<{ id: SmartAiBuilderCategory; label: string; hint: string }> = [
+  { id: 'HITS', label: 'Hits', hint: '1–3 hit focus' },
+  { id: 'RBIS', label: 'RBIs', hint: '1–6 RBI focus' },
+  { id: 'RUNS', label: 'Runs', hint: 'Run production' },
+  { id: 'SB', label: 'Stolen Bases', hint: 'Speed edge' },
+  { id: 'HR', label: 'Home Runs', hint: 'Power focus' },
+];
+
+function controlBtn(active: boolean) {
+  return [
+    'rounded-xl border px-3 py-2.5 text-xs font-bold transition-all z8-interactive',
+    active ? Z8_ACTIVE : Z8_IDLE,
+  ].join(' ');
+}
+
 export function SmartAiDynamicCreator({
   builderLegs,
   builderCategory,
   builderThreshold,
   dynamicParlay,
+  candidatesLoading = false,
+  usingProjectedPreview = false,
+  saveDisabled = false,
   onBuilderLegsChange,
   onBuilderCategoryChange,
   onBuilderThresholdChange,
   onSaveGradableParlay,
-  onAddCustomParlayToSlip,
 }: SmartAiDynamicCreatorProps) {
+  const thresholdOptions = (() => {
+    switch (builderCategory) {
+      case 'HITS':
+        return [1, 2, 3].map((v) => ({ value: v, label: `${v} Hit${v > 1 ? 's' : ''}` }));
+      case 'RBIS':
+        return [1, 2, 3, 4, 5, 6].map((v) => ({ value: v, label: `${v} RBI${v > 1 ? 's' : ''}` }));
+      case 'RUNS':
+        return [1, 2, 3, 4, 5].map((v) => ({ value: v, label: `${v} Run${v > 1 ? 's' : ''}` }));
+      case 'SB':
+        return [1, 2].map((v) => ({ value: v, label: `${v} SB${v > 1 ? 's' : ''}` }));
+      case 'HR':
+        return [
+          { value: 1, label: '1+ HR' },
+          { value: 2, label: '2+ HR' },
+        ];
+      default:
+        return [];
+    }
+  })();
+
   return (
-  <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/25 bg-gradient-to-br from-slate-950 via-cyan-950/20 to-slate-950 p-6 space-y-5 shadow-2xl shadow-cyan-950/40 animate-fade-in ring-1 ring-cyan-300/10" id="dynamic-parlay-builder-deck">
-    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-    <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
-    <div className="pointer-events-none absolute -left-24 bottom-0 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl" />
+    <div
+      className={`${Z8_PANEL_PREMIUM} relative overflow-hidden rounded-[2rem] p-5 sm:p-6 space-y-5`}
+      id="dynamic-parlay-builder-deck"
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
 
-    <div className="relative flex items-start justify-between gap-3 border-b border-white/10 pb-4">
-      <div className="flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 shadow-lg shadow-cyan-950/30">
-          <Cpu className="w-5 h-5 text-cyan-300 animate-pulse" />
+      <div className="relative flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+            <Cpu className="h-5 w-5" />
+          </div>
+          <div className={Z8_SECTION_HEADER}>
+            <p className={`${Z8_LABEL} text-vouch-cyan`}>V.A.I Dynamic Creator</p>
+            <h2 className={`${Z8_DISPLAY} text-xl sm:text-2xl`}>Stats-Verified AI Pilot</h2>
+            <p className="mt-1 max-w-xl text-xs text-white/45 sm:text-sm">
+              Build ledger-ready parlays from verified player trend profiles. Model outputs are estimates.
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-[10px] font-black text-cyan-300 font-mono tracking-[0.26em] uppercase">
-            V.A.I Dynamic Creator
-          </p>
-          <h3 className="text-xl font-black text-white tracking-tight">
-            Stats-Verified AI Pilot
-          </h3>
-          <p className="mt-1 text-[11px] font-semibold text-slate-400">
-            Build ledger-ready parlays from verified player trend profiles.
-          </p>
+        <div className="flex flex-wrap gap-2">
+          <span className={`${Z8_LABEL} rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-1 text-vouch-cyan`}>
+            Research model
+          </span>
+          {usingProjectedPreview && (
+            <span className={`${Z8_LABEL} rounded-full border border-vouch-amber/25 bg-vouch-amber/10 px-3 py-1 ${Z8_WARNING}`}>
+              Roster preview
+            </span>
+          )}
         </div>
       </div>
-      <div className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-black text-emerald-300 font-mono uppercase">
-        Live Model
-      </div>
-    </div>
 
-    <div className="relative rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-      <p className="text-sm text-slate-300 leading-relaxed">
-        Builds dynamic parlay slips from player profiles whose <b className="text-white">historical game logs</b>, matchup shape, and market context verify they have successfully hit this metric.
-      </p>
-    </div>
-
-    {/* Legs selector (2 to 5 legs as requested) */}
-    <div className="relative space-y-2 rounded-2xl border border-cyan-300/10 bg-white/[0.03] p-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-[10px] font-black text-cyan-300 font-mono uppercase tracking-[0.22em] block">Multiplier Depth</label>
-        <span className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-black text-cyan-200 font-mono uppercase">
-          Legs
-        </span>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {[2, 3, 4, 5].map(cnt => (
-          <button
-            key={cnt}
-            type="button"
-            onClick={() => onBuilderLegsChange(cnt)}
-            className={`py-2.5 rounded-2xl border text-center transition-all text-xs font-mono font-black ${
-              builderLegs === cnt
-                ? 'bg-cyan-400/15 border-cyan-300/40 text-cyan-100 shadow-lg shadow-cyan-950/20'
-                : 'bg-slate-950/50 border-white/10 text-slate-400 hover:-translate-y-0.5 hover:border-cyan-300/25 hover:bg-slate-900/80 hover:text-white'
-            }`}
-          >
-            {cnt} Legs
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Focus Stat Category selector */}
-    <div className="relative space-y-2 rounded-2xl border border-indigo-300/10 bg-indigo-400/[0.04] p-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-[10px] font-black text-indigo-200 font-mono uppercase tracking-[0.22em] block">Target Analytics Spec</label>
-        <span className="rounded-full border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 text-[9px] font-black text-indigo-200 font-mono uppercase">
-          Market
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { id: 'HITS', label: '📈 1-3 Hits Focus' },
-          { id: 'RBIS', label: '🎯 1-6 RBIs Focus' },
-          { id: 'RUNS', label: '🏃 Runs' },
-          { id: 'SB', label: '💨 Stolen Bases' },
-          { id: 'HR', label: '⚾ Homeruns Focus' }
-        ].map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            onClick={() => onBuilderCategoryChange(cat.id as any)}
-            className={`p-2.5 rounded-xl border text-left transition-all text-[11px] font-extrabold ${
-              builderCategory === cat.id
-                ? 'bg-indigo-950/20 border-indigo-500/40 text-indigo-300 shadow'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:bg-slate-900/85 hover:text-slate-300'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Threshold level option elements */}
-    <div className="relative space-y-2 rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.04] p-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-[10px] font-black text-emerald-200 font-mono uppercase tracking-[0.22em] block">Trigger Standard Value</label>
-        <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black text-emerald-200 font-mono uppercase">
-          Threshold
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {builderCategory === 'HITS' && [1, 2, 3].map(val => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onBuilderThresholdChange(val)}
-            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
-              builderThreshold === val
-                ? 'bg-slate-900 border-sky-500 text-sky-400'
-                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {val} Hit{val > 1 ? 's' : ''}
-          </button>
-        ))}
-        {builderCategory === 'RBIS' && [1, 2, 3, 4, 5, 6].map(val => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onBuilderThresholdChange(val)}
-            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
-              builderThreshold === val
-                ? 'bg-slate-900 border-indigo-500 text-indigo-400'
-                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {val} RBI{val > 1 ? 's' : ''}
-          </button>
-        ))}
-        {builderCategory === 'RUNS' && [1, 2, 3, 4, 5].map(val => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onBuilderThresholdChange(val)}
-            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
-              builderThreshold === val
-                ? 'bg-slate-900 border-amber-500 text-amber-400'
-                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {val} Run{val > 1 ? 's' : ''}
-          </button>
-        ))}
-        {builderCategory === 'SB' && [1, 2].map(val => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onBuilderThresholdChange(val)}
-            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
-              builderThreshold === val
-                ? 'bg-slate-900 border-cyan-500 text-cyan-400'
-                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {val} SB{val > 1 ? 's' : ''}
-          </button>
-        ))}
-        {builderCategory === 'HR' && [1, 2].map(val => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onBuilderThresholdChange(val)}
-            className={`py-2 px-3 rounded-xl border text-xs font-mono font-black transition-all hover:-translate-y-0.5 ${
-              builderThreshold === val
-                ? 'bg-slate-900 border-emerald-500 text-emerald-400'
-                : 'bg-slate-950/80 border-slate-900 text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {val === 1 ? 'Single HR (1+)' : 'Double HR (2+)'}
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Compiled Dynamic Parlay Card Result */}
-    {dynamicParlay ? (
-      <div className="relative space-y-4 pt-4 border-t border-white/10 animate-slide-up">
-        
-        {/* Stats Parlay Top Header summary */}
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-300/15 bg-gradient-to-br from-cyan-950/20 via-slate-950/85 to-indigo-950/20 p-4 shadow-xl shadow-cyan-950/20">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
-          <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-cyan-400/10 blur-2xl" />
-
-          <div className="relative flex items-center justify-between gap-4">
-            <div>
-              <span className="block text-[9px] font-mono text-cyan-300 uppercase tracking-[0.22em] leading-none font-black">Cumulative Return</span>
-              <div className="mt-1 flex items-end gap-2">
-                <span className="text-xl font-mono font-black text-white">{dynamicParlay.totalOdds}</span>
-                {typeof dynamicParlay.oddsValue === 'number' && (
-                  <span className="pb-0.5 text-[10px] text-slate-400 font-mono">({dynamicParlay.oddsValue}x)</span>
-                )}
+      {candidatesLoading ? (
+        <div className={`${Z8_STAT_CHIP} flex items-center justify-center gap-2 py-10 text-sm text-white/45`}>
+          <Loader2 className="h-4 w-4 animate-spin text-vouch-cyan" />
+          Loading verified candidate pool…
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className={`${Z8_STAT_CHIP} space-y-3`}>
+              <div className="flex items-center justify-between gap-2">
+                <label className={`${Z8_LABEL} text-vouch-cyan`}>Leg depth</label>
+                <span className={`${Z8_LABEL} text-white/35`}>2–5 legs</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[2, 3, 4, 5].map((cnt) => (
+                  <button
+                    key={cnt}
+                    type="button"
+                    onClick={() => onBuilderLegsChange(cnt)}
+                    className={controlBtn(builderLegs === cnt)}
+                  >
+                    {cnt}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="block text-[9px] font-mono text-emerald-300 uppercase tracking-[0.22em] leading-none font-black">AI Confidence Edge</span>
-              <div className="mt-1 inline-flex items-center rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-sm font-mono font-black text-emerald-300">
-                {dynamicParlay.aiConfidenceScore}% Conf
+            <div className={`${Z8_STAT_CHIP} space-y-3 lg:col-span-1`}>
+              <label className={`${Z8_LABEL} text-vouch-cyan`}>Market focus</label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 xl:grid-cols-2">
+                {MARKET_OPTIONS.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => onBuilderCategoryChange(cat.id)}
+                    className={`${controlBtn(builderCategory === cat.id)} text-left`}
+                  >
+                    <span className="block text-white">{cat.label}</span>
+                    <span className="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-white/40">
+                      {cat.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={`${Z8_STAT_CHIP} space-y-3`}>
+              <label className={`${Z8_LABEL} ${Z8_EMERALD}`}>Threshold</label>
+              <div className="flex flex-wrap gap-2">
+                {thresholdOptions.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => onBuilderThresholdChange(value)}
+                    className={controlBtn(builderThreshold === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
-        </div>
 
-        <SmartAiResearchDecisionPanel researchSignals={dynamicParlay.researchSignals} />
+          {dynamicParlay ? (
+            <div className="space-y-4 border-t border-white/10 pt-4 animate-slide-up">
+              <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4`}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className={`${Z8_LABEL} text-white/40`}>Cumulative return</span>
+                    <div className={`mt-1 flex items-end gap-2 ${Z8_TABULAR}`}>
+                      <span className="text-2xl font-black text-white">
+                        {dynamicParlay.totalOdds === 'Odds TBD' ? 'Odds TBD' : dynamicParlay.totalOdds}
+                      </span>
+                      {typeof dynamicParlay.oddsValue === 'number' && dynamicParlay.oddsValue > 0 && (
+                        <span className="pb-1 text-xs text-white/40">({dynamicParlay.oddsValue}x est.)</span>
+                      )}
+                    </div>
+                    {dynamicParlay.totalOdds === 'Odds TBD' && (
+                      <p className="mt-1 text-[10px] text-white/35">No verified market prices for all legs.</p>
+                    )}
+                  </div>
+                  <div className="sm:text-right">
+                    <span className={`${Z8_LABEL} text-white/40`}>AI confidence</span>
+                    <div className="mt-1 inline-flex items-center rounded-full border border-vouch-emerald/25 bg-vouch-emerald/10 px-3 py-1">
+                      <span className={`text-lg font-black ${Z8_EMERALD} ${Z8_TABULAR}`}>
+                        {dynamicParlay.aiConfidenceScore}%
+                      </span>
+                      <span className="ml-1.5 text-[10px] text-white/40">model est.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        {/* Parlay Active Legs Cards List */}
-        <SmartAiLegCardList legs={dynamicParlay.legs} players={dynamicParlay.players} />
+              <SmartAiResearchDecisionPanel researchSignals={dynamicParlay.researchSignals} />
+              <SmartAiLegCardList legs={dynamicParlay.legs} players={dynamicParlay.players} />
 
-        {/* Locked AI Made Parlay CTA */}
-        <div className="grid grid-cols-1 gap-2">
-          <button
-            onClick={onSaveGradableParlay}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all font-mono text-xs shadow-md shadow-emerald-950/30 active:scale-[0.98]"
-          >
-            <Bookmark className="w-4 h-4" />
-            SAVE LOCKED AI PARLAY
-          </button>
-        </div>
-        <p className="mt-2 text-center text-[10px] text-slate-500 font-mono">
-          Locked V.A.I parlays stay separate from manual builder slips and auto-settle in Results from the live MLB boxscore.
-        </p>
-
-      </div>
-    ) : (
-      <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-900 font-mono">
-        ⚠️ No eligible matching players met this strict statistic benchmark. Try choosing a lower benchmark depth!
-      </div>
-    )}
-  </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={onSaveGradableParlay}
+                  disabled={saveDisabled}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-vouch-emerald/40 bg-vouch-emerald/15 px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-vouch-emerald/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Bookmark className="h-4 w-4" />
+                  Save locked AI parlay
+                </button>
+                <p className="text-center text-[10px] text-white/35">
+                  Locked V.A.I parlays stay separate from manual builder slips and auto-settle in Results from the MLB
+                  boxscore.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className={`${Z8_STAT_CHIP} py-10 text-center`}>
+              <p className={`${Z8_LABEL} ${Z8_WARNING}`}>No eligible match</p>
+              <p className="mt-2 text-xs text-white/45">
+                No verified players met this benchmark today. Try a lower threshold or different market focus.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

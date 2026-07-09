@@ -7,9 +7,7 @@ import {
   routeVouchAiMessage,
   sendVouchAiChat,
   uiMessagesToApiHistory,
-  VOUCH_AI_OPEN_EVENT,
   type EmailTarget,
-  type VouchAiOpenEventDetail,
   type VouchAiRouteAction,
   type VouchAiUiMessage,
 } from "../lib/vouchAiChat";
@@ -22,8 +20,6 @@ interface UseVouchAiChatOptions {
   savedSlips?: Parlay[];
   activeLegs?: unknown[];
   onSectionChange: (section: string) => void;
-  listenForOpenEvent?: boolean;
-  onExternalOpen?: () => void;
 }
 
 export function useVouchAiChat({
@@ -31,8 +27,6 @@ export function useVouchAiChat({
   savedSlips = [],
   activeLegs = [],
   onSectionChange,
-  listenForOpenEvent = false,
-  onExternalOpen,
 }: UseVouchAiChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -92,6 +86,10 @@ export function useVouchAiChat({
       case "ai_engine":
         explanation =
           "🧠 Swapped over to the **V.A.I Smart Picks Hub**! Access over 850 verified precompiled tickets backed by Statcast velocity models, relative team rest parameters, and local weather coefficients.";
+        break;
+      case "hr_board":
+        explanation =
+          "🔥 Jumping to the **HR Board** for today's verified home-run candidates and edge table.";
         break;
       case "research":
         explanation =
@@ -256,66 +254,6 @@ Your feedback message has been delivered to **${target}** via our verified SMTP 
     setEmailBody(body);
     addAgentMessage(responseText, "email_form", { target });
   };
-
-  const applyRouteRef = useRef(applyRouteAction);
-  applyRouteRef.current = applyRouteAction;
-
-  useEffect(() => {
-    if (!listenForOpenEvent) return;
-
-    const handleOpenAgent = (e: Event) => {
-      const customEvent = e as CustomEvent<VouchAiOpenEventDetail>;
-      const detail = customEvent.detail || {};
-      onExternalOpen?.();
-
-      if (detail.messages?.length) {
-        setMessages(detail.messages);
-      }
-
-      if (detail.text && detail.action === "explain_alerts") {
-        const userMsg: ChatMessage = {
-          id: `msg-user-evt-${Date.now()}`,
-          sender: "user",
-          text: detail.text,
-          timestamp: formatChatTimestamp(),
-        };
-        setMessages((prev) => [...prev, userMsg]);
-
-        setIsTyping(true);
-        setTimeout(() => {
-          setIsTyping(false);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `msg-agent-evt-${Date.now()}`,
-              sender: "agent",
-              text: `📊 **Active Alerts Sabermetric Deep-Scoping Analysis:**
-
-I ran a quick multi-agent audit on our recent Live Notification ledger values:
-1. **Shohei Ohtani HR (Homerun Alert)**: Statcast register shows 109.5 MPH exit velocity. This matches the exact platoon launch angle projection of our *Math & Probability Agent*!
-2. **Mookie Betts (Run Scored Alert)**: High Base-Runs performance shift registers a 5.8% increase in team win likelihood.
-3. **Drafted Ticket Correlation**: These events are perfectly correlated with your active parlay locks! All injury states are verified as green.
-
-Keep your eyes closely aligned to the **Live Games Board** to track further developments in real time!`,
-              timestamp: formatChatTimestamp(),
-            },
-          ]);
-        }, 900);
-        return;
-      }
-
-      if (detail.processLastUserMessage && detail.messages?.length) {
-        const lastUser = [...detail.messages].reverse().find((m) => m.sender === "user");
-        if (lastUser) {
-          const history = detail.messages.filter((m) => m.id !== lastUser.id);
-          void applyRouteRef.current(routeVouchAiMessage(lastUser.text), lastUser.text, history);
-        }
-      }
-    };
-
-    window.addEventListener(VOUCH_AI_OPEN_EVENT, handleOpenAgent);
-    return () => window.removeEventListener(VOUCH_AI_OPEN_EVENT, handleOpenAgent);
-  }, [listenForOpenEvent, onExternalOpen]);
 
   return {
     messages,

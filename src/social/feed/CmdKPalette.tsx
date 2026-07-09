@@ -45,8 +45,10 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'hitter_matchup_zones', label: 'Hitter Matchup Zones', group: 'Pro Labs', icon: LineChart,       keywords: ['hitter', 'zones', 'heatmap', 'matchup'] },
   { id: 'pro_graphs_lab',  label: 'Pro Graphs Lab',        group: 'Pro Labs',      icon: LineChart,       keywords: ['graphs', 'charts', 'trends', 'data'] },
   { id: 'nba_nfl',         label: 'NBA / NFL Arena',       group: 'Pro Labs',      icon: Trophy,          keywords: ['nba', 'nfl', 'basketball', 'football'] },
+  // AI
+  { id: 'ai_pilot',        label: 'V.A.I Dynamic Creator', group: 'AI',            icon: Cpu,             keywords: ['ai', 'pilot', 'dynamic', 'creator', 'parlay', 'vai'] },
+  { id: 'ai_engine',       label: 'V.A.I Research Center', group: 'AI',            icon: Cpu,             keywords: ['ai', 'research', 'vai', 'rooms', 'smart'] },
   // Build & Track
-  { id: 'ai_engine',       label: 'V.A.I Smart Picks',     group: 'Build & Track', icon: Cpu,             keywords: ['ai', 'smart', 'picks', 'vai', 'engine'] },
   { id: 'live_parlays',    label: 'Parlay Hub',             group: 'Build & Track', icon: Radio,           keywords: ['parlay', 'hub', 'live', 'slips'] },
   { id: 'build',           label: 'Build Parlay',           group: 'Build & Track', icon: Sliders,         keywords: ['build', 'parlay', 'create', 'legs', 'slip'] },
   { id: 'research',        label: 'Player Research',        group: 'Build & Track', icon: Search,          keywords: ['research', 'player', 'stats', 'search'] },

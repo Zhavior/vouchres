@@ -112,4 +112,76 @@ describe("post routes", () => {
       },
     });
   });
+
+  it("blocks parlay post delete after the 30-minute window", async () => {
+    const createdAt = new Date(Date.now() - 31 * 60 * 1000).toISOString();
+
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: "post-parlay",
+              author_id: "user_test",
+              created_at: createdAt,
+              pick_id: "pick-parlay",
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: { leg_type: "parlay" }, error: null }),
+        }),
+      }),
+    });
+
+    const response = await fetch(`${baseUrl}/api/posts/post-parlay`, { method: "DELETE" });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body).toMatchObject({
+      ok: false,
+      error: {
+        code: "parlay_post_locked",
+        message: "Locked in your history after 30 minutes",
+      },
+    });
+  });
+
+  it("allows regular post delete for the author", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: {
+              id: "post-regular",
+              author_id: "user_test",
+              created_at: new Date().toISOString(),
+              pick_id: null,
+            },
+            error: null,
+          }),
+        }),
+      }),
+    });
+
+    fromMock.mockReturnValueOnce({
+      delete: () => ({
+        eq: () => ({
+          eq: async () => ({ error: null }),
+        }),
+      }),
+    });
+
+    const response = await fetch(`${baseUrl}/api/posts/post-regular`, { method: "DELETE" });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+  });
 });

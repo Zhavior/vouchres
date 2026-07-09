@@ -20,7 +20,7 @@ export default function FeedRightRail({
   onSaveVouch,
 }: FeedRightRailProps) {
   return (
-    <aside className="font-z8 hidden lg:flex flex-col gap-6 w-[340px] xl:w-[380px] py-6 overflow-y-auto no-scrollbar max-h-screen sticky top-0 px-4 bg-obsidian-900 border-l border-white/10" id="feed-right-rail">
+    <aside className="font-z8 hidden xl:flex flex-col gap-4 w-[290px] py-4 overflow-y-auto no-scrollbar max-h-screen sticky top-0 px-3 border-l border-white/[0.08]" id="feed-right-rail">
       {/* 1. Hot MLB Markets Selection */}
       <HotMarketsPanel onQuickVouch={onSaveVouch} savedVouchIds={savedVouchIds} />
 

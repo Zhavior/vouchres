@@ -52,7 +52,7 @@ function formatRelativeTime(date: Date | null | undefined): string {
 }
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <div className="grid grid-cols-2 auto-rows-[minmax(220px,42vh)] gap-2 md:auto-rows-auto md:grid-cols-2 md:gap-4 xl:grid-cols-4">
     {Array.from({ length: 4 }).map((_, colIdx) => (
       <div
         key={colIdx}
@@ -194,7 +194,7 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className={`${Z8_PAGE} min-h-0 ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} pb-12`}>
+    <div className={`${Z8_PAGE} ve-page-shell min-h-0 ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
         <HrCommandCenter
           mode={vm.mode}

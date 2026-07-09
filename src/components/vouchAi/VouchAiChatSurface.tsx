@@ -3,10 +3,12 @@ import {
   BrainCircuit,
   Cpu,
   FileText,
+  Flame,
   Mail,
   RefreshCw,
   Search,
   Send,
+  Shield,
   Sliders,
 } from "lucide-react";
 import { motion } from "../../lib/motion";
@@ -21,6 +23,12 @@ type Props = {
   onSectionChange: (section: string) => void;
   chat: ChatState;
 };
+
+const ISLAND_PAGE_SHORTCUTS = [
+  { label: "V.A.I Smart Picks", section: "ai_engine", icon: Cpu },
+  { label: "HR Board", section: "hr_board", icon: Flame },
+  { label: "Parlay Lab", section: "build", icon: Shield },
+] as const;
 
 export default function VouchAiChatSurface({ variant, profile, onSectionChange, chat }: Props) {
   const {
@@ -50,6 +58,9 @@ export default function VouchAiChatSurface({ variant, profile, onSectionChange, 
   const agentBubble = isIsland
     ? "mr-auto glass-panel glass-border text-white/80"
     : "bg-slate-900/90 text-slate-200 border border-slate-800 rounded-tl-none shadow-md";
+
+  const pageJumpBtn =
+    "glass-panel glass-border inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-vouch-cyan transition hover:border-vouch-cyan/40 shrink-0";
 
   const quickBtn = isIsland
     ? "glass-panel glass-border inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-vouch-cyan transition hover:border-vouch-cyan/40 shrink-0 uppercase"
@@ -240,7 +251,23 @@ export default function VouchAiChatSurface({ variant, profile, onSectionChange, 
         )}
       </div>
 
-      <div className={`flex flex-wrap gap-2 ${isIsland ? "mt-4" : "overflow-x-auto pb-1 scrollbar-none"}`}>
+      {isIsland && (
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Quick page jumps">
+          {ISLAND_PAGE_SHORTCUTS.map(({ label, section, icon: Icon }) => (
+            <button
+              key={section}
+              type="button"
+              onClick={() => handleExplainFeature(section)}
+              className={pageJumpBtn}
+            >
+              <Icon className="h-3 w-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className={`flex flex-wrap gap-2 ${isIsland ? "mt-3" : "overflow-x-auto pb-1 scrollbar-none"}`}>
         <button type="button" onClick={() => handleExplainFeature("build")} className={quickBtn}>
           <Sliders className="w-3 h-3" />
           <span>Explain features</span>

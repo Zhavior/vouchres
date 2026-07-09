@@ -3,6 +3,7 @@ import { Share, Twitter, Copy, Check, ExternalLink, ShieldCheck, Sparkles, Troph
 import { CreatorProofProfile } from '../../types';
 import { THEME_REGISTRY } from '../../theme/themeRegistry';
 import ProfileAvatarBorder from './ProfileAvatarBorder';
+import { BubbleField } from '../vouchedge/ParticleFields';
 
 interface ProfileShareCardProps {
   profile: CreatorProofProfile;
@@ -70,13 +71,9 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
         style={getThemeVars() as React.CSSProperties}
         id="social-share-card-preview"
       >
-        {/* Dynamic theme particles demo symbols */}
+        {/* Glass bubble accents */}
         {activeTheme.id !== 'cyber-blue' && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30 flex justify-between p-4">
-            {activeTheme.particleDemo?.slice(0, 3).map((sym, idx) => (
-              <span key={idx} className="animate-bounce text-xs" style={{ animationDelay: `${idx * 400}ms` }}>{sym}</span>
-            ))}
-          </div>
+          <BubbleField count={3} mobileCount={2} variant="pulse" className="opacity-30 p-4" />
         )}
 
         <div className={`rounded-[14px] p-6 bg-slate-950/90 border border-white/5 relative z-10 space-y-4`}>

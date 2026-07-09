@@ -7,15 +7,6 @@ import {
 
 export * from "./vouchAiChatRouting";
 
-export const VOUCH_AI_OPEN_EVENT = "open-vedge-agent-chat";
-
-export interface VouchAiOpenEventDetail {
-  text?: string;
-  action?: string;
-  messages?: VouchAiUiMessage[];
-  processLastUserMessage?: boolean;
-}
-
 export function formatChatTimestamp(date = new Date()): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
@@ -58,10 +49,6 @@ export async function sendVouchAiChat(
       text: "I am connected in offline simulation mode! I can help guide your sports research, explain features, construct parlay slips, or dispatch feedback emails.",
     };
   }
-}
-
-export function openVouchAiAgent(detail: VouchAiOpenEventDetail = {}): void {
-  window.dispatchEvent(new CustomEvent(VOUCH_AI_OPEN_EVENT, { detail }));
 }
 
 export function buildIslandWelcomeMessage(firstName: string): VouchAiUiMessage {

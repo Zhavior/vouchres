@@ -1,6 +1,5 @@
-import { VECard } from '../../components/ui/ve';
 import React from 'react';
-import { CheckCircle2, Lock, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
+import { CheckCircle2, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
 import { FeedPost, Parlay } from '../../types';
 
 type ComposerMode = 'VOUCH' | 'PARLAY' | 'RESULT' | 'RESEARCH_NOTE';
@@ -9,21 +8,34 @@ interface FeedComposerProps {
   onPostCreated: (postData: Partial<FeedPost>) => void;
   savedSlips: Parlay[];
   profileName: string;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  avatarInitials?: string;
 }
 
 const MODES: Array<{
   id: ComposerMode;
   label: string;
-  helper: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: 'VOUCH', label: 'Pick', helper: 'Single edge', icon: Sparkles },
-  { id: 'PARLAY', label: 'Parlay', helper: 'Attach slip', icon: TrendingUp },
-  { id: 'RESULT', label: 'Result', helper: 'Log outcome', icon: Trophy },
-  { id: 'RESEARCH_NOTE', label: 'Research', helper: 'Slate read', icon: FileText },
+  { id: 'VOUCH', label: 'Pick', icon: Sparkles },
+  { id: 'PARLAY', label: 'Parlay', icon: TrendingUp },
+  { id: 'RESULT', label: 'Result', icon: Trophy },
+  { id: 'RESEARCH_NOTE', label: 'Note', icon: FileText },
 ];
 
-export default function FeedComposer({ onPostCreated, savedSlips, profileName }: FeedComposerProps) {
+export default function FeedComposer({
+  onPostCreated,
+  savedSlips,
+  profileName,
+  expanded: expandedProp,
+  onExpandedChange,
+  avatarInitials,
+}: FeedComposerProps) {
+  const [internalExpanded, setInternalExpanded] = React.useState(false);
+  const expanded = expandedProp ?? internalExpanded;
+  const setExpanded = onExpandedChange ?? setInternalExpanded;
+
   const [mode, setMode] = React.useState<ComposerMode>('VOUCH');
   const [content, setContent] = React.useState('');
   const [sport, setSport] = React.useState('MLB');
@@ -36,13 +48,15 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
   const maxChars = 360;
   const remaining = maxChars - content.length;
   const canPost = content.trim().length >= 3 && remaining >= 0 && !isPosting;
-  const initials = (profileName || 'VE')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
+  const initials =
+    avatarInitials ||
+    (profileName || 'VE')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase();
 
   const marketLabel =
     mode === 'RESULT' ? 'Result market' : mode === 'RESEARCH_NOTE' ? 'Game context' : mode === 'PARLAY' ? 'Saved slip' : 'Market / game';
@@ -61,6 +75,7 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
     setTags('');
     setSelectedSlipId('');
     setMode('VOUCH');
+    setExpanded(false);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -129,153 +144,161 @@ export default function FeedComposer({ onPostCreated, savedSlips, profileName }:
     }, 160);
   };
 
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="feed-composer w-full flex items-center gap-3 px-4 py-3 border-b border-white/[0.08] text-left hover:bg-white/[0.02] transition-colors"
+        aria-label="Compose a post"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vouch-emerald/15 text-vouch-emerald font-bold text-sm">
+          {initials}
+        </div>
+        <span className="flex-1 text-[15px] text-white/40">What's happening in the slate?</span>
+        <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-vouch-emerald px-4 py-1.5 text-[13px] font-bold text-black">
+          Post
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <VECard className="font-z8 rounded-3xl p-4 space-y-4">
-      <form onSubmit={handleSubmit}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-vouch-emerald/10 text-vouch-emerald">
-            <strong className="text-xs font-black">{initials}</strong>
-          </div>
-
-          <div>
-            <span className="terminal-text text-white/40">Home Feed</span>
-            <h2 className="text-base font-black text-white leading-tight mt-0.5">Share a Vouch</h2>
-            <p className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
-              <strong className="text-white/70">{profileName || 'VouchEdge Creator'}</strong>
-              <em className="not-italic flex items-center gap-1"><Lock className="h-3 w-3" /> Public post</em>
-            </p>
-          </div>
+    <div className="feed-composer border-b border-white/[0.08] px-4 py-3 font-z8">
+      <form onSubmit={handleSubmit} className="flex gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-vouch-emerald/15 text-vouch-emerald font-bold text-sm">
+          {initials}
         </div>
 
-        <div className="terminal-text flex shrink-0 items-center gap-1.5 rounded-full bg-vouch-emerald/10 px-2.5 py-1 text-vouch-emerald">
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Ready
+        <div className="flex-1 min-w-0 space-y-3">
+          <textarea
+            id="feed-composer-textarea"
+            className="w-full resize-none bg-transparent text-[17px] text-white placeholder:text-white/40 outline-none min-h-[52px] leading-relaxed"
+            value={content}
+            onChange={(event) => setContent(event.target.value.slice(0, maxChars))}
+            placeholder="What's happening in the slate?"
+            autoFocus
+          />
+
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Post type">
+            {MODES.map((item) => {
+              const Icon = item.icon;
+              const active = mode === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setMode(item.id)}
+                  aria-selected={active}
+                  className={[
+                    'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors',
+                    active ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'text-white/45 hover:bg-white/[0.04] hover:text-white',
+                  ].join(' ')}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label className="block">
+              <span className="text-[11px] font-medium text-white/40">Sport</span>
+              <select
+                value={sport}
+                onChange={(event) => setSport(event.target.value)}
+                aria-label="Sport"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
+              >
+                <option value="MLB">MLB</option>
+                <option value="NBA">NBA</option>
+                <option value="NFL">NFL</option>
+                <option value="NHL">NHL</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="text-[11px] font-medium text-white/40">{marketLabel}</span>
+              {mode === 'PARLAY' && savedSlips.length > 0 ? (
+                <select
+                  value={selectedSlipId}
+                  onChange={(event) => setSelectedSlipId(event.target.value)}
+                  aria-label="Saved parlay"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
+                >
+                  <option value="">Attach saved parlay</option>
+                  {savedSlips.map((slip) => (
+                    <option key={slip.id} value={slip.id}>
+                      {slip.title || `${slip.legs?.length || 0}-leg slip`}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={market}
+                  onChange={(event) => setMarket(event.target.value)}
+                  placeholder={marketPlaceholder}
+                  aria-label="Game or market"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
+                />
+              )}
+            </label>
+
+            <label className="block">
+              <span className="text-[11px] font-medium text-white/40">{oddsLabel}</span>
+              <input
+                value={odds}
+                onChange={(event) => setOdds(event.target.value)}
+                placeholder={mode === 'RESULT' ? '1.5' : '+140 or trend'}
+                aria-label="Odds or trend"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-[11px] font-medium text-white/40">Tags</span>
+              <input
+                value={tags}
+                onChange={(event) => setTags(event.target.value)}
+                placeholder="#MLB, #HR"
+                aria-label="Tags"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
+              />
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/[0.06]">
+            <div className="flex items-center gap-2 text-[12px] text-white/35">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-vouch-emerald/60" />
+              <span className={remaining < 40 ? 'text-rose-400' : ''}>{remaining} left</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="rounded-full px-3 py-1.5 text-[13px] font-semibold text-white/50 hover:bg-white/[0.04] hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!canPost}
+                className="flex items-center gap-1.5 rounded-full bg-vouch-emerald px-4 py-1.5 text-[14px] font-bold text-black transition hover:brightness-110 disabled:opacity-40"
+              >
+                {isPosting ? 'Posting...' : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Post
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <textarea
-        className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.02] p-3.5 text-sm text-white placeholder:text-white/30 outline-none transition-colors focus:border-vouch-emerald/30 min-h-[84px]"
-        value={content}
-        onChange={(event) => setContent(event.target.value.slice(0, maxChars))}
-        placeholder="Example: Judge HR lean — wind out to left, pitcher FB-heavy, lineup confirmed."
-      />
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5" role="tablist" aria-label="Post type">
-        {MODES.map((item) => {
-          const Icon = item.icon;
-          const active = mode === item.id;
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setMode(item.id)}
-              aria-selected={active}
-              aria-pressed={active}
-              className={[
-                'flex items-center gap-2 rounded-xl px-3 py-2 text-left transition-all',
-                active ? 'bg-vouch-emerald/10 text-vouch-emerald' : 'text-white/40 hover:text-white hover:bg-white/[0.03]',
-              ].join(' ')}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0">
-                <strong className="block text-xs font-bold leading-none truncate">{item.label}</strong>
-                <em className="not-italic block text-[10px] text-white/30 mt-0.5 truncate">{item.helper}</em>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <label className="block">
-          <span className="terminal-text text-white/40">Sport</span>
-          <select
-            value={sport}
-            onChange={(event) => setSport(event.target.value)}
-            aria-label="Sport"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
-          >
-            <option value="MLB">MLB</option>
-            <option value="NBA">NBA</option>
-            <option value="NFL">NFL</option>
-            <option value="NHL">NHL</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="terminal-text text-white/40">{marketLabel}</span>
-          {mode === 'PARLAY' && savedSlips.length > 0 ? (
-            <select
-              value={selectedSlipId}
-              onChange={(event) => setSelectedSlipId(event.target.value)}
-              aria-label="Saved parlay"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-xs text-white outline-none focus:border-vouch-emerald/30"
-            >
-              <option value="">Attach saved parlay</option>
-              {savedSlips.map((slip) => (
-                <option key={slip.id} value={slip.id}>
-                  {slip.title || `${slip.legs?.length || 0}-leg slip`}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              value={market}
-              onChange={(event) => setMarket(event.target.value)}
-              placeholder={marketPlaceholder}
-              aria-label="Game or market"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
-            />
-          )}
-        </label>
-
-        <label className="block">
-          <span className="terminal-text text-white/40">{oddsLabel}</span>
-          <input
-            value={odds}
-            onChange={(event) => setOdds(event.target.value)}
-            placeholder={mode === 'RESULT' ? '1.5' : '+140 or trend'}
-            aria-label="Odds or trend"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
-          />
-        </label>
-
-        <label className="block">
-          <span className="terminal-text text-white/40">Tags</span>
-          <input
-            value={tags}
-            onChange={(event) => setTags(event.target.value)}
-            placeholder="#MLB, #HR"
-            aria-label="Tags"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-vouch-emerald/30"
-          />
-        </label>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 pt-1">
-        <span className={['text-[11px]', remaining < 40 ? 'text-rose-400' : 'text-white/30'].join(' ')}>{remaining} left</span>
-
-        <button
-          type="submit"
-          disabled={!canPost}
-          className="flex items-center gap-2 rounded-xl bg-vouch-emerald px-5 py-2.5 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
-        >
-          {isPosting ? 'Posting...' : (
-            <>
-              <Send className="h-4 w-4" />
-              Post Vouch
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="flex items-center gap-2 text-[11px] text-white/30">
-        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-vouch-emerald/60" />
-        <span>Posts appear instantly in your feed. Results and saved parlays stay tied to your VouchEdge profile.</span>
-      </div>
       </form>
-    </VECard>
+    </div>
   );
 }

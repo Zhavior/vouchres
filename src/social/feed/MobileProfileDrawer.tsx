@@ -39,7 +39,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 /** HR nav items use Flame per featureConfig. */
 const HR_NAV_IDS = new Set(['hr_board']);
 
-const GROUP_ORDER: FeatureGroup[] = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'];
+const GROUP_ORDER: FeatureGroup[] = ['Daily', 'Pro Labs', 'AI', 'Build & Track', 'Social', 'Account'];
 
 export interface TierMeta {
   label: string;
@@ -162,7 +162,7 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
                   type="button"
                   onClick={onClose}
                   aria-label="Close menu"
-                  className={`flex h-8 w-8 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
+                  className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -218,7 +218,7 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
                           onClick={() => go(item.id)}
                           aria-current={isActive ? 'page' : undefined}
                           className={[
-                            'relative flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',
+                            'relative flex min-h-[44px] w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-all font-z8',
                             isActive ? Z8_SIDEBAR_ACTIVE : Z8_SIDEBAR_IDLE,
                           ].join(' ')}
                         >

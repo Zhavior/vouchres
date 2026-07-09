@@ -34,11 +34,11 @@ type Props = {
 
 function MiniStatChip({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 border border-white/10 bg-white/[0.03] px-3.5 py-2.5 font-mono">
-      <div className="flex h-8 w-8 items-center justify-center border border-white/10 bg-black/30 text-vouch-cyan">{icon}</div>
-      <div className="flex flex-col leading-tight">
-        <span className="text-lg font-extrabold text-slate-50">{value}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-white/40">{label}</span>
+    <div className="flex min-w-0 items-center gap-2 border border-white/10 bg-white/[0.03] px-2 py-2 font-mono sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-white/10 bg-black/30 text-vouch-cyan sm:h-8 sm:w-8">{icon}</div>
+      <div className="min-w-0 flex flex-col leading-tight">
+        <span className="text-base font-extrabold text-slate-50 sm:text-lg">{value}</span>
+        <span className="truncate text-[9px] font-semibold uppercase tracking-widest text-white/40 sm:text-[10px]">{label}</span>
       </div>
     </div>
   );
@@ -56,15 +56,15 @@ export function HrCommandCenter(props: Props) {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <MiniStatChip label="Elite" value={props.eliteCount} icon={<Flame className="h-4 w-4" />} />
-          <MiniStatChip label="Strong" value={props.strongCount} icon={<Award className="h-4 w-4" />} />
-          <MiniStatChip label="Watch" value={props.watchCount} icon={<Eye className="h-4 w-4" />} />
-          <MiniStatChip label="Sleepers" value={props.sleeperCount} icon={<Moon className="h-4 w-4" />} />
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+          <MiniStatChip label="Elite" value={props.eliteCount} icon={<Flame className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
+          <MiniStatChip label="Strong" value={props.strongCount} icon={<Award className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
+          <MiniStatChip label="Watch" value={props.watchCount} icon={<Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
+          <MiniStatChip label="Sleepers" value={props.sleeperCount} icon={<Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
         </div>
 
-        <VEButton onClick={props.onRefresh} disabled={props.isRefreshing} variant="ghost" size="sm">
+        <VEButton onClick={props.onRefresh} disabled={props.isRefreshing} variant="ghost" size="sm" className="self-end sm:self-auto">
           <RefreshCw className={`mr-2 h-3.5 w-3.5 ${props.isRefreshing ? 'animate-spin' : ''}`} />
           {props.lastUpdatedLabel}
         </VEButton>

@@ -1,9 +1,116 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getFounderPointsLabel } from "../../lib/founderAccess";
 
 interface ParticleProps {
   count?: number;
   className?: string;
+}
+
+const BUBBLE_COLORS = [
+  "rgba(0,240,255,0.36)",
+  "rgba(59,130,246,0.32)",
+  "rgba(34,211,238,0.28)",
+  "rgba(37,99,235,0.24)",
+];
+
+function useResponsiveCount(desktop: number, mobile: number) {
+  const [count, setCount] = useState(desktop);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setCount(mq.matches ? mobile : desktop);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [desktop, mobile]);
+  return count;
+}
+
+type BubbleVariant = "drift" | "float" | "pulse";
+
+interface BubbleFieldProps extends ParticleProps {
+  mobileCount?: number;
+  variant?: BubbleVariant;
+}
+
+/** Soft glass/circle bubbles — Z8 premium cyan/blue aesthetic, no emojis. */
+export function BubbleField({
+  count = 15,
+  mobileCount = 8,
+  className = "",
+  variant = "drift",
+}: BubbleFieldProps) {
+  const effectiveCount = useResponsiveCount(count, mobileCount);
+
+  const bubbles = useMemo(
+    () =>
+      Array.from({ length: effectiveCount }).map((_, i) => ({
+        id: i,
+        left: `${((i * 19) % 90) + 5}%`,
+        top: variant === "float" ? `${((i * 31) % 85) + 5}%` : undefined,
+        size: variant === "drift" ? 6 + ((i * 9) % 18) : 8 + ((i * 7) % 14),
+        delay: variant === "drift" ? `-${(i * 2.5) % 20}s` : `${(i * 0.4) % 4}s`,
+        duration:
+          variant === "drift"
+            ? `${((i * 6) % 15) + 18}s`
+            : `${((i * 5) % 8) + 6}s`,
+        driftX: `${((i * 27) % 120) - 60}px`,
+        driftRot: `${((i * 53) % 240) - 120}deg`,
+        opacity: i % 3 === 0 ? 0.28 : 0.14,
+        color: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
+        blur: i % 4 === 0 ? 1.2 : 0.4,
+      })),
+    [effectiveCount, variant]
+  );
+
+  const animClass =
+    variant === "drift"
+      ? "animate-theme-drift"
+      : variant === "pulse"
+        ? "ve-bubble-pulse"
+        : "ve-bubble-float";
+
+  return (
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none select-none ${className}`}>
+      {bubbles.map((b) => (
+        <span
+          key={b.id}
+          className={`${animClass} block rounded-full`}
+          style={{
+            left: b.left,
+            top: b.top,
+            width: b.size,
+            height: b.size,
+            background: `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.45), ${b.color} 55%, transparent 78%)`,
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: `0 0 ${b.size * 1.5}px ${b.color}`,
+            filter: `blur(${b.blur}px)`,
+            "--drift-delay": b.delay,
+            "--drift-duration": b.duration,
+            "--drift-x": b.driftX,
+            "--drift-rot": b.driftRot,
+            "--theme-particle-opacity": String(b.opacity),
+            animationDelay: variant !== "drift" ? b.delay : undefined,
+            animationDuration: variant !== "drift" ? b.duration : undefined,
+          } as React.CSSProperties}
+        />
+      ))}
+      <style>{`
+        @keyframes ve-bubble-float {
+          0%, 100% { transform: translateY(0) scale(1); opacity: var(--theme-particle-opacity, 0.2); }
+          50% { transform: translateY(-18px) scale(1.08); opacity: calc(var(--theme-particle-opacity, 0.2) * 1.4); }
+        }
+        @keyframes ve-bubble-pulse {
+          0%, 100% { transform: scale(0.92); opacity: calc(var(--theme-particle-opacity, 0.2) * 0.7); }
+          50% { transform: scale(1.12); opacity: var(--theme-particle-opacity, 0.2); }
+        }
+        .ve-bubble-float { position: absolute; animation: ve-bubble-float ease-in-out infinite; }
+        .ve-bubble-pulse { position: absolute; animation: ve-bubble-pulse ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .ve-bubble-float, .ve-bubble-pulse { animation: none !important; opacity: 0.1; }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export function SnowField({ count = 50, className = "" }: ParticleProps) {
@@ -96,21 +203,20 @@ export function CoinField({ count = 25, className = "" }: ParticleProps) {
       {coins.map((c) => (
         <span
           key={c.id}
-          className="absolute flex items-center justify-center font-bold"
+          className="absolute rounded-full"
           style={{
             left: `${c.left}%`,
             top: "-30px",
             width: c.size,
             height: c.size,
-            fontSize: c.size,
             ["--drift" as any]: `${c.drift}px`,
             animation: `ve-coin-fall ${c.duration}s linear ${c.delay}s infinite`,
-            color: "#FACC15",
-            textShadow: "0 0 8px rgba(212,175,55,0.6)",
+            background:
+              "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), #FACC15 48%, #CA8A04 100%)",
+            boxShadow: "0 0 10px rgba(212,175,55,0.55), inset 0 0 4px rgba(255,255,255,0.2)",
+            border: "1px solid rgba(250,204,21,0.35)",
           }}
-        >
-          🪙
-        </span>
+        />
       ))}
     </div>
   );
@@ -262,5 +368,5 @@ export function ThemeParticleRouter({ themeId, className = "" }: { themeId: stri
   if (themeId.includes("founder")) return <AuroraField className={className} />;
   if (themeId.includes("4bit") || themeId.includes("arcade")) return <PixelRain count={15} className={className} />;
   if (themeId.includes("8bit")) return <CoinField count={12} className={className} />;
-  return <MeshFlow colors={["#22d3ee", "#3b82f6", "#a78bfa", "#fbbf24"]} className={className} />;
+  return <MeshFlow colors={["#00f0ff", "#3b82f6", "#2563eb", "#22d3ee"]} className={className} />;
 }

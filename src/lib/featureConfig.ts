@@ -15,7 +15,7 @@ import type { SportId } from "../sports/registry";
 export type ViewMode = "beginner" | "pro";
 
 /** Sidebar section a feature belongs to. Undefined = ungrouped (top). */
-export type FeatureGroup = "Daily" | "Pro Labs" | "Build & Track" | "Social" | "Account";
+export type FeatureGroup = "Daily" | "Pro Labs" | "AI" | "Build & Track" | "Social" | "Account";
 
 export interface FeatureConfig {
   id: string;
@@ -69,8 +69,11 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "pro_graphs_lab", label: "Pro Graphs Lab", icon: "LineChart", enabled: true, order: 11, group: "Pro Labs", sports: ALL_SPORTS },
   { id: "nba_nfl", label: "NBA / NFL Arena", icon: "Trophy", enabled: true, order: 11.5, group: "Pro Labs" },
 
+  // AI — V.A.I pilot tools
+  { id: "ai_pilot", label: "V.A.I Dynamic Creator", icon: "Cpu", enabled: true, order: 11.6, group: "AI", sports: ALL_SPORTS, locked: true },
+  { id: "ai_engine", label: "V.A.I Research Center", icon: "Activity", enabled: true, order: 11.7, group: "AI", sports: ALL_SPORTS },
+
   // Build & Track
-  { id: "ai_engine", label: "V.A.I Smart Picks", icon: "Cpu", enabled: false, order: 10, group: "Build & Track" },
   { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
   { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 11, group: "Build & Track", locked: true },
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
@@ -120,7 +123,7 @@ export function loadFeatureLayout(): FeatureLayout {
     const storedById = new Map(parsed.features.map((f) => [f.id, f]));
     parsed.features = ALL_FEATURES.map((def) => {
       const prev = storedById.get(def.id);
-      const enabled = def.locked ? true : def.id === "ai_engine" ? false : prev ? prev.enabled : def.enabled;
+      const enabled = def.locked ? true : prev ? prev.enabled : def.enabled;
       return { ...def, enabled };
     });
 
@@ -141,15 +144,14 @@ export function saveFeatureLayout(layout: FeatureLayout): void {
 /* ============ Helpers ============ */
 
 /** Returns only enabled features, sorted by order — for sidebar rendering */
-/** Sidebar-only exclusions — settings stays in footer; ai_engine stays hidden until re-enabled. */
-const SIDEBAR_HIDDEN_FEATURES = ['settings', 'ai_engine'];
+/** Sidebar-only exclusions — settings stays in footer. */
+const SIDEBAR_HIDDEN_FEATURES = ['settings'];
 
 export function getEnabledFeatures(
   layout: FeatureLayout,
   options: { canAccessThemeStore?: boolean; activeSport?: SportId } = {},
 ): FeatureConfig[] {
   return layout.features
-    .filter((f) => f.id !== 'ai_engine')
     .filter((f) => f.enabled)
     .filter((f) => f.access !== 'admin_dev' || options.canAccessThemeStore)
     // Sport-scoped features only show when the active sport is in their list.

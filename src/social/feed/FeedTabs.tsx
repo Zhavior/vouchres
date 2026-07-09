@@ -1,6 +1,5 @@
 import React from 'react';
 import { SlidersHorizontal, Trophy, Layers } from 'lucide-react';
-import { VECard } from '../../components/ui/ve';
 
 interface FeedTabsProps {
   activeTab: string;
@@ -44,8 +43,7 @@ export default function FeedTabs({
   ];
 
   return (
-    <VECard className="font-z8 flex flex-col sticky top-0 z-30 w-full rounded-none border-x-0" id="feed-navigation-tabs-composite">
-      {/* Primary tabs scroll */}
+    <nav className="home-feed-tabs feed-tabs sticky top-[53px] z-10 border-b border-white/[0.08] bg-black/80 backdrop-blur-md font-z8" id="feed-navigation-tabs-composite">
       <div className="flex overflow-x-auto no-scrollbar scroll-smooth w-full select-none">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -53,42 +51,42 @@ export default function FeedTabs({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="flex-1 py-4 text-center font-bold text-xs select-none min-w-[80px] relative transition-colors shrink-0 uppercase tracking-wider"
+              className="feed-tab-btn flex-1 py-4 text-center font-semibold text-[15px] min-w-[72px] relative transition-colors shrink-0 hover:bg-white/[0.03]"
               id={`tab-btn-${tab.id}`}
+              aria-selected={isActive}
+              role="tab"
             >
-              <span className={isActive ? 'text-vouch-emerald' : 'text-white/40 hover:text-white'}>
+              <span className={isActive ? 'text-white' : 'text-white/50'}>
                 {tab.label}
               </span>
               {isActive && (
                 <div
-                  className="absolute bottom-0 left-[20%] right-[20%] h-0.5 bg-vouch-emerald rounded-t-full"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[4px] w-14 bg-vouch-emerald rounded-full"
                   id={`active-tab-indicator-${tab.id}`}
-                ></div>
+                />
               )}
             </button>
           );
         })}
       </div>
 
-      {/* For You Filters Sub-bar */}
       {activeTab === 'for-you' && (
         <div
-          className="px-4 py-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs"
+          className="px-4 py-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs bg-black/40"
           id="for-you-filters-panel"
         >
-          <div className="terminal-text flex items-center gap-1.5 text-white/40">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-vouch-cyan" />
-            <span>Refine 'For You' stream:</span>
+          <div className="flex items-center gap-1.5 text-white/40 text-[12px]">
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Filters</span>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Sport Filter Dropdown */}
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5" id="sport-selector-container">
               <Trophy className="w-3.5 h-3.5 text-vouch-emerald shrink-0" />
               <select
                 value={selectedSport}
                 onChange={(e) => onSportChange(e.target.value)}
-                className="bg-white/[0.02] border border-white/10 text-white text-[11px] font-bold py-1 px-2 rounded-lg focus:border-vouch-cyan/40 outline-none transition-all cursor-pointer"
+                className="bg-white/[0.04] border border-white/10 text-white text-[12px] font-medium py-1.5 px-2.5 rounded-full focus:border-vouch-cyan/40 outline-none cursor-pointer"
                 id="sport-filter-select"
               >
                 {sports.map((sport) => (
@@ -97,13 +95,12 @@ export default function FeedTabs({
               </select>
             </div>
 
-            {/* Post Type Filter Dropdown */}
             <div className="flex items-center gap-1.5" id="posttype-selector-container">
               <Layers className="w-3.5 h-3.5 text-vouch-cyan shrink-0" />
               <select
                 value={selectedPostType}
                 onChange={(e) => onPostTypeChange(e.target.value)}
-                className="bg-white/[0.02] border border-white/10 text-white text-[11px] font-bold py-1 px-2.5 rounded-lg focus:border-vouch-cyan/40 outline-none transition-all cursor-pointer"
+                className="bg-white/[0.04] border border-white/10 text-white text-[12px] font-medium py-1.5 px-2.5 rounded-full focus:border-vouch-cyan/40 outline-none cursor-pointer"
                 id="posttype-filter-select"
               >
                 {postTypes.map((type) => (
@@ -112,21 +109,20 @@ export default function FeedTabs({
               </select>
             </div>
 
-            {/* Clear Filters Indicator */}
             {(selectedSport !== 'ALL' || selectedPostType !== 'ALL') && (
               <button
                 onClick={() => {
                   onSportChange('ALL');
                   onPostTypeChange('ALL');
                 }}
-                className="text-[10px] text-rose-400 hover:text-rose-300 font-extrabold uppercase hover:underline transition-colors leading-none"
+                className="text-[12px] text-rose-400 hover:text-rose-300 font-semibold hover:underline transition-colors"
               >
-                Reset filters
+                Reset
               </button>
             )}
           </div>
         </div>
       )}
-    </VECard>
+    </nav>
   );
 }

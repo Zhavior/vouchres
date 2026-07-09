@@ -148,10 +148,16 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     description: "Cross-sport arena for NBA and NFL tools.",
     icon: Trophy,
   },
+  ai_pilot: {
+    id: "ai_pilot",
+    label: "V.A.I Dynamic Creator",
+    description: "Stats-verified AI parlay pilot with market focus and thresholds.",
+    icon: Cpu,
+  },
   ai_engine: {
     id: "ai_engine",
-    label: "V.A.I Smart Picks",
-    description: "Smart AI player and parlay ideas.",
+    label: "V.A.I Research Center",
+    description: "V.A.I rooms and deep research board.",
     icon: Cpu,
   },
   live_parlays: {

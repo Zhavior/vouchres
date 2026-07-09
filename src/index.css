@@ -30,7 +30,7 @@
 }
 
 body {
-  background-color: #050505;
+  background-color: #020617;
   color: hsl(var(--ve-text-primary));
   font-family: var(--font-z8);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -49,7 +49,7 @@ body {
 [class*="bg-slate-950"],
 .bg-slate-900,
 .bg-slate-950 {
-  background-color: rgba(5, 5, 5, 0.42) !important;
+  background-color: rgba(2, 6, 23, 0.44) !important;
   backdrop-filter: blur(16px) saturate(1.12) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.12) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
@@ -1224,12 +1224,12 @@ html:not([data-ve-theme]) {
    ========================================================== */
 
 :root {
-  --ve-bg: 0 0% 2%;
-  --ve-bg-deep: 0 0% 1%;
-  --ve-bg-panel: 0 0% 4%;
-  --ve-surface: 0 0% 5%;
-  --ve-surface-raised: 0 0% 7%;
-  --ve-surface-elevated: 0 0% 10%;
+  --ve-bg: 222 47% 4%;
+  --ve-bg-deep: 222 50% 2%;
+  --ve-bg-panel: 222 40% 6%;
+  --ve-surface: 222 35% 7%;
+  --ve-surface-raised: 222 32% 9%;
+  --ve-surface-elevated: 222 28% 12%;
   --ve-border: 0 0% 100%;
   --ve-border-subtle: 0 0% 100%;
   --ve-border-strong: 186 100% 50%;
@@ -1279,15 +1279,15 @@ body {
    ========================================================== */
 
 html {
-  background: #050505;
+  background: #020617;
 }
 
 .z8-app-shell {
-  --ve-bg-soft: #050505;
-  --ve-motion-bg: #050505;
+  --ve-bg-soft: #020617;
+  --ve-motion-bg: #020617;
   --ve-accent: #00ff94;
   --ve-accent-2: #00f0ff;
-  --ve-accent-glow: rgba(0, 255, 148, 0.16);
+  --ve-accent-glow: rgba(0, 240, 255, 0.14);
   --theme-accent-color: #00f0ff;
   --theme-border-color: rgba(255, 255, 255, 0.10);
   --theme-shadow-glow: rgba(0, 240, 255, 0.14);
@@ -1299,7 +1299,10 @@ html {
   --ve-text-secondary: 0 0% 65%;
   --ve-text-muted: 0 0% 45%;
   min-height: 100vh;
-  background: #050505;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -8%, rgba(0, 240, 255, 0.06), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(37, 99, 235, 0.05), transparent 50%),
+    #020617;
   color: rgba(255, 255, 255, 0.92);
   font-family: var(--font-z8);
 }
@@ -1310,7 +1313,7 @@ html {
 .z8-app-shell [class*="bg-slate-900"],
 .z8-app-shell [class*="bg-[#020617]"],
 .z8-app-shell [class*="bg-black"] {
-  background-color: rgba(5, 5, 5, 0.22) !important;
+  background-color: rgba(2, 6, 23, 0.24) !important;
   backdrop-filter: blur(16px) saturate(1.12);
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
 }
@@ -1385,12 +1388,12 @@ html {
 .z8-app-shell input,
 .z8-app-shell select,
 .z8-app-shell textarea {
-  background-color: rgba(5, 5, 5, 0.62);
+  background-color: rgba(2, 6, 23, 0.66);
   border-color: rgba(255, 255, 255, 0.10);
 }
 
 .z8-app-shell ::selection {
-  color: #050505;
+  color: #020617;
   background: #00ff94;
 }
 
@@ -1400,12 +1403,12 @@ html {
 }
 
 .z8-app-shell ::-webkit-scrollbar-track {
-  background: #050505;
+  background: #020617;
 }
 
 .z8-app-shell ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(0, 255, 148, 0.58), rgba(0, 240, 255, 0.46));
-  border: 2px solid #050505;
+  border: 2px solid #020617;
   border-radius: 999px;
 }
 
@@ -1416,8 +1419,9 @@ html {
 
 .z8-app-shell.ve-motion-shell {
   background:
-    radial-gradient(circle at 50% -10%, rgba(0, 255, 148, 0.12), transparent 34rem),
-    linear-gradient(180deg, #050505 0%, #050505 42%, #050505 100%);
+    radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.10), transparent 34rem),
+    radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.06), transparent 28rem),
+    linear-gradient(180deg, #020617 0%, #030a18 42%, #020617 100%);
 }
 
 /* Legacy Tailwind slate text → Z8 premium neutrals */
@@ -1584,7 +1588,7 @@ html {
 
 #root .edge-space-shell {
   min-height: 100vh;
-  background: #050505 !important;
+  background: #020617 !important;
 }
 
 #root .edge-space-shell .edge-space-backdrop {
@@ -4418,11 +4422,11 @@ body,
    ========================================================= */
 
 :root {
-  --ve-home-bg: #050505;
-  --ve-home-panel: rgba(15, 23, 42, 0.78);
-  --ve-home-panel-strong: rgba(15, 23, 42, 0.92);
-  --ve-home-card: rgba(8, 13, 27, 0.82);
-  --ve-home-card-hover: rgba(15, 23, 42, 0.94);
+  --ve-home-bg: #020617;
+  --ve-home-panel: rgba(10, 22, 40, 0.80);
+  --ve-home-panel-strong: rgba(10, 22, 40, 0.94);
+  --ve-home-card: rgba(4, 10, 24, 0.84);
+  --ve-home-card-hover: rgba(10, 22, 40, 0.96);
   --ve-home-border: rgba(148, 163, 184, 0.16);
   --ve-home-border-hot: rgba(45, 212, 191, 0.34);
   --ve-home-text: #f8fafc;
@@ -4448,8 +4452,8 @@ body,
   [class*="feedHeader"]
 ) {
   background:
-    radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.10), transparent 36%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.82)) !important;
+    radial-gradient(circle at 20% 0%, rgba(0, 240, 255, 0.10), transparent 36%),
+    linear-gradient(180deg, rgba(10, 22, 40, 0.94), rgba(2, 6, 23, 0.86)) !important;
   border-color: var(--ve-home-border) !important;
   box-shadow: 0 14px 42px rgba(0, 0, 0, 0.26);
   backdrop-filter: blur(18px);
@@ -6580,3 +6584,200 @@ body,
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================
+   MOBILE READINESS — safe areas, FAB clearance, touch targets
+   ========================================================== */
+
+:root {
+  --ve-mobile-fab-offset: 1rem;
+  --ve-mobile-fab-size: 2.75rem;
+  --ve-mobile-chrome-height: calc(var(--ve-mobile-fab-offset) + var(--ve-mobile-fab-size) + 1.25rem);
+  --ve-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ve-safe-top: env(safe-area-inset-top, 0px);
+  --ve-safe-left: env(safe-area-inset-left, 0px);
+  --ve-safe-right: env(safe-area-inset-right, 0px);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (max-width: 1180px) {
+  #vouchedge-container-root,
+  .z8-layout-root,
+  #layout-inner-frame.ve-layout-frame {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  #inner-view-slot {
+    padding-bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom)) !important;
+    overflow-x: clip !important;
+  }
+
+  .ve-page-shell {
+    padding-bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom));
+  }
+}
+
+@media (max-width: 767px) {
+  .ve-mobile-fab-cluster {
+    bottom: calc(var(--ve-mobile-fab-offset) + var(--ve-safe-bottom));
+    right: max(1.25rem, var(--ve-safe-right));
+  }
+
+  .ve-mobile-fab-cluster .ve-edge-island-trigger {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .ve-mobile-header {
+    padding-top: max(0.625rem, var(--ve-safe-top));
+    padding-left: max(0.75rem, var(--ve-safe-left));
+    padding-right: max(0.75rem, var(--ve-safe-right));
+  }
+}
+
+/* Vouch Editor — mobile-first studio layout */
+@media (max-width: 1023px) {
+  #lightroom-darkroom-studio.ve-studio-editor {
+    border-radius: 1rem;
+    overflow: clip;
+  }
+
+  #lightroom-darkroom-studio .ve-studio-canvas {
+    padding-bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom) + 5.5rem);
+  }
+
+  #lightroom-darkroom-studio .ve-studio-sticky-actions {
+    position: sticky;
+    bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom));
+    margin-top: auto;
+    backdrop-filter: blur(12px);
+    background: hsl(var(--ve-surface) / 0.94);
+    box-shadow: 0 -8px 32px hsl(var(--ve-shadow) / 0.22);
+  }
+
+  #lightroom-darkroom-studio .ve-studio-touch-btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  #vouch-hub-view {
+    overflow-x: clip;
+  }
+}
+
+@media (min-width: 1024px) {
+  #lightroom-darkroom-studio.ve-studio-editor {
+    box-shadow:
+      0 0 0 1px hsl(var(--ve-border) / 0.18),
+      0 24px 64px hsl(var(--ve-shadow) / 0.28);
+  }
+
+  #lightroom-darkroom-studio .ve-studio-sticky-actions {
+    background: #0a0d16;
+  }
+}
+
+/* =========================================================
+   HOME FEED — X / TWITTER STREAM UX
+   Flat single-column feed, thumb-friendly actions, 600px max.
+   ========================================================= */
+
+.home-feed-shell,
+.feed-main {
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#layout-inner-frame.ve-layout-feed #center-main-content-column,
+#layout-inner-frame.ve-layout-feed #inner-view-slot {
+  max-width: 600px !important;
+  width: 100% !important;
+}
+
+@media (min-width: 1181px) {
+  #layout-inner-frame.ve-layout-feed {
+    grid-template-columns: 260px minmax(0, 600px) 290px !important;
+    max-width: 1150px !important;
+  }
+}
+
+/* Flatten feed chrome — no glass cards */
+#inner-view-slot .home-feed-header,
+#inner-view-slot .home-feed-tabs,
+#inner-view-slot .feed-composer {
+  background: rgba(0, 0, 0, 0.82) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+}
+
+#inner-view-slot .feed-post {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#inner-view-slot .feed-post:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: transparent !important;
+}
+
+/* Thumb-friendly action buttons */
+.feed-action-btn,
+.feed-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border-radius: 9999px;
+  transition: color 150ms ease, background-color 150ms ease;
+  touch-action: manipulation;
+}
+
+.feed-action-btn:hover,
+.feed-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 767px) {
+  .feed-action-btn,
+  .feed-icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .feed-action-row {
+    max-width: 100% !important;
+    justify-content: space-between;
+  }
+}
+
+/* Composer collapsed state */
+#inner-view-slot .feed-composer button[type="button"] {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Load state — minimal */
+.ve-feed-load-state {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* Right rail: subtle on xl+ only */
+#feed-right-rail {
+  background: transparent !important;
+}
+

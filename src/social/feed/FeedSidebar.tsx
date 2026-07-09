@@ -31,11 +31,12 @@ import {
   setViewMode, FeatureLayout,
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { useNotificationCenter } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const SIDEBAR_GROUPS = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'] as const;
+const SIDEBAR_GROUPS = ['Daily', 'Pro Labs', 'AI', 'Build & Track', 'Social', 'Account'] as const;
 
 /**
  * Groups that are collapsed by default.
@@ -62,6 +63,7 @@ const HR_NAV_IDS = new Set(['hr_board']);
 const GROUP_ACCENT: Record<string, string> = {
   Daily: 'text-vouch-cyan',
   'Pro Labs': 'text-vouch-cyan',
+  AI: 'text-vouch-cyan',
   'Build & Track': 'text-vouch-cyan',
   Social: 'text-vouch-cyan',
   Account: 'text-white/40',
@@ -205,7 +207,6 @@ interface FeedSidebarProps {
   onSectionChange: (section: string) => void;
   profile: CreatorProofProfile;
   onOpenCmdK?: () => void;
-  unreadNotifications?: number;
 }
 
 export default function FeedSidebar({
@@ -213,8 +214,8 @@ export default function FeedSidebar({
   onSectionChange,
   profile,
   onOpenCmdK,
-  unreadNotifications = 0,
 }: FeedSidebarProps) {
+  const { unreadCount: unreadNotifications } = useNotificationCenter();
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);

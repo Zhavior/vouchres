@@ -177,6 +177,7 @@ export interface FeedPost {
     expiresAt?: string;
   };
   quotedPostId?: string; // Reference for quote tweets
+  backendPostId?: string;
   profileThemeId?: string;
   profileBorderId?: string;
   winRate?: number;

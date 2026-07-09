@@ -26,6 +26,8 @@ import { useTheme } from './theme/ThemeProvider';
 import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import { getFounderPointsLabel } from "../lib/founderAccess";
+import { canCustomizeProfileHeader } from './pro/ProAccessGate';
+import { useEntitlements } from '../features/hr/hooks/useEntitlements';
 
 interface ThemeStoreProps {
   profile: CreatorProofProfile;
@@ -49,6 +51,12 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     userCredits,
     setUserCredits
   } = useTheme();
+
+  const entitlements = useEntitlements();
+  const canEditProfileHeader = canCustomizeProfileHeader(profile, {
+    isPro: entitlements.isPro,
+    isStaff: entitlements.isStaff,
+  });
 
   const [activeTab, setActiveTab] = useState<'locker' | 'shop' | 'custom'>('locker');
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -474,17 +482,26 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                         </button>
                         <button
                           onClick={() => {
+                            if (!canEditProfileHeader) return;
                             setProfileTheme(theme.id);
                             triggerSuccess(`🔮 "${theme.name}" equipped publicly as your Profile Theme!`);
                           }}
-                          disabled={isProfileTheme}
+                          disabled={isProfileTheme || !canEditProfileHeader}
+                          title={!canEditProfileHeader ? 'Upgrade to Gold to customize your profile header' : undefined}
                           className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
-                            isProfileTheme 
+                            !canEditProfileHeader
+                              ? 'bg-black/30 border-white/10 text-white/35 cursor-not-allowed'
+                              : isProfileTheme 
                               ? 'bg-purple-400/15 border-purple-300/25 text-purple-200 cursor-not-allowed' 
                               : 'bg-purple-500/15 border-purple-300/25 text-purple-200 hover:bg-purple-500/25 hover:text-white hover:scale-[1.02]'
                           }`}
                         >
-                          {isProfileTheme ? 'Profile Active' : 'Set as Profile'}
+                          {!canEditProfileHeader ? (
+                            <span className="inline-flex items-center justify-center gap-1">
+                              <Lock className="w-3 h-3" />
+                              Header Locked
+                            </span>
+                          ) : isProfileTheme ? 'Profile Active' : 'Set as Profile'}
                         </button>
                       </div>
                     </div>

@@ -1,18 +1,18 @@
 :root {
   --ve-bg: #020617;
   --ve-surface: rgba(255,255,255,.045);
-  --ve-surface-strong: rgba(0,0,0,.45);
+  --ve-surface-strong: rgba(2,6,23,.55);
   --ve-border: rgba(255,255,255,.10);
-  --ve-cyan: #67e8f9;
+  --ve-cyan: #00f0ff;
   --ve-muted: rgba(255,255,255,.55);
 }
 
 .ve-page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 8%, rgba(34,211,238,.18), transparent 34%),
-    radial-gradient(circle at 82% 12%, rgba(16,185,129,.10), transparent 32%),
-    linear-gradient(180deg, #020617 0%, #000 55%, #020617 100%);
+    radial-gradient(circle at 18% 8%, rgba(0,240,255,.14), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(37,99,235,.10), transparent 32%),
+    linear-gradient(180deg, #020617 0%, #010409 55%, #020617 100%);
   color: white;
 }
 

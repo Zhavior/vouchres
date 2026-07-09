@@ -485,18 +485,18 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
   };
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen`} id="vouch-hub-view">
+    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-[1380px] min-h-screen ve-page-shell`} id="vouch-hub-view">
       
       {/* Toast HUD */}
       {visualToast && (
-        <div className={`fixed bottom-6 right-6 z-50 ${Z8_PANEL_PREMIUM} px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-mono font-bold animate-bounce text-vouch-cyan`}>
+        <div className={`fixed z-50 ${Z8_PANEL_PREMIUM} px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-mono font-bold animate-bounce text-vouch-cyan left-3 right-3 sm:left-auto sm:right-6 bottom-[calc(var(--ve-mobile-chrome-height)+var(--ve-safe-bottom)+0.75rem)] sm:bottom-6 max-w-md sm:max-w-none mx-auto sm:mx-0`}>
           <Sparkles className="w-4 h-4 text-vouch-cyan animate-spin" />
           <span>{visualToast}</span>
         </div>
       )}
 
       {/* Main header banner */}
-      <header className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-3xl p-5 relative`}>
+      <header className={`${Z8_PANEL_PREMIUM} overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative`}>
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-vouch-cyan/10 blur-3xl pointer-events-none" />
         <div className={`relative ${Z8_SECTION_HEADER}`}>
           <span className={`${Z8_LABEL} inline-flex w-fit items-center gap-2 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-3 py-1 text-vouch-cyan`}>
@@ -522,7 +522,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
               <button
                 key={t.id}
                 onClick={() => setActiveBoardTab(t.id as 'studio' | 'saved')}
-                className={`group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
+                className={`group relative flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${
                   active ? Z8_ACTIVE : Z8_IDLE
                 }`}
               >

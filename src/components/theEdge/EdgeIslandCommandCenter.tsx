@@ -207,16 +207,17 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
 
         {/* Swipeable panels */}
         <div
-          className="min-h-0 flex-1 touch-pan-y overflow-hidden"
+          className="relative min-h-0 flex-1 overflow-hidden"
           onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
           onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
         >
           <motion.div
-            className="flex h-full"
+            className="flex h-full min-h-0"
             style={{ width: `${PANELS.length * 100}%` }}
             animate={{ x: `-${(activeIndex * 100) / PANELS.length}%` }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             drag="x"
+            dragDirectionLock
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.14}
             onDragEnd={(_, info) => {
@@ -228,7 +229,10 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             }}
           >
             {/* Command panel */}
-            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+            <div
+              className="h-full min-h-0 shrink-0 overflow-y-auto overscroll-y-contain touch-pan-y p-5 pt-2 sm:p-7 sm:pt-2 [-webkit-overflow-scrolling:touch]"
+              style={{ width: `${100 / PANELS.length}%` }}
+            >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
                   <Gauge className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
@@ -310,7 +314,10 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             </div>
 
             {/* Ask AI panel */}
-            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+            <div
+              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden p-5 pt-2 sm:p-7 sm:pt-2"
+              style={{ width: `${100 / PANELS.length}%` }}
+            >
               <EdgeIslandAskAiPanel
                 profile={profile}
                 savedSlips={savedSlips}
@@ -320,7 +327,10 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             </div>
 
             {/* World Chat panel */}
-            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+            <div
+              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden p-5 pt-2 sm:p-7 sm:pt-2"
+              style={{ width: `${100 / PANELS.length}%` }}
+            >
               <WorldChatPanel
                 profile={profile}
                 isLoggedIn={isLoggedIn}

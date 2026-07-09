@@ -245,9 +245,9 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Tier filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <SlidersHorizontal className="h-3.5 w-3.5 text-vouch-cyan/60" />
+        {/* Tier filters — 2×2 on narrow screens, inline row on sm+ */}
+        <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2">
+          <SlidersHorizontal className="hidden h-3.5 w-3.5 text-vouch-cyan/60 sm:block" />
           {TIER_OPTIONS.map((tier) => {
             const active = activeTiers.includes(tier.key);
             return (
@@ -255,7 +255,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
                 key={tier.key}
                 type="button"
                 onClick={() => onToggleTier(tier.key)}
-                className={`border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition duration-200 ${
+                className={`min-w-0 border px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide transition duration-200 sm:px-3.5 sm:py-1.5 sm:text-xs ${
                   active
                     ? TIER_ACTIVE_CLASSES[tier.key] || 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                     : 'border-white/10 bg-black/25 text-zinc-500 hover:border-vouch-cyan/30 hover:text-zinc-300'

@@ -33,6 +33,15 @@ export function isProUser(profile: Pick<CreatorProofProfile, 'subscriptionTier'>
   return hasTierAccess(profile, 'GOLD');
 }
 
+/** Profile cover/banner theme customization requires Gold or higher. */
+export function canCustomizeProfileHeader(
+  profile: Pick<CreatorProofProfile, 'subscriptionTier'>,
+  opts?: { isPro?: boolean; isStaff?: boolean },
+): boolean {
+  if (opts?.isPro || opts?.isStaff) return true;
+  return hasTierAccess(profile, 'GOLD');
+}
+
 function readSessionEmail(): string | null {
   try {
     const raw = localStorage.getItem('vouchedge.auth');
