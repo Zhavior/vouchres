@@ -408,10 +408,9 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('customize')}
             className={[
-              'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
-              activeSection === 'customize'
-                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                : 'border-white/10 text-white/40 hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white',
+              'flex items-center justify-center xl:justify-start gap-2 border px-3 py-2 transition-all',
+              Z8_LABEL, 'tracking-[0.12em]',
+              activeSection === 'customize' ? Z8_ACTIVE : Z8_IDLE,
             ].join(' ')}
             aria-label="Customize layout"
           >
@@ -421,10 +420,9 @@ export default function FeedSidebar({
           <button
             onClick={() => onSectionChange('settings')}
             className={[
-              'flex items-center justify-center xl:justify-start gap-2 border bg-black/25 px-3 py-2 font-mono text-[10px] font-black uppercase tracking-[0.12em] transition-all',
-              activeSection === 'settings'
-                ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                : 'border-white/10 text-white/40 hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 hover:text-white',
+              'flex items-center justify-center xl:justify-start gap-2 border px-3 py-2 transition-all',
+              Z8_LABEL, 'tracking-[0.12em]',
+              activeSection === 'settings' ? Z8_ACTIVE : Z8_IDLE,
             ].join(' ')}
             aria-label="Settings"
           >
@@ -436,7 +434,7 @@ export default function FeedSidebar({
         {/* Profile card */}
         <button
           onClick={() => onSectionChange('profile')}
-          className="w-full flex items-center gap-3 border border-white/10 bg-black/30 p-3 cursor-pointer transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5"
+          className={`w-full flex items-center gap-3 p-3 cursor-pointer transition-all hover:border-vouch-cyan/35 hover:bg-vouch-cyan/5 ${Z8_SURFACE}`}
           id="sidebar-profile-footer"
           aria-label={`View profile of ${profile.displayName}`}
         >
@@ -450,14 +448,14 @@ export default function FeedSidebar({
           />
           <div className="hidden xl:block min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <h4 className="font-mono text-sm font-bold uppercase tracking-wide text-white truncate leading-none">
+              <h4 className={`${Z8_LABEL} text-sm text-white truncate leading-none`}>
                 {profile.displayName}
               </h4>
               {profile.verified && (
                 <Shield className="h-3 w-3 shrink-0 text-vouch-cyan fill-vouch-cyan/85" />
               )}
             </div>
-            <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-white/40 truncate">
+            <p className={`mt-0.5 ${Z8_LABEL} text-white/40 truncate`}>
               {profile.winRate != null
                 ? `${Math.round(profile.winRate * 100)}% win rate`
                 : 'View profile'}
