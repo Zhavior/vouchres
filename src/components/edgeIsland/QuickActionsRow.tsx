@@ -30,7 +30,7 @@ export function QuickActionsRow({ onSectionChange }: EdgeIslandSectionProps) {
               key={action.section}
               type="button"
               onClick={() => onSectionChange(action.section)}
-              className="group rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:-translate-y-0.5 hover:border-white/20"
+              className="group min-h-11 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:-translate-y-0.5 hover:border-white/20 touch-manipulation"
             >
               <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl border ${accent}`}>
                 <Icon className="h-4.5 w-4.5" />

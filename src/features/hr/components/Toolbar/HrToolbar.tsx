@@ -221,7 +221,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
 
   return (
     <>
-      <div className="glass-command flex flex-col gap-3 border border-ve-fuse/45 p-3 font-mono sm:p-4">
+      <div className="glass-command flex w-full min-w-0 flex-col gap-3 border border-ve-fuse/45 p-3 font-mono sm:p-4">
         {/* Mobile: compact search row + filter sheet trigger */}
         <div className="flex items-center gap-2 md:hidden">
           <div className="relative min-w-0 flex-1">
@@ -373,7 +373,7 @@ export const HrToolbar: React.FC<HrToolbarProps> = ({
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col border-t border-ve-fuse/50 bg-ve-obsidian shadow-2xl">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-2xl border-t border-ve-fuse/50 bg-ve-obsidian shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
               <div className="flex items-center gap-2 font-mono text-sm font-bold uppercase tracking-wide text-white">
                 <SlidersHorizontal className="h-4 w-4 text-vouch-cyan" />

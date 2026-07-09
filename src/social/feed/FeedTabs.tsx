@@ -44,14 +44,14 @@ export default function FeedTabs({
 
   return (
     <nav className="home-feed-tabs feed-tabs sticky top-[53px] z-10 border-b border-white/[0.08] bg-black/80 backdrop-blur-md font-z8" id="feed-navigation-tabs-composite">
-      <div className="flex overflow-x-auto no-scrollbar scroll-smooth w-full select-none">
+      <div className="flex w-full snap-x snap-mandatory overflow-x-auto no-scrollbar scroll-smooth select-none">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="feed-tab-btn flex-1 py-4 text-center font-semibold text-[15px] min-w-[72px] relative transition-colors shrink-0 hover:bg-white/[0.03]"
+              className="feed-tab-btn relative flex min-h-11 min-w-[88px] shrink-0 snap-start flex-1 touch-manipulation items-center justify-center py-3 text-center text-[15px] font-semibold transition-colors hover:bg-white/[0.03]"
               id={`tab-btn-${tab.id}`}
               aria-selected={isActive}
               role="tab"
@@ -86,7 +86,7 @@ export default function FeedTabs({
               <select
                 value={selectedSport}
                 onChange={(e) => onSportChange(e.target.value)}
-                className="bg-white/[0.04] border border-white/10 text-white text-[12px] font-medium py-1.5 px-2.5 rounded-full focus:border-vouch-cyan/40 outline-none cursor-pointer"
+                className="ve-touch-target min-h-11 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[12px] font-medium text-white outline-none focus:border-vouch-cyan/40 sm:min-h-0"
                 id="sport-filter-select"
               >
                 {sports.map((sport) => (
@@ -100,7 +100,7 @@ export default function FeedTabs({
               <select
                 value={selectedPostType}
                 onChange={(e) => onPostTypeChange(e.target.value)}
-                className="bg-white/[0.04] border border-white/10 text-white text-[12px] font-medium py-1.5 px-2.5 rounded-full focus:border-vouch-cyan/40 outline-none cursor-pointer"
+                className="ve-touch-target min-h-11 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[12px] font-medium text-white outline-none focus:border-vouch-cyan/40 sm:min-h-0"
                 id="posttype-filter-select"
               >
                 {postTypes.map((type) => (

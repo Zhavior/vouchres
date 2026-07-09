@@ -337,7 +337,7 @@ function HomeFeedPage({
     .toUpperCase();
 
   return (
-    <div className="home-feed-shell flex flex-col min-h-full bg-ve-obsidian text-ve-flash font-z8" id="home-feed-page-wrapper">
+    <div className="home-feed-shell flex min-h-full min-w-0 max-w-full flex-col overflow-x-hidden bg-ve-obsidian text-ve-flash font-z8" id="home-feed-page-wrapper">
 
       {/* Toast Notification System */}
       {toastMsg && (
@@ -348,8 +348,8 @@ function HomeFeedPage({
       )}
 
       {/* X-style sticky header */}
-      <header className="home-feed-header sticky top-0 z-20 border-b border-ve-fuse/60 bg-ve-obsidian/90 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-3 px-4 h-[53px]">
+      <header className="home-feed-header sticky top-0 z-20 min-w-0 border-b border-ve-fuse/60 bg-ve-obsidian/90 backdrop-blur-md">
+        <div className="flex h-[53px] min-w-0 items-center justify-between gap-3 px-4">
           <h1 className="text-[20px] font-extrabold text-ve-flash leading-none">
             Home
             {proOnlyMode && (
@@ -429,7 +429,7 @@ function HomeFeedPage({
       />
 
       {/* Main Stream Area */}
-      <div className="feed-main w-full mx-auto" id="feed-stream-outer">
+      <div className="feed-main mx-auto w-full min-w-0 max-w-full" id="feed-stream-outer">
 
         {/* Inline composer — collapsed by default, expands on tap */}
         <FeedComposer

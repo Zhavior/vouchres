@@ -17,11 +17,14 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
         onFocus={() => preloadSection('feed')}
         aria-label="Go to Home Feed"
         title="Home Feed"
-        className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
-          activeSection === 'feed' ? 'border-vouch-emerald/70' : ''
+        aria-current={activeSection === 'feed' ? 'page' : undefined}
+        className={`ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
+          activeSection === 'feed'
+            ? 'border-ve-ion/70 shadow-[0_0_20px_rgba(0,229,255,0.35)]'
+            : ''
         }`}
       >
-        <Home className="ve-edge-island-trigger-icon h-4 w-4" />
+        <Home className={`ve-edge-island-trigger-icon h-4 w-4 ${activeSection === 'feed' ? 'text-ve-ion' : ''}`} />
       </button>
       <button
         type="button"
@@ -30,18 +33,21 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
         onFocus={() => preloadSection('board')}
         aria-label="Go to Vouch Board"
         title="Vouch Board"
-        className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
-          activeSection === 'board' ? 'border-vouch-emerald/70' : ''
+        aria-current={activeSection === 'board' ? 'page' : undefined}
+        className={`ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
+          activeSection === 'board'
+            ? 'border-ve-ion/70 shadow-[0_0_20px_rgba(0,229,255,0.35)]'
+            : ''
         }`}
       >
-        <Plus className="ve-edge-island-trigger-icon h-4 w-4" />
+        <Plus className={`ve-edge-island-trigger-icon h-4 w-4 ${activeSection === 'board' ? 'text-ve-ion' : ''}`} />
       </button>
       <button
         type="button"
         onClick={onOpenEdgeIsland}
         aria-label="Open The Edge Island"
         title="The Edge Island"
-        className="ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12"
       >
         <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
       </button>

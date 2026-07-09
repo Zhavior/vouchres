@@ -236,14 +236,14 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
                           {isActive && (
                             <span
                               aria-hidden
-                              className="pointer-events-none absolute inset-y-1 left-0 w-px bg-vouch-cyan/80 shadow-[0_0_10px_rgba(0,240,255,0.9)]"
+                              className="pointer-events-none absolute inset-y-1 left-0 w-[3px] bg-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.95)]"
                             />
                           )}
                           <span
                             className={[
                               'h-7 w-7 shrink-0 transition-all',
                               isActive
-                                ? 'flex items-center justify-center bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
+                                ? 'flex items-center justify-center bg-ve-ion/20 text-ve-ion shadow-[0_0_14px_rgba(0,229,255,0.35)]'
                                 : Z8_SIDEBAR_ICON_BOX,
                             ].join(' ')}
                           >

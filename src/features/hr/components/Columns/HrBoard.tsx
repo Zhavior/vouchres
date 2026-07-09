@@ -34,7 +34,7 @@ export const HrBoard = ({ buckets, onSelectPlayer, onViewProfile, getHrResult }:
     <div className="flex flex-col gap-2 md:gap-3">
       {/* Mobile: one tier at a time — avoids crushed 2×2 columns */}
       <div
-        className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
         role="tablist"
         aria-label="Tier columns"
       >
@@ -49,7 +49,7 @@ export const HrBoard = ({ buckets, onSelectPlayer, onViewProfile, getHrResult }:
               aria-selected={active}
               onClick={() => setMobileTier(tier.key)}
               className={[
-                'flex min-h-11 shrink-0 items-center gap-1.5 border px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-wide transition duration-200 touch-manipulation',
+                'flex min-h-11 shrink-0 snap-start items-center gap-1.5 border px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-wide transition duration-200 touch-manipulation',
                 active
                   ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
                   : 'border-white/10 bg-black/25 text-zinc-500',

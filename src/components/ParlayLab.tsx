@@ -18,7 +18,9 @@ import {
   Sparkles,
   Share2,
   Zap,
-  Lock
+  Lock,
+  X,
+  Receipt,
 } from 'lucide-react';
 import { Parlay, Leg, MLBPlayer, Vouch, FeedPost, CreatorProofProfile } from '../types';
 
@@ -78,6 +80,18 @@ export default function ParlayLab({
   const [isPremiumSubOnly, setIsPremiumSubOnly] = useState(false);
 
   const [builderMode, setBuilderMode] = useState<BuilderMode>('balanced');
+  const [slipSheetOpen, setSlipSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!slipSheetOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSlipSheetOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [slipSheetOpen]);
 
   // AI-driven Edge Report state
   const [edgeReport, setEdgeReport] = useState<{ edgeScore: number; report: string } | null>(null);
@@ -438,7 +452,7 @@ export default function ParlayLab({
   };
 
   return (
-    <div className="ve-page-shell bg-ve-obsidian min-h-screen text-ve-flash ve-panel-glow p-4 md:p-6 space-y-6 max-w-6xl mx-auto font-sans" id="parlay-lab-view">
+    <div className="ve-page-shell mx-auto min-h-screen min-w-0 max-w-6xl space-y-6 overflow-x-hidden bg-ve-obsidian p-4 font-sans text-ve-flash ve-panel-glow md:p-6" id="parlay-lab-view">
       
       {/* Title & Hubtown style subline */}
       <div className="glass-command ve-premium-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-ve-fuse/50 p-4 rounded-3xl shadow-[0_0_32px_rgba(0,229,255,0.08)]">
@@ -477,16 +491,16 @@ export default function ParlayLab({
       </Suspense>
 
       {/* Builder + single source-of-truth Results navigation */}
-      <div className="flex flex-col sm:flex-row gap-3 glass-command border border-ve-fuse/45 p-1 rounded-2xl shadow-xl" id="parlay-fuse-tabs">
-        <div className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black bg-ve-graphite/60 text-ve-ion border border-ve-ion/35 shadow-md ring-1 ring-ve-ion/15">
-          <Sliders className="w-4 h-4 text-sky-450" />
-          <span>🔬 PARLAY SLIP CONSTRUCTOR</span>
+      <div className="glass-command flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-2xl border border-ve-fuse/45 p-1 shadow-xl [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-row sm:overflow-visible sm:snap-none [&::-webkit-scrollbar]:hidden" id="parlay-fuse-tabs">
+        <div className="flex min-h-11 min-w-[min(100%,280px)] shrink-0 snap-start flex-1 items-center justify-center gap-2.5 rounded-xl border border-ve-ion/35 bg-ve-graphite/60 py-3.5 font-mono text-xs font-black text-ve-ion shadow-md ring-1 ring-ve-ion/15 sm:min-w-0">
+          <Sliders className="h-4 w-4 shrink-0 text-sky-450" />
+          <span className="whitespace-nowrap">🔬 PARLAY SLIP CONSTRUCTOR</span>
         </div>
 
         <button
           type="button"
           onClick={() => onSectionChange('results')}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-mono text-xs font-black transition-all text-emerald-300 hover:text-emerald-100 hover:bg-emerald-500/10 border border-emerald-500/20"
+          className="flex min-h-11 min-w-[min(100%,220px)] shrink-0 snap-start flex-1 touch-manipulation items-center justify-center gap-2.5 rounded-xl border border-emerald-500/20 py-3.5 font-mono text-xs font-black text-emerald-300 transition-all hover:bg-emerald-500/10 hover:text-emerald-100 sm:min-w-0"
         >
           <Award className="w-4 h-4 text-emerald-400" />
           <span>🏆 VIEW VERIFIED RESULTS</span>
@@ -494,7 +508,7 @@ export default function ParlayLab({
       </div>
 
       {/* Main Grid: Left is catalog/Console, Right is Slip builder */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 items-start gap-6 pb-[calc(var(--ve-mobile-chrome-height,5rem)+env(safe-area-inset-bottom)+3.5rem)] lg:grid-cols-12 lg:pb-0">
         
         {/* LEFT / CENTER: Player list catalog */}
         <div className="lg:col-span-7 space-y-6">
@@ -786,8 +800,8 @@ export default function ParlayLab({
 
         </div>
 
-        {/* RIGHT SIDE: Active parlay slip with stake calculations & wager indicators */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* RIGHT SIDE: Active parlay slip with stake calculations & wager indicators — desktop inline */}
+        <div className="hidden space-y-6 lg:col-span-5 lg:block">
           <ParlaySlipSummary
             legs={legs}
             mode={builderMode}
@@ -1091,6 +1105,72 @@ export default function ParlayLab({
 
         </div>
 
+      </div>
+
+      {/* Mobile: floating slip trigger + bottom sheet (replaces inline rail) */}
+      <div className="lg:hidden">
+        <button
+          type="button"
+          onClick={() => setSlipSheetOpen(true)}
+          aria-label={`Open parlay slip${legs.length ? `, ${legs.length} legs` : ''}`}
+          className="fixed z-50 flex min-h-11 items-center gap-2 rounded-full border border-ve-ion/45 bg-ve-graphite/95 px-4 py-2.5 font-mono text-xs font-black uppercase tracking-wide text-ve-ion shadow-[0_0_24px_rgba(0,229,255,0.2)] backdrop-blur-md touch-manipulation"
+          style={{ bottom: 'calc(var(--ve-mobile-chrome-height, 5rem) + env(safe-area-inset-bottom, 0px) + 0.5rem)', right: 'max(1rem, env(safe-area-inset-right, 0px))' }}
+        >
+          <Receipt className="h-4 w-4 shrink-0" />
+          <span>{legs.length === 0 ? 'Slip' : `${legs.length} leg${legs.length === 1 ? '' : 's'}`}</span>
+          {legs.length > 0 && (
+            <span className="rounded-full border border-ve-ion/30 bg-ve-ion/10 px-2 py-0.5 text-[10px] text-ve-flash">{totalOddsDisplay}</span>
+          )}
+        </button>
+
+        {slipSheetOpen && (
+          <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Parlay slip">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              aria-label="Close slip"
+              onClick={() => setSlipSheetOpen(false)}
+            />
+            <div className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-2xl border-t border-ve-fuse/50 bg-ve-obsidian shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between border-b border-ve-fuse/40 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+                <div className="font-mono text-sm font-bold uppercase tracking-wide text-ve-flash">Active slip</div>
+                <button
+                  type="button"
+                  onClick={() => setSlipSheetOpen(false)}
+                  aria-label="Close slip"
+                  className="ve-touch-target flex h-11 w-11 items-center justify-center border border-ve-fuse/40 bg-ve-graphite/50 text-ve-ion/60"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <ParlaySlipSummary
+                  legs={legs}
+                  mode={builderMode}
+                  setMode={setBuilderMode}
+                  judgeScore={edgeReport?.edgeScore}
+                  analyzing={isAnalyzingEdge}
+                  onAnalyze={handleGenerateEdgeReport}
+                  onSave={() => { handleSaveParlaySlip(); setSlipSheetOpen(false); }}
+                  onShare={handleShareToVouchPage}
+                />
+                <ParlayBuilderRail
+                  legs={legs}
+                  onRemoveLeg={handleRemoveLeg}
+                  onSaveParlay={() => { handleSaveParlaySlip(); setSlipSheetOpen(false); }}
+                  totalOdds={totalOddsDisplay}
+                  stake={wagerAmount}
+                  onStakeChange={setWagerAmount}
+                  potentialPayout={legs.length > 0 ? potentialPayout : null}
+                  saveLabel="Lock Slate"
+                  showLiveIndicator={legs.length > 0}
+                  formatLegOdds={(leg) => decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
+                  layout="sheet"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ================= MODAL DIALOGS: INJURY RISK PROMPT ================= */}

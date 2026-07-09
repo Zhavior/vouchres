@@ -69,7 +69,7 @@ export function TodaysEdgeBoard({ rows, loading, error, onSectionChange }: Today
             {rows.map((row) => (
               <article
                 key={row.id}
-                className="grid gap-3 bg-black/18 px-3 py-3 transition hover:bg-white/[0.035] lg:grid-cols-[minmax(220px,1.2fr)_120px_160px_minmax(210px,1fr)_130px_120px] lg:items-center"
+                className="grid min-w-0 gap-3 bg-black/18 px-3 py-3 transition hover:bg-white/[0.035] lg:grid-cols-[minmax(220px,1.2fr)_120px_160px_minmax(210px,1fr)_130px_120px] lg:items-center"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function TodaysEdgeBoard({ rows, loading, error, onSectionChange }: Today
                 <button
                   type="button"
                   onClick={() => onSectionChange('player_edge_lab')}
-                  className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black text-white/70 transition hover:border-vouch-cyan/30 hover:text-white"
+                  className="ve-touch-target min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black text-white/70 transition hover:border-vouch-cyan/30 hover:text-white sm:w-auto"
                 >
                   Research
                 </button>

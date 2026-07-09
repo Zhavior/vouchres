@@ -20,8 +20,8 @@ export interface ParlayBuilderRailProps {
   legContent?: React.ReactNode;
   footerExtra?: React.ReactNode;
   className?: string;
-  /** inline = flows in parent column; fixed = xl+ right rail only */
-  layout?: 'inline' | 'fixed';
+  /** inline = flows in parent column; fixed = xl+ right rail only; sheet = mobile bottom sheet body */
+  layout?: 'inline' | 'fixed' | 'sheet';
 }
 
 function defaultFormatLegOdds(leg: Leg): string {
@@ -109,7 +109,9 @@ export default function ParlayBuilderRail({
 
   const shellClass = layout === 'fixed'
     ? 'hidden xl:flex fixed right-0 top-16 bottom-0 w-80 bg-[var(--bg-obsidian)]/95 backdrop-blur-xl border-l border-fuse z-40 flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.8)]'
-    : 'flex flex-col rounded-2xl border border-fuse bg-[var(--bg-graphite)]/50 overflow-hidden';
+    : layout === 'sheet'
+      ? 'flex max-h-[70vh] flex-col overflow-hidden bg-[var(--bg-obsidian)]'
+      : 'flex flex-col rounded-2xl border border-fuse bg-[var(--bg-graphite)]/50 overflow-hidden';
 
   return (
     <aside className={`${shellClass} ${className}`} aria-label="Parlay builder slip">

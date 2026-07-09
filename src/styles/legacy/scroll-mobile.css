@@ -219,6 +219,9 @@ html {
   .ve-mobile-fab-cluster {
     bottom: calc(var(--ve-mobile-fab-offset) + var(--ve-safe-bottom));
     right: max(1.25rem, var(--ve-safe-right));
+    left: auto;
+    padding-left: max(0.75rem, var(--ve-safe-left));
+    padding-right: max(0.75rem, var(--ve-safe-right));
   }
 
   .ve-mobile-fab-cluster .ve-edge-island-trigger {

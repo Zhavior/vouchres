@@ -23,11 +23,11 @@ interface HrFiltersProps {
 
 export function HrFilters({ mode, onModeChange, selectedTiers, onToggleTier }: HrFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <select
         value={mode}
         onChange={(e) => onModeChange(e.target.value as HrWatchMode)}
-        className="h-9 rounded-lg border border-white/[0.06] bg-[#0B0F18] px-3 font-mono text-[11px] uppercase text-zinc-300 outline-none"
+        className="ve-touch-target h-11 rounded-lg border border-white/[0.06] bg-[#0B0F18] px-3 font-mono text-[11px] uppercase text-zinc-300 outline-none sm:h-9"
       >
         {MODES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
@@ -38,7 +38,7 @@ export function HrFilters({ mode, onModeChange, selectedTiers, onToggleTier }: H
           <button
             key={tier.key}
             onClick={() => onToggleTier(tier.key)}
-            className={`h-9 rounded-lg border px-3 font-mono text-[11px] font-bold uppercase transition ${
+            className={`ve-touch-target min-h-11 rounded-lg border px-3 font-mono text-[11px] font-bold uppercase transition sm:h-9 ${
               active ? tier.color : 'border-white/[0.06] bg-white/[0.03] text-zinc-500'
             }`}
           >

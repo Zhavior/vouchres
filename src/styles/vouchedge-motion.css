@@ -30,6 +30,16 @@
 }
 
 /* Global motion preferences — keep animations opt-in and accessible */
+/* Mobile-safe utilities — safe areas + touch targets */
+.ve-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ve-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -200,7 +200,7 @@ const HomeRunIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+    <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
         <HrCommandCenter
           mode={vm.mode}
@@ -257,18 +257,20 @@ const HomeRunIntelligencePage: React.FC = () => {
             getHrResult={vm.getHrResult}
           />
         ) : (
-          <HrBoard
-            buckets={vm.buckets}
-            onSelectPlayer={(player) => {
-              vm.setSelectedPlayer(player);
-              setIsDrawerOpen(true);
-            }}
-            onViewProfile={(player) => {
-              vm.setSelectedPlayer(player);
-              setIsProfileOpen(true);
-            }}
-            getHrResult={vm.getHrResult}
-          />
+          <div className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] md:scroll-mt-0">
+            <HrBoard
+              buckets={vm.buckets}
+              onSelectPlayer={(player) => {
+                vm.setSelectedPlayer(player);
+                setIsDrawerOpen(true);
+              }}
+              onViewProfile={(player) => {
+                vm.setSelectedPlayer(player);
+                setIsProfileOpen(true);
+              }}
+              getHrResult={vm.getHrResult}
+            />
+          </div>
         )}
 
         <HrPlayerDrawer

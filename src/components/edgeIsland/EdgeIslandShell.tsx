@@ -22,8 +22,8 @@ function firstName(profile?: CreatorProofProfile | null): string {
 
 export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: EdgeIslandShellProps) {
   return (
-    <main className={`${Z8_PAGE} ve-page-shell mx-auto w-full max-w-[1500px] ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} bg-ve-obsidian text-ve-flash`}>
-      <header className="glass-command ve-premium-panel relative mb-4 overflow-hidden rounded-[1.5rem] border border-ve-fuse/50 px-4 py-4 shadow-[0_0_40px_rgba(0,229,255,0.08)] sm:px-5">
+    <main className={`${Z8_PAGE} ve-page-shell mx-auto w-full min-w-0 max-w-[1500px] overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ve-safe-bottom bg-ve-obsidian text-ve-flash`}>
+      <header className="glass-command ve-premium-panel relative mb-4 w-full overflow-hidden rounded-[1.5rem] border border-ve-fuse/50 px-4 py-4 shadow-[0_0_40px_rgba(0,229,255,0.08)] sm:px-5">
         <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-ve-ion/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-vouch-emerald/8 blur-3xl" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -42,14 +42,14 @@ export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: Ed
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <div className={`${Z8_STAT_CHIP} border border-ve-fuse/40 bg-ve-graphite/40`}>
+            <div className={`${Z8_STAT_CHIP} min-h-11 min-w-0 border border-ve-fuse/40 bg-ve-graphite/40 sm:min-h-0`}>
               <div className={`${Z8_LABEL} text-ve-ion/40`}>Mode</div>
               <div className="mt-1 text-sm font-black text-ve-flash">{isLoggedIn ? 'Personalized' : 'Public preview'}</div>
             </div>
-            <div className={`${Z8_STAT_CHIP} border border-ve-fuse/40 bg-ve-graphite/40`}>
+            <div className={`${Z8_STAT_CHIP} min-h-11 min-w-0 border border-ve-fuse/40 bg-ve-graphite/40 sm:min-h-0`}>
               <div className={`${Z8_LABEL} text-ve-ion/40`}>Sync</div>
               <div className="mt-1 flex items-center gap-1.5 text-sm font-black text-ve-flash">
-                <ShieldCheck className="h-3.5 w-3.5 text-vouch-emerald" />
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-vouch-emerald" />
                 {updatedAt ? 'Live data' : 'Waiting'}
               </div>
             </div>
@@ -57,7 +57,9 @@ export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: Ed
         </div>
       </header>
 
-      {children}
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:gap-6">
+        {children}
+      </div>
     </main>
   );
 }

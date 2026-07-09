@@ -7,8 +7,10 @@
 .feed-main {
   max-width: 600px;
   width: 100%;
+  min-width: 0;
   margin-left: auto;
   margin-right: auto;
+  overflow-x: clip;
 }
 
 #layout-inner-frame.ve-layout-feed #center-main-content-column,
@@ -39,6 +41,9 @@
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 #inner-view-slot .feed-post:hover {
