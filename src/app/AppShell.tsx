@@ -9,6 +9,7 @@ import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
 import { AppNav } from './AppNav';
+import { DeployUpdateBanner } from '../components/system/DeployUpdateBanner';
 import type { CreatorProofProfile, Parlay } from '../types';
 
 const HomeFeedLayout = lazy(() => import('../social/feed/HomeFeedLayout'));
@@ -103,11 +104,14 @@ export function AppShell({
                   </Suspense>
 
                   {showGlobalAppChrome && (
-                    <AppNav
-                      activeSection={activeSection}
-                      onNavigate={navigateSection}
-                      onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
-                    />
+                    <>
+                      <DeployUpdateBanner />
+                      <AppNav
+                        activeSection={activeSection}
+                        onNavigate={navigateSection}
+                        onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
+                      />
+                    </>
                   )}
 
                   {showGlobalAppChrome && (

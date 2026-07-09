@@ -57,16 +57,12 @@ function showChunkFallbackUi(): void {
   if (!root) return;
 
   root.innerHTML = `
-    <main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#020617;color:#e2e8f0;font-family:system-ui,sans-serif;">
-      <div style="max-width:28rem;width:100%;border:1px solid rgba(56,189,248,0.25);border-radius:1.5rem;background:rgba(2,6,23,0.92);padding:1.5rem;box-shadow:0 0 60px rgba(14,165,233,0.12);">
-        <p style="margin:0 0 0.75rem;font-size:0.65rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#6ee7b7;">VouchEdge update recovery</p>
-        <h1 style="margin:0 0 0.5rem;font-size:1.25rem;font-weight:900;color:#fff;">New version available</h1>
-        <p style="margin:0 0 1rem;font-size:0.875rem;line-height:1.5;color:rgba(226,232,240,0.78);">
-          This tab could not load the latest app bundle after a deploy. Reload once to pick up the new build.
-        </p>
-        <button type="button" id="vouchedge-chunk-retry" style="width:100%;border:none;border-radius:0.9rem;padding:0.75rem 1rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;background:#00f0ff;color:#020617;cursor:pointer;">
-          Reload VouchEdge
-        </button>
+    <main class="ve-chunk-recovery-fallback">
+      <div class="ve-chunk-recovery-fallback__card">
+        <p class="ve-chunk-recovery-fallback__eyebrow">VouchEdge update recovery</p>
+        <h1>New version available</h1>
+        <p>This tab could not load the latest app bundle after a deploy. Reload once to pick up the new build.</p>
+        <button type="button" id="vouchedge-chunk-retry">Reload VouchEdge</button>
       </div>
     </main>
   `;

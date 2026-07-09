@@ -13,9 +13,13 @@ import {
   initChunkRecovery,
   onChunkRecoveryMountSuccess,
 } from './lib/chunkRecovery';
+import { initSentry } from './lib/sentry';
+import { registerChunkRecoveryFallback } from './components/system/ChunkRecoveryFallback';
 
 import { patchPublicNotificationsFetch } from "./lib/patchPublicNotificationsFetch";
 
+initSentry();
+registerChunkRecoveryFallback();
 initChunkRecovery();
 clearChunkRecoveryFlag();
 patchPublicNotificationsFetch();

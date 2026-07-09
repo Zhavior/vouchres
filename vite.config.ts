@@ -1,18 +1,64 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react-swc';
+import { execSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import path from 'path';
+import { join } from 'node:path';
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { LIGHTNINGCSS_TARGETS } from './css/lightningcss-targets.mjs';
 
+function resolveBuildId(): string {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 12);
+  }
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    return `dev-${Date.now()}`;
+  }
+}
+
+function buildIdPlugin(buildId: string): Plugin {
+  return {
+    name: 'vouchedge-build-id',
+    transformIndexHtml(html) {
+      return html.replace(
+        '</head>',
+        `    <meta name="vouchedge-build-id" content="${buildId}" />\n  </head>`,
+      );
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/build-id.txt' || req.url?.startsWith('/build-id.txt?')) {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(`${buildId}\n`);
+          return;
+        }
+        next();
+      });
+    },
+    closeBundle() {
+      writeFileSync(join(process.cwd(), 'dist', 'build-id.txt'), `${buildId}\n`, 'utf8');
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const disableHmr = process.env.DISABLE_HMR === 'true';
   const analyze = mode === 'analyze';
+  const buildId = resolveBuildId();
 
   return {
+    define: {
+      __APP_BUILD_ID__: JSON.stringify(buildId),
+    },
     plugins: [
       react(),
       tailwindcss(),
+      buildIdPlugin(buildId),
       analyze
         ? visualizer({
             filename: 'dist/bundle-report.html',

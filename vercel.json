@@ -1,11 +1,40 @@
 {
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/build-id.txt",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api"
     },
     {
-      "source": "/((?!api/|assets/|favicon\\.svg|favicon\\.png|manifest\\.json|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/((?!api/|assets/|build-id\\.txt|favicon\\.svg|favicon\\.png|manifest\\.json|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ],

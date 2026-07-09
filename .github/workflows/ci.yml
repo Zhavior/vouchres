@@ -34,6 +34,14 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Auth smoke (static audit)
+        continue-on-error: true
+        run: npm run verify:auth-smoke
+
+      - name: Billing hardening (static audit)
+        continue-on-error: true
+        run: npm run verify:billing-hardening
+
       - name: Build
         run: npm run build
 

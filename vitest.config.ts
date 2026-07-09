@@ -5,8 +5,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    environmentMatchGlobs: [
+      ["tests/**/*.test.tsx", "happy-dom"],
+    ],
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
