@@ -38,7 +38,7 @@ import { CreatorProofProfile } from '../types';
 function BaunkAnimatedTitle({ onSectionChange }: { onSectionChange: (sec: string) => void }) {
   return (
     <div 
-      className="flex flex-col items-center select-none cursor-pointer group py-12 px-6 sm:px-12 my-6 relative overflow-visible w-full max-w-4xl mx-auto rounded-3xl bg-[#090d16]/80 border border-white/[0.08] backdrop-blur-xl transition-all hover:border-white/[0.08] active:scale-98 duration-300 shadow-[0_32px_90px_rgba(0,0,0,0.85)]" 
+      className="flex flex-col items-center select-none cursor-pointer group py-12 px-6 sm:px-12 my-6 relative overflow-visible w-full max-w-4xl mx-auto rounded-3xl bg-ve-obsidian/80 border border-white/[0.08] backdrop-blur-xl transition-all hover:border-white/[0.08] active:scale-98 duration-300 shadow-[0_32px_90px_rgba(0,0,0,0.85)]" 
       onClick={() => onSectionChange('feed')}
     >
       {/* Premium ambient background accents (no clunky astronaut, pure luxury glow) */}
@@ -599,7 +599,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
     switch (featureId) {
       case 'feed':
         return (
-          <div className="w-full h-full flex flex-col justify-between bg-[#080d17] p-3 text-[10px] font-mono leading-tight">
+          <div className="w-full h-full flex flex-col justify-between bg-ve-obsidian p-3 text-[10px] font-mono leading-tight">
             {/* Simulation Header */}
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LEDGER_REC_ACTIVE</span>
@@ -619,7 +619,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
               {/* Step representations */}
               {simulationStep === 0 ? (
-                <div className="space-y-1 bg-[#121824] p-2 rounded-lg border border-white/10">
+                <div className="space-y-1 bg-ve-storm p-2 rounded-lg border border-white/10">
                   <div className="text-white/45 text-[8px] flex justify-between">
                     <span>CAPPER HANDLE: @vouch_skywalker</span>
                     <span className="text-vouch-cyan">DRAFT</span>
@@ -645,7 +645,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                   <p className="text-[7px] text-white/40">Un-deletable ROI & win-rate variables calculated instantly.</p>
                 </div>
               ) : (
-                <div className="space-y-1 bg-[#0f172a] p-2 rounded-lg border border-white/10">
+                <div className="space-y-1 bg-ve-storm p-2 rounded-lg border border-white/10">
                   <div className="flex justify-between text-white/45 text-[8px]">
                     <span className="text-emerald-400 uppercase font-black bg-emerald-950/80 px-1 rounded">VERIFIED WON</span>
                     <span>1 min ago</span>
@@ -669,7 +669,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
       case 'ai_engine':
         return (
-          <div className="w-full h-full flex flex-col justify-between bg-[#070b13] p-3 text-[10px] font-mono leading-tight">
+          <div className="w-full h-full flex flex-col justify-between bg-ve-obsidian p-3 text-[10px] font-mono leading-tight">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-ping" /> V.A.I PREDICTION MATRIX v3.0</span>
               <span className="text-cyan-400">LOCAL_GPU: LOADED</span>
@@ -691,7 +691,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
                     <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
                     <span>COMPUTING SABERMETRIC VECTORS...</span>
                   </div>
-                  <div className="bg-[#121824] p-1.5 rounded text-[8px] text-white/40">
+                  <div className="bg-ve-storm p-1.5 rounded text-[8px] text-white/40">
                     Confidence threshold set at: 85% Variance limit
                   </div>
                 </div>
@@ -722,7 +722,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
       case 'build':
         return (
-          <div className="w-full h-full flex flex-col justify-between bg-[#090712] p-3 text-[10px] font-mono leading-tight">
+          <div className="w-full h-full flex flex-col justify-between bg-ve-obsidian p-3 text-[10px] font-mono leading-tight">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1">🎛️ MULTI-LEG ODDS COUNTER</span>
               <span>SLIP BUILDER CODES</span>
@@ -781,7 +781,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
       case 'live_games':
         return (
-          <div className="w-full h-full flex flex-col justify-between bg-[#050e0f] p-3 text-[10px] font-mono leading-tight">
+          <div className="w-full h-full flex flex-col justify-between bg-ve-obsidian p-3 text-[10px] font-mono leading-tight">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" /> LIVE STREAMING STAGE</span>
               <span className="text-red-400">FPS: 60.0_DIRECT</span>
@@ -789,7 +789,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
             <div className="flex-1 my-2 grid grid-cols-12 gap-2 min-h-[90px]">
               {/* Virtual Webcam Viewer box (Grid Left) */}
-              <div className="col-span-7 bg-[#111625] border border-white/10 rounded-lg p-1.5 relative flex flex-col justify-between overflow-hidden">
+              <div className="col-span-7 bg-ve-storm border border-white/10 rounded-lg p-1.5 relative flex flex-col justify-between overflow-hidden">
                 <div className="absolute inset-0 bg-radial-gradient from-slate-900/10 via-black/80 to-black pointer-events-none" />
                 
                 {/* Simulated Floating Fire emoji cards */}
@@ -810,7 +810,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
               </div>
 
               {/* Chat Viewport (Grid Right) */}
-              <div className="col-span-5 bg-[#0a0f18] p-1 rounded-lg border border-white/10 flex flex-col justify-between space-y-1 overflow-hidden">
+              <div className="col-span-5 bg-ve-graphite p-1 rounded-lg border border-white/10 flex flex-col justify-between space-y-1 overflow-hidden">
                 <span className="text-white/35 text-[6px] font-bold tracking-wider uppercase border-b border-white/10 pb-0.5 text-center">LOBBY_CHAT</span>
                 
                 <div className="flex-1 flex flex-col justify-end space-y-1 select-none">
@@ -836,7 +836,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
 
       case 'board':
         return (
-          <div className="w-full h-full flex flex-col justify-between bg-[#0e0710] p-3 text-[10px] font-mono leading-tight">
+          <div className="w-full h-full flex flex-col justify-between bg-ve-obsidian p-3 text-[10px] font-mono leading-tight">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-white/40 text-[8px]">
               <span className="flex items-center gap-1">🎨 CUSTOM NEON CARD LAB</span>
               <span>RENDER ENGINE v2</span>
@@ -845,7 +845,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
             <div className="flex-1 my-2 flex flex-col justify-center items-center space-y-1 bg-obsidian-900 p-2 rounded-lg border border-white/10 min-h-[90px] relative">
               
               {/* Star Wars card deck editor simulation */}
-              <div className="w-3/4 bg-[#111827] rounded-lg border border-pink-500/50 p-1.5 hover:shadow-[0_0_15px_rgba(236,72,153,0.3)] transition-all duration-700 select-none text-center transform rotate-1">
+              <div className="w-3/4 bg-ve-storm rounded-lg border border-pink-500/50 p-1.5 hover:shadow-[0_0_15px_rgba(236,72,153,0.3)] transition-all duration-700 select-none text-center transform rotate-1">
                 <span className="text-[6px] uppercase font-black text-rose-455 tracking-widest block font-sans">VERIFIED PUBLIC CONTRACT</span>
                 <span className="text-[10px] text-white/90 font-black block leading-none uppercase my-1 font-mono tracking-widest text-[#FFE81F]">VOUCHEDGE HERO DECK</span>
                 
@@ -881,7 +881,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
     <div className="mt-4 border border-slate-850 bg-obsidian-900 rounded-2xl overflow-hidden shadow-2xl relative select-none group/player">
       
       {/* Video Player Header Chrome */}
-      <div className="bg-[#0e1220] border-b border-white/10 px-4 py-2 flex items-center justify-between text-[11px] font-mono text-white/45">
+      <div className="bg-ve-graphite border-b border-white/10 px-4 py-2 flex items-center justify-between text-[11px] font-mono text-white/45">
         
         {/* Left Side: Video source badge */}
         <div className="flex items-center gap-2">
@@ -932,7 +932,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
       </div>
 
       {/* Video Player Bottom Timeline Scrubbed Console */}
-      <div className="bg-[#0b0f19] px-3.5 py-2.5 flex items-center gap-3 border-t border-white/10 text-white/45 text-[10px] font-mono">
+      <div className="bg-ve-graphite px-3.5 py-2.5 flex items-center gap-3 border-t border-white/10 text-white/45 text-[10px] font-mono">
         
         {/* Play/Pause Button */}
         <button 
@@ -1090,7 +1090,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
     <div id="landing-page-elite-root" className="bg-transparent text-white/90 min-h-screen relative overflow-y-auto overflow-x-hidden font-sans pb-24">
       
       {/* Landing Navigation Header Header */}
-      <header className="sticky top-0 w-full z-50 bg-[#0b0f19]/85 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between select-none max-w-7xl mx-auto rounded-b-2xl" id="vouchedge-main-nav-header">
+      <header className="sticky top-0 w-full z-50 bg-ve-graphite/85 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between select-none max-w-7xl mx-auto rounded-b-2xl" id="vouchedge-main-nav-header">
         <div 
           onClick={() => onSectionChange('welcome')} 
           className="flex items-center gap-3 cursor-pointer group transition-all"
@@ -1471,7 +1471,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                     <motion.div 
                       whileHover={{ y: -4, scale: 1.015 }}
                       transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                      className="bg-[#121824]/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
+                      className="bg-ve-storm/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
                     >
                       <div className={`absolute top-0 right-0 w-2 h-full bg-gradient-to-b ${feat.color}`} />
                       <div>
@@ -1525,7 +1525,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                     <motion.div 
                       whileHover={{ y: -4, scale: 1.015 }}
                       transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                      className="bg-[#121824]/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
+                      className="bg-ve-storm/90 border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl hover:border-yellow-400/50 hover:shadow-[0_0_20px_rgba(255,232,31,0.15)] transition-all flex flex-col justify-between group text-left"
                     >
                       <div className={`absolute top-0 left-0 w-2 h-full bg-gradient-to-b ${feat.color}`} />
                       <div>

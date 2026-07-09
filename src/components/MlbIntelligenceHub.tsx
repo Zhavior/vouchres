@@ -589,8 +589,8 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
   );
 
   return (
-    <main className={`${Z8_PAGE} mx-auto max-w-7xl px-4 py-6`}>
-      <div className={`mb-5 overflow-hidden rounded-3xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 shadow-2xl relative`}>
+    <main className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom mx-auto max-w-7xl px-4 py-6 sm:px-6`}>
+      <div className={`mb-5 overflow-hidden rounded-3xl ${Z8_PANEL_PREMIUM} glass-command border border-ve-fuse/40 bg-gradient-to-br from-ve-obsidian via-ve-graphite to-vouch-cyan/10 p-5 shadow-2xl relative`}>
         <div className="absolute -top-24 -right-24 h-60 w-60 rounded-full bg-vouch-cyan/15 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-60 w-60 rounded-full bg-vouch-emerald/10 blur-3xl" />
 

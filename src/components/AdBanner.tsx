@@ -48,7 +48,7 @@ export default function AdBanner({
         className={`bg-gradient-to-r ${ad.bgColor} border ${ad.borderColor} p-4 rounded-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 select-none group text-left`}
         id="ad-banner-feed-top"
       >
-        <div className="absolute top-0 right-0 bg-[#0b0f19] text-slate-500 text-[8px] font-mono px-2 py-0.5 rounded-bl uppercase tracking-widest font-black leading-none border-b border-l border-slate-850/60">
+        <div className="absolute top-0 right-0 bg-ve-graphite text-slate-500 text-[8px] font-mono px-2 py-0.5 rounded-bl uppercase tracking-widest font-black leading-none border-b border-l border-slate-850/60">
           SPONSORED AD
         </div>
 

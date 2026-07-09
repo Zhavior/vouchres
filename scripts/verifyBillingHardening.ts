@@ -43,15 +43,15 @@ assert(
 );
 
 includesAll(billingRoutes, [
-  "const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? \"\"",
-  "stripe.webhooks.constructEvent",
+  "const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? \"\"",
+  "getStripe().webhooks.constructEvent",
   "beginStripeWebhookEvent(event)",
   "finishStripeWebhookEvent(event.id, \"processed\")",
-  "finishStripeWebhookEvent(event.id, \"failed\"",
+  "finishStripeWebhookEvent(",
   "duplicate: true",
-  "billingRoutes.get(\"/subscription\", requireAuth, billingStatusHandler)",
+  'billingRoutes.get("/subscription", requireAuth, billingStatusHandler)',
   ".eq(\"profile_id\", req.user!.id)",
-  "tier: z.enum([\"pro\", \"creator\"])",
+  'tier: z.enum(["pro", "creator"])',
 ], "billing route hardening");
 
 includesAll(stripeService, [

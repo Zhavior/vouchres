@@ -153,17 +153,17 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           ...data.theme,
           category: 'Flex',
           rarity: 'epic',
-          background: 'bg-[#040815]',
+          background: 'bg-ve-obsidian',
           backgroundPattern: 'grid',
-          cardStyle: 'bg-[#0f172a]/90 border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
+          cardStyle: 'bg-ve-storm/90 border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
           borderStyle: 'border-cyan-400/30',
           glowStyle: 'shadow-cyan-400/15',
           buttonStyle: 'bg-[#22d3ee] text-slate-950 font-black',
           badgeStyle: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/40',
-          sidebarStyle: 'bg-[#040815] border-r border-cyan-400/10',
-          vouchCardStyle: 'bg-[#111e36] border-cyan-400/30',
-          parlayCardStyle: 'bg-[#111e36] border-cyan-400/30',
-          resultCardStyle: 'bg-[#0f172a] border-cyan-400/20',
+          sidebarStyle: 'bg-ve-obsidian border-r border-cyan-400/10',
+          vouchCardStyle: 'bg-ve-storm border-cyan-400/30',
+          parlayCardStyle: 'bg-ve-storm border-cyan-400/30',
+          resultCardStyle: 'bg-ve-storm border-cyan-400/20',
           profileBorderStyle: 'border-cyan-400',
           animationStyle: 'transition-all duration-300',
           shareCardStyle: 'from-cyan-950 to-black',
@@ -171,7 +171,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           isEarned: false,
           isSeasonal: false,
           cost: 250,
-          pageBg: 'bg-[#040815]',
+          pageBg: 'bg-ve-obsidian',
           fontFamily: 'font-sans',
           coverBg: 'from-cyan-500/20 to-indigo-600/20',
           accentText: 'text-cyan-400'
@@ -216,17 +216,17 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
       description: mDesc,
       cost: mPrice,
       badge: mBadge.toUpperCase(),
-      background: 'bg-[#050914]',
+      background: 'bg-ve-obsidian',
       backgroundPattern: 'grid',
-      cardStyle: 'bg-[#0b0f19] border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] backdrop-blur-md',
+      cardStyle: 'bg-ve-graphite border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] backdrop-blur-md',
       borderStyle: 'border-cyan-500/30',
       glowStyle: 'shadow-cyan-500/10',
       buttonStyle: 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black',
       badgeStyle: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/45',
-      sidebarStyle: 'bg-[#070b14] border-r border-cyan-500/10',
-      vouchCardStyle: 'bg-[#0e1524] border-cyan-500/30',
-      parlayCardStyle: 'bg-[#0e1524] border-cyan-500/30',
-      resultCardStyle: 'bg-[#090d16] border-cyan-500/20',
+      sidebarStyle: 'bg-ve-graphite border-r border-cyan-500/10',
+      vouchCardStyle: 'bg-ve-storm border-cyan-500/30',
+      parlayCardStyle: 'bg-ve-storm border-cyan-500/30',
+      resultCardStyle: 'bg-ve-obsidian border-cyan-500/20',
       profileBorderStyle: 'border-cyan-500',
       animationStyle: 'transition-all duration-300',
       shareCardStyle: 'from-cyan-950 to-black',
@@ -238,7 +238,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
       particleDemo: cleanParticles.length > 0 ? cleanParticles : ['✨', '💎'],
       fontFamily: 'font-sans',
       coverBg: 'from-cyan-500/20 to-indigo-600/10',
-      pageBg: 'bg-[#050914]',
+      pageBg: 'bg-ve-obsidian',
       accentText: 'text-cyan-400'
     };
 
@@ -277,7 +277,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     <div className="p-4 md:p-6 space-y-6 max-w-[1200px] mx-auto min-h-screen bg-transparent" id="theme-store-root">
       
       {/* Visual Header Banners */}
-      <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-white/[0.06] p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl" id="theme-banner">
+      <div className="bg-ve-storm/30 backdrop-blur-md rounded-2xl border border-white/[0.06] p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl" id="theme-banner">
         <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="space-y-2 text-left z-10">
           <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           <div className="lg:col-span-8 space-y-6">
             
             {/* 1. VISUAL SETTING CONTROL PANEL */}
-            <div className="bg-[#121824]/40 rounded-2xl border border-slate-850 p-5 space-y-4 shadow-xl">
+            <div className="bg-ve-storm/40 rounded-2xl border border-slate-850 p-5 space-y-4 shadow-xl">
               <h3 className="text-xs font-bold text-white/65 uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-850 pb-2.5">
                 <Laptop className="w-4 h-4 text-cyan-400" />
                 Theme Engine Accessibility Options
@@ -420,7 +420,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           ? 'bg-cyan-950/20 border-cyan-400/40 shadow-[0_0_28px_rgba(34,211,238,0.12)]'
                           : previewThemeId === theme.id 
                             ? 'bg-indigo-950/20 border-indigo-400/60 shadow-[0_0_20px_rgba(99,102,241,0.16)]' 
-                            : 'bg-[#121824]/35 border-white/[0.08] hover:border-slate-600'
+                            : 'bg-ve-storm/35 border-white/[0.08] hover:border-slate-600'
                       }`}
                     >
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -527,7 +527,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           ? 'bg-emerald-950/20 border-emerald-400/45 shadow-[0_0_24px_rgba(16,185,129,0.13)]'
                           : previewBorderId === border.id 
                             ? 'bg-emerald-950/10 border-emerald-400/55 shadow-[0_0_18px_rgba(16,185,129,0.11)]' 
-                            : 'bg-[#121824]/35 border-white/[0.08] hover:border-emerald-400/30'
+                            : 'bg-ve-storm/35 border-white/[0.08] hover:border-emerald-400/30'
                       }`}
                     >
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-emerald-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -586,7 +586,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           {/* RIGHT COLUMN: PREVIEW OF CURRENT SELECTIONS */}
           <div className="lg:col-span-4 space-y-6">
             
-            <div className="group relative overflow-hidden bg-[#121824]/45 backdrop-blur-xl rounded-3xl border border-white/[0.08] p-5 space-y-5 shadow-2xl sticky top-4">
+            <div className="group relative overflow-hidden bg-ve-storm/45 backdrop-blur-xl rounded-3xl border border-white/[0.08] p-5 space-y-5 shadow-2xl sticky top-4">
               
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-cyan-500/[0.04] opacity-80" />
               <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
@@ -724,7 +724,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={theme.id}
-                    className="group relative bg-[#121824]/30 backdrop-blur-xl rounded-3xl border border-white/[0.08] flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
+                    className="group relative bg-ve-storm/30 backdrop-blur-xl rounded-3xl border border-white/[0.08] flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-cyan-950/30"
                   >
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-cyan-500/[0.05] opacity-70 group-hover:opacity-100 transition-opacity" />
                     <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl group-hover:bg-cyan-300/20 transition-colors" />
@@ -806,7 +806,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                 return (
                   <div 
                     key={border.id}
-                    className="bg-[#121824]/20 backdrop-blur-md rounded-2xl border border-slate-850 p-4 flex flex-col justify-between gap-4 shadow-xl hover:border-white/10"
+                    className="bg-ve-storm/20 backdrop-blur-md rounded-2xl border border-slate-850 p-4 flex flex-col justify-between gap-4 shadow-xl hover:border-white/10"
                   >
                     <div className="flex gap-3 items-center min-w-0">
                       <ProfileAvatarBorder 
@@ -858,7 +858,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
         <div className="space-y-6">
           
           {/* AI GEMINI INTERACTIVE EXPERIMENT */}
-          <div className="bg-[#121824]/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-left space-y-4">
+          <div className="bg-ve-storm/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-left space-y-4">
             <h3 className="text-sm font-black text-white/90 uppercase tracking-tight flex items-center gap-1.5">
               <Sparkles className="w-5 h-5 text-vouch-cyan animate-pulse" />
               Google AI Studio Custom Theme Synthesizer
@@ -904,7 +904,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           </div>
 
           {/* CREATOR MONETIZATION & SELLABLE THEME LAUNCHPAD */}
-          <div className="bg-[#121824]/35 backdrop-blur-md rounded-2xl border border-dashed border-white/10 p-6 md:p-8 space-y-6 relative overflow-hidden" id="creator-licensing-launchpad">
+          <div className="bg-ve-storm/35 backdrop-blur-md rounded-2xl border border-dashed border-white/10 p-6 md:p-8 space-y-6 relative overflow-hidden" id="creator-licensing-launchpad">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-650/5 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">

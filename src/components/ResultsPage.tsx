@@ -817,9 +817,9 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
 
   return (
-    <main className={`${Z8_PAGE} ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-7xl min-h-screen`} id="results-analytics-view">
+    <main className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP} mx-auto max-w-7xl`} id="results-analytics-view">
 
-      <section className={`${Z8_PANEL_PREMIUM} mb-4 rounded-3xl p-4`}>
+      <section className={`${Z8_PANEL_PREMIUM} glass-command mb-4 rounded-3xl border border-ve-fuse/40 p-4`}>
         <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div className={Z8_SECTION_HEADER}>
             <div className={`${Z8_LABEL} text-vouch-cyan`}>
@@ -864,7 +864,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
 
       {/* Toast Notification */}
       {visualToast && (
-        <div className="fixed bottom-5 right-5 z-50 bg-[#0d1527] border border-emerald-500 text-emerald-300 px-4 py-3 rounded-2xl flex items-center gap-2 shadow-2xl text-xs font-mono font-bold animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-ve-graphite border border-emerald-500 text-emerald-300 px-4 py-3 rounded-2xl flex items-center gap-2 shadow-2xl text-xs font-mono font-bold animate-bounce">
           <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
           <span>{visualToast}</span>
         </div>
@@ -918,7 +918,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
       </div>
 
       {/* Unified Tab Selector */}
-      <div className="flex bg-[#121824]/90 p-1 rounded-2xl border border-white/10 shadow-sm" id="results-tab-belt">
+      <div className="flex bg-ve-storm/90 p-1 rounded-2xl border border-white/10 shadow-sm" id="results-tab-belt">
         <button
           onClick={() => {
             setActiveSubTab('ai_model');
@@ -926,7 +926,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'ai_model'
-              ? 'bg-[#1e293b] text-sky-400 border border-white/[0.08] shadow-md'
+              ? 'bg-ve-surface-panel text-sky-400 border border-white/[0.08] shadow-md'
               : 'text-white/45 hover:text-white/80'
           }`}
         >
@@ -941,7 +941,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'community'
-              ? 'bg-[#1e293b] text-orange-400 border border-white/[0.08]'
+              ? 'bg-ve-surface-panel text-orange-400 border border-white/[0.08]'
               : 'text-white/45 hover:text-white/80'
           }`}
         >
@@ -956,7 +956,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-mono text-xs font-black transition-all ${
             activeSubTab === 'personal'
-              ? 'bg-[#1e293b] text-emerald-400 border border-white/[0.08]'
+              ? 'bg-ve-surface-panel text-emerald-400 border border-white/[0.08]'
               : 'text-white/45 hover:text-white/80'
           }`}
         >
@@ -966,7 +966,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
       </div>
 
       {/* Date timeline filter ribbon */}
-      <div className="bg-[#0e1422]/90 border border-white/10 rounded-2xl p-4 gap-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between" id="calendar-timeline-hud">
+      <div className="bg-ve-graphite/90 border border-white/10 rounded-2xl p-4 gap-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between" id="calendar-timeline-hud">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-emerald-400" />
@@ -1072,7 +1072,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                 onClick={() => setSelectedDateYMD(ymd)}
                 className={`min-w-[65px] h-[64px] rounded-xl flex flex-col items-center justify-between py-1.5 px-1 border transition-all text-center flex-shrink-0 relative ${
                   isSelected
-                    ? 'bg-[#1e293b] border-emerald-500/40 border-2 text-emerald-300 shadow shadow-emerald-500/10'
+                    ? 'bg-ve-surface-panel border-emerald-500/40 border-2 text-emerald-300 shadow shadow-emerald-500/10'
                     : 'bg-obsidian-900/60 border-white/10 hover:border-slate-850 hover:bg-obsidian-900/90'
                 }`}
               >
@@ -1124,7 +1124,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
               </div>
             </div>
 
-            <div className="bg-[#121824] border border-white/10 rounded-2xl p-4.5 space-y-1">
+            <div className="bg-ve-storm border border-white/10 rounded-2xl p-4.5 space-y-1">
               <span className="text-[10px] font-mono text-white/45 uppercase tracking-widest block">Net Multi-Slip Return</span>
               <div className={`text-2xl font-mono font-black ${netAiWinnings >= 0 ? "text-emerald-400" : "text-rose-500"} pt-1`}>
                 ${netAiWinnings >= 0 ? '+' : ''}{netAiWinnings.toLocaleString()}
@@ -1134,7 +1134,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
               </p>
             </div>
 
-            <div className="bg-[#121824] border border-white/10 rounded-2xl p-4.5 space-y-1">
+            <div className="bg-ve-storm border border-white/10 rounded-2xl p-4.5 space-y-1">
               <span className="text-[10px] font-mono text-white/45 uppercase tracking-widest block">Average Yield</span>
               <div className={`text-2xl font-mono font-black ${netAiUnitsProfit >= 0 ? "text-emerald-400" : "text-rose-500"} pt-1`}>
                 {netAiUnitsProfit >= 0 ? '+' : ''}{netAiUnitsProfit.toFixed(2)}U
@@ -1168,7 +1168,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                   return (
                     <div 
                       key={pick.id}
-                      className={`bg-[#0d131f]/95 rounded-2xl border p-4.5 flex flex-col justify-between gap-4 transition-all hover:scale-[1.01] ${
+                      className={`bg-ve-graphite/95 rounded-2xl border p-4.5 flex flex-col justify-between gap-4 transition-all hover:scale-[1.01] ${
                         isUpcoming 
                           ? 'border-sky-900/60 shadow-lg shadow-sky-500/5' 
                           : isWon 
@@ -1195,7 +1195,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                             <Clock className="w-3 h-3 text-sky-400 animate-pulse" /> PRE-GAME
                           </span>
                         ) : isWon ? (
-                          <span className="text-[9.5px] bg-[#0c2a1c] text-emerald-400 font-black border border-emerald-900 rounded px-2 py-0.5 font-mono leading-none">
+                          <span className="text-[9.5px] bg-emerald-950/60 text-emerald-400 font-black border border-emerald-900 rounded px-2 py-0.5 font-mono leading-none">
                             WON ✓
                           </span>
                         ) : (
@@ -1353,23 +1353,23 @@ const getFriendlyParlayTitle = (parlay: any) => {
         <div className="space-y-6" id="community-ledger-segment">
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Settled Parlays</span>
               <span className="font-mono text-xl font-black text-white/90 block mt-1">{totalCount}</span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Win Record</span>
               <span className="font-mono text-xl font-black text-emerald-400 block mt-1">
                 {winsCount}W - {lossesCount}L
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Net Practice Units</span>
               <span className={`font-mono text-xl font-black block mt-1 ${totalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {totalUnitsProfit >= 0 ? '+' : ''}{totalUnitsProfit.toFixed(2)}U
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Verified Hit Rate</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{realWinRate.toFixed(1)}%</span>
             </div>
@@ -1392,7 +1392,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                   return (
                     <div 
                       key={item.id} 
-                      className={`bg-[#0d131f]/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
+                      className={`bg-ve-graphite/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
                         isWon ? "border-emerald-950/60" : "border-white/10"
                       }`}
                     >
@@ -1433,23 +1433,23 @@ const getFriendlyParlayTitle = (parlay: any) => {
         <div className="space-y-6" id="personal-ledger-segment">
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">My Placed Tickets</span>
               <span className="font-mono text-xl font-black text-white/90 block mt-1">{personalTotalCount}</span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">My Record</span>
               <span className="font-mono text-xl font-black text-emerald-400 block mt-1">
                 {personalWinsCount}W - {personalLossesCount}L
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Personal Units Profit</span>
               <span className={`font-mono text-xl font-black block mt-1 ${personalUnitsProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                 {personalUnitsProfit >= 0 ? '+' : ''}{personalUnitsProfit.toFixed(2)}U
               </span>
             </div>
-            <div className="bg-[#121824] p-3.5 rounded-2xl border border-white/10">
+            <div className="bg-ve-storm p-3.5 rounded-2xl border border-white/10">
               <span className="text-[10px] text-white/45 font-bold uppercase tracking-wider font-mono">Yield Accuracy</span>
               <span className="font-mono text-xl font-black text-sky-400 block mt-1">{personalWinRate.toFixed(1)}%</span>
             </div>
@@ -1473,7 +1473,7 @@ const getFriendlyParlayTitle = (parlay: any) => {
                   return (
                     <div 
                       key={item.id} 
-                      className={`bg-[#0d131f]/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
+                      className={`bg-ve-graphite/90 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono ${
                         isWon ? "border-emerald-950/60" : "border-white/10"
                       }`}
                     >

@@ -69,7 +69,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#0b0f19] border border-slate-800 p-3 rounded-xl shadow-xl font-sans text-xs">
+        <div className="bg-ve-graphite border border-slate-800 p-3 rounded-xl shadow-xl font-sans text-xs">
           <p className="font-bold text-slate-100 flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
             {data.name}
@@ -89,7 +89,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
   };
 
   return (
-    <div className="bg-[#121824] p-5 rounded-2xl border border-slate-850 space-y-5" id="risk-tier-visualization-module">
+    <div className="bg-ve-storm p-5 rounded-2xl border border-slate-850 space-y-5" id="risk-tier-visualization-module">
       
       {/* Module Heading */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-850/60 pb-3">
@@ -155,7 +155,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
         <div className="md:col-span-7 space-y-3" id="risk-category-metrics-breakdown">
           
           {/* Low Risk Bar */}
-          <div className="space-y-1 bg-[#0b0f19]/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
+          <div className="space-y-1 bg-ve-graphite/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-emerald-400">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -180,7 +180,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
           </div>
 
           {/* Medium Risk Bar */}
-          <div className="space-y-1 bg-[#0b0f19]/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
+          <div className="space-y-1 bg-ve-graphite/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-amber-500">
                 <span className="w-2 h-2 rounded-full bg-amber-50" style={{ backgroundColor: '#f59e0b' }} />
@@ -205,7 +205,7 @@ export default function RiskTierVisualization({ savedParlays }: RiskTierVisualiz
           </div>
 
           {/* High Risk Bar */}
-          <div className="space-y-1 bg-[#0b0f19]/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
+          <div className="space-y-1 bg-ve-graphite/40 p-2.5 rounded-xl border border-slate-850/60 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-rose-500">
                 <span className="w-2 h-2 rounded-full bg-rose-50" style={{ backgroundColor: '#f43f5e' }} />

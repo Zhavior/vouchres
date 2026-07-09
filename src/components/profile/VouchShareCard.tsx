@@ -49,7 +49,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
   };
 
   return (
-    <div className="bg-[#0b0f19]/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
+    <div className="bg-ve-graphite/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl max-w-lg w-full mx-auto shadow-[0_15px_50px_rgba(0,0,0,0.5)] space-y-6 text-slate-100 relative overflow-hidden select-none animate-slide-up">
       {/* Dynamic colored ambient backdrop light */}
       <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 bg-emerald-600`} />
       <div className={`absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-25 bg-indigo-600`} />
@@ -118,7 +118,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
                 </div>
                 <div className="space-y-2">
                   {post.parlay.legs.map((leg, i) => (
-                    <div key={leg.id || i} className="bg-[#0b0f19] border border-slate-850 p-2.5 rounded-xl flex items-center justify-between text-left">
+                    <div key={leg.id || i} className="bg-ve-graphite border border-slate-850 p-2.5 rounded-xl flex items-center justify-between text-left">
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-[9px] bg-slate-900 border border-slate-800 font-bold text-slate-400 px-1 py-0.2 rounded font-mono uppercase shrink-0">
@@ -136,7 +136,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
                 </div>
               </div>
             ) : post.vouch ? (
-              <div className="bg-[#0b0f19] border border-slate-850 p-3.5 rounded-xl text-left space-y-2">
+              <div className="bg-ve-graphite border border-slate-850 p-3.5 rounded-xl text-left space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] bg-amber-950/40 border border-amber-900/40 text-amber-400 font-extrabold px-2 py-0.5 rounded-full font-mono uppercase tracking-wider flex items-center gap-1">
                     <Target className="w-3 h-3" />
@@ -152,7 +152,7 @@ export default function VouchShareCard({ post, profile, onClose }: VouchShareCar
                 </p>
               </div>
             ) : (
-              <div className="bg-[#0b0f19] border border-slate-850 p-4 rounded-xl text-left">
+              <div className="bg-ve-graphite border border-slate-850 p-4 rounded-xl text-left">
                 <p className="text-xs text-slate-300 leading-relaxed font-sans">
                   {post.content}
                 </p>

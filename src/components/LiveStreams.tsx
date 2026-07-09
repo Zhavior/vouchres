@@ -995,7 +995,7 @@ export default function LiveStreams({
                 </div>
 
                 {/* 2. Channel metadata details info */}
-                <div className="p-4 bg-[#121824] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="p-4 bg-ve-storm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex gap-3">
                     {/* Streamer Avatar */}
                     <div className={`w-12 h-12 rounded-full ${activeChannel.avatarColor} border-2 border-[hsl(var(--ve-border)/0.34)] flex items-center justify-center font-extrabold text-[hsl(var(--ve-text))] text-base shadow-lg shrink-0`}>
@@ -1305,7 +1305,7 @@ export default function LiveStreams({
         )
       ) : (
         /* ================= GO-LIVE STREAMING STUDIO VIEW ================= */
-        <div className="bg-[#121824] rounded-2xl border border-slate-850 overflow-hidden text-left" id="streaming-desk-outer">
+        <div className="bg-ve-storm rounded-2xl border border-slate-850 overflow-hidden text-left" id="streaming-desk-outer">
           
           <div className="grid grid-cols-1 lg:grid-cols-12">
             

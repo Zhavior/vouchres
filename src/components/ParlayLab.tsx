@@ -132,7 +132,7 @@ export default function ParlayLab({
     const parts = text.split(/\*\*(.*?)\*\*/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        return <strong key={i} className="text-white font-extrabold bg-[#1e293b]/70 px-1 py-0.5 rounded">{part}</strong>;
+        return <strong key={i} className="text-white font-extrabold bg-ve-surface-panel/70 px-1 py-0.5 rounded">{part}</strong>;
       }
       return part;
     });
@@ -840,7 +840,7 @@ export default function ParlayLab({
                       value={ticketTitle}
                       onChange={(e) => setTicketTitle(e.target.value)}
                       placeholder="e.g. Sharp MLB Slip"
-                      className="w-full bg-[#0b0f19] border border-slate-850 text-white/90 p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600"
+                      className="w-full bg-ve-graphite border border-slate-850 text-white/90 p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600"
                     />
                   </div>
                   <div>
@@ -848,7 +848,7 @@ export default function ParlayLab({
                     <select 
                       value={bookie}
                       onChange={(e) => setBookie(e.target.value)}
-                      className="w-full bg-[#0b0f19] border border-slate-850 text-[#38bdf8] p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600 font-mono font-bold"
+                      className="w-full bg-ve-graphite border border-slate-850 text-[#38bdf8] p-2.5 rounded-xl text-xs outline-none focus:border-emerald-600 font-mono font-bold"
                     >
                       <option value="Market Average" className="text-[#38bdf8]">⚖️ Market Average Odds</option>
                       <option value="Bet365" className="text-emerald-400">🟢 Bet365 Sportsbook</option>
@@ -869,7 +869,7 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'LOW' 
                           ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400 ring-4 ring-emerald-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
+                          : 'bg-ve-graphite border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">🛡️ LOW</span>
@@ -882,7 +882,7 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'MEDIUM' 
                           ? 'bg-amber-950/40 border-amber-500 text-amber-400 ring-4 ring-amber-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
+                          : 'bg-ve-graphite border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">⚖️ MEDIUM</span>
@@ -895,7 +895,7 @@ export default function ParlayLab({
                       className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         riskTier === 'HIGH' 
                           ? 'bg-red-950/40 border-red-550 border-red-500 text-red-450 ring-4 ring-red-500/10' 
-                          : 'bg-[#0b0f19] border-slate-850 text-white/45 hover:border-white/10'
+                          : 'bg-ve-graphite border-slate-850 text-white/45 hover:border-white/10'
                       }`}
                     >
                       <span className="text-[10px] font-black font-mono block">🎰 HIGH</span>
@@ -914,7 +914,7 @@ export default function ParlayLab({
                     value={researchText}
                     onChange={(e) => setResearchText(e.target.value)}
                     placeholder="Provide your edge analysis here (e.g. platoon stats, wind coefficients, umpire hitter-friendliness, bullpen exhaustions)..."
-                    className="w-full bg-[#0b0f19] border border-slate-850 text-white/80 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-505 h-20 resize-none font-medium text-left"
+                    className="w-full bg-ve-graphite border border-slate-850 text-white/80 p-2.5 rounded-xl text-xs outline-none focus:border-indigo-505 h-20 resize-none font-medium text-left"
                     maxLength={220}
                   />
                 </div>
