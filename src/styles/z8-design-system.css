@@ -46,3 +46,40 @@
 @utility font-z8 {
   font-family: var(--font-z8);
 }
+
+/** Distinct obsidian glass shell for the app sidebar — visibly separate from main content. */
+@utility z8-sidebar-shell {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 10, 0.96) 0%,
+    rgba(5, 5, 5, 0.99) 55%,
+    rgba(5, 5, 5, 1) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.25);
+  border-right: 1px solid rgba(0, 240, 255, 0.22);
+  box-shadow:
+    inset -1px 0 0 rgba(0, 240, 255, 0.14),
+    4px 0 48px rgba(0, 0, 0, 0.9),
+    0 0 32px rgba(0, 240, 255, 0.04);
+}
+
+/** Cyan accent rule — matches HR board header treatment. */
+@utility z8-accent-line {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0.85) 0%,
+    rgba(0, 240, 255, 0.4) 55%,
+    transparent 100%
+  );
+}
+
+/** Brighter glass panel variant for sidebar groups. */
+@utility glass-panel-strong {
+  background-color: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 240, 255, 0.14);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}

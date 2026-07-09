@@ -16,7 +16,7 @@ import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, ShieldCheck,
+  Bell, Grid3x3, ShieldCheck, Palette,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import {
@@ -24,13 +24,19 @@ import {
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { getActiveSport } from '../../sports/registry';
+import {
+  Z8_ACTIVE, Z8_IDLE, Z8_ICON_BOX, Z8_LABEL, Z8_PANEL, Z8_SURFACE, Z8_SIDEBAR_SHELL,
+} from '../../theme/z8Tokens';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, Settings, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3,
+  Bell, Grid3x3, Palette,
 };
+
+/** HR nav items use Flame per featureConfig. */
+const HR_NAV_IDS = new Set(['hr_board']);
 
 const GROUP_ORDER: FeatureGroup[] = ['Daily', 'Pro Labs', 'Build & Track', 'Social', 'Account'];
 
@@ -141,21 +147,21 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
             onClick={onClose}
           />
           <motion.aside
-            className="absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col bg-obsidian-900 border-r border-white/10 font-z8"
+            className={`absolute inset-y-0 left-0 flex w-[82vw] max-w-[320px] flex-col ${Z8_SIDEBAR_SHELL} shadow-[4px_0_48px_rgba(0,0,0,0.95)]`}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'tween', duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Profile header — real token-identity data only */}
-            <div className="glass-border border-b px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
+            <div className="glass-border border-b border-vouch-cyan/20 px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">
               <div className="flex items-start justify-between pt-1">
                 <TierAvatar profile={profile} size={52} onClick={() => go('profile')} ariaLabel="Open profile" />
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="Close menu"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition hover:bg-white/5 hover:text-white"
+                  className={`flex h-8 w-8 items-center justify-center border border-white/10 text-white/40 transition hover:border-vouch-cyan/45 hover:bg-vouch-cyan/8 hover:text-white ${Z8_SURFACE}`}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -163,10 +169,11 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
               <button type="button" onClick={() => go('profile')} className="mt-2.5 block text-left">
                 <p className="flex items-center gap-1.5 text-base font-black text-white">
                   {profile.displayName}
-                  {profile.verified && <ShieldCheck className="h-3.5 w-3.5 text-vouch-emerald" />}
+                  {profile.verified && <ShieldCheck className="h-3.5 w-3.5 text-vouch-cyan" />}
                 </p>
                 <p className="text-xs text-white/40">@{profile.username}</p>
               </button>
+              <div className="z8-accent-line mt-3 w-full" aria-hidden />
               <div className="mt-2 flex items-center gap-2">
                 <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${meta.chipBg} ${meta.text}`}>
                   {meta.label}
@@ -196,38 +203,55 @@ export default function MobileProfileDrawer({ open, onClose, profile, activeSect
             {/* Nav groups — same registry as the desktop sidebar */}
             <nav className="flex-1 overflow-y-auto px-2 py-3">
               {groups.map(({ group, items }) => (
-                <div key={group} className="mb-3">
-                  <p className="px-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/25">{group}</p>
-                  {items.map((item) => {
-                    const Icon = ICON_MAP[item.icon] || Settings;
-                    const isActive = activeSection === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => go(item.id)}
-                        aria-current={isActive ? 'page' : undefined}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
-                          isActive ? 'bg-white/5 font-black text-white' : 'font-semibold text-white/60 active:bg-white/5'
-                        }`}
-                      >
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-vouch-emerald/15 text-vouch-emerald' : 'bg-vouch-emerald/10 text-vouch-emerald/70'}`}>
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        <span className="truncate">{item.label}</span>
-                      </button>
-                    );
-                  })}
+                <div key={group} className={`mb-3 overflow-hidden glass-panel-strong ${Z8_PANEL}`}>
+                  <p className={`border-b border-vouch-cyan/20 px-3 py-2 ${Z8_LABEL} text-[9px] tracking-[0.18em] text-vouch-cyan`}>{group}</p>
+                  <div className="px-1.5 py-1.5 space-y-0.5">
+                    {items.map((item) => {
+                      const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
+                      const Icon = ICON_MAP[resolvedIcon] || Settings;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => go(item.id)}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={[
+                            'relative flex w-full items-center gap-3 border px-3 py-2.5 text-left text-sm transition-all font-z8',
+                            isActive ? Z8_ACTIVE : Z8_IDLE,
+                          ].join(' ')}
+                        >
+                          {isActive && (
+                            <span
+                              aria-hidden
+                              className="pointer-events-none absolute inset-y-1 left-0 w-px bg-vouch-cyan/80 shadow-[0_0_10px_rgba(0,240,255,0.9)]"
+                            />
+                          )}
+                          <span
+                            className={[
+                              'h-7 w-7 shrink-0 transition-all',
+                              isActive
+                                ? 'flex items-center justify-center border border-vouch-cyan/60 bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
+                                : Z8_ICON_BOX,
+                            ].join(' ')}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                          </span>
+                          <span className="truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               ))}
             </nav>
 
             {/* Footer */}
-            <div className="glass-border border-t px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)]">
+            <div className="glass-border border-t border-vouch-cyan/20 px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)]">
               <button
                 type="button"
                 onClick={() => go('settings')}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/60 transition active:bg-white/5"
+                className={`flex w-full items-center gap-3 border px-3 py-2.5 text-sm transition-all ${Z8_IDLE} ${Z8_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings
               </button>

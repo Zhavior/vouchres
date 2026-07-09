@@ -14,7 +14,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Z8_ACTIVE, Z8_IDLE, Z8_ICON_BOX, Z8_LABEL, Z8_PANEL, Z8_SURFACE,
+  Z8_ACTIVE, Z8_IDLE, Z8_ICON_BOX, Z8_LABEL, Z8_PANEL, Z8_SURFACE, Z8_SIDEBAR_SHELL,
 } from '../../theme/z8Tokens';
 import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
@@ -106,12 +106,18 @@ function NavItem({ id, label, icon, isActive, onClick, badge }: NavItemProps) {
         isActive ? Z8_ACTIVE : Z8_IDLE,
       ].join(' ')}
     >
+      {isActive && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-1 left-0 w-px bg-vouch-cyan/80 shadow-[0_0_10px_rgba(0,240,255,0.9)]"
+        />
+      )}
       <span
         className={[
           'relative z-10 h-7 w-7 shrink-0 transition-all',
           isActive
-            ? 'flex items-center justify-center border border-vouch-cyan/45 bg-vouch-cyan/15 text-vouch-cyan'
-            : `${Z8_ICON_BOX} group-hover:border-vouch-cyan/35 group-hover:text-vouch-cyan`,
+            ? 'flex items-center justify-center border border-vouch-cyan/60 bg-vouch-cyan/20 text-vouch-cyan shadow-[0_0_14px_rgba(0,240,255,0.35)]'
+            : `${Z8_ICON_BOX} group-hover:border-vouch-cyan/45 group-hover:text-vouch-cyan group-hover:shadow-[0_0_10px_rgba(0,240,255,0.15)]`,
         ].join(' ')}
       >
         <IconComponent className="h-3.5 w-3.5" />
@@ -138,7 +144,7 @@ function SidebarGroup({ group, items, activeSection, onSectionChange, collapsed,
   const hasActive = items.some(i => i.id === activeSection);
 
   return (
-    <div className={['glass-panel glass-border transition-all overflow-hidden', Z8_PANEL, hasActive ? 'border-vouch-cyan/35' : ''].join(' ')}>
+    <div className={['glass-panel-strong glass-border transition-all overflow-hidden', Z8_PANEL, hasActive ? 'border-vouch-cyan/45 shadow-[0_0_24px_rgba(0,240,255,0.08)]' : ''].join(' ')}>
       {/* Group header */}
       <button
         onClick={onToggle}
@@ -264,13 +270,13 @@ export default function FeedSidebar({
 
   return (
     <aside
+      id="z8-feed-sidebar"
       className={[
-        'relative hidden md:flex h-full min-h-0 flex-col font-z8',
+        'relative hidden md:flex h-full min-h-0 flex-col',
         'w-[72px] xl:w-[280px]',
-        'glass-panel glass-border border-r border-white/10',
-        'bg-obsidian-800/80 px-2 xl:px-3.5 py-4',
-        'text-white',
-        'justify-between select-none backdrop-blur-sm',
+        Z8_SIDEBAR_SHELL,
+        'px-2 xl:px-3.5 py-4',
+        'justify-between select-none',
         'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
       ].join(' ')}
     >
@@ -278,29 +284,32 @@ export default function FeedSidebar({
       <div className="relative z-10 space-y-4 flex-1">
 
         {/* Brand logo */}
-        <button
-          onClick={() => onSectionChange('feed')}
-          className={`group relative w-full flex items-center gap-3 ${Z8_SURFACE} p-2.5 cursor-pointer transition-all hover:border-vouch-cyan/45 hover:bg-vouch-cyan/5`}
-          id="brand-logo-id"
-          aria-label="Go to Home Feed"
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan">
-            <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
-          </div>
-          <div className="hidden xl:block min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
-                VouchEdge
-              </span>
-              <span className={`${Z8_LABEL} border border-vouch-cyan/25 bg-vouch-cyan/10 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan`}>
-                Live
-              </span>
+        <div className="relative">
+          <button
+            onClick={() => onSectionChange('feed')}
+            className={`group relative w-full flex items-center gap-3 ${Z8_SURFACE} p-2.5 cursor-pointer transition-all hover:border-vouch-cyan/55 hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
+            id="brand-logo-id"
+            aria-label="Go to Home Feed"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-vouch-cyan/50 bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
+              <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
             </div>
-            <p className={`mt-0.5 truncate ${Z8_LABEL} text-white/40`}>
-              MLB Intelligence Command
-            </p>
-          </div>
-        </button>
+            <div className="hidden xl:block min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
+                  VouchEdge
+                </span>
+                <span className={`${Z8_LABEL} border border-vouch-cyan/35 bg-vouch-cyan/15 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.15)]`}>
+                  Live
+                </span>
+              </div>
+              <p className={`mt-0.5 truncate ${Z8_LABEL} text-white/40`}>
+                MLB Intelligence Command
+              </p>
+            </div>
+          </button>
+          <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
+        </div>
 
         {/* Cmd+K hint — desktop only */}
         <button
