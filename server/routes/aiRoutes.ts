@@ -3,7 +3,9 @@ import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
+import type { AuthedRequest } from "../middleware/auth";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { generateAiChatResponse } from "../services/ai/chatService";
 import { generateAiImage } from "../services/ai/imageGenerationService";
 import { generateAiTheme } from "../services/ai/themeGenerationService";
@@ -29,14 +31,25 @@ import {
   type PlayerResearchInput,
 } from "../validators/aiSchemas";
 
+type AiReq = AuthedRequest & RequestWithContext;
+
+async function incrementAiQuotaIfNeeded(req: AiReq): Promise<void> {
+  const q = (req as { __quota?: { key: string; day: string } }).__quota;
+  if (q) {
+    await incrementQuota(req.user!.id, q.key, q.day);
+  }
+}
+
 export function registerAiRoutes(app: Express): void {
   app.post(
     "/api/ai/chat",
     requireAuth,
     generationLimiter,
+    requireTierOrQuota("gold", 20, "ai_chat"),
     validate({ body: AiChatRequestSchema }),
-    asyncHandler(async (req: RequestWithContext, res: Response) => {
+    asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiChatResponse(req.body as AiChatInput);
+      await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
@@ -45,9 +58,11 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/generate-image",
     requireAuth,
     generationLimiter,
+    requireTierOrQuota("gold", 5, "ai_image"),
     validate({ body: AiImageRequestSchema }),
-    asyncHandler(async (req: RequestWithContext, res: Response) => {
+    asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiImage(req.body as AiImageInput);
+      await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
@@ -56,9 +71,11 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/generate-theme",
     requireAuth,
     generationLimiter,
+    requireTierOrQuota("gold", 5, "ai_theme"),
     validate({ body: AiThemeRequestSchema }),
-    asyncHandler(async (req: RequestWithContext, res: Response) => {
+    asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiTheme(req.body as AiThemeInput);
+      await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
@@ -67,57 +84,82 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/player-research",
     requireAuth,
     generationLimiter,
+    requireTierOrQuota("gold", 15, "research_lookups"),
     validate({ body: PlayerResearchRequestSchema }),
-    asyncHandler(async (req: RequestWithContext, res: Response) => {
+    asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generatePlayerResearch(req.body as PlayerResearchInput);
+      await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );
 
-  app.post("/api/ai/explain-pick", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const pick = req.body?.pick as PickCandidate;
-    if (!pick) {
-      throw new AppError({
-        status: 400,
-        code: "validation_error",
-        message: "pick is required.",
-        details: [{ path: "pick", message: "Required." }],
-      });
-    }
-    const result = await explainPick(pick);
-    res.json(apiOkFlat(req, result as Record<string, unknown>));
-  }));
+  app.post(
+    "/api/ai/explain-pick",
+    requireAuth,
+    generationLimiter,
+    requireTierOrQuota("gold", 10, "ai_explain"),
+    asyncHandler(async (req: AiReq, res: Response) => {
+      const pick = req.body?.pick as PickCandidate;
+      if (!pick) {
+        throw new AppError({
+          status: 400,
+          code: "validation_error",
+          message: "pick is required.",
+          details: [{ path: "pick", message: "Required." }],
+        });
+      }
+      const result = await explainPick(pick);
+      await incrementAiQuotaIfNeeded(req);
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+    })
+  );
 
-  app.post("/api/ai/daily-report", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const result = await getDailyReportNarrative(req.body?.date);
-    res.json(apiOkFlat(req, result as Record<string, unknown>));
-  }));
+  app.post(
+    "/api/ai/daily-report",
+    requireAuth,
+    generationLimiter,
+    requireTierOrQuota("gold", 1, "ai_daily_report"),
+    asyncHandler(async (req: AiReq, res: Response) => {
+      const result = await getDailyReportNarrative(req.body?.date);
+      await incrementAiQuotaIfNeeded(req);
+      return res.json(apiOkFlat(req, result as Record<string, unknown>));
+    })
+  );
 
-  app.post("/api/ai/learning-note", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
-    if (!pickId || !result) {
-      throw new AppError({
-        status: 400,
-        code: "validation_error",
-        message: "pickId and result are required.",
-        details: [
-          ...(!pickId ? [{ path: "pickId", message: "Required." }] : []),
-          ...(!result ? [{ path: "result", message: "Required." }] : []),
-        ],
-      });
-    }
-    const note = await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened });
-    res.json(apiOkFlat(req, note as Record<string, unknown>));
-  }));
+  app.post(
+    "/api/ai/learning-note",
+    requireAuth,
+    generationLimiter,
+    requireTierOrQuota("gold", 5, "ai_learning_note"),
+    asyncHandler(async (req: AiReq, res: Response) => {
+      const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
+      if (!pickId || !result) {
+        throw new AppError({
+          status: 400,
+          code: "validation_error",
+          message: "pickId and result are required.",
+          details: [
+            ...(!pickId ? [{ path: "pickId", message: "Required." }] : []),
+            ...(!result ? [{ path: "result", message: "Required." }] : []),
+          ],
+        });
+      }
+      const note = await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened });
+      await incrementAiQuotaIfNeeded(req);
+      return res.json(apiOkFlat(req, note as Record<string, unknown>));
+    })
+  );
 
   app.post(
     "/api/ai/parlay-edge",
     requireAuth,
     generationLimiter,
+    requireTierOrQuota("gold", 10, "parlay_edge"),
     validate({ body: ParlayEdgeRequestSchema }),
-    asyncHandler(async (req: RequestWithContext, res: Response) => {
+    asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateParlayEdgeReport(req.body as ParlayEdgeInput);
       assertParlayEdgeReportIsSafe(result.report);
+      await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, result as Record<string, unknown>));
     })
   );

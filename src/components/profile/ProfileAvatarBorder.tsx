@@ -63,6 +63,8 @@ export default function ProfileAvatarBorder({
   const isPixel = border?.id?.includes('4bit') || border?.id?.includes('8bit');
   const isSquare = isPixel || borderId === '4bit-pixel-frame' || borderId === '4bit-champion-frame';
 
+  const avatarPx = size === 'sm' ? 32 : size === 'lg' ? 64 : size === 'xl' ? 96 : 40;
+
   // Render overlay icon
   const renderOverlayBadge = () => {
     if (isVerified) {
@@ -110,7 +112,9 @@ export default function ProfileAvatarBorder({
         {avatarUrl ? (
           <img 
             src={avatarUrl} 
-            alt={displayName} 
+            alt={displayName}
+            width={avatarPx}
+            height={avatarPx}
             referrerPolicy="no-referrer"
             loading={size === 'xl' || size === 'lg' ? 'eager' : 'lazy'}
             decoding="async"

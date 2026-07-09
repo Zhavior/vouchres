@@ -2,7 +2,10 @@ import { Router } from "express";
 import type { Response } from "express";
 import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
+import type { RequestWithContext } from "../middleware/requestContext";
 
 /**
  * Privacy routes — GDPR / CCPA / CPRA compliance endpoints.
@@ -21,12 +24,20 @@ import { AppError } from "../errors/AppError";
  */
 export const privacyRoutes = Router();
 
-privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+type PrivacyReq = AuthedRequest & RequestWithContext;
+
+privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
   const { data, error } = await supabaseAdmin
     .rpc("export_user_data", { p_user_id: req.user!.id });
 
   if (error) {
-    console.error("[privacy] export failed", error);
+    structuredLog({
+      level: "error",
+      event: "privacy_export_failed",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      message: error.message,
+    });
     throw new AppError({
       status: 500,
       code: "internal_server_error",
@@ -35,9 +46,12 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: AuthedRequest
     });
   }
 
-  console.log(
-    `[privacy] DSAR export for user ${req.user!.id} at ${new Date().toISOString()}`,
-  );
+  structuredLog({
+    level: "info",
+    event: "privacy_dsar_export",
+    requestId: req.requestId,
+    userId: req.user!.id,
+  });
 
   res.setHeader("Content-Type", "application/json");
   res.setHeader(
@@ -45,10 +59,10 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: AuthedRequest
     `attachment; filename="vouchedge-data-export-${req.user!.profile.username}-${Date.now()}.json"`,
   );
 
-  return res.json({ ok: true, data });
+  return res.json(apiOkFlat(req, { data }));
 }));
 
-privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
   const { confirm } = req.body ?? {};
 
   if (confirm !== "DELETE MY ACCOUNT") {
@@ -80,7 +94,13 @@ privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: Auth
     .eq("id", req.user!.id);
 
   if (error) {
-    console.error("[privacy] schedule deletion failed", error);
+    structuredLog({
+      level: "error",
+      event: "privacy_schedule_deletion_failed",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      message: error.message,
+    });
     throw new AppError({
       status: 500,
       code: "internal_server_error",
@@ -90,27 +110,34 @@ privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: Auth
   }
 
   if ((req.user!.profile as any).stripe_subscription_id) {
-    console.warn(
-      "[privacy] Stripe subscription cancellation helper is not wired yet; skipping remote cancellation",
-      { subscriptionId: (req.user!.profile as any).stripe_subscription_id },
-    );
+    structuredLog({
+      level: "warn",
+      event: "privacy_stripe_cancel_skipped",
+      requestId: req.requestId,
+      userId: req.user!.id,
+      subscriptionId: (req.user!.profile as any).stripe_subscription_id,
+      message: "Stripe subscription cancellation helper is not wired yet.",
+    });
   }
 
-  console.log(
-    `[privacy] user ${req.user!.id} scheduled deletion for ${deletionDate.toISOString()}`,
-  );
+  structuredLog({
+    level: "info",
+    event: "privacy_deletion_scheduled",
+    requestId: req.requestId,
+    userId: req.user!.id,
+    deletionScheduledAt: deletionDate.toISOString(),
+  });
 
-  return res.json({
-    ok: true,
+  return res.json(apiOkFlat(req, {
     deletion_scheduled_at: deletionDate.toISOString(),
     grace_period_days: 30,
     message:
       "Your account is scheduled for deletion in 30 days. " +
       "You can cancel this by signing in and visiting Settings.",
-  });
+  }));
 }));
 
-privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
   if (!(req.user!.profile as any).deletion_scheduled_at) {
     throw new AppError({
       status: 400,
@@ -137,17 +164,21 @@ privacyRoutes.post("/cancel-deletion", requireAuth, asyncHandler(async (req: Aut
     });
   }
 
-  console.log(`[privacy] user ${req.user!.id} canceled deletion`);
+  structuredLog({
+    level: "info",
+    event: "privacy_deletion_canceled",
+    requestId: req.requestId,
+    userId: req.user!.id,
+  });
 
-  return res.json({ ok: true, message: "Account deletion canceled." });
+  return res.json(apiOkFlat(req, { message: "Account deletion canceled." }));
 }));
 
-privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
-  return res.json({
-    ok: true,
+privacyRoutes.get("/deletion-status", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
+  return res.json(apiOkFlat(req, {
     deletion_scheduled_at: (req.user!.profile as any).deletion_scheduled_at ?? null,
     grace_period_days: 30,
-  });
+  }));
 }));
 
 /**

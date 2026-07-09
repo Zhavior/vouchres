@@ -136,6 +136,7 @@ const MobileCompactHeader = React.memo(function MobileCompactHeader({
         <TierAvatar
           profile={profile}
           size={36}
+          priority
           onClick={onOpenDrawer}
           ariaLabel="Open navigation menu"
         />

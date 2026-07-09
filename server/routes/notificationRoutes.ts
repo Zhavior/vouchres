@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { AuthedRequest, requireAuth, requireStaff } from "../middleware/auth";
+import { AuthedRequest, requireAuth, requireStaff, getSupabaseAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
@@ -104,6 +104,40 @@ notificationRoutes.post("/notifications/push/unsubscribe", requireAuth, asyncHan
       details: { warnings: ["Missing push endpoint"] },
     });
   }
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: subscription, error: lookupError } = await supabaseAdmin
+    .from("push_subscriptions")
+    .select("id")
+    .eq("user_id", req.user!.id)
+    .eq("endpoint", endpoint)
+    .maybeSingle();
+
+  if (lookupError || !subscription) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Push subscription not found.",
+    });
+  }
+
+  const owned = await assertUserOwnsResource(req.user!.id, "push_subscription", subscription.id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: "Push subscription not found.",
+      });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
   const out = await deletePushSubscription(req.user!.id, endpoint);
   if (!out.ok) {
     throw new AppError({

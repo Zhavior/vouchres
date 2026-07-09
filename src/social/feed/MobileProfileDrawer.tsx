@@ -60,18 +60,29 @@ export function tierMeta(tier: CreatorProofProfile['subscriptionTier']): TierMet
   }
 }
 
-export function TierAvatar({ profile, size = 40, onClick, ariaLabel }: {
+export function TierAvatar({ profile, size = 40, onClick, ariaLabel, priority = false }: {
   profile: CreatorProofProfile;
   size?: number;
   onClick?: () => void;
   ariaLabel?: string;
+  priority?: boolean;
 }) {
   const meta = tierMeta(profile.subscriptionTier);
   const initials = (profile.displayName || profile.username || '?')
     .trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
   const inner = profile.avatarUrl ? (
-    <img src={profile.avatarUrl} alt={profile.displayName} className="h-full w-full rounded-full object-cover" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
+    <img
+      src={profile.avatarUrl}
+      alt={profile.displayName}
+      width={size}
+      height={size}
+      className="h-full w-full rounded-full object-cover"
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchPriority={priority ? 'high' : undefined}
+      referrerPolicy="no-referrer"
+    />
   ) : (
     <span className="flex h-full w-full items-center justify-center rounded-full bg-obsidian-800 text-[11px] font-black text-white/70">
       {initials}

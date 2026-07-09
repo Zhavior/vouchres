@@ -663,6 +663,8 @@ function PlayerCard({ player, index }: { player: Player; index: number }) {
           <img
             src={headshot}
             alt={playerName(player)}
+            width={64}
+            height={64}
             className={MLB_HEADSHOT_IMG_CLASS}
             loading="eager"
             decoding="async"
@@ -769,6 +771,8 @@ function CompactRosterColumn({
                   <img
                     src={img}
                     alt=""
+                    width={48}
+                    height={48}
                     className={MLB_HEADSHOT_IMG_CLASS}
                     loading="eager"
                     decoding="async"

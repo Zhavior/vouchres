@@ -1,19 +1,22 @@
 /** AI capper + judge agent routes. */
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { listAgents, getAgent, generatePicks, JUDGE_AGENTS } from "../agents/agentRegistry";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { generationLimiter } from "../middleware/rateLimit";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
+import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
 import { upstreamUnavailable } from "../lib/requestValidators";
+import type { RequestWithContext } from "../middleware/requestContext";
 
 export function registerAgentRoutes(app: Express): void {
-  app.get("/api/agents", asyncHandler(async (_req: Request, res: Response) => {
-    res.json({ ok: true, cappers: listAgents(), judges: JUDGE_AGENTS });
+  app.get("/api/agents", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, { cappers: listAgents(), judges: JUDGE_AGENTS }));
   }));
 
-  app.get("/api/agents/:id", asyncHandler(async (req: Request, res: Response) => {
+  app.get("/api/agents/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const agent = getAgent(req.params.id);
     if (!agent) {
       throw new AppError({
@@ -22,7 +25,7 @@ export function registerAgentRoutes(app: Express): void {
         message: "Agent not found.",
       });
     }
-    res.json({ ok: true, ...agent });
+    return res.json(apiOkFlat(req, { ...agent }));
   }));
 
   /**
@@ -31,7 +34,7 @@ export function registerAgentRoutes(app: Express): void {
    * the MLB schedule + pitcher stats are fetched ONLY ONCE and the
    * in-flight Promise is shared across all callers.
    */
-  app.post("/api/agents/:id/generate-picks", requireAuth, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.post("/api/agents/:id/generate-picks", requireAuth, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     const agent = getAgent(req.params.id);
     if (!agent) {
@@ -45,17 +48,30 @@ export function registerAgentRoutes(app: Express): void {
     try {
       const report = await getSharedDailyReport(req.body?.date);
       const picks = await generatePicks(agent.id, report);
-      res.json({
-        ok: true,
+      return res.json(apiOkFlat(req, {
         agent: { id: agent.id, name: agent.name, icon: agent.icon },
         picks,
         warnings: report.warnings,
-      });
+      }));
     } catch (err: any) {
-      console.error(`[agentRoutes] generate-picks failed for ${agent.id}:`, err.message);
+      structuredLog({
+        level: "error",
+        event: "agent_generate_picks_failed",
+        requestId: req.requestId,
+        agentId: agent.id,
+        message: err?.message,
+      });
       throw upstreamUnavailable("Failed to generate picks — MLB data unavailable.", err);
     } finally {
-      console.log(`[endpoint] POST /api/agents/:id/generate-picks ${Date.now() - start}ms`);
+      structuredLog({
+        level: "info",
+        event: "endpoint",
+        requestId: req.requestId,
+        method: "POST",
+        route: "/api/agents/:id/generate-picks",
+        durationMs: Date.now() - start,
+        agentId: agent.id,
+      });
     }
   }));
 
@@ -64,7 +80,7 @@ export function registerAgentRoutes(app: Express): void {
    * Builds the daily report ONCE, then runs all 5 cappers against it.
    * This is the most efficient endpoint — one MLB data fetch, 5 cappers.
    */
-  app.post("/api/agents/generate-all-picks", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: Request, res: Response) => {
+  app.post("/api/agents/generate-all-picks", requireAuth, requireStaff, generationLimiter, asyncHandler(async (req: RequestWithContext, res: Response) => {
     const start = Date.now();
     try {
       const report = await getSharedDailyReport(req.body?.date);
@@ -88,20 +104,31 @@ export function registerAgentRoutes(app: Express): void {
         })
       );
 
-      res.json({
-        ok: true,
+      return res.json(apiOkFlat(req, {
         date: report.date,
         gameCount: report.gameCount,
         dataQuality: report.dataQuality,
         generatedAt: report.generatedAt,
         warnings: report.warnings,
         cappers: results,
-      });
+      }));
     } catch (err: any) {
-      console.error("[agentRoutes] generate-all-picks failed:", err.message);
+      structuredLog({
+        level: "error",
+        event: "agent_generate_all_picks_failed",
+        requestId: req.requestId,
+        message: err?.message,
+      });
       throw upstreamUnavailable("Failed to generate picks — MLB data unavailable.", err);
     } finally {
-      console.log(`[endpoint] POST /api/agents/generate-all-picks ${Date.now() - start}ms`);
+      structuredLog({
+        level: "info",
+        event: "endpoint",
+        requestId: req.requestId,
+        method: "POST",
+        route: "/api/agents/generate-all-picks",
+        durationMs: Date.now() - start,
+      });
     }
   }));
 }

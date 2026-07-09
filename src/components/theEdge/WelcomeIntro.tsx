@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { motion } from '../../lib/motion';
 import { ArrowRight, Check, Radio, ShieldCheck, Sparkles, TrendingUp, Layers3 } from 'lucide-react';
-import { GradingDemo } from './GradingDemo';
 import { MermaidDiagram } from '../../lib/diagrams/MermaidDiagram';
+
+const GradingDemo = lazy(() =>
+  import('./GradingDemo').then((m) => ({ default: m.GradingDemo })),
+);
 import { logoByTeamId } from '../../lib/teamLogos';
 
 const GRADING_FLOWCHART = `flowchart LR
@@ -54,8 +57,11 @@ function TeamIcon({ teamId, abbr }: { teamId?: number | null; abbr: string }) {
     <img
       src={src}
       alt={abbr}
-      loading="lazy"
+      width={20}
+      height={20}
+      loading="eager"
       decoding="async"
+      fetchPriority="low"
       className="h-5 w-5 shrink-0 object-contain"
       onError={() => setErrored(true)}
     />
@@ -133,12 +139,7 @@ export default function WelcomeIntro({
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 0.1 }}
-          className="glass-panel glass-border rounded-2xl p-5"
-        >
+        <div className="ve-hero-in glass-panel glass-border rounded-2xl p-5" style={{ animationDelay: '100ms' }}>
           <div className="mb-4 flex items-center justify-between">
             <div>
               <div className="terminal-text">Today</div>
@@ -191,7 +192,7 @@ export default function WelcomeIntro({
             Official lineups are treated as confirmed only when the source says they are. Preview rows stay
             clearly marked until then.
           </p>
-        </motion.div>
+        </div>
       </section>
 
       {/* ── THE PROBLEM ── */}
@@ -218,7 +219,9 @@ export default function WelcomeIntro({
           <MermaidDiagram definition={GRADING_FLOWCHART} id="grading-flowchart" className="mx-auto min-w-[560px] max-w-full [&_svg]:mx-auto" />
         </div>
         <div className="mt-3">
-          <GradingDemo />
+          <Suspense fallback={<div className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" aria-hidden />}>
+            <GradingDemo />
+          </Suspense>
         </div>
       </motion.section>
 

@@ -11,7 +11,15 @@ import { queryClient } from './lib/queryClient';
 
 import { patchPublicNotificationsFetch } from "./lib/patchPublicNotificationsFetch";
 patchPublicNotificationsFetch();
-forceFounderPoints();
+
+const scheduleIdle = (fn: () => void) => {
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(fn, { timeout: 2000 });
+  } else {
+    setTimeout(fn, 0);
+  }
+};
+scheduleIdle(forceFounderPoints);
 
 
 createRoot(document.getElementById('root')!).render(

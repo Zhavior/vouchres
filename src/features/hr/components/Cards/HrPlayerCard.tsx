@@ -230,10 +230,13 @@ export const HrPlayerCard: React.FC<HrPlayerCardProps> = ({ player, onClick, onV
             <img
               src={player.headshotUrl}
               alt={player.playerName}
+              width={44}
+              height={44}
               loading="lazy"
               decoding="async"
               onError={() => setImgError(true)}
               className="h-9 w-9 shrink-0 border border-white/10 object-cover sm:h-11 sm:w-11"
+              style={{ aspectRatio: '1 / 1' }}
             />
           ) : (
             <div

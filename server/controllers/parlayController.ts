@@ -18,6 +18,19 @@ import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../
 type ParlayReq = AuthedRequest & RequestWithContext;
 
 export const getParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+  if (!owned.ok) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
   const parlay = await getUserParlay({ userId: req.user!.id, parlayId: req.params.id });
   return res.json(apiOkFlat(req, { parlay }));
 });

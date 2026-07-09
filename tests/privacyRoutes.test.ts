@@ -2,6 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { privacyRoutes } from "../server/routes/privacyRoutes";
 
 const profile = {
@@ -32,6 +33,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api/privacy", privacyRoutes);
   app.use("/api/privacy", apiErrorHandler);
@@ -101,9 +103,13 @@ describe("privacy routes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({
+    expect(body).toMatchObject({
       ok: true,
       data: { profile: { id: "user_test" } },
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
     });
   });
 });

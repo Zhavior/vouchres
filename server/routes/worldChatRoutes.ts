@@ -4,7 +4,9 @@ import { z } from "zod";
 import { AuthedRequest, optionalAuth, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
+import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
+import type { RequestWithContext } from "../middleware/requestContext";
 import { worldChatLimiter } from "../middleware/rateLimit";
 import {
   getChatProfile,
@@ -24,13 +26,15 @@ import {
  */
 export const worldChatRoutes = Router();
 
+type WorldChatReq = AuthedRequest & RequestWithContext;
+
 worldChatRoutes.get(
   "/world-chat/messages",
   optionalAuth,
-  asyncHandler(async (req, res: Response) => {
+  asyncHandler(async (req: RequestWithContext, res: Response) => {
     const limit = Math.min(Number(req.query.limit ?? 50), 100);
     const items = listWorldChatMessages(limit);
-    return res.json({ ok: true, messages: items, preview: items.length === 0 });
+    return res.json(apiOkFlat(req, { messages: items, preview: items.length === 0 }));
   }),
 );
 
@@ -46,7 +50,7 @@ worldChatRoutes.post(
   requireAuth,
   worldChatLimiter,
   validate({ body: PostMessageSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: WorldChatReq, res: Response) => {
     const body = req.body as z.infer<typeof PostMessageSchema>;
     const userId = req.user!.id;
 
@@ -81,7 +85,7 @@ worldChatRoutes.post(
       text: body.text,
     });
 
-    return res.json({ ok: true, message });
+    return res.json(apiOkFlat(req, { message }));
   }),
 );
 
@@ -94,9 +98,9 @@ const ChatProfileSchema = z.object({
 worldChatRoutes.get(
   "/profile/chat-profile",
   requireAuth,
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: WorldChatReq, res: Response) => {
     const chatProfile = getChatProfile(req.user!.id);
-    return res.json({ ok: true, chatProfile });
+    return res.json(apiOkFlat(req, { chatProfile }));
   }),
 );
 
@@ -104,7 +108,7 @@ worldChatRoutes.put(
   "/profile/chat-profile",
   requireAuth,
   validate({ body: ChatProfileSchema }),
-  asyncHandler(async (req: AuthedRequest, res: Response) => {
+  asyncHandler(async (req: WorldChatReq, res: Response) => {
     const body = req.body as z.infer<typeof ChatProfileSchema>;
     const existing = getChatProfile(req.user!.id);
     const chatProfile = putChatProfile(req.user!.id, {
@@ -112,6 +116,6 @@ worldChatRoutes.put(
       accentColor: body.accentColor ?? existing?.accentColor ?? "cyan",
       tag: body.tag ?? existing?.tag,
     });
-    return res.json({ ok: true, chatProfile });
+    return res.json(apiOkFlat(req, { chatProfile }));
   }),
 );

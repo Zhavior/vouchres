@@ -38,6 +38,11 @@ vi.mock("../server/middleware/rateLimit", () => ({
   generationLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
+vi.mock("../server/middleware/entitlements", () => ({
+  requireTierOrQuota: () => (_req: unknown, _res: unknown, next: () => void) => next(),
+  incrementQuota: vi.fn(async () => undefined),
+}));
+
 vi.mock("../server/services/ai/chatService", () => ({
   generateAiChatResponse: vi.fn(async () => ({
     status: "no-key",

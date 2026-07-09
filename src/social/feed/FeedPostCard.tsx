@@ -626,14 +626,17 @@ function FeedPostCard({
               className="max-h-[380px] w-full object-contain rounded-lg shadow-inner" 
             />
           ) : (
-            <div className="relative w-full flex flex-col items-center">
+            <div className="relative w-full aspect-[4/3] max-h-[380px] flex flex-col items-center">
               {/* Show active slide */}
               <img 
                 src={activeSlide === 1 && post.mediaUrl2 ? post.mediaUrl2 : post.mediaUrl} 
-                alt={`Attached proof slide ${activeSlide + 1}`} 
+                alt={`Attached proof slide ${activeSlide + 1}`}
+                width={800}
+                height={600}
                 loading="lazy"
                 decoding="async"
-                className="max-h-[380px] w-full object-contain rounded-lg hover:scale-[1.005] transition-all duration-200 cursor-pointer shadow-inner animate-fade-in" 
+                className="max-h-[380px] w-full h-full object-contain rounded-lg hover:scale-[1.005] transition-all duration-200 cursor-pointer shadow-inner animate-fade-in" 
+                style={{ aspectRatio: '4 / 3' }}
                 referrerPolicy="no-referrer"
               />
 

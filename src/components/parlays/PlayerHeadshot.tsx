@@ -50,6 +50,8 @@ export default function PlayerHeadshot({ name, playerId, headshotUrl, size = 40,
         <img
           src={resolvedUrl!}
           alt={name || 'Player headshot'}
+          width={size}
+          height={size}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={priority ? 'high' : 'low'}

@@ -25,21 +25,102 @@
     <meta name="twitter:description" content="Track picks. Build proof. Follow the edge." />
     <meta name="twitter:image" content="https://vouchres.vercel.app/og-image.png" />
 
-    <!-- Font preconnect FIRST — stops render-blocking -->
+    <!-- Critical above-fold shell — paints before 740KB Tailwind bundle parses -->
+    <style id="ve-critical-shell">
+      :root {
+        color-scheme: dark;
+        --font-z8: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --z8-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        background: #020617;
+        color: #fafafa;
+      }
+      #root { min-height: 100vh; isolation: isolate; }
+      body, #root {
+        font-family: var(--font-z8);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .font-z8 { font-family: var(--font-z8); }
+      .text-vouch-cyan { color: #00f0ff; }
+      .text-vouch-emerald { color: #00ff94; }
+      .bg-vouch-emerald { background-color: #00ff94; }
+      .bg-obsidian-900 { background-color: #020617; }
+      .z8-layout-root { min-height: 100vh; color: #fff; width: 100%; }
+      .ve-mobile-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.4);
+        padding: 0.625rem 0.75rem;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        contain: layout style;
+        transform: translateZ(0);
+      }
+      .glass-panel {
+        background-color: rgba(2, 6, 23, 0.28);
+        backdrop-filter: blur(16px) saturate(1.15);
+        -webkit-backdrop-filter: blur(16px) saturate(1.15);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+      }
+      .glass-border { border: 1px solid rgba(255, 255, 255, 0.1); }
+      .terminal-text {
+        font-family: var(--z8-font-mono);
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .ve-route-suspense-fallback { min-height: 40vh; contain: strict; pointer-events: none; }
+      @keyframes ve-hero-in {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .ve-hero-in { animation: ve-hero-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+      @keyframes pulse { 50% { opacity: 0.5; } }
+      .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+
+    <!-- Fonts: preconnect + non-blocking load (was 3 render-blocking stylesheets) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap"
+      />
+    </noscript>
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&family=Montserrat:wght@900&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
-    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playball&family=Graduate&family=Space+Grotesk:wght@700&family=Cinzel:wght@600;700;800;900&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,400;1,700&family=Montserrat:wght@900&display=swap"
+      />
+    </noscript>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
