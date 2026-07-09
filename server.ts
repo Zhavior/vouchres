@@ -97,8 +97,18 @@ async function startServer() {
   httpServer.on("request", app);
   const PORT = Number(process.env.PORT) || 3000;
 
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `[boot] Port ${PORT} is already in use. Stop the stale process: lsof -ti :${PORT} | xargs kill`,
+      );
+      process.exit(1);
+    }
+    throw err;
+  });
+
   httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express custom server running on http://0.0.0.0:${PORT}`);
+    console.log(`Express custom server running on http://localhost:${PORT}`);
   });
 }
 
