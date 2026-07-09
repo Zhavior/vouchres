@@ -210,7 +210,7 @@ interface DraftLegCardProps {
   onRemove: (id: string) => void;
 }
 
-function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
+const DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
   const record = leg as Record<string, unknown>;
   const confidence = Number(record.confidence ?? record.edgeScore ?? null);
   const hasConf = Number.isFinite(confidence);
@@ -310,9 +310,7 @@ function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
       )}
     </div>
   );
-}
-
-// ─── Judge Verdict peek drawer (Judge 3: not a separate tab, but a sheet) ─────
+});
 
 function JudgeVerdictDrawer({
   verdict,

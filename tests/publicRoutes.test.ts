@@ -22,6 +22,25 @@ vi.mock("../server/services/aiJudges/aiJudgeLeaderboardService", () => ({
   buildAiJudgeLeaderboard: vi.fn(async () => ({ entries: [] })),
 }));
 
+vi.mock("../server/services/aiJudges/agentRegistry", () => ({
+  listAgentMeta: vi.fn(() => [
+    {
+      id: "data_scout",
+      displayName: "Data Scout",
+      handle: "ai-data-scout",
+      tagline: "Clean math.",
+      persona: "Test",
+      specialty: "Math",
+      color: "cyan",
+      code: "DS",
+      builtin: true,
+      singlePickLimit: 1,
+    },
+  ]),
+  getAgent: vi.fn(),
+  EXTENSION_DOCS_PATH: "server/services/aiJudges/agentRegistry.ts",
+}));
+
 vi.mock("../server/middleware/rateLimit", () => ({
   generationLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
@@ -96,6 +115,17 @@ describe("public routes", () => {
         message: "Capper not found.",
       },
     });
+  });
+
+  it("returns ai judge registry metadata", async () => {
+    const response = await fetch(`${baseUrl}/api/ai-judges/registry`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.agents).toHaveLength(1);
+    expect(body.agents[0].id).toBe("data_scout");
+    expect(body.extensionDocs).toContain("agentRegistry");
   });
 
   it("rejects self-follow with unified bad_request envelope", async () => {

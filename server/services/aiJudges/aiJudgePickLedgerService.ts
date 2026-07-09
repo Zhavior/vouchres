@@ -1,46 +1,8 @@
 import { supabaseAdmin } from "../../middleware/auth";
 import { createPick } from "../persistence/pickService";
+import { listAgents } from "./agentRegistry";
 import { judgePickMeta } from "./judgeScoring";
 import { buildAiJudgeLeaderboard } from "./aiJudgeLeaderboardService";
-import type { JudgeId } from "./judgeScoring";
-
-const AI_JUDGE_CAPPERS: Array<{
-  judgeId: JudgeId;
-  displayName: string;
-  tagline: string;
-  persona: string;
-}> = [
-  {
-    judgeId: "data_scout",
-    displayName: "Data Scout",
-    tagline: "Clean math. Low hype. Safer profiles.",
-    persona: "AI Judge that prioritizes cleaner data, safer HR profiles, and fewer red flags.",
-  },
-  {
-    judgeId: "power_hunter",
-    displayName: "Power Hunter",
-    tagline: "Home-run upside hunter.",
-    persona: "AI Judge that chases hitter power, pitcher vulnerability, and HR ceiling.",
-  },
-  {
-    judgeId: "momentum_reader",
-    displayName: "Momentum Reader",
-    tagline: "Recent form and rhythm reader.",
-    persona: "AI Judge that reads recent form, lineup rhythm, and momentum signals.",
-  },
-  {
-    judgeId: "risk_auditor",
-    displayName: "Risk Auditor",
-    tagline: "Finds traps before they cost you.",
-    persona: "AI Judge that flags thin data, risky profiles, and low-confidence traps.",
-  },
-  {
-    judgeId: "pro_edge_agent",
-    displayName: "Pro Edge Agent",
-    tagline: "Premium blended model.",
-    persona: "AI Judge that blends power, matchup, form, confidence, and risk into one premium read.",
-  },
-];
 
 type SaveResult = {
   judgeId: string;
@@ -56,7 +18,11 @@ type SaveResult = {
   }>;
 };
 
-async function ensureAiJudgeCapper(judge: (typeof AI_JUDGE_CAPPERS)[number]) {
+async function ensureAiJudgeCapper(judge: {
+  displayName: string;
+  tagline: string;
+  persona: string;
+}) {
   const { data: existing, error: lookupError } = await supabaseAdmin
     .from("cappers")
     .select("id, display_name")
@@ -135,18 +101,23 @@ export async function saveCurrentAiJudgePicksToLedger() {
   const gameDate = board.date ?? new Date().toISOString().slice(0, 10);
   const results: SaveResult[] = [];
 
-  for (const judgeConfig of AI_JUDGE_CAPPERS) {
-    const judge = board.leaderboard.find((j: any) => j.id === judgeConfig.judgeId);
+  for (const agent of listAgents()) {
+    const judge = board.leaderboard.find((j: any) => j.id === agent.id);
     if (!judge) continue;
 
-    const capper = await ensureAiJudgeCapper(judgeConfig);
+    const capper = await ensureAiJudgeCapper({
+      displayName: agent.displayName,
+      tagline: agent.tagline,
+      persona: agent.persona,
+    });
     const topPick = judge.topPick ?? (Array.isArray(judge.topPicks) ? judge.topPicks[0] : null);
-    const meta = judgePickMeta(judgeConfig.judgeId);
-    const source = `ai_judge:${judgeConfig.judgeId}`;
+    const meta = judgePickMeta(agent.id as any);
+    const source = `ai_judge:${agent.id}`;
+    const isAvoidAgent = agent.gradeStrategy?.isAvoidPick === true;
 
     const result: SaveResult = {
-      judgeId: judgeConfig.judgeId,
-      judgeName: judgeConfig.displayName,
+      judgeId: agent.id,
+      judgeName: agent.displayName,
       capperId: capper?.id ?? null,
       created: 0,
       skipped: 0,
@@ -178,7 +149,7 @@ export async function saveCurrentAiJudgePicksToLedger() {
     }
 
     const playerName = topPick.playerName ?? "Unknown player";
-    const isAvoid = topPick.isAvoidPick === true || judgeConfig.judgeId === "risk_auditor";
+    const isAvoid = topPick.isAvoidPick === true || isAvoidAgent;
     const selection = isAvoid
       ? `Avoid ${playerName} HR`
       : `${playerName} HR (${topPick.singlePickLabel ?? meta.singlePickLabel})`;
@@ -215,7 +186,7 @@ export async function saveCurrentAiJudgePicksToLedger() {
       confidence: null,
       judge_verdict: isAvoid ? "avoid" : "back",
       explanation:
-        `${judgeConfig.displayName} AI Judge daily single. ` +
+        `${agent.displayName} AI Judge daily single. ` +
         `Type: ${topPick.singlePickLabel ?? meta.singlePickLabel}. ` +
         `Agent Score: ${topPick.agentScore ?? "N/A"}. ` +
         `HR Edge: ${topPick.hrScore ?? "N/A"}. ` +

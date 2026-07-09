@@ -13,7 +13,7 @@ interface HrColumnProps {
   getHrResult?: (playerId: string | number | null) => HrCardResult;
 }
 
-export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile, getHrResult }: HrColumnProps) => {
+export const HrColumn = React.memo(function HrColumn({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile, getHrResult }: HrColumnProps) {
   return (
     <section className={`flex h-full min-h-0 flex-col overflow-hidden border ${borderClass} bg-black/25`}>
       <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-3 py-2 font-mono">
@@ -43,4 +43,4 @@ export const HrColumn = ({ title, icon, colorClass, borderClass, players, onSele
       </div>
     </section>
   );
-};
+});

@@ -1,19 +1,19 @@
 import React, { Suspense, lazy, useState, useEffect, useRef, useTransition } from 'react';
 import HomeFeedLayout from './social/feed/HomeFeedLayout';
-import HrNotifications from './components/notifications/HrNotifications';
-import AppNotificationsHost from './components/notifications/AppNotificationsHost';
 import { Sparkles as EdgeIslandIcon } from 'lucide-react';
 import { useLiveGames } from './hooks/queries/useLiveGames';
+import { useMyParlays } from './hooks/queries/useMyParlays';
+import { useMyVouches } from './hooks/queries/useMyVouches';
+import { fetchAuthMe } from './hooks/queries/useAuthMe';
+import { queryClient } from './lib/queryClient';
+import { queryKeys } from './hooks/queries/queryKeys';
 import { ThemeProvider } from './components/theme/ThemeProvider';
 import { canAccessThemeStore } from './lib/adminDevAccess';
 import AppErrorBoundary from './components/AppErrorBoundary';
 
 import { FeedPost, Parlay, Vouch, CreatorProofProfile, Leg, MLBPlayer } from './types';
 import { INITIAL_PROFILE, INITIAL_POSTS } from './data/mockData';
-import { ProAccessGate } from './components/pro/ProAccessGate';
 import { resolveMarket } from './sports/markets';
-import { gradePendingParlays } from './lib/parlayGrading';
-import { generateAiParlays } from './lib/aiParlayGenerator';
 import { isLive } from './lib/parlayLifecycle';
 import { notify } from './lib/appNotifications';
 import { apiClient } from './lib/apiClient';
@@ -25,6 +25,12 @@ import { useParlayCommandStore } from './stores/parlayCommandStore';
 import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
+
+const HrNotifications = lazy(() => import('./components/notifications/HrNotifications'));
+const AppNotificationsHost = lazy(() => import('./components/notifications/AppNotificationsHost'));
+const ProAccessGate = lazy(() =>
+  import('./components/pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
+);
 
 const HomeFeedPage = lazy(() => import('./social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('./components/TodayDashboard'));
@@ -560,6 +566,8 @@ export default function App() {
   const [activeLegs, setActiveLegs] = useState<Leg[]>([]);
   const { data: liveGamesPayload } = useLiveGames();
   const liveGames = liveGamesPayload?.games ?? [];
+  const { data: backendParlayRows } = useMyParlays();
+  const { data: backendVouchRows } = useMyVouches();
   const canSeeThemeStore = canAccessThemeStore(profile);
 
   useEffect(() => {
@@ -612,95 +620,59 @@ export default function App() {
     }
   }, []);
 
-  // Load backend parlays on startup if user is authenticated.
-  // Merges with localStorage: local-only parlays (no backendPickId) are kept;
-  // backend parlays are authoritative for anything with a matching ID.
+  // Merge backend parlays from React Query with local-only slips.
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    let cancelled = false;
+    if (!backendParlayRows?.length) return;
 
-    (async () => {
-      try {
-        const token = await getAuthToken();
-        if (!token || cancelled) return;
+    const backendParlays = backendParlayRows.map(mapBackendParlay);
+    const backendPickIds = new Set(
+      backendParlays
+        .map((p) => p.backendPickId || p.id)
+        .filter(Boolean)
+        .map(String)
+    );
 
-        const result = await apiClient.get<{ parlays: any[] }>('/api/me/parlays?limit=100');
-        if (!result?.parlays?.length || cancelled) return;
+    const localSlips = savedSlipsRef.current;
+    const localOnly = localSlips.filter((p) => {
+      if (!p.backendPickId) return true;
+      return !backendPickIds.has(String(p.backendPickId));
+    });
 
-        const backendParlays = result.parlays.map(mapBackendParlay);
-        const backendPickIds = new Set(
-          backendParlays
-            .map((p) => p.backendPickId || p.id)
-            .filter(Boolean)
-            .map(String)
-        );
+    const merged = [...backendParlays, ...localOnly];
+    const seen = new Set<string>();
+    const deduped = merged.filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
 
-        const localSlips = savedSlipsRef.current;
-        // Backend rows are authoritative. Keep only local slips that have not
-        // been synced yet, or whose backend id is not present in the hydrated GET.
-        const localOnly = localSlips.filter((p) => {
-          if (!p.backendPickId) return true;
-          return !backendPickIds.has(String(p.backendPickId));
-        });
+    syncSlips(deduped);
+  }, [backendParlayRows]);
 
-        const merged = [...backendParlays, ...localOnly];
-        const seen = new Set<string>();
-        const deduped = merged.filter(p => {
-          if (seen.has(p.id)) return false;
-          seen.add(p.id);
-          return true;
-        });
-
-        syncSlips(deduped);
-      } catch (err) {
-        console.warn('[parlays] backend load failed (localStorage parlays still active)', err);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-  // Load backend vouches on startup if user is authenticated. Same merge
-  // strategy as parlays above: backend rows are authoritative, local-only
-  // vouches (never synced) are kept.
+  // Merge backend vouches from React Query with local-only vouches.
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    let cancelled = false;
+    if (!backendVouchRows?.length) return;
 
-    (async () => {
-      try {
-        const token = await getAuthToken();
-        if (!token || cancelled) return;
+    const backendVouches = backendVouchRows.map(mapBackendVouch);
+    const backendVouchIds = new Set(
+      backendVouches.map((v) => v.backendVouchId || v.id).filter(Boolean).map(String)
+    );
 
-        const result = await apiClient.get<{ vouches: any[] }>('/api/vouches');
-        if (!result?.vouches?.length || cancelled) return;
+    const localOnly = savedVouchesRef.current.filter((v) => {
+      if (!v.backendVouchId) return true;
+      return !backendVouchIds.has(String(v.backendVouchId));
+    });
 
-        const backendVouches = result.vouches.map(mapBackendVouch);
-        const backendVouchIds = new Set(
-          backendVouches.map((v) => v.backendVouchId || v.id).filter(Boolean).map(String)
-        );
+    const merged = [...backendVouches, ...localOnly];
+    const seen = new Set<string>();
+    const deduped = merged.filter((v) => {
+      if (seen.has(v.id)) return false;
+      seen.add(v.id);
+      return true;
+    });
 
-        const localOnly = savedVouchesRef.current.filter((v) => {
-          if (!v.backendVouchId) return true;
-          return !backendVouchIds.has(String(v.backendVouchId));
-        });
-
-        const merged = [...backendVouches, ...localOnly];
-        const seen = new Set<string>();
-        const deduped = merged.filter((v) => {
-          if (seen.has(v.id)) return false;
-          seen.add(v.id);
-          return true;
-        });
-
-        syncVouches(deduped);
-      } catch (err) {
-        console.warn('[vouches] backend load failed (localStorage vouches still active)', err);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
+    syncVouches(deduped);
+  }, [backendVouchRows]);
 
   // Sync state modifications helper
   function syncPosts(newPosts: FeedPost[]) {
@@ -729,14 +701,12 @@ export default function App() {
     if (!isSupabaseConfigured) return null;
     if (backendProfileRef.current !== undefined) return backendProfileRef.current;
 
-    const token = await getAuthToken();
-    if (!token) {
-      backendProfileRef.current = null;
-      return null;
-    }
-
     try {
-      const me = await apiClient.get<BackendProfile>('/api/auth/me');
+      const me = await queryClient.fetchQuery({
+        queryKey: queryKeys.authMe(),
+        queryFn: fetchAuthMe,
+        staleTime: 5 * 60_000,
+      });
       backendProfileRef.current = me;
       return me;
     } catch (error) {
@@ -1248,6 +1218,7 @@ export default function App() {
     gradingRef.current = true;
     setIsGrading(true);
     try {
+      const { gradePendingParlays } = await import('./lib/parlayGrading');
       const { parlays, newlySettled, changed } = await gradePendingParlays(savedSlipsRef.current);
       if (!changed) return;
       syncSlips(parlays);
@@ -1299,7 +1270,7 @@ export default function App() {
     const now = new Date();
     if (now.getHours() < gh || (now.getHours() === gh && now.getMinutes() < gm)) return;
 
-    const created = await generateAiParlays({ sport: 'mlb' });
+    const created = await (await import('./lib/aiParlayGenerator')).generateAiParlays({ sport: 'mlb' });
     // Mark today done even if 0 (no confirmed lineups yet) — we retry tomorrow,
     // but allow a manual refresh via the Live Parlays page if lineups post later.
     localStorage.setItem('vouchedge_ai_gen_date', today);
@@ -1319,7 +1290,7 @@ export default function App() {
   // Manual generation (Live Parlays "Generate" button). Replaces today's slate.
   const _handleGenerateAiParlaysNow = async () => {
     if (gradingRef.current) return;
-    const created = await generateAiParlays({ sport: 'mlb' });
+    const created = await (await import('./lib/aiParlayGenerator')).generateAiParlays({ sport: 'mlb' });
     localStorage.setItem('vouchedge_ai_gen_date', new Date().toISOString().slice(0, 10));
     if (created.length === 0) {
       alert('No confirmed lineups are posted yet — check back closer to game time.');
@@ -1921,9 +1892,17 @@ export default function App() {
           >
             {renderMainView()}
           </Suspense>
-          {showGlobalAppChrome && <HrNotifications savedSlips={savedSlips} />}
+          {showGlobalAppChrome && (
+            <Suspense fallback={null}>
+              <HrNotifications savedSlips={savedSlips} />
+            </Suspense>
+          )}
         </HomeFeedLayout>
-        {showGlobalAppChrome && <AppNotificationsHost onNavigate={navigateSection} />}
+        {showGlobalAppChrome && (
+          <Suspense fallback={null}>
+            <AppNotificationsHost onNavigate={navigateSection} />
+          </Suspense>
+        )}
 
         {/* The Edge Island launcher — third button in the stack: app
             notifications bell sits at bottom-44/40, HR notifications bell

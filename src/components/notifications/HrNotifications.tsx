@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, AlertTriangle } from 'lucide-react';
-import { vouchedgeApi } from '../../api/vouchedgeApi';
+import { useHrFeedToday } from '../../hooks/queries/useHrFeedToday';
 import type { HrEvent } from '../../types/notifications';
 import type { Parlay } from '../../types';
-
-const POLL_MS = import.meta.env.DEV ? 120_000 : 60_000;
 const LS_ENABLED = 'vouchedge_hr_notify';
 const LS_ONLY_PARLAYS = 'vouchedge_hr_only_parlays';
 
@@ -84,33 +82,27 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
   useEffect(() => { localStorage.setItem(LS_ENABLED, String(enabled)); }, [enabled]);
   useEffect(() => { localStorage.setItem(LS_ONLY_PARLAYS, String(onlyParlays)); }, [onlyParlays]);
 
-  const poll = useCallback(async () => {
-    if (!enabled) return;
-    try {
-      const res = await vouchedgeApi.hrFeedToday();
-      let evs = res.events;
-      if (onlyParlays) evs = evs.filter((e) => matchesParlay(e, savedSlips));
-      setEvents(evs);
-
-      const fresh = evs.filter((e) => !seen.current.has(e.id));
-      if (initialized.current && fresh.length) {
-        setToasts((t) => [...fresh.slice(0, 3), ...t].slice(0, 3));
-        setUnread((u) => u + fresh.length);
-        window.setTimeout(() => setToasts([]), 8000);
-      }
-      evs.forEach((e) => seen.current.add(e.id));
-      initialized.current = true;
-    } catch {
-      /* backend offline — stay quiet, no fake data */
-    }
-  }, [enabled, onlyParlays, savedSlips]);
+  const { data: hrFeed } = useHrFeedToday({
+    enabled,
+    refetchInterval: enabled ? undefined : false,
+  });
 
   useEffect(() => {
-    if (!enabled) { setToasts([]); return; }
-    poll();
-    const id = setInterval(poll, POLL_MS);
-    return () => clearInterval(id);
-  }, [poll, enabled]);
+    if (!enabled || !hrFeed?.events) return;
+
+    let evs = hrFeed.events;
+    if (onlyParlays) evs = evs.filter((e) => matchesParlay(e, savedSlips));
+    setEvents(evs);
+
+    const fresh = evs.filter((e) => !seen.current.has(e.id));
+    if (initialized.current && fresh.length) {
+      setToasts((t) => [...fresh.slice(0, 3), ...t].slice(0, 3));
+      setUnread((u) => u + fresh.length);
+      window.setTimeout(() => setToasts([]), 8000);
+    }
+    evs.forEach((e) => seen.current.add(e.id));
+    initialized.current = true;
+  }, [enabled, onlyParlays, savedSlips, hrFeed]);
 
   const openPanel = () => { setIsOpen(true); setUnread(0); };
 

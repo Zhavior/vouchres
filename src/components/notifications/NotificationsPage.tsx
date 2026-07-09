@@ -1,12 +1,11 @@
-import { useMemo } from 'react';
 import { Bell, Info, Trash2, Trophy, X } from 'lucide-react';
 
 import {
   clearNotifications,
-  getNotifications,
   markAllRead,
   type AppNotification,
 } from '../../lib/appNotifications';
+import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
 import {
   Z8_DISPLAY,
   Z8_LABEL,
@@ -52,7 +51,7 @@ function timeAgo(iso: string): string {
 }
 
 export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
-  const list = useMemo(() => getNotifications(), []);
+  const { data: list = [] } = useAppNotifications();
 
   const unread = list.filter((notification) => !notification.read).length;
 

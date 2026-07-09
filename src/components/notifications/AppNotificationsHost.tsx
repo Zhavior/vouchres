@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Bell, X, Sparkles, Lock, Trophy, Info, CheckCircle2 } from 'lucide-react';
 import {
   AppNotification,
-  getNotifications,
   markAllRead,
   clearNotifications,
   onNotification,
 } from '../../lib/appNotifications';
+import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
 
 const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   ai: Sparkles, lock: Lock, result: Trophy, success: CheckCircle2, info: Info,
@@ -31,17 +31,15 @@ interface Props {
 }
 
 export default function AppNotificationsHost({ onNavigate }: Props) {
-  const [list, setList] = useState<AppNotification[]>(() => getNotifications());
+  const { data: list = [] } = useAppNotifications();
   const [toasts, setToasts] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     return onNotification((n) => {
-      setList(getNotifications());
-      if (n) {
-        setToasts((t) => [n, ...t].slice(0, 3));
-        window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n.id)), 7000);
-      }
+      if (!n) return;
+      setToasts((t) => [n, ...t].slice(0, 3));
+      window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n.id)), 7000);
     });
   }, []);
 
@@ -50,7 +48,6 @@ export default function AppNotificationsHost({ onNavigate }: Props) {
   const openPanel = () => {
     setOpen(true);
     markAllRead();
-    setList(getNotifications());
   };
 
   return (

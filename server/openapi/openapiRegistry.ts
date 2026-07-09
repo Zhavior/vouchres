@@ -317,6 +317,34 @@ const ParlayIntegritySchema = z.object({
   advice: z.string(),
 }).openapi("ParlayIntegrityResponse");
 
+const AiAgentPluginMetaSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  handle: z.string(),
+  tagline: z.string(),
+  persona: z.string(),
+  specialty: z.string(),
+  color: z.string(),
+  code: z.string(),
+  builtin: z.boolean(),
+  singlePickLimit: z.number().int().positive(),
+}).openapi("AiAgentPluginMeta");
+
+const AiAgentRegistrySchema = z.object({
+  ok: z.literal(true),
+  status: z.literal("ready"),
+  agents: z.array(AiAgentPluginMetaSchema),
+  customSlotEnabled: z.boolean(),
+  extensionDocs: z.string(),
+}).openapi("AiAgentRegistryResponse");
+
+const AiAgentRunStubSchema = z.object({
+  ok: z.literal(true),
+  status: z.literal("stub"),
+  agentId: z.string(),
+  message: z.string(),
+}).openapi("AiAgentRunStubResponse");
+
 openapiRegistry.register("OkEnvelope", OkEnvelopeSchema);
 openapiRegistry.register("ErrorEnvelope", ErrorEnvelopeSchema);
 openapiRegistry.register("BackendHealth", HealthBackendSchema);
@@ -348,6 +376,9 @@ openapiRegistry.register("HrBoardPoolResponse", HrBoardPoolSchema);
 openapiRegistry.register("HrBoardDebugResponse", HrBoardDebugSchema);
 openapiRegistry.register("NotificationsUnreadCountResponse", NotificationsUnreadCountSchema);
 openapiRegistry.register("ParlayIntegrityResponse", ParlayIntegritySchema);
+openapiRegistry.register("AiAgentPluginMeta", AiAgentPluginMetaSchema);
+openapiRegistry.register("AiAgentRegistryResponse", AiAgentRegistrySchema);
+openapiRegistry.register("AiAgentRunStubResponse", AiAgentRunStubSchema);
 
 openapiRegistry.registerPath({
   method: "get",
@@ -834,6 +865,39 @@ openapiRegistry.registerPath({
     200: {
       description: "HR board",
       content: { "application/json": { schema: HrBoardTodaySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "get",
+  path: "/api/ai-judges/registry",
+  summary: "List registered AI judge agent plugins (metadata only)",
+  tags: ["AI Judges"],
+  responses: {
+    200: {
+      description: "Agent registry",
+      content: { "application/json": { schema: AiAgentRegistrySchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/ai-judges/agents/{id}/run",
+  summary: "Staff-only stub for future external agent runners",
+  tags: ["AI Judges"],
+  request: {
+    params: z.object({ id: z.string() }),
+  },
+  responses: {
+    200: {
+      description: "Stub acknowledgement",
+      content: { "application/json": { schema: AiAgentRunStubSchema } },
+    },
+    404: {
+      description: "Agent not found",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });

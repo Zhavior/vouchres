@@ -41,7 +41,7 @@ interface VouchCardProps {
   onPostCreated?: (postData: Partial<FeedPost>) => void;
 }
 
-export default function VouchCard({
+export default React.memo(function VouchCard({
   vouch,
   layout = 'feed-home',
   onSaveVouch,
@@ -790,4 +790,4 @@ export default function VouchCard({
       )}
     </div>
   );
-}
+});

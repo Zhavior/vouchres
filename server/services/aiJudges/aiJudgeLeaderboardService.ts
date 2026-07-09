@@ -1,69 +1,13 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
+import { listAgents } from "./agentRegistry";
 import {
-  computeJudgeWinRate,
+  computeJudgeRecord,
   safeArray,
-  selectTopPicksForJudge,
-  singlePickLimit,
   type JudgeCandidate,
-  type JudgeId,
 } from "./judgeScoring";
 
-export const AI_JUDGES: Array<{
-  id: JudgeId;
-  displayName: string;
-  handle: string;
-  tagline: string;
-  persona: string;
-  specialty: string;
-  color: string;
-}> = [
-  {
-    id: "data_scout",
-    displayName: "Data Scout",
-    handle: "ai-data-scout",
-    tagline: "Clean math. Low hype. Safer profiles.",
-    persona: "Finds cleaner HR profiles with better data quality and fewer red flags.",
-    specialty: "Math-first slate screening",
-    color: "cyan",
-  },
-  {
-    id: "power_hunter",
-    displayName: "Power Hunter",
-    handle: "ai-power-hunter",
-    tagline: "Home-run upside hunter.",
-    persona: "Chases raw HR upside using hitter power, pitcher vulnerability, and park context.",
-    specialty: "HR threat radar",
-    color: "orange",
-  },
-  {
-    id: "momentum_reader",
-    displayName: "Momentum Reader",
-    handle: "ai-momentum-reader",
-    tagline: "Recent form and rhythm reader.",
-    persona: "Reads recent form, lineup volume, and short-term momentum signals.",
-    specialty: "Game rhythm & form",
-    color: "purple",
-  },
-  {
-    id: "risk_auditor",
-    displayName: "Risk Auditor",
-    handle: "ai-risk-auditor",
-    tagline: "Finds traps before they cost you.",
-    persona: "Flags thin data, risky profiles, projection problems, and low-confidence picks.",
-    specialty: "Skeptical filter",
-    color: "red",
-  },
-  {
-    id: "pro_edge_agent",
-    displayName: "Pro Edge Agent",
-    handle: "ai-pro-edge",
-    tagline: "Premium blended model.",
-    persona: "Blends power, matchup, form, confidence, and risk into one premium read.",
-    specialty: "Premium blended edge",
-    color: "emerald",
-  },
-];
+export { AI_JUDGES } from "./agentRegistry";
 
 async function getCapperStatsByNames(names: string[]) {
   const empty = {
@@ -139,36 +83,48 @@ export async function buildAiJudgeLeaderboard() {
   const payload = board?.payload ?? board ?? {};
   const candidates = trustFirstCandidates(payload);
 
+  const agents = listAgents();
   const { capperMap, scoreMap, pendingMap } = await getCapperStatsByNames(
-    AI_JUDGES.map((j) => j.displayName),
+    agents.map((j) => j.displayName),
   );
 
-  const judges = AI_JUDGES.map((judge) => {
-    const capper = capperMap.get(judge.displayName);
+  const judges = agents.map((agent) => {
+    const capper = capperMap.get(agent.displayName);
     const stats = capper ? scoreMap.get(capper.id) : null;
 
     const won = Number(stats?.won_picks ?? 0);
     const lost = Number(stats?.lost_picks ?? 0);
     const pushed = Number(stats?.pushed_picks ?? 0);
-    const graded = won + lost + pushed;
-    const winRate = computeJudgeWinRate({ won, lost, pushed });
     const pending = capper ? Number(pendingMap.get(capper.id) ?? 0) : 0;
+    const record = computeJudgeRecord({
+      won,
+      lost,
+      pushed,
+      pending,
+      netUnits: stats?.net_units,
+    });
 
-    const topPicks = selectTopPicksForJudge(judge.id, candidates);
+    const topPicks = agent.buildPicks(candidates);
 
     return {
-      ...judge,
+      id: agent.id,
+      displayName: agent.displayName,
+      handle: agent.handle,
+      tagline: agent.tagline,
+      persona: agent.persona,
+      specialty: agent.specialty,
+      color: agent.color,
       capperId: capper?.id ?? null,
       trustScore: stats?.score != null ? Number(stats.score) : 50,
-      winRate,
-      singlePickLimit: singlePickLimit(judge.id),
+      winRate: record.winRate,
+      singlePickLimit: agent.singlePickLimit,
       record: {
-        won,
-        lost,
-        pushed,
-        graded,
-        pending,
-        netUnits: Number(stats?.net_units ?? 0),
+        won: record.won,
+        lost: record.lost,
+        pushed: record.pushed,
+        graded: record.graded,
+        pending: record.pending,
+        netUnits: record.netUnits,
       },
       topPick: topPicks[0] ?? null,
       topPicks,

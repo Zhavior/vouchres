@@ -125,7 +125,26 @@ export function confidenceBonus(c: JudgeCandidate): number {
   return 0;
 }
 
-export function agentScore(judgeId: JudgeId, c: JudgeCandidate): number {
+type RegistryAgent = {
+  scoreCandidate: (c: JudgeCandidate) => number;
+  pickMeta?: () => JudgePickMeta;
+  buildReason?: (c: JudgeCandidate) => string;
+  passesGate?: (c: JudgeCandidate, relaxed: boolean) => boolean;
+};
+
+let resolveRegistryAgent: ((id: string) => RegistryAgent | undefined) | null = null;
+
+/** Wired by agentRegistry at boot — avoids circular ESM/require issues in tests. */
+export function setAgentResolver(fn: (id: string) => RegistryAgent | undefined): void {
+  resolveRegistryAgent = fn;
+}
+
+function getRegistryAgent(id: string): RegistryAgent | undefined {
+  return resolveRegistryAgent?.(id);
+}
+
+/** Built-in judge scoring — used by registry plugins and as fallback. */
+export function scoreBuiltinJudge(judgeId: JudgeId, c: JudgeCandidate): number {
   const m = normalizeMetrics(c);
 
   if (judgeId === "data_scout") {
@@ -194,7 +213,14 @@ export function agentScore(judgeId: JudgeId, c: JudgeCandidate): number {
   );
 }
 
-export function judgePickMeta(judgeId: JudgeId): JudgePickMeta {
+/** Delegates to registry plugin when registered, else built-in specialty math. */
+export function agentScore(judgeId: JudgeId, c: JudgeCandidate): number {
+  const plugin = getRegistryAgent(judgeId);
+  if (plugin) return plugin.scoreCandidate(c);
+  return scoreBuiltinJudge(judgeId, c);
+}
+
+export function builtinJudgePickMeta(judgeId: JudgeId): JudgePickMeta {
   if (judgeId === "data_scout") {
     return {
       pickType: "CLEAN_SCREEN",
@@ -235,7 +261,13 @@ export function judgePickMeta(judgeId: JudgeId): JudgePickMeta {
   };
 }
 
-export function buildJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string {
+export function judgePickMeta(judgeId: JudgeId): JudgePickMeta {
+  const plugin = getRegistryAgent(judgeId);
+  if (plugin?.pickMeta) return plugin.pickMeta();
+  return builtinJudgePickMeta(judgeId);
+}
+
+export function builtinJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string {
   const m = normalizeMetrics(c);
 
   if (judgeId === "data_scout") {
@@ -262,7 +294,13 @@ export function buildJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string {
   return `Premium blend: power ${Math.round(m.hitterPower)}, matchup ${Math.round(m.pitcherVulnerability)}, form ${Math.round(m.recentForm)}, confidence ${c.confidenceTier ?? "unknown"}.`;
 }
 
-function passesJudgeGate(judgeId: JudgeId, c: JudgeCandidate, relaxed = false): boolean {
+export function buildJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string {
+  const plugin = getRegistryAgent(judgeId);
+  if (plugin?.buildReason) return plugin.buildReason(c);
+  return builtinJudgeReason(judgeId, c);
+}
+
+export function passesBuiltinJudgeGate(judgeId: JudgeId, c: JudgeCandidate, relaxed = false): boolean {
   const m = normalizeMetrics(c);
 
   if (judgeId === "risk_auditor") {
@@ -292,6 +330,12 @@ function passesJudgeGate(judgeId: JudgeId, c: JudgeCandidate, relaxed = false): 
   }
 
   return m.hrScore >= 52;
+}
+
+function passesJudgeGate(judgeId: JudgeId, c: JudgeCandidate, relaxed = false): boolean {
+  const plugin = getRegistryAgent(judgeId);
+  if (plugin?.passesGate) return plugin.passesGate(c, relaxed);
+  return passesBuiltinJudgeGate(judgeId, c, relaxed);
 }
 
 export function rankCandidatesForJudge(

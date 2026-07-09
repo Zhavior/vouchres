@@ -5,6 +5,11 @@ import { generationLimiter } from "../middleware/rateLimit";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
+import {
+  EXTENSION_DOCS_PATH,
+  getAgent,
+  listAgentMeta,
+} from "../services/aiJudges/agentRegistry";
 
 /**
  * Public routes — world-readable data used by the home feed, leaderboard,
@@ -32,6 +37,45 @@ publicRoutes.post(
         cause: error,
       });
     }
+  }),
+);
+
+publicRoutes.get("/ai-judges/registry", asyncHandler(async (_req, res: Response) => {
+  const customSlotEnabled =
+    process.env.AI_AGENT_PLUGINS_ENABLED === "true" ||
+    process.env.NODE_ENV !== "production";
+
+  return res.json({
+    ok: true,
+    status: "ready",
+    agents: listAgentMeta(),
+    customSlotEnabled,
+    extensionDocs: EXTENSION_DOCS_PATH,
+  });
+}));
+
+publicRoutes.post(
+  "/ai-judges/agents/:id/run",
+  requireAuth,
+  requireStaff,
+  generationLimiter,
+  asyncHandler(async (req, res: Response) => {
+    const agent = getAgent(req.params.id);
+    if (!agent) {
+      throw new AppError({
+        status: 404,
+        code: "not_found",
+        message: `Agent not found: ${req.params.id}`,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      status: "stub",
+      agentId: agent.id,
+      message:
+        "Extension point reserved. Wire external agent runners here via registerAgent() + staff auth.",
+    });
   }),
 );
 

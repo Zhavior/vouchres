@@ -1,9 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Bell, Crown, FlaskConical, Flame, Gauge, Layers3, ScrollText, Shield,
+  Bell, BrainCircuit, Crown, FlaskConical, Flame, Gauge, Layers3, ScrollText, Shield,
   Sparkles, Trophy, X,
 } from "lucide-react";
+import { motion } from "../../lib/motion";
 import type { CreatorProofProfile, Parlay } from "../../types";
+import EdgeIslandAskAiPanel from "./EdgeIslandAskAiPanel";
 
 /**
  * The Edge Island Command Center — a quick-launch popup dock.
@@ -13,6 +15,8 @@ import type { CreatorProofProfile, Parlay } from "../../types";
  * state: it renders nothing while `open` is false, and its only side effect
  * (the Esc-key listener + body scroll lock) is registered and torn down in
  * the same effect every time `open` flips.
+ *
+ * Swipe left/right (or use tab pills) to switch between Command and Ask AI.
  *
  * Every number shown here comes from real props (profile, savedSlips) —
  * no invented stats, no fake daily-missions checklist, no placeholder
@@ -25,6 +29,9 @@ type Props = {
   savedSlips?: Parlay[];
   profile?: CreatorProofProfile;
 };
+
+const PANELS = ["command", "ask-ai"] as const;
+type PanelId = (typeof PANELS)[number];
 
 const ZONES = [
   { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "hr_board", icon: Flame, tag: "Start here" },
@@ -41,7 +48,12 @@ const TIER_LABEL: Record<string, string> = {
   SELLER_PRO: "Seller Pro",
 };
 
+const SWIPE_THRESHOLD = 56;
+
 export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange, savedSlips = [], profile }: Props) {
+  const [activePanel, setActivePanel] = useState<PanelId>("command");
+  const touchStartX = useRef<number | null>(null);
+
   // Esc closes; body scroll is locked while the island is open. Both are
   // torn down on every close/unmount, so opening and closing repeatedly
   // never accumulates listeners or leaves the page stuck unscrollable.
@@ -57,11 +69,32 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
     };
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open) setActivePanel("command");
+  }, [open]);
+
   if (!open) return null;
 
   const go = (section: string) => {
     onSectionChange?.(section);
     onClose();
+  };
+
+  const activeIndex = PANELS.indexOf(activePanel);
+
+  const onTouchStart = (clientX: number) => {
+    touchStartX.current = clientX;
+  };
+
+  const onTouchEnd = (clientX: number) => {
+    if (touchStartX.current === null) return;
+    const delta = clientX - touchStartX.current;
+    if (delta < -SWIPE_THRESHOLD && activeIndex < PANELS.length - 1) {
+      setActivePanel(PANELS[activeIndex + 1]);
+    } else if (delta > SWIPE_THRESHOLD && activeIndex > 0) {
+      setActivePanel(PANELS[activeIndex - 1]);
+    }
+    touchStartX.current = null;
   };
 
   const pendingParlays = savedSlips.filter((p) => p.status === "PENDING").slice(0, 4);
@@ -79,8 +112,8 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
       />
 
       <div className="glass-panel glass-border relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem]">
-        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
-          {/* Header */}
+        {/* Shared header + tab pills */}
+        <div className="shrink-0 border-b border-white/5 p-5 pb-4 sm:p-7 sm:pb-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="glass-panel glass-border inline-flex items-center gap-2 rounded-full px-3 py-1.5">
@@ -88,10 +121,14 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                 <span className="terminal-text">The Edge Island</span>
               </div>
               <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                {firstName ? `Welcome back, ${firstName}.` : "Your command island."}
+                {activePanel === "command"
+                  ? firstName ? `Welcome back, ${firstName}.` : "Your command island."
+                  : "Ask your Command AI."}
               </h1>
               <p className="mt-1.5 text-sm text-white/40">
-                A quick-launch dock for the routes you use most.
+                {activePanel === "command"
+                  ? "A quick-launch dock for the routes you use most."
+                  : "Swipe or tap tabs — research help and quick jumps."}
               </p>
             </div>
             <button
@@ -104,87 +141,162 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
             </button>
           </div>
 
-          {/* Real stats — every value is derived from props, not invented */}
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
-              <Gauge className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
-              <div className="text-xl font-black text-white">{decided ? `${profile!.winRate.toFixed(1)}%` : "—"}</div>
-              <div className="terminal-text mt-0.5">Win Rate</div>
-            </div>
-            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
-              <Trophy className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
-              <div className="text-xl font-black text-white">{decided ? `${profile!.wonPicks}-${profile!.totalPicks - profile!.wonPicks}` : "0-0"}</div>
-              <div className="terminal-text mt-0.5">Record</div>
-            </div>
-            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
-              <Layers3 className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
-              <div className="text-xl font-black text-white">{pendingParlays.length}</div>
-              <div className="terminal-text mt-0.5">Pending</div>
-            </div>
-            <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
-              <Crown className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
-              <div className="text-xl font-black text-white">{tierLabel}</div>
-              <div className="terminal-text mt-0.5">Plan</div>
-            </div>
+          <div className="mt-4 flex items-center justify-center gap-2" role="tablist" aria-label="Command Island panels">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activePanel === "command"}
+              onClick={() => setActivePanel("command")}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+                activePanel === "command"
+                  ? "border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan"
+                  : "border border-white/10 bg-black/20 text-white/45 hover:text-white/70"
+              }`}
+            >
+              <Gauge className="h-3.5 w-3.5" />
+              Command
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activePanel === "ask-ai"}
+              onClick={() => setActivePanel("ask-ai")}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
+                activePanel === "ask-ai"
+                  ? "border border-vouch-cyan/40 bg-vouch-cyan/15 text-vouch-cyan"
+                  : "border border-white/10 bg-black/20 text-white/45 hover:text-white/70"
+              }`}
+            >
+              <BrainCircuit className="h-3.5 w-3.5" />
+              Ask AI
+            </button>
           </div>
 
-          {/* Quick-launch zones */}
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {ZONES.map((zone) => {
-              const Icon = zone.icon;
-              const isHrBoard = zone.section === 'hr_board';
-              return (
-                <button
-                  key={zone.title}
-                  type="button"
-                  onClick={() => go(zone.section)}
-                  className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isHrBoard ? 'border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan' : 'bg-vouch-emerald/10 text-vouch-emerald'}`}>
-                      <Icon className="h-4.5 w-4.5" strokeWidth={isHrBoard ? 2.25 : undefined} />
-                    </div>
-                    <span className="terminal-text text-vouch-cyan">{zone.tag}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-white">{zone.title}</h3>
-                  <p className="mt-1 text-xs text-white/40">{zone.subtitle}</p>
-                </button>
-              );
-            })}
+          <div className="mt-3 flex justify-center gap-1.5" aria-hidden>
+            {PANELS.map((panel, i) => (
+              <span
+                key={panel}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === activeIndex ? "w-5 bg-vouch-cyan" : "w-1.5 bg-white/20"
+                }`}
+              />
+            ))}
           </div>
+        </div>
 
-          {/* Real pending parlays — no fake list */}
-          <div className="glass-panel glass-border mt-5 rounded-2xl p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Bell className="h-4 w-4 text-white/40" />
-              <h2 className="text-sm font-bold text-white">Pending parlays</h2>
-            </div>
-            {pendingParlays.length > 0 ? (
-              <div className="space-y-2">
-                {pendingParlays.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => go("live_parlays")}
-                    className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left transition hover:border-vouch-cyan/30"
-                  >
-                    <span className="truncate text-xs font-bold text-white/80">{p.title || "Saved parlay"}</span>
-                    <span className="font-mono text-[11px] text-white/40">{p.totalOdds}</span>
-                  </button>
-                ))}
+        {/* Swipeable panels */}
+        <div
+          className="min-h-0 flex-1 touch-pan-y overflow-hidden"
+          onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
+          onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
+        >
+          <motion.div
+            className="flex h-full"
+            style={{ width: `${PANELS.length * 100}%` }}
+            animate={{ x: `-${(activeIndex * 100) / PANELS.length}%` }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.14}
+            onDragEnd={(_, info) => {
+              if (info.offset.x < -SWIPE_THRESHOLD && activeIndex < PANELS.length - 1) {
+                setActivePanel(PANELS[activeIndex + 1]);
+              } else if (info.offset.x > SWIPE_THRESHOLD && activeIndex > 0) {
+                setActivePanel(PANELS[activeIndex - 1]);
+              }
+            }}
+          >
+            {/* Command panel */}
+            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                  <Gauge className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
+                  <div className="text-xl font-black text-white">{decided ? `${profile!.winRate.toFixed(1)}%` : "—"}</div>
+                  <div className="terminal-text mt-0.5">Win Rate</div>
+                </div>
+                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                  <Trophy className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
+                  <div className="text-xl font-black text-white">{decided ? `${profile!.wonPicks}-${profile!.totalPicks - profile!.wonPicks}` : "0-0"}</div>
+                  <div className="terminal-text mt-0.5">Record</div>
+                </div>
+                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                  <Layers3 className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
+                  <div className="text-xl font-black text-white">{pendingParlays.length}</div>
+                  <div className="terminal-text mt-0.5">Pending</div>
+                </div>
+                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                  <Crown className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
+                  <div className="text-xl font-black text-white">{tierLabel}</div>
+                  <div className="terminal-text mt-0.5">Plan</div>
+                </div>
               </div>
-            ) : (
-              <button
-                onClick={() => go("build")}
-                className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-3.5 text-center text-xs font-bold text-white/40 transition hover:text-white/70"
-              >
-                No pending parlays — build one
-              </button>
-            )}
-          </div>
 
-          <p className="mt-5 text-center text-[10px] text-white/25">
-            Research &amp; entertainment only — no guaranteed outcomes.
-          </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {ZONES.map((zone) => {
+                  const Icon = zone.icon;
+                  const isHrBoard = zone.section === "hr_board";
+                  return (
+                    <button
+                      key={zone.title}
+                      type="button"
+                      onClick={() => go(zone.section)}
+                      className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isHrBoard ? "border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan" : "bg-vouch-emerald/10 text-vouch-emerald"}`}>
+                          <Icon className="h-4.5 w-4.5" strokeWidth={isHrBoard ? 2.25 : undefined} />
+                        </div>
+                        <span className="terminal-text text-vouch-cyan">{zone.tag}</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-white">{zone.title}</h3>
+                      <p className="mt-1 text-xs text-white/40">{zone.subtitle}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="glass-panel glass-border mt-5 rounded-2xl p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-white/40" />
+                  <h2 className="text-sm font-bold text-white">Pending parlays</h2>
+                </div>
+                {pendingParlays.length > 0 ? (
+                  <div className="space-y-2">
+                    {pendingParlays.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => go("live_parlays")}
+                        className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left transition hover:border-vouch-cyan/30"
+                      >
+                        <span className="truncate text-xs font-bold text-white/80">{p.title || "Saved parlay"}</span>
+                        <span className="font-mono text-[11px] text-white/40">{p.totalOdds}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => go("build")}
+                    className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-3.5 text-center text-xs font-bold text-white/40 transition hover:text-white/70"
+                  >
+                    No pending parlays — build one
+                  </button>
+                )}
+              </div>
+
+              <p className="mt-5 text-center text-[10px] text-white/25">
+                Research &amp; entertainment only — no guaranteed outcomes.
+              </p>
+            </div>
+
+            {/* Ask AI panel */}
+            <div className="h-full shrink-0 overflow-y-auto p-5 pt-2 sm:p-7 sm:pt-2" style={{ width: `${100 / PANELS.length}%` }}>
+              <EdgeIslandAskAiPanel
+                profile={profile}
+                onSectionChange={onSectionChange}
+                onClose={onClose}
+              />
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   agentScore,
   buildJudgeReason,
+  computeJudgeRecord,
   computeJudgeWinRate,
   judgePickMeta,
   normalizeMetrics,
   rankCandidatesForJudge,
+  selectTopPickForJudge,
   selectTopPicksForJudge,
   singlePickLimit,
   type JudgeCandidate,
@@ -160,20 +162,27 @@ describe("agentScore per persona", () => {
   });
 });
 
-describe("single pick limits", () => {
-  it("caps each judge between 1 and 3 singles", () => {
+describe("single daily pick output", () => {
+  it("publishes exactly one single per judge", () => {
     for (const judgeId of ["data_scout", "power_hunter", "momentum_reader", "risk_auditor", "pro_edge_agent"] as JudgeId[]) {
-      const limit = singlePickLimit(judgeId);
-      expect(limit).toBeGreaterThanOrEqual(1);
-      expect(limit).toBeLessThanOrEqual(3);
-      expect(selectTopPicksForJudge(judgeId, FIXTURES).length).toBeLessThanOrEqual(limit);
+      expect(singlePickLimit(judgeId)).toBe(1);
+      const picks = selectTopPicksForJudge(judgeId, FIXTURES);
+      expect(picks).toHaveLength(1);
+      expect(picks[0]?.rank).toBe(1);
     }
   });
 
-  it("attaches judgeId to every generated pick", () => {
-    const picks = selectTopPicksForJudge("power_hunter", FIXTURES);
-    expect(picks.length).toBeGreaterThan(0);
-    expect(picks.every((p) => p.judgeId === "power_hunter")).toBe(true);
+  it("selectTopPickForJudge matches the top specialty candidate", () => {
+    const pick = selectTopPickForJudge("power_hunter", FIXTURES);
+    expect(pick?.playerName).toBe("Power Slugger");
+    expect(pick?.pickType).toBe("POWER_THREAT");
+    expect(pick?.judgeId).toBe("power_hunter");
+  });
+
+  it("does not emit parlay fields on singles", () => {
+    const pick = selectTopPickForJudge("power_hunter", FIXTURES);
+    expect(pick).not.toHaveProperty("parlayEligible");
+    expect(pick).not.toHaveProperty("parlayLeg");
   });
 });
 
@@ -199,21 +208,12 @@ describe("judge pick metadata", () => {
     expect(reason).toContain("92");
   });
 
-  it("marks risk auditor picks as gradeable trap avoids", () => {
-    const raPicks = selectTopPicksForJudge("risk_auditor", FIXTURES);
-    expect(raPicks.length).toBeGreaterThan(0);
-    expect(raPicks.every((p) => p.pickType === "AVOID")).toBe(true);
-    expect(raPicks.every((p) => p.isAvoidPick === true)).toBe(true);
-    expect(raPicks.every((p) => p.gradeable === true)).toBe(true);
+  it("marks risk auditor pick as gradeable trap avoid", () => {
+    const raPick = selectTopPickForJudge("risk_auditor", FIXTURES);
+    expect(raPick?.pickType).toBe("AVOID");
+    expect(raPick?.isAvoidPick).toBe(true);
+    expect(raPick?.gradeable).toBe(true);
     expect(judgePickMeta("risk_auditor").singlePickLabel).toBe("Trap Avoid");
-  });
-
-  it("does not emit parlay fields on singles", () => {
-    const picks = selectTopPicksForJudge("power_hunter", FIXTURES);
-    for (const pick of picks) {
-      expect(pick).not.toHaveProperty("parlayEligible");
-      expect(pick).not.toHaveProperty("parlayLeg");
-    }
   });
 
   it("scores power hunter higher on raw power than data scout", () => {
@@ -230,5 +230,20 @@ describe("computeJudgeWinRate", () => {
   it("computes win rate from won and lost only", () => {
     expect(computeJudgeWinRate({ won: 7, lost: 3, pushed: 1 })).toBe(70);
     expect(computeJudgeWinRate({ won: 1, lost: 0 })).toBe(100);
+  });
+});
+
+describe("computeJudgeRecord", () => {
+  it("aggregates graded and pending counts for leaderboard display", () => {
+    const record = computeJudgeRecord({ won: 7, lost: 3, pushed: 1, pending: 2, netUnits: 3.5 });
+    expect(record.graded).toBe(11);
+    expect(record.pending).toBe(2);
+    expect(record.winRate).toBe(70);
+  });
+
+  it("returns null win rate when no decisive graded picks exist", () => {
+    const record = computeJudgeRecord({ won: 0, lost: 0, pushed: 0, pending: 1 });
+    expect(record.winRate).toBeNull();
+    expect(record.graded).toBe(0);
   });
 });

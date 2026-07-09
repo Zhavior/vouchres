@@ -80,8 +80,12 @@ export default defineConfig(({ mode }) => {
             // Stripe — only needed on billing pages
             if (id.includes('stripe')) return 'stripe-vendor';
 
-            // State + validation
-            if (id.includes('zustand') || id.includes('zod')) {
+            // State + validation + query cache
+            if (
+              id.includes('zustand') ||
+              id.includes('zod') ||
+              id.includes('@tanstack/react-query')
+            ) {
               return 'state-vendor';
             }
 

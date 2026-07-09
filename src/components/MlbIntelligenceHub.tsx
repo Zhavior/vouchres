@@ -4,15 +4,19 @@ import {
   AlertTriangle,
   Brain,
   Flame,
+  Plug,
   RefreshCw,
   Target,
   Zap,
 } from 'lucide-react';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useAiJudgeLeaderboard } from '../hooks/queries/useAiJudgeLeaderboard';
+import { useAiAgentRegistry } from '../hooks/queries/useAiAgentRegistry';
 import { useHrBoardToday } from '../hooks/queries/useHrBoardToday';
 import type { HrBoardResponse } from '../types/hrBoard';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
+import AgentDock from './agents/AgentDock';
+import { hydrateAgentSlots } from '../services/agents/agentSlots';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
 type Props = {
@@ -390,14 +394,12 @@ function formatJudgeRecord(record: AiJudge['record']) {
 
 function JudgeCard({ judge }: { judge: AiJudge }) {
   const isRisk = judge.id === 'risk_auditor';
-  const pickLimit = judge.singlePickLimit ?? 3;
-  const picks = safeArray<AiJudgePick>(judge.topPicks).slice(0, pickLimit);
-  const gradeableCount = picks.filter((p) => p.gradeable).length;
+  const pick = judge.topPick ?? safeArray<AiJudgePick>(judge.topPicks)[0] ?? null;
   const sectionCopy = JUDGE_SECTION_COPY[judge.id] ?? {
-    title: isRisk ? "Today's Trap Avoids" : "Today's Singles",
+    title: isRisk ? "Today's Trap Avoid" : "Today's Single",
     subtitle: isRisk
-      ? 'Warning profiles tracked for trap accuracy.'
-      : `${gradeableCount} gradeable single${gradeableCount === 1 ? '' : 's'} today.`,
+      ? 'One warning profile tracked for trap accuracy.'
+      : 'One specialty-filtered HR single per judge.',
   };
 
   return (
@@ -427,80 +429,78 @@ function JudgeCard({ judge }: { judge: AiJudge }) {
             </p>
             <p className="text-xs text-slate-400">
               {sectionCopy.subtitle}
-              {gradeableCount > 0 ? ` · ${gradeableCount} tracking for win rate.` : ''}
+              {pick?.gradeable ? ' · Tracking for win rate.' : pick ? ' · Preview only until confirmed.' : ''}
             </p>
           </div>
           <button
             type="button"
-            onClick={() => { void copyJudgeSingles(judge); }}
-            disabled={picks.length === 0}
+            onClick={() => { void copyJudgeSingle(judge); }}
+            disabled={!pick}
             className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Copy Singles
+            Copy Single
           </button>
         </div>
 
         <div className="space-y-2">
-          {picks.length === 0 ? (
+          {!pick ? (
             <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-500">
-              No judge picks available yet.
+              No judge pick available yet.
             </p>
           ) : (
-            picks.map((pick) => (
-              <div key={`${judge.id}-${pick.rank}-${pick.playerName}`} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <PlayerHeadshot name={pick.playerName} playerId={pick.playerId} headshotUrl={pick.headshotUrl ?? pick.headshot} size={42} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-black text-white">
-                        #{pick.rank} {pick.playerName}
-                        <span className="ml-2 text-xs font-normal text-slate-500">
-                          {pick.team} vs {pick.opponent}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {pick.singlePickLabel ?? pick.market} · Agent Score {pick.agentScore}
-                        {!isRisk ? ` · HR Edge ${pick.hrScore}` : ''}
-                      </p>
-                      {pick.judgeReason ? (
-                        <p className="mt-1 text-[11px] text-slate-300">{pick.judgeReason}</p>
-                      ) : null}
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${pickTypeTone(pick.pickType)}`}>
-                      {pick.singlePickLabel ?? pick.specialtyLabel ?? pick.pickType}
-                    </span>
-                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${availabilityTone(pick.availability?.status)}`}>
-                      {pick.availability?.label ?? 'Availability unknown'}
-                    </span>
-                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
-                      pick.gradeable
-                        ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
-                        : 'border-slate-700 bg-slate-800 text-slate-400'
-                    }`}>
-                      {pick.gradeable ? 'Tracking' : 'Preview only'}
-                    </span>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <PlayerHeadshot name={pick.playerName} playerId={pick.playerId} headshotUrl={pick.headshotUrl ?? pick.headshot} size={42} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-white">
+                      {pick.playerName}
+                      <span className="ml-2 text-xs font-normal text-slate-500">
+                        {pick.team} vs {pick.opponent}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {pick.singlePickLabel ?? pick.market} · Agent Score {pick.agentScore}
+                      {!isRisk ? ` · HR Edge ${pick.hrScore}` : ''}
+                    </p>
+                    {pick.judgeReason ? (
+                      <p className="mt-1 text-[11px] text-slate-300">{pick.judgeReason}</p>
+                    ) : null}
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Pitcher: {pick.opponentPitcherName ?? 'TBD'} · Venue: {pick.venue ?? 'TBD'}
+                    </p>
                   </div>
                 </div>
 
-                {isRisk && safeArray<string>(pick.warnings).length > 0 ? (
-                  <div className="mt-2 rounded-xl border border-amber-400/20 bg-amber-400/5 p-2">
-                    {pick.warnings!.slice(0, 2).map((warning, i) => (
-                      <p key={i} className="text-[11px] text-amber-200">⚠ {warning}</p>
-                    ))}
-                  </div>
-                ) : pick.availability?.reasons?.length ? (
-                  <div className="mt-2 text-[11px] text-slate-500">
-                    {pick.availability.reasons.slice(0, 2).join(' · ')}
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${pickTypeTone(pick.pickType)}`}>
+                    {pick.singlePickLabel ?? pick.specialtyLabel ?? pick.pickType}
+                  </span>
+                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${availabilityTone(pick.availability?.status)}`}>
+                    {pick.availability?.label ?? 'Availability unknown'}
+                  </span>
+                  <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
+                    pick.gradeable
+                      ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                      : 'border-slate-700 bg-slate-800 text-slate-400'
+                  }`}>
+                    {pick.gradeable ? 'Tracking' : 'Preview only'}
+                  </span>
+                </div>
               </div>
-            ))
+
+              {isRisk && safeArray<string>(pick.warnings).length > 0 ? (
+                <div className="mt-2 rounded-xl border border-amber-400/20 bg-amber-400/5 p-2">
+                  {pick.warnings!.slice(0, 2).map((warning, i) => (
+                    <p key={i} className="text-[11px] text-amber-200">⚠ {warning}</p>
+                  ))}
+                </div>
+              ) : pick.availability?.reasons?.length ? (
+                <div className="mt-2 text-[11px] text-slate-500">
+                  {pick.availability.reasons.slice(0, 2).join(' · ')}
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
       </div>
@@ -512,6 +512,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
   const hrBoardQuery = useHrBoardToday();
   const judgeQuery = useAiJudgeLeaderboard();
+  const agentRegistryQuery = useAiAgentRegistry();
 
   const report = useMemo(() => {
     if (hrBoardQuery.data) return buildIntelligenceReport(hrBoardQuery.data);
@@ -537,6 +538,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
 
   const loadJudges = () => {
     void judgeQuery.refetch();
+    void agentRegistryQuery.refetch();
   };
 
   const candidates = safeArray<Candidate>(report?.candidates);
@@ -581,13 +583,10 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
       .slice(0, 10);
   }, [candidates]);
 
-  const agents = [
-    { code: 'DS', name: 'Data Scout', role: 'Math-first game reads', focus: 'Checks slate rank, data quality, score logic, and weak spots.', signal: 'Clean math' },
-    { code: 'PH', name: 'Power Hunter', role: 'HR threat radar', focus: 'Finds hitters with power paths, HR edge, and pitcher mistake zones.', signal: 'Power spike' },
-    { code: 'MR', name: 'Momentum Reader', role: 'Game rhythm', focus: 'Reads recent form, pressure windows, and late-game opportunity.', signal: 'Momentum' },
-    { code: 'RA', name: 'Risk Auditor', role: 'Skeptical filter', focus: 'Flags missing data, projected lineups, and fake confidence traps.', signal: 'Risk check' },
-    { code: 'PE', name: 'Pro Edge Agent', role: 'Premium paths', focus: 'Unlocks RBI, stolen bases, bullpen fatigue, and live parlay impact.', signal: 'Pro locked' },
-  ];
+  const agents = useMemo(
+    () => hydrateAgentSlots(agentRegistryQuery.data?.agents ?? []),
+    [agentRegistryQuery.data?.agents],
+  );
 
   return (
     <main className={`${Z8_PAGE} mx-auto max-w-7xl px-4 py-6`}>
@@ -645,13 +644,13 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
               <div className="flex items-center gap-3">
                 <PixelAgentIcon code={agent.code} />
                 <div>
-                  <p className="text-sm font-black text-white">{agent.name}</p>
-                  <p className={`${Z8_LABEL} text-white/40`}>{agent.role}</p>
+                  <p className="text-sm font-black text-white">{agent.displayName}</p>
+                  <p className={`${Z8_LABEL} text-white/40`}>{agent.role ?? agent.specialty}</p>
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-white/50 leading-relaxed">{agent.focus}</p>
+              <p className="mt-2 text-[11px] text-white/50 leading-relaxed">{agent.focus ?? agent.persona}</p>
               <div className={`mt-3 inline-flex items-center rounded-full border border-vouch-cyan/20 bg-vouch-cyan/5 px-2 py-1 ${Z8_LABEL} text-vouch-cyan`}>
-                {agent.signal}
+                {agent.tagline}
               </div>
             </div>
           ))}
@@ -788,12 +787,18 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
           <div className={`rounded-3xl border border-vouch-cyan/20 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 ${Z8_PANEL_PREMIUM}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>
-                  Premium AI Judge Board
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className={`${Z8_LABEL} text-vouch-cyan`}>
+                    Premium AI Judge Board
+                  </p>
+                  <span className={`inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5 ${Z8_LABEL} text-white/45`}>
+                    <Plug className="h-3 w-3 text-vouch-emerald/80" />
+                    {agentRegistryQuery.data?.agents.length ?? 5} agent slots · extensible
+                  </span>
+                </div>
                 <h2 className="mt-1 text-2xl font-black text-white">AI Judge Leaderboard</h2>
                 <p className="mt-2 max-w-3xl text-sm text-white/55">
-                  Each AI judge posts up to three specialty singles per day. Win rate and record come from graded singles in the picks ledger — honest W/L only, no fabricated stats.
+                  Each AI judge posts one specialty-filtered single per day. Win rate and record come from graded singles in the picks ledger — honest W/L only, no fabricated stats.
                   Risk Auditor trap avoids win when the flagged player stays cold.
                 </p>
               </div>
@@ -805,6 +810,20 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
               </button>
             </div>
           </div>
+
+          <AgentDock
+            agents={agentRegistryQuery.data?.agents ?? []}
+            customSlotEnabled={agentRegistryQuery.data?.customSlotEnabled}
+            extensionDocs={agentRegistryQuery.data?.extensionDocs}
+            loading={agentRegistryQuery.isLoading}
+            error={
+              agentRegistryQuery.isError
+                ? agentRegistryQuery.error instanceof Error
+                  ? agentRegistryQuery.error.message
+                  : 'Agent registry unavailable.'
+                : null
+            }
+          />
 
           {judgeLoading && (
             <div className={`rounded-3xl ${Z8_PANEL_PREMIUM} p-6 text-white/70`}>
