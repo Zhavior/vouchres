@@ -6699,6 +6699,7 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .lazy-mount-fade {
     animation: none;
+    opacity: 1;
   }
 }
 
