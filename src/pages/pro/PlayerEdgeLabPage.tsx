@@ -4,7 +4,6 @@ import { Crown, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
 import PlayerIntelligenceCard from '../../components/player/PlayerIntelligenceCard';
 
 import {
-  PlayerSignalPanel,
   ProLockedCard,
   ProPageHeader,
   VerifiedDataNotice,
@@ -16,6 +15,7 @@ import {
   safeText,
   useHrBoardProData,
 } from './proLabData';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
 
 
 function getPlayerId(row: any, fallback: number) {
@@ -49,16 +49,16 @@ export default function PlayerEdgeLabPage() {
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
 
   return (
-    <main className="ve-page-shell min-h-screen px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
+    <main className={`${Z8_PAGE} px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[300px_1fr]">
         <section className="space-y-5 lg:col-span-2">
-          <div className="ve-premium-panel overflow-hidden rounded-2xl p-4">
+          <div className={`${Z8_PANEL} overflow-hidden rounded-2xl p-4`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="ve-chip ve-chip-premium px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
+              <span className={`inline-flex items-center gap-1.5 border border-vouch-emerald/25 bg-vouch-emerald/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-emerald`}>
                 <Crown className="h-3.5 w-3.5" />
                 Pro Player Edge
               </span>
-              <span className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
+              <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3.5 w-3.5" />
                 AI Edge Lab
               </span>
@@ -71,29 +71,29 @@ export default function PlayerEdgeLabPage() {
             />
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className="ve-stat-card rounded-xl px-3 py-2.5">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
-                  <ShieldCheck className="h-4 w-4 text-[hsl(var(--ve-success))]" />
+              <div className={`${Z8_PANEL} rounded-xl px-3 py-2.5`}>
+                <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
+                  <ShieldCheck className="h-4 w-4 text-vouch-emerald" />
                   Verified Feed
                 </div>
-                <div className="mt-2 text-xl font-black text-[hsl(var(--ve-text-primary))]">{rows.length}</div>
-                <div className="text-xs text-[hsl(var(--ve-text-muted))]">Current player rows</div>
+                <div className="mt-2 text-xl font-black text-white">{rows.length}</div>
+                <div className="text-xs text-white/45">Current player rows</div>
               </div>
-              <div className="ve-stat-card rounded-xl px-3 py-2.5">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
-                  <TrendingUp className="h-4 w-4 text-[hsl(var(--ve-accent-cyan))]" />
+              <div className={`${Z8_PANEL} rounded-xl px-3 py-2.5`}>
+                <div className={`flex items-center gap-2 ${Z8_LABEL} text-white/40`}>
+                  <TrendingUp className="h-4 w-4 text-vouch-cyan" />
                   Selected Edge
                 </div>
-                <div className="mt-2 truncate text-base font-black text-[hsl(var(--ve-text-primary))]">{selectedRow ? getPlayerName(selectedRow) : 'No player'}</div>
-                <div className="text-xs text-[hsl(var(--ve-text-muted))]">Tap a player to research</div>
+                <div className="mt-2 truncate text-base font-black text-white">{selectedRow ? getPlayerName(selectedRow) : 'No player'}</div>
+                <div className="text-xs text-white/45">Tap a player to research</div>
               </div>
-              <div className="ve-stat-card rounded-xl border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.08)] px-3 py-2.5">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-accent-gold))]">
+              <div className={`${Z8_PANEL} rounded-xl border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-2.5`}>
+                <div className={`flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}>
                   <Crown className="h-4 w-4" />
                   Premium Mode
                 </div>
-                <div className="mt-2 text-base font-black text-[hsl(var(--ve-text-primary))]">Headshots + Signals</div>
-                <div className="text-xs text-[hsl(var(--ve-text-muted))]">Cleaner Pro scouting cards</div>
+                <div className="mt-2 text-base font-black text-white">Headshots + Signals</div>
+                <div className="text-xs text-white/45">Cleaner Pro scouting cards</div>
               </div>
             </div>
           </div>
@@ -105,21 +105,21 @@ export default function PlayerEdgeLabPage() {
           />
         </section>
 
-        <aside className="ve-premium-panel flex flex-col overflow-hidden rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]">
+        <aside className={`${Z8_PANEL} flex flex-col overflow-hidden rounded-2xl p-3 lg:sticky lg:top-5 lg:max-h-[calc(100vh-4rem)]`}>
           <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[hsl(var(--ve-text-muted))]">
+              <div className={`${Z8_LABEL} text-white/40`}>
                 Player Queue
               </div>
-              <div className="mt-1 text-[11px] text-[hsl(var(--ve-text-muted))]">New player signals with premium headshots</div>
+              <div className="mt-1 text-[11px] text-white/45">New player signals with premium headshots</div>
             </div>
-            <div className="rounded-full border border-[hsl(var(--ve-accent-gold)/0.30)] bg-[hsl(var(--ve-accent-gold)/0.10)] p-2 text-[hsl(var(--ve-accent-gold))]">
+            <div className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 p-2 text-vouch-emerald">
               <Crown className="h-4 w-4" />
             </div>
           </div>
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-            {loading ? <div className="ve-card-compact rounded-xl p-3 text-xs text-[hsl(var(--ve-text-muted))]">Loading verified HR board candidates...</div> : null}
-            {!loading && !rows.length ? <div className="ve-card-compact rounded-xl p-3 text-xs text-[hsl(var(--ve-text-muted))]">No verified player rows available.</div> : null}
+            {loading ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>Loading verified HR board candidates...</div> : null}
+            {!loading && !rows.length ? <div className={`${Z8_SURFACE} rounded-xl p-3 text-xs text-white/45`}>No verified player rows available.</div> : null}
             {rows.slice(0, 30).map((row, index) => {
               const id = String(row.playerId ?? row.player_id ?? row.id ?? index);
               const active = String(selectedRow?.playerId ?? selectedRow?.player_id ?? selectedRow?.id) === id;
@@ -128,14 +128,12 @@ export default function PlayerEdgeLabPage() {
                   key={`${id}-${index}`}
                   type="button"
                   className={`group w-full overflow-hidden rounded-2xl border p-3 text-left transition ${
-                    active
-                      ? 'border-[hsl(var(--ve-accent-cyan)/0.46)] bg-[hsl(var(--ve-accent-cyan)/0.10)] shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]'
-                      : 'border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-surface-raised)/0.30)] hover:border-[hsl(var(--ve-accent-cyan)/0.30)] hover:bg-[hsl(var(--ve-surface-raised)/0.44)]'
+                    active ? Z8_ACTIVE : Z8_IDLE
                   }`}
                   onClick={() => setSelectedId(id)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[hsl(var(--ve-border)/0.34)] bg-[hsl(var(--ve-bg-panel))]">
+                    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30`}>
                       {getMlbHeadshotUrl(id) ? (
                         <img
                           src={getMlbHeadshotUrl(id)}
@@ -147,21 +145,21 @@ export default function PlayerEdgeLabPage() {
                           }}
                         />
                       ) : null}
-                      <div className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,hsl(var(--ve-accent-cyan)/0.16),hsl(var(--ve-accent-gold)/0.08))]" />
+                      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-vouch-cyan/16 to-vouch-emerald/8" />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-black text-[hsl(var(--ve-text-primary))]">
+                      <div className="truncate text-sm font-black text-white">
                         {getPlayerName(row)}
                       </div>
-                      <div className="mt-1 text-xs text-[hsl(var(--ve-text-muted))]">
+                      <div className="mt-1 text-xs text-white/45">
                         {safeText(row.team, 'MLB')} · {safeText(row.riskLabel ?? row.riskTier ?? row.risk, 'Review')}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {getSignalTags(row).map((tag) => (
                           <span
                             key={tag}
-                            className="ve-chip px-2 py-0.5 text-[9px] uppercase tracking-wide"
+                            className={`border border-vouch-cyan/20 bg-vouch-cyan/10 px-2 py-0.5 ${Z8_LABEL} text-vouch-cyan`}
                           >
                             {tag}
                           </span>
@@ -182,7 +180,7 @@ export default function PlayerEdgeLabPage() {
             <VerifiedGraphEmptyState
               variant="feed-required"
               title="Verified data feed required"
-              detail="The Player Edge Lab needs HR board player rows before rendering PlayerSignalPanel."
+              detail="The Player Edge Lab needs HR board player rows before rendering the player intelligence card."
             />
           )}
 
