@@ -200,6 +200,8 @@ export interface FeedComment {
 export interface CreatorProofProfile {
   displayName: string;
   username: string;
+  /** Canonical public @handle — lowercase, unique. Mirrors username when set. */
+  handle: string;
   avatarUrl: string;
   bio: string;
   verified: boolean;

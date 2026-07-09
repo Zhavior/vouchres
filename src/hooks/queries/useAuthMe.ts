@@ -12,6 +12,18 @@ export interface AuthMeProfile {
 
 /** Full /api/auth/me payload — shared by profile sync and entitlements. */
 export interface AuthMeResponse extends AuthMeProfile {
+  username?: string;
+  handle?: string;
+  display_name?: string;
+  avatar_url?: string | null;
+  bio?: string;
+  trust_score?: number;
+  total_picks?: number;
+  won_picks?: number;
+  lost_picks?: number;
+  pushed_picks?: number;
+  net_units?: number;
+  is_demo?: boolean;
   entitlements?: { tier?: string };
   profile?: {
     tier?: string;

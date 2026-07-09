@@ -5,6 +5,7 @@ import { openapiRoutes } from "./openapiRoutes";
 import { publicRoutes } from "./publicRoutes";
 import { parlayRoutes } from "./parlayRoutes";
 import { authRoutes } from "./authRoutes";
+import { userRoutes } from "./userRoutes";
 import { billingRoutes } from "./billingRoutes";
 import { adminRoutes } from "./adminRoutes";
 import { privacyRoutes } from "./privacyRoutes";
@@ -47,6 +48,7 @@ function escapeHtml(value: unknown): string {
 
 export function registerApiRoutes(app: Express): void {
   app.use("/api/auth", authLimiter, authRoutes);
+  app.use("/api/users", userRoutes);
   app.use("/api/billing", billingRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/privacy", privacyRoutes);

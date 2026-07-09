@@ -55,16 +55,18 @@ export async function getAuthToken(): Promise<string | null> {
 export async function signUpWithEmail(opts: {
   email: string;
   password: string;
-  username: string;
+  handle: string;
   inviteCode?: string;
 }) {
+  const handle = opts.handle.trim().toLowerCase();
   const { data, error } = await supabase.auth.signUp({
     email: opts.email,
     password: opts.password,
     options: {
       data: {
-        username: opts.username,
-        display_name: opts.username,
+        handle,
+        username: handle,
+        display_name: handle,
         invite_code: opts.inviteCode,
       },
     },

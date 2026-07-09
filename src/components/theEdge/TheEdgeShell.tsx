@@ -365,11 +365,11 @@ export default function TheEdgeShell({
     setAuthError(null);
     setAuthNotice(null);
     try {
-      const username = authForm.name.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24);
+      const handle = authForm.name.trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/gi, '').toLowerCase().slice(0, 30);
       const { data, error } = await signUpWithEmail({
         email: authForm.email.trim(),
         password: authForm.password,
-        username: username || authForm.email.trim().split('@')[0],
+        handle: handle || authForm.email.trim().split('@')[0].toLowerCase(),
       });
 
       if (error) {

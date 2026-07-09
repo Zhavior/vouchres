@@ -13,6 +13,8 @@ import { useSlipsStore, selectSavedSlips, selectSyncSlips } from '../stores/slip
 import { useProfileStore, selectProfile, selectSyncProfile } from '../stores/profileStore';
 import { useVouchesStore, selectSavedVouches, selectSyncVouches } from '../stores/vouchesStore';
 import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
+import { fetchAuthMe } from '../hooks/queries/useAuthMe';
+import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { mapBackendParlay, mapBackendVouch } from './backendMappers';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
@@ -245,6 +247,21 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
     void warmGuestHrBoardCache();
   }, [activeSection, isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let cancelled = false;
+    void fetchAuthMe().then((data) => {
+      if (cancelled || !data) return;
+      const current = useProfileStore.getState().profile;
+      syncProfile(mapAuthMeToCreatorProof(data as unknown as Record<string, unknown>, current));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, syncProfile]);
 
   return {
     posts,

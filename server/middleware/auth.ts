@@ -62,6 +62,7 @@ export interface AuthedRequest extends Request {
     profile: {
       id: string;
       username: string;
+      handle: string;
       tier: "free" | "gold" | "seller_pro";
       is_banned: boolean;
       is_staff: boolean;
@@ -96,7 +97,7 @@ export async function requireAuth(
     }
 
     const PROFILE_COLUMNS = `
-    id, username, tier, is_banned, is_staff, is_demo,
+    id, username, handle, tier, is_banned, is_staff, is_demo,
     age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
     deletion_scheduled_at
   `;
@@ -113,13 +114,13 @@ export async function requireAuth(
   // create a minimal one now so a valid logged-in user is never locked out.
   // Idempotent — a concurrent insert just falls back to a re-select.
     if (!pErr && !profile) {
-      const shortId = data.user.id.replace(/-/g, "").slice(0, 12);
-      const username = `user_${shortId}`; // 17 chars, within the 3–24 constraint
+      const shortId = data.user.id.replace(/-/g, "").slice(0, 8);
+      const handle = `user_${shortId}`;
       const displayName = (data.user.email?.split("@")[0] || "Member").slice(0, 40);
 
       const { data: created, error: cErr } = await supabaseAdmin
         .from("profiles")
-        .insert({ id: data.user.id, username, display_name: displayName })
+        .insert({ id: data.user.id, username: handle, handle, display_name: displayName })
         .select(PROFILE_COLUMNS)
         .single();
 
@@ -193,7 +194,7 @@ export async function optionalAuth(
   const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select(`
-      id, username, tier, is_banned, is_staff, is_demo,
+      id, username, handle, tier, is_banned, is_staff, is_demo,
       age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
       deletion_scheduled_at
     `)

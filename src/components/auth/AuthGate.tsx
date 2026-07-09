@@ -39,12 +39,13 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
           throw new Error("Invite code required for beta access");
         }
         if (username.trim().length < 3) {
-          throw new Error("Username must be at least 3 characters");
+          throw new Error("Handle must be at least 3 characters");
         }
+        const handle = username.trim().toLowerCase();
         const { error } = await signUpWithEmail({
           email,
           password,
-          username: username.trim(),
+          handle,
           inviteCode: inviteCode.trim() || undefined,
         });
         if (error) throw error;

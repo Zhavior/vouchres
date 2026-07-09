@@ -3,6 +3,7 @@ import { FeedPost, CreatorProofProfile } from '../types';
 export const INITIAL_PROFILE: CreatorProofProfile = {
   displayName: "",
   username: "",
+  handle: "",
   avatarUrl: "",
   bio: "",
   verified: false,

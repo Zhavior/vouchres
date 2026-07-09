@@ -95,6 +95,7 @@ export async function createTestUser(opts?: {
   email?: string;
   password?: string;
   username?: string;
+  handle?: string;
   tier?: "free" | "gold" | "seller_pro";
   ageConfirmed?: boolean;
 }): Promise<{
@@ -102,17 +103,18 @@ export async function createTestUser(opts?: {
   email: string;
   password: string;
   username: string;
+  handle: string;
 }> {
   const random = Math.random().toString(36).slice(2, 10);
   const email = opts?.email ?? `test+${random}@test.vouchedge.dev`;
   const password = opts?.password ?? `Test1234!${random}`;
-  const username = opts?.username ?? `testuser_${random}`;
+  const handle = (opts?.handle ?? opts?.username ?? `testuser_${random}`).toLowerCase();
 
   const { data, error } = await testDb.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { username, display_name: username },
+    user_metadata: { handle, username: handle, display_name: handle },
   });
 
   if (error || !data.user) {
@@ -121,8 +123,9 @@ export async function createTestUser(opts?: {
 
   // Update profile directly (bypasses the trigger which only sets defaults)
   const profileUpdate: any = {
-    username,
-    display_name: username,
+    username: handle,
+    handle,
+    display_name: handle,
     tier: opts?.tier ?? "free",
   };
   if (opts?.ageConfirmed) {
@@ -137,7 +140,8 @@ export async function createTestUser(opts?: {
     id: data.user.id,
     email,
     password,
-    username,
+    username: handle,
+    handle,
   };
 }
 

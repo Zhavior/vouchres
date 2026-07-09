@@ -339,6 +339,7 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, re
     .select(`
       id,
       username,
+      handle,
       display_name,
       avatar_url,
       bio,

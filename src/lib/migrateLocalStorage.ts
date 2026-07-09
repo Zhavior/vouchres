@@ -94,7 +94,8 @@ async function migrateProfile(): Promise<MigrationResult> {
 
     // Only migrate editable fields — never tier, is_staff, etc.
     if (profile.displayName) updates.display_name = profile.displayName;
-    if (profile.username) updates.username = profile.username;
+    if (profile.handle) updates.handle = profile.handle;
+    else if (profile.username) updates.username = profile.username;
     if (profile.bio) updates.bio = profile.bio;
     if (profile.avatarUrl) updates.avatar_url = profile.avatarUrl;
 
