@@ -187,7 +187,7 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
         <>
           <div className="mt-4 flex items-center gap-3">
             {play.batter.headshot && (
-              <img src={play.batter.headshot} alt={play.batter.name} className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10" />
+              <img src={play.batter.headshot} alt={play.batter.name} className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10" loading="eager" decoding="async" fetchPriority="high" referrerPolicy="no-referrer" />
             )}
             <div className="min-w-0">
               <p className="truncate text-base font-black text-white">

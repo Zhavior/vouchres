@@ -42,6 +42,7 @@ import AuthStatusBadge from './components/auth/AuthStatusBadge';
 import GoodbyeScreen from './components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from "./components/boot/VouchEdgeBootGate";
 import RouteShellSkeleton from "./components/boot/RouteShellSkeleton";
+import { preloadSection } from "./lib/routePreload";
 import { AppShellProvider } from "./context/AppShellContext";
 
 const EdgeIslandCommandCenter = lazy(() => import('./components/theEdge/EdgeIslandCommandCenter'));
@@ -1273,6 +1274,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => navigateSection('feed')}
+              onMouseEnter={() => preloadSection('feed')}
+              onFocus={() => preloadSection('feed')}
               aria-label="Go to Home Feed"
               title="Home Feed"
               className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
@@ -1284,6 +1287,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => navigateSection('board')}
+              onMouseEnter={() => preloadSection('board')}
+              onFocus={() => preloadSection('board')}
               aria-label="Go to Vouch Board"
               title="Vouch Board"
               className={`ve-edge-island-trigger z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${

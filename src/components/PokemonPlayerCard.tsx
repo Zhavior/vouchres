@@ -287,10 +287,13 @@ export default function PokemonPlayerCard({
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FFF176_1px,transparent_1px)] bg-[size:12px_12px]" />
               
               {/* Player face */}
-              <img 
-                src={activePlayer.headshot} 
+              <img
+                src={activePlayer.headshot}
                 alt={activePlayer.name}
                 referrerPolicy="no-referrer"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="w-24 h-24 object-contain relative z-10 transition-transform hover:scale-110 drop-shadow-[0_8px_16px_rgba(251,191,36,0.3)]"
               />
 

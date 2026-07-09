@@ -215,7 +215,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
     <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
       {align === 'left' && (
         <div data-page="daily-players" className="daily-players-page flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
+          {src ? <img src={src} alt={name} className="h-full w-full min-w-0 object-contain" loading="lazy" decoding="async" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
       )}
 
@@ -228,7 +228,7 @@ function TeamLogoBadge({ id, name, align = 'left' }: { id?: string | number; nam
 
       {align === 'right' && (
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--ve-border)/0.32)] bg-white/95 p-1 shadow-lg shadow-[hsl(var(--ve-shadow)/0.18)]">
-          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
+          {src ? <img src={src} alt={name} className="h-full w-full object-contain" loading="lazy" decoding="async" /> : <span className="text-xs font-black text-slate-900">{name.slice(0, 2)}</span>}
         </div>
       )}
     </div>
@@ -1257,6 +1257,7 @@ function DailyTeamIcon({ team, gameTeamId, size = 'md' }: { team: any; gameTeamI
           alt=""
           className="h-full w-full object-contain"
           loading="lazy"
+          decoding="async"
           onError={() => setLogoFailed(true)}
         />
       ) : (
@@ -1305,6 +1306,7 @@ function DailyStarterRow({ player, index, team, teamAbbr, search }: { player: an
             alt=""
             className={MLB_HEADSHOT_IMG_CLASS}
             loading="lazy"
+            decoding="async"
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}

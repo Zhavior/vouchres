@@ -154,11 +154,17 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
     onClose();
   };
 
-  // Scroll active item into view
+  // Scroll active item into view + prefetch highlighted destination chunk
   useEffect(() => {
     const item = listRef.current?.querySelector(`[data-cursor-idx="${cursor}"]`);
     item?.scrollIntoView({ block: 'nearest' });
   }, [cursor]);
+
+  useEffect(() => {
+    if (!open) return;
+    const item = filtered()[cursor];
+    if (item) preloadSection(item.id);
+  }, [open, cursor, filtered]);
 
   if (!open) return null;
 
@@ -250,7 +256,10 @@ export default function CmdKPalette({ open, onClose, onNavigate }: CmdKPalettePr
                         role="option"
                         aria-selected={isActive}
                         onClick={() => navigate(item.id)}
-                        onMouseEnter={() => setCursor(idx)}
+                        onMouseEnter={() => {
+                          setCursor(idx);
+                          preloadSection(item.id);
+                        }}
                         className={[
                           'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all border border-transparent font-mono',
                           isActive ? Z8_ACTIVE : `${Z8_IDLE} border-transparent`,

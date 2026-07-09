@@ -112,6 +112,9 @@ export default function ProfileAvatarBorder({
             src={avatarUrl} 
             alt={displayName} 
             referrerPolicy="no-referrer"
+            loading={size === 'xl' || size === 'lg' ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchPriority={size === 'xl' ? 'high' : undefined}
             className={`w-full h-full object-cover select-none ${isSquare ? 'rounded-none' : 'rounded-full'}`}
           />
         ) : (

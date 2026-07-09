@@ -72,7 +72,7 @@ export default function VouchScan() {
           </span>
           {fileName && <span className="text-[11px] text-slate-500 font-mono truncate">{fileName}</span>}
         </label>
-        {preview && <img src={preview} alt="slip" className="mt-3 max-h-56 rounded-xl border border-slate-800" />}
+        {preview && <img src={preview} alt="slip" className="mt-3 max-h-56 rounded-xl border border-slate-800" loading="eager" decoding="async" />}
         <p className="mt-2 text-[10px] text-amber-400/80 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> No automatic extraction yet — read your slip and enter the legs below.</p>
       </div>
 

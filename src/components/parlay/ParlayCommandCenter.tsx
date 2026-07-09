@@ -36,6 +36,7 @@ import {
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { ParlayTreeModal } from './tree/ParlayTreeModal';
 import { lazy, Suspense } from 'react';
+import LazyChunkSkeleton from '../system/LazyChunkSkeleton';
 
 // Lazy: pulls in cytoscape (~300KB+), which must not join the main bundle —
 // ParlayCommandCenter itself is statically imported from App.tsx.
@@ -967,7 +968,7 @@ function MyParlaysPanel({
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={null}>
+      <Suspense fallback={<LazyChunkSkeleton height={260} label="Loading correlation graph" />}>
         <ParlayCorrelationGraph slips={savedSlips} />
       </Suspense>
       <Section title="Live & Pending" slips={liveSlips} live />

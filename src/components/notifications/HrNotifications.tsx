@@ -168,7 +168,7 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
               ) : (
                 events.map((e) => (
                   <div key={e.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
-                    <img src={e.headshot} alt={e.playerName} loading="lazy" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
+                    <img src={e.headshot} alt={e.playerName} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-9 h-9 rounded-lg object-cover bg-slate-900 border border-slate-800 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-100 truncate">⚾ {e.playerName} <span className="text-slate-500 font-normal text-xs">({e.teamAbbr})</span></p>
                       <p className="text-[11px] text-slate-400 truncate">{e.halfInning} {e.inning} · {e.matchup} · {e.rbi} RBI</p>

@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
+import FadeInMount from '../system/FadeInMount';
 import { useAppShell } from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
@@ -44,7 +45,11 @@ const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<RouteShellSkeleton />}>{children}</Suspense>;
+  return (
+    <Suspense fallback={<RouteShellSkeleton />}>
+      <FadeInMount>{children}</FadeInMount>
+    </Suspense>
+  );
 }
 
 export type MainViewRouterProps = {

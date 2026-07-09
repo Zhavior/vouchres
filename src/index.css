@@ -6671,6 +6671,37 @@ body,
   pointer-events: none;
 }
 
+@keyframes ve-lazy-mount-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lazy-mount-fade {
+  animation: ve-lazy-mount-fade-in 260ms ease-out both;
+}
+
+.ve-lazy-chunk-skeleton {
+  contain: layout style;
+  pointer-events: none;
+}
+
+.ve-feed-post-skeleton {
+  contain: layout style;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lazy-mount-fade {
+    animation: none;
+  }
+}
+
 /* ==========================================================
    MOBILE READINESS — safe areas, FAB clearance, touch targets
    ========================================================== */

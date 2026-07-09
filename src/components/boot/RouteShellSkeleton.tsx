@@ -8,7 +8,11 @@ export default function RouteShellSkeleton() {
       aria-busy="true"
       aria-label="Loading view"
     >
-      <div className="mb-6 h-8 max-w-xs animate-pulse rounded bg-white/[0.06]" />
+      <div className="mb-6 flex items-center gap-3">
+        <div className="h-8 w-8 animate-pulse rounded-lg bg-white/[0.06]" />
+        <div className="h-8 max-w-xs flex-1 animate-pulse rounded bg-white/[0.06]" />
+      </div>
+      <div className="mb-4 h-4 max-w-sm animate-pulse rounded bg-white/[0.04]" />
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, index) => (
           <div

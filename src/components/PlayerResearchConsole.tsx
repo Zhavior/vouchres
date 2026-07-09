@@ -704,6 +704,9 @@ export default function PlayerResearchConsole({
                     src={activePlayer.headshot} 
                     alt={activePlayer.name}
                     referrerPolicy="no-referrer"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     className="w-20 h-20 rounded-2xl border border-vouch-emerald/50/30 shadow-xl object-cover"
                   />
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{activePlayer.name}</h3>
@@ -723,6 +726,8 @@ export default function PlayerResearchConsole({
                     src={comparePlayer.headshot} 
                     alt={comparePlayer.name}
                     referrerPolicy="no-referrer"
+                    loading="lazy"
+                    decoding="async"
                     className="w-20 h-20 rounded-2xl border border-vouch-cyan/30 shadow-xl object-cover"
                   />
                   <h3 className="font-extrabold text-white text-base mt-3 leading-tight font-display">{comparePlayer.name}</h3>
@@ -995,6 +1000,9 @@ export default function PlayerResearchConsole({
                         src={activePlayer.headshot} 
                         alt={activePlayer.name}
                         referrerPolicy="no-referrer"
+                        loading="eager"
+                        decoding="async"
+                        fetchPriority="high"
                         className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-white/34 shadow-2xl object-cover bg-black/72"
                       />
                       <div className="absolute -bottom-2 -right-2 bg-black/74 border border-white/34 rounded-lg px-2.5 py-1 text-[10px] font-black text-vouch-emerald font-mono shadow-md">

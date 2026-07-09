@@ -551,6 +551,8 @@ export default function PortfolioAnalyticsPanel({
                       alt={ps.player.name}
                       className="w-10 h-10 rounded-full object-cover border border-[hsl(var(--ve-border)/0.34)] shrink-0"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="min-w-0 flex-1 leading-tight">
                       <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-xs truncate">{ps.player.name}</h4>
@@ -629,6 +631,8 @@ export default function PortfolioAnalyticsPanel({
                       alt={p.name}
                       className="w-8.5 h-8.5 rounded-full object-cover border border-[hsl(var(--ve-border)/0.34)] shrink-0"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="min-w-0 leading-tight">
                       <h4 className="font-bold text-[hsl(var(--ve-text-primary))] text-xs truncate">{p.name}</h4>

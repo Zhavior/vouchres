@@ -174,6 +174,7 @@ export default function PlayerEdgeLabPage() {
                           alt={getPlayerName(row)}
                           className="h-full w-full object-cover"
                           loading="lazy"
+                          decoding="async"
                           onError={(event) => {
                             event.currentTarget.style.display = 'none';
                           }}

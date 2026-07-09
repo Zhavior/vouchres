@@ -35,6 +35,7 @@ function TeamLogo({ team, size = 22 }: { team: string; size?: number }) {
       width={size}
       height={size}
       loading="lazy"
+      decoding="async"
       className="object-contain shrink-0"
       style={{ width: size, height: size }}
       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
@@ -601,6 +602,8 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
                                 src={player.headshot} 
                                 alt={player.name}
                                 referrerPolicy="no-referrer"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-12 h-12 rounded-xl object-cover border border-white/10 bg-black/55"
                               />
                               <div className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-vouch-amber border border-white/10 flex items-center justify-center text-[10px] font-black text-obsidian-900 font-mono" title={`Ranked #${idx + 1}`}>

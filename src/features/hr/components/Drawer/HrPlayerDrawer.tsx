@@ -282,6 +282,9 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                 {player.headshotUrl && !imgError ? (
                   <img
                     src={player.headshotUrl} alt={player.playerName}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     onError={() => setImgError(true)}
                     className="h-20 w-20 shrink-0 rounded-full object-cover ring-2 ring-[hsl(var(--ve-border)/0.40)]"
                   />

@@ -1234,6 +1234,8 @@ const getFriendlyParlayTitle = (parlay: any) => {
                                     src={leg.headshot || fallbackHeadshot}
                                     alt={`${playerName} headshot`}
                                     referrerPolicy="no-referrer"
+                                    loading="lazy"
+                                    decoding="async"
                                     onError={(event) => {
                                       event.currentTarget.onerror = null;
                                       event.currentTarget.src = fallbackHeadshot;

@@ -10,6 +10,8 @@ import {
   nextVisiblePostCount,
   shouldPrefetchServerFeedPage,
 } from './feedVirtualizerConfig';
+import LazyChunkSkeleton from '../../components/system/LazyChunkSkeleton';
+import FeedPostCardSkeleton from './FeedPostCardSkeleton';
 
 // Lazy: pulls in cytoscape (~300KB+) — keep it out of this already-lazy
 // page's initial chunk too, since HomeFeedPage itself can render before
@@ -452,7 +454,7 @@ function HomeFeedPage({
 
         {activeTab === 'following' && followingList.length > 0 && (
           <div className="px-4 py-3 border-b border-white/[0.08]">
-            <Suspense fallback={null}>
+            <Suspense fallback={<LazyChunkSkeleton height={320} label="Loading network graph" />}>
               <CapperNetworkGraph posts={posts} followingList={followingList} />
             </Suspense>
           </div>
@@ -521,11 +523,15 @@ function HomeFeedPage({
         <div ref={feedSentinelRef} className="h-px" aria-hidden="true" />
 
         {algorithmPosts.length > 0 && (
-          <div className="ve-feed-load-state flex items-center justify-center gap-2 py-4 px-4 text-[13px] text-white/40">
+          <div className="ve-feed-load-state flex flex-col items-center justify-center gap-2 py-4 px-4 text-[13px] text-white/40">
             {isLoadingMorePosts ? (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-pulse" />
-                <span>Loading more...</span>
+                <FeedPostCardSkeleton />
+                <FeedPostCardSkeleton />
+                <span className="flex items-center gap-2 pt-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-vouch-emerald animate-pulse" />
+                  <span>Loading more...</span>
+                </span>
               </>
             ) : hasMorePosts ? (
               <span>Scroll for more</span>

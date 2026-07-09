@@ -667,11 +667,13 @@ export default function VouchStudioDarkroom({
                   {activeCardLayout === 'potd' ? (
                     <div className="p-2 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-center justify-between px-3 py-2 animate-fade-in">
                       <div className="flex items-center gap-2 min-w-0">
-                        <img 
-                          src={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.headshot} 
-                          alt={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name} 
+                        <img
+                          src={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.headshot}
+                          alt={(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}
                           referrerPolicy="no-referrer"
-                          className="w-7 h-7 rounded-full border border-white/10 object-cover bg-obsidian-900 shrink-0" 
+                          loading="lazy"
+                          decoding="async"
+                          className="w-7 h-7 rounded-full border border-white/10 object-cover bg-obsidian-900 shrink-0"
                         />
                         <div className="min-w-0">
                           <span className="text-xs font-black text-amber-300 block truncate">{(selectedPlayers[potdIndex] || selectedPlayers[0])?.player.name}</span>
@@ -686,7 +688,7 @@ export default function VouchStudioDarkroom({
                     <div className="flex flex-wrap gap-1 py-1">
                       {selectedPlayers.map((ps, idx) => (
                         <div key={ps.player.id} className="bg-obsidian-900 border border-white/10 rounded-lg py-1 px-2.5 flex items-center gap-1.5 text-[10px] text-slate-205 font-mono font-bold">
-                          <img src={ps.player.headshot} alt={ps.player.name} referrerPolicy="no-referrer" className="w-4 h-4 rounded-full object-cover bg-black/25 shrink-0" />
+                          <img src={ps.player.headshot} alt={ps.player.name} referrerPolicy="no-referrer" loading="lazy" decoding="async" className="w-4 h-4 rounded-full object-cover bg-black/25 shrink-0" />
                           <span className="truncate max-w-[100px]">{ps.player.name.split(' ').pop()}</span>
                           <button 
                             onClick={() => handleRemovePlayerFromCircle(ps.player.id)}
@@ -745,11 +747,13 @@ export default function VouchStudioDarkroom({
                             }}
                           >
                             <div className="flex items-center gap-1.5 text-left min-w-0">
-                              <img 
-                                src={player.headshot} 
-                                alt={player.name} 
+                              <img
+                                src={player.headshot}
+                                alt={player.name}
                                 referrerPolicy="no-referrer"
-                                className="w-4 h-4 rounded bg-black/25 border border-white/10 object-cover shrink-0" 
+                                loading="lazy"
+                                decoding="async"
+                                className="w-4 h-4 rounded bg-black/25 border border-white/10 object-cover shrink-0"
                               />
                               <span className="truncate">{player.name} <span className="text-[7.5px] text-white/35 font-mono">({player.team.split(' ').pop()})</span></span>
                             </div>
@@ -1450,11 +1454,13 @@ export default function VouchStudioDarkroom({
                                 @{profile?.username || "zhavior"}
                               </span>
                             </div>
-                            <img 
-                              src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"} 
-                              alt={profile?.displayName || "Zhavior"} 
+                            <img
+                              src={profile?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"}
+                              alt={profile?.displayName || "Zhavior"}
                               className="w-6.5 h-6.5 rounded-full border border-sky-500/20 object-cover bg-obsidian-900 shadow-inner"
                               referrerPolicy="no-referrer"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </div>
                         </div>
@@ -1529,10 +1535,12 @@ export default function VouchStudioDarkroom({
                                     }}
                                   >
                                     <div className={`relative p-0.5 ${cardStyle === 'minimal' ? 'bg-white' : 'bg-obsidian-900'} rounded-full border ${activeStyle.nodeBorder} shadow-lg`}>
-                                      <img 
-                                        src={ps.player.headshot} 
-                                        alt={ps.player.name} 
+                                      <img
+                                        src={ps.player.headshot}
+                                        alt={ps.player.name}
                                         referrerPolicy="no-referrer"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-10 h-10 rounded-full object-cover bg-black/25"
                                       />
                                       <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${activeStyle.nodeValueBg} text-[6.5px] font-bold font-mono px-1 rounded-full shadow leading-none truncate max-w-[65px] text-center`}>
@@ -1564,6 +1572,8 @@ export default function VouchStudioDarkroom({
                                         src={featured.player.headshot}
                                         alt={featured.player.name}
                                         referrerPolicy="no-referrer"
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full rounded-full object-cover bg-obsidian-900"
                                       />
                                     </div>
@@ -1632,7 +1642,7 @@ export default function VouchStudioDarkroom({
                                 {selectedPlayers.map((ps, index) => (
                                   <div key={ps.player.id} className="bg-[#05070c]/50 p-1.5 rounded-xl border border-white/[0.06] flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5 min-w-0">
-                                      <img src={ps.player.headshot} alt={ps.player.name} className="w-5.5 h-5.5 rounded-full object-cover shrink-0" />
+                                      <img src={ps.player.headshot} alt={ps.player.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-5.5 h-5.5 rounded-full object-cover shrink-0" />
                                       <div className="min-w-0 leading-none">
                                         <span className="text-[9.5px] font-black text-white/80 block uppercase truncate">{ps.player.name}</span>
                                         <span className="text-[6.5px] font-mono text-white/40">{ps.player.team.split(' ').pop()} · No. {ps.player.number}</span>
@@ -1784,11 +1794,13 @@ export default function VouchStudioDarkroom({
                                 <div className="space-y-3 animate-fade-in text-left">
                                   <div className={`p-2.5 rounded-xl border ${activeStyle.nodeTagBg} ${activeStyle.cardBorder} flex items-center justify-between gap-3`}>
                                     <div className="flex items-center gap-2">
-                                      <img 
-                                        src={player.headshot} 
+                                      <img
+                                        src={player.headshot}
                                         alt={player.name}
                                         className="w-10 h-10 rounded-full object-cover border border-white/10 bg-obsidian-900"
                                         referrerPolicy="no-referrer"
+                                        loading="lazy"
+                                        decoding="async"
                                       />
                                       <div className="leading-tight">
                                         <span className={`text-xs font-black uppercase block ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-300'}`}>
@@ -1884,7 +1896,7 @@ export default function VouchStudioDarkroom({
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5">
-                                      <img src={ps.player.headshot} alt={ps.player.name} className="w-6 h-6 rounded-full object-cover border border-white/10 bg-obsidian-900" />
+                                      <img src={ps.player.headshot} alt={ps.player.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" className="w-6 h-6 rounded-full object-cover border border-white/10 bg-obsidian-900" />
                                       <div className="leading-none text-left">
                                         <span className={`text-[10px] font-black uppercase block ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-105'}`}>
                                           {ps.player.name}

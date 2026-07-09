@@ -363,6 +363,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 alt={post.displayName} 
                 className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>
@@ -442,6 +444,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                         src={ps.player?.headshot || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50"} 
                         alt={ps.player?.name} 
                         referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
                         className="w-10 h-10 rounded-full object-cover bg-black/25"
                       />
                       <span className={`absolute -bottom-2 left-1/2 -translate-x-1/2 text-[7.5px] font-extrabold uppercase px-1 py-0.2 rounded-md ${activeStyle.nodeValueBg} border shadow-sm leading-none whitespace-nowrap z-30`}>
@@ -464,6 +468,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                     alt={ps.player?.name} 
                     className="w-16 h-16 rounded-full object-cover border-2 border-amber-500 bg-obsidian-900 shadow-large"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-[8px] font-mono bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase inline-block mb-1">
@@ -575,6 +581,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                 alt={post.displayName} 
                 className="w-7 h-7 rounded-full border border-sky-500/30 object-cover bg-obsidian-900"
                 referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>
@@ -634,6 +642,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                         alt={player.name}
                         className="w-10 h-10 rounded-full object-cover border border-amber-500 bg-obsidian-900"
                         referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="leading-tight">
                         <span className={`text-xs font-black uppercase ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-amber-400'}`}>
@@ -692,6 +702,8 @@ export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCa
                           alt={ps.player?.name}
                           className="w-6 h-6 rounded-full object-cover border border-white/10 bg-obsidian-900"
                           referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <div className="leading-none text-left">
                           <span className={`text-[10px] font-black block uppercase truncate w-24 ${cardStyle === 'minimal' ? 'text-slate-900' : 'text-slate-205'}`}>

@@ -323,6 +323,7 @@ export function NotificationProvider({ savedSlips = [], onNavigate, children }: 
                       src={e.headshot}
                       alt={e.playerName}
                       loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="h-9 w-9 flex-shrink-0 rounded-lg border border-slate-800 bg-slate-900 object-cover"
                     />

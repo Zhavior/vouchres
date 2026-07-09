@@ -22,6 +22,8 @@ export function SmartAiLegCardList({ legs, players }: SmartAiLegCardListProps) {
                     alt={leg.playerName}
                     className="h-11 w-11 rounded-2xl border border-cyan-300/20 bg-slate-950 object-cover shadow-md shadow-cyan-950/25"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="grid h-11 w-11 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-xs font-black text-cyan-200">
