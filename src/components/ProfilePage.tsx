@@ -8,6 +8,7 @@ import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
 import { VEButton } from './ui/ve';
+import { Z8_PAGE } from '../theme/z8Tokens';
 
 interface ProfilePageProps {
   profile: CreatorProofProfile;
@@ -130,17 +131,17 @@ export default function ProfilePage({
 
   return (
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
-      <div className="p-4 md:p-6 max-w-[1120px] mx-auto min-h-screen bg-transparent space-y-6" id="profile-details-view">
+      <div className={`p-4 md:p-6 max-w-[1120px] mx-auto ${Z8_PAGE} space-y-6`} id="profile-details-view">
 
         <ProfileResume savedParlays={savedParlays} winRate={profile.winRate} />
 
         {/* Title segment */}
         <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-            <User className="w-5 h-5 text-sky-400" />
+          <h2 className="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2 font-z8">
+            <User className="w-5 h-5 text-vouch-cyan" />
             Real Profile Guard & Proof Hub
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-white/45 mt-1 font-z8">
             Review your tracking statistics, win rates, and verify your proof handle credentials.
           </p>
         </div>

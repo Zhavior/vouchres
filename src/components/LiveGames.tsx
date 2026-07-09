@@ -22,6 +22,7 @@ import {
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { MLBPlayer } from '../types';
 import { logoByTeamName } from '../lib/teamLogos';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
 
 /** Small MLB team logo with graceful fallback when a team can't be matched. */
 function TeamLogo({ team, size = 22 }: { team: string; size?: number }) {
@@ -292,27 +293,27 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
   };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6 text-slate-200 selection:bg-sky-500/20 font-sans max-w-none mx-auto animate-fade-in" id="live-games-root">
+    <main className={`${Z8_PAGE} p-4 md:p-6 lg:p-8 space-y-6 max-w-none mx-auto animate-fade-in`} id="live-games-root">
       
       {/* SECTION BANNER HERO */}
-      <div className="ve-hero p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="live-games-banner">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-sky-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className={`${Z8_PANEL} relative p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6`} id="live-games-banner">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-vouch-cyan/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-vouch-emerald/5 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="space-y-2 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="bg-sky-500/10 border border-sky-500/30 text-sky-400 px-3 py-0.5 rounded-full text-[10px] font-black font-mono tracking-widest uppercase flex items-center gap-1.5 animate-pulse">
+            <span className={`bg-vouch-cyan/10 border border-vouch-cyan/30 text-vouch-cyan px-3 py-0.5 rounded-full ${Z8_LABEL} flex items-center gap-1.5 animate-pulse`}>
               <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> MLB Live API Connected
             </span>
-            <span className="bg-[#1e293b] text-slate-400 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
+            <span className="bg-black/30 border border-white/10 text-white/45 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
               Deterministic Sabermetric Models
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight flex items-center gap-3">
-            <Tv className="w-8 h-8 text-sky-400" /> Live Matchups 
-            <span className="bg-gradient-to-r from-sky-450 to-emerald-400 bg-clip-text text-transparent">& Predictions</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+            <Tv className="w-8 h-8 text-vouch-cyan" /> Live Matchups 
+            <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">& Predictions</span>
           </h1>
-          <p className="text-slate-400 text-sm max-w-3xl">
+          <p className="text-white/50 text-sm max-w-3xl">
             Real-time scoreboard directly bound to MLB's public schema. Each scheduled match is coupled with instantaneous, serverless mathematical calculations computing winning variables and micro-metrics!
           </p>
         </div>
@@ -322,7 +323,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
           <button
             onClick={fetchLiveGames}
             disabled={loading}
-            className="bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 py-2.5 px-4 rounded-xl text-xs font-bold text-sky-400 flex items-center gap-2 transition-all active:scale-95"
+            className="bg-black/25 hover:bg-black/40 border border-white/10 hover:border-vouch-cyan/40 py-2.5 px-4 rounded-xl text-xs font-bold text-vouch-cyan flex items-center gap-2 transition-all active:scale-95"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refreshed: {lastRefreshed || 'Never'}</span>
@@ -679,6 +680,6 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
         </div>
       )}
 
-    </div>
+    </main>
   );
 }

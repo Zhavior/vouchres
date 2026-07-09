@@ -92,18 +92,18 @@ interface SlateGame {
 /* ── small shared primitives (one accent: cyan; emerald=proof, rose=loss, amber=live) ── */
 
 function Stat({ label, value, tone = 'white' }: { label: string; value: string | number; tone?: 'white' | 'cyan' | 'emerald' | 'rose' | 'violet' }) {
-  const color = tone === 'cyan' ? 'text-cyan-300' : tone === 'emerald' ? 'text-emerald-300' : tone === 'rose' ? 'text-rose-300' : tone === 'violet' ? 'text-violet-300' : 'text-white';
+  const color = tone === 'cyan' ? 'text-vouch-cyan' : tone === 'emerald' ? 'text-vouch-emerald' : tone === 'rose' ? 'text-rose-300' : tone === 'violet' ? 'text-violet-300' : 'text-white';
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center">
+    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-center font-z8">
       <div className={`text-2xl font-black ${color}`}>{value}</div>
-      <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">{label}</div>
     </div>
   );
 }
 
-const PRIMARY = 'rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3.5 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5';
-const SECONDARY = 'rounded-2xl border border-cyan-300/25 bg-cyan-300/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5';
-const GHOST = 'rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-3.5 text-sm font-black text-slate-200 transition hover:-translate-y-0.5 hover:text-white';
+const PRIMARY = 'rounded-2xl bg-gradient-to-r from-vouch-cyan to-vouch-cyan/80 px-6 py-3.5 text-sm font-black text-obsidian-900 shadow-lg shadow-vouch-cyan/20 transition hover:-translate-y-0.5 font-z8';
+const SECONDARY = 'rounded-2xl border border-vouch-cyan/25 bg-vouch-cyan/10 px-6 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5 font-z8';
+const GHOST = 'rounded-2xl border border-white/10 bg-black/25 px-6 py-3.5 text-sm font-black text-white/70 transition hover:-translate-y-0.5 hover:text-white font-z8';
 
 function friendlyAuthError(message?: string) {
   const text = String(message ?? '').toLowerCase();

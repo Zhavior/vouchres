@@ -12,6 +12,7 @@ import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
 
 interface Props {
   onSectionChange: (section: string) => void;
@@ -605,22 +606,22 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 text-slate-100">
+    <main className={`${Z8_PAGE} max-w-6xl mx-auto px-3 sm:px-4 py-5`}>
       {/* Header */}
-      <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-sky-950/30 via-[#0b1120] to-[#0b1120] p-5 mb-5">
+      <div className={`rounded-2xl ${Z8_PANEL} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-5 mb-5`}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-sky-400" /> Live Games Center</h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
-            <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-cyan-300">{sourceNote}</p>
+            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-6 h-6 text-vouch-cyan" /> Live Games Center</h1>
+            <p className="text-xs text-white/50 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
+            <p className={`mt-2 ${Z8_LABEL} text-vouch-cyan`}>{sourceNote}</p>
           </div>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-500/50 transition-colors">
+          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan">
             <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching || liveGamesQuery.isFetching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
         <div className="flex items-center gap-2 mt-4">
-          <button onClick={() => setLiveOnly(false)} className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${!liveOnly ? 'bg-sky-500/15 border-sky-500/50 text-sky-300' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>All games ({matchups.length})</button>
-          <button onClick={() => setLiveOnly(true)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
+          <button onClick={() => setLiveOnly(false)} className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
+          <button onClick={() => setLiveOnly(true)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
             <Radio className="w-3.5 h-3.5" /> Live only ({liveCount})
           </button>
         </div>
@@ -638,13 +639,13 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
         ) : (
           <div className="space-y-4">
             {activeGame && (
-              <div className="relative overflow-hidden rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/40 p-5 shadow-2xl">
-                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-sky-500/20 blur-3xl" />
+              <div className={`relative overflow-hidden rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-5 shadow-2xl ${Z8_PANEL}`}>
+                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl" />
                 <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl" />
 
                 <div className="relative flex items-center justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[10px] font-black font-mono uppercase tracking-[0.28em] text-sky-300">
+                    <p className={`${Z8_LABEL} text-vouch-cyan`}>
                       Live Games Center
                     </p>
                     <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -782,6 +783,6 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       )}
 
       {selected && <MatchupDrawer m={selected} onClose={() => setSelected(null)} onAddLeg={addLeg} />}
-    </div>
+    </main>
   );
 }

@@ -29,6 +29,7 @@ import {
   startStripeCheckout,
   tierToSubscriptionTier,
 } from '../lib/billingClient';
+import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../theme/z8Tokens';
 
 interface SettingsPageProps {
   onResetDatabase: () => void;
@@ -349,26 +350,26 @@ export default function SettingsPage({
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
   return (
-    <div className="relative min-h-screen bg-[#0b0f19] text-slate-100">
+    <div className={`relative ${Z8_PAGE}`}>
 
       {/* Toast */}
       {toast && (
         <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur ${
           toast.type === 'ok'
-            ? 'border-slate-700 bg-slate-900 text-slate-100'
+            ? 'border-white/10 bg-black/80 text-white'
             : 'border-red-500/40 bg-red-950/80 text-red-200'
         }`}>
           {toast.type === 'ok'
-            ? <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+            ? <Check className="h-4 w-4 shrink-0 text-vouch-emerald" />
             : <Zap className="h-4 w-4 shrink-0 text-red-400" />}
           {toast.msg}
         </div>
       )}
 
       {/* Page header */}
-      <div className="border-b border-slate-800 bg-[#0b0f19]/95 px-6 py-5">
+      <div className="border-b border-white/10 bg-obsidian-900/95 px-6 py-5">
         <div className="mx-auto max-w-5xl">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+          <div className={`flex items-center gap-2 text-xs font-medium text-white/40 ${Z8_LABEL}`}>
             <Settings className="h-3.5 w-3.5" />
             Settings
           </div>
@@ -390,8 +391,8 @@ export default function SettingsPage({
                     onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                       activeTab === id
-                        ? 'bg-slate-800 font-medium text-white'
-                        : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-200'
+                        ? `${Z8_ACTIVE} font-medium`
+                        : `${Z8_IDLE}`
                     }`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -402,8 +403,8 @@ export default function SettingsPage({
             </ul>
 
             {/* Plan badge */}
-            <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-3">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Current plan</p>
+            <div className={`mt-8 rounded-xl ${Z8_PANEL} p-3`}>
+              <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
               <p className="mt-1 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
               <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
               {activeTier === 'BASIC' && (
@@ -451,7 +452,7 @@ export default function SettingsPage({
                         <input
                           value={displayName}
                           onChange={(e) => setDisplayName(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                          className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                           placeholder="Your name"
                         />
                       </div>
@@ -507,7 +508,7 @@ export default function SettingsPage({
                         <input
                           value={value}
                           onChange={(e) => set(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                          className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-vouch-cyan focus:ring-1 focus:ring-vouch-cyan/30"
                           placeholder={placeholder}
                         />
                       </div>

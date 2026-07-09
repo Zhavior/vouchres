@@ -15,6 +15,7 @@ import { VerifiedDataNotice } from '../../components/pro';
 import PitcherMatchupDrawer from '../../components/matchups/PitcherMatchupDrawer';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
 import { apiUrl } from '../../lib/apiBase';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
 
 type MatrixLabel = 'STRONG PLAY' | 'LEAN OVER' | 'NEUTRAL' | 'AVOID';
 
@@ -476,19 +477,19 @@ export default function TeamMatchupLabPage() {
   };
 
   return (
-    <main className="ve-page-shell relative min-h-screen overflow-hidden px-3 py-4 text-[hsl(var(--ve-text-primary))] sm:px-4 lg:py-5">
+    <main className={`${Z8_PAGE} relative overflow-hidden px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="relative mx-auto max-w-7xl space-y-4">
-        <section className="ve-premium-panel relative overflow-hidden rounded-2xl p-4">
-          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,hsl(var(--ve-accent-cyan)/0.55),transparent)]" />
-          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[hsl(var(--ve-accent-cyan)/0.08)] blur-3xl" />
+        <section className={`${Z8_PANEL} relative overflow-hidden rounded-2xl p-4`}>
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/55 to-transparent" />
+          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-vouch-cyan/8 blur-3xl" />
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <div className="ve-chip ve-chip-primary px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
+              <div className={`inline-flex items-center gap-1.5 border border-vouch-cyan/25 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                 <Target className="h-3.5 w-3.5" />
                 Matchup Matrix
               </div>
-              <h1 className="mt-3 text-2xl font-black tracking-tight text-[hsl(var(--ve-text-primary))] sm:text-3xl">Team Matchup Lab</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[hsl(var(--ve-text-secondary))]">
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Team Matchup Lab</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
                 Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">

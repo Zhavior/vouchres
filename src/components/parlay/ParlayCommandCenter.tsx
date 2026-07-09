@@ -65,6 +65,7 @@ import {
   type SlipGradeStatus,
   type DfsLegContext,
 } from './types/parlayHubTypes';
+import { Z8_LABEL, Z8_PAGE, Z8_PANEL } from '../../theme/z8Tokens';
 
 const SmartAiEngine  = lazy(() => import('../SmartAiEngine'));
 const ResultsStudio  = lazy(() => import('../results/ResultsStudio'));
@@ -1079,21 +1080,21 @@ export default function ParlayCommandCenter({
       `}</style>
 
       <section
-        className="min-h-screen bg-[hsl(var(--ve-bg))] text-[hsl(var(--ve-text-primary))] flex flex-col"
+        className={`${Z8_PAGE} flex flex-col`}
         aria-label="Parlay Hub"
       >
         {/* Header */}
         <div className="px-4 pt-5 pb-0 sm:px-6 lg:px-8 shrink-0">
           <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[hsl(var(--ve-accent-cyan)/0.25)] bg-[hsl(var(--ve-accent-cyan)/0.08)] text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-accent-cyan))]">
+              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${Z8_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
                 Parlay Hub
               </div>
-              <h1 className="mt-2 text-2xl font-extrabold text-[hsl(var(--ve-text-primary))] sm:text-3xl">
+              <h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl font-z8">
                 Build. Select. Track.
               </h1>
-              <p className="mt-1 text-xs text-[hsl(var(--ve-text-muted))] max-w-xl">
+              <p className="mt-1 text-xs text-white/50 max-w-xl font-z8">
                 One place to build slips manually, let V.A.I surface picks, and monitor every parlay you save.
               </p>
             </div>
@@ -1110,7 +1111,7 @@ export default function ParlayCommandCenter({
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.5)] p-3"
+                className={`rounded-xl ${Z8_PANEL} p-3`}
               >
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{stat.label}</p>
                 <div className="mt-1.5 flex items-end justify-between gap-2">
