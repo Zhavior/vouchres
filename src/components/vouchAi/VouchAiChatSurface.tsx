@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import {
   ArrowRight,
@@ -40,6 +40,7 @@ export default function VouchAiChatSurface({
   initialPrompt,
 }: Props) {
   const { isPro } = useEntitlements();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const {
     messages,
@@ -324,11 +325,33 @@ export default function VouchAiChatSurface({
         </button>
       </div>
 
+      {showUpgradePrompt && (
+        <div className="mb-3 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 p-4">
+          <div className="font-black text-white">
+            🔒 Vouch AI Pro
+          </div>
+
+          <p className="mt-2 text-sm text-white/70">
+            Unlock unlimited Vouch conversations,
+            edge explanations, matchup intelligence,
+            and confidence breakdowns.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => onSectionChange?.("premium")}
+            className="mt-3 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-black"
+          >
+            Upgrade to Pro
+          </button>
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           if (!isPro && messages.filter((m) => m.sender === "user").length >= 3) {
             e.preventDefault();
-            onSectionChange?.("premium");
+            setShowUpgradePrompt(true);
             return;
           }
 
