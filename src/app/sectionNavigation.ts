@@ -4,6 +4,8 @@ export const DEV_BYPASS_AUTH =
 export const PUBLIC_SECTIONS = new Set([
   'welcome',
   'vouchedge_intro',
+  'edge_island_preview',
+  'legacy_studio',
   'feed',
   'home',
   'daily_players',
@@ -40,9 +42,16 @@ export function getSavedActiveSection(): string | null {
   }
 }
 
+/** Logged-out users always land on the terminal intro — not Edge Island welcome. */
+export function resolvePublicSection(section: string): string {
+  if (hasRealAuthToken()) return section;
+  if (section === 'welcome' || section === 'island') return 'vouchedge_intro';
+  return section;
+}
+
 /** Signed-in users must never land on the public intro terminal. */
 export function resolveAuthenticatedSection(section: string): string {
-  if (!hasRealAuthToken()) return section;
+  if (!hasRealAuthToken()) return resolvePublicSection(section);
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
   if (saved && saved !== 'vouchedge_intro') return saved;
@@ -68,11 +77,17 @@ export function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
 
 export function hasRealAuthToken() {
   try {
+    const legacyToken = localStorage.getItem('vouchedge_auth_token');
+    if (legacyToken && legacyToken.length >= 20) {
+      return true;
+    }
+
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key) continue;
       const isSupabaseSessionKey =
         key === 'vouchedge.auth' ||
+        key === 'vouchedge_auth' ||
         (key.startsWith('sb-') && key.includes('auth-token'));
       if (!isSupabaseSessionKey) continue;
 
@@ -149,7 +164,22 @@ export function resolveDevSectionFromLocation() {
     target === 'welcome' || target === '/welcome' ||
     target === 'island' || target === '/island'
   ) {
+    if (!hasRealAuthToken()) {
+      window.history.replaceState(null, '', '/');
+      return 'vouchedge_intro';
+    }
     return 'welcome';
+  }
+
+  if (
+    target === 'legacy/welcome' || target === '/legacy/welcome' ||
+    target === 'legacy/edge-island' || target === '/legacy/edge-island'
+  ) {
+    return 'edge_island_preview';
+  }
+
+  if (target === 'legacy/studio' || target === '/legacy/studio') {
+    return 'legacy_studio';
   }
 
   if (
@@ -204,9 +234,11 @@ export function resolveDevSectionFromLocation() {
 }
 
 export function isPublicFrontPage(activeSection: string, isLoggedIn: boolean) {
+  if (isLoggedIn) return false;
   return (
-    (activeSection === 'welcome' && !isLoggedIn)
-    || (activeSection === 'vouchedge_intro' && !isLoggedIn)
+    activeSection === 'vouchedge_intro'
+    || activeSection === 'edge_island_preview'
+    || activeSection === 'legacy_studio'
   );
 }
 

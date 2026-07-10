@@ -8,7 +8,7 @@ const LIVE_POLL_MS = 6_000;
 const IDLE_POLL_MS = 45_000;
 const LIVE_STALE_MS = 4_500;
 
-function hasLiveGames(payload: LiveGamesPayload | undefined): boolean {
+export function hasLiveGames(payload: LiveGamesPayload | undefined): boolean {
   if (!payload?.games?.length) return false;
   return payload.games.some((game) => {
     if (game.isLive) return true;

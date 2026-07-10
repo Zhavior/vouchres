@@ -1,0 +1,87 @@
+.ve-player-face {
+  object-position: center 22%;
+}
+
+.ve-player-team-header-logo {
+  filter: saturate(0.85);
+}
+
+/* HR Intelligence tier shells */
+.ve-tier-elite {
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow: 0 12px 40px rgba(251, 191, 36, 0.12), inset 0 1px 0 rgba(252, 211, 77, 0.15);
+}
+
+.ve-tier-elite-header {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, #111820 55%, #0a0e14 100%);
+}
+
+.ve-tier-strong {
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 12px 36px rgba(34, 211, 238, 0.08), inset 0 1px 0 rgba(103, 232, 249, 0.1);
+}
+
+.ve-tier-strong-header {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, #111820 55%, #0a0e14 100%);
+}
+
+.ve-tier-watch {
+  border-color: rgba(148, 163, 184, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.ve-tier-watch-header {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.06) 0%, #111820 60%, #0a0e14 100%);
+}
+
+.ve-tier-sleeper {
+  border-color: rgba(167, 139, 250, 0.4);
+  box-shadow: 0 12px 36px rgba(124, 58, 237, 0.1), inset 0 1px 0 rgba(196, 181, 253, 0.12);
+}
+
+.ve-tier-sleeper-header {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, #111820 55%, #0a0e14 100%);
+}
+
+.ve-tier-fade {
+  border-color: rgba(100, 116, 139, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0.88;
+}
+
+.ve-tier-fade-header {
+  background: linear-gradient(135deg, rgba(71, 85, 105, 0.18) 0%, #0f1419 60%, #0a0e14 100%);
+}
+
+@media (pointer: fine) {
+  .ve-vouch-tip-anchor:hover,
+  .ve-vouch-action:hover {
+    cursor: help;
+  }
+
+  .ve-unified-player-card--interactive:hover {
+    transform: translateY(-2px);
+  }
+
+  .ve-tier-elite.ve-unified-player-card--interactive:hover {
+    border-color: rgba(252, 211, 77, 0.6);
+    box-shadow: 0 16px 48px rgba(251, 191, 36, 0.18);
+  }
+
+  .ve-tier-sleeper.ve-unified-player-card--interactive:hover {
+    border-color: rgba(196, 181, 253, 0.55);
+    box-shadow: 0 16px 44px rgba(124, 58, 237, 0.16);
+  }
+
+  .ve-tier-fade.ve-unified-player-card--interactive:hover {
+    opacity: 0.95;
+    border-color: rgba(148, 163, 184, 0.35);
+  }
+}
+
+@media (max-width: 767px) {
+  .ve-landing-hr-cards .ve-unified-player-card {
+    flex: 0 0 min(86vw, 19.5rem);
+    scroll-snap-align: start;
+  }
+}

@@ -15,6 +15,8 @@ import { getDailyVaiPersona, getVaiEntitlements } from '../lib/vai/vaiEntitlemen
 import { MLBPlayer, FeedPost } from '../types';
 import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { SmartAiDeepResearchPanel } from './smart-ai/SmartAiDeepResearchPanel';
+import { VaiParlayCommandDeck } from './smart-ai/VaiParlayCommandDeck';
+import JudgePixelIcon from './judges/JudgePixelIcon';
 import { useSmartAiCandidates } from './smart-ai/useSmartAiCandidates';
 import type { RealCandidate } from './smart-ai/smartAiEngine.logic';
 
@@ -114,6 +116,13 @@ export default function SmartAiEngine({
       : null;
     return { total: realCandidates.length, confirmed, games, avgConfidence };
   }, [realCandidates]);
+
+  const usingProjectedPreview = useMemo(
+    () =>
+      realCandidates.length > 0 &&
+      realCandidates.every((c) => String(c.lineupStatus ?? '').toLowerCase() !== 'confirmed'),
+    [realCandidates],
+  );
 
   const handleAddCandidateToSlip = (_candidate: RealCandidate) => {
     alert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
@@ -292,11 +301,14 @@ export default function SmartAiEngine({
                 <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-white/5 blur-2xl" />
                 <div className="relative z-10 space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-                        {persona.accent}
+                    <div className="flex items-start gap-3">
+                      <JudgePixelIcon code={persona.judgeCode} size="sm" />
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                          {persona.judgeCode} · {persona.accent}
+                        </div>
+                        <h3 className="mt-1 text-lg font-black text-white">{persona.name}</h3>
                       </div>
-                      <h3 className="mt-1 text-lg font-black text-white">{persona.name}</h3>
                     </div>
 
                     <div className={`rounded-2xl border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
@@ -359,18 +371,23 @@ export default function SmartAiEngine({
         </div>
 
         {isSelectedVaiRoomUnlocked ? (
-          <>
+          <div className="space-y-6">
+            <VaiParlayCommandDeck
+              persona={selectedVaiPersona}
+              candidates={realCandidates}
+              loading={candidatesLoading}
+              usingProjectedPreview={usingProjectedPreview}
+            />
 
-      <div className="space-y-6" id="ai-deep-research-column">
-          <SmartAiDeepResearchPanel
-            candidates={realCandidates}
-            loading={candidatesLoading}
-            onAddToSlip={handleAddCandidateToSlip}
-            onOpenResearch={handleOpenResearch}
-          />
-      </div>
-
-          </>
+            <div id="ai-deep-research-column">
+              <SmartAiDeepResearchPanel
+                candidates={realCandidates}
+                loading={candidatesLoading}
+                onAddToSlip={handleAddCandidateToSlip}
+                onOpenResearch={handleOpenResearch}
+              />
+            </div>
+          </div>
         ) : (
           <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 p-6 sm:p-8 text-center" id="vai-locked-room-upgrade-panel">
             <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />

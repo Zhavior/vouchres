@@ -2,14 +2,17 @@ import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import {
   DEV_BYPASS_AUTH,
   PUBLIC_SECTIONS,
+  SIGNED_IN_HOME,
   hasRealAuthToken,
   replaceLandingUrl,
   resolveAuthenticatedSection,
+  resolvePublicSection,
   resolveDevSectionFromLocation,
   saveActiveSection,
   requiresLogin,
   isPublicFrontPage,
 } from './sectionNavigation';
+import { persistAuthSession, supabase } from '../lib/supabaseClient';
 
 export function useSectionNavigation() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
@@ -52,7 +55,7 @@ export function useSectionNavigation() {
     if (section !== 'profile') {
       setProfileViewUserId(null);
     }
-    const target = resolveAuthenticatedSection(section);
+    const target = resolveAuthenticatedSection(resolvePublicSection(section));
     if (target !== section) {
       replaceLandingUrl(target);
       commitSection(target);
@@ -71,7 +74,7 @@ export function useSectionNavigation() {
         // ignore storage failures
       }
 
-      commitSection('welcome');
+      commitSection('vouchedge_intro');
       return;
     }
 
@@ -89,25 +92,39 @@ export function useSectionNavigation() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
-    try {
-      localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
-    } catch {
-      // ignore storage failures
-    }
-    void Promise.all([
-      import('../lib/queryClient'),
-      import('../hooks/queries/queryKeys'),
-    ]).then(([{ queryClient }, { queryKeys }]) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
-    });
-    navigateSection('welcome');
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        persistAuthSession(data.session);
+      }
+
+      let destination = SIGNED_IN_HOME;
+      try {
+        const pending = localStorage.getItem('vouchedge_after_auth_destination');
+        if (pending) {
+          destination = pending;
+          localStorage.removeItem('vouchedge_after_auth_destination');
+        }
+        localStorage.removeItem('vouchedge_after_auth_mode');
+      } catch {
+        // ignore storage failures
+      }
+      void Promise.all([
+        import('../lib/queryClient'),
+        import('../hooks/queries/queryKeys'),
+      ]).then(([{ queryClient }, { queryKeys }]) => {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
+      });
+      replaceLandingUrl(destination);
+      navigateSection(destination);
+    })();
   }, [navigateSection]);
 
   const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
+    window.history.replaceState(null, '', '/');
+    commitSection('vouchedge_intro');
     window.setTimeout(() => {
-      window.history.replaceState(null, '', '/');
-      commitSection('welcome');
       setLoggingOut(false);
     }, 900);
   }, [commitSection]);
@@ -117,12 +134,13 @@ export function useSectionNavigation() {
   }, [activeSection]);
 
   useEffect(() => {
+    if (loggingOut) return;
     if (!hasRealAuthToken()) return;
     if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);
     replaceLandingUrl(next);
     commitSection(next);
-  }, [activeSection, commitSection]);
+  }, [activeSection, commitSection, loggingOut]);
 
   useEffect(() => {
     const syncSectionFromLocation = () => {

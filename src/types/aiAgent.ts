@@ -5,7 +5,6 @@ export type AgentPluginId =
   | 'power_hunter'
   | 'momentum_reader'
   | 'risk_auditor'
-  | 'pro_edge_agent'
   | (string & {});
 
 export type AgentPluginMeta = {

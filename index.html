@@ -74,21 +74,18 @@
       .bg-vouch-emerald { background-color: #00ff94; }
       .bg-obsidian-900 { background-color: #020617; }
       .z8-layout-root { min-height: 100vh; color: #fff; width: 100%; }
-      .ve-mobile-header {
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        background: rgba(0, 0, 0, 0.4);
-        padding: 0.625rem 0.75rem;
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        contain: layout style;
-        transform: translateZ(0);
+      /* Legacy duplicate top chrome — sidebar/drawer owns auth + alerts */
+      .ve-mobile-header,
+      #center-main-content-column > header {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
       .glass-panel {
         background-color: rgba(2, 6, 23, 0.28);

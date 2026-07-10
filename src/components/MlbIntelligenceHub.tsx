@@ -363,10 +363,6 @@ const JUDGE_SECTION_COPY: Record<string, { title: string; subtitle: string }> = 
     title: "Today's Trap Avoid",
     subtitle: 'One caution profile — graded when the flagged player stays cold.',
   },
-  pro_edge_agent: {
-    title: "Today's Premium Single",
-    subtitle: 'One blended power, matchup, form, and confidence HR read.',
-  },
 };
 
 async function copyJudgeSingle(judge: AiJudge) {
@@ -813,7 +809,6 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
 
           <AgentDock
             agents={agentRegistryQuery.data?.agents ?? []}
-            customSlotEnabled={agentRegistryQuery.data?.customSlotEnabled}
             extensionDocs={agentRegistryQuery.data?.extensionDocs}
             loading={agentRegistryQuery.isLoading}
             error={

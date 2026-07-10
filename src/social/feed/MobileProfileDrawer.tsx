@@ -1,22 +1,16 @@
 /**
  * MobileProfileDrawer — Twitter/X-style slide-in navigation drawer (mobile).
  *
- * Opened by tapping the profile avatar in the mobile header (which replaced
- * the old bottom nav bar). The avatar's ring — here and in the header — is
- * driven by the real subscription tier on the backend-hydrated profile
- * (profile.subscriptionTier, resolved from the auth token identity):
- *   BASIC → muted · GOLD (Pro) → vouch-emerald · SELLER_PRO (Capper) → vouch-cyan
- *
- * Nav items come from the same featureConfig registry the desktop sidebar
- * uses, so the two menus can never drift apart.
+ * Opened via the Menu FAB in AppNav. Avatar ring is driven by profile.subscriptionTier.
+ * Notifications and logout each appear once here (no duplicate top header chrome).
  */
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from '../../lib/motion';
 import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import {
@@ -28,6 +22,10 @@ import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
+import { performAppLogout } from '../../lib/appLogout';
+import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
+import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -112,10 +110,21 @@ interface MobileProfileDrawerProps {
   profile: CreatorProofProfile;
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onLogoutComplete?: () => void;
 }
 
-function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionChange }: MobileProfileDrawerProps) {
+function MobileProfileDrawer({
+  open,
+  onClose,
+  profile,
+  activeSection,
+  onSectionChange,
+  onLogoutComplete,
+}: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
+  const [signingOut, setSigningOut] = useState(false);
+  const { data: liveGamesPayload } = useLiveGames({ enabled: open });
+  const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   useEffect(() => {
     if (!open) return;
@@ -136,7 +145,7 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
     const features = getSidebarFeatures(loadFeatureLayout(), {
       canAccessThemeStore: canAccessThemeStore(profile),
       activeSport: getActiveSport(),
-    });
+    }).filter((f) => f.id !== 'notifications');
     return GROUP_ORDER
       .map((group) => ({ group, items: features.filter((f) => f.group === group) }))
       .filter((g) => g.items.length > 0);
@@ -146,6 +155,17 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
     onSectionChange(section);
     onClose();
   }, [onClose, onSectionChange]);
+
+  const handleLogout = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await performAppLogout(onLogoutComplete);
+      onClose();
+    } finally {
+      setSigningOut(false);
+    }
+  }, [onClose, onLogoutComplete, signingOut]);
 
   return (
     <AnimatePresence>
@@ -169,14 +189,17 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
             <div className="px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
               <div className="flex items-start justify-between pt-1">
                 <TierAvatar profile={profile} size={52} onClick={() => go('profile')} ariaLabel="Open profile" />
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close menu"
-                  className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <NotificationBellButton size="sm" />
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close menu"
+                    className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <button type="button" onClick={() => go('profile')} className="mt-2.5 block text-left">
                 <p className="flex items-center gap-1.5 text-base font-black text-white">
@@ -250,6 +273,11 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
                             <Icon className="h-3.5 w-3.5" />
                           </span>
                           <span className="truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                          {liveGamesActive && item.id === 'live_games' && (
+                            <span className="ml-auto shrink-0">
+                              <SidebarLiveOnAirBadge />
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -259,13 +287,22 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
             </nav>
 
             {/* Footer */}
-            <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+            <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)] space-y-1">
               <button
                 type="button"
                 onClick={() => go('settings')}
                 className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className={`flex w-full min-h-[44px] items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL} text-white/45 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50`}
+              >
+                <LogOut className="h-4 w-4" />
+                {signingOut ? 'Leaving…' : 'Log out'}
               </button>
             </div>
           </motion.aside>

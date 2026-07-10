@@ -49,6 +49,7 @@ const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
 const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
+const AisLandingPage = lazy(() => import('../AisLandingPage'));
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
   return (
@@ -129,6 +130,36 @@ function MainViewRouter({
         </LazyRoute>
       );
     }
+
+    case 'edge_island_preview':
+      return (
+        <LazyRoute>
+          <div className="mx-auto w-full max-w-[1500px] px-3 py-4 sm:px-6">
+            <LegacyPublicBanner
+              title="Legacy Edge Island preview"
+              backLabel="Back to terminal landing"
+              onBack={() => navigateSection('vouchedge_intro')}
+            />
+            <EdgeIslandShell navigateSection={navigateSection} isLoggedIn={false} />
+          </div>
+        </LazyRoute>
+      );
+
+    case 'legacy_studio':
+      return (
+        <LazyRoute>
+          <div className="w-full">
+            <div className="mx-auto max-w-[1500px] px-3 py-4 sm:px-6">
+              <LegacyPublicBanner
+                title="Legacy AI Studio landing (archived)"
+                backLabel="Back to terminal landing"
+                onBack={() => navigateSection('vouchedge_intro')}
+              />
+            </div>
+            <LegacyStudioShell navigateSection={navigateSection} />
+          </div>
+        </LazyRoute>
+      );
 
     case 'island':
       return (
@@ -380,6 +411,44 @@ function EdgeIslandShell({
       savedSlips={savedSlips}
       profile={profile}
       isLoggedIn={isLoggedIn}
+    />
+  );
+}
+
+function LegacyPublicBanner({
+  title,
+  backLabel,
+  onBack,
+}: {
+  title: string;
+  backLabel: string;
+  onBack: () => void;
+}) {
+  return (
+    <div className="mx-auto mb-4 flex max-w-[1500px] flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/8 px-4 py-3">
+      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-200/90">
+        {title}
+      </p>
+      <button
+        type="button"
+        onClick={onBack}
+        className="rounded-lg border border-white/15 bg-black/30 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white/70 hover:border-vouch-cyan/35 hover:text-vouch-cyan"
+      >
+        {backLabel}
+      </button>
+    </div>
+  );
+}
+
+function LegacyStudioShell({ navigateSection }: { navigateSection: (section: string) => void }) {
+  const { profile } = useAppShell();
+  const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
+
+  return (
+    <AisLandingPage
+      profile={profile}
+      onUpdateProfile={onUpdateProfile}
+      onSectionChange={navigateSection}
     />
   );
 }

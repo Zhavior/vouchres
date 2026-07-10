@@ -101,16 +101,6 @@ const BUILTIN_META: Omit<AgentPluginMeta, "builtin" | "singlePickLimit" | "grade
     color: "red",
     code: "RA",
   },
-  {
-    id: "pro_edge_agent",
-    displayName: "Pro Edge Agent",
-    handle: "ai-pro-edge",
-    tagline: "Premium blended model.",
-    persona: "Blends power, matchup, form, confidence, and risk into one premium read.",
-    specialty: "Premium blended edge",
-    color: "emerald",
-    code: "PE",
-  },
 ];
 
 function wrapBuiltinJudge(

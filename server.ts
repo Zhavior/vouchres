@@ -12,11 +12,14 @@ import { requestContext } from "./server/middleware/requestContext";
 import { routeTiming } from "./server/middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled, captureException } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
+import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
 dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
+syncDevSupabaseEnv();
+logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
 
 export async function createApp(httpServer?: http.Server) {
@@ -57,6 +60,10 @@ export async function createApp(httpServer?: http.Server) {
         ...(httpServer ? { hmr: { server: httpServer } } : {}),
       },
       appType: "spa",
+      define: {
+        "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(process.env.VITE_SUPABASE_URL ?? ""),
+        "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY ?? ""),
+      },
     });
     app.use(vite.middlewares);
   } else {
@@ -191,9 +198,8 @@ async function startServer() {
   });
 }
 
-// Render (and any persistent-process host) always starts the HTTP server.
-// The old `if (process.env.VERCEL !== "1")` guard existed for a Vercel
-// serverless deploy (api/index.ts called createApp() without listening).
-// That path was removed — Render single-service is the deploy target, so
-// createApp stays exported for tests but the process always listens.
-startServer();
+// Render / local dev listen on a port. Vercel serverless (api/index.ts) imports
+// dist/server.cjs and calls createApp() only — it must not bind a port here.
+if (process.env.VERCEL !== "1") {
+  startServer();
+}

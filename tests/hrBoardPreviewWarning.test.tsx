@@ -39,9 +39,9 @@ describe('HR board projected preview warnings', () => {
   it('shows lineup-not-confirmed warning on projected candidate cards', () => {
     render(<HrPlayerCard player={makeProjectedRow()} />);
 
-    expect(screen.getByText('Projected')).toBeTruthy();
-    expect(screen.getByText('Lineup not confirmed')).toBeTruthy();
-    expect(screen.getByTitle('Official lineup not posted yet')).toBeTruthy();
+    expect(screen.getByText('Preview only')).toBeTruthy();
+    expect(screen.getByText('Official lineup not posted yet')).toBeTruthy();
+    expect(screen.getAllByTitle('Official lineup not posted yet').length).toBeGreaterThan(0);
   });
 
   it('does not show preview warning on official candidate cards', () => {
@@ -54,8 +54,8 @@ describe('HR board projected preview warnings', () => {
       />,
     );
 
-    expect(screen.getByText('Official')).toBeTruthy();
-    expect(screen.queryByText('Lineup not confirmed')).toBeNull();
+    expect(screen.getByText('Confirmed lineup')).toBeTruthy();
+    expect(screen.queryByText('Official lineup not posted yet')).toBeNull();
   });
 
   it('shows auto-preview banner when confirmed lineups are not posted', () => {

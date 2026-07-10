@@ -14,11 +14,16 @@ import {
   Z8_INTERACTIVE,
   Z8_LABEL,
   Z8_PAGE,
-  Z8_PANEL,
   Z8_PANEL_PREMIUM,
+  Z8_BTN_TERMINAL_HEADER_LOGIN,
+  Z8_BTN_TERMINAL_HEADER_SIGNUP,
 } from '../components/landing/LandingTokens';
+import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
+import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
+import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
+import '../components/landing/LandingMobileShell.css';
 
 type SignupPlan = 'free' | 'pro' | 'capper';
 
@@ -79,7 +84,7 @@ const FEATURES = [
     icon: FlaskConical,
     eyebrow: 'AI Edge Lab',
     title: 'Judge-powered research room',
-    copy: 'Five AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
+    copy: 'Four AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
     route: 'mlb_intelligence',
   },
   {
@@ -98,30 +103,6 @@ const TRUST_PILLARS = [
   { label: 'Play', detail: 'Prove your record' },
 ] as const;
 
-function StatusTicker() {
-  const items = [
-    'VOUCHEDGE_TERMINAL // TRUST_FIRST_PROTOCOL',
-    'HR_BOARD: LIVE_WHEN_SIGNED_IN',
-    'JUDGE_COUNCIL: DS · PH · MR · RA · PE',
-    'NO_FAKE_LINEUPS // NO_FAKE_ODDS',
-    'EDGE_ISLAND: READY',
-  ];
-
-  return (
-    <div className="ve-terminal-ticker fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
-      <div className="ve-terminal-ticker-track flex gap-16 whitespace-nowrap">
-        {[1, 2].map((pass) =>
-          items.map((item) => (
-            <span key={`${pass}-${item}`} className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">
-              {item} //
-            </span>
-          )),
-        )}
-      </div>
-    </div>
-  );
-}
-
 function JudgesPlaceholder() {
   return (
     <section
@@ -129,15 +110,13 @@ function JudgesPlaceholder() {
       aria-label="AI Judge Council preview"
     >
       <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Five judges on standby</h2>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Four judges on standby</h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
-        Profiles initialize after the terminal preview so the first screen stays fast and the trust story stays clear.
+        Interactive judge profiles load as you scroll — hover or click each AI to explore.
       </p>
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-hidden="true">
-        {['DS', 'PH', 'MR', 'RA', 'PE'].map((code) => (
-          <div key={code} className="rounded-xl border border-white/10 bg-black/30 px-3 py-4">
-            <span className="font-mono text-xs font-black text-vouch-cyan/70">{code}</span>
-          </div>
+      <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
+        {['DS', 'PH', 'MR', 'RA'].map((code) => (
+          <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
         ))}
       </div>
     </section>
@@ -197,80 +176,6 @@ function DeferredLandingJudgesDeck() {
     <Suspense fallback={<JudgesPlaceholder />}>
       <LandingJudgesDeck />
     </Suspense>
-  );
-}
-
-function PreviewTerminal() {
-  return (
-    <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <div>
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Terminal Preview</p>
-          <p className="mt-1 text-xs text-white/40">Sign in to unlock live HR board + judge picks</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.6)]" />
-          <span className="font-mono text-[9px] uppercase tracking-widest text-vouch-emerald/80">Standby</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 border-b border-white/10 sm:grid-cols-4">
-        {[
-          { label: 'HR Board', value: '—' },
-          { label: 'Judges', value: '5' },
-          { label: 'Data Quality', value: 'Verified' },
-          { label: 'Status', value: 'Locked' },
-        ].map((stat) => (
-          <div key={stat.label} className="border-r border-white/5 p-4 last:border-r-0">
-            <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">{stat.label}</p>
-            <p className="mt-1 font-mono text-lg font-bold text-white/80">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-3 p-5">
-        {[
-          { row: 'Confirmed lineup players', status: 'Live when signed in', tone: 'text-vouch-cyan' },
-          { row: 'Projected roster previews', status: 'Labeled + warned', tone: 'text-vouch-amber' },
-          { row: 'AI judge top picks', status: 'Updates with slate', tone: 'text-vouch-emerald' },
-          { row: 'Parlay-ready legs', status: 'Copy after sign-in', tone: 'text-white/60' },
-        ].map((row) => (
-          <div
-            key={row.row}
-            className="ve-terminal-preview-row flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/30 px-4 py-3"
-          >
-            <span className="text-sm text-white/70">{row.row}</span>
-            <span className={`font-mono text-[10px] font-bold uppercase tracking-wide ${row.tone}`}>
-              {row.status}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="border-t border-white/10 bg-vouch-cyan/5 px-5 py-3 text-center">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
-          Official lineup not posted yet? We warn you. Team mismatch? We block it.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function FeatureStrip({
-  icon: Icon,
-  eyebrow,
-  title,
-  copy,
-}: (typeof FEATURES)[number]) {
-  return (
-    <article className={`rounded-2xl ${Z8_PANEL} ${Z8_INTERACTIVE} p-5`}>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">
-        <Icon size={18} strokeWidth={2.25} />
-      </div>
-      <p className={`${Z8_LABEL} text-vouch-cyan/70`}>{eyebrow}</p>
-      <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-white/50">{copy}</p>
-    </article>
   );
 }
 
@@ -359,11 +264,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page cinematic-bunker ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
-        <div className="starfield" aria-hidden="true" />
-        <div className="storm-layer" aria-hidden="true" />
-        <StatusTicker />
+      <LandingStatusTicker />
 
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
         {/* Ambient obsidian glow */}
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
@@ -371,36 +274,36 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             background: `radial-gradient(circle at 30% 20%, rgba(0,240,255,0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
-        <div
-          className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl"
+        <div className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
           style={{ background: `radial-gradient(circle, rgba(0,255,148,0.12), transparent 70%)` }}
         />
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
+        <div className="ve-terminal-scanlines pointer-events-none absolute inset-0 z-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
 
-        <div className="relative z-10 mx-auto w-full max-w-none px-3 py-6 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-          {/* Header */}
-          <header className="ve-terminal-header mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
-                <Activity size={18} className="text-vouch-cyan" />
+        <div className="relative z-10 mx-auto w-full max-w-none px-3 py-4 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+          <header className="ve-terminal-header ve-terminal-sticky-header flex items-center justify-between gap-3 md:mb-6 md:justify-end">
+            <div className="flex min-w-0 items-center gap-2.5 md:hidden">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/25 bg-vouch-cyan/10">
+                <Activity size={16} className="text-vouch-cyan" />
               </div>
-              <div>
-                <p className="text-lg font-black uppercase italic tracking-tighter text-white">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black tracking-tight text-white">
                   VouchEdge<span className="text-vouch-cyan">.Terminal</span>
                 </p>
-                <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
-                  MLB Edge Research · Trust First
+                <p className="truncate font-mono text-[8px] uppercase tracking-[0.18em] text-white/35">
+                  MLB · Trust First
                 </p>
               </div>
             </div>
-            <div className="ve-terminal-header-actions flex items-center gap-2">
+            <div
+              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
+            >
               <button
                 type="button"
                 onClick={openLogin}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
+                className={Z8_BTN_TERMINAL_HEADER_LOGIN}
               >
                 Log In
               </button>
@@ -409,24 +312,25 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 onClick={() => openSignup('free')}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:bg-vouch-cyan hover:text-black`}
+                className={Z8_BTN_TERMINAL_HEADER_SIGNUP}
               >
                 Sign Up
               </button>
             </div>
           </header>
 
-          <div className="space-y-10 sm:space-y-16 md:space-y-20">
-            {/* Hero */}
-            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-6 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
-              <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5">
-                <ShieldCheck size={14} className="text-vouch-cyan" />
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan/90">
-                  Verified HR Board · AI Judge Council
+          <div className="space-y-8 sm:space-y-16 md:space-y-20">
+            <LandingLiveGamesCenter eager />
+
+            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
+                <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
+                  Verified HR Board · AI Judges
                 </span>
               </div>
 
-              <h1 className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl">
+              <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
                 MLB edge research with{' '}
                 <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
                   pristine
@@ -434,10 +338,20 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 intelligence.
               </h1>
 
-              <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/50">
-                The trust-first terminal for serious analysts. Verified home run boards, five AI judges,
-                and honest data — no fake lineups, no inflated edges, no hype.
+              <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
+                Trust-first HR boards, four AI judges, and honest slate data — no fake lineups or inflated edges.
               </p>
+
+              <div className="ve-terminal-trust-strip px-0.5">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="ve-terminal-trust-strip-item">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/40">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
 
               <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
                 {TRUST_PILLARS.map((pillar) => (
@@ -450,23 +364,42 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 ))}
               </div>
 
-              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
                 <button
                   type="button"
                   onClick={() => openSignup('free')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:h-14 sm:max-w-[220px]`}
                 >
                   <Sparkles size={14} />
                   Enter the Edge
                 </button>
+
+                <div className="ve-terminal-cta-secondary-row">
+                  <button
+                    type="button"
+                    onClick={openLogin}
+                    className="text-white/55 transition hover:text-white"
+                  >
+                    Sign in
+                  </button>
+                  <span className="text-white/15" aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    onClick={() => openSignup('pro')}
+                    className="text-vouch-emerald/80 transition hover:text-vouch-emerald"
+                  >
+                    Explore Pro
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={openLogin}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
                 >
                   Sign In
                 </button>
@@ -475,7 +408,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                   onClick={() => openSignup('pro')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald ${Z8_INTERACTIVE} hover:border-vouch-emerald/60 sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-emerald/60`}
                 >
                   Explore Pro
                   <ChevronRight size={14} />
@@ -483,33 +416,11 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
-            {/* Preview terminal — honest, no fake data */}
-            <section className="space-y-4">
-              <div className="text-center">
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
-                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Live terminal preview</h2>
-              </div>
-              <PreviewTerminal />
-            </section>
-
-            {/* 5 Judges */}
+            {/* 4 Judges */}
             <DeferredLandingJudgesDeck />
 
-            {/* Feature strips */}
-            <section className="space-y-6">
-              <div className="text-center">
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>Platform</p>
-                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Built for the full research loop</h2>
-                <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-                  From verified HR boards to judge parlays — every module is honest about what is confirmed vs projected.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {FEATURES.map((feature) => (
-                  <FeatureStrip key={feature.eyebrow} {...feature} />
-                ))}
-              </div>
-            </section>
+            {/* Platform strengths slideshow */}
+            <LandingFeatureSlideshow features={FEATURES} />
 
             {/* Pricing */}
             <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />
