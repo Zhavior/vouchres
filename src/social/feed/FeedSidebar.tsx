@@ -37,6 +37,8 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { performAppLogout } from '../../lib/appLogout';
+import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -112,10 +114,10 @@ interface NavItemProps {
   icon: string;
   isActive: boolean;
   onNavigate: (id: string) => void;
-  badge?: React.ReactNode;
+  showLiveOnAir?: boolean;
 }
 
-const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, badge }: NavItemProps) {
+const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, showLiveOnAir = false }: NavItemProps) {
   const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
@@ -163,7 +165,16 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       <span className="relative z-10 hidden xl:block truncate text-[12px] font-bold leading-none">
         {label}
       </span>
-      {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
+      {showLiveOnAir && (
+        <>
+          <span className="relative z-10 ml-auto shrink-0 xl:hidden">
+            <SidebarLiveOnAirBadge compact />
+          </span>
+          <span className="relative z-10 ml-auto hidden shrink-0 xl:inline-flex">
+            <SidebarLiveOnAirBadge />
+          </span>
+        </>
+      )}
     </button>
   );
 });
@@ -175,6 +186,7 @@ interface SidebarGroupProps {
   onNavigate: (id: string) => void;
   collapsed: boolean;
   onToggle: () => void;
+  liveGamesActive?: boolean;
 }
 
 const SidebarGroup = React.memo(function SidebarGroup({
@@ -184,6 +196,7 @@ const SidebarGroup = React.memo(function SidebarGroup({
   onNavigate,
   collapsed,
   onToggle,
+  liveGamesActive = false,
 }: SidebarGroupProps) {
   const accentClass = GROUP_ACCENT[group] || 'text-white/40';
   const hasActive = items.some(i => i.id === activeSection);
@@ -230,6 +243,7 @@ const SidebarGroup = React.memo(function SidebarGroup({
               icon={f.icon}
               isActive={activeSection === f.id}
               onNavigate={onNavigate}
+              showLiveOnAir={liveGamesActive && f.id === 'live_games'}
             />
           ))}
         </div>
@@ -329,6 +343,9 @@ function FeedSidebar({
     () => profile.displayName.split(' ').map(n => n[0]).join(''),
     [profile.displayName],
   );
+
+  const { data: liveGamesPayload } = useLiveGames();
+  const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   return (
     <aside
@@ -446,6 +463,7 @@ function FeedSidebar({
               onNavigate={handleNavigate}
               collapsed={!!collapsed[group]}
               onToggle={() => toggleGroup(group)}
+              liveGamesActive={liveGamesActive}
             />
           ))}
         </nav>

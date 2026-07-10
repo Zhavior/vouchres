@@ -68,7 +68,7 @@ const DEFAULT_WIDGETS: Widget[] = [
   },
   {
     id: "live-projections",
-    title: "Live Projections",
+    title: "Live Games",
     subtitle: "Live game movement and projection checks",
     section: "live_games",
     tag: "Live",
