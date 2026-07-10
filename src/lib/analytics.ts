@@ -1,4 +1,3 @@
-import { posthog } from "posthog-js";
 import { hasConsent } from "../components/legal/CookieConsentBanner";
 
 /**
@@ -25,36 +24,40 @@ const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST ?? "https://app.posthog.c
 const CLIENT_VERSION = import.meta.env.VITE_CLIENT_VERSION ?? "0.1.0-beta";
 
 let initialized = false;
+let posthogClient: any = null;
+let posthogLoad: Promise<any> | null = null;
 
 export function initPostHog() {
   if (!POSTHOG_KEY || initialized) return;
   if (!hasConsent("analytics")) return;
 
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    loaded: (ph) => {
-      ph.register({
-        app_version: CLIENT_VERSION,
-        env: import.meta.env.VITE_SENTRY_ENV ?? "development",
-      });
-    },
-    // Don't capture IP addresses
-    respect_dnt: true,
-    // Don't autocapture everything — we send explicit events for important actions
-    autocapture: false,
-    // Persist user identity in localStorage (NOT cookies — avoids cookie banner complexity)
-    persistence: "localStorage",
-    // Sanitize any URL properties that might leak sensitive query params
-    property_denylist: [
-      "token",
-      "access_token",
-      "refresh_token",
-      "password",
-      "stripe_customer_id",
-    ],
-  });
+  posthogLoad ??= import("posthog-js").then((module) => module.posthog);
+  void posthogLoad.then((posthog) => {
+    if (initialized || !hasConsent("analytics")) return;
 
-  initialized = true;
+    posthog.init(POSTHOG_KEY, {
+      api_host: POSTHOG_HOST,
+      loaded: (ph) => {
+        ph.register({
+          app_version: CLIENT_VERSION,
+          env: import.meta.env.VITE_SENTRY_ENV ?? "development",
+        });
+      },
+      respect_dnt: true,
+      autocapture: false,
+      persistence: "localStorage",
+      property_denylist: [
+        "token",
+        "access_token",
+        "refresh_token",
+        "password",
+        "stripe_customer_id",
+      ],
+    });
+
+    posthogClient = posthog;
+    initialized = true;
+  });
 }
 
 /**
@@ -64,7 +67,7 @@ export function initPostHog() {
 export function identifyUser(userId: string, properties?: Record<string, any>) {
   if (!initialized || !hasConsent("analytics")) return;
 
-  posthog.identify(userId, {
+  posthogClient?.identify(userId, {
     ...properties,
     // Don't send PII to PostHog beyond what's needed for funnel tracking
     username: properties?.username,
@@ -78,7 +81,7 @@ export function identifyUser(userId: string, properties?: Record<string, any>) {
  */
 export function resetUser() {
   if (!initialized) return;
-  posthog.reset();
+  posthogClient?.reset();
 }
 
 /**
@@ -87,7 +90,7 @@ export function resetUser() {
  */
 export function trackEvent(name: string, properties?: Record<string, any>) {
   if (!initialized || !hasConsent("analytics")) return;
-  posthog.capture(name, properties);
+  posthogClient?.capture(name, properties);
 }
 
 /**
@@ -95,7 +98,7 @@ export function trackEvent(name: string, properties?: Record<string, any>) {
  */
 export function trackPageView(path: string) {
   if (!initialized || !Consent("analytics")) return;
-  posthog.capture("$pageview", { path });
+  posthogClient?.capture("$pageview", { path });
 }
 
 // Helper to avoid circular import with CookieConsentBanner
@@ -109,7 +112,7 @@ function Consent(category: "essential" | "analytics" | "marketing"): boolean {
  */
 export function optOut() {
   if (!initialized) return;
-  posthog.opt_out_capturing();
+  posthogClient?.opt_out_capturing();
 }
 
 /**
@@ -120,7 +123,7 @@ export function optIn() {
     initPostHog();
     return;
   }
-  posthog.opt_in_capturing();
+  posthogClient?.opt_in_capturing();
 }
 
 // =========================================================

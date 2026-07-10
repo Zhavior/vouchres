@@ -489,7 +489,7 @@ export default function PortfolioAnalyticsPanel({
                 className={`w-full py-3 px-4 rounded-xl font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all ${
                   isAuditing
                     ? 'bg-slate-900 text-[hsl(var(--ve-text-muted))] border border-slate-800 cursor-not-allowed'
-                    : 'bg-[#10b981] hover:bg-[#059669] text-white shadow-lg shadow-emerald-500/10 border border-emerald-400/20 active:scale-[0.98]'
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/10 border border-emerald-400/20 active:scale-[0.98]'
                 }`}
               >
                 <Activity className={`w-4 h-4 ${isAuditing ? 'animate-spin text-[hsl(var(--ve-text-muted))]' : 'text-[hsl(var(--ve-bg-deep))]'}`} />

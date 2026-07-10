@@ -1,5 +1,6 @@
-import { Home, Plus, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
+import { Home, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
+import '../styles/legacy/command-island.css';
 
 type AppNavProps = {
   activeSection: string;

@@ -16,6 +16,13 @@ interface ConfigCheck {
   requiredForProductionProof: boolean;
 }
 
+interface EnvActionItem {
+  envVar: string;
+  severity: "required" | "recommended" | "conditional";
+  configured: boolean;
+  remediation: string;
+}
+
 interface ProductionProofItem {
   id: string;
   label: string;
@@ -25,6 +32,43 @@ interface ProductionProofItem {
 
 function configured(name: string): boolean {
   return Boolean(process.env[name]?.trim());
+}
+
+/** Operator-facing remediation for each env check (Vercel / hosting dashboard). */
+const ENV_REMEDIATION: Record<string, string> = {
+  "SUPABASE_URL or VITE_SUPABASE_URL":
+    "Set SUPABASE_URL (server) or VITE_SUPABASE_URL (client) in Vercel → Project → Settings → Environment Variables.",
+  SUPABASE_SERVICE_ROLE_KEY:
+    "Add SUPABASE_SERVICE_ROLE_KEY from Supabase → Project Settings → API (service_role, server-only).",
+  GEMINI_API_KEY:
+    "Optional — add GEMINI_API_KEY for Smart AI features; app runs without it.",
+  STRIPE_SECRET_KEY:
+    "Optional — add STRIPE_SECRET_KEY only when billing is enabled.",
+  STRIPE_WEBHOOK_SECRET:
+    "Required when STRIPE_SECRET_KEY is set — copy signing secret from Stripe → Developers → Webhooks.",
+  "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN":
+    "Add both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN from Upstash console for multi-instance rate limits + HR cache.",
+  CRON_SECRET:
+    "Generate a random secret and set CRON_SECRET; Vercel Cron must send Authorization: Bearer <CRON_SECRET>.",
+  SENTRY_DSN:
+    "Add SENTRY_DSN from Sentry → Project → Client Keys (DSN) for server 5xx capture.",
+};
+
+function buildEnvActionItems(checks: ConfigCheck[]): EnvActionItem[] {
+  return checks.map((check) => {
+    let severity: EnvActionItem["severity"] = "recommended";
+    if (check.requiredInProduction) severity = "required";
+    else if (check.name === "STRIPE_WEBHOOK_SECRET") severity = "conditional";
+
+    return {
+      envVar: check.name,
+      severity,
+      configured: check.configured,
+      remediation:
+        ENV_REMEDIATION[check.name]
+        ?? `Configure ${check.name} in your hosting provider environment settings.`,
+    };
+  });
 }
 
 function configChecks(): ConfigCheck[] {
@@ -230,11 +274,15 @@ export function getBackendHealthReport(now = new Date()) {
     warnings.push(`Production proof env incomplete: ${pending.join(", ")}.`);
   }
 
+  const actionItems = buildEnvActionItems(checks).filter((item) => !item.configured);
+  const missingRequired = actionItems.filter((item) => item.severity === "required");
+
   const status: BackendHealthStatus = warnings.length > 0 ? "degraded" : "ok";
 
   // GET /api/health/backend — `productionProof` is the ops checklist for true
-  // multi-instance readiness. Fail-closed prod requires SUPABASE_*, CRON_SECRET,
-  // and STRIPE_WEBHOOK_SECRET when billing is enabled. Set SENTRY_DSN + Upstash
+  // multi-instance readiness. `actionItems` lists unset env vars with Vercel
+  // remediation hints. Fail-closed prod requires SUPABASE_*, CRON_SECRET, and
+  // STRIPE_WEBHOOK_SECRET when billing is enabled. Set SENTRY_DSN + Upstash
   // Redis, then run grading + multi-instance soak from productionProof.soakPending.
   return {
     ok: true,
@@ -244,6 +292,13 @@ export function getBackendHealthReport(now = new Date()) {
     uptimeMs: routes.uptimeMs,
     memory: memorySnapshot(),
     config: checks,
+    missingProductionConfig,
+    actionItems,
+    productionReadiness: {
+      requiredEnvComplete: missingRequired.length === 0,
+      proofEnvComplete: productionProof.envReady,
+      unsetCount: actionItems.length,
+    },
     productionProof,
     dependencies: {
       redis: {

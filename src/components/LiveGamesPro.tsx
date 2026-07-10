@@ -350,9 +350,9 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg h-full bg-[#0b1120] border-l border-slate-800 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-lg h-full bg-ve-storm border-l border-slate-800 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0b1120]/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-ve-storm/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TeamLogo src={m.away.logo} alt={m.away.name} size={26} />
             <span className="text-sm font-black text-slate-100">{m.away.abbreviation} @ {m.home.abbreviation}</span>
@@ -606,7 +606,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-w-0 overflow-x-hidden ve-safe-bottom max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5`}>
+    <main className={`${Z8_PAGE} ve-page-shell min-w-0 overflow-x-hidden ve-safe-bottom max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5 pb-24 md:pb-5`}>
       {/* Header */}
       <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-4 sm:p-5 mb-4 sm:mb-5`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -785,6 +785,19 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       )}
 
       {selected && <MatchupDrawer m={selected} onClose={() => setSelected(null)} onAddLeg={addLeg} />}
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
+        <div className="pointer-events-auto border-t border-amber-400/25 bg-ve-obsidian/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
+          <button
+            type="button"
+            onClick={() => onSectionChange('premium')}
+            className="flex w-full min-h-12 items-center justify-center gap-2 rounded-xl border border-amber-400/45 bg-amber-400/10 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-200"
+          >
+            Unlock Pro live modules
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     </main>
   );
 }

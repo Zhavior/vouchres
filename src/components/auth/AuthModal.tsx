@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from '../../lib/motion';
+import { createPortal } from 'react-dom';
 import {
   X,
   Mail,
@@ -34,6 +34,7 @@ import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';
 type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
@@ -161,6 +162,9 @@ export default function AuthModal({
   const [notice, setNotice] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync mode when reopened with a different intent
   useEffect(() => {
@@ -176,12 +180,55 @@ export default function AuthModal({
     }
   }, [open, initialMode, initialPlan]);
 
-  // Close on Escape
+  // Keep keyboard focus inside the modal and restore it to the opener on close.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      (emailInputRef.current ?? closeButtonRef.current)?.focus();
+    });
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('hidden') && element.offsetParent !== null);
+
+      if (focusable.length === 0) {
+        e.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
   }, [open, onClose]);
 
   // Live @handle availability (signup only)
@@ -315,22 +362,20 @@ export default function AuthModal({
     invalid: { text: '3–30 chars, lowercase letters, numbers, or _', color: '#fbbf24' },
   };
 
-  return (
-    <AnimatePresence initial={false}>
-      <motion.div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 font-z8"
-        initial={false}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+  return createPortal(
+    (
+      <div
+        className="ve-auth-backdrop fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 font-z8"
         style={{ background: 'rgba(2,4,10,0.82)', backdropFilter: 'blur(12px)' }}
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        <motion.div
-          initial={{ y: 18, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 18, scale: 0.97 }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ve-auth-title"
+          tabIndex={-1}
+          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
         >
           {/* Judge welcome — desktop sidebar */}
           <div className="hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
@@ -344,6 +389,7 @@ export default function AuthModal({
             style={{ background: 'radial-gradient(120% 100% at 50% 0%, rgba(0,240,255,0.12), transparent 70%)' }}
           >
             <button
+              ref={closeButtonRef}
               onClick={onClose}
               aria-label="Close"
               className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors ${Z8_INTERACTIVE}`}
@@ -368,7 +414,7 @@ export default function AuthModal({
               </div>
             </div>
 
-            <h2 className="text-xl font-black text-white tracking-tight">
+            <h2 id="ve-auth-title" className="text-xl font-black text-white tracking-tight">
               {emailSent
                 ? 'Check your inbox'
                 : mode === 'signup' && signupStep === 'intro'
@@ -664,11 +710,9 @@ export default function AuthModal({
                   style={{ color: mode === m ? '#fff' : '#64748b' }}
                 >
                   {mode === m && (
-                    <motion.div
-                      layoutId="auth-tab"
+                    <div
                       className="absolute inset-0 rounded-lg"
                       style={{ background: 'linear-gradient(135deg, #06b6d4, #2563eb)' }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     />
                   )}
                   <span className="relative">{m === 'signup' ? 'Sign Up' : 'Log In'}</span>
@@ -678,15 +722,8 @@ export default function AuthModal({
           </div>
 
           {/* Perks strip — signup only */}
-          <AnimatePresence initial={false}>
             {mode === 'signup' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25 }}
-                className="overflow-hidden"
-              >
+              <div className="ve-auth-reveal overflow-hidden">
                 <div className="px-6 pt-4">
                   <div className="grid grid-cols-3 gap-2">
                     {[
@@ -704,15 +741,15 @@ export default function AuthModal({
                     })}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-3.5">
             {/* Email */}
             <Field icon={<Mail className="w-4 h-4" />}>
               <input
+                ref={emailInputRef}
                 type="email"
                 autoComplete="email"
                 placeholder="you@email.com"
@@ -723,15 +760,8 @@ export default function AuthModal({
             </Field>
 
             {/* Handle (signup) */}
-            <AnimatePresence initial={false}>
               {mode === 'signup' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
+                <div className="ve-auth-reveal overflow-hidden">
                   <Field icon={<User className="w-4 h-4" />}>
                     <span className="text-sm text-slate-500 shrink-0">@</span>
                     <input
@@ -755,9 +785,8 @@ export default function AuthModal({
                       {handleHint[handleState]!.text}
                     </p>
                   )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
             {/* Password */}
             <div>
@@ -793,15 +822,8 @@ export default function AuthModal({
             </div>
 
             {/* Invite code (signup) — optional during preview, required at private-beta launch */}
-            <AnimatePresence initial={false}>
               {mode === 'signup' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
+                <div className="ve-auth-reveal overflow-hidden">
                   <Field icon={<Ticket className="w-4 h-4" />}>
                     <input
                       type="text"
@@ -818,37 +840,28 @@ export default function AuthModal({
                     </button>
                     .
                   </p>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
             {/* Error / notice */}
-            <AnimatePresence>
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
+                <div
+                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
                   style={{ background: 'rgba(248,113,113,0.1)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)' }}
                 >
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>{error}</span>
-                </motion.div>
+                </div>
               )}
               {notice && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
+                <div
+                  className="ve-auth-message flex items-start gap-2 text-[13px] rounded-lg px-3 py-2"
                   style={{ background: 'rgba(52,211,153,0.1)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)' }}
                 >
                   <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>{notice}</span>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
             {/* Primary */}
             <button
@@ -908,9 +921,10 @@ export default function AuthModal({
           </>
           )}
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
+    ),
+    document.body,
   );
 }
 

@@ -166,7 +166,7 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
 
       {/* Dynamic Collapsible AI Edge Report */}
       {parlay.edgeReport && (
-        <div className="border-t border-slate-800/80 bg-[#0d1322]/80">
+        <div className="border-t border-slate-800/80 bg-ve-graphite/80">
           <button
             onClick={() => setShowEdgeReport(!showEdgeReport)}
             className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-mono font-bold text-emerald-400 hover:bg-emerald-950/10 transition-colors"
