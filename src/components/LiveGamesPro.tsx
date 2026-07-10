@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
+import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
 import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
@@ -765,6 +766,12 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
             {activeGame && !activeGame.isLive && !activeGame.isFinal && (
               <div className="mt-6">
                 <PregameAiReadPanel game={activeGame} />
+              </div>
+            )}
+
+            {activeGame?.isFinal && (
+              <div className="mt-6">
+                <FinalGameRecapPanel game={activeGame} />
               </div>
             )}
 
