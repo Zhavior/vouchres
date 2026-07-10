@@ -18,28 +18,13 @@ import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
-import { dailyReportDirect, matchupsDirect } from "../lib/mlbDirect";
+import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
 import { unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
 
-const DEV_HR_BOARD_FALLBACK_BASE = "https://vouchres.vercel.app";
-
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(apiUrl(url));
-  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-  if (url.includes("/api/mlb/hr-board/")) {
-    recordHrBoardCacheControl(res.headers.get("cache-control"));
-  }
-  const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
-  }
-  return unwrapApiPayload<T>(await res.json());
-}
-
-async function getAbsoluteJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   if (url.includes("/api/mlb/hr-board/")) {
     recordHrBoardCacheControl(res.headers.get("cache-control"));
@@ -80,19 +65,14 @@ function normalizeLiveAtBatSnapshot(raw: LiveAtBatSnapshot | { data?: LiveAtBatS
   return (raw as { data?: LiveAtBatSnapshot })?.data ?? (raw as LiveAtBatSnapshot);
 }
 
-async function hrBoardTodayWithDevFallback(previewLimit?: number): Promise<HrBoardResponse> {
+async function hrBoardTodayWithFallback(previewLimit?: number): Promise<HrBoardResponse> {
   const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
   const localPath = `/api/mlb/hr-board/today${query}`;
 
-  try {
-    return await getJson<HrBoardResponse>(localPath);
-  } catch (error) {
-    if (!import.meta.env.DEV) {
-      throw error;
-    }
-
-    return getAbsoluteJson<HrBoardResponse>(`${DEV_HR_BOARD_FALLBACK_BASE}${localPath}`);
-  }
+  return withFallback(
+    () => getJson<HrBoardResponse>(localPath),
+    () => hrBoardDirect(),
+  );
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
@@ -151,32 +131,37 @@ export const vouchedgeApi = {
     normalizeLiveAtBatSnapshot(await getJson<LiveAtBatSnapshot | { data: LiveAtBatSnapshot }>(`/api/mlb/live-at-bat/${gamePk}`)),
 
   // Live Games matchups
-  liveGames: () => getJson<{
-    success: boolean;
-    date: string;
-    games: Array<{
-      id: string;
-      homeTeam: string;
-      awayTeam: string;
-      homeScore: number | null;
-      awayScore: number | null;
-      status: string;
-      venue: string | null;
-      gameDate: string | null;
-      isLive?: boolean;
-      isFinal?: boolean;
-      predictionsAvailable?: boolean;
-      warnings?: string[];
-    }>;
-    warnings?: string[];
-    updatedAt: string;
-  }>("/api/mlb/live"),
+  liveGames: () =>
+    withFallback(
+      () =>
+        getJson<{
+          success: boolean;
+          date: string;
+          games: Array<{
+            id: string;
+            homeTeam: string;
+            awayTeam: string;
+            homeScore: number | null;
+            awayScore: number | null;
+            status: string;
+            venue: string | null;
+            gameDate: string | null;
+            isLive?: boolean;
+            isFinal?: boolean;
+            predictionsAvailable?: boolean;
+            warnings?: string[];
+          }>;
+          warnings?: string[];
+          updatedAt: string;
+        }>("/api/mlb/live"),
+      () => liveGamesDirect(),
+    ),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),
   scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),
 
   // Daily HR Board
-  hrBoardToday: (previewLimit?: number) => hrBoardTodayWithDevFallback(previewLimit),
+  hrBoardToday: (previewLimit?: number) => hrBoardTodayWithFallback(previewLimit),
   hrBoardByDate: (date: string, previewLimit?: number) =>
     getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
   hrBoardPlayer: (playerId: number, date?: string) =>

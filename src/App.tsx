@@ -1,5 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
+import { queryClient } from './lib/queryClient';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
@@ -34,11 +37,7 @@ function RouteFallback() {
 function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   return (
     <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-      <div className="ve-motion-bg" aria-hidden="true">
-        <div className="ve-motion-grid" />
-        <div className="ve-motion-noise" />
-        <div className="ve-motion-spotlight" />
-      </div>
+      <TerminalBackground />
       <div className="ve-motion-content">
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
@@ -57,13 +56,15 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 export default function App() {
   const navigation = useSectionNavigation();
 
-  if (navigation.isPublicFrontPage && navigation.activeSection === 'vouchedge_intro') {
-    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
-  }
-
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <AuthenticatedApp navigation={navigation} />
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      {navigation.isPublicFrontPage && navigation.activeSection === 'vouchedge_intro' ? (
+        <PublicLanding onAuthed={navigation.handleLoginSuccess} />
+      ) : (
+        <Suspense fallback={<RouteFallback />}>
+          <AuthenticatedApp navigation={navigation} />
+        </Suspense>
+      )}
+    </QueryClientProvider>
   );
 }
