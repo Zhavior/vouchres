@@ -46,10 +46,20 @@ export default function ProGraphsLabPage() {
           <ProLockedCard
             title="Team Trend Graphs"
             description="Team run creation, hits, HRs, and strikeout trend graphs require verified feeds."
+            onUpgrade={() => window.dispatchEvent(
+              new CustomEvent("vouch:navigate", {
+                detail: { section: "premium" },
+              })
+            )}
           />
           <ProLockedCard
             title="Pitcher Vulnerability Graphs"
             description="Pitcher HR weakness, contact risk, and strikeout volatility require verified feeds."
+            onUpgrade={() => window.dispatchEvent(
+              new CustomEvent("vouch:navigate", {
+                detail: { section: "premium" },
+              })
+            )}
           />
         </div>
 

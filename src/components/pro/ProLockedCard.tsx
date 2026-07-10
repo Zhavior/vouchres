@@ -11,6 +11,7 @@ export interface ProLockedCardProps {
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   accent?: string;
   className?: string;
+  onUpgrade?: () => void;
 }
 
 export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function ProLockedCard({
@@ -21,6 +22,7 @@ export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function P
   icon: Icon = Lock,
   accent = ACCENT.slate,
   className = '',
+  onUpgrade,
 }) {
   const copy = detail ?? description ?? 'Verified data feed required. No fake data shown.';
 
@@ -49,7 +51,19 @@ export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function P
           {badge}
         </VEBadge>
       </div>
-      <p className="relative mt-1.5 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">{copy}</p>
+      <p className="relative mt-1.5 text-[10px] leading-relaxed text-[hsl(var(--ve-text-muted))]">
+        {copy}
+      </p>
+
+      {onUpgrade && (
+        <button
+          type="button"
+          onClick={onUpgrade}
+          className="relative mt-3 rounded-lg bg-vouch-cyan px-3 py-1.5 text-[10px] font-black text-black transition hover:brightness-110"
+        >
+          Upgrade to Pro
+        </button>
+      )}
     </VECard>
   );
 });
