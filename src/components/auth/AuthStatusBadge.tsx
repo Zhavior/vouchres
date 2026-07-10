@@ -15,9 +15,9 @@ interface AuthStatusBadgeProps {
 function resetToLandingScreen() {
   localStorage.removeItem('vouchedge_after_auth_destination');
   localStorage.removeItem('vouchedge_after_auth_mode');
-  localStorage.setItem('vouchedge_active_section', 'welcome');
-  localStorage.setItem('activeSection', 'welcome');
-  localStorage.setItem('selectedSection', 'welcome');
+  localStorage.setItem('vouchedge_active_section', 'vouchedge_intro');
+  localStorage.setItem('activeSection', 'vouchedge_intro');
+  localStorage.setItem('selectedSection', 'vouchedge_intro');
   sessionStorage.removeItem('vouchedge_active_section');
 }
 
@@ -123,7 +123,7 @@ export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onL
       resetToLandingScreen();
       setEmail(null);
       setSigningOut(false);
-      window.history.replaceState(null, '', '/');
+      window.history.replaceState(null, '', '/vouchedge');
       onLogoutComplete?.();
     }
   }

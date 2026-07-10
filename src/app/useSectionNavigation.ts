@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import {
   DEV_BYPASS_AUTH,
-  PUBLIC_SECTIONS,
+  SIGNED_IN_HOME,
+  consumeAfterAuthDestination,
+  gateSectionForAuth,
   hasRealAuthToken,
   replaceLandingUrl,
   resolveAuthenticatedSection,
   resolveDevSectionFromLocation,
+  redirectToPublicIntro,
   saveActiveSection,
   requiresLogin,
   isPublicFrontPage,
@@ -54,24 +57,16 @@ export function useSectionNavigation() {
     }
     const target = resolveAuthenticatedSection(section);
     if (target !== section) {
-      replaceLandingUrl(target);
-      commitSection(target);
-      return;
-    }
-
-    if (PUBLIC_SECTIONS.has(target)) {
-      commitSection(target);
-      return;
-    }
-
-    if (requiresLogin(target) && !hasRealAuthToken()) {
-      try {
-        localStorage.setItem('vouchedge_after_auth_destination', target);
-      } catch {
-        // ignore storage failures
+      if (hasRealAuthToken()) {
+        replaceLandingUrl(target);
       }
+      commitSection(target);
+      return;
+    }
 
-      commitSection('welcome');
+    if (!hasRealAuthToken() && requiresLogin(target)) {
+      gateSectionForAuth(target);
+      commitSection('vouchedge_intro');
       return;
     }
 
@@ -89,25 +84,21 @@ export function useSectionNavigation() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
-    try {
-      localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
-    } catch {
-      // ignore storage failures
-    }
     void Promise.all([
       import('../lib/queryClient'),
       import('../hooks/queries/queryKeys'),
     ]).then(([{ queryClient }, { queryKeys }]) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
     });
-    navigateSection('welcome');
+    const saved = consumeAfterAuthDestination();
+    navigateSection(saved && requiresLogin(saved) ? saved : SIGNED_IN_HOME);
   }, [navigateSection]);
 
   const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
     window.setTimeout(() => {
-      window.history.replaceState(null, '', '/');
-      commitSection('welcome');
+      redirectToPublicIntro();
+      commitSection('vouchedge_intro');
       setLoggingOut(false);
     }, 900);
   }, [commitSection]);
@@ -115,6 +106,13 @@ export function useSectionNavigation() {
   useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
+
+  useEffect(() => {
+    if (hasRealAuthToken()) return;
+    if (!requiresLogin(activeSection)) return;
+    gateSectionForAuth(activeSection);
+    commitSection('vouchedge_intro');
+  }, [activeSection, commitSection]);
 
   useEffect(() => {
     if (!hasRealAuthToken()) return;
@@ -132,6 +130,7 @@ export function useSectionNavigation() {
       }
     };
 
+    syncSectionFromLocation();
     window.addEventListener('hashchange', syncSectionFromLocation);
     window.addEventListener('popstate', syncSectionFromLocation);
 
@@ -139,7 +138,7 @@ export function useSectionNavigation() {
       window.removeEventListener('hashchange', syncSectionFromLocation);
       window.removeEventListener('popstate', syncSectionFromLocation);
     };
-  }, []);
+  }, [navigateSection]);
 
   const isLoggedIn = hasRealAuthToken();
   const isPublicFrontPageView = isPublicFrontPage(activeSection, isLoggedIn);

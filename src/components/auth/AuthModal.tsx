@@ -276,7 +276,7 @@ export default function AuthModal({
     setNotice(null);
 
     if (!isSupabaseConfigured) {
-      setNotice("Accounts aren't enabled in this environment yet. You can explore everything as a guest.");
+      setNotice("Accounts aren't enabled in this environment yet. Sign-in is required to access VouchEdge.");
       return;
     }
 
@@ -337,7 +337,7 @@ export default function AuthModal({
     setError(null);
     setNotice(null);
     if (!isSupabaseConfigured) {
-      setNotice("Accounts aren't enabled in this environment yet. You can explore everything as a guest.");
+      setNotice("Accounts aren't enabled in this environment yet. Sign-in is required to access VouchEdge.");
       return;
     }
     if (!email.trim()) { setError('Enter your email first.'); return; }
@@ -900,19 +900,8 @@ export default function AuthModal({
             </button>
           </form>
 
-          {/* Footer — guest + trust */}
+          {/* Footer — trust */}
           <div className="px-6 pb-6 pt-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-[11px] uppercase tracking-widest text-slate-600 font-mono">or</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-            <button
-              onClick={onGuest}
-              className={`w-full py-2.5 rounded-xl text-[13px] font-bold text-white/55 hover:text-white hover:bg-white/5 transition-colors ${Z8_INTERACTIVE}`}
-            >
-              Continue as guest
-            </button>
             <p className="text-[10px] text-center leading-relaxed text-slate-600">
               By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
               <span className="text-slate-400">Privacy Policy</span>. You must be of legal age in your jurisdiction

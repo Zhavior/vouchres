@@ -9,7 +9,6 @@ import { canAccessThemeStore } from '../lib/adminDevAccess';
 import { notify } from '../lib/appNotifications';
 import { isLive } from '../lib/parlayLifecycle';
 import { pushAiParlaysToBackend } from '../domain/parlayActions';
-import { warmGuestHrBoardCache } from '../lib/boot/guestHrBoardWarmCache';
 import { useFeedStore, selectPosts, selectSyncPosts } from '../stores/feedStore';
 import { useSlipsStore, selectSavedSlips, selectSyncSlips } from '../stores/slipsStore';
 import { useProfileStore, selectProfile, selectSyncProfile } from '../stores/profileStore';
@@ -267,12 +266,6 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     return () => { window.clearTimeout(warmup); window.clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (isLoggedIn) return;
-    if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
-    void warmGuestHrBoardCache();
-  }, [activeSection, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
