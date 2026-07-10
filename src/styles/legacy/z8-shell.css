@@ -198,10 +198,7 @@ html {
 }
 
 .z8-app-shell.ve-motion-shell {
-  background:
-    radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.10), transparent 34rem),
-    radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.06), transparent 28rem),
-    linear-gradient(180deg, #020617 0%, #030a18 42%, #020617 100%);
+  background-color: var(--bg-obsidian);
 }
 
 /* Legacy Tailwind slate text → Z8 premium neutrals */

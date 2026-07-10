@@ -168,9 +168,7 @@
   width: 100%;
   isolation: isolate;
   overflow-x: clip;
-  background:
-    radial-gradient(circle at 50% -10%, var(--ve-accent-glow), transparent 34rem),
-    linear-gradient(180deg, var(--ve-bg-soft) 0%, var(--ve-bg) 42%, var(--ve-bg) 100%);
+  background-color: var(--bg-obsidian);
   color: var(--ve-text);
 }
 

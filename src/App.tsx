@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
@@ -34,11 +35,7 @@ function RouteFallback() {
 function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   return (
     <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-      <div className="ve-motion-bg" aria-hidden="true">
-        <div className="ve-motion-grid" />
-        <div className="ve-motion-noise" />
-        <div className="ve-motion-spotlight" />
-      </div>
+      <TerminalBackground />
       <div className="ve-motion-content">
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">

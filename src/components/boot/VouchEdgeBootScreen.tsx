@@ -1,4 +1,5 @@
 import type { VouchEdgeBootState } from "../../features/hr/hooks/useVouchEdgeBoot";
+import { TerminalBackground } from "../layout/TerminalBackground";
 
 type Props = {
   boot: VouchEdgeBootState;
@@ -22,15 +23,8 @@ export default function VouchEdgeBootScreen({ boot }: Props) {
   const progress = Math.max(0, Math.min(100, boot.progress));
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[hsl(var(--ve-bg))] text-white">
-      <div className="absolute inset-0 ve-motion-bg" aria-hidden="true">
-        <div className="ve-motion-grid" />
-        <div className="ve-motion-noise" />
-        <div className="ve-motion-spotlight" />
-        <div className="ve-motion-orb ve-motion-orb-a" />
-        <div className="ve-motion-orb ve-motion-orb-b" />
-        <div className="ve-motion-orb ve-motion-orb-c" />
-      </div>
+    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[var(--bg-obsidian)] text-white">
+      <TerminalBackground fixed={false} />
 
       <div className="relative z-10 flex min-h-[100dvh] items-center justify-center px-5 py-8">
         <div className="grid w-full max-w-7xl items-center gap-6 lg:grid-cols-[1fr_1.35fr_1fr]">

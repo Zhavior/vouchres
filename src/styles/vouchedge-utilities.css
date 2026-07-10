@@ -123,3 +123,53 @@
     transform: translateY(-150px) translateX(-50px);
   }
 }
+
+/* Shared landing terminal backdrop — app shell + boot overlays */
+.ve-terminal-background {
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+  background-color: var(--bg-obsidian);
+}
+
+.ve-terminal-background--fixed {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.ve-terminal-background--absolute {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.ve-terminal-background::before {
+  content: "";
+  position: absolute;
+  top: -20vh;
+  right: -10vw;
+  width: 80vw;
+  height: 80vw;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 229, 255, 0.05) 0%,
+    rgba(230, 250, 255, 0.02) 20%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: -3;
+}
+
+.ve-terminal-background .starfield {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.ve-terminal-background .storm-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}

@@ -361,9 +361,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page cinematic-bunker ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
-        <div className="starfield" aria-hidden="true" />
-        <div className="storm-layer" aria-hidden="true" />
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
         <StatusTicker />
 
         {/* Ambient obsidian glow */}

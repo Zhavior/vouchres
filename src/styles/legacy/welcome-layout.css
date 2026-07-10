@@ -139,12 +139,14 @@
     padding-bottom: 5.75rem;
   }
 
-  .ve-terminal-page .starfield {
+  .ve-terminal-page .starfield,
+  .ve-terminal-background .starfield {
     opacity: 0.22;
     animation: none;
   }
 
-  .ve-terminal-page .storm-layer {
+  .ve-terminal-page .storm-layer,
+  .ve-terminal-background .storm-layer {
     opacity: 0.84;
   }
 

@@ -10,6 +10,7 @@ import { hasRealAuthToken } from './sectionNavigation';
 import { AppNav } from './AppNav';
 import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
+import { TerminalBackground } from '../components/layout/TerminalBackground';
 import type { CreatorProofProfile, Parlay } from '../types';
 
 const DeployUpdateBanner = lazy(() =>
@@ -82,14 +83,7 @@ export function AppShell({
       <AppShellProvider value={appShellState}>
         <VouchEdgeBootGate enabled={!['welcome', 'vouchedge_intro'].includes(activeSection) && hasRealAuthToken()}>
           <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-            <div className="ve-motion-bg" aria-hidden="true">
-              <div className="ve-motion-grid" />
-              <div className="ve-motion-noise" />
-              <div className="ve-motion-spotlight" />
-              <div className="ve-motion-orb ve-motion-orb-a" />
-              <div className="ve-motion-orb ve-motion-orb-b" />
-              <div className="ve-motion-orb ve-motion-orb-c" />
-            </div>
+            <TerminalBackground />
 
             <div className="ve-motion-content">
               {loggingOut && <GoodbyeScreen />}
