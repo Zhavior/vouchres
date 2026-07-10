@@ -147,6 +147,7 @@ export function resolveDevSectionFromLocation() {
 
   if (
     target === 'vouchedge-intro' || target === '/vouchedge-intro' ||
+    target === 'vouchedge_intro' || target === '/vouchedge_intro' ||
     target === 'vouchedge' || target === '/vouchedge'
   ) {
     if (hasRealAuthToken()) {
