@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase, signInWithEmail, signUpWithEmail, signInWithMagicLink } from "../../lib/supabaseClient";
+import { identifyUser } from "../../lib/analytics";
 
 interface AuthGateProps {
   onAuthed?: () => void;
@@ -24,6 +25,20 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function identifyAuthenticatedUser() {
+    const { data } = await supabase.auth.getUser();
+
+    const user = data.user;
+
+    if (!user) return;
+
+    identifyUser(user.id, {
+      email: user.email,
+      subscription_status: "free",
+      auth_provider: user.app_metadata?.provider ?? "email",
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -33,6 +48,7 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
       if (mode === "signin") {
         const { error } = await signInWithEmail({ email, password });
         if (error) throw error;
+        await identifyAuthenticatedUser();
         onAuthed?.();
       } else {
         if (inviteCodeRequired && !inviteCode.trim()) {
@@ -72,6 +88,7 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
       setError(error.message);
     } else {
       setMagicLinkSent(true);
+      await identifyAuthenticatedUser();
     }
   }
 
