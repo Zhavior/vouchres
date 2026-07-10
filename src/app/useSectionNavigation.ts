@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import {
   DEV_BYPASS_AUTH,
   PUBLIC_SECTIONS,
+  SIGNED_IN_HOME,
   hasRealAuthToken,
   replaceLandingUrl,
   resolveAuthenticatedSection,
@@ -71,7 +72,7 @@ export function useSectionNavigation() {
         // ignore storage failures
       }
 
-      commitSection('welcome');
+      commitSection('vouchedge_intro');
       return;
     }
 
@@ -89,8 +90,14 @@ export function useSectionNavigation() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
+    let destination = SIGNED_IN_HOME;
     try {
-      localStorage.setItem('vouchedge_after_auth_mode', 'welcome');
+      const pending = localStorage.getItem('vouchedge_after_auth_destination');
+      if (pending) {
+        destination = pending;
+        localStorage.removeItem('vouchedge_after_auth_destination');
+      }
+      localStorage.removeItem('vouchedge_after_auth_mode');
     } catch {
       // ignore storage failures
     }
@@ -100,14 +107,15 @@ export function useSectionNavigation() {
     ]).then(([{ queryClient }, { queryKeys }]) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
     });
-    navigateSection('welcome');
+    replaceLandingUrl(destination);
+    navigateSection(destination);
   }, [navigateSection]);
 
   const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
     window.setTimeout(() => {
       window.history.replaceState(null, '', '/');
-      commitSection('welcome');
+      commitSection('vouchedge_intro');
       setLoggingOut(false);
     }, 900);
   }, [commitSection]);
