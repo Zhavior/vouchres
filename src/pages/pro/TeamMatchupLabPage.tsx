@@ -1,3 +1,5 @@
+import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
+import { ProLockedCard } from "../../components/pro/ProLockedCard";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
@@ -312,6 +314,7 @@ async function fetchJsonResponse<T>(path: string, signal: AbortSignal): Promise<
 }
 
 export default function TeamMatchupLabPage() {
+  const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [data, setData] = useState<MatchupMatrixResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -741,12 +744,26 @@ export default function TeamMatchupLabPage() {
                               type="button"
                               onClick={(event) => {
                                 event.stopPropagation();
+
+                                if (!isPro) {
+                                  window.dispatchEvent(
+                                    new CustomEvent("vouch:navigate", {
+                                      detail: { section: "premium" },
+                                    })
+                                  );
+                                  return;
+                                }
+
                                 handleCopy(row);
                               }}
                               className="inline-flex items-center gap-2 rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 px-3 py-2 text-xs font-black text-vouch-cyan hover:border-vouch-cyan/45"
                             >
                               <ClipboardCopy className="h-3.5 w-3.5" />
-                              {copiedKey === rowKey ? 'Copied' : 'Copy Research'}
+                              {isPro
+                                ? copiedKey === rowKey
+                                  ? 'Copied'
+                                  : 'Copy Research'
+                                : 'Unlock Research'}
                             </button>
                           </td>
                         </tr>
