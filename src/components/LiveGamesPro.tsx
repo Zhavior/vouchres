@@ -350,9 +350,12 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
   const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
   const homeFav = winProbability.home >= winProbability.away;
   return (
-    <div className="fixed inset-0 z-[120] flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg h-full bg-ve-storm border-l border-slate-800 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[120]" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm md:bg-black/40" />
+      <div
+        className="relative ml-auto flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-slate-800 bg-ve-storm shadow-2xl md:fixed md:right-4 md:top-[4.75rem] md:h-auto md:max-h-[calc(100vh-5.5rem)] md:w-[min(24rem,calc(100vw-2rem))] md:rounded-3xl md:border md:border-slate-700/80 md:shadow-[0_24px_80px_rgba(0,0,0,0.55)] xl:right-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-ve-storm/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -364,6 +367,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           <button onClick={onClose} className="text-slate-500 hover:text-slate-200"><X className="w-5 h-5" /></button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="p-4 space-y-5">
           {/* Scoreboard */}
           <Section icon={Activity} title="Game scoreboard">
@@ -457,6 +461,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
           </div>
 
           <p className="text-[10px] text-slate-600 text-center">Live game research for entertainment — not betting advice. Some lineups/weather may be projected until official feeds confirm.</p>
+        </div>
         </div>
       </div>
     </div>
