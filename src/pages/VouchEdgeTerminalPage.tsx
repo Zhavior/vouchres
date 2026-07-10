@@ -20,6 +20,7 @@ import {
 } from '../components/landing/LandingTokens';
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
+import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -28,7 +29,6 @@ import '../components/landing/LandingMobileShell.css';
 type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
-const LandingJudgesDeck = lazy(() => import('../components/landing/LandingJudgesDeck'));
 const preloadAuthModal = () => {
   void import('../components/auth/AuthModal');
 };
@@ -172,11 +172,7 @@ function DeferredLandingJudgesDeck() {
     );
   }
 
-  return (
-    <Suspense fallback={<JudgesPlaceholder />}>
-      <LandingJudgesDeck />
-    </Suspense>
-  );
+  return <LandingJudgesDeck />;
 }
 
 function PricingGrid({

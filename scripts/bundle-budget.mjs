@@ -84,11 +84,19 @@ const entryCssFiles = new Set();
 collectInitialCss(entry, entryCssFiles, new Set());
 const bootCssPaths = BOOT_ENTRY_NAMES.map((name) => {
   const chunk = Object.values(manifest).find((candidate) => candidate.name === name && candidate.isDynamicEntry);
-  if (!chunk) {
-    console.error(`[bundle-budget] boot entry ${name} not found in Vite manifest`);
-    process.exit(1);
-  }
   const files = new Set(entryCssFiles);
+  if (!chunk) {
+    // Not a dynamic entry: eagerly bundled into the index entry (e.g.
+    // VouchEdgeTerminalPage after the no-lazy-landing rule), so its CSS is
+    // already in entryCssFiles.
+    return {
+      name: `${name} (eager)`,
+      gzipBytes: [...files].reduce(
+        (sum, file) => sum + gzipSize(join(process.cwd(), "dist", file)).gzipBytes,
+        0,
+      ),
+    };
+  }
   collectInitialCss(chunk, files, new Set());
   const gzipBytes = [...files].reduce(
     (sum, file) => sum + gzipSize(join(process.cwd(), "dist", file)).gzipBytes,
