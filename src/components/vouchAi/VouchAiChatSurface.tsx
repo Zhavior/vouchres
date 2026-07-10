@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   ArrowRight,
   BrainCircuit,
@@ -30,7 +31,13 @@ const ISLAND_PAGE_SHORTCUTS = [
   { label: "Parlay Lab", section: "build", icon: Shield },
 ] as const;
 
-export default function VouchAiChatSurface({ variant, profile, onSectionChange, chat }: Props) {
+export default function VouchAiChatSurface({
+  variant,
+  profile,
+  onSectionChange,
+  chat,
+  initialPrompt,
+}: Props) {
   const {
     messages,
     inputValue,
@@ -48,6 +55,12 @@ export default function VouchAiChatSurface({ variant, profile, onSectionChange, 
     submitEmailSimulation,
     openEmailForm,
   } = chat;
+
+  useEffect(() => {
+    if (initialPrompt && !inputValue) {
+      setInputValue(initialPrompt);
+    }
+  }, [initialPrompt, inputValue, setInputValue]);
 
   const isIsland = variant === "island";
 
