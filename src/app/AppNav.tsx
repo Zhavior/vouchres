@@ -1,4 +1,4 @@
-import { Menu, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
+import { Menu, Sparkles as EdgeIslandIcon, Flame, Brain } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 import '../styles/legacy/command-island.css';
@@ -49,18 +49,6 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
         <Brain className="ve-edge-island-trigger-icon h-4 w-4" />
       </button>
 
-      <button
-        type="button"
-        onClick={() => onNavigate('notifications')}
-        onPointerDown={() => preloadSection('notifications')}
-        onMouseEnter={() => preloadSection('notifications')}
-        onFocus={() => preloadSection('notifications')}
-        aria-label="Go to Alerts"
-        title="Alerts"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
-      >
-        <Bell className="ve-edge-island-trigger-icon h-4 w-4" />
-      </button>
       <button
         type="button"
         onClick={onOpenEdgeIsland}

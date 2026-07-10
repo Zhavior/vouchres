@@ -52,19 +52,6 @@ export const LANDING_JUDGES = [
     authTip: 'I flag traps before they reach your slip — projected lineups and thin data stay blocked.',
     color: 'amber',
   },
-  {
-    id: 'pro_edge_agent',
-    code: 'PE',
-    displayName: 'Pro Edge Agent',
-    handle: 'ai-pro-edge',
-    tagline: 'Premium blended model.',
-    persona: 'Blends power, matchup, form, confidence, and risk into one premium read.',
-    specialty: 'Premium blended edge',
-    useCase: 'One premium read that blends power, matchup, form, and risk for serious edge hunters.',
-    quote: 'The best edge is never one signal — it is the blend that survives scrutiny.',
-    authTip: 'Pro blends power, form, and risk into one read — yours unlocks after sign-in.',
-    color: 'emerald',
-  },
 ] as const;
 
 export type LandingJudge = (typeof LANDING_JUDGES)[number];
@@ -74,7 +61,6 @@ export const JUDGE_PIXEL_THEME: Record<string, { main: string; glow: string; acc
   PH: { main: 'bg-red-300', glow: 'bg-red-500/25', accent: 'bg-orange-300/80', active: [0, 3, 5, 6, 9, 10, 12, 15] },
   MR: { main: 'bg-violet-300', glow: 'bg-violet-500/25', accent: 'bg-fuchsia-300/80', active: [1, 4, 6, 9, 11, 13, 14] },
   RA: { main: 'bg-amber-300', glow: 'bg-amber-500/25', accent: 'bg-yellow-200/80', active: [0, 1, 2, 4, 8, 12, 13, 14] },
-  PE: { main: 'bg-emerald-300', glow: 'bg-emerald-500/25', accent: 'bg-lime-300/80', active: [2, 5, 6, 7, 8, 9, 10, 13] },
 };
 
 export const JUDGE_COLOR_RING: Record<string, string> = {
@@ -82,5 +68,4 @@ export const JUDGE_COLOR_RING: Record<string, string> = {
   orange: 'border-orange-400/30 shadow-[0_0_32px_rgba(251,146,60,0.1)]',
   purple: 'border-violet-400/30 shadow-[0_0_32px_rgba(167,139,250,0.1)]',
   amber: 'border-amber-400/30 shadow-[0_0_32px_rgba(251,191,36,0.1)]',
-  emerald: 'border-vouch-emerald/30 shadow-[0_0_32px_rgba(0,255,148,0.1)]',
 };

@@ -67,7 +67,7 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
       <div className="relative">
         <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
         <h3 className="mt-2 text-lg font-black tracking-tight text-white sm:text-xl">
-          Five judges vet your edge.
+          Four judges vet your edge.
         </h3>
         <p className="mt-2 text-xs leading-relaxed text-white/45">
           Probability research for entertainment — not betting advice. Every score is an estimate, never a guarantee.

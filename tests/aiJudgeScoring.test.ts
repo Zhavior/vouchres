@@ -141,7 +141,7 @@ describe("normalizeMetrics", () => {
 describe("agentScore per persona", () => {
   it("ranks different top candidates per judge", () => {
     const topByJudge = Object.fromEntries(
-      (["data_scout", "power_hunter", "momentum_reader", "risk_auditor", "pro_edge_agent"] as JudgeId[]).map(
+      (["data_scout", "power_hunter", "momentum_reader", "risk_auditor"] as JudgeId[]).map(
         (judgeId) => [judgeId, rankCandidatesForJudge(judgeId, FIXTURES, 1)[0]?.playerName],
       ),
     );
@@ -150,11 +150,10 @@ describe("agentScore per persona", () => {
     expect(topByJudge.power_hunter).toBe("Power Slugger");
     expect(topByJudge.momentum_reader).toBe("Hot Streak");
     expect(topByJudge.risk_auditor).toBe("Trap Profile");
-    expect(topByJudge.pro_edge_agent).toBe("Balanced Star");
   });
 
   it("does not return identical orderings for all non-risk judges", () => {
-    const orders = ["data_scout", "power_hunter", "momentum_reader", "pro_edge_agent"].map((judgeId) =>
+    const orders = ["data_scout", "power_hunter", "momentum_reader"].map((judgeId) =>
       rankCandidatesForJudge(judgeId as JudgeId, FIXTURES, 3).map((c) => c.playerName).join("|"),
     );
     const uniqueOrders = new Set(orders);
@@ -164,7 +163,7 @@ describe("agentScore per persona", () => {
 
 describe("single daily pick output", () => {
   it("publishes exactly one single per judge", () => {
-    for (const judgeId of ["data_scout", "power_hunter", "momentum_reader", "risk_auditor", "pro_edge_agent"] as JudgeId[]) {
+    for (const judgeId of ["data_scout", "power_hunter", "momentum_reader", "risk_auditor"] as JudgeId[]) {
       expect(singlePickLimit(judgeId)).toBe(1);
       const picks = selectTopPicksForJudge(judgeId, FIXTURES);
       expect(picks).toHaveLength(1);
@@ -189,7 +188,7 @@ describe("single daily pick output", () => {
 describe("judge pick metadata", () => {
   it("assigns specialty single labels instead of generic HR for every judge", () => {
     const labels = new Set(
-      (["data_scout", "power_hunter", "momentum_reader", "risk_auditor", "pro_edge_agent"] as JudgeId[]).map(
+      (["data_scout", "power_hunter", "momentum_reader", "risk_auditor"] as JudgeId[]).map(
         (judgeId) => judgePickMeta(judgeId).singlePickLabel,
       ),
     );
@@ -198,7 +197,7 @@ describe("judge pick metadata", () => {
     expect(labels.has("HR Single")).toBe(true);
     expect(labels.has("Form Single")).toBe(true);
     expect(labels.has("Safer HR Single")).toBe(true);
-    expect(labels.has("Premium Blended Single")).toBe(true);
+    expect(labels.size).toBe(4);
   });
 
   it("builds persona-specific reasoning", () => {

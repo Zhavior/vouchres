@@ -7,7 +7,8 @@
  *  - Collapsible group sections (open by default, user preference persisted in localStorage)
  *  - Sport pill switcher (MLB / NBA / NFL) at top
  *  - BEGINNER/PRO toggle removed → lives in Settings
- *  - Notifications live in sidebar toolbar (no duplicate top header bar)
+ *  - Notifications: one bell in sidebar brand row (desktop) / drawer header (mobile)
+ *  - Logout: sidebar footer (desktop) / drawer footer (mobile) only
  *  - Cmd+K hint at top for power users
  *  - All 18+ features preserved, just 2-level hierarchy
  */
@@ -30,12 +31,14 @@ import {
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { preloadSection } from '../../lib/routePreload';
-import { NotificationBellButton, useNotificationUnreadCount } from '../../components/notifications/UnifiedNotificationCenter';
+import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { performAppLogout } from '../../lib/appLogout';
+import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -111,10 +114,10 @@ interface NavItemProps {
   icon: string;
   isActive: boolean;
   onNavigate: (id: string) => void;
-  badge?: React.ReactNode;
+  showLiveOnAir?: boolean;
 }
 
-const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, badge }: NavItemProps) {
+const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavigate, showLiveOnAir = false }: NavItemProps) {
   const resolvedIcon = HR_NAV_IDS.has(id) ? 'Flame' : icon;
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
@@ -162,7 +165,16 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
       <span className="relative z-10 hidden xl:block truncate text-[12px] font-bold leading-none">
         {label}
       </span>
-      {badge && <span className="relative z-10 ml-auto hidden xl:block">{badge}</span>}
+      {showLiveOnAir && (
+        <>
+          <span className="relative z-10 ml-auto shrink-0 xl:hidden">
+            <SidebarLiveOnAirBadge compact />
+          </span>
+          <span className="relative z-10 ml-auto hidden shrink-0 xl:inline-flex">
+            <SidebarLiveOnAirBadge />
+          </span>
+        </>
+      )}
     </button>
   );
 });
@@ -174,6 +186,7 @@ interface SidebarGroupProps {
   onNavigate: (id: string) => void;
   collapsed: boolean;
   onToggle: () => void;
+  liveGamesActive?: boolean;
 }
 
 const SidebarGroup = React.memo(function SidebarGroup({
@@ -183,6 +196,7 @@ const SidebarGroup = React.memo(function SidebarGroup({
   onNavigate,
   collapsed,
   onToggle,
+  liveGamesActive = false,
 }: SidebarGroupProps) {
   const accentClass = GROUP_ACCENT[group] || 'text-white/40';
   const hasActive = items.some(i => i.id === activeSection);
@@ -229,22 +243,12 @@ const SidebarGroup = React.memo(function SidebarGroup({
               icon={f.icon}
               isActive={activeSection === f.id}
               onNavigate={onNavigate}
+              showLiveOnAir={liveGamesActive && f.id === 'live_games'}
             />
           ))}
         </div>
       </div>
     </div>
-  );
-});
-
-const SidebarNotificationBadge = React.memo(function SidebarNotificationBadge() {
-  const unreadCount = useNotificationUnreadCount();
-  if (unreadCount <= 0) return null;
-
-  return (
-    <span className="xl:hidden absolute top-1 right-1 flex h-4 w-4 items-center justify-center bg-vouch-cyan text-[8px] font-black text-black">
-      {unreadCount > 9 ? '9+' : unreadCount}
-    </span>
   );
 });
 
@@ -340,6 +344,9 @@ function FeedSidebar({
     [profile.displayName],
   );
 
+  const { data: liveGamesPayload } = useLiveGames();
+  const liveGamesActive = hasLiveGames(liveGamesPayload);
+
   return (
     <aside
       id="z8-feed-sidebar"
@@ -354,29 +361,32 @@ function FeedSidebar({
     >
       <div className="relative z-10 space-y-4 flex-1">
         <div className="relative">
-          <button
-            onClick={() => handleNavigate('feed')}
-            className={`group relative w-full flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
-            id="brand-logo-id"
-            aria-label="Go to Home Feed"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
-              <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
-            </div>
-            <div className="hidden xl:block min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
-                  VouchEdge
-                </span>
-                <span className={`${Z8_LABEL} bg-vouch-cyan/15 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.15)]`}>
-                  Live
-                </span>
+          <div className="flex items-start gap-1.5">
+            <button
+              onClick={() => handleNavigate('feed')}
+              className={`group relative min-w-0 flex-1 flex items-center gap-3 ${Z8_SIDEBAR_SURFACE} p-2.5 cursor-pointer transition-all hover:bg-vouch-cyan/8 hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]`}
+              id="brand-logo-id"
+              aria-label="Go to Home Feed"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-vouch-cyan/15 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.25)]">
+                <span className={`${Z8_LABEL} text-[13px] font-black tracking-tight text-vouch-cyan`}>VE</span>
               </div>
-              <p className={`mt-0.5 truncate ${Z8_LABEL} text-white/40`}>
-                MLB Intelligence Command
-              </p>
-            </div>
-          </button>
+              <div className="hidden xl:block min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[15px] font-black uppercase italic tracking-tight text-white">
+                    VouchEdge
+                  </span>
+                  <span className={`${Z8_LABEL} bg-vouch-cyan/15 px-2 py-0.5 text-[9px] tracking-widest text-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.15)]`}>
+                    Live
+                  </span>
+                </div>
+                <p className={`mt-0.5 truncate ${Z8_LABEL} text-white/40`}>
+                  MLB Intelligence Command
+                </p>
+              </div>
+            </button>
+            <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />
+          </div>
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
         </div>
 
@@ -457,6 +467,7 @@ function FeedSidebar({
               onNavigate={handleNavigate}
               collapsed={!!collapsed[group]}
               onToggle={() => toggleGroup(group)}
+              liveGamesActive={liveGamesActive}
             />
           ))}
         </nav>
@@ -534,7 +545,6 @@ function FeedSidebar({
                 : 'View profile'}
             </p>
           </div>
-          <SidebarNotificationBadge />
         </button>
 
         <button

@@ -131,12 +131,12 @@ function PrefRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-8 py-3.5">
+    <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5 sm:py-3.5">
       <div className="min-w-0">
         <p className="text-sm font-medium text-slate-200">{label}</p>
-        <p className="mt-0.5 text-xs text-slate-500">{detail}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{detail}</p>
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="shrink-0 self-start sm:self-center">{children}</div>
     </div>
   );
 }
@@ -350,11 +350,11 @@ export default function SettingsPage({
   const initials = (displayName || username || 'VE').slice(0, 2).toUpperCase();
 
   return (
-    <div className={`relative ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE}`}>
+    <div className={`relative ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom pb-24 md:pb-8 ${Z8_PAGE}`}>
 
-      {/* Toast */}
+      {/* Toast — clear mobile FAB cluster */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur ${
+        <div className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
           toast.type === 'ok'
             ? 'border-white/10 bg-black/80 text-white'
             : 'border-red-500/40 bg-red-950/80 text-red-200'
@@ -367,22 +367,60 @@ export default function SettingsPage({
       )}
 
       {/* Page header */}
-      <div className="glass-command border-b border-ve-fuse/40 bg-ve-obsidian/95 px-4 py-5 sm:px-6">
+      <div className={`glass-command border-b border-ve-fuse/40 bg-ve-obsidian/95 py-4 sm:py-5 ${Z8_PAGE_PAD_X}`}>
         <div className="mx-auto max-w-5xl">
           <div className={`flex items-center gap-2 text-xs font-medium text-white/40 ${Z8_LABEL}`}>
             <Settings className="h-3.5 w-3.5" />
             Settings
           </div>
-          <h1 className="mt-1 text-xl font-semibold text-white">Account settings</h1>
+          <h1 className="mt-1 text-lg font-semibold text-white sm:text-xl">Account settings</h1>
         </div>
       </div>
 
       {/* Body */}
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="flex gap-10">
+      <div className={`mx-auto max-w-5xl py-5 sm:py-8 ${Z8_PAGE_PAD_X}`}>
+        {/* Mobile tab bar */}
+        <nav className="mb-5 lg:hidden" aria-label="Settings sections">
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
+            {nav.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => { setActiveTab(id); setBillingPortalError(null); }}
+                className={`ve-touch-target snap-start shrink-0 flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${
+                  activeTab === id
+                    ? 'border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.12)]'
+                    : 'border-white/10 bg-black/25 text-white/55 hover:border-white/20 hover:text-white'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                {label}
+              </button>
+            ))}
+          </div>
 
-          {/* ─── Left sidebar nav ─── */}
-          <nav className="w-48 shrink-0">
+          <div className={`mt-3 flex items-center justify-between gap-3 rounded-xl ${Z8_PANEL_PREMIUM} p-3`}>
+            <div className="min-w-0">
+              <p className={`${Z8_LABEL} text-white/35`}>Current plan</p>
+              <p className="mt-0.5 text-sm font-semibold text-white">{PLAN_COPY[activeTier].title}</p>
+              <p className="text-xs text-slate-500">{PLAN_COPY[activeTier].price}{activeTier !== 'BASIC' ? '/mo' : ''}</p>
+            </div>
+            {activeTier === 'BASIC' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('billing')}
+                className="ve-touch-target shrink-0 flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-[11px] font-semibold text-white hover:bg-blue-500 transition-colors"
+              >
+                Upgrade <ChevronRight className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </nav>
+
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+
+          {/* Desktop sidebar nav */}
+          <nav className="hidden w-48 shrink-0 lg:block">
             <ul className="space-y-0.5">
               {nav.map(({ id, label, icon: Icon }) => (
                 <li key={id}>
@@ -429,11 +467,11 @@ export default function SettingsPage({
 
                 {/* Avatar + name */}
                 <Section title="Profile" subtitle="This is your public identity on VouchEdge.">
-                  <div className={`${Z8_SURFACE} flex items-center gap-4 rounded-xl p-5`}>
+                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5`}>
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-bold text-white">
                       {initials}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-white">{displayName || 'Display name'}</p>
                       <p className="text-xs text-slate-500">@{username || 'username'}</p>
                       <p className="mt-1 text-xs text-slate-600">{customTitle || 'No title set'}</p>
@@ -516,10 +554,10 @@ export default function SettingsPage({
                   </div>
                 </Section>
 
-                <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-6">
+                <div className="flex flex-col gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-end">
                   <button
                     type="submit"
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                    className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:w-auto ${
                       profileSaved
                         ? 'bg-emerald-600 text-white'
                         : 'bg-blue-600 text-white hover:bg-blue-500'
@@ -601,11 +639,11 @@ export default function SettingsPage({
                       </div>
                     )}
 
-                    <div className="flex items-center justify-end">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                       <button
                         type="submit"
                         disabled={passwordLoading || newPassword.length < 8 || newPassword !== confirmPassword}
-                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 transition-all"
+                        className="ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 transition-all sm:w-auto"
                       >
                         {passwordLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                         Update password
@@ -624,19 +662,19 @@ export default function SettingsPage({
                 <Section title="Subscription" subtitle="Manage your plan and payment method.">
 
                   {/* Current plan row */}
-                  <div className={`${Z8_SURFACE} flex items-center justify-between rounded-xl px-5 py-4`}>
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+                  <div className={`${Z8_SURFACE} flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
                         <Zap className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-white">{PLAN_COPY[activeTier].title} plan</p>
                         <p className="text-xs text-slate-500">
                           {billingStatus ? `Renews ${formatDate(billingStatus.currentPeriodEnd)}` : PLAN_COPY[activeTier].price + (activeTier !== 'BASIC' ? '/month' : ' forever')}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                         activeTier === 'BASIC' ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/15 text-emerald-400'
                       }`}>
@@ -655,7 +693,7 @@ export default function SettingsPage({
                   </div>
 
                   {/* Plan cards */}
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {(Object.keys(PLAN_COPY) as AppTier[]).map((tier) => {
                       const plan = PLAN_COPY[tier];
                       const isActive = activeTier === tier;
@@ -723,7 +761,7 @@ export default function SettingsPage({
                       onClick={handleManageBilling}
                       disabled={portalLoading}
                       variant="ghost"
-                      className="border-slate-700 bg-slate-900/50 text-slate-200 hover:bg-slate-800 hover:text-white"
+                      className="ve-touch-target w-full justify-center border-slate-700 bg-slate-900/50 text-slate-200 hover:bg-slate-800 hover:text-white sm:w-auto sm:justify-start"
                     >
                       {portalLoading ? <Loader className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                       Manage billing
@@ -793,17 +831,17 @@ export default function SettingsPage({
             {activeTab === 'privacy' && (
               <div className="space-y-8">
                 <Section title="Your data" subtitle="Download a copy of everything VouchEdge holds about your account.">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
-                    <div>
+                  <div className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Data export</p>
-                      <p className="text-xs text-slate-500">Download your picks, parlays, profile, and activity as JSON.</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">Download your picks, parlays, profile, and activity as JSON.</p>
                     </div>
                     <VEButton
                       type="button"
                       onClick={handleExportData}
                       disabled={privacyLoading === 'export'}
                       variant="ghost"
-                      className="border-slate-700 text-slate-200"
+                      className="ve-touch-target w-full shrink-0 justify-center border-slate-700 text-slate-200 sm:w-auto"
                     >
                       {privacyLoading === 'export' ? <Loader className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                       Export
@@ -814,16 +852,16 @@ export default function SettingsPage({
                 <Divider />
 
                 <Section title="Local data" subtitle="Reset preview data stored on this device only.">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-5 py-4">
-                    <div>
+                  <div className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-white">Reset local data</p>
-                      <p className="text-xs text-slate-500">Clears picks, slips, vouches, and profile previews on this browser.</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">Clears picks, slips, vouches, and profile previews on this browser.</p>
                     </div>
                     <VEButton
                       type="button"
                       onClick={handleResetClick}
                       variant="ghost"
-                      className="border-slate-700 text-slate-200"
+                      className="ve-touch-target w-full shrink-0 justify-center border-slate-700 text-slate-200 sm:w-auto"
                     >
                       <RefreshCw className="h-4 w-4" />
                       Reset
@@ -834,11 +872,11 @@ export default function SettingsPage({
                 <Divider />
 
                 <Section title="Danger zone" subtitle="Irreversible actions for your account.">
-                  <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-5">
-                    <div className="flex items-start justify-between gap-6">
-                      <div>
+                  <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-red-300">Delete account</p>
-                        <p className="mt-0.5 text-xs text-red-400/70">
+                        <p className="mt-0.5 text-xs leading-relaxed text-red-400/70">
                           Schedules deletion with a 30-day grace period. Active subscriptions will be cancelled. This cannot be undone.
                         </p>
                       </div>
@@ -847,7 +885,7 @@ export default function SettingsPage({
                         onClick={handleScheduleDeletion}
                         disabled={privacyLoading === 'delete'}
                         variant="ghost"
-                        className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+                        className="ve-touch-target w-full shrink-0 justify-center border-red-500/40 text-red-400 hover:bg-red-500/10 sm:w-auto"
                       >
                         {privacyLoading === 'delete' ? <Loader className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         Delete account

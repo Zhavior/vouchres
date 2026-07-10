@@ -403,11 +403,16 @@ function LiveGamesCenterPlaceholder() {
   );
 }
 
-export default function LandingLiveGamesCenter() {
-  const [ready, setReady] = useState(false);
+export default function LandingLiveGamesCenter({ eager = false }: { eager?: boolean }) {
+  const [ready, setReady] = useState(eager);
   const markerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (eager) {
+      setReady(true);
+      return undefined;
+    }
+
     const marker = markerRef.current;
     if (!marker || !('IntersectionObserver' in window)) {
       setReady(true);
@@ -426,17 +431,17 @@ export default function LandingLiveGamesCenter() {
 
     observer.observe(marker);
     return () => observer.disconnect();
-  }, []);
+  }, [eager]);
 
   return (
     <section ref={markerRef} aria-labelledby="live-games-heading" className="ve-landing-live-section space-y-4">
       <div className="ve-landing-section-intro text-center">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
+        <p className={`${Z8_LABEL} text-vouch-cyan`}>Today&apos;s slate</p>
         <h2 id="live-games-heading" className="mt-2 text-2xl font-black text-white sm:text-3xl">
-          Live terminal preview
+          Live games + top 3 HR picks
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-          Official MLB matchups with team logos, live status, and the same HR player cards powering the daily board.
+          Official MLB matchups with team logos, live status, and trust-first HR spotlight cards from today&apos;s board.
         </p>
       </div>
 

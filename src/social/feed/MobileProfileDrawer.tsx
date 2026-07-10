@@ -1,14 +1,8 @@
 /**
  * MobileProfileDrawer — Twitter/X-style slide-in navigation drawer (mobile).
  *
- * Opened by tapping the profile avatar in the mobile header (which replaced
- * the old bottom nav bar). The avatar's ring — here and in the header — is
- * driven by the real subscription tier on the backend-hydrated profile
- * (profile.subscriptionTier, resolved from the auth token identity):
- *   BASIC → muted · GOLD (Pro) → vouch-emerald · SELLER_PRO (Capper) → vouch-cyan
- *
- * Nav items come from the same featureConfig registry the desktop sidebar
- * uses, so the two menus can never drift apart.
+ * Opened via the Menu FAB in AppNav. Avatar ring is driven by profile.subscriptionTier.
+ * Notifications and logout each appear once here (no duplicate top header chrome).
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from '../../lib/motion';
@@ -29,6 +23,9 @@ import {
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
 import { performAppLogout } from '../../lib/appLogout';
+import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
+import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -126,6 +123,8 @@ function MobileProfileDrawer({
 }: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
   const [signingOut, setSigningOut] = useState(false);
+  const { data: liveGamesPayload } = useLiveGames({ enabled: open });
+  const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   useEffect(() => {
     if (!open) return;
@@ -146,7 +145,7 @@ function MobileProfileDrawer({
     const features = getSidebarFeatures(loadFeatureLayout(), {
       canAccessThemeStore: canAccessThemeStore(profile),
       activeSport: getActiveSport(),
-    });
+    }).filter((f) => f.id !== 'notifications');
     return GROUP_ORDER
       .map((group) => ({ group, items: features.filter((f) => f.group === group) }))
       .filter((g) => g.items.length > 0);
@@ -190,14 +189,17 @@ function MobileProfileDrawer({
             <div className="px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
               <div className="flex items-start justify-between pt-1">
                 <TierAvatar profile={profile} size={52} onClick={() => go('profile')} ariaLabel="Open profile" />
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close menu"
-                  className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <NotificationBellButton size="sm" />
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close menu"
+                    className={`flex h-11 w-11 items-center justify-center text-white/40 transition hover:bg-vouch-cyan/8 hover:text-white ${Z8_SIDEBAR_SURFACE}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <button type="button" onClick={() => go('profile')} className="mt-2.5 block text-left">
                 <p className="flex items-center gap-1.5 text-base font-black text-white">
@@ -271,6 +273,11 @@ function MobileProfileDrawer({
                             <Icon className="h-3.5 w-3.5" />
                           </span>
                           <span className="truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                          {liveGamesActive && item.id === 'live_games' && (
+                            <span className="ml-auto shrink-0">
+                              <SidebarLiveOnAirBadge />
+                            </span>
+                          )}
                         </button>
                       );
                     })}

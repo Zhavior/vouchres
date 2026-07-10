@@ -13,22 +13,54 @@ type TierStyle = {
   label: string;
   scoreColor: string;
   badge: string;
+  shell: string;
+  barColor: string;
 };
 
 function tierStyle(score: number): TierStyle {
   if (score >= 97) {
-    return { label: 'Elite', scoreColor: '#e2e8f0', badge: 'border-white/20 bg-white/8 text-white/85' };
+    return {
+      label: 'Elite',
+      scoreColor: '#fcd34d',
+      badge: 'border-amber-300/40 bg-amber-400/15 text-amber-100',
+      shell: 've-tier-elite',
+      barColor: 'linear-gradient(90deg, #f59e0b, #fcd34d)',
+    };
   }
   if (score >= 92) {
-    return { label: 'Strong', scoreColor: '#cbd5e1', badge: 'border-white/18 bg-white/6 text-white/75' };
+    return {
+      label: 'Strong',
+      scoreColor: '#67e8f9',
+      badge: 'border-cyan-300/35 bg-cyan-400/12 text-cyan-100',
+      shell: 've-tier-strong',
+      barColor: 'linear-gradient(90deg, #0891b2, #67e8f9)',
+    };
   }
   if (score >= 85) {
-    return { label: 'Watch', scoreColor: '#94a3b8', badge: 'border-white/15 bg-white/5 text-white/65' };
+    return {
+      label: 'Watch',
+      scoreColor: '#cbd5e1',
+      badge: 'border-slate-400/30 bg-slate-500/10 text-slate-200',
+      shell: 've-tier-watch',
+      barColor: 'linear-gradient(90deg, #475569, #94a3b8)',
+    };
   }
   if (score >= 75) {
-    return { label: 'Sleeper', scoreColor: '#94a3b8', badge: 'border-white/12 bg-black/35 text-white/55' };
+    return {
+      label: 'Sleeper',
+      scoreColor: '#c4b5fd',
+      badge: 'border-violet-400/35 bg-violet-500/12 text-violet-200',
+      shell: 've-tier-sleeper',
+      barColor: 'linear-gradient(90deg, #7c3aed, #c4b5fd)',
+    };
   }
-  return { label: 'Fade', scoreColor: '#64748b', badge: 'border-white/10 bg-black/40 text-white/45' };
+  return {
+    label: 'Fade',
+    scoreColor: '#94a3b8',
+    badge: 'border-rose-900/50 bg-rose-950/40 text-rose-300/70',
+    shell: 've-tier-fade',
+    barColor: 'linear-gradient(90deg, #475569, #64748b)',
+  };
 }
 
 function initials(name: string): string {
@@ -142,12 +174,13 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
       onClick={interactive ? () => onClick?.(player) : undefined}
       onKeyDown={handleKeyDown}
       className={[
-        've-unified-player-card ve-landing-hr-card overflow-hidden rounded-xl border border-white/12 bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
+        've-unified-player-card ve-landing-hr-card overflow-hidden rounded-xl border bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
+        tier.shell,
         interactive ? 've-unified-player-card--interactive cursor-pointer' : '',
         className,
       ].filter(Boolean).join(' ')}
     >
-      <div className="relative h-24 overflow-hidden border-b border-white/8 bg-[#111820]">
+      <div className={`relative h-24 overflow-hidden border-b border-white/8 bg-[#111820] ${tier.shell}-header`}>
         {teamLogo ? (
           <>
             <img
@@ -304,8 +337,8 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-white/55 transition-all duration-500"
-                style={{ width: `${Math.min(100, player.hrProbability! * 700)}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, player.hrProbability! * 700)}%`, background: tier.barColor }}
               />
             </div>
           </div>

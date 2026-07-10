@@ -2,8 +2,7 @@ export type JudgeId =
   | "data_scout"
   | "power_hunter"
   | "momentum_reader"
-  | "risk_auditor"
-  | "pro_edge_agent";
+  | "risk_auditor";
 
 export type JudgeCandidate = {
   playerId?: number | string;
@@ -199,18 +198,7 @@ export function scoreBuiltinJudge(judgeId: JudgeId, c: JudgeCandidate): number {
     );
   }
 
-  return (
-    m.hrScore * 0.28 +
-    m.hitterPower * 0.18 +
-    m.pitcherVulnerability * 0.16 +
-    m.recentForm * 0.14 +
-    m.lineupVolume * 0.1 +
-    m.handednessEdge * 0.06 +
-    m.parkContext * 0.08 +
-    confidenceBonus(c) -
-    m.warnings * 3 -
-    m.penalties * 0.4
-  );
+  return m.hrScore;
 }
 
 /** Delegates to registry plugin when registered, else built-in specialty math. */
@@ -254,10 +242,10 @@ export function builtinJudgePickMeta(judgeId: JudgeId): JudgePickMeta {
     };
   }
   return {
-    pickType: "PREMIUM_EDGE",
-    market: "Premium Blended Single",
-    specialtyLabel: "Blended premium edge",
-    singlePickLabel: "Premium Blended Single",
+    pickType: "CLEAN_SCREEN",
+    market: "Safer HR Single",
+    specialtyLabel: "Safer data profile",
+    singlePickLabel: "Safer HR Single",
   };
 }
 
@@ -291,7 +279,7 @@ export function builtinJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string 
     return `Trap flag: penalties ${Math.round(m.penalties)} and HR edge ${Math.round(m.hrScore)} look thin for trust.`;
   }
 
-  return `Premium blend: power ${Math.round(m.hitterPower)}, matchup ${Math.round(m.pitcherVulnerability)}, form ${Math.round(m.recentForm)}, confidence ${c.confidenceTier ?? "unknown"}.`;
+  return `HR edge ${Math.round(m.hrScore)} with lineup volume ${Math.round(m.lineupVolume)}.`;
 }
 
 export function buildJudgeReason(judgeId: JudgeId, c: JudgeCandidate): string {

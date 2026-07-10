@@ -84,7 +84,7 @@ const FEATURES = [
     icon: FlaskConical,
     eyebrow: 'AI Edge Lab',
     title: 'Judge-powered research room',
-    copy: 'Five AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
+    copy: 'Four AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
     route: 'mlb_intelligence',
   },
   {
@@ -110,12 +110,12 @@ function JudgesPlaceholder() {
       aria-label="AI Judge Council preview"
     >
       <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Five judges on standby</h2>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Four judges on standby</h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
         Interactive judge profiles load as you scroll — hover or click each AI to explore.
       </p>
       <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
-        {['DS', 'PH', 'MR', 'RA', 'PE'].map((code) => (
+        {['DS', 'PH', 'MR', 'RA'].map((code) => (
           <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
         ))}
       </div>
@@ -320,6 +320,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
           </header>
 
           <div className="space-y-8 sm:space-y-16 md:space-y-20">
+            <LandingLiveGamesCenter eager />
+
             <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
@@ -337,7 +339,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </h1>
 
               <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
-                Trust-first HR boards, five AI judges, and honest slate data — no fake lineups or inflated edges.
+                Trust-first HR boards, four AI judges, and honest slate data — no fake lineups or inflated edges.
               </p>
 
               <div className="ve-terminal-trust-strip px-0.5">
@@ -414,9 +416,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
-            <LandingLiveGamesCenter />
-
-            {/* 5 Judges */}
+            {/* 4 Judges */}
             <DeferredLandingJudgesDeck />
 
             {/* Platform strengths slideshow */}
