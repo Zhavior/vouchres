@@ -398,7 +398,7 @@ async function fetchBoxscore(gamePk: string, expectedGameDate?: string | null): 
  *
  * New markets can be added here as the capper agents evolve.
  */
-async function evaluatePick(
+export async function evaluatePick(
   pick: {
     id: string;
     market: string;
@@ -438,18 +438,27 @@ async function evaluatePick(
   if (market === "hr" || market === "hr_multi" || market === "hr_avoid" || market === "home run") {
     const threshold = market === "hr_multi" ? 2 : 1;
     const playerHrs = countPlayerStat(boxscore, playerName, "homeRuns");
+    if (playerHrs === null) {
+      return settlePush(pick, `${playerName} did not appear in the box score (DNP/scratch) — pick voided, stake refunded.`);
+    }
     const hitHr = playerHrs >= threshold;
     return settlePick(pick, isAvoidPick ? !hitHr : hitHr);
   }
 
   if (market === "rbi" || market === "rbi_over") {
     const playerRbis = countPlayerStat(boxscore, playerName, "rbi");
+    if (playerRbis === null) {
+      return settlePush(pick, `${playerName} did not appear in the box score (DNP/scratch) — pick voided, stake refunded.`);
+    }
     const threshold = market === "rbi_over" ? extractThreshold(selection) : 1;
     return settlePick(pick, playerRbis >= threshold);
   }
 
   if (market === "run") {
     const playerRuns = countPlayerStat(boxscore, playerName, "runs");
+    if (playerRuns === null) {
+      return settlePush(pick, `${playerName} did not appear in the box score (DNP/scratch) — pick voided, stake refunded.`);
+    }
     return settlePick(pick, playerRuns >= 1);
   }
 
@@ -1010,6 +1019,21 @@ function settlePick(
   }
 }
 
+/**
+ * Push (void) a single pick — stake refunded, no win/loss recorded. Used
+ * when the player never appeared in the box score (DNP/scratch/trade), so
+ * the prop cannot be honestly graded either way. Mirrors sportsbook DNP
+ * handling and the parlay leg path (which already pushes not-found players).
+ */
+function settlePush(pick: { id: string }, reason: string): GradeResult {
+  return {
+    pick_id: pick.id,
+    status: "push",
+    settled_units: 0,
+    learning_note: reason,
+  };
+}
+
 function extractPlayerName(selection: string, _market: string): string {
   const cleaned = selection
     .replace(/^avoid\s+/i, "")
@@ -1026,8 +1050,15 @@ function extractThreshold(selection: string): number {
   return match ? parseFloat(match[1]) : 1;
 }
 
-function countPlayerStat(boxscore: any, playerName: string, stat: string): number {
-  if (!boxscore?.teams) return 0;
+/**
+ * Returns the player's batting stat from the box score, or NULL when the
+ * player is not present in the box score at all (DNP, late scratch, trade,
+ * or a name that doesn't match). NULL must be handled as a push/void by the
+ * caller — it is NOT the same as a real 0 (played, didn't hit). Returning 0
+ * here previously caused scratched players to be graded as a fabricated LOSS.
+ */
+export function countPlayerStat(boxscore: any, playerName: string, stat: string): number | null {
+  if (!boxscore?.teams) return null;
   const nameLower = playerName.toLowerCase();
 
   for (const side of ["away", "home"]) {
@@ -1040,11 +1071,14 @@ function countPlayerStat(boxscore: any, playerName: string, stat: string): numbe
       if (!fullName) continue;
 
       if (fullName === nameLower || fullName.endsWith(" " + nameLower)) {
+        // Player IS in the box score. A missing stat key means the stat was
+        // 0 for a player who actually appeared — that's a real 0, not a DNP.
         const statValue = p?.stats?.batting?.[stat];
         return typeof statValue === "number" ? statValue : 0;
       }
     }
   }
 
-  return 0;
+  // Player not found anywhere in the box score → cannot honestly grade.
+  return null;
 }

@@ -39,7 +39,34 @@ export function isMlbLiveStatus(status: unknown): boolean {
   );
 }
 
+/**
+ * A game that ended WITHOUT being played to a valid, gradeable result:
+ * postponed, suspended (mid-suspension), cancelled, or forfeited. MLB
+ * frequently reports abstractGameState="Final" alongside detailedState=
+ * "Postponed" (codedGameState "D"), so these would otherwise slip past
+ * isMlbFinalStatusText, hit an empty/partial box score, and grade every
+ * player prop as a LOSS. They must NOT be treated as final — the pick
+ * stays pending until the game is actually replayed/resumed to completion.
+ *
+ * Note: a suspended game that later RESUMES and completes reports
+ * detailedState="Final" (not "Suspended"), so it correctly grades then.
+ */
+export function isMlbAbandonedStatus(status: unknown): boolean {
+  const text = statusText(status).toLowerCase();
+  return (
+    text.includes("postponed") ||
+    text.includes("suspended") ||
+    text.includes("cancelled") ||
+    text.includes("canceled") ||
+    text.includes("forfeit")
+  );
+}
+
 export function isMlbFinalStatusText(status: unknown): boolean {
+  // Postponed/suspended/cancelled/forfeited games are terminal but NOT
+  // "final and played" — never grade off them (see isMlbAbandonedStatus).
+  if (isMlbAbandonedStatus(status)) return false;
+
   const raw = statusText(status);
   const text = raw.toLowerCase();
   const tokens = raw.split(/\s+/).map((token) => token.toUpperCase());
