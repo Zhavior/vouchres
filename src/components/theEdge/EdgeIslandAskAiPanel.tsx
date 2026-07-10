@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { BrainCircuit, Sparkles } from "lucide-react";
 import type { CreatorProofProfile, Parlay } from "../../types";
 import { useVouchAiChat } from "../../hooks/useVouchAiChat";
@@ -33,10 +34,28 @@ export default function EdgeIslandAskAiPanel({
   onSectionChange,
   onClose,
 }: Props) {
+  const [edgeContextPrompt, setEdgeContextPrompt] = useState("");
+
   const navigate = (section: string) => {
     onSectionChange?.(section);
     onClose?.();
   };
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const custom = event as CustomEvent<{ prompt?: string }>;
+
+      if (custom.detail?.prompt) {
+        setEdgeContextPrompt(custom.detail.prompt);
+      }
+    };
+
+    window.addEventListener("vouch-ai-context", handler);
+
+    return () => {
+      window.removeEventListener("vouch-ai-context", handler);
+    };
+  }, []);
 
   const chat = useVouchAiChat({
     profile,
@@ -60,7 +79,13 @@ export default function EdgeIslandAskAiPanel({
         </div>
       </div>
 
-      <VouchAiChatSurface variant="island" profile={profile} onSectionChange={navigate} chat={chat} />
+      <VouchAiChatSurface
+        variant="island"
+        profile={profile}
+        onSectionChange={navigate}
+        chat={chat}
+        initialPrompt={edgeContextPrompt}
+/>
     </div>
   );
 }
