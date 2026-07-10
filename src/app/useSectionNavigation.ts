@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
+import { useState, useEffect, useRef, useTransition, useCallback, useMemo } from 'react';
 import {
   DEV_BYPASS_AUTH,
   PUBLIC_SECTIONS,
@@ -12,7 +12,7 @@ import {
   requiresLogin,
   isPublicFrontPage,
 } from './sectionNavigation';
-import { persistAuthSession, supabase } from '../lib/supabaseClient';
+import { persistAuthSession, supabase, onAuthStateChange } from '../lib/supabaseClient';
 
 export function useSectionNavigation() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
@@ -37,6 +37,7 @@ export function useSectionNavigation() {
     return resolveAuthenticatedSection(raw);
   });
   const activeSectionRef = useRef(activeSection);
+  const [sessionRevision, setSessionRevision] = useState(0);
   const [loggingOut, setLoggingOut] = useState(false);
   const [isPendingRoute, startTransition] = useTransition();
 
@@ -124,10 +125,20 @@ export function useSectionNavigation() {
     setLoggingOut(true);
     window.history.replaceState(null, '', '/');
     commitSection('vouchedge_intro');
+    setSessionRevision((n) => n + 1);
     window.setTimeout(() => {
       setLoggingOut(false);
     }, 900);
   }, [commitSection]);
+
+  useEffect(() => {
+    const { data } = onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setSessionRevision((n) => n + 1);
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     activeSectionRef.current = activeSection;
@@ -159,7 +170,7 @@ export function useSectionNavigation() {
     };
   }, []);
 
-  const isLoggedIn = hasRealAuthToken();
+  const isLoggedIn = useMemo(() => hasRealAuthToken(), [sessionRevision]);
   const isPublicFrontPageView = isPublicFrontPage(activeSection, isLoggedIn);
   const showGlobalAppChrome = !isPublicFrontPageView;
 

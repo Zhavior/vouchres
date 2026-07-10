@@ -373,7 +373,11 @@ export default function LandingLiveGamesCenter() {
               <p className={`${Z8_LABEL} text-vouch-cyan`}>HR Board Spotlight</p>
               <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Top 3 today</span>
             </div>
-            {hrQuery.isLoading ? <HrCardsPlaceholder /> : <HrSpotlightRow {...spotlight} />}
+            {hrQuery.isLoading && !hrQuery.data ? (
+              <HrCardsPlaceholder />
+            ) : (
+              <HrSpotlightRow {...spotlight} />
+            )}
           </div>
         </div>
 

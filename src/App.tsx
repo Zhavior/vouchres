@@ -1,14 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
 import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import { queryKeys } from './hooks/queries/queryKeys';
 import { vouchedgeApi } from './api/vouchedgeApi';
+import VouchEdgeTerminalPage from './pages/VouchEdgeTerminalPage';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
-const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
@@ -56,9 +55,7 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
             <div id="inner-view-slot">
-              <Suspense fallback={<RouteFallback />}>
-                <VouchEdgeTerminalPage onAuthed={onAuthed} />
-              </Suspense>
+              <VouchEdgeTerminalPage onAuthed={onAuthed} />
             </div>
           </div>
         </div>
@@ -69,10 +66,13 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 
 export default function App() {
   const navigation = useSectionNavigation();
+  const showPublicLanding =
+    (!navigation.isLoggedIn || navigation.loggingOut)
+    && !LEGACY_LANDING_SECTIONS.has(navigation.activeSection);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!navigation.isLoggedIn && !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) ? (
+      {showPublicLanding ? (
         <PublicLanding onAuthed={navigation.handleLoginSuccess} />
       ) : (
         <Suspense fallback={<RouteFallback />}>
