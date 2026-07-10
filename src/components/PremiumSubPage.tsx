@@ -210,7 +210,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                   <span className="text-white/40 text-xs">/ Month</span>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed pt-1">
-                  Unlock all Pro analytics labs, verification & advanced graphs. Locked-in beta price — won't increase later.
+                  Unlock Vouch AI intelligence, Featured Edge analysis, all Pro Labs, advanced graphs, and matchup research. Locked-in beta price — won't increase later.
                 </p>
               </div>
 
@@ -222,15 +222,15 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>All 4 Pro Labs: Live Game, Player Edge, Team Matchup, Pro Graphs</span>
+                  <span>All Pro Intelligence Labs: Player Edge, Team Matchup, Pro Graphs, and Live Game research</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>Real-time signal graphs & confidence meters</span>
+                  <span>Real-time signal graphs, confidence meters, and Vouch AI explanations</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-vouch-emerald shrink-0 mt-0.5" />
-                  <span>1.5x feed reach algorithm boost</span>
+                  <span>Featured Edge insights, matchup intelligence, and player tracking alerts</span>
                 </div>
               </div>
             </div>
