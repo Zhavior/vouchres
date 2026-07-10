@@ -10,7 +10,7 @@ type AppNavProps = {
 
 export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavProps) {
   return (
-    <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:bottom-8 md:right-8 md:gap-0">
+    <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:hidden">
       <button
         type="button"
         onClick={() => onNavigate('feed')}
@@ -71,9 +71,9 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
         onClick={onOpenEdgeIsland}
         aria-label="Open The Edge Island"
         title="The Edge Island"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full"
       >
-        <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
+        <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4" />
       </button>
     </div>
   );
