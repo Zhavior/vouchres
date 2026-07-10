@@ -121,11 +121,11 @@ export const StatLeaderboardTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[hsl(var(--ve-border)/0.5)]">
-      <table className="w-full text-left border-collapse">
+    <div className="ve-stat-table-wrap overflow-x-auto rounded-xl border border-white/10 bg-[#0a0e14]">
+      <table className="w-full min-w-[640px] border-collapse text-left">
         <thead>
-          <tr className="bg-[hsl(var(--ve-bg-deep)/0.9)] border-b border-[hsl(var(--ve-border)/0.5)]">
-            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))] w-8">#</th>
+          <tr className="border-b border-white/10 bg-[#0d1219]">
+            <th className="w-8 px-3 py-2.5 font-mono text-[9px] font-bold uppercase tracking-widest text-white/35">#</th>
             {cols.map(col => {
               const sortable = col.key in SORTABLE;
               return (
@@ -135,8 +135,8 @@ export const StatLeaderboardTable: React.FC<Props> = ({
                   aria-sort={ariaSortAttr(col.key)}
                   style={{ minWidth: col.width ?? 80 }}
                   className={[
-                    'px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]',
-                    sortable ? 'cursor-pointer hover:text-[hsl(var(--ve-text-primary))] select-none' : '',
+                    'px-3 py-2.5 font-mono text-[9px] font-bold uppercase tracking-widest text-white/35',
+                    sortable ? 'cursor-pointer select-none hover:text-white/70' : '',
                   ].join(' ')}
                   onClick={() => handleHeaderClick(col.key)}
                 >
@@ -157,12 +157,11 @@ export const StatLeaderboardTable: React.FC<Props> = ({
               key={row.stableId}
               onClick={() => onSelect(row)}
               className={[
-                'border-b border-[hsl(var(--ve-border)/0.25)] cursor-pointer',
-                'hover:bg-[hsl(var(--ve-surface-raised)/0.5)] transition-colors duration-[var(--ve-duration-fast)]',
-                i % 2 === 0 ? '' : 'bg-[hsl(var(--ve-bg-deep)/0.3)]',
+                'cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.03]',
+                i % 2 === 1 ? 'bg-black/15' : '',
               ].join(' ')}
             >
-              <td className="px-3 py-2.5 text-xs text-[hsl(var(--ve-text-muted))]">{i + 1}</td>
+              <td className="px-3 py-2.5 text-xs text-white/35">{i + 1}</td>
               {cols.map(col => (
                 <td key={col.key} className="px-3 py-2.5">
                   {formatCell(col.key, row, statType)}
