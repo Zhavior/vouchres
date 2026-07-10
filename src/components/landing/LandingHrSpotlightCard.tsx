@@ -50,16 +50,50 @@ function topStats(player: HrWatchRow): Array<{ label: string; value: number }> {
     .slice(0, 3);
 }
 
-function TeamMark({ name }: { name: string }) {
+function TeamMark({ name, size = 16 }: { name: string; size?: number }) {
   const logo = logoByTeamName(name);
   if (logo) {
-    return <img src={logo} alt="" className="h-4 w-4 object-contain" loading="lazy" decoding="async" />;
+    return <img src={logo} alt="" className="object-contain" style={{ width: size, height: size }} loading="lazy" decoding="async" />;
   }
   return <span className="font-mono text-[9px] font-bold text-white/50">{name.slice(0, 3).toUpperCase()}</span>;
 }
 
-export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow }) {
+function PlayerHeadshot({
+  name,
+  url,
+  size = 'md',
+}: {
+  name: string;
+  url: string | null;
+  size?: 'md' | 'sm';
+}) {
   const [imgError, setImgError] = useState(false);
+  const dim = size === 'md' ? 'h-14 w-14' : 'h-11 w-11';
+  const text = size === 'md' ? 'text-sm' : 'text-xs';
+
+  if (url && !imgError) {
+    return (
+      <img
+        src={url}
+        alt=""
+        width={56}
+        height={56}
+        loading="lazy"
+        decoding="async"
+        onError={() => setImgError(true)}
+        className={`ve-landing-player-face ${dim} shrink-0 rounded-lg border border-white/12 bg-[#151b24] object-cover`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${dim} flex shrink-0 items-center justify-center rounded-lg border border-white/12 bg-[#151b24] font-mono ${text} font-black text-white/35`}>
+      {initials(name)}
+    </div>
+  );
+}
+
+export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow }) {
   const tier = tierStyle(player.hrScore);
   const stats = topStats(player);
   const isOfficial = player.truthStatus === 'official';
@@ -67,30 +101,36 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
   const vouchEdge = player.vouchScore;
   const dataConf = player.dataConfidence;
   const topReason = player.reasons?.[0];
+  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
 
   return (
     <article className="ve-landing-hr-card overflow-hidden rounded-xl border border-white/12 bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-      <div className="relative h-28 overflow-hidden border-b border-white/8 bg-[#111820]">
-        {player.headshotUrl && !imgError ? (
-          <img
-            src={player.headshotUrl}
-            alt=""
-            width={320}
-            height={320}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImgError(true)}
-            className="ve-landing-hr-headshot absolute inset-0 h-full w-full object-cover"
-          />
+      <div className="relative h-24 overflow-hidden border-b border-white/8 bg-[#111820]">
+        {teamLogo ? (
+          <>
+            <img
+              src={teamLogo}
+              alt=""
+              className="ve-landing-team-header-logo pointer-events-none absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-[42%] object-contain opacity-[0.22]"
+              loading="lazy"
+              decoding="async"
+            />
+            <img
+              src={teamLogo}
+              alt=""
+              className="pointer-events-none absolute bottom-2 left-3 h-10 w-10 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]"
+              loading="lazy"
+              decoding="async"
+            />
+          </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[#151b24] font-mono text-2xl font-black text-white/35">
-            {initials(player.playerName)}
-          </div>
+          <div className="absolute bottom-2 left-3 font-mono text-lg font-black text-white/25">{player.team.slice(0, 3).toUpperCase()}</div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/55 to-transparent" aria-hidden="true" />
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/40 to-transparent" aria-hidden="true" />
 
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 px-3 pb-2.5">
-          <div className="min-w-0">
+          <div className="min-w-0 pl-11">
             <p className="truncate text-sm font-bold text-white">{player.playerName}</p>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/55">
               <TeamMark name={player.team} />
@@ -109,31 +149,41 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
         </div>
 
         {player.rank != null && (
-          <span className="absolute left-3 top-3 rounded border border-white/15 bg-black/70 px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/70">
+          <span className="absolute right-3 top-3 rounded border border-white/15 bg-black/70 px-1.5 py-0.5 font-mono text-[8px] font-bold text-white/70">
             #{player.rank}
           </span>
         )}
       </div>
 
       <div className="flex flex-col gap-3 p-3.5">
-        {player.pitcherName && (
-          <p className="truncate font-mono text-[10px] uppercase tracking-wide text-white/40">vs {player.pitcherName}</p>
-        )}
+        <div className="flex items-start gap-3 rounded-lg border border-white/8 bg-[#0d1219] p-2.5">
+          <PlayerHeadshot name={player.playerName} url={player.headshotUrl} />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide ${
-              isOfficial
-                ? 'border-white/15 bg-white/5 text-white/70'
-                : 'border-amber-500/25 bg-amber-500/8 text-amber-200/85'
-            }`}
-          >
-            {isOfficial ? <ShieldCheck size={11} /> : <ShieldQuestion size={11} />}
-            {isOfficial ? 'Confirmed lineup' : 'Preview only'}
-          </span>
-          {player.gameTime && (
-            <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-white/35">{player.gameTime}</span>
-          )}
+          <div className="min-w-0 flex-1 space-y-2">
+            {player.pitcherName && (
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="truncate font-mono text-[10px] uppercase tracking-wide text-white/50">
+                  vs {player.pitcherName}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide ${
+                  isOfficial
+                    ? 'border-white/15 bg-white/5 text-white/70'
+                    : 'border-amber-500/25 bg-amber-500/8 text-amber-200/85'
+                }`}
+              >
+                {isOfficial ? <ShieldCheck size={11} /> : <ShieldQuestion size={11} />}
+                {isOfficial ? 'Confirmed lineup' : 'Preview only'}
+              </span>
+              {player.gameTime && (
+                <span className="font-mono text-[9px] uppercase tracking-wider text-white/35">{player.gameTime}</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {stats.length > 0 && (
@@ -175,7 +225,6 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
             <button
               type="button"
               className="ve-landing-vouch-action mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/75 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
-              aria-describedby={`vouch-tip-${player.stableId}`}
             >
               <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/20 text-[9px]">V</span>
               Vouch this pick
