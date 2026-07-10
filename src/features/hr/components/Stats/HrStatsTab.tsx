@@ -96,18 +96,6 @@ const ResultDot: React.FC<{ hrs: number }> = ({ hrs }) => (
   />
 );
 
-function compositeScore(layers: LayerRankRow[], fallback: number) {
-  let sum = 0;
-  let total = 0;
-  for (const l of layers) {
-    if (l.value != null && l.weight > 0) {
-      sum += l.value * l.weight;
-      total += l.weight;
-    }
-  }
-  return total > 0 ? Math.round(sum / total) : fallback;
-}
-
 export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) => {
   const { logs: realLog, state: logState } = useRealGameLog(player.playerId, true);
   const layers = useMemo(() => getLayerRows(player), [player]);
@@ -120,7 +108,6 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
     () => gamesAgainstOpponent(realLog ?? [], player.opponent, 5),
     [realLog, player.opponent],
   );
-  const composite = useMemo(() => compositeScore(layers, player.hrScore), [layers, player.hrScore]);
   const bvpCareer = useMemo(() => bvpCareerTotals(bvpLogs), [bvpLogs]);
 
   const formHRs = formLogs.filter((g) => g.hrs > 0).length;
@@ -131,31 +118,12 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
 
   return (
     <div className="ve-hr-drawer flex flex-col gap-6 pb-4">
-      {/* Score overview */}
-      <div className="ve-hr-chart-panel">
-        <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Score Breakdown</p>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {[
-            { label: 'Composite', value: composite, color: '#fbbf24' },
-            { label: 'Power', value: player.hitterPower ?? 0, color: '#22d3ee' },
-            { label: 'Pitcher', value: player.pitcherVulnerability ?? 0, color: '#fb7185' },
-            { label: 'Form', value: player.recentForm ?? 0, color: '#34d399' },
-            { label: 'Edge', value: player.vouchScore ?? 0, color: '#818cf8' },
-          ].map((s) => (
-            <div key={s.label} className="ve-hr-stat-chip">
-              <span className="ve-hr-stat-chip__value" style={{ color: s.color }}>{Math.round(s.value)}</span>
-              <span className="ve-hr-stat-chip__label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Layer radar + horizontal */}
+      {/* Layer charts — deep dive lives here, not on Overview */}
       <div>
         <SectionHeader
-          icon={<BarChart2 className="h-4 w-4 text-cyan-400" />}
-          title="Layer Rankings"
-          subtitle="Recharts radar + bar — real scoring engine values"
+          icon={<BarChart2 className="h-4 w-4 text-slate-400" />}
+          title="Layer model"
+          subtitle="Full 12-layer breakdown with charts"
         />
         <div className="ve-hr-chart-panel mb-3">
           <LayerRadarChart layers={layers} height={240} />

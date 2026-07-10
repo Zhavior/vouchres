@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
-  Zap, BarChart2, Target, Users, Activity, ChevronRight,
+  BarChart2, Target, Users, Activity,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
@@ -37,6 +37,7 @@ import {
   SimulatedBadge,
   type LayerChartRow,
 } from './HrProfileCharts';
+import { HrOverviewDossier } from './HrOverviewDossier';
 import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -223,16 +224,6 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     { id: 'form'     as const, label: 'Recent Form' },
   ];
 
-  // ─── Score arcs for sidebar ───────────────────────────────────────────────
-  const ARCS = [
-    { value: player.hrScore,                label: 'HR Score',   color: tier.color },
-    { value: compositeScore,                  label: 'Composite',  color: '#fbbf24' },
-    { value: player.hitterPower ?? 0,         label: 'Power',      color: '#00F0FF' },
-    { value: player.pitcherVulnerability ?? 0, label: 'Pitcher',   color: '#fb7185' },
-    { value: player.recentForm ?? 0,           label: 'Form',       color: '#00FF94' },
-    { value: player.parkFactor ?? 0,           label: 'Park',       color: '#00F0FF' },
-  ];
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -334,31 +325,23 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 </div>
               </div>
 
-              {/* Score arc grid — desktop sidebar only */}
-              <div className="hidden lg:block px-5 mt-4">
-                <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Score Breakdown</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {ARCS.map(a => (
-                    <Arc key={a.label} value={a.value} color={a.color} label={a.label} size={76} />
-                  ))}
+              {/* Sidebar composite — replaces 6-arc wall */}
+              <div className="ve-hr-sidebar-composite hidden px-5 lg:block">
+                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">Weighted composite</p>
+                <p className="ve-hr-sidebar-composite-score mt-1">{compositeScore}</p>
+                <div className="ve-hr-sidebar-composite-row">
+                  <span>Power <strong>{fmtScore(player.hitterPower)}</strong></span>
+                  <span>Pitcher <strong>{fmtScore(player.pitcherVulnerability)}</strong></span>
+                  <span>Form <strong>{fmtScore(player.recentForm)}</strong></span>
                 </div>
-
-                {/* Vegas edge callout */}
                 {player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null && (() => {
                   const edge = player.hrProbability - player.impliedProbability;
-                  const pos = edge >= 0.02, neg = edge <= -0.02;
+                  const pos = edge >= 0.02;
+                  const neg = edge <= -0.02;
                   return (
-                    <div className="mt-4 rounded-2xl p-3" style={{ background: pos ? 'rgba(0,255,148,0.08)' : neg ? 'rgba(251,113,133,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid hsl(var(--${pos ? 've-success' : neg ? 've-danger' : 've-border'}) / 0.3)` }}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>VouchEdge Signal</p>
-                          <p className="mt-0.5 text-2xl font-black" style={{ color: pos ? '#00FF94' : neg ? '#fb7185' : 'rgba(255,255,255,0.4)' }}>
-                            {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(2)}%
-                          </p>
-                        </div>
-                        <Zap className="h-8 w-8 opacity-15" style={{ color: pos ? '#00FF94' : 'rgba(255,255,255,0.4)' }} />
-                      </div>
-                    </div>
+                    <p className={`mt-3 font-mono text-[11px] ${pos ? 'text-emerald-400/90' : neg ? 'text-rose-400/90' : 'text-white/40'}`}>
+                      Edge {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(1)}%
+                    </p>
                   );
                 })()}
               </div>
@@ -426,92 +409,12 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
       <>
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeSection === 'overview' && (
-          <div className="flex flex-col gap-6">
-
-            {/* Mobile score arcs */}
-            <div className="lg:hidden rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Score Breakdown</p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {ARCS.map(a => (
-                  <Arc key={a.label} value={a.value} color={a.color} label={a.label} size={72} />
-                ))}
-              </div>
-            </div>
-
-            {/* Key stats — 4-col grid on desktop */}
-            <div>
-              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Key Metrics</p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {[
-                  { label: 'HR Score',       value: fmtScore(player.hrScore),              color: tier.color },
-                  { label: 'Edge Score',      value: fmtScore(player.vouchScore),           color: '#fbbf24' },
-                  { label: 'Model HR%',       value: fmtPct(player.hrProbability),          color: '#00F0FF' },
-                  { label: 'Book Implied',    value: fmtPct(player.impliedProbability),     color: '#00F0FF' },
-                  { label: 'Hitter Power',    value: fmtScore(player.hitterPower),          color: '#00F0FF' },
-                  { label: 'Pitcher Risk',    value: fmtScore(player.pitcherVulnerability), color: '#fb7185' },
-                  { label: 'Park Factor',     value: fmtScore(player.parkFactor),           color: '#00F0FF' },
-                  { label: 'Data Confidence', value: fmtScore(player.dataConfidence),       color: '#00FF94' },
-                ].map(s => (
-                  <div
-                    key={s.label}
-                    className="flex flex-col gap-1.5 rounded-2xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.3)' }}
-                  >
-                    <span className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
-                    <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile Vegas signal */}
-            {player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null && (() => {
-              const edge = player.hrProbability - player.impliedProbability;
-              const pos = edge >= 0.02, neg = edge <= -0.02;
-              return (
-                <div className="lg:hidden rounded-2xl p-4" style={{ background: pos ? 'rgba(0,255,148,0.08)' : neg ? 'rgba(251,113,133,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid hsl(var(--${pos ? 've-success' : neg ? 've-danger' : 've-border'}) / 0.3)` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>VouchEdge Signal</p>
-                      <p className="mt-0.5 text-3xl font-black" style={{ color: pos ? '#00FF94' : neg ? '#fb7185' : 'rgba(255,255,255,0.4)' }}>
-                        {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(2)}%
-                      </p>
-                    </div>
-                    <Zap className="h-10 w-10 opacity-15" style={{ color: pos ? '#00FF94' : 'rgba(255,255,255,0.4)' }} />
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Top signals */}
-            {(player.reasons?.length ?? 0) > 0 && (
-              <div>
-                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Top Signals</p>
-                <div className="flex flex-col gap-2">
-                  {player.reasons!.map((r, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.28)' }}>
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0" style={{ color: tier.color }} />
-                      <span className="text-sm" style={{ color: '#ffffff' }}>{r}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Warnings */}
-            {(player.warnings?.length ?? 0) > 0 && (
-              <div>
-                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: '#fbbf24' }}>⚠️ Warnings</p>
-                <div className="flex flex-col gap-2">
-                  {player.warnings!.map((w, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-xl p-3.5" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
-                      <span className="text-sm" style={{ color: '#fbbf24' }}>{w}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <HrOverviewDossier
+            player={player}
+            formLogs={formLogs}
+            logState={realLogState}
+            variant="full"
+          />
         )}
 
         {/* ── 12 LAYERS ──────────────────────────────────────────────────────── */}
