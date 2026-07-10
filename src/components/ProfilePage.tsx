@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Shield, ShieldCheck, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import FeedPostCard from '../social/feed/FeedPostCard';
-import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
-import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
+import { resolveThemeById } from '../lib/themeResolve';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
 import { DeferredBubbleField } from './vouchedge/DeferredBubbleField';
@@ -36,8 +35,9 @@ interface ProfilePageProps {
   onDeletePost?: (postId: string) => void;
   savedParlays?: Parlay[];
   onSectionChange?: (section: string) => void;
-  viewUserId?: string;
+  viewUserId?: string | null;
   onClearViewUser?: () => void;
+  isSelf?: boolean;
 }
 
 export default function ProfilePage({ 
@@ -53,6 +53,9 @@ export default function ProfilePage({
   onDeletePost,
   savedParlays = [],
   onSectionChange,
+  viewUserId,
+  onClearViewUser,
+  isSelf = true,
 }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -66,33 +69,8 @@ export default function ProfilePage({
   });
 
   const getActiveThemeData = () => {
-    const themeToFind = profile.profileThemeId || profile.activeTheme || 'cyber-blue';
-    const found = THEME_REGISTRY.find(t => t.id === themeToFind);
-    if (!found) {
-      try {
-        const stored = localStorage.getItem('vouchedge_market_themes');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          const match = parsed.find((item: any) => item.id === themeToFind);
-          if (match) {
-            return {
-              id: match.id,
-              name: match.name,
-              category: match.category,
-              badge: match.badge || '💎 AI_MINT',
-              avatarAnimationClass: match.avatarAnimationClass || 'animate-pulse border-sky-400 shadow-md',
-              cardStyle: match.cardStyle || 'bg-ve-storm border-slate-800',
-              glowColor: match.glowColor || 'from-sky-500 to-indigo-500',
-              particleDemo: match.particleDemo || ['✨', '💎'],
-              fontFamily: match.fontFamily || 'font-mono',
-              coverBg: match.coverBg || 'from-indigo-650/40 to-slate-950/40',
-              customAIPhrase: match.customAIPhrase || '🚀 CUSTOM THEME REVENUE INSTANCE LIVE'
-            };
-          }
-        }
-      } catch (e) {}
-    }
-    return found;
+    const themeToFind = profile.profileThemeId || profile.appThemeId || profile.activeTheme || 'cyber-blue';
+    return resolveThemeById(themeToFind);
   };
 
   const activeThemeData = getActiveThemeData();
@@ -154,8 +132,23 @@ export default function ProfilePage({
   }
 
   return (
-    <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
       <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 max-w-[1120px] mx-auto overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="profile-details-view">
+        {!isSelf && viewUserId && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-vouch-cyan/85">
+              Viewing @{profile.username} — their theme is live across your UI
+            </p>
+            {onClearViewUser && (
+              <button
+                type="button"
+                onClick={onClearViewUser}
+                className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-widest text-white/55 hover:text-white"
+              >
+                Back to you
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
@@ -313,7 +306,7 @@ export default function ProfilePage({
                   )}
                 </div>
 
-                {!isEditing ? (
+                {!isEditing && isSelf ? (
                   <div className="flex items-center gap-2 shrink-0">
                     <VEButton
                       onClick={() => setShowShareModal(true)}
@@ -775,6 +768,5 @@ export default function ProfilePage({
       )}
 
     </div>
-    </ProfileThemeWrapper>
   );
 }

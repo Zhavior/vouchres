@@ -5,6 +5,8 @@ import FadeInMount from '../system/FadeInMount';
 import { useAppShell } from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
+import ProfileThemeWrapper from '../profile/ProfileThemeWrapper';
+import { resolveVisitorProfile, postsForProfile } from '../../lib/resolveVisitorProfile';
 
 const ProAccessGate = lazy(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
@@ -29,11 +31,6 @@ const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
 const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHub'));
 const Leaderboard = lazy(() => import('../Leaderboard'));
 const ThemeStore = lazy(() => import('../ThemeStore'));
-const EpicThemeShowcase = lazy(() =>
-  import('../vouchedge/EpicThemeShowcase').then((module) => ({
-    default: module.EpicThemeShowcase,
-  })),
-);
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('../../pages/LiveGameLabPage'));
 const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
@@ -302,23 +299,18 @@ function MainViewRouter({
           <PremiumShell />
         </LazyRoute>
       );
+    case 'epic_themes':
     case 'themestore':
       if (!canSeeThemeStore) {
         return (
           <LazyRoute>
-            <ProfileShell profileViewUserId={profileViewUserId} />
+            <ProfileShell profileViewUserId={profileViewUserId} navigateSection={navigateSection} />
           </LazyRoute>
         );
       }
       return (
         <LazyRoute>
           <ThemeStoreShell />
-        </LazyRoute>
-      );
-    case 'epic_themes':
-      return (
-        <LazyRoute>
-          <EpicThemeShowcase />
         </LazyRoute>
       );
     case 'subscriber_hub':
@@ -569,23 +561,34 @@ function ProfileShell({
     onAddComment,
   } = useAppCommandStore();
 
+  const { profile: displayProfile, isSelf } = resolveVisitorProfile(profileViewUserId, profile, posts);
+  const visiblePosts = postsForProfile(posts, displayProfile, profileViewUserId, isSelf);
+  const visitorThemeId =
+    displayProfile.profileThemeId ||
+    displayProfile.appThemeId ||
+    displayProfile.activeTheme ||
+    'cyber-blue';
+
   return (
-    <ProfilePage
-      profile={profile}
-      onUpdateProfile={onUpdateProfile}
-      posts={posts}
-      onLikePost={onLikePost}
-      onVouchPost={onVouchPost}
-      onRepostPost={onRepostPost}
-      onSaveVouch={onSaveVouch}
-      savedVouchIds={savedVouchIds}
-      onAddComment={onAddComment}
-      onDeletePost={onDeletePost}
-      savedParlays={savedSlips}
-      viewUserId={profileViewUserId}
-      onClearViewUser={onClearProfileViewUser}
-      onSectionChange={navigateSection}
-    />
+    <ProfileThemeWrapper themeId={visitorThemeId}>
+      <ProfilePage
+        profile={displayProfile}
+        onUpdateProfile={isSelf ? onUpdateProfile : () => {}}
+        posts={visiblePosts}
+        onLikePost={onLikePost}
+        onVouchPost={onVouchPost}
+        onRepostPost={onRepostPost}
+        onSaveVouch={onSaveVouch}
+        savedVouchIds={savedVouchIds}
+        onAddComment={onAddComment}
+        onDeletePost={onDeletePost}
+        savedParlays={savedSlips}
+        viewUserId={profileViewUserId}
+        onClearViewUser={onClearProfileViewUser}
+        onSectionChange={navigateSection}
+        isSelf={isSelf}
+      />
+    </ProfileThemeWrapper>
   );
 }
 

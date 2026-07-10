@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CreatorProofProfile } from '../../types';
-import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../../theme/themeRegistry';
+import { BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../../theme/themeRegistry';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
 import { canCustomizeProfileHeader } from '../pro/proAccessUtils';
+import { resolveThemeById, resolveThemeByIdOptional } from '../../lib/themeResolve';
 
 interface ThemeContextType {
   currentAppTheme: VisualTheme;
@@ -12,6 +13,8 @@ interface ThemeContextType {
   overrideTheme: VisualTheme | null;
   setAppTheme: (themeId: string) => void;
   setProfileTheme: (themeId: string) => void;
+  /** Equip one theme for the whole app + public profile visit overlay. */
+  equipThemeEverywhere: (themeId: string) => void;
   setBorder: (borderId: string | null) => void;
   setOverrideTheme: (themeId: string | null) => void;
   unlockedThemes: string[];
@@ -105,24 +108,31 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   const unlockedBorders = profile.unlockedBorderIds || ['default-cyber-ring'];
 
   // Resolve Themes
-  const currentAppTheme = THEME_REGISTRY.find(t => t.id === (profile.appThemeId || profile.activeTheme)) || THEME_REGISTRY[0];
-  const currentProfileTheme = THEME_REGISTRY.find(t => t.id === profile.profileThemeId) || currentAppTheme;
+  const currentAppTheme = resolveThemeById(profile.appThemeId || profile.activeTheme);
+  const currentProfileTheme = resolveThemeById(profile.profileThemeId || profile.appThemeId || profile.activeTheme);
   const currentBorder = BORDER_REGISTRY.find(b => b.id === profile.profileBorderId) || BORDER_REGISTRY[0];
 
-  // Resolve Active Theme
-  const overrideTheme = overrideThemeId ? (THEME_REGISTRY.find(t => t.id === overrideThemeId) || null) : null;
+  const overrideTheme = overrideThemeId ? resolveThemeByIdOptional(overrideThemeId) : null;
   const activeTheme = overrideTheme || currentAppTheme;
 
   const setAppTheme = (themeId: string) => {
     onUpdateProfile({ 
       appThemeId: themeId,
-      activeTheme: themeId // Maintain backward compatibility
+      activeTheme: themeId
     });
   };
 
   const setProfileTheme = (themeId: string) => {
     if (!canCustomizeProfileHeader(profile)) return;
     onUpdateProfile({ profileThemeId: themeId });
+  };
+
+  const equipThemeEverywhere = (themeId: string) => {
+    onUpdateProfile({
+      appThemeId: themeId,
+      activeTheme: themeId,
+      profileThemeId: themeId,
+    });
   };
 
   const setBorder = (borderId: string | null) => {
@@ -191,6 +201,7 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
       overrideTheme,
       setAppTheme,
       setProfileTheme,
+      equipThemeEverywhere,
       setBorder,
       setOverrideTheme,
       unlockedThemes,

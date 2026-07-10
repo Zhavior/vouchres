@@ -1,33 +1,20 @@
 import React, { useState } from 'react';
-import { apiClient } from '../lib/apiClient';
 import {
-  Sparkles,
   ShoppingBag,
   CheckCircle,
   Shield,
-  Flame,
-  Star,
-  Award,
-  Zap,
-  Heart,
-  RefreshCw,
-  DollarSign,
   Lock,
-  User,
   Layout,
   Eye,
-  BadgeCheck,
   Grid,
   Laptop,
-  Video
+  DollarSign,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../types';
 import { useTheme } from './theme/ThemeProvider';
-import { THEME_REGISTRY, BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
+import { BORDER_REGISTRY, VisualTheme, ProfileBorder } from '../theme/themeRegistry';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
-import { getFounderPointsLabel } from "../lib/founderAccess";
-import { canCustomizeProfileHeader } from './pro/proAccessUtils';
-import { useEntitlements } from '../features/hr/hooks/useEntitlements';
+import { allAvailableThemes } from '../lib/themeResolve';
 
 interface ThemeStoreProps {
   profile: CreatorProofProfile;
@@ -39,8 +26,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     currentAppTheme,
     currentProfileTheme,
     currentBorder,
-    setAppTheme,
-    setProfileTheme,
+    equipThemeEverywhere,
     setBorder,
     unlockedThemes,
     unlockedBorders,
@@ -52,48 +38,13 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     setUserCredits
   } = useTheme();
 
-  const entitlements = useEntitlements();
-  const canEditProfileHeader = canCustomizeProfileHeader(profile, {
-    isPro: entitlements.isPro,
-    isStaff: entitlements.isStaff,
-  });
-
-  const [activeTab, setActiveTab] = useState<'locker' | 'shop' | 'custom'>('locker');
+  const [activeTab, setActiveTab] = useState<'locker' | 'shop'>('shop');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [previewThemeId, setPreviewThemeId] = useState<string>(currentAppTheme.id);
   const [previewBorderId, setPreviewBorderId] = useState<string>(currentBorder?.id || 'default-cyber-ring');
 
-  // Dynamic community/marketplace themes
-  const [marketThemes, setMarketThemes] = useState<VisualTheme[]>(() => {
-    const cached = localStorage.getItem('vouchedge_market_themes');
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch (e) {
-        // Fallback
-      }
-    }
-    return [];
-  });
-
-  // Combine standard and minted themes
-  const allThemes = [...THEME_REGISTRY, ...marketThemes];
-
-  // Custom theme minting form states
-  const [mName, setMName] = useState('');
-  const [mDesc, setMDesc] = useState('');
-  const [mPrice, setMPrice] = useState(250);
-  const [mCategory, setMCategory] = useState<string>('Anime');
-  const [mBadge, setMBadge] = useState('🔥 MONETIZED');
-  const [mBorderColor, setMBorderColor] = useState('border-sky-500');
-  const [mParticleDemo, setMParticleDemo] = useState('🐾,⚡,💎,🐱');
-  const [mGlowGradient, setMGlowGradient] = useState('from-sky-500 to-indigo-500');
-
-  // AI Generation states
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
+  const allThemes = allAvailableThemes();
 
   const triggerSuccess = (msg: string) => {
     setSuccessMsg(msg);
@@ -117,8 +68,9 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     const nextCredits = userCredits - theme.cost;
     setUserCredits(nextCredits);
     unlockTheme(theme.id);
+    equipThemeEverywhere(theme.id);
     setPreviewThemeId(theme.id);
-    triggerSuccess(`💎 Successfully purchased "${theme.name}"! You can now equip it as your App or Profile theme in your Locker tab.`);
+    triggerSuccess(`💎 "${theme.name}" unlocked and equipped — your whole UI just changed. Visitors to your profile will see it too.`);
   };
 
   const handleBuyBorder = (border: ProfileBorder) => {
@@ -131,139 +83,15 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
     const nextCredits = userCredits - cost;
     setUserCredits(nextCredits);
     unlockBorder(border.id);
+    setBorder(border.id);
     setPreviewBorderId(border.id);
-    triggerSuccess(`🛡️ Successfully purchased "${border.name}" avatar frame! Equip it instantly in your Locker tab.`);
-  };
-
-  const handleGenerateAITheme = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiPrompt.trim()) return;
-
-    setIsGeneratingAI(true);
-    setAiError(null);
-
-    try {
-      const data = await apiClient.post<{ status?: string; theme?: VisualTheme; error?: string }>(
-        '/api/ai/generate-theme',
-        { prompt: aiPrompt.trim() },
-      );
-
-      if (data.status === 'success' || data.status === 'simulated') {
-        const generatedTheme: VisualTheme = {
-          ...data.theme,
-          category: 'Flex',
-          rarity: 'epic',
-          background: 'bg-ve-obsidian',
-          backgroundPattern: 'grid',
-          cardStyle: 'bg-ve-storm/90 border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
-          borderStyle: 'border-cyan-400/30',
-          glowStyle: 'shadow-cyan-400/15',
-          buttonStyle: 'bg-cyan-400 text-slate-950 font-black',
-          badgeStyle: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/40',
-          sidebarStyle: 'bg-ve-obsidian border-r border-cyan-400/10',
-          vouchCardStyle: 'bg-ve-storm border-cyan-400/30',
-          parlayCardStyle: 'bg-ve-storm border-cyan-400/30',
-          resultCardStyle: 'bg-ve-storm border-cyan-400/20',
-          profileBorderStyle: 'border-cyan-400',
-          animationStyle: 'transition-all duration-300',
-          shareCardStyle: 'from-cyan-950 to-black',
-          isPremium: true,
-          isEarned: false,
-          isSeasonal: false,
-          cost: 250,
-          pageBg: 'bg-ve-obsidian',
-          fontFamily: 'font-sans',
-          coverBg: 'from-cyan-500/20 to-indigo-600/20',
-          accentText: 'text-cyan-400'
-        };
-        
-        const updatedMarketList = [generatedTheme, ...marketThemes];
-        setMarketThemes(updatedMarketList);
-        localStorage.setItem('vouchedge_market_themes', JSON.stringify(updatedMarketList));
-
-        // Auto unlock
-        unlockTheme(generatedTheme.id);
-        setAppTheme(generatedTheme.id);
-        setPreviewThemeId(generatedTheme.id);
-
-        setAiPrompt('');
-        triggerSuccess(`🔮 Beautiful! Gemini 3.5 AI has synthesized, coded, and unlocked "${generatedTheme.name}" inside your locker!`);
-      } else {
-        setAiError(data.error || 'The Gemini AI engine had trouble synthesizing this visual styling combination. Please try an alternate prompt!');
-      }
-    } catch (err: any) {
-      setAiError(err.message || 'Failure reaching Google AI Studio theme generation cluster.');
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
-
-  const handleMintTheme = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mName.trim() || !mDesc.trim()) {
-      alert("❌ Please provide a name and description for your custom theme!");
-      return;
-    }
-
-    const newId = `minted_theme_${Date.now()}`;
-    const cleanParticles = mParticleDemo.split(',').map(p => p.trim()).filter(Boolean);
-
-    const newTheme: VisualTheme = {
-      id: newId,
-      name: mName,
-      category: 'Flex',
-      rarity: 'epic',
-      description: mDesc,
-      cost: mPrice,
-      badge: mBadge.toUpperCase(),
-      background: 'bg-ve-obsidian',
-      backgroundPattern: 'grid',
-      cardStyle: 'bg-ve-graphite border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] backdrop-blur-md',
-      borderStyle: 'border-cyan-500/30',
-      glowStyle: 'shadow-cyan-500/10',
-      buttonStyle: 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black',
-      badgeStyle: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/45',
-      sidebarStyle: 'bg-ve-graphite border-r border-cyan-500/10',
-      vouchCardStyle: 'bg-ve-storm border-cyan-500/30',
-      parlayCardStyle: 'bg-ve-storm border-cyan-500/30',
-      resultCardStyle: 'bg-ve-obsidian border-cyan-500/20',
-      profileBorderStyle: 'border-cyan-500',
-      animationStyle: 'transition-all duration-300',
-      shareCardStyle: 'from-cyan-950 to-black',
-      unlockCondition: 'Minted custom design listing',
-      isPremium: true,
-      isEarned: false,
-      isSeasonal: false,
-      avatarAnimationClass: `${mBorderColor} animate-pulse shadow-md`,
-      particleDemo: cleanParticles.length > 0 ? cleanParticles : ['✨', '💎'],
-      fontFamily: 'font-sans',
-      coverBg: 'from-cyan-500/20 to-indigo-600/10',
-      pageBg: 'bg-ve-obsidian',
-      accentText: 'text-cyan-400'
-    };
-
-    const updatedMarketList = [newTheme, ...marketThemes];
-    setMarketThemes(updatedMarketList);
-    localStorage.setItem('vouchedge_market_themes', JSON.stringify(updatedMarketList));
-
-    // Instantly unlock
-    unlockTheme(newId);
-    setAppTheme(newId);
-    setPreviewThemeId(newId);
-
-    setMName('');
-    setMDesc('');
-    setMPrice(250);
-    setMBadge('🔥 MY_MINT');
-
-    triggerSuccess(`🚀 Custom theme "${newTheme.name}" successfully minted & added to locker! Payouts listed to community.`);
+    triggerSuccess(`🛡️ "${border.name}" equipped on your avatar frame.`);
   };
 
   const handleResetToDefault = () => {
-    setAppTheme('cyber-blue');
-    setProfileTheme('cyber-blue');
+    equipThemeEverywhere('cyber-blue');
     setBorder('default-cyber-ring');
-    triggerSuccess("🌿 Profile and App themes reset to baseline Cyber Blue standard.");
+    triggerSuccess("🌿 Reset to baseline Cyber Blue — app and profile theme restored.");
   };
 
   const selectedPreviewTheme = allThemes.find(t => t.id === previewThemeId) || allThemes[0];
@@ -288,10 +116,10 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">ANIMATED PRESETS</span>
           </div>
           <h2 className="text-2xl font-black text-white/90 uppercase tracking-tight">
-            VouchEdge Theme & Frame Manager
+            VouchEdge Theme Store
           </h2>
           <p className="text-xs text-white/45 max-w-2xl leading-relaxed">
-            Customize your client application interface and configure your public profile identity. Your public profile page temporarily transforms to your selected theme for visiting followers, complete with custom avatar borders, badges, cards, and animations!
+            Buy a theme once — it equips across your whole app instantly. When someone visits your profile, they see your theme across the full UI too.
           </p>
         </div>
 
@@ -332,7 +160,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             }`}
           >
             <Layout className="w-4 h-4" />
-            <span>🎨 My Locker</span>
+            <span>My Locker</span>
           </button>
           
           <button
@@ -344,19 +172,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>🛒 Unlock Store</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('custom')}
-            className={`px-4 py-2 rounded-lg font-black uppercase tracking-wide transition-all flex items-center gap-1.5 ${
-              activeTab === 'custom'
-                ? 'bg-gradient-to-tr from-indigo-600 to-cyan-600 text-white shadow'
-                : 'text-white/45 hover:text-white/80'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>🧬 Custom Lab</span>
+            <span>Theme Store</span>
           </button>
         </div>
 
@@ -462,43 +278,20 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                         </div>
                       </div>
 
-                      <div className="relative z-10 grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => {
-                            setAppTheme(theme.id);
-                            triggerSuccess(`✨ "${theme.name}" equipped globally as your personal App Theme!`);
+                            equipThemeEverywhere(theme.id);
+                            triggerSuccess(`✨ "${theme.name}" equipped across your whole UI and public profile.`);
                           }}
-                          disabled={isAppTheme}
-                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
-                            isAppTheme 
-                              ? 'bg-sky-400/15 border-sky-300/25 text-sky-200 cursor-not-allowed' 
-                              : 'bg-white text-slate-950 border-white/80 hover:bg-slate-100 hover:scale-[1.02]'
+                          disabled={isAppTheme && isProfileTheme}
+                          className={`w-full py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
+                            isAppTheme && isProfileTheme
+                              ? 'bg-cyan-400/15 border-cyan-300/25 text-cyan-200 cursor-not-allowed'
+                              : 'bg-vouch-cyan/15 border-vouch-cyan/35 text-vouch-cyan hover:bg-vouch-cyan hover:text-black hover:scale-[1.02]'
                           }`}
                         >
-                          {isAppTheme ? 'App Active' : 'Set as App'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (!canEditProfileHeader) return;
-                            setProfileTheme(theme.id);
-                            triggerSuccess(`🔮 "${theme.name}" equipped publicly as your Profile Theme!`);
-                          }}
-                          disabled={isProfileTheme || !canEditProfileHeader}
-                          title={!canEditProfileHeader ? 'Upgrade to Gold to customize your profile header' : undefined}
-                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-xl border text-center transition-all ${
-                            !canEditProfileHeader
-                              ? 'bg-black/30 border-white/10 text-white/35 cursor-not-allowed'
-                              : isProfileTheme 
-                              ? 'bg-purple-400/15 border-purple-300/25 text-purple-200 cursor-not-allowed' 
-                              : 'bg-purple-500/15 border-purple-300/25 text-purple-200 hover:bg-purple-500/25 hover:text-white hover:scale-[1.02]'
-                          }`}
-                        >
-                          {!canEditProfileHeader ? (
-                            <span className="inline-flex items-center justify-center gap-1">
-                              <Lock className="w-3 h-3" />
-                              Header Locked
-                            </span>
-                          ) : isProfileTheme ? 'Profile Active' : 'Set as Profile'}
+                          {isAppTheme && isProfileTheme ? 'Equipped Everywhere' : 'Equip Everywhere'}
                         </button>
                       </div>
                     </div>
@@ -779,7 +572,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
                           onClick={() => handleBuyTheme(theme)}
                           className="px-4 py-2.5 bg-white text-slate-950 hover:bg-slate-100 text-[10px] font-black rounded-xl uppercase shadow-xl transition-all hover:scale-105 active:scale-95"
                         >
-                          Unlock theme
+                          Unlock & Equip
                         </button>
                       </div>
                     </div>
@@ -854,227 +647,6 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
         </div>
       )}
 
-      {activeTab === 'custom' && (
-        <div className="space-y-6">
-          
-          {/* AI GEMINI INTERACTIVE EXPERIMENT */}
-          <div className="bg-ve-storm/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-left space-y-4">
-            <h3 className="text-sm font-black text-white/90 uppercase tracking-tight flex items-center gap-1.5">
-              <Sparkles className="w-5 h-5 text-vouch-cyan animate-pulse" />
-              Google AI Studio Custom Theme Synthesizer
-            </h3>
-            <p className="text-xs text-white/45 max-w-3xl leading-relaxed">
-              Connect to our integrated Gemini capper models to synthesize, code, and list a brand-new, bespoke visual theme dynamically. Provide visual mood cues (e.g. "cyberpunk ballpark under storm", "liquid neon gold starfighter"), and watch the AI write the layout classes instantly!
-            </p>
-
-            {aiError && (
-              <div className="p-3 bg-rose-950/40 border border-rose-900/60 text-rose-400 text-xs rounded-xl">
-                ⚠️ {aiError}
-              </div>
-            )}
-
-            <form onSubmit={handleGenerateAITheme} className="flex flex-col sm:flex-row gap-3">
-              <input 
-                type="text"
-                required
-                disabled={isGeneratingAI}
-                placeholder="e.g. Retro arcade theme themed on Boston ballpark under green skies..."
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                className="flex-1 bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-4 py-3.5 rounded-xl focus:outline-none placeholder-slate-650 font-medium"
-              />
-              <button
-                type="submit"
-                disabled={isGeneratingAI || !aiPrompt.trim()}
-                className="py-3.5 px-6 bg-gradient-to-r from-indigo-600 via-indigo-700 to-cyan-600 hover:from-indigo-550 hover:to-cyan-550 text-white font-black text-xs rounded-xl uppercase tracking-wider shadow-lg transition-all disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-2"
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Synthesizing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 text-yellow-300" />
-                    <span>Synthesize Layout</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* CREATOR MONETIZATION & SELLABLE THEME LAUNCHPAD */}
-          <div className="bg-ve-storm/35 backdrop-blur-md rounded-2xl border border-dashed border-white/10 p-6 md:p-8 space-y-6 relative overflow-hidden" id="creator-licensing-launchpad">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-650/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
-              <div className="space-y-1 text-left">
-                <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-[9px] font-mono font-black px-2 py-0.5 rounded-full text-slate-950 uppercase tracking-wider">
-                  CAPPER ROYALTY ENGINE
-                </span>
-                <h3 className="text-lg font-black text-white/90 uppercase tracking-tight flex items-center gap-2">
-                  💎 Sell Your Created Themes
-                </h3>
-                <p className="text-xs text-white/45 max-w-2xl leading-relaxed">
-                  Generate custom cosmetic theme templates. Mint them directly onto the Vouch-ledger to sell to your fans and copy-bettors! Set your own price index and earn an instant <span className="text-emerald-400 font-extrabold">85% custom royalty share</span> on every user download.
-                </p>
-              </div>
-
-              {/* Interactive Seller Stats */}
-              <div className="bg-obsidian-900/80 p-3.5 rounded-xl border border-slate-850 grid grid-cols-2 gap-4 font-mono text-center min-w-[240px] shadow-inner">
-                <div>
-                  <span className="text-[8px] text-white/40 uppercase block font-bold">Total Sales</span>
-                  <span className="text-xs text-emerald-400 font-extrabold">+18,450 pts</span>
-                </div>
-                <div>
-                  <span className="text-[8px] text-white/40 uppercase block font-bold">Royalty Split</span>
-                  <span className="text-xs text-vouch-cyan font-extrabold">85% Creator</span>
-                </div>
-              </div>
-            </div>
-
-            <form onSubmit={handleMintTheme} className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left" id="mint-custom-theme-form">
-              {/* Left panel instructions/inputs */}
-              <div className="lg:col-span-7 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Theme Display Name</label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. Purrfect Golden Slips"
-                      value={mName}
-                      onChange={(e) => setMName(e.target.value)}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Theme Category</label>
-                    <select 
-                      value={mCategory}
-                      onChange={(e) => setMCategory(e.target.value as any)}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-bold"
-                    >
-                      <option value="Anime">Anime Aura</option>
-                      <option value="Cartoon">Retro Cartoon</option>
-                      <option value="Vaporwave">Vaporwave Retro</option>
-                      <option value="Retro">Retro Code</option>
-                      <option value="Specials">Specials & Pets</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Public Listing Description</label>
-                  <textarea 
-                    required
-                    placeholder="Give details of your custom theme design. Describe the background animations, floating micro symbols, and premium avatar frame."
-                    value={mDesc}
-                    onChange={(e) => setMDesc(e.target.value)}
-                    rows={2}
-                    className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium resize-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Sale Price (Credits)</label>
-                    <input 
-                      type="number"
-                      required
-                      min={50}
-                      max={2000}
-                      value={mPrice}
-                      onChange={(e) => setMPrice(parseInt(e.target.value, 10))}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-amber-400 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Badge Label tag</label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. 🐱 SPECIAL"
-                      value={mBadge}
-                      onChange={(e) => setMBadge(e.target.value)}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-black placeholder-slate-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Border Accent Glow Frame</label>
-                    <select 
-                      value={mBorderColor}
-                      onChange={(e) => setMBorderColor(e.target.value)}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/65 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-semibold"
-                    >
-                      <option value="border-dashed border-rose-500">Dashed Cute Pink (Cat-like)</option>
-                      <option value="border-emerald-500 border-2">Sleek Green Matrix</option>
-                      <option value="border-blue-500 border-4">Thick Google Blue</option>
-                      <option value="border-yellow-400">Amber Glow Crown</option>
-                      <option value="border-purple-600 animate-spin">Rainbow Spinner Ring</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-mono tracking-wider font-extrabold text-white/45">Demo Floating Particles (Comma Sep)</label>
-                    <input 
-                      type="text"
-                      placeholder="e.g. 🐱, 🐾, 💎, 🐈"
-                      value={mParticleDemo}
-                      onChange={(e) => setMParticleDemo(e.target.value)}
-                      className="w-full bg-obsidian-900/80 border border-slate-850 focus:border-indigo-500 text-xs text-white/80 px-3 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right panel live revenue payout splits and actions */}
-              <div className="lg:col-span-5 bg-black/25 p-5 rounded-2xl border border-slate-850/80 flex flex-col justify-between gap-6" id="minting-live-calculator-panel">
-                <div className="space-y-4">
-                  <span className="text-[10px] font-mono font-black text-vouch-cyan uppercase tracking-widest block">
-                    ⚡ LIVE LEDGER SPLIT PROJECTIONS
-                  </span>
-
-                  {/* Fee transparent splits visualization */}
-                  <div className="space-y-2 font-mono text-xs">
-                    <div className="p-3 bg-obsidian-900 rounded-xl border border-white/10 space-y-2">
-                      <div className="flex justify-between text-white/45">
-                        <span>Listing Cost:</span>
-                        <span className="text-white/90 font-black">{mPrice} Credits</span>
-                      </div>
-                      <div className="flex justify-between text-rose-505 text-[11px]">
-                        <span>Platform Dev Fee (15%):</span>
-                        <span>-{(mPrice * 0.15).toFixed(0)} Credits</span>
-                      </div>
-                      <div className="flex justify-between text-emerald-400 font-black text-[12.5px] border-t border-slate-850/60 pt-2">
-                        <span>Creator Payout (85%):</span>
-                        <span>+{(mPrice * 0.85).toFixed(0)} Credits</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-obsidian-900/60 rounded-xl border border-white/10 space-y-1.5 text-[10.5px] text-white/45 leading-normal">
-                      <span className="text-[#FBBC05] font-black block uppercase text-[9.5px]">💡 SELLER INSTRUCTIONS:</span>
-                      <p>When user mints a layout, VouchEdge locks your configuration parameters in your web context. Other Bettors inspect your theme and can instantly unlock it via the store. Your credit balance will update dynamically!</p>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 hover:from-amber-450 hover:to-indigo-550 text-white font-black text-xs rounded-xl tracking-wider uppercase shadow-xl transition-all hover:scale-105"
-                >
-                  Mint Custom Theme & List to Marketplace 🪙
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );
