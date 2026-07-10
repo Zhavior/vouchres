@@ -320,7 +320,7 @@ export default function Leaderboard({ profile, onSectionChange }: LeaderboardPro
               </div>
 
               {/* Core Audited Stats Block */}
-              <div className="grid grid-cols-2 gap-2 bg-[#090d16]/90 w-full p-3.5 rounded-xl border border-amber-500/20 mt-4 h-[100px] items-center shadow-inner">
+              <div className="grid grid-cols-2 gap-2 bg-ve-graphite/90 w-full p-3.5 rounded-xl border border-amber-500/20 mt-4 h-[100px] items-center shadow-inner">
                 <div className="text-left">
                   <span className="text-[8px] uppercase text-slate-500 font-mono font-bold block">win rate %</span>
                   <p className="text-base font-black text-teal-400 font-mono tracking-tight mt-0.5">{firstPlace.winRate}%</p>

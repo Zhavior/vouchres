@@ -6,6 +6,7 @@
  * - Single parse path for scores (homeScore, awayScore, inning, outs)
  */
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
+import type { MlbLiveFeed } from "../../types/mlbLiveFeed";
 import { getGameFeed } from "../mlb/mlbClient";
 
 export const LIVE_HUB_TTL_MS = Number(process.env.LIVE_GAME_HUB_TTL_MS ?? 4_500);
@@ -27,7 +28,7 @@ export interface LiveGameScore {
 
 export interface SharedGameFeedSnapshot {
   gamePk: number;
-  feed: any | null;
+  feed: MlbLiveFeed | null;
   score: LiveGameScore;
   asOf: string;
   servedStale?: boolean;
@@ -50,7 +51,7 @@ function num(v: unknown): number | null {
 }
 
 /** Single parse path for live scores — used by schedule overlay and at-bat snapshot. */
-export function parseLiveScoreFromFeed(feed: any, gamePk: number): LiveGameScore {
+export function parseLiveScoreFromFeed(feed: MlbLiveFeed, gamePk: number): LiveGameScore {
   const linescore = feed?.liveData?.linescore ?? {};
   const asOf = new Date().toISOString();
 
@@ -66,7 +67,7 @@ export function parseLiveScoreFromFeed(feed: any, gamePk: number): LiveGameScore
   };
 }
 
-function buildSnapshotFromFeed(gamePk: number, feed: any | null): SharedGameFeedSnapshot {
+function buildSnapshotFromFeed(gamePk: number, feed: MlbLiveFeed | null): SharedGameFeedSnapshot {
   const asOf = new Date().toISOString();
   if (!feed) {
     return {
@@ -159,7 +160,7 @@ async function loadHotFromRedis(gamePk: number): Promise<FeedCacheEntry | null> 
 
 async function fetchFreshFeed(gamePk: number): Promise<SharedGameFeedSnapshot> {
   try {
-    const feed = await getGameFeed(gamePk);
+    const feed = (await getGameFeed(gamePk)) as MlbLiveFeed | null;
     const snapshot = buildSnapshotFromFeed(gamePk, feed);
     if (feed) rememberLastGood(gamePk, snapshot);
 

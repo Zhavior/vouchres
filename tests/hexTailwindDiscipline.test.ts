@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 const SRC_ROOT = join(process.cwd(), 'src');
 
-/** Baseline after Phase 4 hex purge wave 2 (was 343). */
-const ALLOWED_BG_HEX_ARBITRARY_COUNT = 279;
+/** Baseline after hex purge wave 2 (Jul 2026). Was 61, then 0. */
+const ALLOWED_BG_HEX_ARBITRARY_COUNT = 0;
 
 const BG_HEX_ARBITRARY = /bg-\[#/g;
 

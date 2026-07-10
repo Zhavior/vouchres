@@ -192,7 +192,10 @@ const HomeRunIntelligencePage: React.FC = () => {
 
   // 'cards' and 'treemap' both consume vm.buckets (cards data shape); only
   // 'table' needs the ViewModel to switch its underlying fetch/shape.
-  const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>('cards');
+  const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
+    if (typeof window === 'undefined') return 'cards';
+    return window.matchMedia('(max-width: 767px)').matches ? 'table' : 'cards';
+  });
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
     setLocalViewMode(mode);

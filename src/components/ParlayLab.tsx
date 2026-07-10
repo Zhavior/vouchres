@@ -729,35 +729,35 @@ export default function ParlayLab({
                                 </div>
                                 <div className="grid grid-cols-2 gap-1 text-[9px] font-mono">
                                   {/* Bet365 */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.bet365.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-ve-graphite/80 border ${comparison.bet365.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
                                     <span className="text-white/45">Bet365</span>
                                     <strong className={comparison.bet365.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.bet365.oddsDecimal.toFixed(2)} ({comparison.bet365.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* FanDuel */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.fanduel.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-ve-graphite/80 border ${comparison.fanduel.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
                                     <span className="text-white/45">FanDuel</span>
                                     <strong className={comparison.fanduel.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.fanduel.oddsDecimal.toFixed(2)} ({comparison.fanduel.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* DraftKings */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.draftkings.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-ve-graphite/80 border ${comparison.draftkings.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
                                     <span className="text-white/45">DraftKings</span>
                                     <strong className={comparison.draftkings.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.draftkings.oddsDecimal.toFixed(2)} ({comparison.draftkings.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* Caesars */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.caesars.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-ve-graphite/80 border ${comparison.caesars.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
                                     <span className="text-white/45">Caesars</span>
                                     <strong className={comparison.caesars.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.caesars.oddsDecimal.toFixed(2)} ({comparison.caesars.oddsAmerican})
                                     </strong>
                                   </div>
                                   {/* BetMGM */}
-                                  <div className={`p-1 rounded flex justify-between items-center bg-[#0d1222]/80 border ${comparison.betmgm.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
+                                  <div className={`p-1 rounded flex justify-between items-center bg-ve-graphite/80 border ${comparison.betmgm.isBest ? 'border-emerald-600/50 bg-emerald-950/10' : 'border-white/10'}`}>
                                     <span className="text-white/45">BetMGM</span>
                                     <strong className={comparison.betmgm.isBest ? 'text-emerald-400 font-bold' : 'text-white/80'}>
                                       {comparison.betmgm.oddsDecimal.toFixed(2)} ({comparison.betmgm.oddsAmerican})
@@ -940,7 +940,7 @@ export default function ParlayLab({
 
                   {/* If not analyzed yet and not generating */}
                   {!edgeReport && !isAnalyzingEdge && (
-                    <div className="p-3 bg-[#0d1222]/80 border border-slate-850/60 rounded-xl space-y-2 text-center">
+                    <div className="p-3 bg-ve-graphite/80 border border-slate-850/60 rounded-xl space-y-2 text-center">
                       <p className="text-[10px] text-white/45 leading-normal">
                         Verify matchup correlations, platoon variables, and stadium parameters across all active parlay legs instantly.
                       </p>
@@ -956,7 +956,7 @@ export default function ParlayLab({
 
                   {/* If active loader */}
                   {isAnalyzingEdge && (
-                    <div className="p-4 bg-[#0d1222]/90 border border-sky-900/40 rounded-xl space-y-3">
+                    <div className="p-4 bg-ve-graphite/90 border border-sky-900/40 rounded-xl space-y-3">
                       <div className="flex items-center gap-2 text-sky-400 font-mono text-[10px]">
                         <Activity className="w-4 h-4 animate-spin shrink-0 text-sky-400" />
                         <span className="font-extrabold uppercase animate-pulse">

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import {
   Z8_INTERACTIVE,
   Z8_LABEL,
@@ -11,12 +10,9 @@ function JudgeCard({ judge, index }: { judge: (typeof LANDING_JUDGES)[number]; i
   const ring = JUDGE_COLOR_RING[judge.color] ?? JUDGE_COLOR_RING.cyan;
 
   return (
-    <motion.article
-      initial={false}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      className={`group relative overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM} ${Z8_INTERACTIVE} ${ring} p-5`}
+    <article
+      className={`ve-landing-judge-card group relative overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM} ${Z8_INTERACTIVE} ${ring} p-5`}
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-vouch-cyan/5 blur-2xl transition-opacity group-hover:opacity-100" />
 
@@ -43,7 +39,7 @@ function JudgeCard({ judge, index }: { judge: (typeof LANDING_JUDGES)[number]; i
           Live when signed in
         </span>
       </div>
-    </motion.article>
+    </article>
   );
 }
 

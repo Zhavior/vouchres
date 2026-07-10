@@ -61,7 +61,7 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
     }
 
     return (
-      <main className="min-h-screen bg-[#020617] px-4 py-10 text-slate-100">
+      <main className="min-h-screen bg-ve-obsidian px-4 py-10 text-slate-100">
         <div className="mx-auto flex min-h-[80vh] max-w-3xl items-center justify-center">
           <div className="w-full rounded-3xl border border-sky-400/20 bg-slate-950/80 p-6 shadow-[0_0_60px_rgba(14,165,233,0.12)]">
             <div className="mb-4 inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-200">

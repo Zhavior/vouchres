@@ -36,7 +36,10 @@ const DISPLAY_TIER: Record<HrWatchRow['riskTier'], keyof HrBuckets | null> = {
 
 export function useHrBoardViewModel() {
   const [mode, setModeState] = useState<HrWatchMode>('confirmed');
-  const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>(() => {
+    if (typeof window === 'undefined') return 'cards';
+    return window.matchMedia('(max-width: 767px)').matches ? 'spreadsheet' : 'cards';
+  });
   const [search, setSearch] = useState('');
   const [selectedTiers, setSelectedTiers] = useState<string[]>(['Elite', 'Strong', 'Watch', 'Sleepers']);
   const [selectedPlayer, setSelectedPlayer] = useState<HrWatchRow | null>(null);

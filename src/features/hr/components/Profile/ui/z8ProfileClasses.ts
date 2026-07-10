@@ -6,7 +6,7 @@ export const z8Profile = {
   value: 'text-2xl font-extrabold tabular-nums text-white',
   muted: 'text-white/40',
   row: 'border-t border-white/10 bg-white/[0.03]',
-  rowDark: 'border-t border-white/10 bg-[#0A0A0A]',
+  rowDark: 'border-t border-white/10 bg-ve-obsidian',
   warningPanel: 'rounded-xl border border-amber-400/25 bg-amber-400/[0.07]',
   successText: 'text-emerald-300',
   dangerText: 'text-rose-400',

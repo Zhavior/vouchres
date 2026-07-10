@@ -22,7 +22,7 @@ export default function LiveGameLabPage() {
   const topRow = selected?.rows[0] || rows[0] || null;
 
   return (
-    <main className="min-h-screen bg-[#020617] p-4 text-slate-100 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-ve-obsidian p-4 text-slate-100 sm:p-6 lg:p-8">
       <section className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[28px] border border-cyan-400/15 bg-gradient-to-br from-[#07111f] via-[#06101e] to-[#020617] p-6 shadow-[0_30px_90px_rgba(8,47,73,0.18)]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

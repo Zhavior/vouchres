@@ -248,7 +248,7 @@ export default React.memo(function VouchCard({
         oddsBadgeColor = 'text-purple-400 bg-purple-950/45 border border-purple-900/80 shadow-[0_0_10px_rgba(168,85,247,0.15)]';
         break;
       case 'minimalist':
-        themeBgAndBorder = 'bg-[#121620] border-slate-800 hover:border-slate-700 shadow-md text-slate-300 p-5';
+        themeBgAndBorder = 'bg-ve-surface-panel border-slate-800 hover:border-slate-700 shadow-md text-slate-300 p-5';
         glowColor1 = 'bg-slate-500/2';
         glowColor2 = 'bg-slate-400/2';
         avatarBorder = 'border-slate-500 shadow-none';
@@ -677,7 +677,7 @@ export default React.memo(function VouchCard({
             </p>
 
             {/* 16:9 Watermarked Share Preview Card */}
-            <div className="w-full bg-[#050814] border border-cyan-500/40 rounded-xl overflow-hidden shadow-inner p-4 flex flex-col justify-between relative" style={{ minHeight: '180px' }}>
+            <div className="w-full bg-ve-obsidian border border-cyan-500/40 rounded-xl overflow-hidden shadow-inner p-4 flex flex-col justify-between relative" style={{ minHeight: '180px' }}>
               <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-60">
                 <span className="text-[7px] bg-cyan-950 font-black text-cyan-400 px-1.5 py-0.2 rounded font-mono border border-cyan-800/40">VERIFIED PRE-LOCK</span>
                 <span className="text-[7px] text-slate-400 font-mono">vouchedge.ai</span>

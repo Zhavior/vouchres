@@ -11,7 +11,7 @@ interface ResearchNotePostCardProps {
 
 export default function ResearchNotePostCard({ researchNote }: ResearchNotePostCardProps) {
   return (
-    <div className="bg-[#0b0f19] rounded-xl border border-slate-800/80 p-3.5 my-2 flex flex-col gap-3.5 shadow-inner" id="research-note-card">
+    <div className="bg-ve-storm rounded-xl border border-slate-800/80 p-3.5 my-2 flex flex-col gap-3.5 shadow-inner" id="research-note-card">
       <div className="flex items-center justify-between border-b border-slate-800/40 pb-2 flex-wrap gap-2">
         <div className="flex items-center gap-1.5 text-xs">
           <FileText className="w-4 h-4 text-sky-400" />
@@ -26,7 +26,7 @@ export default function ResearchNotePostCard({ researchNote }: ResearchNotePostC
 
       {/* Trend data */}
       {researchNote.trendData && (
-        <div className="bg-[#121824] border border-slate-800/60 rounded-lg p-2.5 flex items-start gap-2">
+        <div className="bg-ve-surface-panel border border-slate-800/60 rounded-lg p-2.5 flex items-start gap-2">
           <BarChart2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Verified Matchup Trend</span>

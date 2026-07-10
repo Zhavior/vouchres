@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -23,6 +23,9 @@ type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
 const LandingJudgesDeck = lazy(() => import('../components/landing/LandingJudgesDeck'));
+const preloadAuthModal = () => {
+  void import('../components/auth/AuthModal');
+};
 
 const pricingPlans: Array<{
   id: SignupPlan;
@@ -104,7 +107,7 @@ function StatusTicker() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
+    <div className="ve-terminal-ticker fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
       <div className="ve-terminal-ticker-track flex gap-16 whitespace-nowrap">
         {[1, 2].map((pass) =>
           items.map((item) => (
@@ -115,6 +118,84 @@ function StatusTicker() {
         )}
       </div>
     </div>
+  );
+}
+
+function JudgesPlaceholder() {
+  return (
+    <section
+      className={`ve-judges-placeholder rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}
+      aria-label="AI Judge Council preview"
+    >
+      <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Five judges on standby</h2>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
+        Profiles initialize after the terminal preview so the first screen stays fast and the trust story stays clear.
+      </p>
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-hidden="true">
+        {['DS', 'PH', 'MR', 'RA', 'PE'].map((code) => (
+          <div key={code} className="rounded-xl border border-white/10 bg-black/30 px-3 py-4">
+            <span className="font-mono text-xs font-black text-vouch-cyan/70">{code}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AuthModalFallback() {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl"
+      role="status"
+      aria-live="polite"
+    >
+      <div className={`w-full max-w-sm rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}>
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-vouch-cyan" />
+        <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
+      </div>
+    </div>
+  );
+}
+
+function DeferredLandingJudgesDeck() {
+  const [ready, setReady] = useState(false);
+  const markerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+
+    if (!marker || !('IntersectionObserver' in window)) {
+      setReady(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '360px 0px' },
+    );
+
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!ready) {
+    return (
+      <div ref={markerRef}>
+        <JudgesPlaceholder />
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={<JudgesPlaceholder />}>
+      <LandingJudgesDeck />
+    </Suspense>
   );
 }
 
@@ -155,7 +236,7 @@ function PreviewTerminal() {
         ].map((row) => (
           <div
             key={row.row}
-            className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/30 px-4 py-3"
+            className="ve-terminal-preview-row flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/30 px-4 py-3"
           >
             <span className="text-sm text-white/70">{row.row}</span>
             <span className={`font-mono text-[10px] font-bold uppercase tracking-wide ${row.tone}`}>
@@ -192,7 +273,13 @@ function FeatureStrip({
   );
 }
 
-function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => void }) {
+function PricingGrid({
+  onSelectPlan,
+  onPlanIntent,
+}: {
+  onSelectPlan: (plan: SignupPlan) => void;
+  onPlanIntent: () => void;
+}) {
   return (
     <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-6`}>
       <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
@@ -211,6 +298,8 @@ function PricingGrid({ onSelectPlan }: { onSelectPlan: (plan: SignupPlan) => voi
             key={plan.id}
             type="button"
             onClick={() => onSelectPlan(plan.id)}
+            onFocus={onPlanIntent}
+            onMouseEnter={onPlanIntent}
             className={`group flex min-h-[190px] flex-col justify-between rounded-xl border p-4 text-left ${Z8_INTERACTIVE} ${
               plan.featured
                 ? 'border-vouch-cyan/50 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.12)]'
@@ -254,12 +343,14 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
   const [authPlan, setAuthPlan] = useState<SignupPlan>('free');
 
   const openSignup = (plan: SignupPlan = 'free') => {
+    preloadAuthModal();
     setAuthMode('signup');
     setAuthPlan(plan);
     setAuthOpen(true);
   };
 
   const openLogin = () => {
+    preloadAuthModal();
     setAuthMode('login');
     setAuthPlan('free');
     setAuthOpen(true);
@@ -267,7 +358,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`cinematic-bunker ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
+      <main className={`ve-terminal-page cinematic-bunker ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
         <div className="starfield" aria-hidden="true" />
         <div className="storm-layer" aria-hidden="true" />
         <StatusTicker />
@@ -286,9 +377,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <div className="relative z-10 mx-auto w-full max-w-none px-3 py-6 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
           {/* Header */}
-          <header className="mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row">
+          <header className="ve-terminal-header mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
                 <Activity size={18} className="text-vouch-cyan" />
@@ -302,10 +393,12 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="ve-terminal-header-actions flex items-center gap-2">
               <button
                 type="button"
                 onClick={openLogin}
+                onFocus={preloadAuthModal}
+                onMouseEnter={preloadAuthModal}
                 className={`rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
               >
                 Log In
@@ -313,6 +406,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               <button
                 type="button"
                 onClick={() => openSignup('free')}
+                onFocus={preloadAuthModal}
+                onMouseEnter={preloadAuthModal}
                 className={`rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:bg-vouch-cyan hover:text-black`}
               >
                 Sign Up
@@ -320,10 +415,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </div>
           </header>
 
-          <div className="space-y-16 sm:space-y-20">
+          <div className="space-y-10 sm:space-y-16 md:space-y-20">
             {/* Hero */}
-            <section className="mx-auto flex w-full max-w-5xl flex-col items-center space-y-8 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5">
+            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-6 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5">
                 <ShieldCheck size={14} className="text-vouch-cyan" />
                 <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan/90">
                   Verified HR Board · AI Judge Council
@@ -343,7 +438,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 and honest data — no fake lineups, no inflated edges, no hype.
               </p>
 
-              <div className="grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
+              <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
                 {TRUST_PILLARS.map((pillar) => (
                   <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
                     <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
@@ -354,10 +449,12 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 ))}
               </div>
 
-              <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
                 <button
                   type="button"
                   onClick={() => openSignup('free')}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
                   className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:max-w-[220px]`}
                 >
                   <Sparkles size={14} />
@@ -366,6 +463,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 <button
                   type="button"
                   onClick={openLogin}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
                   className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white sm:max-w-[220px]`}
                 >
                   Sign In
@@ -373,6 +472,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 <button
                   type="button"
                   onClick={() => openSignup('pro')}
+                  onFocus={preloadAuthModal}
+                  onMouseEnter={preloadAuthModal}
                   className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald ${Z8_INTERACTIVE} hover:border-vouch-emerald/60 sm:max-w-[220px]`}
                 >
                   Explore Pro
@@ -391,9 +492,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </section>
 
             {/* 5 Judges */}
-            <Suspense fallback={null}>
-              <LandingJudgesDeck />
-            </Suspense>
+            <DeferredLandingJudgesDeck />
 
             {/* Feature strips */}
             <section className="space-y-6">
@@ -412,7 +511,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </section>
 
             {/* Pricing */}
-            <PricingGrid onSelectPlan={openSignup} />
+            <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />
 
             {/* Footer CTA */}
             <section
@@ -429,6 +528,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               <button
                 type="button"
                 onClick={() => openSignup('free')}
+                onFocus={preloadAuthModal}
+                onMouseEnter={preloadAuthModal}
                 className={`mt-6 inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan px-8 font-mono text-[11px] font-bold uppercase tracking-widest text-black shadow-[0_0_32px_rgba(0,240,255,0.2)] ${Z8_INTERACTIVE}`}
                 style={{ ['--tw-shadow-color' as string]: Z8_CYAN_HEX }}
               >
@@ -441,7 +542,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
       </main>
 
       {authOpen && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AuthModalFallback />}>
           <AuthModal
             open={authOpen}
             initialMode={authMode}

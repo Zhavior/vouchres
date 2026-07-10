@@ -43,7 +43,7 @@ export function VEAppShell({ children, active, onNavigate }: VEAppShellProps) {
         </aside>
 
         <section className="min-w-0 flex-1">
-          <header className="sticky top-0 z-40 border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl">
+          <header className="sticky top-0 z-40 border-b border-white/10 bg-ve-obsidian/80 backdrop-blur-xl">
             <div className="flex items-center justify-between px-5 py-4">
               <div className="lg:hidden text-xl font-black italic">
                 Vouch<span className="text-cyan-300">Edge</span>

@@ -4,7 +4,7 @@
    white outlines without globally recoloring every card/button.
    ========================================================== */
 
-#root [class*="bg-[#020617]"],
+#root [class*="bg-ve-obsidian"],
 #root [class*="bg-black"] {
   background-color: hsl(var(--ve-bg-deep) / 0.86);
 }
@@ -91,7 +91,7 @@ html:not([data-ve-theme]) {
 
 #root .ve-sidebar [class*="bg-slate"],
 #root .ve-sidebar [class*="bg-black"],
-#root .ve-sidebar [class*="bg-[#020617]"],
+#root .ve-sidebar [class*="bg-ve-obsidian"],
 #root .ve-sidebar [class*="bg-white"] {
   background:
     linear-gradient(135deg, rgba(var(--gecko-1), 0.09), rgba(2, 6, 23, 0.18)) !important;

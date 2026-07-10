@@ -140,7 +140,7 @@ export default function AdBanner({
   if (bannerType === 'inline-slip') {
     return (
       <div 
-        className={`p-3 bg-[#0d121f] border border-dashed ${ad.borderColor} rounded-xl relative select-none flex items-center justify-between text-left`}
+        className={`p-3 bg-ve-graphite border border-dashed ${ad.borderColor} rounded-xl relative select-none flex items-center justify-between text-left`}
         id="ad-banner-inline-slip"
       >
         <div className="space-y-0.5">
@@ -166,7 +166,7 @@ export default function AdBanner({
   if (bannerType === 'live-stream') {
     return (
       <div 
-        className="bg-[#0c0f17] border border-amber-500/25 p-3 rounded-xl flex items-center justify-between relative select-none animate-pulse text-left"
+        className="bg-ve-graphite border border-amber-500/25 p-3 rounded-xl flex items-center justify-between relative select-none animate-pulse text-left"
         id="ad-banner-live-stream-overlay"
       >
         <div className="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[8px] font-bold px-1.5 rounded-bl uppercase tracking-widest leading-none">

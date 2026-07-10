@@ -63,9 +63,9 @@ export default function PitcherProfileDrawer({ pitcher, isPro, onClose, onUpgrad
   return (
     <div className="fixed inset-0 z-[120] flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-[rgba(var(--ve-bg-rgb),0.72)] backdrop-blur-sm" onClick={onClose} />
-      <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-slate-800 bg-[#0b1120] shadow-2xl">
+      <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-slate-800 bg-ve-storm shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-800 bg-[#0b1120]/95 px-5 py-4 backdrop-blur">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-800 bg-ve-storm/95 px-5 py-4 backdrop-blur">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10">

@@ -19,7 +19,7 @@ export const HrColumn = React.memo(function HrColumn({ title, icon, colorClass, 
   return (
     <section className={`flex min-w-0 flex-col border ${borderClass} bg-black/25 md:h-full md:min-h-0 md:overflow-hidden`}>
       {!hideHeader && (
-        <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-2 py-1.5 font-mono md:px-3 md:py-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-ve-obsidian/95 px-2 py-1.5 font-mono md:px-3 md:py-2">
           <div className={`flex min-w-0 items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] md:gap-2 md:text-xs md:tracking-[0.18em] ${colorClass}`}>
             <span className="shrink-0">{icon}</span>
             <span className="truncate">{title}</span>
