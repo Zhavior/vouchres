@@ -12,11 +12,14 @@ import { requestContext } from "./server/middleware/requestContext";
 import { routeTiming } from "./server/middleware/routeTiming";
 import { initServerSentry, sentryErrorHandler, isSentryEnabled, captureException } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
+import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 
 // Load base env, then local secrets (.env.local) which take precedence.
 // Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
 dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
+syncDevSupabaseEnv();
+logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
 
 export async function createApp(httpServer?: http.Server) {
@@ -57,6 +60,10 @@ export async function createApp(httpServer?: http.Server) {
         ...(httpServer ? { hmr: { server: httpServer } } : {}),
       },
       appType: "spa",
+      define: {
+        "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(process.env.VITE_SUPABASE_URL ?? ""),
+        "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY ?? ""),
+      },
     });
     app.use(vite.middlewares);
   } else {

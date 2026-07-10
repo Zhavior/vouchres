@@ -11,6 +11,7 @@ import {
   requiresLogin,
   isPublicFrontPage,
 } from './sectionNavigation';
+import { persistAuthSession, supabase } from '../lib/supabaseClient';
 
 export function useSectionNavigation() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
@@ -90,25 +91,32 @@ export function useSectionNavigation() {
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
-    let destination = SIGNED_IN_HOME;
-    try {
-      const pending = localStorage.getItem('vouchedge_after_auth_destination');
-      if (pending) {
-        destination = pending;
-        localStorage.removeItem('vouchedge_after_auth_destination');
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        persistAuthSession(data.session);
       }
-      localStorage.removeItem('vouchedge_after_auth_mode');
-    } catch {
-      // ignore storage failures
-    }
-    void Promise.all([
-      import('../lib/queryClient'),
-      import('../hooks/queries/queryKeys'),
-    ]).then(([{ queryClient }, { queryKeys }]) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
-    });
-    replaceLandingUrl(destination);
-    navigateSection(destination);
+
+      let destination = SIGNED_IN_HOME;
+      try {
+        const pending = localStorage.getItem('vouchedge_after_auth_destination');
+        if (pending) {
+          destination = pending;
+          localStorage.removeItem('vouchedge_after_auth_destination');
+        }
+        localStorage.removeItem('vouchedge_after_auth_mode');
+      } catch {
+        // ignore storage failures
+      }
+      void Promise.all([
+        import('../lib/queryClient'),
+        import('../hooks/queries/queryKeys'),
+      ]).then(([{ queryClient }, { queryKeys }]) => {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
+      });
+      replaceLandingUrl(destination);
+      navigateSection(destination);
+    })();
   }, [navigateSection]);
 
   const handleLogoutComplete = useCallback(() => {

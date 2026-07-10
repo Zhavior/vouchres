@@ -71,7 +71,22 @@ export async function signUpWithEmail(opts: {
       },
     },
   });
+  if (!error && data.session) {
+    persistAuthSession(data.session);
+  }
   return { data, error };
+}
+
+/**
+ * Persist session token for legacy helpers (hasRealAuthToken, API client).
+ */
+export function persistAuthSession(session: { access_token?: string; user?: { id?: string } } | null | undefined) {
+  if (!session?.access_token || !session.user?.id) return;
+  try {
+    localStorage.setItem('vouchedge_auth_token', session.access_token);
+  } catch {
+    // ignore storage failures
+  }
 }
 
 /**
@@ -79,6 +94,9 @@ export async function signUpWithEmail(opts: {
  */
 export async function signInWithEmail(opts: { email: string; password: string }) {
   const { data, error } = await supabase.auth.signInWithPassword(opts);
+  if (!error && data.session) {
+    persistAuthSession(data.session);
+  }
   return { data, error };
 }
 
