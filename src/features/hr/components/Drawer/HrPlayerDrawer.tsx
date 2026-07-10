@@ -22,6 +22,11 @@ import {
 import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWatch';
 import { HrStatsTab } from '../Stats/HrStatsTab';
 import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
+import { logoByTeamName } from '../../../../lib/teamLogos';
+import { useRealGameLog } from '../../hooks/useRealGameLog';
+import { lastNGames } from '../../utils/realGameLogs';
+import { FormTrendChart, GameLogEmpty, GameLogLoading } from '../Profile/HrProfileCharts';
+import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -214,6 +219,8 @@ function getLayers(p: HrWatchRow): Array<{
 export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, onClose }) => {
   const [tab, setTab] = useState<DrawerTab>('overview');
   const [imgError, setImgError] = useState(false);
+  const { logs: realLog, state: logState } = useRealGameLog(player?.playerId, isOpen);
+  const formPreview = lastNGames(realLog ?? [], 8);
 
   useEffect(() => {
     if (isOpen) { setTab('overview'); setImgError(false); }
@@ -230,6 +237,8 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
   const palette = getTierPalette(player.hrScore);
   const badge = truthBadge(player.truthStatus);
   const avatarBg = teamColor(player.team);
+  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
+  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
   const hasWarnings = Boolean(player.warnings?.length);
   const reasons = player.reasons ?? [];
   const layers = getLayers(player);
@@ -267,10 +276,10 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-deep)/0.97)] shadow-2xl sm:h-full"
+            className="ve-hr-drawer fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[#0a0e14] shadow-2xl sm:h-full"
           >
             {/* ── Header ────────────────────────────────────── */}
-            <div className="relative shrink-0 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.40)] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
+            <div className="ve-hr-drawer-header relative shrink-0 border-b border-white/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
               <button
                 onClick={onClose} aria-label="Close"
                 className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:border-vouch-cyan/35 hover:text-vouch-cyan sm:right-4 sm:top-4 sm:h-8 sm:w-8"
@@ -304,8 +313,16 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                       {tierLabel(player.hrScore)}
                     </span>
                   </div>
-                  <p className="truncate text-sm text-[hsl(var(--ve-text-muted))]">
-                    {player.team || '—'} <span className="text-[hsl(var(--ve-text-muted)/0.40)]">vs</span> {player.opponent || '—'}
+                  <p className="truncate text-sm text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      {teamLogo && <img src={teamLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {player.team || '—'}
+                    </span>
+                    <span className="mx-1 text-white/25">vs</span>
+                    <span className="inline-flex items-center gap-1">
+                      {oppLogo && <img src={oppLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {player.opponent || '—'}
+                    </span>
                   </p>
                   {player.pitcherName && (
                     <p className="truncate text-xs text-[hsl(var(--ve-text-muted)/0.55)]">⚾ {player.pitcherName}</p>
@@ -325,7 +342,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             </div>
 
             {/* ── Score bar ────────────────────────────────── */}
-            <div className="shrink-0 border-b border-[hsl(var(--ve-border)/0.24)] p-4 sm:p-5">
+            <div className="ve-hr-drawer-score shrink-0 border-b p-4 sm:p-5">
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.60)]">HR Score</p>
@@ -388,6 +405,25 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
               {/* OVERVIEW TAB */}
               {tab === 'overview' && (
                 <div className="flex flex-col gap-4">
+                  {/* Recent form preview — real MLB logs */}
+                  <div className="ve-hr-chart-panel">
+                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      Recent Form
+                    </p>
+                    {logState === 'loading' && <GameLogLoading />}
+                    {logState === 'unavailable' && (
+                      <GameLogEmpty message="No game log available yet." />
+                    )}
+                    {logState === 'ready' && formPreview.length > 0 && (
+                      <>
+                        <FormTrendChart logs={formPreview} height={96} />
+                        <p className="mt-2 text-[10px] text-slate-500">
+                          Last {formPreview.length} games · MLB Stats API · open Pro Stats for full charts
+                        </p>
+                      </>
+                    )}
+                  </div>
+
                   {/* Quick stats grid */}
                   <div className="grid grid-cols-2 gap-2.5">
                     <StatBox label="Power" value={fmt(player.hitterPower)} />
