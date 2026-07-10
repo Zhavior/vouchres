@@ -306,9 +306,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
 
         <div className="relative z-10 mx-auto w-full max-w-none px-3 py-6 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-          {/* Header */}
-          <header className="ve-terminal-header mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row">
-            <div className="flex items-center gap-3">
+          {/* Header — brand on mobile only; desktop gets a single top-right auth cluster */}
+          <header className="ve-terminal-header mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row md:mb-6 md:justify-end md:border-b-0 md:pb-0">
+            <div className="flex items-center gap-3 md:hidden">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
                 <Activity size={18} className="text-vouch-cyan" />
               </div>
@@ -321,7 +321,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 </p>
               </div>
             </div>
-            <div className={`ve-terminal-header-actions flex items-center gap-2 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}>
+            <div
+              className={`ve-terminal-header-actions flex items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
+            >
               <button
                 type="button"
                 onClick={openLogin}

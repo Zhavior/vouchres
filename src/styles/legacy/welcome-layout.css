@@ -160,6 +160,19 @@
   }
 }
 
+@media (min-width: 768px) {
+  .ve-mobile-header {
+    display: none !important;
+  }
+
+  .ve-terminal-header {
+    margin-bottom: 0;
+    min-height: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
 @media (max-width: 767px) {
   #root .edge-space-hero {
     min-height: auto;

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { LogOut, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { hasRealAuthToken } from '../../app/sectionNavigation';
 import { Z8_BTN_TERMINAL_GHOST, Z8_LABEL } from '../landing/LandingTokens';
 
 interface AuthStatusBadgeProps {
@@ -11,6 +11,8 @@ interface AuthStatusBadgeProps {
   /** Render inside the app header row (never fixed, never guest login). */
   inline?: boolean;
 }
+
+const AUTH_SYNC_MS = 250;
 
 function resetToLandingScreen() {
   localStorage.removeItem('vouchedge_after_auth_destination');
@@ -49,40 +51,14 @@ export default function AuthStatusBadge({
   const [email, setEmail] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let alive = true;
 
-    async function verifyRealUser() {
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (!sessionData.session) {
-        clearVouchEdgeLocalAuth();
-        if (alive) {
-          setEmail(null);
-          setChecking(false);
-        }
-        return;
-      }
-
-      const { data: userData, error } = await supabase.auth.getUser();
-
+    const applySession = (session: Session | null) => {
       if (!alive) return;
 
-      if (error || !userData.user) {
-        clearVouchEdgeLocalAuth();
-        setEmail(null);
-      } else {
-        localStorage.setItem('vouchedge_auth_token', sessionData.session.access_token);
-        setEmail(userData.user.email ?? 'Account');
-      }
-
-      setChecking(false);
-    }
-
-    verifyRealUser();
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         clearVouchEdgeLocalAuth();
         setEmail(null);
@@ -93,10 +69,30 @@ export default function AuthStatusBadge({
       localStorage.setItem('vouchedge_auth_token', session.access_token);
       setEmail(session.user.email ?? 'Account');
       setChecking(false);
+    };
+
+    const scheduleSessionSync = (session: Session | null) => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = setTimeout(() => applySession(session), AUTH_SYNC_MS);
+    };
+
+    async function verifyRealUser() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!alive) return;
+      applySession(sessionData.session);
+    }
+
+    verifyRealUser();
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!alive) return;
+      setChecking(true);
+      scheduleSessionSync(session);
     });
 
     return () => {
       alive = false;
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
       data.subscription.unsubscribe();
     };
   }, []);
@@ -110,16 +106,17 @@ export default function AuthStatusBadge({
       clearVouchEdgeLocalAuth();
       resetToLandingScreen();
       setEmail(null);
+      setChecking(false);
       setSigningOut(false);
       window.history.replaceState(null, '', '/vouchedge');
       onLogoutComplete?.();
     }
   }
 
-  const signedIn = Boolean(email) || hasRealAuthToken();
+  const signedIn = !checking && Boolean(email);
 
   if (inline) {
-    if (checking || !signedIn) return null;
+    if (!signedIn) return null;
 
     return (
       <div className="flex max-w-[min(100%,12rem)] items-center gap-1.5 sm:max-w-xs">

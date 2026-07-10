@@ -78,10 +78,8 @@ const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
 });
 
 const DesktopSlimHeader = React.memo(function DesktopSlimHeader({
-  onAuthLoginSuccess,
   onAuthLogoutComplete,
 }: {
-  onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
 }) {
   return (
@@ -303,10 +301,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           {!isPublicFrontPage && (
-            <DesktopSlimHeader
-              onAuthLoginSuccess={onAuthLoginSuccess}
-              onAuthLogoutComplete={onAuthLogoutComplete}
-            />
+            <DesktopSlimHeader onAuthLogoutComplete={onAuthLogoutComplete} />
           )}
 
           {!isPublicFrontPage && (

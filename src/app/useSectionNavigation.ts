@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
+import { useState, useEffect, useRef, useTransition, useCallback, useMemo } from 'react';
 import {
   DEV_BYPASS_AUTH,
   SIGNED_IN_HOME,
@@ -13,6 +13,9 @@ import {
   requiresLogin,
   isPublicFrontPage,
 } from './sectionNavigation';
+import { supabase } from '../lib/supabaseClient';
+
+const AUTH_ROUTE_SYNC_MS = 200;
 
 export function useSectionNavigation() {
   const [edgePortalTransitionActive, setEdgePortalTransitionActive] = useState(() => {
@@ -42,6 +45,8 @@ export function useSectionNavigation() {
 
   const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
+  const [authRevision, setAuthRevision] = useState(0);
+  const authSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const commitSection = useCallback((target: string) => {
     void import('../lib/routePreload').then(({ preloadSection }) => preloadSection(target));
@@ -104,6 +109,26 @@ export function useSectionNavigation() {
   }, [commitSection]);
 
   useEffect(() => {
+    const bumpAuthRevision = () => {
+      if (authSyncTimerRef.current) clearTimeout(authSyncTimerRef.current);
+      authSyncTimerRef.current = setTimeout(() => {
+        setAuthRevision((value) => value + 1);
+      }, AUTH_ROUTE_SYNC_MS);
+    };
+
+    void supabase.auth.getSession().finally(bumpAuthRevision);
+
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      bumpAuthRevision();
+    });
+
+    return () => {
+      if (authSyncTimerRef.current) clearTimeout(authSyncTimerRef.current);
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     activeSectionRef.current = activeSection;
   }, [activeSection]);
 
@@ -140,7 +165,7 @@ export function useSectionNavigation() {
     };
   }, [navigateSection]);
 
-  const isLoggedIn = hasRealAuthToken();
+  const isLoggedIn = useMemo(() => hasRealAuthToken(), [authRevision]);
   const isPublicFrontPageView = isPublicFrontPage(activeSection, isLoggedIn);
   const showGlobalAppChrome = !isPublicFrontPageView;
 
