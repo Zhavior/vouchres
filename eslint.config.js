@@ -18,6 +18,7 @@ export default tseslint.config(
       'public/**',
       '*.config.js',
       '*.config.ts',
+      'lighthouserc.cjs',
     ],
   },
   js.configs.recommended,
