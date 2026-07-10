@@ -1,0 +1,25 @@
+.ve-player-face {
+  object-position: center 22%;
+}
+
+.ve-player-team-header-logo {
+  filter: saturate(0.85);
+}
+
+@media (pointer: fine) {
+  .ve-vouch-tip-anchor:hover,
+  .ve-vouch-action:hover {
+    cursor: help;
+  }
+
+  .ve-unified-player-card--interactive:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (max-width: 767px) {
+  .ve-landing-hr-cards .ve-unified-player-card {
+    flex: 0 0 min(86vw, 19.5rem);
+    scroll-snap-align: start;
+  }
+}

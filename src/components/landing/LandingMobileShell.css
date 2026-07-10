@@ -172,24 +172,6 @@
   }
 }
 
-.ve-landing-player-face {
-  object-position: center 22%;
-}
-
-.ve-landing-team-header-logo {
-  filter: saturate(0.85);
-}
-
-@media (pointer: fine) {
-  .ve-landing-vouch-tip-anchor:hover {
-    cursor: help;
-  }
-
-  .ve-landing-vouch-action:hover {
-    cursor: help;
-  }
-}
-
 @media (min-width: 768px) {
   .ve-terminal-sticky-header {
     position: static;
