@@ -75,6 +75,26 @@
   pointer-events: auto !important;
 }
 
+.ve-terminal-ticker-track {
+  animation: ve-terminal-ticker-scroll 28s linear infinite;
+}
+
+@keyframes ve-terminal-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-terminal-ticker-track {
+    animation: none;
+  }
+}
+
 @media (max-width: 767px) {
   #root .edge-space-hero {
     min-height: auto;
@@ -145,4 +165,3 @@ body {
     max-width: 100%;
   }
 }
-

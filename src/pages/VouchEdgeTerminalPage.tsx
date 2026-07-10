@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { lazy, Suspense, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -10,8 +9,6 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import AuthModal from '../components/auth/AuthModal';
-import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import {
   Z8_CYAN_HEX,
   Z8_INTERACTIVE,
@@ -23,6 +20,9 @@ import {
 import '../styles/legacy/welcome-layout.css';
 
 type SignupPlan = 'free' | 'pro' | 'capper';
+
+const AuthModal = lazy(() => import('../components/auth/AuthModal'));
+const LandingJudgesDeck = lazy(() => import('../components/landing/LandingJudgesDeck'));
 
 const pricingPlans: Array<{
   id: SignupPlan;
@@ -105,11 +105,7 @@ function StatusTicker() {
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
-      <motion.div
-        animate={{ x: '-50%' }}
-        transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-        className="flex gap-16 whitespace-nowrap"
-      >
+      <div className="ve-terminal-ticker-track flex gap-16 whitespace-nowrap">
         {[1, 2].map((pass) =>
           items.map((item) => (
             <span key={`${pass}-${item}`} className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">
@@ -117,7 +113,7 @@ function StatusTicker() {
             </span>
           )),
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -327,47 +323,27 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
           <div className="space-y-16 sm:space-y-20">
             {/* Hero */}
             <section className="mx-auto flex w-full max-w-5xl flex-col items-center space-y-8 text-center">
-              <motion.div
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5"
-              >
+              <div className="inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5">
                 <ShieldCheck size={14} className="text-vouch-cyan" />
                 <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan/90">
                   Verified HR Board · AI Judge Council
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h1
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl"
-              >
+              <h1 className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl">
                 MLB edge research with{' '}
                 <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
                   pristine
                 </span>{' '}
                 intelligence.
-              </motion.h1>
+              </h1>
 
-              <motion.p
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="mx-auto max-w-2xl text-base leading-relaxed text-white/50"
-              >
+              <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/50">
                 The trust-first terminal for serious analysts. Verified home run boards, five AI judges,
                 and honest data — no fake lineups, no inflated edges, no hype.
-              </motion.p>
+              </p>
 
-              <motion.div
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className="grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4"
-              >
+              <div className="grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
                 {TRUST_PILLARS.map((pillar) => (
                   <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
                     <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
@@ -376,14 +352,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                     <p className="mt-1 text-[10px] text-white/35">{pillar.detail}</p>
                   </div>
                 ))}
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center"
-              >
+              <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
                 <button
                   type="button"
                   onClick={() => openSignup('free')}
@@ -407,7 +378,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                   Explore Pro
                   <ChevronRight size={14} />
                 </button>
-              </motion.div>
+              </div>
             </section>
 
             {/* Preview terminal — honest, no fake data */}
@@ -420,7 +391,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </section>
 
             {/* 5 Judges */}
-            <LandingJudgesDeck />
+            <Suspense fallback={null}>
+              <LandingJudgesDeck />
+            </Suspense>
 
             {/* Feature strips */}
             <section className="space-y-6">
@@ -467,17 +440,21 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
         </div>
       </main>
 
-      <AuthModal
-        open={authOpen}
-        initialMode={authMode}
-        initialPlan={authPlan}
-        onClose={() => setAuthOpen(false)}
-        onAuthed={() => {
-          setAuthOpen(false);
-          onAuthed?.();
-        }}
-        onGuest={() => setAuthOpen(false)}
-      />
+      {authOpen && (
+        <Suspense fallback={null}>
+          <AuthModal
+            open={authOpen}
+            initialMode={authMode}
+            initialPlan={authPlan}
+            onClose={() => setAuthOpen(false)}
+            onAuthed={() => {
+              setAuthOpen(false);
+              onAuthed?.();
+            }}
+            onGuest={() => setAuthOpen(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
