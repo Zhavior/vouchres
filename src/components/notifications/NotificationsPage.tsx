@@ -1,3 +1,4 @@
+import { ProductEvents } from "../../lib/productEvents";
 import { Bell, Info, Trash2, Trophy, X } from 'lucide-react';
 
 import {
@@ -73,11 +74,18 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
         className={`group w-full p-4 text-left ${Z8_SURFACE}`}
         role={notification.section ? 'button' : undefined}
         tabIndex={notification.section ? 0 : undefined}
-        onClick={() => notification.section && onSectionChange(notification.section)}
+        onClick={() => {
+          ProductEvents.notificationOpened(notification.kind);
+
+          if (notification.section) {
+            onSectionChange(notification.section);
+          }
+        }}
         onKeyDown={(event) => {
           if (!notification.section) return;
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            ProductEvents.notificationOpened(notification.kind);
             onSectionChange(notification.section);
           }
         }}

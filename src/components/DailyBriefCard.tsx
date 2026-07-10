@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { ProductEvents } from "../lib/productEvents";
 import { Brain, Flame, MapPin, Target } from "lucide-react";
 
 interface DailyBriefCardProps {
@@ -30,6 +32,10 @@ export function DailyBriefCard({
     environment?.park ??
     environment?.name ??
     "Environment data syncing";
+
+  useEffect(() => {
+    ProductEvents.dailyBriefOpened();
+  }, []);
 
   return (
     <section className="ve-premium-panel rounded-3xl border border-vouch-cyan/20 bg-black/30 p-5 backdrop-blur-xl">
