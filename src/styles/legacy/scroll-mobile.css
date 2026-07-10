@@ -117,12 +117,16 @@
 }
 
 /* Sticky headers — own compositor layer to avoid scroll jank */
-.home-feed-header,
-.ve-mobile-header {
+.home-feed-header {
   contain: layout style;
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+}
+
+/* Retired: .ve-mobile-header duplicate app chrome (sidebar/drawer only now) */
+.ve-mobile-header {
+  display: none !important;
 }
 
 .ve-bubble-field {
@@ -249,14 +253,7 @@ html {
   }
 
   .ve-mobile-header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    padding-top: max(0.625rem, var(--ve-safe-top));
-    padding-left: max(0.75rem, var(--ve-safe-left));
-    padding-right: max(0.75rem, var(--ve-safe-right));
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    display: none !important;
   }
 }
 
