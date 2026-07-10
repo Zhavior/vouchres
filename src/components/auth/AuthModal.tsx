@@ -276,7 +276,9 @@ export default function AuthModal({
     setNotice(null);
 
     if (!isSupabaseConfigured) {
-      setNotice("Accounts aren't enabled in this environment yet. You can explore everything as a guest.");
+      setError(
+        'Login is not configured locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local (Supabase → Project Settings → API), then restart npm run dev.',
+      );
       return;
     }
 
@@ -322,8 +324,12 @@ export default function AuthModal({
           setEmailSent(true);
         }
       } else {
-        const { error } = await signInWithEmail({ email: email.trim(), password });
+        const { data, error } = await signInWithEmail({ email: email.trim(), password });
         if (error) { setError(friendlyError(error.message)); return; }
+        if (!data?.session) {
+          setError('Sign-in succeeded but no session was returned. Check your email for a confirmation link.');
+          return;
+        }
         onAuthed?.();
       }
     } catch (err: any) {
@@ -337,7 +343,9 @@ export default function AuthModal({
     setError(null);
     setNotice(null);
     if (!isSupabaseConfigured) {
-      setNotice("Accounts aren't enabled in this environment yet. You can explore everything as a guest.");
+      setError(
+        'Login is not configured locally. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local (Supabase → Project Settings → API), then restart npm run dev.',
+      );
       return;
     }
     if (!email.trim()) { setError('Enter your email first.'); return; }

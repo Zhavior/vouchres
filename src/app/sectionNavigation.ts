@@ -68,6 +68,11 @@ export function replaceLandingUrl(homeSection = SIGNED_IN_HOME) {
 
 export function hasRealAuthToken() {
   try {
+    const legacyToken = localStorage.getItem('vouchedge_auth_token');
+    if (legacyToken && legacyToken.length >= 20) {
+      return true;
+    }
+
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key) continue;
