@@ -10,6 +10,9 @@ import { vouchedgeApi } from './api/vouchedgeApi';
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 
+/** Archived landings only — everything else logged-out goes to the terminal landing. */
+const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
+
 function RouteFallback() {
   const [visible, setVisible] = useState(false);
 
@@ -69,7 +72,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {navigation.isPublicFrontPage && navigation.activeSection === 'vouchedge_intro' ? (
+      {!navigation.isLoggedIn && !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) ? (
         <PublicLanding onAuthed={navigation.handleLoginSuccess} />
       ) : (
         <Suspense fallback={<RouteFallback />}>
