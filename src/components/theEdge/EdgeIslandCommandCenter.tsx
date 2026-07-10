@@ -114,7 +114,9 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
         className="absolute inset-0 bg-obsidian-900/80 backdrop-blur-sm"
       />
 
-      <div className="glass-panel glass-border relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem]">
+      <div className="glass-panel glass-border relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] shadow-[0_32px_120px_rgba(0,0,0,0.55)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_70%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/40 to-transparent" aria-hidden />
         {/* Shared header + tab pills */}
         <div className="shrink-0 border-b border-white/5 p-5 pb-4 sm:p-7 sm:pb-4">
           <div className="flex items-start justify-between gap-3">
@@ -234,24 +236,24 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
               style={{ width: `${100 / PANELS.length}%` }}
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                <div className="glass-panel glass-border rounded-2xl border-emerald-400/10 bg-emerald-400/[0.04] p-3.5 text-center">
                   <Gauge className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
-                  <div className="text-xl font-black text-white">{decided ? `${profile!.winRate.toFixed(1)}%` : "—"}</div>
+                  <div className="text-xl font-black tabular-nums text-white">{decided ? `${profile!.winRate.toFixed(1)}%` : "—"}</div>
                   <div className="terminal-text mt-0.5">Win Rate</div>
                 </div>
-                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                <div className="glass-panel glass-border rounded-2xl border-emerald-400/10 bg-emerald-400/[0.04] p-3.5 text-center">
                   <Trophy className="mx-auto mb-1.5 h-4 w-4 text-vouch-emerald" />
-                  <div className="text-xl font-black text-white">{decided ? `${profile!.wonPicks}-${profile!.totalPicks - profile!.wonPicks}` : "0-0"}</div>
+                  <div className="text-xl font-black tabular-nums text-white">{decided ? `${profile!.wonPicks}-${profile!.totalPicks - profile!.wonPicks}` : "0-0"}</div>
                   <div className="terminal-text mt-0.5">Record</div>
                 </div>
-                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                <div className="glass-panel glass-border rounded-2xl border-cyan-400/10 bg-cyan-400/[0.04] p-3.5 text-center">
                   <Layers3 className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
-                  <div className="text-xl font-black text-white">{pendingParlays.length}</div>
+                  <div className="text-xl font-black tabular-nums text-white">{pendingParlays.length}</div>
                   <div className="terminal-text mt-0.5">Pending</div>
                 </div>
-                <div className="glass-panel glass-border rounded-2xl p-3.5 text-center">
+                <div className="glass-panel glass-border rounded-2xl border-cyan-400/10 bg-cyan-400/[0.04] p-3.5 text-center">
                   <Crown className="mx-auto mb-1.5 h-4 w-4 text-vouch-cyan" />
-                  <div className="text-xl font-black text-white">{tierLabel}</div>
+                  <div className="truncate text-lg font-black text-white">{tierLabel}</div>
                   <div className="terminal-text mt-0.5">Plan</div>
                 </div>
               </div>
@@ -265,7 +267,11 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                       key={zone.title}
                       type="button"
                       onClick={() => go(zone.section)}
-                      className="glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5"
+                      className={`glass-panel glass-border group rounded-2xl p-4 text-left transition hover:-translate-y-0.5 ${
+                        isHrBoard
+                          ? 'hover:border-vouch-cyan/35 hover:shadow-[0_12px_40px_rgba(0,240,255,0.08)]'
+                          : 'hover:border-vouch-emerald/25 hover:shadow-[0_12px_40px_rgba(0,255,148,0.06)]'
+                      }`}
                     >
                       <div className="mb-3 flex items-center justify-between">
                         <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isHrBoard ? "border border-vouch-cyan/35 bg-vouch-cyan/10 text-vouch-cyan" : "bg-vouch-emerald/10 text-vouch-emerald"}`}>

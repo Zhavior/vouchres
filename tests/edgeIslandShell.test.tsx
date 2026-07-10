@@ -4,16 +4,16 @@ import { render, screen } from '@testing-library/react';
 import { EdgeIslandShell } from '../src/components/edgeIsland/EdgeIslandShell';
 
 describe('EdgeIslandShell', () => {
-  it('renders Lightning Edge Island chrome with live sync state', () => {
+  it('renders Edge Island chrome with live sync state', () => {
     render(
       <EdgeIslandShell profile={{ displayName: 'Alex Rivera' } as any} isLoggedIn updatedAt="2026-07-09T12:00:00Z">
         <div data-testid="edge-child">Board content</div>
       </EdgeIslandShell>,
     );
 
-    expect(screen.getByText(/Lightning Edge Island/i)).toBeTruthy();
-    expect(screen.getByText(/Morning board, Alex/i)).toBeTruthy();
-    expect(screen.getByText(/Live data/i)).toBeTruthy();
+    expect(screen.getByText(/The Edge Island/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/Morning board,\s*Alex/i);
+    expect(screen.getByText(/^Live$/i)).toBeTruthy();
     expect(screen.getByTestId('edge-child')).toBeTruthy();
   });
 
@@ -25,7 +25,7 @@ describe('EdgeIslandShell', () => {
     );
 
     expect(screen.getByText(/Morning edge board preview/i)).toBeTruthy();
-    expect(screen.getByText(/Public preview/i)).toBeTruthy();
-    expect(screen.getByText(/Waiting/i)).toBeTruthy();
+    expect(screen.getByText(/^Preview$/i)).toBeTruthy();
+    expect(screen.getByText(/Waiting for sync/i)).toBeTruthy();
   });
 });
