@@ -45,4 +45,16 @@ export const ProductEvents = {
     void send("first_player_tracked");
   },
 
+  dailyBriefOpened() {
+    void send("daily_brief_opened");
+  },
+
+  notificationOpened(kind?: string) {
+    void send("notification_opened", { kind });
+  },
+
+  returningSession() {
+    void send("returning_session");
+  },
+
 };
