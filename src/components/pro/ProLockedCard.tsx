@@ -1,4 +1,5 @@
 import React from 'react';
+import { ProductEvents } from "../../lib/productEvents";
 import { Lock } from 'lucide-react';
 import { ACCENT, withAlpha } from '../../theme/colors';
 import { VECard, VEBadge } from '../ui/ve';
@@ -58,7 +59,10 @@ export const ProLockedCard: React.FC<ProLockedCardProps> = React.memo(function P
       {onUpgrade && (
         <button
           type="button"
-          onClick={onUpgrade}
+          onClick={() => {
+            ProductEvents.proUpgradeClicked(title);
+            onUpgrade?.();
+          }}
           className="relative mt-3 rounded-lg bg-vouch-cyan px-3 py-1.5 text-[10px] font-black text-black transition hover:brightness-110"
         >
           Upgrade to Pro

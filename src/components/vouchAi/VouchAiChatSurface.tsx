@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ProductEvents } from "../../lib/productEvents";
 import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import {
   ArrowRight,
@@ -339,7 +340,10 @@ export default function VouchAiChatSurface({
 
           <button
             type="button"
-            onClick={() => onSectionChange?.("premium")}
+            onClick={() => {
+              ProductEvents.proUpgradeClicked("vouch_ai");
+              onSectionChange?.("premium");
+            }}
             className="mt-3 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-black"
           >
             Upgrade to Pro
