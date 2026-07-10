@@ -16,6 +16,7 @@ import {
   safeText,
   useHrBoardProData,
 } from './proLabData';
+import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import { usePlayerEdgeResearch } from './usePlayerEdgeResearch';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../../theme/z8Tokens';
 
@@ -58,6 +59,7 @@ function getGamePk(row: any): number | null {
 
 export default function PlayerEdgeLabPage() {
   const { rows, loading, error, source } = useHrBoardProData();
+  const { isPro } = useEntitlements();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedRow = rows.find((row) => String(row.playerId ?? row.player_id ?? row.id) === selectedId) || rows[0] || null;
   const playerPayload = useMemo(() => buildPlayerPayload(selectedRow), [selectedRow]);
@@ -212,7 +214,34 @@ export default function PlayerEdgeLabPage() {
           {playerPayload ? (
             <>
               <PlayerIntelligenceCard payload={playerPayload} />
-              <HrSignalGraphs payload={playerPayload} showLockedFutureGraphs={false} />
+
+              {isPro ? (
+                <HrSignalGraphs
+                  payload={playerPayload}
+                  showLockedFutureGraphs={false}
+                />
+              ) : (
+                <div className={`${Z8_PANEL} rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10 p-5`}>
+                  <div className="text-lg font-black text-white">
+                    🔒 Pro Player Edge Intelligence
+                  </div>
+
+                  <p className="mt-2 text-sm text-white/70">
+                    Unlock matchup graphs, pitcher vulnerability,
+                    Statcast quality, and deeper AI research.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="mt-4 rounded-xl bg-vouch-cyan px-5 py-2 text-sm font-black text-black"
+                    onClick={() => window.dispatchEvent(new CustomEvent("vouch:navigate", {
+                      detail: { section: "premium" }
+                    }))}
+                  >
+                    Upgrade to Pro
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <VerifiedGraphEmptyState
