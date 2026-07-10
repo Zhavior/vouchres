@@ -1,10 +1,11 @@
-import { identifyUser } from "./analytics";
 import type { CreatorProofProfile } from "../types";
 
-export function syncAnalyticsProfile(
+export async function syncAnalyticsProfile(
   userId: string,
   profile: CreatorProofProfile
 ) {
+  const { identifyUser } = await import("./analytics");
+
   identifyUser(userId, {
     username: profile.username,
     handle: profile.handle,
