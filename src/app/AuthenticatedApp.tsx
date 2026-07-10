@@ -4,6 +4,8 @@ import { queryClient } from '../lib/queryClient';
 import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
+import '../index.css';
+import '../styles/vouchedge-theme.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
 

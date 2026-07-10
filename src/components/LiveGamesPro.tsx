@@ -775,8 +775,8 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
               </div>
             )}
 
-            {/* Pitch-by-pitch sweat screen for the selected live/final game */}
-            {(activeGame?.isLive || activeGame?.isFinal) && activeGame.gamePk != null && (
+            {/* Pitch-by-pitch sweat screen for the selected live game */}
+            {activeGame?.isLive && activeGame.gamePk != null && (
               <div className="min-w-0 max-w-4xl mx-auto w-full">
                 <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
               </div>

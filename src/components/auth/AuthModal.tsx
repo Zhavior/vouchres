@@ -34,6 +34,7 @@ import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import '../../styles/public-auth.css';
 import '../../styles/auth-modal.css';
 
 type Mode = 'login' | 'signup';

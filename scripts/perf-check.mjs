@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Lightweight perf gate — extends bundle-budget with tighter CSS ceiling.
- * Default CSS gzip: 88 KiB (Lighthouse headroom under 90 KiB budget).
+ * Lightweight perf gate — extends bundle-budget with route-aware CSS ceilings.
+ * Public landing CSS gzip: 24 KiB. Authenticated app CSS gzip: 88 KiB.
+ * Lazy auth modal CSS gzip: 12 KiB. Total emitted CSS gzip: 120 KiB.
  * Default JS index chunk: 130 KiB.
  *
  * Manual Lighthouse (optional):
@@ -16,7 +17,10 @@ import { gzipSync } from "node:zlib";
 
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
-const MAX_CSS_GZIP_BYTES = Number(process.env.PERF_CSS_BUDGET_BYTES ?? 88 * 1024);
+const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 24 * 1024);
+const MAX_AUTH_CSS_GZIP_BYTES = Number(process.env.PERF_AUTH_CSS_BUDGET_BYTES ?? 88 * 1024);
+const MAX_MODAL_CSS_GZIP_BYTES = Number(process.env.PERF_MODAL_CSS_BUDGET_BYTES ?? 12 * 1024);
+const MAX_TOTAL_CSS_GZIP_BYTES = Number(process.env.PERF_CSS_BUDGET_BYTES ?? 120 * 1024);
 
 function formatKiB(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;
@@ -57,12 +61,24 @@ if (indexChunks.length === 0) {
 
 const totalCssGzip = cssChunks.reduce((sum, chunk) => sum + chunk.gzipBytes, 0);
 const largestIndex = indexChunks[0];
+const publicCss = cssChunks.find((chunk) => chunk.name.startsWith('VouchEdgeTerminalPage-'));
+const authenticatedCss = cssChunks.find((chunk) => chunk.name.startsWith('AuthenticatedApp-'));
+const modalCss = cssChunks.find((chunk) => chunk.name.startsWith('AuthModal-'));
 
 console.log(
   `[perf-check] index gzip=${formatKiB(largestIndex.gzipBytes)} budget=${formatKiB(MAX_JS_GZIP_BYTES)}`
 );
 console.log(
-  `[perf-check] CSS total gzip=${formatKiB(totalCssGzip)} budget=${formatKiB(MAX_CSS_GZIP_BYTES)}`
+  `[perf-check] public CSS gzip=${formatKiB(publicCss?.gzipBytes ?? 0)} budget=${formatKiB(MAX_PUBLIC_CSS_GZIP_BYTES)}`
+);
+console.log(
+  `[perf-check] auth CSS gzip=${formatKiB(authenticatedCss?.gzipBytes ?? 0)} budget=${formatKiB(MAX_AUTH_CSS_GZIP_BYTES)}`
+);
+console.log(
+  `[perf-check] modal CSS gzip=${formatKiB(modalCss?.gzipBytes ?? 0)} budget=${formatKiB(MAX_MODAL_CSS_GZIP_BYTES)}`
+);
+console.log(
+  `[perf-check] emitted CSS gzip=${formatKiB(totalCssGzip)} budget=${formatKiB(MAX_TOTAL_CSS_GZIP_BYTES)}`
 );
 
 let failed = false;
@@ -72,8 +88,23 @@ if (largestIndex.gzipBytes > MAX_JS_GZIP_BYTES) {
   failed = true;
 }
 
-if (totalCssGzip > MAX_CSS_GZIP_BYTES) {
-  console.error(`[perf-check] FAIL — CSS gzip exceeds budget`);
+if (!publicCss || publicCss.gzipBytes > MAX_PUBLIC_CSS_GZIP_BYTES) {
+  console.error(`[perf-check] FAIL — public landing CSS exceeds budget or is missing`);
+  failed = true;
+}
+
+if (!authenticatedCss || authenticatedCss.gzipBytes > MAX_AUTH_CSS_GZIP_BYTES) {
+  console.error(`[perf-check] FAIL — authenticated CSS exceeds budget or is missing`);
+  failed = true;
+}
+
+if (!modalCss || modalCss.gzipBytes > MAX_MODAL_CSS_GZIP_BYTES) {
+  console.error(`[perf-check] FAIL — auth modal CSS exceeds budget or is missing`);
+  failed = true;
+}
+
+if (totalCssGzip > MAX_TOTAL_CSS_GZIP_BYTES) {
+  console.error(`[perf-check] FAIL — total emitted CSS exceeds budget`);
   failed = true;
 }
 

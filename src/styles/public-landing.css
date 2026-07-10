@@ -1,0 +1,27 @@
+@import "tailwindcss" source(none);
+@config "../../tailwind.public.config.ts";
+@source "../App.tsx";
+@source "../pages/VouchEdgeTerminalPage.tsx";
+@source "../components/landing/**/*.{ts,tsx}";
+
+@import "./vouchedge-tokens.css";
+@import "./vouchedge-utilities.css";
+@import "./vouchedge-motion.css";
+@import "./z8-design-system.css";
+@import "./vouchedge-theme.css";
+
+@import "./legacy/global-overrides.css";
+@import "./legacy/z8-shell.css";
+@import "./legacy/layout.css";
+@import "./legacy/ultrawide.css";
+@import "./legacy/scroll-mobile.css";
+
+body {
+  background-color: var(--bg-obsidian);
+  color: hsl(var(--ve-text-primary));
+  font-family: var(--font-z8);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
+}
