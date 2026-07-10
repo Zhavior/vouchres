@@ -1,3 +1,4 @@
+import { ProductEvents } from "../lib/productEvents";
 import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
@@ -60,6 +61,8 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
 
     const stripeTier = tier === 'GOLD' ? 'gold' : 'seller_pro';
     setCheckoutLoading(tier);
+
+    ProductEvents.checkoutStarted(stripeTier);
 
     const result = await startStripeCheckout(stripeTier);
     setCheckoutLoading(null);
