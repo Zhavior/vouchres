@@ -395,7 +395,7 @@ export default function HitterMatchupZonesPage() {
   const selectedGameData = games.find((g) => g.gamePk === selectedGame);
 
   return (
-    <div className="min-h-screen bg-[#050505] px-4 py-6 md:px-8">
+    <div className="min-h-screen bg-ve-obsidian px-4 py-6 md:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-black/20 px-5 py-4">
           <div className="flex items-center gap-3">

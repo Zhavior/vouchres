@@ -944,7 +944,7 @@ export default function PlayerResearchConsole({
                     Toggle interactive retro <b className="text-yellow-400">Pokémon Saber-Card Mode</b> or advanced <b className="text-[#10b981]">Pro Sabermetric Dossier</b> view.
                   </p>
                 </div>
-                <div className="flex bg-[#070a13] border border-white/10 p-1 rounded-2xl text-[10.5px] font-mono shrink-0 select-none">
+                <div className="flex bg-ve-obsidian border border-white/10 p-1 rounded-2xl text-[10.5px] font-mono shrink-0 select-none">
                   <button
                     type="button"
                     onClick={() => setDossierMode('POKEMON')}
@@ -961,7 +961,7 @@ export default function PlayerResearchConsole({
                     onClick={() => setDossierMode('SABER')}
                     className={`px-4 py-2 font-black rounded-xl transition-all uppercase flex items-center gap-1 leading-none ${
                       dossierMode === 'SABER'
-                        ? 'bg-[#10b981] text-white/45 font-extrabold shadow-sm'
+                        ? 'bg-emerald-500 text-white/45 font-extrabold shadow-sm'
                         : 'text-white/45 hover:text-white/70'
                     }`}
                   >
@@ -1370,10 +1370,10 @@ export default function PlayerResearchConsole({
                           </div>
                           
                           <div className="text-[8.5px] font-mono leading-normal text-white/45 space-y-1.5 pr-1 shrink-0">
-                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#10b981] inline-block" /> LHP: {activePlayer.splits.vLHP.ops}</div>
-                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#3b82f6] inline-block" /> RHP: {activePlayer.splits.vRHP.ops}</div>
-                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#f59e0b] inline-block" /> Home: {activePlayer.splits.home.ops}</div>
-                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-[#8b5cf6] inline-block" /> Away: {activePlayer.splits.away.ops}</div>
+                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LHP: {activePlayer.splits.vLHP.ops}</div>
+                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> RHP: {activePlayer.splits.vRHP.ops}</div>
+                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Home: {activePlayer.splits.home.ops}</div>
+                            <div className="flex items-center gap-1 min-w-[70px]"><span className="w-2 h-2 rounded-full bg-violet-500 inline-block" /> Away: {activePlayer.splits.away.ops}</div>
                           </div>
                         </div>
                       </div>

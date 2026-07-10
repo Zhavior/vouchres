@@ -366,7 +366,7 @@ export function SmartAiDeepResearchPanel({
             return (
               <article
                 key={`${c.playerId}-${c.gamePk}`}
-                className="group relative overflow-hidden rounded-3xl border border-slate-800/80 bg-[#07101d]/90 p-4 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:border-cyan-300/25"
+                className="group relative overflow-hidden rounded-3xl border border-slate-800/80 bg-ve-obsidian/90 p-4 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:border-cyan-300/25"
               >
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/35 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 

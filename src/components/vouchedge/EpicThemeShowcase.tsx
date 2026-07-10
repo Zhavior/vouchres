@@ -35,7 +35,7 @@ function themeAccent(t: VisualTheme): string {
   return extractHex(t.accentText);
 }
 function themeBg(t: VisualTheme): string {
-  // pageBg is a Tailwind class like bg-[#050B18] — pull the hex for inline styling
+  // pageBg is a Tailwind class like bg-ve-obsidian — pull the hex for inline styling
   const m = (t.pageBg || t.background || "").match(/#[0-9A-Fa-f]{6}/);
   return m ? m[0] : "#0b0f19";
 }

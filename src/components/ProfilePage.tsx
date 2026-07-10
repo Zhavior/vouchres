@@ -173,7 +173,7 @@ export default function ProfilePage({
                   {/* Cat peaking over the top border */}
                   <div className="absolute -top-3.5 right-12 flex flex-col items-center pointer-events-none select-none z-30 transition-all hover:-top-1 group cursor-pointer">
                     <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] animate-bounce" style={{ animationDuration: '3s' }}>🐱</span>
-                    <span className="text-[8px] bg-[#FBBC05] text-[#121824] px-1.5 py-0.5 rounded font-black uppercase font-mono tracking-wider border border-slate-900 shadow leading-none scale-90">G_KITTY</span>
+                    <span className="text-[8px] bg-yellow-400 text-ve-surface-panel px-1.5 py-0.5 rounded font-black uppercase font-mono tracking-wider border border-slate-900 shadow leading-none scale-90">G_KITTY</span>
                   </div>
                   
                   {/* Kitten clinging onto the left border */}
@@ -238,11 +238,11 @@ export default function ProfilePage({
                   {profile.activeTheme === 'google_cats' && (
                     <>
                       {/* Left ear */}
-                      <div className="absolute -top-3 left-1.5 w-6 h-6 bg-[#4285F4] border border-slate-950 rounded-tr-emerald-500 rounded-tl-2xl rounded-br-2xl rotate-12 z-30 flex items-center justify-center shadow-lg">
+                      <div className="absolute -top-3 left-1.5 w-6 h-6 bg-blue-500 border border-slate-950 rounded-tr-emerald-500 rounded-tl-2xl rounded-br-2xl rotate-12 z-30 flex items-center justify-center shadow-lg">
                         <div className="w-3 h-3 bg-pink-400 rounded-tr-emerald-400 rounded-tl-xl rounded-br-xl" />
                       </div>
                       {/* Right ear */}
-                      <div className="absolute -top-3 right-1.5 w-6 h-6 bg-[#34A853] border border-slate-950 rounded-tl-emerald-500 rounded-tr-2xl rounded-bl-2xl -rotate-12 z-30 flex items-center justify-center shadow-lg">
+                      <div className="absolute -top-3 right-1.5 w-6 h-6 bg-green-600 border border-slate-950 rounded-tl-emerald-500 rounded-tr-2xl rounded-bl-2xl -rotate-12 z-30 flex items-center justify-center shadow-lg">
                         <div className="w-3 h-3 bg-pink-400 rounded-tl-emerald-400 rounded-tr-xl rounded-bl-xl" />
                       </div>
                       {/* Left & Right whiskers indicators */}

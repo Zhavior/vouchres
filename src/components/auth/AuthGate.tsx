@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase, signInWithEmail, signUpWithEmail, signInWithMagicLink } from "../../lib/supabaseClient";
-import { identifyUser } from "../../lib/analytics";
 
 interface AuthGateProps {
   onAuthed?: () => void;
@@ -31,6 +30,8 @@ export function AuthGate({ onAuthed, inviteCodeRequired = true }: AuthGateProps)
     const user = data.user;
 
     if (!user) return;
+
+    const { identifyUser } = await import("../../lib/analytics");
 
     identifyUser(user.id, {
       email: user.email,

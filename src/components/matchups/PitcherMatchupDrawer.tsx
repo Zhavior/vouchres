@@ -486,7 +486,7 @@ export default function PitcherMatchupDrawer({
       />
 
       <aside
-        className="absolute inset-0 flex flex-col overflow-hidden border-white/15 bg-[#070713] text-slate-100 shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:inset-y-4 sm:right-4 sm:left-auto sm:w-[min(820px,calc(100vw-2rem))] sm:rounded-[2rem] sm:border"
+        className="absolute inset-0 flex flex-col overflow-hidden border-white/15 bg-ve-obsidian text-slate-100 shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:inset-y-4 sm:right-4 sm:left-auto sm:w-[min(820px,calc(100vw-2rem))] sm:rounded-[2rem] sm:border"
         role="dialog"
         aria-modal="true"
         aria-label="Pitcher matchup drawer"
@@ -540,7 +540,7 @@ export default function PitcherMatchupDrawer({
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto border-b border-white/10 bg-[#0b0b1b]/95 px-3 py-3 sm:px-5">
+        <div className="flex gap-2 overflow-x-auto border-b border-white/10 bg-ve-graphite/95 px-3 py-3 sm:px-5">
           {tabs.map(({ key, label, icon: Icon }) => (
             <button
               key={key}

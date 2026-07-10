@@ -1105,7 +1105,7 @@ export default function LiveStreams({
                           key={i}
                           onClick={() => handleVotePoll(i)}
                           disabled={hasVoted}
-                          className="w-full relative overflow-hidden bg-[#0d121f] hover:bg-[#101726] p-3 rounded-xl border border-slate-800 text-left transition-all hover:border-slate-700 disabled:hover:bg-[#0d121f] disabled:hover:border-slate-800"
+                          className="w-full relative overflow-hidden bg-ve-graphite hover:bg-ve-storm p-3 rounded-xl border border-slate-800 text-left transition-all hover:border-slate-700 disabled:hover:bg-ve-graphite disabled:hover:border-slate-800"
                         >
                           <div 
                             className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 transition-all duration-500 rounded-l"

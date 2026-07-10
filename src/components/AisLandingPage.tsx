@@ -920,7 +920,7 @@ function FeaturePreviewVideo({ featureId, accentColor }: { featureId: string; ac
             >
               <button 
                 onClick={() => setIsPlaying(true)}
-                className="w-12 h-12 rounded-full bg-[#FFE81F] text-slate-950 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,232,31,0.5)] outline-none"
+                className="w-12 h-12 rounded-full bg-yellow-300 text-slate-950 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,232,31,0.5)] outline-none"
               >
                 <Play className="w-6 h-6 fill-slate-950 ml-1" />
               </button>
@@ -1121,7 +1121,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
             id="navlink-features-scroller"
           >
             Features
-            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#FFE81F] transition-all group-hover:w-full" />
+            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-yellow-300 transition-all group-hover:w-full" />
           </button>
           <button 
             type="button"
@@ -1130,7 +1130,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
             id="navlink-smart-models"
           >
             Smart Models
-            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#38bdf8] transition-all group-hover:w-full" />
+            <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-sky-400 transition-all group-hover:w-full" />
           </button>
           <button 
             type="button"
@@ -1171,7 +1171,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }
             }}
-            className="px-4 py-2 bg-[#FFE81F] hover:bg-yellow-405 text-slate-950 font-black font-mono text-[10px] uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(255,232,31,0.25)] transition-all active:scale-95 cursor-pointer outline-none"
+            className="px-4 py-2 bg-yellow-300 hover:bg-yellow-405 text-slate-950 font-black font-mono text-[10px] uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(255,232,31,0.25)] transition-all active:scale-95 cursor-pointer outline-none"
             id="nav-establish-proof-btn"
           >
             {isRegistered ? 'Enter Portal' : 'Establish Proof'}
@@ -1401,7 +1401,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
                         <button
                           type="submit"
                           disabled={isActivating}
-                          className="w-full py-3.5 bg-[#FFE81F] hover:bg-yellow-405 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+                          className="w-full py-3.5 bg-yellow-300 hover:bg-yellow-405 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
                         >
                           {isActivating ? (
                             <>

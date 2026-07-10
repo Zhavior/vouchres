@@ -91,7 +91,7 @@ html {
 .z8-app-shell [class*="bg-obsidian-900"],
 .z8-app-shell [class*="bg-slate-950"],
 .z8-app-shell [class*="bg-slate-900"],
-.z8-app-shell [class*="bg-[#020617]"],
+.z8-app-shell [class*="bg-ve-obsidian"],
 .z8-app-shell [class*="bg-black"] {
   background-color: rgba(2, 6, 23, 0.24) !important;
   backdrop-filter: blur(16px) saturate(1.12);

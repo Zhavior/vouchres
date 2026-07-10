@@ -107,7 +107,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
 
             {/* VouchEdge Watermark badge */}
             <div className="text-right">
-              <span className="text-[10px] font-black text-[#FFE81F] font-mono tracking-wider border border-[#FFE81F]/30 px-2 py-0.5 rounded-md bg-[#FFE81F]/5 shadow-[0_0_10px_rgba(255,232,31,0.1)]">
+              <span className="text-[10px] font-black text-[#FFE81F] font-mono tracking-wider border border-[#FFE81F]/30 px-2 py-0.5 rounded-md bg-yellow-300/5 shadow-[0_0_10px_rgba(255,232,31,0.1)]">
                 ★ VOUCH<span className="text-white">EDGE</span>
               </span>
               <p className="text-[8px] text-slate-500 font-bold uppercase mt-1">Verified Proof Guard</p>
@@ -115,13 +115,13 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
           </div>
 
           <div className="grid grid-cols-2 gap-3.5 pt-2">
-            <div className="bg-[#0d1321] border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
+            <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
               <div className="absolute top-2 right-2 text-[10px] text-emerald-400 opacity-60">🎯</div>
               <span className="text-2xl font-black text-slate-100 tracking-tight font-mono">{profile.winRate}%</span>
               <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">WIN RATE PROOF</span>
             </div>
 
-            <div className="bg-[#0d1321] border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
+            <div className="bg-ve-graphite border border-slate-800/60 rounded-xl p-3 text-center flex flex-col justify-center shadow-md relative group hover:border-slate-700 transition-colors">
               <div className="absolute top-2 right-2 text-[10px] text-amber-400 opacity-60">💰</div>
               <span className="text-2xl font-black text-amber-400 tracking-tight font-mono">+{profile.unitsNetProfit}U</span>
               <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">NET LEDGER UNITS</span>
@@ -129,7 +129,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
           </div>
 
           {/* Bio quote box */}
-          <div className="bg-[#0b0c15] border border-slate-900/60 p-3 rounded-xl text-left">
+          <div className="bg-ve-obsidian border border-slate-900/60 p-3 rounded-xl text-left">
             <p className="text-xs text-slate-300 italic leading-relaxed font-sans line-clamp-2">
               "{profile.bio}"
             </p>

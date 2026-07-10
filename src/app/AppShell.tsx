@@ -2,16 +2,18 @@ import React, { Suspense, lazy } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
-import AuthStatusBadge from '../components/auth/AuthStatusBadge';
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
-import { AppNav } from './AppNav';
-import { DeployUpdateBanner } from '../components/system/DeployUpdateBanner';
 import type { CreatorProofProfile, Parlay } from '../types';
 
+const AppNav = lazy(() => import('./AppNav').then((module) => ({ default: module.AppNav })));
+const AuthStatusBadge = lazy(() => import('../components/auth/AuthStatusBadge'));
+const DeployUpdateBanner = lazy(() =>
+  import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
+);
 const HomeFeedLayout = lazy(() => import('../social/feed/HomeFeedLayout'));
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
 const EdgeIslandCommandCenter = lazy(() => import('../components/theEdge/EdgeIslandCommandCenter'));
@@ -57,6 +59,18 @@ export function AppShell({
   handleLogoutComplete,
   handleUpdateProfile,
 }: AppShellProps) {
+  const routeContent = (
+    <Suspense fallback={<RouteShellSkeleton />}>
+      <MainViewRouter
+        activeSection={activeSection}
+        navigateSection={navigateSection}
+        isLoggedIn={isLoggedIn}
+        profileViewUserId={profileViewUserId}
+        canSeeThemeStore={canSeeThemeStore}
+      />
+    </Suspense>
+  );
+
   return (
     <ThemeProvider profile={profile} onUpdateProfile={handleUpdateProfile}>
       <AppShellProvider value={appShellState}>
@@ -76,41 +90,47 @@ export function AppShell({
               <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
                 <NotificationProvider savedSlips={savedSlips} onNavigate={navigateSection}>
                   <div className="hidden md:block">
-                    <AuthStatusBadge
-                      hideGuest={activeSection === 'welcome' || activeSection === 'vouchedge_intro'}
-                      onLoginSuccess={handleLoginSuccess}
-                      onLogoutComplete={handleLogoutComplete}
-                    />
-                  </div>
-                  <Suspense fallback={<RouteShellSkeleton />}>
-                    <HomeFeedLayout
-                      activeSection={activeSection}
-                      onSectionChange={navigateSection}
-                      isRouteSwitching={isPendingRoute}
-                      isPublicFrontPage={isPublicFrontPage}
-                      onAuthLoginSuccess={handleLoginSuccess}
-                      onAuthLogoutComplete={handleLogoutComplete}
-                    >
-                      <Suspense fallback={<RouteShellSkeleton />}>
-                        <MainViewRouter
-                          activeSection={activeSection}
-                          navigateSection={navigateSection}
-                          isLoggedIn={isLoggedIn}
-                          profileViewUserId={profileViewUserId}
-                          canSeeThemeStore={canSeeThemeStore}
+                    {!isPublicFrontPage && (
+                      <Suspense fallback={null}>
+                        <AuthStatusBadge
+                          hideGuest={activeSection === 'welcome' || activeSection === 'vouchedge_intro'}
+                          onLoginSuccess={handleLoginSuccess}
+                          onLogoutComplete={handleLogoutComplete}
                         />
                       </Suspense>
-                    </HomeFeedLayout>
-                  </Suspense>
+                    )}
+                  </div>
+                  {isPublicFrontPage ? (
+                    <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
+                      <div id="center-main-content-column">
+                        <div id="inner-view-slot">{routeContent}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Suspense fallback={<RouteShellSkeleton />}>
+                      <HomeFeedLayout
+                        activeSection={activeSection}
+                        onSectionChange={navigateSection}
+                        isRouteSwitching={isPendingRoute}
+                        isPublicFrontPage={isPublicFrontPage}
+                        onAuthLoginSuccess={handleLoginSuccess}
+                        onAuthLogoutComplete={handleLogoutComplete}
+                      >
+                        {routeContent}
+                      </HomeFeedLayout>
+                    </Suspense>
+                  )}
 
                   {showGlobalAppChrome && (
                     <>
-                      <DeployUpdateBanner />
-                      <AppNav
-                        activeSection={activeSection}
-                        onNavigate={navigateSection}
-                        onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
-                      />
+                      <Suspense fallback={null}>
+                        <DeployUpdateBanner />
+                        <AppNav
+                          activeSection={activeSection}
+                          onNavigate={navigateSection}
+                          onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
+                        />
+                      </Suspense>
                     </>
                   )}
 

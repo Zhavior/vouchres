@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from '../../lib/motion';
 import { LANDING_JUDGES } from '../../constants/aiJudges';
 import JudgePixelIcon from '../judges/JudgePixelIcon';
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from '../../theme/z8Tokens';
@@ -43,22 +42,16 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
             </button>
           ))}
         </div>
-        <AnimatePresence mode="wait">
-          <motion.p
+          <p
             key={judge.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="text-center text-[11px] leading-relaxed text-white/50"
+            className="ve-auth-judge-swap text-center text-[11px] leading-relaxed text-white/50"
           >
             <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-cyan/70">
               {judge.code}
             </span>
             {' — '}
             <span className="italic text-white/60">&ldquo;{judge.authTip}&rdquo;</span>
-          </motion.p>
-        </AnimatePresence>
+          </p>
       </div>
     );
   }
@@ -82,14 +75,9 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
       </div>
 
       <div className="relative my-6">
-        <AnimatePresence mode="wait">
-          <motion.div
+          <div
             key={judge.id}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 12 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-start gap-3"
+            className="ve-auth-judge-swap flex items-start gap-3"
           >
             <JudgePixelIcon code={judge.code} />
             <div className="min-w-0">
@@ -100,8 +88,7 @@ export default function AuthJudgeWelcome({ compact = false, className = '' }: Au
                 &ldquo;{judge.authTip}&rdquo;
               </blockquote>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
 
       <div className="relative space-y-3">

@@ -13,12 +13,13 @@ import {
   initChunkRecovery,
   onChunkRecoveryMountSuccess,
 } from './lib/chunkRecovery';
-import { initSentry } from './lib/sentry';
 import { registerChunkRecoveryFallback } from './components/system/ChunkRecoveryFallback';
 
 import { patchPublicNotificationsFetch } from "./lib/patchPublicNotificationsFetch";
 
-initSentry();
+if (import.meta.env.VITE_SENTRY_DSN) {
+  void import('./lib/sentry').then(({ initSentry }) => initSentry());
+}
 registerChunkRecoveryFallback();
 initChunkRecovery();
 clearChunkRecoveryFlag();

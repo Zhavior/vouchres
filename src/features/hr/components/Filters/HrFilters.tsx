@@ -27,7 +27,7 @@ export function HrFilters({ mode, onModeChange, selectedTiers, onToggleTier }: H
       <select
         value={mode}
         onChange={(e) => onModeChange(e.target.value as HrWatchMode)}
-        className="ve-touch-target h-11 rounded-lg border border-white/[0.06] bg-[#0B0F18] px-3 font-mono text-[11px] uppercase text-zinc-300 outline-none sm:h-9"
+        className="ve-touch-target h-11 rounded-lg border border-white/[0.06] bg-ve-storm px-3 font-mono text-[11px] uppercase text-zinc-300 outline-none sm:h-9"
       >
         {MODES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>

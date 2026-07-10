@@ -75,9 +75,150 @@
   pointer-events: auto !important;
 }
 
+.ve-terminal-ticker-track {
+  animation: ve-terminal-ticker-scroll 28s linear infinite;
+}
+
+.ve-judges-placeholder {
+  min-height: 280px;
+}
+
+.ve-landing-judge-card {
+  animation: ve-terminal-card-rise 360ms ease-out both;
+}
+
+@keyframes ve-terminal-card-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0.01;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes ve-terminal-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-terminal-ticker-track {
+    animation: none;
+  }
+
+  .ve-landing-judge-card {
+    animation: none;
+  }
+}
+
 @media (max-width: 767px) {
   #root .edge-space-hero {
     min-height: auto;
+  }
+
+  /* Public landing: full-width column — no grid dead space or mobile chrome padding */
+  #layout-inner-frame.ve-layout-welcome,
+  #layout-inner-frame.ve-layout-welcome #center-main-content-column,
+  #layout-inner-frame.ve-layout-welcome #inner-view-slot {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-column: auto !important;
+    margin-inline: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .ve-terminal-page {
+    padding-bottom: 5.75rem;
+  }
+
+  .ve-terminal-page .starfield {
+    opacity: 0.22;
+    animation: none;
+  }
+
+  .ve-terminal-page .storm-layer {
+    opacity: 0.84;
+  }
+
+  .ve-terminal-header {
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+  }
+
+  .ve-terminal-header-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .ve-terminal-header-actions button {
+    min-height: 44px;
+  }
+
+  .ve-terminal-hero {
+    gap: 1.35rem;
+  }
+
+  .ve-terminal-hero-badge {
+    max-width: 100%;
+    justify-content: center;
+    white-space: normal;
+  }
+
+  .ve-terminal-hero h1 {
+    font-size: clamp(2.35rem, 12vw, 3.35rem);
+    line-height: 0.98;
+  }
+
+  .ve-terminal-hero p {
+    font-size: 0.95rem;
+  }
+
+  .ve-terminal-trust-grid {
+    border-radius: 1rem;
+  }
+
+  .ve-terminal-cta-row {
+    max-width: 100%;
+  }
+
+  .ve-terminal-cta-row button {
+    min-height: 52px;
+    max-width: none;
+  }
+
+  .ve-terminal-preview-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .ve-terminal-preview-row span:last-child {
+    line-height: 1.25;
+  }
+
+  .ve-terminal-ticker {
+    padding-block: 0.45rem;
+  }
+
+  .ve-terminal-ticker-track {
+    animation-duration: 36s;
+    gap: 2.5rem;
+  }
+
+  .ve-judges-placeholder {
+    min-height: 250px;
+    padding: 1.25rem;
   }
 }
 
@@ -145,4 +286,3 @@ body {
     max-width: 100%;
   }
 }
-

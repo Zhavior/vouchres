@@ -158,7 +158,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
           cardStyle: 'bg-ve-storm/90 border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
           borderStyle: 'border-cyan-400/30',
           glowStyle: 'shadow-cyan-400/15',
-          buttonStyle: 'bg-[#22d3ee] text-slate-950 font-black',
+          buttonStyle: 'bg-cyan-400 text-slate-950 font-black',
           badgeStyle: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/40',
           sidebarStyle: 'bg-ve-obsidian border-r border-cyan-400/10',
           vouchCardStyle: 'bg-ve-storm border-cyan-400/30',

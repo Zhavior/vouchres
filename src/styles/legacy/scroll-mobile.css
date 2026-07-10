@@ -210,8 +210,17 @@ html {
     overflow-x: clip !important;
   }
 
+  #layout-inner-frame.ve-layout-welcome #inner-view-slot {
+    padding-bottom: 0 !important;
+  }
+
   .ve-page-shell {
     padding-bottom: calc(var(--ve-mobile-chrome-height) + var(--ve-safe-bottom));
+  }
+
+  #layout-inner-frame.ve-layout-welcome .ve-page-shell,
+  .ve-terminal-page {
+    padding-bottom: 0;
   }
 }
 

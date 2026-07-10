@@ -11,6 +11,7 @@
  * muted white = balls, cyan = system chrome (live pulse, win prob).
  */
 import React, { useEffect, useRef, useState } from 'react';
+import { PlayerIntelligenceCard } from "../player/PlayerIntelligenceCard";
 import { Activity, Wifi, WifiOff } from 'lucide-react';
 import { liveAtBatPollLabel, useLiveAtBat } from '../../hooks/queries/useLiveAtBat';
 import type { LiveAtBatPitch, LiveAtBatRunner, LiveAtBatSnapshot } from '../../types/liveAtBat';
@@ -304,6 +305,8 @@ export const LiveAtBatView: React.FC<{ gamePk: number }> = ({ gamePk }) => {
                 : `${snap.away.abbr} ${snap.winProb.awayPct.toFixed(1)}%`} win prob
             </span>
           )}
+          <PlayerIntelligenceCard snapshot={snap} />
+
           <ConnectionBadge snap={snap} isFetching={isFetching} isError={isError} />
         </div>
       </div>

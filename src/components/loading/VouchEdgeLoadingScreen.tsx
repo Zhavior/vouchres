@@ -22,7 +22,7 @@ export default function VouchEdgeLoadingScreen({
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] grid place-items-center overflow-hidden bg-[#020617] text-white ${
+      className={`fixed inset-0 z-[9999] grid place-items-center overflow-hidden bg-ve-obsidian text-white ${
         compact ? "p-4" : "p-6"
       }`}
       role="status"

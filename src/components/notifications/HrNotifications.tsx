@@ -137,7 +137,7 @@ export default function HrNotifications({ savedSlips = [] }: { savedSlips?: Parl
       {isOpen && (
         <div className="fixed inset-0 z-[120] md:inset-auto md:bottom-6 md:right-6 md:w-96">
           <div className="absolute inset-0 bg-black/50 md:hidden" onClick={() => setIsOpen(false)} />
-          <div className="relative h-full md:h-auto md:max-h-[72vh] bg-[#0b1120] md:border border-slate-800 md:rounded-2xl shadow-2xl flex flex-col">
+          <div className="relative h-full md:h-auto md:max-h-[72vh] bg-ve-storm md:border border-slate-800 md:rounded-2xl shadow-2xl flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
               <h3 className="text-sm font-black flex items-center gap-2 text-slate-100"><Bell className="w-4 h-4 text-orange-400" /> Home Run Alerts</h3>

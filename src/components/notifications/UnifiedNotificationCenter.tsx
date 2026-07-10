@@ -196,7 +196,7 @@ export function NotificationProvider({ savedSlips = [], onNavigate, children }: 
           <div className="absolute inset-0 bg-black/50" onClick={closePanel} aria-hidden />
           <div
             ref={panelRef}
-            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-vouch-cyan/20 bg-[#0b1120] shadow-2xl md:right-4 md:top-14 md:h-auto md:max-h-[min(72vh,640px)] md:rounded-2xl md:border"
+            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-vouch-cyan/20 bg-ve-storm shadow-2xl md:right-4 md:top-14 md:h-auto md:max-h-[min(72vh,640px)] md:rounded-2xl md:border"
             role="dialog"
             aria-label="Notifications"
           >
