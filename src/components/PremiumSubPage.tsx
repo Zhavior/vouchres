@@ -30,6 +30,9 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'success') {
+      ProductEvents.proSubscribed(
+        tier === 'GOLD' ? 'gold' : 'seller_pro'
+      );
       fetchBillingStatus().then((status) => {
         if (status) {
           const subTier = tierToSubscriptionTier(status.tier);
