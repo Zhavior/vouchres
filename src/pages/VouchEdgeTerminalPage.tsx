@@ -20,6 +20,7 @@ import {
 } from '../components/landing/LandingTokens';
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
+import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 
@@ -101,30 +102,6 @@ const TRUST_PILLARS = [
   { label: 'Play', detail: 'Prove your record' },
 ] as const;
 
-function StatusTicker() {
-  const items = [
-    'VOUCHEDGE_TERMINAL // TRUST_FIRST_PROTOCOL',
-    'HR_BOARD: LIVE_WHEN_SIGNED_IN',
-    'JUDGE_COUNCIL: DS · PH · MR · RA · PE',
-    'NO_FAKE_LINEUPS // NO_FAKE_ODDS',
-    'EDGE_ISLAND: READY',
-  ];
-
-  return (
-    <div className="ve-terminal-ticker fixed bottom-0 left-0 z-50 w-full overflow-hidden border-t border-white/10 bg-black/80 py-2 shadow-[0_-18px_40px_rgba(0,0,0,0.75)] backdrop-blur-xl">
-      <div className="ve-terminal-ticker-track flex gap-16 whitespace-nowrap">
-        {[1, 2].map((pass) =>
-          items.map((item) => (
-            <span key={`${pass}-${item}`} className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">
-              {item} //
-            </span>
-          )),
-        )}
-      </div>
-    </div>
-  );
-}
-
 function JudgesPlaceholder() {
   return (
     <section
@@ -134,13 +111,11 @@ function JudgesPlaceholder() {
       <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
       <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Five judges on standby</h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
-        Profiles initialize after the terminal preview so the first screen stays fast and the trust story stays clear.
+        Interactive judge profiles load as you scroll — hover or click each AI to explore.
       </p>
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-hidden="true">
+      <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
         {['DS', 'PH', 'MR', 'RA', 'PE'].map((code) => (
-          <div key={code} className="rounded-xl border border-white/10 bg-black/30 px-3 py-4">
-            <span className="font-mono text-xs font-black text-vouch-cyan/70">{code}</span>
-          </div>
+          <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
         ))}
       </div>
     </section>
@@ -288,9 +263,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-hidden pb-28 lg:pb-32`}>
-        <StatusTicker />
+      <LandingStatusTicker />
 
+      <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
         {/* Ambient obsidian glow */}
         <div
           className="pointer-events-none absolute left-[-10%] top-0 h-full w-[80%] opacity-50"
