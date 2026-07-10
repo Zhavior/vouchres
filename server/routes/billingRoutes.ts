@@ -340,13 +340,28 @@ billingRoutes.post(
         case "charge.dispute.created": {
           // A refunded/charged-back customer must NOT keep paid access. Revoke
           // on a FULL refund or any dispute (partial refunds are left alone).
-          const obj = event.data.object as Stripe.Charge | Stripe.Dispute;
-          const charge = event.type === "charge.refunded" ? (obj as Stripe.Charge) : null;
-          const isFullRefund = charge ? charge.amount_refunded >= charge.amount : true;
-          const customerId =
-            typeof (obj as any).customer === "string"
-              ? (obj as any).customer
-              : (obj as any).customer?.id ?? null;
+          const resolveCustomerId = (c: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined): string | null =>
+            typeof c === "string" ? c : c?.id ?? null;
+
+          let customerId: string | null = null;
+          let isFullRefund = true; // a dispute always revokes; refunds check below
+
+          if (event.type === "charge.refunded") {
+            const charge = event.data.object as Stripe.Charge;
+            isFullRefund = charge.amount_refunded >= charge.amount;
+            customerId = resolveCustomerId(charge.customer);
+          } else {
+            // Stripe.Dispute has NO top-level customer field — resolve it via
+            // the disputed charge (expanded object or a charge id we retrieve).
+            const dispute = event.data.object as Stripe.Dispute;
+            const chargeRef = dispute.charge;
+            if (typeof chargeRef === "string") {
+              const charge = await getStripe().charges.retrieve(chargeRef);
+              customerId = resolveCustomerId(charge.customer);
+            } else {
+              customerId = resolveCustomerId(chargeRef?.customer);
+            }
+          }
 
           if (customerId && isFullRefund) {
             structuredLog({
