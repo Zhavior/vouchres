@@ -83,7 +83,29 @@ export function FeaturedEdgeCard({
 
       <div className="mt-6 grid grid-cols-3 gap-2">
         <button
-          onClick={() => onSectionChange?.("ai_engine")}
+          onClick={() => {
+              onSectionChange?.("ai_engine");
+
+              window.dispatchEvent(
+                new CustomEvent("vouch-ai-context", {
+                  detail: {
+                    prompt: `
+Explain this featured edge:
+
+Player: ${playerName}
+VE Score: ${score}
+HR Probability: ${hrProbability ?? "N/A"}%
+Confidence: ${confidence ?? "N/A"}
+
+Reasons:
+${reasons.join("\n")}
+
+Why is this a top edge today?
+`,
+                  },
+                })
+              );
+            }}
           className="rounded-xl bg-vouch-cyan/20 px-3 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/30"
         >
           🤖 Ask AI
