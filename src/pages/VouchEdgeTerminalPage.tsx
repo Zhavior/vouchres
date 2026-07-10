@@ -110,12 +110,12 @@ function JudgesPlaceholder() {
       aria-label="AI Judge Council preview"
     >
       <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Five judges on standby</h2>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Four judges on standby</h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
         Interactive judge profiles load as you scroll — hover or click each AI to explore.
       </p>
       <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
-        {['DS', 'PH', 'MR', 'RA', 'PE'].map((code) => (
+        {['DS', 'PH', 'MR', 'RA'].map((code) => (
           <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
         ))}
       </div>

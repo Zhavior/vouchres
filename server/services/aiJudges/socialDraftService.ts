@@ -70,13 +70,6 @@ export const AI_JUDGES: AiJudge[] = [
     personality: "Skeptical, warning-first judge.",
     strategy: "Flags risky picks and weak-data traps before public posting.",
   },
-  {
-    id: "pro_edge_agent",
-    name: "Pro Edge Agent",
-    icon: "PE",
-    personality: "Premium analyst for locked insights.",
-    strategy: "Creates a Pro teaser without revealing every premium edge.",
-  },
 ];
 
 function agentReason(judgeId: JudgeId, c: Candidate): string {
@@ -141,24 +134,6 @@ function composeDraft(judge: AiJudge, picks: Candidate[], date: string): string 
     ].join("\n");
   }
 
-  if (judge.id === "pro_edge_agent") {
-    return [
-      `🔒 VouchEdge ${judge.name} — Pro HR Preview`,
-      ``,
-      `The Pro model found ${picks.length} premium HR paths today.`,
-      picks[0]
-        ? `Top visible teaser: ${playerName(picks[0])} — HR Edge ${hrScore(picks[0])}/100`
-        : `Top visible teaser: pending HR board data.`,
-      ``,
-      `Pro unlock later: RBI windows, bullpen fatigue, stolen bases, pitch mix, and live parlay impact.`,
-      ``,
-      premiumCta(judge.name),
-      ``,
-      `Research only. Not betting advice.`,
-      `Generated for ${date}.`,
-    ].join("\n");
-  }
-
   const lines = picks.map((p, i) => {
     const reason = agentReason(judge.id, p);
     return `${i + 1}. ${playerName(p)} — ${p.team ?? "TBD"} vs ${opponent(p)}\nHR Edge: ${hrScore(p)}/100 · Agent Score: ${agentScore(judge.id, p).toFixed(1)} · Est HR: ${probability(p)}\nWhy: ${reason}`;
@@ -213,12 +188,7 @@ export async function generateHrSocialDrafts(options?: {
       id: randomUUID(),
       judgeId: judge.id,
       judgeName: judge.name,
-      postType:
-        judge.id === "risk_auditor"
-          ? "risk_report"
-          : judge.id === "pro_edge_agent"
-            ? "pro_preview"
-            : "hr_picks",
+      postType: judge.id === "risk_auditor" ? "risk_report" : "hr_picks",
       platform: "x",
       status: "draft",
       date,

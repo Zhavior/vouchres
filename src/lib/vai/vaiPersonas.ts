@@ -1,3 +1,5 @@
+import type { JudgeAgentId } from './judgeClientScoring';
+
 export type VaiPersonaId = 'banker' | 'analyst' | 'hunter' | 'shark';
 
 export type VaiRiskProfile = 'conservative' | 'balanced' | 'momentum' | 'aggressive';
@@ -19,6 +21,9 @@ export interface VaiPersona {
   name: string;
   shortName: string;
   roomName: string;
+  /** Linked AI Edge Lab judge — shared scoring + ledger identity. */
+  judgeId: JudgeAgentId;
+  judgeCode: string;
   riskProfile: VaiRiskProfile;
   accent: string;
   gradient: string;
@@ -47,6 +52,8 @@ export const VAI_PERSONAS: VaiPersona[] = [
     name: 'The Banker',
     shortName: 'Banker',
     roomName: 'Banker Room',
+    judgeId: 'data_scout',
+    judgeCode: 'DS',
     riskProfile: 'conservative',
     accent: 'Emerald / Gold',
     gradient: 'from-emerald-500/20 via-slate-950 to-yellow-500/10',
@@ -73,6 +80,8 @@ export const VAI_PERSONAS: VaiPersona[] = [
     name: 'The Analyst',
     shortName: 'Analyst',
     roomName: 'Analyst Room',
+    judgeId: 'risk_auditor',
+    judgeCode: 'RA',
     riskProfile: 'balanced',
     accent: 'Blue / Cyan',
     gradient: 'from-cyan-500/20 via-slate-950 to-blue-500/10',
@@ -98,6 +107,8 @@ export const VAI_PERSONAS: VaiPersona[] = [
     name: 'The Hunter',
     shortName: 'Hunter',
     roomName: 'Hunter Room',
+    judgeId: 'momentum_reader',
+    judgeCode: 'MR',
     riskProfile: 'momentum',
     accent: 'Amber / Orange',
     gradient: 'from-amber-500/20 via-slate-950 to-orange-500/10',
@@ -123,6 +134,8 @@ export const VAI_PERSONAS: VaiPersona[] = [
     name: 'The Shark',
     shortName: 'Shark',
     roomName: 'Shark Room',
+    judgeId: 'power_hunter',
+    judgeCode: 'PH',
     riskProfile: 'aggressive',
     accent: 'Violet / Red',
     gradient: 'from-violet-500/20 via-slate-950 to-red-500/10',

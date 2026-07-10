@@ -57,7 +57,7 @@ export default function LandingJudgesDeck() {
       <div className="text-center">
         <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
         <h2 id="judges-heading" className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-          Five judges. Five real-world edges.
+          Four judges. Four real-world edges.
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/50">
           Hover to explore each judge — click a profile to switch. Every AI maps to how serious researchers
@@ -127,7 +127,7 @@ export default function LandingJudgesDeck() {
         </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           {LANDING_JUDGES.map((item, judgeIndex) => {
             const active = judgeIndex === index;
             const ring = JUDGE_COLOR_RING[item.color] ?? JUDGE_COLOR_RING.cyan;
@@ -165,7 +165,7 @@ export default function LandingJudgesDeck() {
       </div>
 
       <p className="text-center font-mono text-[10px] uppercase tracking-widest text-white/30">
-        Judge IDs: data_scout · power_hunter · momentum_reader · risk_auditor · pro_edge_agent
+        Judge IDs: data_scout · power_hunter · momentum_reader · risk_auditor
       </p>
     </section>
   );

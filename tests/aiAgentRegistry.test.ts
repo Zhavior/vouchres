@@ -52,11 +52,11 @@ vi.mock("../server/hubs/hrBoardHub", () => ({
 }));
 
 describe("ai judge agent registry", () => {
-  it("lists five built-in judge agents", () => {
+  it("lists four built-in judge agents", () => {
     const agents = listAgentMeta();
-    expect(agents).toHaveLength(5);
+    expect(agents).toHaveLength(4);
     expect(agents.every((a) => a.builtin)).toBe(true);
-    expect(agents.map((a) => a.code).sort()).toEqual(["DS", "MR", "PE", "PH", "RA"]);
+    expect(agents.map((a) => a.code).sort()).toEqual(["DS", "MR", "PH", "RA"]);
   });
 
   it("exposes scoreCandidate, buildSinglePick, and gradeStrategy on built-ins", () => {
@@ -83,9 +83,9 @@ describe("ai judge agent registry", () => {
 });
 
 describe("leaderboard via registry", () => {
-  it("builds leaderboard with five judges from registry", async () => {
+  it("builds leaderboard with four judges from registry", async () => {
     const board = await buildAiJudgeLeaderboard();
-    expect(board.leaderboard).toHaveLength(5);
+    expect(board.leaderboard).toHaveLength(4);
     expect(board.leaderboard.every((j) => j.topPicks.length <= 1)).toBe(true);
     expect(listAgents().map((a) => a.id).sort()).toEqual(
       board.leaderboard.map((j) => j.id).sort(),
