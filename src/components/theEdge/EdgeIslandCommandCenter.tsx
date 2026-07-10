@@ -61,6 +61,8 @@ const TIER_LABEL: Record<string, string> = {
 };
 
 const SWIPE_THRESHOLD = 56;
+const PANEL_SCROLL_CLASS =
+  "h-full min-h-0 shrink-0 overflow-y-auto overscroll-y-contain touch-pan-y px-4 py-4 sm:px-6 sm:py-5 [-webkit-overflow-scrolling:touch]";
 const TAB_COPY: Record<PanelId, { title: string; subtitle: string }> = {
   command: {
     title: "Command deck",
@@ -308,6 +310,11 @@ export default function EdgeIslandCommandCenter({
 }: Props) {
   const [activePanel, setActivePanel] = useState<PanelId>("command");
   const touchStartX = useRef<number | null>(null);
+  const panelScrollRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  const setPanelScrollRef = (index: number) => (node: HTMLDivElement | null) => {
+    panelScrollRefs.current[index] = node;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -326,6 +333,18 @@ export default function EdgeIslandCommandCenter({
   useEffect(() => {
     if (!open) setActivePanel("command");
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    panelScrollRefs.current.forEach((pane) => {
+      if (pane) pane.scrollTop = 0;
+    });
+  }, [open]);
+
+  useEffect(() => {
+    const index = PANELS.indexOf(activePanel);
+    panelScrollRefs.current[index]?.scrollTo({ top: 0, behavior: "auto" });
+  }, [activePanel]);
 
   if (!open) return null;
 
@@ -436,20 +455,10 @@ export default function EdgeIslandCommandCenter({
             style={{ width: `${PANELS.length * 100}%` }}
             animate={{ x: `-${(activeIndex * 100) / PANELS.length}%` }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            drag="x"
-            dragDirectionLock
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.14}
-            onDragEnd={(_, info) => {
-              if (info.offset.x < -SWIPE_THRESHOLD && activeIndex < PANELS.length - 1) {
-                setActivePanel(PANELS[activeIndex + 1]);
-              } else if (info.offset.x > SWIPE_THRESHOLD && activeIndex > 0) {
-                setActivePanel(PANELS[activeIndex - 1]);
-              }
-            }}
           >
             <div
-              className="h-full min-h-0 shrink-0 overflow-y-auto overscroll-y-contain touch-pan-y px-4 py-4 sm:px-6 sm:py-5 [-webkit-overflow-scrolling:touch]"
+              ref={setPanelScrollRef(0)}
+              className={PANEL_SCROLL_CLASS}
               style={{ width: `${100 / PANELS.length}%` }}
             >
               <CommandPanel
@@ -461,7 +470,8 @@ export default function EdgeIslandCommandCenter({
             </div>
 
             <div
-              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-5"
+              ref={setPanelScrollRef(1)}
+              className={`flex ${PANEL_SCROLL_CLASS}`}
               style={{ width: `${100 / PANELS.length}%` }}
             >
               <EdgeIslandAskAiPanel
@@ -473,7 +483,8 @@ export default function EdgeIslandCommandCenter({
             </div>
 
             <div
-              className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-5"
+              ref={setPanelScrollRef(2)}
+              className={`flex ${PANEL_SCROLL_CLASS}`}
               style={{ width: `${100 / PANELS.length}%` }}
             >
               <WorldChatPanel

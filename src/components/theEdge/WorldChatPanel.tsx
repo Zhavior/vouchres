@@ -76,7 +76,7 @@ export default function WorldChatPanel({
   }, [fetchMessages]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    scrollRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages.length]);
 
   const handlePost = async (e?: React.FormEvent) => {
@@ -118,7 +118,7 @@ export default function WorldChatPanel({
   };
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col">
+    <div className="flex w-full flex-col">
       <div className="glass-panel glass-border mb-3 flex items-center gap-3 rounded-2xl p-3.5">
         <div className="grid h-10 w-10 place-items-center rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald">
           <Globe className="h-5 w-5" />
@@ -179,7 +179,7 @@ export default function WorldChatPanel({
 
       <div
         ref={scrollRef}
-        className="glass-panel glass-border min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl p-3"
+        className="glass-panel glass-border space-y-3 rounded-2xl p-3"
       >
         {loading ? (
           <p className="text-center text-xs text-white/35">Loading messages…</p>

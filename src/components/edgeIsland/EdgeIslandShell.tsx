@@ -32,7 +32,7 @@ export function EdgeIslandShell({ children, profile, isLoggedIn, updatedAt }: Ed
 
   return (
     <main
-      className={`${Z8_PAGE} ve-page-shell relative mx-auto w-full min-w-0 max-w-[1500px] overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ve-safe-bottom bg-ve-obsidian text-ve-flash`}
+      className={`${Z8_PAGE} ve-page-shell relative mx-auto w-full min-h-0 min-w-0 max-w-[1500px] overflow-x-hidden ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ve-safe-bottom bg-ve-obsidian text-ve-flash`}
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(0,240,255,0.14),transparent_70%)]"

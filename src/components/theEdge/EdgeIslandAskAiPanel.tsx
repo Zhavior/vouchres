@@ -65,8 +65,8 @@ export default function EdgeIslandAskAiPanel({
   });
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col">
-      <div className="glass-panel glass-border mb-4 flex items-center gap-3 rounded-2xl p-3.5">
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <div className="glass-panel glass-border mb-4 flex shrink-0 items-center gap-3 rounded-2xl p-3.5">
         <div className="grid h-10 w-10 place-items-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 text-vouch-cyan">
           <BrainCircuit className="h-5 w-5" />
         </div>
@@ -79,13 +79,15 @@ export default function EdgeIslandAskAiPanel({
         </div>
       </div>
 
-      <VouchAiChatSurface
-        variant="island"
-        profile={profile}
-        onSectionChange={navigate}
-        chat={chat}
-        initialPrompt={edgeContextPrompt}
-/>
+      <div className="w-full">
+        <VouchAiChatSurface
+          variant="island"
+          profile={profile}
+          onSectionChange={navigate}
+          chat={chat}
+          initialPrompt={edgeContextPrompt}
+        />
+      </div>
     </div>
   );
 }

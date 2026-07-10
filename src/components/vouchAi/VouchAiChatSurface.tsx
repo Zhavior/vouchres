@@ -101,7 +101,7 @@ export default function VouchAiChatSurface({
     <>
       <div
         ref={scrollRef}
-        className={`min-h-0 flex-1 space-y-3 overflow-y-auto ${isIsland ? "pr-1" : "p-4 space-y-4 scrollbar-none"}`}
+        className={`space-y-3 ${isIsland ? "pr-1" : "min-h-0 flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none"}`}
       >
         {messages.map((m) => (
           <motion.div
