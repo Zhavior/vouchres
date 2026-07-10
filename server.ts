@@ -123,6 +123,9 @@ async function startServer() {
   });
 }
 
-if (process.env.VERCEL !== "1") {
-  startServer();
-}
+// Render (and any persistent-process host) always starts the HTTP server.
+// The old `if (process.env.VERCEL !== "1")` guard existed for a Vercel
+// serverless deploy (api/index.ts called createApp() without listening).
+// That path was removed — Render single-service is the deploy target, so
+// createApp stays exported for tests but the process always listens.
+startServer();
