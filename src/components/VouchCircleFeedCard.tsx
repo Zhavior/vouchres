@@ -5,13 +5,8 @@ import {
   Sparkles, 
   Check, 
   Tv, 
-  Info, 
-  Flame, 
-  Activity, 
-  Shield 
 } from 'lucide-react';
 import { FeedPost } from '../types';
-import { getFounderPointsLabel } from "../lib/founderAccess";
 
 interface VouchCircleFeedCardProps {
   post: FeedPost;
@@ -162,11 +157,11 @@ const cardStyleConfigs: any = {
 };
 
 export default function VouchCircleFeedCard({ post, profile }: VouchCircleFeedCardProps) {
-  const config = post.boardConfig;
-  if (!config) return null;
-
   const [activeSlide, setActiveSlide] = useState(0);
   const [potdIndex] = useState(0);
+
+  const config = post.boardConfig;
+  if (!config) return null;
 
   const cardStyle = config.cardStyle || 'cyberpunk';
   const activeStyle = cardStyleConfigs[cardStyle] || cardStyleConfigs.cyberpunk;

@@ -811,7 +811,7 @@ function TrackRecordPanel({
   onSectionChange?: (section: string) => void;
 }) {
   // Map PublicParlaySlip[] → Parlay[] shape for ResultsStudio
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const mappedParlays = useMemo(() => (
     savedSlips.map((s) => {
       const rec = s as Record<string, unknown>;
@@ -828,7 +828,7 @@ function TrackRecordPanel({
         wagerAmount: Number(rec.wagerAmount ?? 0),
       };
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   ), [savedSlips]);
 
   return (
@@ -861,7 +861,7 @@ function TrackRecordPanel({
           <div className="py-12 text-center text-xs text-[hsl(var(--ve-text-muted))]">Loading results…</div>
         }>
           <ResultsStudio
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             savedParlays={mappedParlays as any}
           />
         </Suspense>
@@ -1032,11 +1032,11 @@ interface ParlayCommandCenterProps {
   liveGames?:      unknown[];
   initialPanel?:   ParlayCommandPanel;
   onSectionChange?: (section: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   onAddLegToParlay?: (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   onSaveVouch?:    (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   onPostCreated?:  (...args: any[]) => void;
   onSaveParlay?:   (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?:   (parlayId: string) => Promise<void> | void;

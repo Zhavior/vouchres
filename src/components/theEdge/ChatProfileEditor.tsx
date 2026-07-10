@@ -36,7 +36,7 @@ export default function ChatProfileEditor({ resolved, isLoggedIn, onChange }: Pr
       }
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per login
+     
   }, [isLoggedIn]);
 
   const preview: ResolvedChatProfile = { ...resolved, ...draft };

@@ -58,7 +58,7 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
       cy.destroy();
       cyRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [elements, stylesheet, layout]);
 
   return <div ref={containerRef} className={className} style={{ width: '100%', height }} />;

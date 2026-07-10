@@ -265,7 +265,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     const warmup = window.setTimeout(tick, 1500);
     const id = window.setInterval(tick, 60_000);
     return () => { window.clearTimeout(warmup); window.clearInterval(id); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {

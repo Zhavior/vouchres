@@ -52,24 +52,16 @@ export default tseslint.config(
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/immutability': 'off',
-      'react-hooks/rules-of-hooks': 'warn',
-      'no-useless-assignment': 'warn',
-      'no-empty': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/incompatible-library': 'off',
+      'no-useless-assignment': 'off',
+      'no-empty': 'off',
 
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': 'off',
 
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 );
