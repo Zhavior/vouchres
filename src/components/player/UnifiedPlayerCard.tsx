@@ -2,66 +2,13 @@ import React, { useState } from 'react';
 import { ChevronRight, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { logoByTeamName } from '../../lib/teamLogos';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
+import { tierStyleForScore } from '../../features/hr/engine/tiers';
 import VouchCursorTip from '../vouch-system/VouchCursorTip';
 import '../../styles/unified-player-card.css';
 
 export type HrCardResult = 'hit' | 'no-hr' | null;
 
 const CARD_LABEL = 'font-mono text-[10px] font-bold uppercase tracking-wide';
-
-type TierStyle = {
-  label: string;
-  scoreColor: string;
-  badge: string;
-  shell: string;
-  barColor: string;
-};
-
-function tierStyle(score: number): TierStyle {
-  if (score >= 97) {
-    return {
-      label: 'Elite',
-      scoreColor: '#fcd34d',
-      badge: 'border-amber-300/40 bg-amber-400/15 text-amber-100',
-      shell: 've-tier-elite',
-      barColor: 'linear-gradient(90deg, #f59e0b, #fcd34d)',
-    };
-  }
-  if (score >= 92) {
-    return {
-      label: 'Strong',
-      scoreColor: '#67e8f9',
-      badge: 'border-cyan-300/35 bg-cyan-400/12 text-cyan-100',
-      shell: 've-tier-strong',
-      barColor: 'linear-gradient(90deg, #0891b2, #67e8f9)',
-    };
-  }
-  if (score >= 85) {
-    return {
-      label: 'Watch',
-      scoreColor: '#cbd5e1',
-      badge: 'border-slate-400/30 bg-slate-500/10 text-slate-200',
-      shell: 've-tier-watch',
-      barColor: 'linear-gradient(90deg, #475569, #94a3b8)',
-    };
-  }
-  if (score >= 75) {
-    return {
-      label: 'Sleeper',
-      scoreColor: '#c4b5fd',
-      badge: 'border-violet-400/35 bg-violet-500/12 text-violet-200',
-      shell: 've-tier-sleeper',
-      barColor: 'linear-gradient(90deg, #7c3aed, #c4b5fd)',
-    };
-  }
-  return {
-    label: 'Fade',
-    scoreColor: '#94a3b8',
-    badge: 'border-rose-900/50 bg-rose-950/40 text-rose-300/70',
-    shell: 've-tier-fade',
-    barColor: 'linear-gradient(90deg, #475569, #64748b)',
-  };
-}
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -136,7 +83,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
   showVouchExplainer = true,
   className = '',
 }: UnifiedPlayerCardProps) {
-  const tier = tierStyle(player.hrScore);
+  const tier = tierStyleForScore(player.hrScore);
   const stats = topStats(player);
   const isOfficial = player.truthStatus === 'official';
   const isProjected = player.truthStatus === 'projected';
@@ -174,7 +121,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
       onClick={interactive ? () => onClick?.(player) : undefined}
       onKeyDown={handleKeyDown}
       className={[
-        've-unified-player-card ve-landing-hr-card overflow-hidden rounded-xl border bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
+        've-unified-player-card overflow-hidden rounded-xl border bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
         tier.shell,
         interactive ? 've-unified-player-card--interactive cursor-pointer' : '',
         className,

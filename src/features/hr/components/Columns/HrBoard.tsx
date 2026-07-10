@@ -20,10 +20,10 @@ const TIER_COLUMNS: Array<{
   colorClass: string;
   borderClass: string;
 }> = [
-  { key: 'Elite', title: 'Elite', icon: '🥇', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Strong', title: 'Strong', icon: '🟢', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Watch', title: 'Watch', icon: '🔵', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Sleepers', title: 'Sleepers', icon: '🟣', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
+  { key: 'Elite', title: 'Elite', icon: '🥇', colorClass: 'text-amber-300', borderClass: 'border-amber-500/25' },
+  { key: 'Strong', title: 'Strong', icon: '🟢', colorClass: 'text-cyan-300', borderClass: 'border-cyan-500/25' },
+  { key: 'Watch', title: 'Watch', icon: '🔵', colorClass: 'text-slate-300', borderClass: 'border-slate-400/25' },
+  { key: 'Sleepers', title: 'Sleepers', icon: '🟣', colorClass: 'text-violet-300', borderClass: 'border-violet-500/25' },
 ];
 
 export const HrBoard = ({ buckets, onSelectPlayer, onViewProfile, getHrResult }: HrBoardProps) => {

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { logoByTeamName } from '../../../lib/teamLogos';
+import { TIER_THRESHOLDS } from '../engine/tiers';
 import type { HrWatchBoard, HrWatchMode, HrWatchRow, RiskTier, TruthStatus } from '../types/hrWatch';
 
 type UnknownRecord = z.infer<typeof UnknownRecordSchema>;
@@ -69,11 +70,12 @@ function truthStatus(row: UnknownRecord, mode: HrWatchMode): TruthStatus {
   return 'unknown';
 }
 
+/** Maps engine score → board bucket; must stay aligned with tiers.ts + UnifiedPlayerCard. */
 function riskTier(score: number, status: TruthStatus): RiskTier {
   if (status === 'blocked') return 'Blocked';
-  if (score >= 82) return 'Elite';
-  if (score >= 72) return 'Core';
-  if (score >= 62) return 'Watch';
+  if (score >= TIER_THRESHOLDS.elite) return 'Elite';
+  if (score >= TIER_THRESHOLDS.strong) return 'Core';
+  if (score >= TIER_THRESHOLDS.watch) return 'Watch';
   return 'Deep';
 }
 

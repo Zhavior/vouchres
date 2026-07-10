@@ -20,6 +20,7 @@ import {
   Zap, BarChart3, Wind, LineChart,
 } from 'lucide-react';
 import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWatch';
+import { TIER_THRESHOLDS, tierLabelForScore } from '../../engine/tiers';
 import { HrStatsTab } from '../Stats/HrStatsTab';
 import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
 
@@ -36,19 +37,15 @@ type DrawerTab = 'overview' | 'layers' | 'vegas' | 'stats';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTierPalette(score: number): { text: string; bar: string; ring: string; border: string; token: string } {
-  if (score >= 97) return { text: 'text-vouch-amber', bar: 'bg-vouch-amber', ring: Z8_AMBER_HEX, border: 'border-vouch-amber/30', token: 'vouch-amber' };
-  if (score >= 92) return { text: 'text-[hsl(var(--ve-success))]', bar: 'bg-[hsl(var(--ve-success))]', ring: '#10b981', border: 'border-[hsl(var(--ve-success)/0.28)]', token: 've-success' };
-  if (score >= 85) return { text: 'text-vouch-cyan', bar: 'bg-vouch-cyan', ring: Z8_CYAN_HEX, border: 'border-vouch-cyan/30', token: 'vouch-cyan' };
-  if (score >= 75) return { text: 'text-vouch-emerald', bar: 'bg-vouch-emerald', ring: Z8_EMERALD_HEX, border: 'border-vouch-emerald/25', token: 'vouch-emerald' };
+  if (score >= TIER_THRESHOLDS.elite) return { text: 'text-vouch-amber', bar: 'bg-vouch-amber', ring: Z8_AMBER_HEX, border: 'border-vouch-amber/30', token: 'vouch-amber' };
+  if (score >= TIER_THRESHOLDS.strong) return { text: 'text-[hsl(var(--ve-success))]', bar: 'bg-[hsl(var(--ve-success))]', ring: '#10b981', border: 'border-[hsl(var(--ve-success)/0.28)]', token: 've-success' };
+  if (score >= TIER_THRESHOLDS.watch) return { text: 'text-vouch-cyan', bar: 'bg-vouch-cyan', ring: Z8_CYAN_HEX, border: 'border-vouch-cyan/30', token: 'vouch-cyan' };
+  if (score >= TIER_THRESHOLDS.sleeper) return { text: 'text-vouch-emerald', bar: 'bg-vouch-emerald', ring: Z8_EMERALD_HEX, border: 'border-vouch-emerald/25', token: 'vouch-emerald' };
   return               { text: 'text-[hsl(var(--ve-text-muted))]',     bar: 'bg-[hsl(var(--ve-border))]',      ring: '#64748b', border: 'border-[hsl(var(--ve-border)/0.35)]',      token: 've-text-muted' };
 }
 
 function tierLabel(score: number): string {
-  if (score >= 97) return 'ELITE';
-  if (score >= 92) return 'STRONG';
-  if (score >= 85) return 'WATCH';
-  if (score >= 75) return 'SLEEPER';
-  return 'FADE';
+  return tierLabelForScore(score);
 }
 
 function truthBadge(status: HrTruthStatus): { label: string; icon: React.ReactNode; className: string } {

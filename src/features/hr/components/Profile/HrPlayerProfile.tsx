@@ -20,6 +20,7 @@ import {
   Zap, BarChart2, Target, Users, Activity, ChevronRight,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
+import { TIER_THRESHOLDS } from '../../engine/tiers';
 import { fetchRealGameLog, lastNGames, gamesAgainstOpponent, type RealGameLog } from '../../utils/realGameLogs';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
 
@@ -61,10 +62,10 @@ function fmtOdds(v: number | null | undefined): string {
 }
 
 function tierConfig(score: number) {
-  if (score >= 97) return { label: 'ELITE',   color: '#fbbf24',                rgb: '251,191,36',  icon: <Flame className="h-3.5 w-3.5" /> };
-  if (score >= 92) return { label: 'STRONG',  color: '#00FF94',                rgb: '0,255,148',   icon: <Award className="h-3.5 w-3.5" /> };
-  if (score >= 85) return { label: 'WATCH',   color: '#00F0FF',                rgb: '0,240,255',   icon: <Eye className="h-3.5 w-3.5" /> };
-  if (score >= 75) return { label: 'SLEEPER', color: '#00F0FF',                rgb: '0,240,255',   icon: <Moon className="h-3.5 w-3.5" /> };
+  if (score >= TIER_THRESHOLDS.elite) return { label: 'ELITE',   color: '#fbbf24',                rgb: '251,191,36',  icon: <Flame className="h-3.5 w-3.5" /> };
+  if (score >= TIER_THRESHOLDS.strong) return { label: 'STRONG',  color: '#00FF94',                rgb: '0,255,148',   icon: <Award className="h-3.5 w-3.5" /> };
+  if (score >= TIER_THRESHOLDS.watch) return { label: 'WATCH',   color: '#00F0FF',                rgb: '0,240,255',   icon: <Eye className="h-3.5 w-3.5" /> };
+  if (score >= TIER_THRESHOLDS.sleeper) return { label: 'SLEEPER', color: '#00F0FF',                rgb: '0,240,255',   icon: <Moon className="h-3.5 w-3.5" /> };
   return             { label: 'FADE',    color: 'rgba(255,255,255,0.4)', rgb: '255,255,255', icon: <Minus className="h-3.5 w-3.5" /> };
 }
 
