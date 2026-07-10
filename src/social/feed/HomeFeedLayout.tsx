@@ -87,11 +87,7 @@ const DesktopSlimHeader = React.memo(function DesktopSlimHeader({
   return (
     <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
       <NotificationBellButton />
-      <AuthStatusBadge
-        inline
-        onLoginSuccess={onAuthLoginSuccess}
-        onLogoutComplete={onAuthLogoutComplete}
-      />
+      <AuthStatusBadge inline onLogoutComplete={onAuthLogoutComplete} />
     </header>
   );
 });
@@ -132,16 +128,15 @@ const MobileCompactHeader = React.memo(function MobileCompactHeader({
         {profile.subscriptionTier !== 'SELLER_PRO' && (
           <button
             onClick={() => onSectionChange('premium')}
-            className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
+            className="flex shrink-0 items-center gap-1 rounded-full border border-vouch-emerald/30 bg-vouch-emerald/10 px-2.5 py-1 font-bold text-vouch-emerald transition active:scale-95"
           >
-            <Sparkles className="w-3 h-3" />
-            <span>UPGRADE</span>
+            <Sparkles className="h-3 w-3" />
+            <span className="hidden xs:inline">UPGRADE</span>
           </button>
         )}
 
         <AuthStatusBadge
           inline
-          onLoginSuccess={onAuthLoginSuccess}
           onLogoutComplete={onAuthLogoutComplete}
         />
       </div>

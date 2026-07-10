@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { LogIn, LogOut, ShieldCheck, UserCircle } from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import AuthModal from './AuthModal';
+import { hasRealAuthToken } from '../../app/sectionNavigation';
+import { Z8_BTN_TERMINAL_GHOST, Z8_LABEL } from '../landing/LandingTokens';
 
 interface AuthStatusBadgeProps {
   hideGuest?: boolean;
   onLoginSuccess?: () => void;
   onLogoutComplete?: () => void;
-  /** Render as a plain inline pill (no fixed positioning) for embedding inside
-   * an existing header row, instead of floating fixed over page content. */
+  /** Render inside the app header row (never fixed, never guest login). */
   inline?: boolean;
 }
 
@@ -27,7 +27,6 @@ function clearVouchEdgeLocalAuth() {
   localStorage.removeItem('vouchedge_after_auth_destination');
   localStorage.removeItem('vouchedge_after_auth_mode');
 
-  // remove old/demo/local auth-ish keys without deleting everything
   Object.keys(localStorage).forEach((key) => {
     const lower = key.toLowerCase();
     if (
@@ -43,11 +42,13 @@ function clearVouchEdgeLocalAuth() {
   });
 }
 
-export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onLogoutComplete, inline = false }: AuthStatusBadgeProps) {
+export default function AuthStatusBadge({
+  onLogoutComplete,
+  inline = false,
+}: AuthStatusBadgeProps) {
   const [email, setEmail] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -100,19 +101,6 @@ export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onL
     };
   }, []);
 
-  async function handleAuthed() {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-
-    if (token) {
-      localStorage.setItem('vouchedge_auth_token', token);
-    }
-
-    setEmail(data.session?.user.email ?? 'Account');
-    setAuthOpen(false);
-    onLoginSuccess?.();
-  }
-
   async function logout() {
     setSigningOut(true);
 
@@ -128,63 +116,30 @@ export default function AuthStatusBadge({ hideGuest = false, onLoginSuccess, onL
     }
   }
 
-  if (hideGuest && !email) {
-    return null;
+  const signedIn = Boolean(email) || hasRealAuthToken();
+
+  if (inline) {
+    if (checking || !signedIn) return null;
+
+    return (
+      <div className="flex max-w-[min(100%,12rem)] items-center gap-1.5 sm:max-w-xs">
+        <div className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2.5 py-1 lg:flex">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-vouch-emerald" />
+          <span className={`${Z8_LABEL} truncate normal-case tracking-normal text-white/55`}>{email}</span>
+        </div>
+        <button
+          type="button"
+          onClick={logout}
+          disabled={signingOut}
+          aria-label="Sign out"
+          className={`${Z8_BTN_TERMINAL_GHOST} shrink-0 gap-1.5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/55 hover:text-white disabled:opacity-50`}
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{signingOut ? 'Leaving' : 'Sign out'}</span>
+        </button>
+      </div>
+    );
   }
 
-  const pill = (
-    <div
-      className={
-        inline
-          ? 'flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-950/95 px-2 py-1 text-[11px] font-black text-white shadow-lg'
-          : 'flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/95 px-3 py-2 text-xs font-black text-white shadow-2xl backdrop-blur'
-      }
-    >
-      {checking ? (
-        <span>Checking login...</span>
-      ) : email ? (
-        <>
-          <ShieldCheck className="h-4 w-4 text-emerald-300 shrink-0" />
-          {!inline && <span className="hidden max-w-[180px] truncate sm:inline">Logged in: {email}</span>}
-          {!inline && <span className="sm:hidden">Logged in</span>}
-          <button
-            type="button"
-            onClick={logout}
-            disabled={signingOut}
-            className="ml-1 inline-flex items-center gap-1 rounded-full border border-red-300/30 bg-red-500/20 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-red-100 hover:bg-red-500/30 disabled:opacity-50"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            {!inline && (signingOut ? 'Leaving' : 'Logout')}
-          </button>
-        </>
-      ) : (
-        <>
-          <UserCircle className="h-4 w-4 text-slate-300 shrink-0" />
-          {!inline && <span className="hidden sm:inline">Guest</span>}
-          <button
-            type="button"
-            onClick={() => setAuthOpen(true)}
-            className="inline-flex items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-cyan-100 hover:bg-cyan-400/25"
-          >
-            <LogIn className="h-3.5 w-3.5" />
-            Login
-          </button>
-        </>
-      )}
-    </div>
-  );
-
-  return (
-    <>
-      {inline ? pill : <div className="fixed right-4 top-4 z-[80]">{pill}</div>}
-
-      <AuthModal
-        open={authOpen}
-        initialMode="login"
-        onClose={() => setAuthOpen(false)}
-        onAuthed={handleAuthed}
-        onGuest={() => setAuthOpen(false)}
-      />
-    </>
-  );
+  return null;
 }

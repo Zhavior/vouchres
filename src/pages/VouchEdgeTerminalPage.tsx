@@ -394,7 +394,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 </p>
               </div>
             </div>
-            <div className="ve-terminal-header-actions flex items-center gap-2">
+            <div className={`ve-terminal-header-actions flex items-center gap-2 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}>
               <button
                 type="button"
                 onClick={openLogin}
