@@ -63,4 +63,14 @@ export const ProductEvents = {
     void send("returning_session");
   },
 
+  experimentViewed(
+    experiment: string,
+    variant: string
+  ) {
+    void send("experiment_viewed", {
+      experiment,
+      variant,
+    });
+  },
+
 };
