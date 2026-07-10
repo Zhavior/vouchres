@@ -33,7 +33,7 @@
     scroll-behavior: auto !important;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
-    contain: layout style paint;
+    contain: layout style;
     transition: none !important;
     transform: none !important;
   }
@@ -82,12 +82,10 @@
     scroll-behavior: auto !important;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
-    contain: layout style paint;
+    contain: layout style;
     transition: none !important;
     transform: none !important;
   }
-
-  /* Public welcome page should still use natural document scroll */
   #layout-inner-frame.ve-layout-welcome {
     height: auto !important;
     max-height: none !important;
@@ -116,8 +114,14 @@
   }
 }
 
-/* Sticky headers — own compositor layer to avoid scroll jank */
-.home-feed-header,
+/* Sticky headers — avoid transform on feed/stat chrome (breaks iOS sticky in scroll panes) */
+.home-feed-sticky-chrome,
+.stat-hub-sticky-chrome {
+  contain: layout style;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 .ve-mobile-header {
   contain: layout style;
   transform: translateZ(0);

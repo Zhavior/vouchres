@@ -27,6 +27,7 @@
 }
 
 /* Flatten feed chrome — no glass cards */
+#inner-view-slot .home-feed-sticky-chrome,
 #inner-view-slot .home-feed-header,
 #inner-view-slot .home-feed-tabs,
 #inner-view-slot .feed-composer {

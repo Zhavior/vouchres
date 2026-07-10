@@ -347,8 +347,12 @@ function HomeFeedPage({
         </div>
       )}
 
-      {/* X-style sticky header */}
-      <header className="home-feed-header sticky top-0 z-20 min-w-0 border-b border-ve-fuse/60 bg-ve-obsidian/90 backdrop-blur-md">
+      {/* Sticky chrome: Home title, tabs, and For You filters move as one unit */}
+      <div
+        className="home-feed-sticky-chrome sticky top-0 z-20 min-w-0 border-b border-ve-fuse/60 bg-ve-obsidian/95 backdrop-blur-md supports-[backdrop-filter]:bg-ve-obsidian/90"
+        id="home-feed-sticky-chrome"
+      >
+      <header className="home-feed-header min-w-0">
         <div className="flex h-[53px] min-w-0 items-center justify-between gap-3 px-4">
           <h1 className="text-[20px] font-extrabold text-ve-flash leading-none">
             Home
@@ -427,6 +431,7 @@ function HomeFeedPage({
         selectedPostType={selectedPostType}
         onPostTypeChange={setSelectedPostType}
       />
+      </div>
 
       {/* Main Stream Area */}
       <div className="feed-main mx-auto w-full min-w-0 max-w-full" id="feed-stream-outer">

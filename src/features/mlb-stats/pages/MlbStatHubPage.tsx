@@ -46,10 +46,10 @@ export default function MlbStatHubPage() {
     : 'overall career';
 
   return (
-    <div className={`flex h-full min-h-0 flex-col ${Z8_PAGE}`}>
-      {/* Sticky top section */}
-      <div className={`sticky top-0 z-30 shrink-0 ${Z8_PAGE_PAD_X} pt-4 sm:px-6 lg:px-8`}>
-        <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 sm:p-5`}>
+    <div className={`flex min-h-full min-w-0 flex-col ${Z8_PAGE}`}>
+      {/* Sticky chrome — one block on mobile so header/tabs/filters stay grounded */}
+      <div className={`stat-hub-sticky-chrome sticky top-0 z-30 shrink-0 ${Z8_PAGE_PAD_X} pt-3 pb-2 sm:px-6 sm:pt-4 lg:px-8`}>
+        <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3 sm:p-5`}>
         <StatHubHeader
           activeStatType={hub.filters.statType}
           date={hub.filters.date}
@@ -70,7 +70,7 @@ export default function MlbStatHubPage() {
         <div
           role="tablist"
           aria-label="View mode"
-          className="mt-3 flex gap-1 overflow-x-auto border-b border-white/10 pb-0"
+          className="stat-hub-view-tabs mt-3 flex gap-1 overflow-x-auto border-b border-white/10 pb-0 snap-x snap-mandatory no-scrollbar"
           style={{ scrollbarWidth: 'none' }}
         >
           {TABS.map(tab => {
@@ -82,7 +82,7 @@ export default function MlbStatHubPage() {
                 aria-selected={active}
                 onClick={() => hub.setViewTab(tab.id as typeof hub.filters.viewTab)}
                 className={[
-                  'flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-semibold',
+                  'flex min-h-11 shrink-0 snap-start items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-xs font-semibold touch-manipulation sm:px-4',
                   'border-b-2 -mb-px transition-all duration-200 focus-visible:outline focus-visible:outline-2',
                   active ? 'border-vouch-cyan text-vouch-cyan' : 'border-transparent text-white/45 hover:text-white',
                 ].join(' ')}
@@ -98,31 +98,31 @@ export default function MlbStatHubPage() {
 
       {/* Beta banner for Phase 2 stats */}
       {isPhase2 && (
-        <div className={`mx-4 mt-3 flex shrink-0 items-center gap-3 rounded-xl border border-vouch-amber/30 bg-vouch-amber/8 px-4 py-2.5 sm:mx-6 lg:mx-8`}>
-          <span className={`${Z8_LABEL} rounded border border-vouch-amber/40 bg-vouch-amber/15 px-1.5 py-0.5 text-vouch-amber`}>
+        <div className={`mx-3 mt-2 flex shrink-0 items-start gap-2.5 rounded-xl border border-vouch-amber/30 bg-vouch-amber/8 px-3 py-2.5 sm:mx-6 sm:items-center sm:gap-3 sm:px-4 lg:mx-8`}>
+          <span className={`${Z8_LABEL} shrink-0 rounded border border-vouch-amber/40 bg-vouch-amber/15 px-1.5 py-0.5 text-vouch-amber`}>
             β BETA
           </span>
-          <p className="text-xs text-white/45">
+          <p className="text-[11px] leading-snug text-white/45 sm:text-xs">
             <strong className="text-vouch-amber/90">{config.label}</strong> scoring is Phase 2 — model not yet backtested. Use as a directional signal only.
           </p>
         </div>
       )}
 
       <div className={[
-        'mx-4 mt-3 flex shrink-0 items-center gap-3 rounded-xl px-4 py-2.5 sm:mx-6 lg:mx-8',
+        'mx-3 mt-2 flex shrink-0 items-start gap-2.5 rounded-xl px-3 py-2.5 sm:mx-6 sm:items-center sm:gap-3 sm:px-4 lg:mx-8',
         hub.error
           ? 'border border-red-500/30 bg-red-500/10'
           : `${Z8_PANEL_PREMIUM} border-vouch-cyan/20`,
       ].join(' ')}>
         <span className={[
-          `${Z8_LABEL} rounded border px-1.5 py-0.5 uppercase tracking-wide`,
+          `${Z8_LABEL} shrink-0 rounded border px-1.5 py-0.5 uppercase tracking-wide`,
           hub.error
             ? 'border-red-500/35 bg-red-500/12 text-red-400'
             : 'border-vouch-cyan/30 bg-vouch-cyan/12 text-vouch-cyan',
         ].join(' ')}>
           MLB API
         </span>
-        <p className="text-xs text-white/45">
+        <p className="text-[11px] leading-snug text-white/45 sm:text-xs">
           {hub.error
             ? `${hub.error}. No mock Stat Hub rows are being shown.`
             : hub.loading
@@ -131,9 +131,9 @@ export default function MlbStatHubPage() {
         </p>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="px-4 py-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
+      {/* Content scrolls with the main app pane — no nested overflow on mobile */}
+      <div className={`min-w-0 flex-1 ${Z8_PAGE_PAD_X} py-3 sm:px-6 sm:py-4 lg:px-8`}>
+        <div className="mx-auto max-w-[1600px]">
           <Suspense fallback={<LoadingSkeleton />}>
             <TabContent hub={hub} />
           </Suspense>
@@ -250,13 +250,13 @@ function VsTeamView({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
   return (
     <div className="flex flex-col gap-5">
       {/* Team selector */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs text-[hsl(var(--ve-text-muted))]">Filter by team:</span>
-        <div className="flex gap-1.5 flex-wrap">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <span className="text-xs text-[hsl(var(--ve-text-muted))] shrink-0">Filter by team:</span>
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:flex-wrap sm:overflow-visible">
           <button
             onClick={() => setTeam(null)}
             className={[
-              'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+              'shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-9 touch-manipulation',
               !filters.team
                 ? 'bg-[hsl(var(--ve-accent-cyan)/0.18)] text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.4)]'
                 : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] bg-[hsl(var(--ve-surface)/0.4)] border border-[hsl(var(--ve-border)/0.4)]',
@@ -269,7 +269,7 @@ function VsTeamView({ hub }: { hub: ReturnType<typeof useMlbStatHub> }) {
               key={team}
               onClick={() => setTeam(team === filters.team ? null : team)}
               className={[
-                'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                'shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-9 touch-manipulation',
                 filters.team === team
                   ? 'bg-[hsl(var(--ve-accent-cyan)/0.18)] text-[hsl(var(--ve-accent-cyan))] border border-[hsl(var(--ve-accent-cyan)/0.4)]'
                   : 'text-[hsl(var(--ve-text-muted))] hover:text-[hsl(var(--ve-text-primary))] bg-[hsl(var(--ve-surface)/0.4)] border border-[hsl(var(--ve-border)/0.4)]',

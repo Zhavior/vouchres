@@ -43,7 +43,7 @@ export default function FeedTabs({
   ];
 
   return (
-    <nav className="home-feed-tabs feed-tabs sticky top-[53px] z-10 border-b border-white/[0.08] bg-black/80 backdrop-blur-md font-z8" id="feed-navigation-tabs-composite">
+    <nav className="home-feed-tabs feed-tabs border-b border-white/[0.08] bg-transparent font-z8" id="feed-navigation-tabs-composite">
       <div className="flex w-full snap-x snap-mandatory overflow-x-auto no-scrollbar scroll-smooth select-none">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -72,16 +72,16 @@ export default function FeedTabs({
 
       {activeTab === 'for-you' && (
         <div
-          className="px-4 py-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs bg-black/40"
+          className="home-feed-filters px-3 py-2.5 border-t border-white/[0.06] flex flex-col gap-2.5 text-xs bg-black/30 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4"
           id="for-you-filters-panel"
         >
-          <div className="flex items-center gap-1.5 text-white/40 text-[12px]">
+          <div className="flex items-center gap-1.5 text-white/40 text-[12px] shrink-0">
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Filters</span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5" id="sport-selector-container">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 sm:flex-wrap sm:overflow-visible">
+            <div className="flex shrink-0 items-center gap-1.5" id="sport-selector-container">
               <Trophy className="w-3.5 h-3.5 text-vouch-emerald shrink-0" />
               <select
                 value={selectedSport}
@@ -95,7 +95,7 @@ export default function FeedTabs({
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5" id="posttype-selector-container">
+            <div className="flex shrink-0 items-center gap-1.5" id="posttype-selector-container">
               <Layers className="w-3.5 h-3.5 text-vouch-cyan shrink-0" />
               <select
                 value={selectedPostType}

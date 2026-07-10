@@ -43,20 +43,20 @@ export const StatHubHeader: React.FC<Props> = ({
   const config = STAT_CONFIG[activeStatType];
 
   return (
-    <header className={`${Z8_SECTION_HEADER} flex flex-col gap-3 pb-4 border-b border-white/10`}>
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl" aria-hidden="true">{config.icon}</span>
-          <div>
-            <h1 className="text-lg font-bold text-white leading-tight">
+    <header className={`${Z8_SECTION_HEADER} flex flex-col gap-3 pb-3 sm:pb-4 border-b border-white/10`}>
+      <div className="flex items-start justify-between gap-2 sm:items-center sm:gap-3">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <span className="text-xl sm:text-2xl shrink-0" aria-hidden="true">{config.icon}</span>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-white leading-tight truncate">
               MLB Stat Intelligence Hub
             </h1>
-            <p className={`${Z8_LABEL} mt-0.5 text-white/45`}>
+            <p className={`${Z8_LABEL} mt-0.5 text-white/45 line-clamp-2 sm:line-clamp-none`}>
               {config.description}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <StatModeToggle value={viewMode} onChange={onViewMode} />
         </div>
       </div>
@@ -64,7 +64,7 @@ export const StatHubHeader: React.FC<Props> = ({
       <div
         role="tablist"
         aria-label="Stat category"
-        className="flex gap-1 overflow-x-auto pb-1 scrollbar-none"
+        className="stat-hub-stat-tabs flex gap-1 overflow-x-auto pb-1 snap-x snap-mandatory no-scrollbar -mx-1 px-1"
         style={{ scrollbarWidth: 'none' }}
       >
         {STAT_ORDER.map(st => {
@@ -77,7 +77,7 @@ export const StatHubHeader: React.FC<Props> = ({
               aria-selected={active}
               onClick={() => onStatType(st)}
               className={[
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
+                'flex shrink-0 snap-start items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all min-h-9 touch-manipulation',
                 active ? `${Z8_ACTIVE} rounded-lg` : `${Z8_IDLE} rounded-lg border border-transparent`,
               ].join(' ')}
             >
@@ -93,8 +93,8 @@ export const StatHubHeader: React.FC<Props> = ({
         })}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[160px] max-w-xs">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+        <div className="relative w-full sm:flex-1 sm:min-w-[160px] sm:max-w-xs">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/35 text-xs pointer-events-none" aria-hidden="true">⌕</span>
           <input
             type="search"
@@ -102,40 +102,46 @@ export const StatHubHeader: React.FC<Props> = ({
             value={search}
             onChange={e => onSearch(e.target.value)}
             aria-label="Search players"
-            className={`${Z8_SURFACE} w-full rounded-lg pl-7 pr-3 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25`}
+            className={`${Z8_SURFACE} w-full rounded-lg pl-7 pr-3 py-2.5 sm:py-1.5 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25 min-h-11 sm:min-h-0`}
           />
         </div>
 
-        <input
-          type="date"
-          value={date}
-          onChange={e => onDate(e.target.value)}
-          aria-label="Select date"
-          disabled={statScope === 'overall'}
-          className={`${Z8_SURFACE} rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25 ${statScope === 'overall' ? 'opacity-45 cursor-not-allowed' : ''}`}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={e => onDate(e.target.value)}
+            aria-label="Select date"
+            disabled={statScope === 'overall'}
+            className={`${Z8_SURFACE} rounded-lg px-2.5 py-2.5 sm:py-1.5 text-xs text-white focus:border-vouch-cyan/45 focus:outline-none focus:ring-1 focus:ring-vouch-cyan/25 min-h-11 sm:min-h-0 ${statScope === 'overall' ? 'opacity-45 cursor-not-allowed' : ''}`}
+          />
 
-        <div role="group" aria-label="Stat range" className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
-          {(['season', 'overall'] as StatScope[]).map(scope => {
-            const active = statScope === scope;
-            return (
-              <button
-                key={scope}
-                type="button"
-                onClick={() => onStatScope(scope)}
-                aria-pressed={active}
-                className={[
-                  'px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide transition-all',
-                  active ? 'bg-vouch-cyan/15 text-vouch-cyan' : 'text-white/45 hover:text-white',
-                ].join(' ')}
-              >
-                {scope === 'season' ? 'Season' : 'Overall'}
-              </button>
-            );
-          })}
+          <div role="group" aria-label="Stat range" className={`${Z8_SURFACE} flex rounded-lg p-0.5`}>
+            {(['season', 'overall'] as StatScope[]).map(scope => {
+              const active = statScope === scope;
+              return (
+                <button
+                  key={scope}
+                  type="button"
+                  onClick={() => onStatScope(scope)}
+                  aria-pressed={active}
+                  className={[
+                    'px-3 py-2 sm:px-2.5 sm:py-1 rounded-md text-[10px] font-black uppercase tracking-wide transition-all min-h-9 sm:min-h-0 touch-manipulation',
+                    active ? 'bg-vouch-cyan/15 text-vouch-cyan' : 'text-white/45 hover:text-white',
+                  ].join(' ')}
+                >
+                  {scope === 'season' ? 'Season' : 'Overall'}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div role="group" aria-label="Filter by tier" className="flex gap-1 ml-auto">
+        <div
+          role="group"
+          aria-label="Filter by tier"
+          className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:ml-auto sm:overflow-visible sm:flex-wrap"
+        >
           {(['elite', 'strong', 'watch', 'sleeper'] as StatTier[]).map(tier => {
             const active = tierFilter.includes(tier);
             const tierCls = TIER_CLASSES[tier];
@@ -146,7 +152,7 @@ export const StatHubHeader: React.FC<Props> = ({
                 onClick={() => onToggleTier(tier)}
                 aria-pressed={active}
                 className={[
-                  'flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all',
+                  'flex shrink-0 items-center gap-1 px-2.5 py-2 sm:py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all min-h-9 sm:min-h-0 touch-manipulation',
                   active ? tierCls.active : `${Z8_SURFACE} ${tierCls.idle} hover:border-white/20`,
                 ].join(' ')}
               >
