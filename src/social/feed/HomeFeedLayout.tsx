@@ -1,4 +1,6 @@
 import React, { Suspense, lazy } from 'react';
+// App chrome policy: no top header bar — branding, notifications, and logout
+// live only in FeedSidebar (md+) and MobileProfileDrawer (mobile).
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer from './MobileProfileDrawer';
