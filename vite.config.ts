@@ -122,8 +122,6 @@ export default defineConfig(({ mode }) => {
               return 'vendor-motion';
             }
 
-            if (id.includes('lucide-react')) return 'vendor-icons';
-
             if (id.includes('stripe')) return 'vendor-stripe';
 
             if (id.includes('cytoscape') || id.includes('mermaid')) {
