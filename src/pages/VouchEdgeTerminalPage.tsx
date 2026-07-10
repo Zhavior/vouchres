@@ -20,6 +20,7 @@ import {
   Z8_PANEL,
   Z8_PANEL_PREMIUM,
 } from '../theme/z8Tokens';
+import '../styles/legacy/welcome-layout.css';
 
 type SignupPlan = 'free' | 'pro' | 'capper';
 

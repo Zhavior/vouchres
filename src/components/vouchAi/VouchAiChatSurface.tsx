@@ -25,6 +25,7 @@ type Props = {
   profile: CreatorProofProfile;
   onSectionChange: (section: string) => void;
   chat: ChatState;
+  initialPrompt?: string;
 };
 
 const ISLAND_PAGE_SHORTCUTS = [

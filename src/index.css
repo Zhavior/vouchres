@@ -13,17 +13,11 @@
 @import "./styles/z8-design-system.css";
 
 @import "./styles/legacy/global-overrides.css";
-@import "./styles/legacy/themes-legacy.css";
 @import "./styles/legacy/command-island.css";
 @import "./styles/legacy/z8-shell.css";
-@import "./styles/legacy/welcome-layout.css";
-@import "./styles/legacy/daily-players.css";
 @import "./styles/legacy/layout.css";
-@import "./styles/legacy/feed.css";
 @import "./styles/legacy/ultrawide.css";
-@import "./styles/legacy/ve-components.css";
 @import "./styles/legacy/scroll-mobile.css";
-@import "./styles/legacy/feed-stream.css";
 
 .scrollbar-none {
   scrollbar-width: none; /* Firefox */

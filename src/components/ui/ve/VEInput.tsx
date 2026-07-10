@@ -13,7 +13,7 @@ export function VEInput({
     <input
       className={[
         've-input',
-        fullWidth ? 've-input-full' : '',
+        fullWidth ? 'w-full' : '',
         className,
       ]
         .filter(Boolean)

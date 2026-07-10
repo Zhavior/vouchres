@@ -73,4 +73,14 @@ export const ProductEvents = {
     });
   },
 
+  onboardingStepCompleted(step: string) {
+    void send("onboarding_step_completed", {
+      step,
+    });
+  },
+
+  onboardingCompleted(properties?: Record<string, unknown>) {
+    void send("onboarding_completed", properties);
+  },
+
 };

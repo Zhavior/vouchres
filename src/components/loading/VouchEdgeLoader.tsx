@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import '../../styles/vouchedge-loader.css';
 
 interface Props {
   /** Flip to true when the app is ready; the loader rushes to 100% then fades out. */

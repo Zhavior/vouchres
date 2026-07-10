@@ -13,6 +13,8 @@ import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/Ap
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
+import '../../styles/legacy/feed.css';
+import '../../styles/legacy/feed-stream.css';
 
 interface HomeFeedLayoutProps {
   activeSection: string;

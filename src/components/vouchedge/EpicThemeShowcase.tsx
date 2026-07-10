@@ -24,6 +24,7 @@ import { THEME_REGISTRY, type VisualTheme } from "../../theme/themeRegistry";
 import { useTheme } from "../theme/ThemeProvider";
 import { ThemeParticleRouter } from "./ParticleFields";
 import { getFounderPointsLabel } from "../../lib/founderAccess";
+import "../../styles/theme-showcase.css";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function extractHex(cls: string): string {

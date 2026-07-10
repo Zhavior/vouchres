@@ -1,3 +1,4 @@
+import { PersonalizedOnboarding } from "../onboarding/PersonalizedOnboarding";
 import { getExperimentVariant } from '../../lib/experiments';
 import { ProductEvents } from '../../lib/productEvents';
 import React, { Suspense, lazy, memo } from 'react';
@@ -107,9 +108,8 @@ function MainViewRouter({
       if (variant === "variant") {
         return (
           <LazyRoute>
-            <EdgeIslandShell
-              navigateSection={navigateSection}
-              isLoggedIn={isLoggedIn}
+            <PersonalizedOnboarding
+              onComplete={() => navigateSection("island")}
             />
           </LazyRoute>
         );

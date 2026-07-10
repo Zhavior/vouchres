@@ -102,6 +102,22 @@ export function BubbleField({
         />
       ))}
       <style>{`
+        @keyframes themeParticleDrift {
+          0% {
+            transform: translateY(115vh) translateX(0) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: var(--theme-particle-opacity, 0.3);
+          }
+          90% {
+            opacity: var(--theme-particle-opacity, 0.3);
+          }
+          100% {
+            transform: translateY(-20vh) translateX(var(--drift-x, 60px)) rotate(var(--drift-rot, 360deg));
+            opacity: 0;
+          }
+        }
         @keyframes ve-bubble-float {
           0%, 100% { transform: translateY(0) scale(1); opacity: var(--theme-particle-opacity, 0.2); }
           50% { transform: translateY(-18px) scale(1.08); opacity: calc(var(--theme-particle-opacity, 0.2) * 1.4); }
@@ -110,10 +126,15 @@ export function BubbleField({
           0%, 100% { transform: scale(0.92); opacity: calc(var(--theme-particle-opacity, 0.2) * 0.7); }
           50% { transform: scale(1.12); opacity: var(--theme-particle-opacity, 0.2); }
         }
+        .animate-theme-drift {
+          position: absolute;
+          animation: themeParticleDrift var(--drift-duration, 20s) linear infinite;
+          animation-delay: var(--drift-delay, 0s);
+        }
         .ve-bubble-float { position: absolute; animation: ve-bubble-float ease-in-out infinite; }
         .ve-bubble-pulse { position: absolute; animation: ve-bubble-pulse ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .ve-bubble-float, .ve-bubble-pulse { animation: none !important; opacity: 0.1; }
+          .animate-theme-drift, .ve-bubble-float, .ve-bubble-pulse { animation: none !important; opacity: 0.1; }
         }
       `}</style>
     </div>
