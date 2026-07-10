@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import {
   ArrowRight,
   BrainCircuit,
@@ -38,6 +39,8 @@ export default function VouchAiChatSurface({
   chat,
   initialPrompt,
 }: Props) {
+  const { isPro } = useEntitlements();
+
   const {
     messages,
     inputValue,
@@ -321,7 +324,18 @@ export default function VouchAiChatSurface({
         </button>
       </div>
 
-      <form onSubmit={handleSendMessage} className={`flex gap-2 ${isIsland ? "mt-3" : "mt-0 items-center"}`}>
+      <form
+        onSubmit={(e) => {
+          if (!isPro && messages.filter((m) => m.sender === "user").length >= 3) {
+            e.preventDefault();
+            onSectionChange?.("premium");
+            return;
+          }
+
+          handleSendMessage(e);
+        }}
+        className={`flex gap-2 ${isIsland ? "mt-3" : "mt-0 items-center"}`}
+      >
         <input
           type="text"
           value={inputValue}
