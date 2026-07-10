@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveGames } from '../../hooks/queries/useLiveGames';
 import { useHrBoardToday } from '../../hooks/queries/useHrBoardToday';
 import { buildBoard } from '../../features/hr/utils/normalizeHrWatch';
@@ -6,12 +6,7 @@ import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import { logoByTeamName } from '../../lib/teamLogos';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { ChevronLeft, ChevronRight, Radio, ShieldCheck } from './LandingIcons';
-
-const HrPlayerCard = lazy(() =>
-  import('../../features/hr/components/Cards/HrPlayerCard').then((module) => ({
-    default: module.HrPlayerCard,
-  })),
-);
+import LandingHrSpotlightCard from './LandingHrSpotlightCard';
 
 type LiveGame = {
   id: string;
@@ -295,11 +290,11 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
 
 function HrCardsPlaceholder() {
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+    <div className="ve-landing-hr-cards grid grid-cols-1 gap-3 md:grid-cols-3">
       {[1, 2, 3].map((slot) => (
         <div
           key={slot}
-          className="h-36 animate-pulse rounded-xl border border-white/10 bg-black/30"
+          className="ve-landing-hr-card h-44 animate-pulse rounded-2xl border border-white/10 bg-black/30"
           aria-hidden="true"
         />
       ))}
@@ -328,12 +323,10 @@ function HrSpotlightRow({ projectedOnly, rows }: { projectedOnly: boolean; rows:
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <Suspense fallback={<HrCardsPlaceholder />}>
-          {rows.map((player) => (
-            <HrPlayerCard key={player.stableId} player={player} />
-          ))}
-        </Suspense>
+      <div className="ve-landing-hr-cards grid grid-cols-1 gap-3 md:grid-cols-3">
+        {rows.map((player) => (
+          <LandingHrSpotlightCard key={player.stableId} player={player} />
+        ))}
       </div>
     </div>
   );
@@ -374,7 +367,7 @@ function LiveGamesCenterBody() {
         </div>
       </div>
 
-      <div className="ve-landing-games-panel-body grid grid-cols-1 gap-5 p-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="ve-landing-games-panel-body flex flex-col gap-5 p-5">
         <GamesSlideshow games={games} />
 
         <div className="space-y-3">
@@ -402,7 +395,7 @@ function LiveGamesCenterPlaceholder() {
         <p className={`${Z8_LABEL} text-vouch-cyan/70`}>Today&apos;s Slate</p>
         <h2 className="mt-1 text-xl font-black text-white">Live games + HR spotlight</h2>
       </div>
-      <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-2">
+      <div className="flex flex-col gap-5 p-5">
         <div className="h-52 animate-pulse rounded-xl border border-white/10 bg-black/30" />
         <HrCardsPlaceholder />
       </div>
