@@ -1,3 +1,5 @@
+import { getExperimentVariant } from '../../lib/experiments';
+import { ProductEvents } from '../../lib/productEvents';
 import React, { Suspense, lazy, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import FadeInMount from '../system/FadeInMount';
@@ -52,6 +54,20 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+function getOnboardingExperiment(userId: string) {
+  const variant = getExperimentVariant(
+    "new_onboarding_v2",
+    userId
+  );
+
+  ProductEvents.experimentViewed(
+    "new_onboarding_v2",
+    variant
+  );
+
+  return variant;
+}
+
 export type MainViewRouterProps = {
   activeSection: string;
   navigateSection: (section: string) => void;
@@ -83,7 +99,32 @@ function MainViewRouter({
           <VouchEdgeTerminalPage onAuthed={onLoginSuccess} />
         </LazyRoute>
       );
-    case 'welcome':
+    case 'welcome': {
+      const variant = getOnboardingExperiment(
+        profileViewUserId ?? "anonymous"
+      );
+
+      if (variant === "variant") {
+        return (
+          <LazyRoute>
+            <EdgeIslandShell
+              navigateSection={navigateSection}
+              isLoggedIn={isLoggedIn}
+            />
+          </LazyRoute>
+        );
+      }
+
+      return (
+        <LazyRoute>
+          <EdgeIslandShell
+            navigateSection={navigateSection}
+            isLoggedIn={isLoggedIn}
+          />
+        </LazyRoute>
+      );
+    }
+
     case 'island':
       return (
         <LazyRoute>
