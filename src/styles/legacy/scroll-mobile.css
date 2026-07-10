@@ -111,13 +111,8 @@
   .ve-edge-rail-left.ve-edge-rail-switching,
   .ve-edge-rail-right.ve-edge-rail-switching {
     filter: none;
-    transform: scale(0.992);
-    opacity: 0.88;
-    transition-duration: 120ms;
-  }
-
-  .ve-edge-rail {
-    transition-duration: 140ms;
+    transform: none;
+    opacity: 1;
   }
 }
 

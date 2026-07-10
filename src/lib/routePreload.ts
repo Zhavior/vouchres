@@ -41,9 +41,60 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   pro_graphs_lab: () => import('../pages/pro/ProGraphsLabPage'),
 };
 
+const WARM_NEIGHBORS: Record<string, string[]> = {
+  feed: ['today', 'hr_board', 'live_parlays'],
+  today: ['feed', 'hr_board', 'intel'],
+  hr_board: ['today', 'mlb_stats', 'daily_players'],
+  mlb_stats: ['hr_board', 'daily_players'],
+  daily_players: ['hr_board', 'live_games'],
+  live_parlays: ['build', 'ai_engine'],
+  build: ['live_parlays', 'ai_engine'],
+  ai_engine: ['ai_pilot', 'build'],
+  pro_command_center: ['player_edge_lab', 'team_matchup_lab'],
+  profile: ['settings', 'customize'],
+  settings: ['profile', 'customize'],
+};
+
+const MAIN_ROUTER_KEY = '__main_router__';
+
+function scheduleIdle(task: () => void): void {
+  if (typeof window === 'undefined') return;
+  const ric = window.requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(() => task(), { timeout: 1800 });
+    return;
+  }
+  window.setTimeout(task, 250);
+}
+
 export function preloadSection(section: string): void {
   const loader = SECTION_LOADERS[section];
   if (!loader || preloaded.has(section)) return;
   preloaded.add(section);
-  void loader();
+  void loader().catch(() => {
+    // Allow a later retry if the chunk fetch failed (deploy race / offline).
+    preloaded.delete(section);
+  });
+}
+
+/** Warm the MainViewRouter chunk so route switches don't wait on the router shell. */
+export function preloadMainRouter(): void {
+  if (preloaded.has(MAIN_ROUTER_KEY)) return;
+  preloaded.add(MAIN_ROUTER_KEY);
+  void import('../components/routing/MainViewRouter').catch(() => {
+    preloaded.delete(MAIN_ROUTER_KEY);
+  });
+}
+
+/** Idle-warm likely next routes from the current section (and a small default set). */
+export function warmLikelyRoutes(activeSection?: string): void {
+  scheduleIdle(() => {
+    preloadMainRouter();
+    const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
+    const defaults = ['feed', 'today', 'hr_board'];
+    for (const section of [...neighbors, ...defaults]) {
+      if (section === activeSection) continue;
+      preloadSection(section);
+    }
+  });
 }

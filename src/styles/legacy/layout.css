@@ -92,7 +92,6 @@ body,
 /* Transition wrappers must not change actual layout width */
 .ve-edge-rail {
   flex: 0 0 auto;
-  will-change: transform, opacity;
 }
 
 .ve-edge-rail-left,
@@ -100,13 +99,12 @@ body,
   min-width: 0;
 }
 
-/* Animation is visual only; it should not push pages around */
-.ve-edge-rail-left.ve-edge-rail-switching {
-  transform: translateX(10px) scale(0.992);
-}
-
+/* Keep rails visually stable during route switches (no blur/transform jank). */
+.ve-edge-rail-left.ve-edge-rail-switching,
 .ve-edge-rail-right.ve-edge-rail-switching {
-  transform: translateX(-10px) scale(0.992);
+  transform: none;
+  opacity: 1;
+  filter: none;
 }
 
 /* Stop accidental page-breaking horizontal scroll from oversized grids */

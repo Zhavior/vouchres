@@ -83,16 +83,17 @@
 }
 
 #layout-inner-frame.ve-layout-feed .ve-edge-rail-switching {
-  opacity: 0.72 !important;
-  filter: blur(0.4px) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 #layout-inner-frame.ve-layout-feed .ve-edge-rail-left.ve-edge-rail-switching {
-  transform: translateX(10px) scale(0.992) !important;
+  transform: none !important;
 }
 
 #layout-inner-frame.ve-layout-feed .ve-edge-rail-right.ve-edge-rail-switching {
-  transform: translateX(-10px) scale(0.992) !important;
+  transform: none !important;
 }
 
 .ve-sidebar,

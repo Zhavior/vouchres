@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
 import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
-import CmdKPalette from './CmdKPalette';
 import { Sparkles } from 'lucide-react';
 import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
@@ -15,6 +14,8 @@ import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
 import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
+
+const CmdKPalette = lazy(() => import('./CmdKPalette'));
 
 interface HomeFeedLayoutProps {
   activeSection: string;
@@ -33,15 +34,13 @@ const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
   activeSection,
   onSectionChange,
   onOpenCmdK,
-  edgeTransitioning,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onOpenCmdK: () => void;
-  edgeTransitioning: boolean;
 }) {
   return (
-    <div className={`ve-edge-rail ve-edge-rail-left ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+    <div className="ve-edge-rail ve-edge-rail-left">
       <FeedSidebar
         activeSection={activeSection}
         onSectionChange={onSectionChange}
@@ -53,10 +52,8 @@ const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
 
 const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
   activeSection,
-  edgeTransitioning,
 }: {
   activeSection: string;
-  edgeTransitioning: boolean;
 }) {
   const posts = useAppPosts();
   const profile = useAppProfile();
@@ -69,7 +66,7 @@ const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
   if (activeSection !== 'feed') return null;
 
   return (
-    <div className={`ve-edge-rail ve-edge-rail-right ${edgeTransitioning ? 've-edge-rail-switching' : ''}`}>
+    <div className="ve-edge-rail ve-edge-rail-right">
       <FeedRightRail
         posts={posts}
         profile={profile}
@@ -187,10 +184,8 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 }: HomeFeedLayoutProps) {
   const { activeTheme, reduceMotion } = useTheme();
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
-  const [edgeTransitioning, setEdgeTransitioning] = React.useState(false);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-  const previousSectionRef = React.useRef(activeSection);
 
   const closeNavigationOverlays = React.useCallback(() => {
     setMobileDrawerOpen(false);
@@ -225,20 +220,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   React.useEffect(() => {
     resetScrollPane(scrollPaneRef.current);
   }, [activeSection]);
-
-  React.useEffect(() => {
-    if (previousSectionRef.current === activeSection) return;
-
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    setEdgeTransitioning(true);
-    const duration = reduceMotion ? 0 : isMobile ? 140 : 280;
-    const timer = window.setTimeout(() => {
-      setEdgeTransitioning(false);
-      previousSectionRef.current = activeSection;
-    }, duration);
-
-    return () => window.clearTimeout(timer);
-  }, [activeSection, reduceMotion]);
 
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -322,7 +303,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
             activeSection={activeSection}
             onSectionChange={handleSectionChange}
             onOpenCmdK={handleOpenCmdK}
-            edgeTransitioning={edgeTransitioning}
           />
         )}
 
@@ -352,10 +332,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
         </main>
 
         {!isPublicFrontPage && (
-          <FeedRightRailColumn
-            activeSection={activeSection}
-            edgeTransitioning={edgeTransitioning}
-          />
+          <FeedRightRailColumn activeSection={activeSection} />
         )}
       </div>
 
@@ -368,12 +345,14 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
         />
       )}
 
-      {!isPublicFrontPage && (
-        <CmdKPalette
-          open={cmdKOpen}
-          onClose={handleCloseCmdK}
-          onNavigate={handleSectionChange}
-        />
+      {!isPublicFrontPage && cmdKOpen && (
+        <Suspense fallback={null}>
+          <CmdKPalette
+            open={cmdKOpen}
+            onClose={handleCloseCmdK}
+            onNavigate={handleSectionChange}
+          />
+        </Suspense>
       )}
     </div>
   );

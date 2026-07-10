@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
@@ -7,14 +7,15 @@ import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
 import RouteShellSkeleton from '../components/boot/RouteShellSkeleton';
 import { AppShellProvider, type AppShellState } from '../context/AppShellContext';
 import { hasRealAuthToken } from './sectionNavigation';
+import { AppNav } from './AppNav';
+import HomeFeedLayout from '../social/feed/HomeFeedLayout';
+import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
 
-const AppNav = lazy(() => import('./AppNav').then((module) => ({ default: module.AppNav })));
 const AuthStatusBadge = lazy(() => import('../components/auth/AuthStatusBadge'));
 const DeployUpdateBanner = lazy(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
-const HomeFeedLayout = lazy(() => import('../social/feed/HomeFeedLayout'));
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
 const EdgeIslandCommandCenter = lazy(() => import('../components/theEdge/EdgeIslandCommandCenter'));
 
@@ -59,6 +60,12 @@ export function AppShell({
   handleLogoutComplete,
   handleUpdateProfile,
 }: AppShellProps) {
+  useEffect(() => {
+    if (isPublicFrontPage) return;
+    preloadMainRouter();
+    warmLikelyRoutes(activeSection);
+  }, [isPublicFrontPage, activeSection]);
+
   const routeContent = (
     <Suspense fallback={<RouteShellSkeleton />}>
       <MainViewRouter
@@ -107,30 +114,28 @@ export function AppShell({
                       </div>
                     </div>
                   ) : (
-                    <Suspense fallback={<RouteShellSkeleton />}>
-                      <HomeFeedLayout
-                        activeSection={activeSection}
-                        onSectionChange={navigateSection}
-                        isRouteSwitching={isPendingRoute}
-                        isPublicFrontPage={isPublicFrontPage}
-                        onAuthLoginSuccess={handleLoginSuccess}
-                        onAuthLogoutComplete={handleLogoutComplete}
-                      >
-                        {routeContent}
-                      </HomeFeedLayout>
-                    </Suspense>
+                    <HomeFeedLayout
+                      activeSection={activeSection}
+                      onSectionChange={navigateSection}
+                      isRouteSwitching={isPendingRoute}
+                      isPublicFrontPage={isPublicFrontPage}
+                      onAuthLoginSuccess={handleLoginSuccess}
+                      onAuthLogoutComplete={handleLogoutComplete}
+                    >
+                      {routeContent}
+                    </HomeFeedLayout>
                   )}
 
                   {showGlobalAppChrome && (
                     <>
                       <Suspense fallback={null}>
                         <DeployUpdateBanner />
-                        <AppNav
-                          activeSection={activeSection}
-                          onNavigate={navigateSection}
-                          onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
-                        />
                       </Suspense>
+                      <AppNav
+                        activeSection={activeSection}
+                        onNavigate={navigateSection}
+                        onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
+                      />
                     </>
                   )}
 

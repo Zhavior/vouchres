@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import { queryClient } from '../lib/queryClient';
 import { queryKeys } from '../hooks/queries/queryKeys';
+import { preloadSection } from '../lib/routePreload';
 import {
   DEV_BYPASS_AUTH,
   PUBLIC_SECTIONS,
@@ -43,6 +44,7 @@ export function useSectionNavigation() {
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
 
   const commitSection = useCallback((target: string) => {
+    preloadSection(target);
     startTransition(() => {
       saveActiveSection(target);
       setActiveSection(target);

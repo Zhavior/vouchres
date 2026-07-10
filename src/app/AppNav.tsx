@@ -14,6 +14,7 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
       <button
         type="button"
         onClick={() => onNavigate('feed')}
+        onPointerDown={() => preloadSection('feed')}
         onMouseEnter={() => preloadSection('feed')}
         onFocus={() => preloadSection('feed')}
         aria-label="Go to Home Feed"
@@ -30,6 +31,7 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
       <button
         type="button"
         onClick={() => onNavigate('pro_command_center')}
+        onPointerDown={() => preloadSection('pro_command_center')}
         onMouseEnter={() => preloadSection('pro_command_center')}
         onFocus={() => preloadSection('pro_command_center')}
         aria-label="Go to Pro Edges"
@@ -42,6 +44,7 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
       <button
         type="button"
         onClick={() => onNavigate('ai_engine')}
+        onPointerDown={() => preloadSection('ai_engine')}
         onMouseEnter={() => preloadSection('ai_engine')}
         onFocus={() => preloadSection('ai_engine')}
         aria-label="Go to AI"
@@ -54,6 +57,7 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
       <button
         type="button"
         onClick={() => onNavigate('notifications')}
+        onPointerDown={() => preloadSection('notifications')}
         onMouseEnter={() => preloadSection('notifications')}
         onFocus={() => preloadSection('notifications')}
         aria-label="Go to Alerts"

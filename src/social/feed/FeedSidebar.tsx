@@ -118,6 +118,7 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
   const IconComponent = ICON_MAP[resolvedIcon] || Settings;
 
   const handleClick = useCallback(() => {
+    preloadSection(id);
     onNavigate(id);
   }, [id, onNavigate]);
 
@@ -128,7 +129,9 @@ const NavItem = React.memo(function NavItem({ id, label, icon, isActive, onNavig
   return (
     <button
       key={id}
+      type="button"
       onClick={handleClick}
+      onPointerDown={handleIntent}
       onMouseEnter={handleIntent}
       onFocus={handleIntent}
       id={`sidebar-link-${id}`}
@@ -288,6 +291,7 @@ function FeedSidebar({
   }, []);
 
   const handleNavigate = useCallback((id: string) => {
+    preloadSection(id);
     onSectionChange(id);
   }, [onSectionChange]);
 
