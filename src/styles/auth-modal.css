@@ -8,6 +8,29 @@
   overflow-y: auto;
 }
 
+.ve-auth-terminal-dialog {
+  border-color: rgba(0, 240, 255, 0.22);
+  box-shadow:
+    0 32px 120px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(0, 240, 255, 0.08);
+}
+
+.ve-auth-terminal-dialog::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 240, 255, 0.12), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: auto, 100% 4px;
+  opacity: 0.9;
+}
+
+.ve-auth-terminal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .ve-auth-reveal,
 .ve-auth-message,
 .ve-auth-judge-swap {

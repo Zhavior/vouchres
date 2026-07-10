@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LANDING_JUDGES } from '../../constants/aiJudges';
 import JudgePixelIcon from '../judges/JudgePixelIcon';
-import { Z8_LABEL, Z8_PANEL_PREMIUM } from '../../theme/z8Tokens';
+import { Z8_LABEL, Z8_PANEL_PREMIUM } from '../landing/LandingTokens';
 
 interface AuthJudgeWelcomeProps {
   /** Compact strip only — for narrow layouts or wizard steps */

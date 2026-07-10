@@ -22,6 +22,7 @@ import {
   Coins,
   ClipboardCheck,
   ScrollText,
+  Activity,
 } from 'lucide-react';
 import {
   signInWithEmail,
@@ -33,7 +34,20 @@ import { apiUrl } from '../../lib/apiBase';
 import { apiClient } from '../../lib/apiClient';
 import { startStripeCheckout } from '../../lib/billingClient';
 import AuthJudgeWelcome from './AuthJudgeWelcome';
-import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../theme/z8Tokens';
+import {
+  Z8_INTERACTIVE,
+  Z8_LABEL,
+  Z8_PANEL_PREMIUM,
+  Z8_AUTH_SURFACE,
+  Z8_AUTH_FIELD,
+  Z8_BTN_TERMINAL_PRIMARY,
+  Z8_BTN_TERMINAL_SECONDARY,
+  Z8_BTN_TERMINAL_GHOST,
+  Z8_AUTH_TAB_ACTIVE,
+  Z8_AUTH_TAB_IDLE,
+  Z8_AUTH_PLAN_SELECTED,
+  Z8_AUTH_PLAN_IDLE,
+} from '../landing/LandingTokens';
 import '../../styles/public-auth.css';
 import '../../styles/auth-modal.css';
 
@@ -132,11 +146,6 @@ interface AuthModalProps {
   /** Called when the user chooses to skip auth and browse as a guest. */
   onGuest?: () => void;
 }
-
-const CYAN_GRADIENT = 'linear-gradient(135deg, #00F0FF, #2563eb)';
-const CYAN_SHADOW = '0 8px 32px rgba(0,240,255,0.22)';
-const CYAN = '#00F0FF';
-const BLURPLE = '#5865F2';
 
 export default function AuthModal({
   open,
@@ -355,19 +364,18 @@ export default function AuthModal({
 
   if (!open) return null;
 
-  const handleHint: Record<HandleState, { text: string; color: string } | null> = {
+  const handleHint: Record<HandleState, { text: string; className: string } | null> = {
     idle: null,
-    checking: { text: 'Checking…', color: '#94a3b8' },
-    available: { text: 'Available', color: '#34d399' },
-    taken: { text: 'Already taken', color: '#f87171' },
-    invalid: { text: '3–30 chars, lowercase letters, numbers, or _', color: '#fbbf24' },
+    checking: { text: 'Checking…', className: 'text-white/45' },
+    available: { text: 'Available', className: 'text-vouch-emerald' },
+    taken: { text: 'Already taken', className: 'text-rose-400' },
+    invalid: { text: '3–30 chars, lowercase letters, numbers, or _', className: 'text-vouch-amber' },
   };
 
   return createPortal(
     (
       <div
-        className="ve-auth-backdrop fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 font-z8"
-        style={{ background: 'rgba(2,4,10,0.82)', backdropFilter: 'blur(12px)' }}
+        className="ve-auth-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-obsidian-900/82 p-3 backdrop-blur-md sm:p-4 font-z8"
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <div
@@ -376,24 +384,20 @@ export default function AuthModal({
           aria-modal="true"
           aria-labelledby="ve-auth-title"
           tabIndex={-1}
-          className={`ve-auth-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.65)] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
+          className={`ve-auth-dialog ve-auth-terminal-dialog relative flex w-full max-w-lg flex-col overflow-hidden rounded-[1.75rem] lg:max-w-4xl lg:flex-row ${Z8_PANEL_PREMIUM}`}
         >
           {/* Judge welcome — desktop sidebar */}
           <div className="hidden lg:flex lg:w-[38%] lg:min-w-[260px] lg:max-w-[320px]">
             <AuthJudgeWelcome className="h-full w-full rounded-none border-0 shadow-none" />
           </div>
 
-          <div className="relative flex min-w-0 flex-1 flex-col">
-          {/* Glow header band */}
-          <div
-            className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
-            style={{ background: 'radial-gradient(120% 100% at 50% 0%, rgba(0,240,255,0.12), transparent 70%)' }}
-          >
+          <div className="ve-auth-terminal-header relative flex min-w-0 flex-1 flex-col">
+          <div className="relative px-5 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5">
             <button
               ref={closeButtonRef}
               onClick={onClose}
               aria-label="Close"
-              className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors ${Z8_INTERACTIVE}`}
+              className={`absolute top-3 right-3 sm:top-4 sm:right-4 rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white ${Z8_INTERACTIVE}`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -403,19 +407,28 @@ export default function AuthModal({
               <AuthJudgeWelcome compact />
             </div>
 
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-vouch-cyan/35 bg-vouch-cyan/10 font-black text-sm text-vouch-cyan shadow-[0_0_16px_rgba(0,240,255,0.15)]">
-                VE
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+                <Activity size={18} className="text-vouch-cyan" />
               </div>
               <div>
-                <span className="font-black tracking-tight text-lg text-white">
-                  Vouch<span className="text-vouch-cyan">Edge</span>
-                </span>
-                <p className={`${Z8_LABEL} text-white/30`}>Trust-first research</p>
+                <p className="text-lg font-black uppercase italic tracking-tighter text-white">
+                  VouchEdge<span className="text-vouch-cyan">.Terminal</span>
+                </p>
+                <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+                  MLB Edge Research · Trust First
+                </p>
               </div>
             </div>
 
-            <h2 id="ve-auth-title" className="text-xl font-black text-white tracking-tight">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-3 py-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-vouch-cyan" />
+              <span className={`${Z8_LABEL} text-vouch-cyan/90`}>
+                {mode === 'login' ? 'Member Access' : 'Create Terminal Access'}
+              </span>
+            </div>
+
+            <h2 id="ve-auth-title" className="text-xl font-black tracking-tight text-white sm:text-2xl">
               {emailSent
                 ? 'Check your inbox'
                 : mode === 'signup' && signupStep === 'intro'
@@ -428,7 +441,7 @@ export default function AuthModal({
                 ? 'Create your account'
                 : 'Welcome back'}
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="mt-1 text-sm leading-relaxed text-white/50">
               {emailSent
                 ? 'One more step to finish setting up your account.'
                 : mode === 'signup' && signupStep === 'intro'
@@ -450,21 +463,20 @@ export default function AuthModal({
                 style={{ boxShadow: '0 0 24px rgba(0,240,255,0.12)' }}>
                 <MailCheck className="w-8 h-8 text-vouch-cyan" />
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
+              <p className="text-sm leading-relaxed text-white/70 max-w-xs">
                 We sent a secure link to{' '}
                 <span className="font-bold text-white break-all">{email || 'your email'}</span>.
                 Click it to {mode === 'signup' ? 'confirm your account' : 'finish signing in'} — it expires in 1 hour.
               </p>
               <button
                 onClick={() => { setEmailSent(false); }}
-                className={`mt-5 w-full py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                className={`mt-5 w-full ${Z8_BTN_TERMINAL_PRIMARY}`}
               >
                 Got it
               </button>
               <button
                 onClick={() => { setEmailSent(false); setMode('login'); }}
-                className="mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+                className="mt-2 text-[13px] font-semibold text-white/45 transition-colors hover:text-white/70"
               >
                 Back to sign in
               </button>
@@ -476,10 +488,7 @@ export default function AuthModal({
                 {(() => {
                   const Icon = INTRO_SLIDES[introIndex].icon;
                   return (
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center border border-vouch-cyan/30 bg-vouch-cyan/10"
-                      style={{ boxShadow: '0 0 24px rgba(0,240,255,0.12)' }}
-                    >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_24px_rgba(0,240,255,0.12)]">
                       <Icon className="w-8 h-8 text-vouch-cyan" />
                     </div>
                   );
@@ -491,8 +500,7 @@ export default function AuthModal({
                 {INTRO_SLIDES.map((_, i) => (
                   <span
                     key={i}
-                    className="h-1.5 rounded-full transition-all"
-                    style={{ width: i === introIndex ? 20 : 6, background: i === introIndex ? '#00F0FF' : 'rgba(255,255,255,0.15)' }}
+                    className={`h-1.5 rounded-full transition-all ${i === introIndex ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/15'}`}
                   />
                 ))}
               </div>
@@ -502,8 +510,7 @@ export default function AuthModal({
                   <button
                     type="button"
                     onClick={() => setIntroIndex((i) => Math.max(0, i - 1))}
-                    className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
-                    style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                    className={`${Z8_BTN_TERMINAL_GHOST} h-11 w-11 shrink-0`}
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
@@ -514,8 +521,7 @@ export default function AuthModal({
                     if (introIndex < INTRO_SLIDES.length - 1) setIntroIndex((i) => i + 1);
                     else setSignupStep('plan');
                   }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  className={`flex-1 ${Z8_BTN_TERMINAL_PRIMARY}`}
                 >
                   {introIndex < INTRO_SLIDES.length - 1 ? 'Next' : "Let's go"}
                   <ArrowRight className="w-4 h-4" />
@@ -524,7 +530,7 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={() => setSignupStep('plan')}
-                className="w-full mt-2 text-[13px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+                className="mt-2 w-full text-[13px] font-semibold text-white/45 transition-colors hover:text-white/70"
               >
                 Skip
               </button>
@@ -541,47 +547,44 @@ export default function AuthModal({
                       key={opt.id}
                       type="button"
                       onClick={() => setPlan(opt.id)}
-                      className="w-full text-left rounded-xl border p-3.5 transition-colors"
-                      style={{
-                        background: selected ? 'rgba(0,240,255,0.08)' : 'rgba(0,0,0,0.35)',
-                        borderColor: selected ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)',
-                      }}
+                      className={`w-full rounded-xl border p-3.5 text-left transition-colors ${Z8_INTERACTIVE} ${
+                        selected ? Z8_AUTH_PLAN_SELECTED : Z8_AUTH_PLAN_IDLE
+                      }`}
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ background: selected ? 'rgba(34,211,238,0.16)' : 'rgba(255,255,255,0.05)' }}
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                            selected ? 'border-vouch-cyan/35 bg-vouch-cyan/15' : 'border-white/10 bg-white/5'
+                          }`}
                         >
-                          <Icon className="w-4 h-4" style={{ color: selected ? CYAN : '#94a3b8' }} />
+                          <Icon className={`h-4 w-4 ${selected ? 'text-vouch-cyan' : 'text-white/45'}`} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-black text-white">{opt.label}</span>
-                            <span className="text-xs font-bold" style={{ color: CYAN }}>{opt.price}</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-black uppercase text-white">{opt.label}</span>
+                            <span className="font-mono text-xs font-bold text-vouch-cyan">{opt.price}</span>
                             {opt.beta && (
-                              <span
-                                className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                                style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24' }}
-                              >
+                              <span className="rounded-full bg-vouch-amber/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-vouch-amber">
                                 Beta
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-0.5">{opt.tagline}</p>
+                          <p className="mt-0.5 text-[11px] text-white/45">{opt.tagline}</p>
                           <ul className="mt-1.5 space-y-0.5">
                             {opt.perks.map((perk) => (
-                              <li key={perk} className="flex items-start gap-1.5 text-[10px] text-slate-500">
-                                <Check className="w-3 h-3 shrink-0 mt-0.5" style={{ color: selected ? CYAN : '#64748b' }} />
+                              <li key={perk} className="flex items-start gap-1.5 text-[10px] text-white/40">
+                                <Check className={`mt-0.5 h-3 w-3 shrink-0 ${selected ? 'text-vouch-cyan' : 'text-white/25'}`} />
                                 {perk}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div
-                          className="w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center"
-                          style={{ borderColor: selected ? CYAN : 'rgba(255,255,255,0.2)' }}
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                            selected ? 'border-vouch-cyan' : 'border-white/20'
+                          }`}
                         >
-                          {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ background: CYAN }} />}
+                          {selected && <span className="h-2.5 w-2.5 rounded-full bg-vouch-cyan" />}
                         </div>
                       </div>
                     </button>
@@ -590,25 +593,23 @@ export default function AuthModal({
               </div>
 
               {(plan === 'pro' || plan === 'capper') && (
-                <p className="mt-3 text-[11px] leading-relaxed text-center" style={{ color: '#fbbf24' }}>
+                <p className="mt-3 text-center text-[11px] leading-relaxed text-vouch-amber">
                   This tier is in beta — you're an early supporter and lock in this price for as long as you stay subscribed.
                 </p>
               )}
 
-              <div className="flex items-center gap-2 mt-4">
+              <div className="mt-4 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setSignupStep('intro')}
-                  className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
-                  style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                  className={`${Z8_BTN_TERMINAL_GHOST} h-11 w-11 shrink-0`}
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setSignupStep('policy')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  className={`flex-1 ${Z8_BTN_TERMINAL_PRIMARY}`}
                 >
                   Continue
                   <ArrowRight className="w-4 h-4" />
@@ -619,12 +620,12 @@ export default function AuthModal({
             /* ── Policy agreement ── */
             <div className="px-6 pb-6">
               <div
-                className={`max-h-56 overflow-y-auto rounded-xl border p-4 space-y-3 ${Z8_SURFACE}`}
+                className={`max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-black/35 p-4 space-y-3`}
               >
                 {POLICY_SECTIONS.map((section) => (
                   <div key={section.title}>
                     <p className={`${Z8_LABEL} text-vouch-cyan`}>{section.title}</p>
-                    <p className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#94a3b8' }}>{section.body}</p>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-white/50">{section.body}</p>
                   </div>
                 ))}
               </div>
@@ -633,20 +634,18 @@ export default function AuthModal({
                 {AGREEMENTS.map((item) => (
                   <label
                     key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors"
-                    style={{
-                      background: agreements[item.id] ? 'rgba(0,240,255,0.06)' : 'rgba(0,0,0,0.35)',
-                      borderColor: agreements[item.id] ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.08)',
-                    }}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
+                      agreements[item.id]
+                        ? 'border-vouch-cyan/40 bg-vouch-cyan/10'
+                        : 'border-white/10 bg-black/35'
+                    }`}
                   >
                     <span
-                      className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
-                      style={{
-                        borderColor: agreements[item.id] ? CYAN : 'rgba(255,255,255,0.2)',
-                        background: agreements[item.id] ? CYAN : 'transparent',
-                      }}
+                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                        agreements[item.id] ? 'border-vouch-cyan bg-vouch-cyan' : 'border-white/20 bg-transparent'
+                      }`}
                     >
-                      {agreements[item.id] && <Check className="w-3 h-3" style={{ color: '#0b1322' }} />}
+                      {agreements[item.id] && <Check className="h-3 w-3 text-black" />}
                     </span>
                     <input
                       type="checkbox"
@@ -654,17 +653,16 @@ export default function AuthModal({
                       checked={agreements[item.id]}
                       onChange={() => setAgreements((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
                     />
-                    <span className="text-[12px] leading-5 text-slate-300">{item.label}</span>
+                    <span className="text-[12px] leading-5 text-white/70">{item.label}</span>
                   </label>
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 mt-4">
+              <div className="mt-4 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setSignupStep('plan')}
-                  className="flex items-center justify-center w-11 h-11 rounded-xl border shrink-0"
-                  style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
+                  className={`${Z8_BTN_TERMINAL_GHOST} h-11 w-11 shrink-0`}
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
@@ -672,15 +670,14 @@ export default function AuthModal({
                   type="button"
                   disabled={!agreements.age || !agreements.terms || !agreements.research}
                   onClick={() => setSignupStep('form')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${Z8_INTERACTIVE}`}
-                  style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+                  className={`flex-1 ${Z8_BTN_TERMINAL_PRIMARY} disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   Agree & continue
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
               {!(agreements.age && agreements.terms && agreements.research) && (
-                <p className="mt-2 text-[11px] text-center" style={{ color: '#64748b' }}>
+                <p className="mt-2 text-center text-[11px] text-white/35">
                   Check all three boxes to continue.
                 </p>
               )}
@@ -693,7 +690,7 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={() => setSignupStep('policy')}
-                className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+                className="flex items-center gap-1.5 text-[12px] font-semibold text-white/45 transition-colors hover:text-white/70"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 {PLAN_OPTIONS.find((p) => p.id === plan)?.label ?? 'Basic'} plan
@@ -702,21 +699,15 @@ export default function AuthModal({
           )}
           {/* Tab switch */}
           <div className="px-6">
-            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${Z8_SURFACE}`}>
+            <div className={`grid grid-cols-2 gap-1 p-1 ${Z8_AUTH_SURFACE}`}>
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   key={m}
+                  type="button"
                   onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'intro' : 'form'); setIntroIndex(0); }}
-                  className="relative py-2 text-sm font-bold rounded-lg transition-colors"
-                  style={{ color: mode === m ? '#fff' : '#64748b' }}
+                  className={`relative py-2.5 transition-colors ${mode === m ? Z8_AUTH_TAB_ACTIVE : Z8_AUTH_TAB_IDLE}`}
                 >
-                  {mode === m && (
-                    <div
-                      className="absolute inset-0 rounded-lg"
-                      style={{ background: 'linear-gradient(135deg, #06b6d4, #2563eb)' }}
-                    />
-                  )}
-                  <span className="relative">{m === 'signup' ? 'Sign Up' : 'Log In'}</span>
+                  {m === 'signup' ? 'Sign Up' : 'Log In'}
                 </button>
               ))}
             </div>
@@ -734,9 +725,9 @@ export default function AuthModal({
                     ].map((p, i) => {
                       const Icon = p.icon;
                       return (
-                        <div key={i} className={`flex flex-col items-center gap-1 text-center py-2 rounded-lg ${Z8_SURFACE}`}>
+                        <div key={i} className={`flex flex-col items-center gap-1 rounded-lg py-2 text-center ${Z8_AUTH_SURFACE}`}>
                           <Icon className="w-3.5 h-3.5 text-vouch-cyan" />
-                          <span className="text-[10px] font-semibold text-slate-400 leading-tight">{p.label}</span>
+                          <span className="text-[10px] font-semibold leading-tight text-white/45">{p.label}</span>
                         </div>
                       );
                     })}
@@ -756,7 +747,7 @@ export default function AuthModal({
                 placeholder="you@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+                className="w-full bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
               />
             </Field>
 
@@ -764,7 +755,7 @@ export default function AuthModal({
               {mode === 'signup' && (
                 <div className="ve-auth-reveal overflow-hidden">
                   <Field icon={<User className="w-4 h-4" />}>
-                    <span className="text-sm text-slate-500 shrink-0">@</span>
+                    <span className="shrink-0 text-sm text-white/45">@</span>
                     <input
                       type="text"
                       autoComplete="username"
@@ -775,14 +766,14 @@ export default function AuthModal({
                         setHandle(next);
                         checkHandle(next);
                       }}
-                      className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+                      className="w-full bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
                     />
-                    {handleState === 'checking' && <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />}
+                    {handleState === 'checking' && <Loader2 className="h-3.5 w-3.5 animate-spin text-white/45" />}
                     {handleState === 'available' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
                     {handleState === 'taken' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
                   </Field>
                   {handleHint[handleState] && (
-                    <p className="text-[11px] mt-1 ml-1 font-medium" style={{ color: handleHint[handleState]!.color }}>
+                    <p className={`ml-1 mt-1 text-[11px] font-medium ${handleHint[handleState]!.className}`}>
                       {handleHint[handleState]!.text}
                     </p>
                   )}
@@ -798,9 +789,9 @@ export default function AuthModal({
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
                 />
-                <button type="button" onClick={() => setShowPw((v) => !v)} className="text-slate-500 hover:text-slate-300">
+                <button type="button" onClick={() => setShowPw((v) => !v)} className="text-white/45 hover:text-white/70">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </Field>
@@ -831,12 +822,12 @@ export default function AuthModal({
                       placeholder="Invite code — optional (VE-XXXXXXXX)"
                       value={inviteCode}
                       onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                      className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none tracking-wide"
+                      className="w-full bg-transparent text-sm tracking-wide text-white placeholder:text-white/30 outline-none"
                     />
                   </Field>
-                  <p className="text-[11px] mt-1 ml-1" style={{ color: '#7c8aa0' }}>
+                  <p className="text-[11px] mt-1 ml-1 text-white/35">
                     VouchEdge is in private beta. No code?{' '}
-                    <button type="button" onClick={onGuest} className="font-semibold underline" style={{ color: BLURPLE }}>
+                    <button type="button" onClick={onGuest} className="font-semibold text-vouch-cyan underline hover:text-white">
                       Join the waitlist
                     </button>
                     .
@@ -868,8 +859,7 @@ export default function AuthModal({
             <button
               type="submit"
               disabled={busy || redirectingToCheckout}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-black transition-all disabled:opacity-60 ${Z8_INTERACTIVE}`}
-              style={{ background: CYAN_GRADIENT, boxShadow: CYAN_SHADOW }}
+              className={`w-full ${Z8_BTN_TERMINAL_PRIMARY} disabled:cursor-not-allowed disabled:opacity-60`}
             >
               {redirectingToCheckout ? (
                 <>
@@ -893,18 +883,18 @@ export default function AuthModal({
               type="button"
               onClick={handleMagicLink}
               disabled={busy}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-white/10 text-white/80 transition-colors disabled:opacity-60 hover:border-vouch-cyan/30 hover:text-white ${Z8_INTERACTIVE}`}
+              className={`w-full ${Z8_BTN_TERMINAL_SECONDARY} disabled:cursor-not-allowed disabled:opacity-60`}
             >
-              <Wand2 className="w-3.5 h-3.5" style={{ color: BLURPLE }} />
+              <Wand2 className="h-3.5 w-3.5 text-vouch-cyan" />
               Email me a magic link instead
             </button>
           </form>
 
           {/* Footer — trust */}
           <div className="px-6 pb-6 pt-1 space-y-3">
-            <p className="text-[10px] text-center leading-relaxed text-slate-600">
-              By continuing you agree to our <span className="text-slate-400">Terms</span> &amp;{' '}
-              <span className="text-slate-400">Privacy Policy</span>. You must be of legal age in your jurisdiction
+            <p className="text-[10px] text-center leading-relaxed text-white/35">
+              By continuing you agree to our <span className="text-white/50">Terms</span> &amp;{' '}
+              <span className="text-white/50">Privacy Policy</span>. You must be of legal age in your jurisdiction
               and located somewhere this is legal. Probability-based research for entertainment — not betting advice.
             </p>
           </div>
@@ -920,10 +910,8 @@ export default function AuthModal({
 
 function Field({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div
-      className={`flex items-center gap-2.5 px-3.5 h-11 rounded-xl transition-colors focus-within:border-vouch-cyan/45 focus-within:ring-1 focus-within:ring-vouch-cyan/20 ${Z8_SURFACE}`}
-    >
-      <span className="text-white/35 flex-shrink-0">{icon}</span>
+    <div className={`${Z8_AUTH_FIELD} [&_svg]:text-vouch-cyan/70`}>
+      <span className="flex-shrink-0 text-white/35">{icon}</span>
       {children}
     </div>
   );
