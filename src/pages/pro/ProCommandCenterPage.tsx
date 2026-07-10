@@ -18,7 +18,13 @@ import { AskVouchPanel } from "../../features/ai/components/AskVouchPanel";
 import { FeaturedEdgeCard } from "./FeaturedEdgeCard";
 import { AiMarketPulseCard } from "./AiMarketPulseCard";
 
-export default function ProCommandCenterPage() {
+interface ProCommandCenterPageProps {
+  onSectionChange?: (section: string) => void;
+}
+
+export default function ProCommandCenterPage({
+  onSectionChange,
+}: ProCommandCenterPageProps) {
   const {
     realCandidates,
     candidatesLoading,
@@ -68,6 +74,7 @@ export default function ProCommandCenterPage() {
           confidence={topEdges[0].confidenceTier}
           hrProbability={topEdges[0].estimatedHrProbability}
           reasons={topEdges[0].reasons}
+          onSectionChange={onSectionChange}
         />
       )}
 

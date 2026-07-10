@@ -6,6 +6,7 @@ interface FeaturedEdgeCardProps {
   confidence?: string;
   hrProbability?: number;
   reasons?: string[];
+  onSectionChange?: (section: string) => void;
 }
 
 export function FeaturedEdgeCard({
@@ -14,6 +15,7 @@ export function FeaturedEdgeCard({
   confidence,
   hrProbability,
   reasons = [],
+  onSectionChange,
 }: FeaturedEdgeCardProps) {
   return (
     <section className="ve-premium-panel rounded-3xl border border-vouch-cyan/20 bg-black/30 p-6 backdrop-blur-xl shadow-xl">
@@ -68,6 +70,29 @@ export function FeaturedEdgeCard({
             ✓ {reason}
           </p>
         ))}
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-2">
+        <button
+          onClick={() => onSectionChange?.("ai_engine")}
+          className="rounded-xl bg-vouch-cyan/20 px-3 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/30"
+        >
+          🤖 Ask AI
+        </button>
+
+        <button
+          onClick={() => onSectionChange?.("player_edge_lab")}
+          className="rounded-xl bg-white/10 px-3 py-2 text-xs font-black text-white hover:bg-white/20"
+        >
+          📊 Player
+        </button>
+
+        <button
+          onClick={() => onSectionChange?.("team_matchup_lab")}
+          className="rounded-xl bg-white/10 px-3 py-2 text-xs font-black text-white hover:bg-white/20"
+        >
+          ⚾ Matchup
+        </button>
       </div>
     </section>
   );
