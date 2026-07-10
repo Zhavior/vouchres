@@ -1,3 +1,4 @@
+import { ProductEvents } from '../lib/productEvents';
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
 import { useMyParlays } from '../hooks/queries/useMyParlays';
@@ -19,6 +20,19 @@ import { mapBackendParlay, mapBackendVouch } from './backendMappers';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
+
+const SESSION_TRACK_KEY = 'vouchedge_session_tracked';
+
+function trackReturningSession() {
+  if (typeof window === 'undefined') return;
+
+  if (sessionStorage.getItem(SESSION_TRACK_KEY)) {
+    return;
+  }
+
+  sessionStorage.setItem(SESSION_TRACK_KEY, 'true');
+  ProductEvents.returningSession();
+}
 
 type UseAppBootstrapArgs = {
   activeSection: string;
@@ -63,6 +77,10 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     useSlipsStore.getState().hydrateFromStorage();
     useProfileStore.getState().hydrateFromStorage();
     useVouchesStore.getState().hydrateFromStorage();
+  }, []);
+
+  useEffect(() => {
+    trackReturningSession();
   }, []);
 
   useEffect(() => {
