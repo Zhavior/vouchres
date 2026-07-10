@@ -1,6 +1,4 @@
-import { PersonalizedOnboarding } from "../onboarding/PersonalizedOnboarding";
 import { getExperimentVariant } from '../../lib/experiments';
-import { ProductEvents } from '../../lib/productEvents';
 import React, { Suspense, lazy, memo } from 'react';
 import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import FadeInMount from '../system/FadeInMount';
@@ -10,6 +8,11 @@ import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 
 const ProAccessGate = lazy(() =>
   import('../pro/ProAccessGate').then((module) => ({ default: module.ProAccessGate })),
+);
+const PersonalizedOnboarding = lazy(() =>
+  import('../onboarding/PersonalizedOnboarding').then((module) => ({
+    default: module.PersonalizedOnboarding,
+  })),
 );
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('../TodayDashboard'));
@@ -61,10 +64,12 @@ function getOnboardingExperiment(userId: string) {
     userId
   );
 
-  ProductEvents.experimentViewed(
-    "new_onboarding_v2",
-    variant
-  );
+  void import('../../lib/productEvents').then(({ ProductEvents }) => {
+    ProductEvents.experimentViewed(
+      "new_onboarding_v2",
+      variant
+    );
+  });
 
   return variant;
 }
