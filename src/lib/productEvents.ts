@@ -32,4 +32,17 @@ export const ProductEvents = {
   proSubscribed(tier: string) {
     void send("pro_subscribed", { tier });
   },
+
+  firstEdgeViewed() {
+    void send("first_edge_viewed");
+  },
+
+  firstVouchQuestion() {
+    void send("first_vouch_question");
+  },
+
+  firstPlayerTracked() {
+    void send("first_player_tracked");
+  },
+
 };

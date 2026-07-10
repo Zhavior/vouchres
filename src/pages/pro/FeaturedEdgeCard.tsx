@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { ProductEvents } from "../../lib/productEvents";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { Flame, Sparkles } from "lucide-react";
 import { notify } from "../../lib/appNotifications";
@@ -28,6 +29,7 @@ export function FeaturedEdgeCard({
 
   useEffect(() => {
     completeOnboarding();
+    ProductEvents.firstEdgeViewed();
   }, [completeOnboarding]);
   const trackPlayer = useTrackedPlayersStore(
     (state) => state.trackPlayer
