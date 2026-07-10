@@ -15,8 +15,8 @@ export interface VerifiedRecard {
   recentPicks: Pick<PickRecord, "pickId" | "selection" | "market" | "status" | "score">[];
 }
 
-export function getVerifiedRecord(capperId: string): VerifiedRecard {
-  const trust = getCapperTrust(capperId);
+export async function getVerifiedRecord(capperId: string): Promise<VerifiedRecard> {
+  const [trust, picks] = await Promise.all([getCapperTrust(capperId), getCapperPicks(capperId)]);
   const s = trust.verifiedRecordSummary;
   return {
     subjectId: capperId,
@@ -27,7 +27,7 @@ export function getVerifiedRecord(capperId: string): VerifiedRecard {
     recentForm: trust.recentForm,
     bestMarket: trust.bestMarket,
     transparencyBadge: trust.transparencyBadge,
-    recentPicks: getCapperPicks(capperId)
+    recentPicks: picks
       .slice(0, 8)
       .map((p) => ({ pickId: p.pickId, selection: p.selection, market: p.market, status: p.status, score: p.score })),
   };

@@ -3,6 +3,7 @@
  * Swap the Map for a real DB later; the service interface stays the same.
  */
 import { PickRecord, ResultStatus, LearningNote } from "../results/resultTypes";
+import { getSupabaseAdmin } from "../../middleware/auth";
 
 const ledger = new Map<string, PickRecord>();
 
@@ -65,10 +66,67 @@ export function getAllPicks(): PickRecord[] {
   return [...ledger.values()].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
-export function getCapperPicks(capperId: string): PickRecord[] {
-  return getAllPicks().filter((p) => p.capperId === capperId);
+// ─── Real trust data ─────────────────────────────────────────────────────────
+// getCapperPicks/getUserPicks read the REAL picks table (service role), NOT the
+// in-memory seed above. The seed/ledger remains only for the learning-note flow
+// (addPick/getPick/gradePick). Previously these two returned the fake seed, so
+// /api/trust/* served fabricated records (and never reflected real graded picks).
+
+const PICK_COLUMNS =
+  "id, user_id, capper_id, market, selection, confidence, explanation, status, created_at, graded_at, game_date";
+
+function mapDbStatus(status: string): ResultStatus | null {
+  switch (status) {
+    case "won": return "win";
+    case "lost": return "loss";
+    case "push":
+    case "void": return "push"; // void = refunded → treated as a push, not a loss
+    case "pending": return "pending";
+    default: return null;        // graded_error and unknowns are excluded entirely
+  }
 }
 
-export function getUserPicks(userId: string): PickRecord[] {
-  return getAllPicks().filter((p) => p.userId === userId);
+function mapDbPick(row: any): PickRecord | null {
+  const status = mapDbStatus(String(row.status));
+  if (status === null) return null;
+  return {
+    pickId: String(row.id),
+    capperId: String(row.capper_id ?? ""),
+    userId: row.user_id ? String(row.user_id) : undefined,
+    team: "",
+    market: String(row.market ?? ""),
+    selection: String(row.selection ?? ""),
+    score: typeof row.confidence === "number" ? row.confidence : 0,
+    // Real picks store a single explanation string; surface it as reasons[] so
+    // the transparency factor reflects "has a written rationale."
+    reasons: row.explanation ? [String(row.explanation)] : [],
+    createdAt: row.created_at ?? new Date().toISOString(),
+    gameDate: row.game_date ?? row.created_at ?? new Date().toISOString(),
+    status,
+    gradedAt: row.graded_at ?? undefined,
+  };
+}
+
+export async function getCapperPicks(capperId: string): Promise<PickRecord[]> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select(PICK_COLUMNS)
+    .eq("capper_id", capperId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error || !data) return [];
+  return data.map(mapDbPick).filter((p): p is PickRecord => p !== null);
+}
+
+export async function getUserPicks(userId: string): Promise<PickRecord[]> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select(PICK_COLUMNS)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error || !data) return [];
+  return data.map(mapDbPick).filter((p): p is PickRecord => p !== null);
 }

@@ -80,12 +80,12 @@ function compute(subjectId: string, picks: PickRecord[]): TrustScoreResult {
   };
 }
 
-export function getCapperTrust(capperId: string): TrustScoreResult {
-  return trustCache.getOrSetSync(`capper:${capperId}`, () => compute(capperId, getCapperPicks(capperId)));
+export async function getCapperTrust(capperId: string): Promise<TrustScoreResult> {
+  return trustCache.getOrSet(`capper:${capperId}`, async () => compute(capperId, await getCapperPicks(capperId)));
 }
 
-export function getUserTrust(userId: string): TrustScoreResult {
-  return trustCache.getOrSetSync(`user:${userId}`, () => compute(userId, getUserPicks(userId)));
+export async function getUserTrust(userId: string): Promise<TrustScoreResult> {
+  return trustCache.getOrSet(`user:${userId}`, async () => compute(userId, await getUserPicks(userId)));
 }
 
 /** Clear cached trust so the next read recomputes (call after grading a pick). */

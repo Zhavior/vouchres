@@ -34,7 +34,7 @@ export async function buildLearningNote(pick: PickRecord, result: ResultStatus, 
 export interface GradeAndLearnResult {
   pick: PickRecord | undefined;
   learningNote: LearningNote | null;
-  capperTrust: ReturnType<typeof getCapperTrust> | null;
+  capperTrust: Awaited<ReturnType<typeof getCapperTrust>> | null;
 }
 
 /** Grade a pick by id, attach a learning note, and return refreshed trust. */
@@ -50,6 +50,6 @@ export async function gradeAndLearn(
   const pick = gradePick(pickId, result, note);
   // Grading changes the record, so drop the stale trust cache before recomputing.
   if (pick) invalidateCapperTrust(pick.capperId);
-  const capperTrust = pick ? getCapperTrust(pick.capperId) : null;
+  const capperTrust = pick ? await getCapperTrust(pick.capperId) : null;
   return { pick, learningNote: note, capperTrust };
 }

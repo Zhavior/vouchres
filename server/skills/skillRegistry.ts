@@ -120,7 +120,7 @@ export const SKILLS: Skill[] = [
     description: "Recompute a capper's trust score from the ledger.",
     inputSchema: ["capperId"],
     outputSchema: ["trust"],
-    run: async (input) => ({ trust: getCapperTrust(input.capperId) }),
+    run: async (input) => ({ trust: await getCapperTrust(input.capperId) }),
   },
   {
     id: "createLearningNote",
