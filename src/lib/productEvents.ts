@@ -34,15 +34,21 @@ export const ProductEvents = {
   },
 
   firstEdgeViewed() {
-    void send("first_edge_viewed");
+    void send("first_edge_viewed", {
+      first_value_feature: "featured_edge",
+    });
   },
 
   firstVouchQuestion() {
-    void send("first_vouch_question");
+    void send("first_vouch_question", {
+      first_value_feature: "vouch_ai",
+    });
   },
 
   firstPlayerTracked() {
-    void send("first_player_tracked");
+    void send("first_player_tracked", {
+      first_value_feature: "player_tracking",
+    });
   },
 
   dailyBriefOpened() {
