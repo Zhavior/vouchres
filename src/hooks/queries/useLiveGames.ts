@@ -23,7 +23,7 @@ export function useLiveGames(options?: { enabled?: boolean; refetchInterval?: nu
     queryFn: () => vouchedgeApi.liveGames(),
     staleTime: LIVE_STALE_MS,
     gcTime: 120_000,
-    refetchOnMount: true,
+    refetchOnMount: false,
     placeholderData: (prev) => prev,
     refetchInterval: (query) => {
       if (options?.refetchInterval !== undefined) return options.refetchInterval;

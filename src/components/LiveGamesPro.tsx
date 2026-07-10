@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
 import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
 import {
@@ -159,6 +159,41 @@ function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMat
   });
 
   return Array.from(byGame.values()).sort((a, b) => {
+    const liveDelta = Number(b.isLive) - Number(a.isLive);
+    if (liveDelta) return liveDelta;
+    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
+  });
+}
+
+/** Overlay fresh official scores/status onto enriched rows without dropping model fields. */
+function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
+  if (official.length === 0) return enriched;
+
+  const officialByPk = new Map(official.map((game) => [String(game.gamePk), game]));
+  const seen = new Set<string>();
+
+  const merged = enriched.map((game) => {
+    const key = String(game.gamePk);
+    seen.add(key);
+    const next = officialByPk.get(key);
+    if (!next) return game;
+
+    return {
+      ...game,
+      status: next.status || game.status,
+      isLive: next.isLive || game.isLive || isLiveStatus(next.status) || isLiveStatus(game.status),
+      isFinal: next.isFinal || game.isFinal || isFinalStatus(next.status) || isFinalStatus(game.status),
+      score: next.score ?? game.score,
+      gameTime: next.gameTime || game.gameTime,
+    };
+  });
+
+  for (const game of official) {
+    const key = String(game.gamePk);
+    if (!seen.has(key)) merged.push(game);
+  }
+
+  return merged.sort((a, b) => {
     const liveDelta = Number(b.isLive) - Number(a.isLive);
     if (liveDelta) return liveDelta;
     return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
@@ -484,13 +519,21 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const liveGamesQuery = useLiveGames();
   const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
-  const [liveScores, setLiveScores] = useState<LiveScore[]>([]);
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
   const [selected, setSelected] = useState<GameMatchup | null>(null);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
+
+  const liveGamesDataRef = useRef(liveGamesQuery.data);
+  const hrBoardDataRef = useRef(hrBoardQuery.data);
+  const matchupsCountRef = useRef(0);
+  const enrichRequestRef = useRef(0);
+
+  liveGamesDataRef.current = liveGamesQuery.data;
+  hrBoardDataRef.current = hrBoardQuery.data;
+  matchupsCountRef.current = matchups.length;
 
   const loading = (liveGamesQuery.isLoading || hrBoardQuery.isLoading) && matchups.length === 0;
 
@@ -505,80 +548,98 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     return merged;
   }, []);
 
-  const enrichMatchups = useCallback(async (base: GameMatchup[]) => {
-    if (base.length === 0) return;
-    setEnriching(true);
-    try {
-      const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
-      let working = base;
-      if (Array.isArray(scoreResult?.scores)) {
-        setLiveScores(scoreResult.scores);
-        working = applyScores(working, scoreResult.scores);
-      }
-
-      const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
-      const next = Array.isArray(res.matchups) ? res.matchups : [];
-      if (next.length > 0) {
-        setMatchups(working.length > 0 ? mergeMatchups(working, next) : next);
-        setError(null);
-        setSourceNote('Live game model loaded.');
-      } else {
-        setMatchups(working);
-        setError(null);
-        setSourceNote('Live model returned no rows. Showing verified schedule preview.');
-      }
-    } catch {
-      setMatchups(base);
-      setError(null);
-      setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
-    } finally {
-      setEnriching(false);
-    }
+  const buildOfficialBase = useCallback(() => {
+    return (liveGamesDataRef.current?.games ?? [])
+      .map(matchupFromLiveGame)
+      .filter((game) => game.gamePk);
   }, []);
 
+  // Fast path: react-query polls update scores/status without re-enriching the full model.
   useEffect(() => {
     const official = liveGamesQuery.data;
     let officialBase: GameMatchup[] = [];
     if (official?.games?.length) {
       officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
       if (officialBase.length > 0) {
-        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
+        setSourceNote((prev) => (prev === 'Backend unavailable.' ? prev : 'Official MLB live schedule loaded.'));
       }
     }
 
     const merged = mergeFromQueries(officialBase, hrBoardQuery.data);
     if (merged.length > 0) {
-      setMatchups((prev) => {
-        const scored = liveScores.length > 0 ? applyScores(merged, liveScores) : merged;
-        return scored.length > 0 ? scored : prev;
-      });
+      setMatchups((prev) => (prev.length > 0 ? mergeOfficialLiveUpdates(prev, merged) : merged));
+      setError(null);
     } else if (liveGamesQuery.isError && hrBoardQuery.isError) {
       setError('Live games unavailable right now. No fake games shown.');
       setSourceNote('Backend unavailable.');
     }
-  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries, liveScores]);
+  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries]);
 
+  // Slow path: matchup model enrichment on an interval only — not on every live poll.
   useEffect(() => {
-    const merged = mergeFromQueries(
-      (liveGamesQuery.data?.games ?? []).map(matchupFromLiveGame).filter((game) => game.gamePk),
-      hrBoardQuery.data,
-    );
-    if (merged.length === 0) return;
+    let cancelled = false;
 
-    void enrichMatchups(merged);
+    const runEnrich = async (showBusy: boolean) => {
+      const officialBase = buildOfficialBase();
+      const merged = mergeFromQueries(officialBase, hrBoardDataRef.current);
+      if (merged.length === 0) return;
+
+      const requestId = ++enrichRequestRef.current;
+      if (showBusy && matchupsCountRef.current === 0) setEnriching(true);
+
+      try {
+        const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
+        let working = merged;
+        if (Array.isArray(scoreResult?.scores) && scoreResult.scores.length > 0) {
+          working = applyScores(working, scoreResult.scores);
+        }
+
+        const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
+        const next = Array.isArray(res.matchups) ? res.matchups : [];
+
+        if (cancelled || requestId !== enrichRequestRef.current) return;
+
+        const latestOfficial = buildOfficialBase();
+        const latestMerged = mergeFromQueries(latestOfficial, hrBoardDataRef.current);
+        const enrichedBase = latestMerged.length > 0 ? latestMerged : working;
+
+        if (next.length > 0) {
+          setMatchups(mergeMatchups(enrichedBase, next));
+          setSourceNote('Live game model loaded.');
+        } else {
+          setMatchups((prev) => (prev.length > 0 ? prev : working));
+          setSourceNote('Live model returned no rows. Showing verified schedule preview.');
+        }
+        setError(null);
+      } catch {
+        if (cancelled || requestId !== enrichRequestRef.current) return;
+        setMatchups((prev) => (prev.length > 0 ? prev : merged));
+        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
+        setError(null);
+      } finally {
+        if (!cancelled && requestId === enrichRequestRef.current && showBusy) {
+          setEnriching(false);
+        }
+      }
+    };
+
+    void runEnrich(true);
     const id = window.setInterval(() => {
-      void enrichMatchups(merged);
+      void runEnrich(false);
     }, REFRESH_MS);
-    return () => window.clearInterval(id);
-  }, [enrichMatchups, mergeFromQueries, liveGamesQuery.data, hrBoardQuery.data]);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [buildOfficialBase, mergeFromQueries, hrBoardQuery.data]);
 
   const load = useCallback(() => {
     void liveGamesQuery.refetch();
     void hrBoardQuery.refetch();
   }, [liveGamesQuery, hrBoardQuery]);
 
-  // Always overlay the latest scores from the fast scores endpoint.
-  const scoredMatchups = applyScores(matchups, liveScores);
+  const scoredMatchups = matchups;
   const liveCount = scoredMatchups.filter((m) => m.isLive).length;
   const shown = liveOnly ? scoredMatchups.filter((m) => m.isLive) : scoredMatchups;
 
@@ -618,7 +679,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
             <p className={`mt-2 ${Z8_LABEL} text-vouch-cyan`}>{sourceNote}</p>
           </div>
           <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan shrink-0 self-start sm:self-auto">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching || liveGamesQuery.isFetching ? 'animate-spin' : ''}`} /> Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
         <div className="flex items-center gap-2 mt-4">

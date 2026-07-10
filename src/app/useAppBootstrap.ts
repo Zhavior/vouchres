@@ -57,7 +57,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
 
   const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection);
   const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
-  const liveGames = liveGamesPayload?.games ?? [];
+  const liveGames = useMemo(() => liveGamesPayload?.games ?? [], [liveGamesPayload?.games]);
   const { data: backendParlayRows } = useMyParlays();
   const { data: backendVouchRows } = useMyVouches();
   const { data: backendFeedPages } = useFeedQuery();

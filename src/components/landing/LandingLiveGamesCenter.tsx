@@ -132,21 +132,46 @@ function GameStatusPill({ game }: { game: LiveGame }) {
 }
 
 function GamesSlideshow({ games }: { games: LiveGame[] }) {
-  const [index, setIndex] = useState(0);
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const count = games.length;
+
+  const index = useMemo(() => {
+    if (count === 0) return 0;
+    if (activeGameId) {
+      const found = games.findIndex((game) => game.id === activeGameId);
+      if (found >= 0) return found;
+    }
+    return 0;
+  }, [activeGameId, count, games]);
+
+  useEffect(() => {
+    if (count === 0) {
+      setActiveGameId(null);
+      return;
+    }
+    setActiveGameId((current) => {
+      if (current && games.some((game) => game.id === current)) return current;
+      return games[0]?.id ?? null;
+    });
+  }, [count, games]);
 
   useEffect(() => {
     if (count <= 1 || paused) return undefined;
     const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % count);
+      setActiveGameId((current) => {
+        const currentIndex = games.findIndex((game) => game.id === current);
+        const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % count : 0;
+        return games[nextIndex]?.id ?? games[0]?.id ?? null;
+      });
     }, SLIDE_MS);
     return () => window.clearInterval(timer);
-  }, [count, paused]);
+  }, [count, games, paused]);
 
-  useEffect(() => {
-    if (index >= count) setIndex(0);
-  }, [count, index]);
+  const goToIndex = (nextIndex: number) => {
+    const game = games[nextIndex];
+    if (game) setActiveGameId(game.id);
+  };
 
   if (count === 0) {
     return (
@@ -178,7 +203,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
         <GameStatusPill game={game} />
       </div>
 
-      <div className="ve-landing-game-slide px-4 py-6 sm:px-8 sm:py-8" key={game.id}>
+      <div className="ve-landing-game-slide px-4 py-6 sm:px-8 sm:py-8">
         <div className="flex items-center justify-center gap-4 sm:gap-8">
           <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
             <TeamLogo name={game.awayTeam} size={56} />
@@ -219,7 +244,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
             <button
               type="button"
               aria-label="Previous game"
-              onClick={() => setIndex((current) => (current - 1 + count) % count)}
+              onClick={() => goToIndex((index - 1 + count) % count)}
               className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
             >
               <ChevronLeft size={16} />
@@ -232,7 +257,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
                   type="button"
                   aria-label={`Show game ${dotIndex + 1}`}
                   aria-current={dotIndex === index}
-                  onClick={() => setIndex(dotIndex)}
+                  onClick={() => goToIndex(dotIndex)}
                   className={`h-1.5 rounded-full transition-all ${
                     dotIndex === index
                       ? 'w-5 bg-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.45)]'
@@ -245,7 +270,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
             <button
               type="button"
               aria-label="Next game"
-              onClick={() => setIndex((current) => (current + 1) % count)}
+              onClick={() => goToIndex((index + 1) % count)}
               className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
             >
               <ChevronRight size={16} />
@@ -264,7 +289,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
                   type="button"
                   aria-label={`${item.awayTeam} at ${item.homeTeam}`}
                   aria-current={active}
-                  onClick={() => setIndex(shortcutIndex)}
+                  onClick={() => goToIndex(shortcutIndex)}
                   className={`${Z8_INTERACTIVE} flex shrink-0 items-center gap-1.5 rounded-lg border px-2 py-1.5 font-mono text-[9px] uppercase tracking-wide ${
                     active
                       ? 'border-vouch-cyan/40 bg-vouch-cyan/10 text-vouch-cyan'
@@ -336,10 +361,19 @@ function LiveGamesCenterBody() {
   const liveQuery = useLiveGames({ refetchInterval: 45_000 });
   const hrQuery = useHrBoardToday(12);
 
+  const gamesFingerprint = useMemo(
+    () =>
+      (liveQuery.data?.games ?? [])
+        .slice(0, 18)
+        .map((game) => `${game.id}:${game.awayScore}:${game.homeScore}:${game.status}:${game.isLive}:${game.isFinal}`)
+        .join('|'),
+    [liveQuery.data?.games],
+  );
+
   const games = useMemo(() => {
     const raw = liveQuery.data?.games ?? [];
     return sortGames(raw.slice(0, 18));
-  }, [liveQuery.data?.games]);
+  }, [gamesFingerprint]);
 
   const spotlight = useMemo(() => pickSpotlightPlayers(hrQuery.data), [hrQuery.data]);
 
