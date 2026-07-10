@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
-} from 'lucide-react';
+} from '../components/landing/LandingIcons';
 import {
   Z8_CYAN_HEX,
   Z8_INTERACTIVE,
@@ -16,7 +16,7 @@ import {
   Z8_PAGE,
   Z8_PANEL,
   Z8_PANEL_PREMIUM,
-} from '../theme/z8Tokens';
+} from '../components/landing/LandingTokens';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 

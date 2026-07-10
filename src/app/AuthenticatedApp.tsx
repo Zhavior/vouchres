@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { useSectionNavigation } from './useSectionNavigation';
 import { queryClient } from '../lib/queryClient';
+import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFetch';
 import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
@@ -8,6 +10,8 @@ import '../index.css';
 import '../styles/vouchedge-theme.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
+
+patchPublicNotificationsFetch();
 
 function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }) {
   const bootstrap = useAppBootstrap({
@@ -54,6 +58,18 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
 }
 
 export default function AuthenticatedApp({ navigation }: { navigation: NavigationState }) {
+  useEffect(() => {
+    const loadFounderAccess = () => {
+      void import('../lib/founderAccess').then(({ forceFounderPoints }) => forceFounderPoints());
+    };
+    if (typeof requestIdleCallback === 'function') {
+      const idleId = requestIdleCallback(loadFounderAccess, { timeout: 2000 });
+      return () => cancelIdleCallback(idleId);
+    }
+    const timer = window.setTimeout(loadFounderAccess, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthenticatedAppContent navigation={navigation} />
