@@ -18,6 +18,7 @@ import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
+import type { LiveGamesPayload } from "../types/liveGames";
 import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
 import { apiUrl } from "../lib/apiBase";
 import { unwrapApiPayload } from "../lib/apiEnvelope";
@@ -133,27 +134,7 @@ export const vouchedgeApi = {
   // Live Games matchups
   liveGames: () =>
     withFallback(
-      () =>
-        getJson<{
-          success: boolean;
-          date: string;
-          games: Array<{
-            id: string;
-            homeTeam: string;
-            awayTeam: string;
-            homeScore: number | null;
-            awayScore: number | null;
-            status: string;
-            venue: string | null;
-            gameDate: string | null;
-            isLive?: boolean;
-            isFinal?: boolean;
-            predictionsAvailable?: boolean;
-            warnings?: string[];
-          }>;
-          warnings?: string[];
-          updatedAt: string;
-        }>("/api/mlb/live"),
+      () => getJson<LiveGamesPayload>("/api/mlb/live"),
       () => liveGamesDirect(),
     ),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),

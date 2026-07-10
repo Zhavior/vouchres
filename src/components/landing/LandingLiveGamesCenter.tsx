@@ -4,22 +4,12 @@ import { useHrBoardToday } from '../../hooks/queries/useHrBoardToday';
 import { buildBoard } from '../../features/hr/utils/normalizeHrWatch';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import { logoByTeamName } from '../../lib/teamLogos';
+import { liveGameDisplayStatus, sortLiveGameCards, type LiveGameCard } from '../../types/liveGames';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { ChevronLeft, ChevronRight, Radio, ShieldCheck } from './LandingIcons';
 import LandingHrSpotlightCard from './LandingHrSpotlightCard';
 
-type LiveGame = {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number | null;
-  awayScore: number | null;
-  status: string;
-  venue: string | null;
-  gameDate: string | null;
-  isLive?: boolean;
-  isFinal?: boolean;
-};
+type LiveGame = LiveGameCard;
 
 const SLIDE_MS = 5500;
 
@@ -54,19 +44,7 @@ function teamAbbr(name: string): string {
 }
 
 function sortGames(games: LiveGame[]): LiveGame[] {
-  return [...games].sort((a, b) => {
-    const aLive = a.isLive || isLiveStatus(a.status);
-    const bLive = b.isLive || isLiveStatus(b.status);
-    if (aLive !== bLive) return aLive ? -1 : 1;
-
-    const aFinal = a.isFinal || isFinalStatus(a.status);
-    const bFinal = b.isFinal || isFinalStatus(b.status);
-    if (aFinal !== bFinal) return aFinal ? 1 : -1;
-
-    const aTime = a.gameDate ? Date.parse(a.gameDate) : Number.MAX_SAFE_INTEGER;
-    const bTime = b.gameDate ? Date.parse(b.gameDate) : Number.MAX_SAFE_INTEGER;
-    return aTime - bTime;
-  });
+  return sortLiveGameCards(games);
 }
 
 function pickSpotlightPlayers(boardInput: unknown): { rows: HrWatchRow[]; projectedOnly: boolean } {
@@ -232,7 +210,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
         </div>
 
         <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-widest text-white/35">
-          {game.status}
+          {liveGameDisplayStatus(game)}
           <span className="mx-2 text-white/15">·</span>
           Official MLB schedule
         </p>
