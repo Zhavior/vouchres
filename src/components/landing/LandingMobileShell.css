@@ -172,10 +172,12 @@
   }
 }
 
-.ve-landing-hr-headshot {
-  object-position: center 18%;
-  transform: scale(1.08);
-  transform-origin: center 22%;
+.ve-landing-player-face {
+  object-position: center 22%;
+}
+
+.ve-landing-team-header-logo {
+  filter: saturate(0.85);
 }
 
 @media (pointer: fine) {
