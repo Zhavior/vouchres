@@ -1,4 +1,6 @@
 import { Flame, Sparkles } from "lucide-react";
+import { notify } from "../../lib/appNotifications";
+import { useTrackedPlayersStore } from "../../stores/trackedPlayersStore";
 
 interface FeaturedEdgeCardProps {
   playerName: string;
@@ -17,6 +19,13 @@ export function FeaturedEdgeCard({
   reasons = [],
   onSectionChange,
 }: FeaturedEdgeCardProps) {
+  const trackPlayer = useTrackedPlayersStore(
+    (state) => state.trackPlayer
+  );
+
+  const isTracked = useTrackedPlayersStore(
+    (state) => state.isTracked(playerName)
+  );
   return (
     <section className="ve-premium-panel rounded-3xl border border-vouch-cyan/20 bg-black/30 p-6 backdrop-blur-xl shadow-xl">
       <div className="flex items-center gap-2 text-vouch-cyan">
@@ -93,6 +102,22 @@ export function FeaturedEdgeCard({
         >
           ⚾ Matchup
         </button>
+        <button
+          onClick={() => {
+            trackPlayer(playerName);
+
+            notify({
+              kind: "success",
+              title: `${playerName} tracked`,
+              body: "Vouch will watch this edge and alert you when the signal changes.",
+              section: "notifications",
+            });
+          }}
+          className="rounded-xl bg-vouch-cyan/20 px-3 py-2 text-xs font-black text-vouch-cyan hover:bg-vouch-cyan/30"
+        >
+          🔔 {isTracked ? "Tracked" : "Track"}
+        </button>
+
       </div>
     </section>
   );
