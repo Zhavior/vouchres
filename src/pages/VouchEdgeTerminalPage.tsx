@@ -23,6 +23,7 @@ import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlidesh
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
+import '../components/landing/LandingMobileShell.css';
 
 type SignupPlan = 'free' | 'pro' | 'capper';
 
@@ -273,31 +274,29 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             background: `radial-gradient(circle at 30% 20%, rgba(0,240,255,0.14), transparent 32%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 42%)`,
           }}
         />
-        <div
-          className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl"
+        <div className="pointer-events-none absolute -right-20 top-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl max-md:opacity-15"
           style={{ background: `radial-gradient(circle, rgba(0,255,148,0.12), transparent 70%)` }}
         />
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
+        <div className="ve-terminal-scanlines pointer-events-none absolute inset-0 z-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_4px]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black via-black/95 to-transparent" />
 
-        <div className="relative z-10 mx-auto w-full max-w-none px-3 py-6 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-          {/* Header — brand on mobile only; desktop gets a single top-right auth cluster */}
-          <header className="ve-terminal-header mb-10 flex flex-col items-center justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row md:mb-6 md:justify-end md:border-b-0 md:pb-0">
-            <div className="flex items-center gap-3 md:hidden">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
-                <Activity size={18} className="text-vouch-cyan" />
+        <div className="relative z-10 mx-auto w-full max-w-none px-3 py-4 sm:max-w-6xl sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+          <header className="ve-terminal-header ve-terminal-sticky-header flex items-center justify-between gap-3 md:mb-6 md:justify-end">
+            <div className="flex min-w-0 items-center gap-2.5 md:hidden">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vouch-cyan/25 bg-vouch-cyan/10">
+                <Activity size={16} className="text-vouch-cyan" />
               </div>
-              <div>
-                <p className="text-lg font-black uppercase italic tracking-tighter text-white">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black tracking-tight text-white">
                   VouchEdge<span className="text-vouch-cyan">.Terminal</span>
                 </p>
-                <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
-                  MLB Edge Research · Trust First
+                <p className="truncate font-mono text-[8px] uppercase tracking-[0.18em] text-white/35">
+                  MLB · Trust First
                 </p>
               </div>
             </div>
             <div
-              className={`ve-terminal-header-actions flex items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
+              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
             >
               <button
                 type="button"
@@ -320,17 +319,16 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </div>
           </header>
 
-          <div className="space-y-10 sm:space-y-16 md:space-y-20">
-            {/* Hero */}
-            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-6 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
-              <div className="ve-terminal-hero-badge inline-flex items-center gap-2 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-4 py-1.5">
-                <ShieldCheck size={14} className="text-vouch-cyan" />
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan/90">
-                  Verified HR Board · AI Judge Council
+          <div className="space-y-8 sm:space-y-16 md:space-y-20">
+            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+              <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
+                <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
+                  Verified HR Board · AI Judges
                 </span>
               </div>
 
-              <h1 className="text-4xl font-black leading-[1.05] tracking-tighter text-white sm:text-5xl lg:text-6xl">
+              <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
                 MLB edge research with{' '}
                 <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
                   pristine
@@ -338,10 +336,20 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 intelligence.
               </h1>
 
-              <p className="mx-auto max-w-2xl text-base leading-relaxed text-white/50">
-                The trust-first terminal for serious analysts. Verified home run boards, five AI judges,
-                and honest data — no fake lineups, no inflated edges, no hype.
+              <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
+                Trust-first HR boards, five AI judges, and honest slate data — no fake lineups or inflated edges.
               </p>
+
+              <div className="ve-terminal-trust-strip px-0.5">
+                {TRUST_PILLARS.map((pillar) => (
+                  <div key={pillar.label} className="ve-terminal-trust-strip-item">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">
+                      {pillar.label}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-white/40">{pillar.detail}</p>
+                  </div>
+                ))}
+              </div>
 
               <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
                 {TRUST_PILLARS.map((pillar) => (
@@ -354,23 +362,42 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 ))}
               </div>
 
-              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
                 <button
                   type="button"
                   onClick={() => openSignup('free')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:h-14 sm:max-w-[220px]`}
                 >
                   <Sparkles size={14} />
                   Enter the Edge
                 </button>
+
+                <div className="ve-terminal-cta-secondary-row">
+                  <button
+                    type="button"
+                    onClick={openLogin}
+                    className="text-white/55 transition hover:text-white"
+                  >
+                    Sign in
+                  </button>
+                  <span className="text-white/15" aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    onClick={() => openSignup('pro')}
+                    className="text-vouch-emerald/80 transition hover:text-vouch-emerald"
+                  >
+                    Explore Pro
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={openLogin}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
                 >
                   Sign In
                 </button>
@@ -379,7 +406,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                   onClick={() => openSignup('pro')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald ${Z8_INTERACTIVE} hover:border-vouch-emerald/60 sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-emerald/60`}
                 >
                   Explore Pro
                   <ChevronRight size={14} />
@@ -387,7 +414,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
-            {/* Live games center + HR spotlight */}
             <LandingLiveGamesCenter />
 
             {/* 5 Judges */}

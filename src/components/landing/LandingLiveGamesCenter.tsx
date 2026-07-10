@@ -354,11 +354,11 @@ function LiveGamesCenterBody() {
 
   return (
     <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
-      <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="ve-landing-games-panel-header flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className={`${Z8_LABEL} text-vouch-cyan`}>Today&apos;s Slate</p>
           <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">Live games + HR spotlight</h2>
-          <p className="mt-1 text-sm text-white/45">
+          <p className="mt-1 hidden text-sm text-white/45 sm:block">
             Official MLB schedule with trust-first HR board previews — the same cards you get inside the terminal.
           </p>
         </div>
@@ -374,7 +374,7 @@ function LiveGamesCenterBody() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="ve-landing-games-panel-body grid grid-cols-1 gap-5 p-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <GamesSlideshow games={games} />
 
         <div className="space-y-3">
@@ -436,8 +436,8 @@ export default function LandingLiveGamesCenter() {
   }, []);
 
   return (
-    <section ref={markerRef} aria-labelledby="live-games-heading" className="space-y-4">
-      <div className="text-center">
+    <section ref={markerRef} aria-labelledby="live-games-heading" className="ve-landing-live-section space-y-4">
+      <div className="ve-landing-section-intro text-center">
         <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
         <h2 id="live-games-heading" className="mt-2 text-2xl font-black text-white sm:text-3xl">
           Live terminal preview

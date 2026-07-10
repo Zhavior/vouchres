@@ -1,0 +1,172 @@
+/* Landing mobile polish — professional spacing, sticky chrome, compact hero */
+
+@media (max-width: 767px) {
+  .ve-terminal-page {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ve-terminal-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    margin-inline: -0.75rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(2, 6, 23, 0.72);
+    padding: 0.65rem 0.75rem;
+    backdrop-filter: blur(20px) saturate(1.15);
+    -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  }
+
+  .ve-terminal-sticky-header .ve-terminal-header-actions {
+    display: flex;
+    width: auto;
+    gap: 0.5rem;
+  }
+
+  .ve-terminal-sticky-header .ve-terminal-header-actions button {
+    min-height: 36px;
+    padding-inline: 0.85rem;
+    font-size: 9px;
+  }
+
+  .ve-terminal-hero {
+    gap: 1rem;
+    padding-top: 0.25rem;
+  }
+
+  .ve-terminal-hero-badge {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .ve-terminal-hero h1 {
+    font-size: clamp(1.65rem, 8.5vw, 2.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .ve-terminal-hero .ve-terminal-hero-lead {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .ve-terminal-trust-strip {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ve-terminal-trust-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ve-terminal-trust-strip-item {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+  }
+
+  .ve-terminal-trust-grid {
+    display: none;
+  }
+
+  .ve-terminal-cta-row {
+    gap: 0.75rem;
+  }
+
+  .ve-terminal-cta-row .ve-terminal-cta-primary {
+    min-height: 48px;
+    width: 100%;
+    border-radius: 0.85rem;
+    font-size: 11px;
+  }
+
+  .ve-terminal-cta-secondary-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .ve-terminal-cta-secondary-row button {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+
+  .ve-terminal-cta-desktop-only {
+    display: none;
+  }
+
+  .ve-landing-live-section {
+    margin-top: 0.5rem;
+  }
+
+  .ve-landing-live-section .ve-landing-section-intro {
+    display: none;
+  }
+
+  .ve-landing-games-panel-header {
+    padding: 1rem 1rem 0.85rem;
+  }
+
+  .ve-landing-games-panel-header h2 {
+    font-size: 1.125rem;
+  }
+
+  .ve-landing-games-panel-header p {
+    display: none;
+  }
+
+  .ve-landing-games-panel-body {
+    padding: 0.85rem;
+    gap: 0.85rem;
+  }
+
+  .ve-terminal-scanlines {
+    display: none;
+  }
+
+  .ve-landing-judge-slideshow .ve-landing-judge-slide {
+    padding: 1.25rem 1rem;
+  }
+
+  .ve-landing-judge-tab {
+    min-height: 72px;
+    padding: 0.65rem;
+  }
+
+  #judges-heading {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .ve-terminal-sticky-header {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .ve-terminal-trust-strip {
+    display: none;
+  }
+
+  .ve-terminal-cta-secondary-row {
+    display: none;
+  }
+}
