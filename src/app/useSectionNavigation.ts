@@ -113,9 +113,9 @@ export function useSectionNavigation() {
 
   const handleLogoutComplete = useCallback(() => {
     setLoggingOut(true);
+    window.history.replaceState(null, '', '/');
+    commitSection('vouchedge_intro');
     window.setTimeout(() => {
-      window.history.replaceState(null, '', '/');
-      commitSection('vouchedge_intro');
       setLoggingOut(false);
     }, 900);
   }, [commitSection]);
@@ -125,12 +125,13 @@ export function useSectionNavigation() {
   }, [activeSection]);
 
   useEffect(() => {
+    if (loggingOut) return;
     if (!hasRealAuthToken()) return;
     if (activeSection !== 'vouchedge_intro') return;
     const next = resolveAuthenticatedSection(activeSection);
     replaceLandingUrl(next);
     commitSection(next);
-  }, [activeSection, commitSection]);
+  }, [activeSection, commitSection, loggingOut]);
 
   useEffect(() => {
     const syncSectionFromLocation = () => {

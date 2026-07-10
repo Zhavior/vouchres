@@ -73,6 +73,7 @@ export function hasRealAuthToken() {
       if (!key) continue;
       const isSupabaseSessionKey =
         key === 'vouchedge.auth' ||
+        key === 'vouchedge_auth' ||
         (key.startsWith('sb-') && key.includes('auth-token'));
       if (!isSupabaseSessionKey) continue;
 

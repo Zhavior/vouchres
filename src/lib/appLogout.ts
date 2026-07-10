@@ -12,12 +12,15 @@ export function resetToLandingScreen() {
 export function clearVouchEdgeLocalAuth() {
   localStorage.removeItem('vouchedge_auth_token');
   localStorage.removeItem('mlb_ai_auth_token');
+  localStorage.removeItem('vouchedge.auth');
   localStorage.removeItem('vouchedge_after_auth_destination');
   localStorage.removeItem('vouchedge_after_auth_mode');
 
   Object.keys(localStorage).forEach((key) => {
     const lower = key.toLowerCase();
     if (
+      key === 'vouchedge.auth' ||
+      (key.startsWith('sb-') && key.includes('auth-token')) ||
       lower.includes('demo') ||
       lower.includes('fake') ||
       lower.includes('mock') ||
