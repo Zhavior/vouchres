@@ -172,6 +172,22 @@
   }
 }
 
+.ve-landing-hr-headshot {
+  object-position: center 18%;
+  transform: scale(1.08);
+  transform-origin: center 22%;
+}
+
+@media (pointer: fine) {
+  .ve-landing-vouch-tip-anchor:hover {
+    cursor: help;
+  }
+
+  .ve-landing-vouch-action:hover {
+    cursor: help;
+  }
+}
+
 @media (min-width: 768px) {
   .ve-terminal-sticky-header {
     position: static;
