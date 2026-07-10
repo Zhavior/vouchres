@@ -32,3 +32,10 @@ export const Z8_AUTH_PLAN_SELECTED =
 
 export const Z8_AUTH_PLAN_IDLE =
   'border-white/10 bg-black/30 hover:border-vouch-cyan/40';
+
+/** Landing header auth actions — reuse in terminal page + auth modal tabs */
+export const Z8_BTN_TERMINAL_HEADER_LOGIN =
+  `${Z8_INTERACTIVE} rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 transition hover:border-vouch-cyan/40 hover:text-white`;
+
+export const Z8_BTN_TERMINAL_HEADER_SIGNUP =
+  `${Z8_INTERACTIVE} rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] transition hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black`;

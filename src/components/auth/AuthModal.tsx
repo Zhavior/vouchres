@@ -43,10 +43,10 @@ import {
   Z8_BTN_TERMINAL_PRIMARY,
   Z8_BTN_TERMINAL_SECONDARY,
   Z8_BTN_TERMINAL_GHOST,
-  Z8_AUTH_TAB_ACTIVE,
-  Z8_AUTH_TAB_IDLE,
   Z8_AUTH_PLAN_SELECTED,
   Z8_AUTH_PLAN_IDLE,
+  Z8_BTN_TERMINAL_HEADER_LOGIN,
+  Z8_BTN_TERMINAL_HEADER_SIGNUP,
 } from '../landing/LandingTokens';
 import '../../styles/public-auth.css';
 import '../../styles/auth-modal.css';
@@ -698,14 +698,15 @@ export default function AuthModal({
             </div>
           )}
           {/* Tab switch */}
+          {/* Tab switch — same tokens as landing header Log In / Sign Up */}
           <div className="px-6">
-            <div className={`grid grid-cols-2 gap-1 p-1 ${Z8_AUTH_SURFACE}`}>
+            <div className="grid grid-cols-2 gap-2">
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'intro' : 'form'); setIntroIndex(0); }}
-                  className={`relative py-2.5 transition-colors ${mode === m ? Z8_AUTH_TAB_ACTIVE : Z8_AUTH_TAB_IDLE}`}
+                  className={`w-full py-2.5 ${mode === m ? Z8_BTN_TERMINAL_HEADER_SIGNUP : Z8_BTN_TERMINAL_HEADER_LOGIN}`}
                 >
                   {m === 'signup' ? 'Sign Up' : 'Log In'}
                 </button>

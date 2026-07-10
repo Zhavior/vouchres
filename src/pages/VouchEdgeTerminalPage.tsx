@@ -16,6 +16,8 @@ import {
   Z8_PAGE,
   Z8_PANEL,
   Z8_PANEL_PREMIUM,
+  Z8_BTN_TERMINAL_HEADER_LOGIN,
+  Z8_BTN_TERMINAL_HEADER_SIGNUP,
 } from '../components/landing/LandingTokens';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -400,7 +402,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 onClick={openLogin}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
+                className={Z8_BTN_TERMINAL_HEADER_LOGIN}
               >
                 Log In
               </button>
@@ -409,7 +411,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 onClick={() => openSignup('free')}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:bg-vouch-cyan hover:text-black`}
+                className={Z8_BTN_TERMINAL_HEADER_SIGNUP}
               >
                 Sign Up
               </button>
