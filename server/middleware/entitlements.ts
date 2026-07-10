@@ -92,7 +92,15 @@ export function requireTier(required: Tier) {
 export function requireTierOrQuota(
   required: Tier,
   freeDailyLimit: number,
-  quotaKey: string
+  quotaKey: string,
+  /**
+   * Hard daily ceiling applied EVEN to paid tiers — cost protection for
+   * expensive paid-API endpoints (Gemini image/theme/etc). Without it, a paid
+   * (or leaked) token is capped only by the per-minute rate limiter, i.e.
+   * thousands of the most expensive calls per day for a flat monthly fee.
+   * Omit only for gates where the paid tier is genuinely meant to be unlimited.
+   */
+  paidDailyLimit?: number
 ) {
   return async (req: QuotaRequest, res: Response, next: NextFunction) => {
     const profile = req.user?.profile;
@@ -100,9 +108,14 @@ export function requireTierOrQuota(
       return next(new AppError({ status: 401, code: "missing_token", message: "Authentication token is required." }));
     }
 
-    if (tierRank(profile.tier) >= tierRank(required)) {
+    const isPaid = tierRank(profile.tier) >= tierRank(required);
+
+    // Paid tiers use the higher paid ceiling when one is configured; only a
+    // paid tier with NO paid ceiling is truly unlimited (legacy behavior).
+    if (isPaid && paidDailyLimit === undefined) {
       return next();
     }
+    const effectiveLimit = isPaid ? (paidDailyLimit as number) : freeDailyLimit;
 
     const day = todayUtc();
     const { supabaseAdmin } = await import("./auth");
@@ -131,14 +144,16 @@ export function requireTierOrQuota(
     }
 
     const count = Number(data?.count ?? 0);
-    if (count >= freeDailyLimit) {
+    if (count >= effectiveLimit) {
       return next(new AppError({
         status: 429,
         code: "quota_exceeded",
-        message: "Daily free quota exceeded.",
+        message: isPaid
+          ? "Daily usage limit reached for this feature."
+          : "Daily free quota exceeded.",
         details: {
           quotaKey,
-          limit: freeDailyLimit,
+          limit: effectiveLimit,
           count,
           requiredTier: normalizeSubscriptionTier(required).tier,
           currentTier: normalizeSubscriptionTier(profile.tier).tier,
@@ -146,7 +161,7 @@ export function requireTierOrQuota(
       }));
     }
 
-    req.__quota = { key: quotaKey, day, count, limit: freeDailyLimit };
+    req.__quota = { key: quotaKey, day, count, limit: effectiveLimit };
     return next();
   };
 }

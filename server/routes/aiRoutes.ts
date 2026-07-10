@@ -45,7 +45,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/chat",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 20, "ai_chat"),
+    requireTierOrQuota("gold", 20, "ai_chat", 500),
     validate({ body: AiChatRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiChatResponse(req.body as AiChatInput);
@@ -58,7 +58,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/generate-image",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 5, "ai_image"),
+    requireTierOrQuota("gold", 5, "ai_image", 100),
     validate({ body: AiImageRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiImage(req.body as AiImageInput);
@@ -71,7 +71,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/generate-theme",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 5, "ai_theme"),
+    requireTierOrQuota("gold", 5, "ai_theme", 100),
     validate({ body: AiThemeRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateAiTheme(req.body as AiThemeInput);
@@ -84,7 +84,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/player-research",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 15, "research_lookups"),
+    requireTierOrQuota("gold", 15, "research_lookups", 500),
     validate({ body: PlayerResearchRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generatePlayerResearch(req.body as PlayerResearchInput);
@@ -97,7 +97,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/explain-pick",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 10, "ai_explain"),
+    requireTierOrQuota("gold", 10, "ai_explain", 300),
     asyncHandler(async (req: AiReq, res: Response) => {
       const pick = req.body?.pick as PickCandidate;
       if (!pick) {
@@ -118,7 +118,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/daily-report",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 1, "ai_daily_report"),
+    requireTierOrQuota("gold", 1, "ai_daily_report", 30),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await getDailyReportNarrative(req.body?.date);
       await incrementAiQuotaIfNeeded(req);
@@ -130,7 +130,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/learning-note",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 5, "ai_learning_note"),
+    requireTierOrQuota("gold", 5, "ai_learning_note", 200),
     asyncHandler(async (req: AiReq, res: Response) => {
       const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
       if (!pickId || !result) {
@@ -154,7 +154,7 @@ export function registerAiRoutes(app: Express): void {
     "/api/ai/parlay-edge",
     requireAuth,
     generationLimiter,
-    requireTierOrQuota("gold", 10, "parlay_edge"),
+    requireTierOrQuota("gold", 10, "parlay_edge", 300),
     validate({ body: ParlayEdgeRequestSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
       const result = await generateParlayEdgeReport(req.body as ParlayEdgeInput);
