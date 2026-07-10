@@ -72,7 +72,18 @@ export async function createApp(httpServer?: http.Server) {
             return;
           }
 
-          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          if (filePath.endsWith("service-worker.js") || filePath.endsWith("manifest.json")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            if (filePath.endsWith("service-worker.js")) {
+              res.setHeader("Service-Worker-Allowed", "/");
+            }
+            return;
+          }
+
+          if (
+            filePath.includes(`${path.sep}assets${path.sep}`) ||
+            filePath.includes(`${path.sep}icons${path.sep}`)
+          ) {
             res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
           }
         },

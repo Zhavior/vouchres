@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-/** Stable Suspense fallback — avoids blank flashes during lazy route loads. */
-export default function RouteShellSkeleton() {
+/** Delayed fallback: fast cached chunks transition without flashing a skeleton. */
+export default function RouteShellSkeleton({ delayMs = 140 }: { delayMs?: number }) {
+  const [visible, setVisible] = useState(delayMs === 0);
+
+  useEffect(() => {
+    if (visible) return;
+    const timer = window.setTimeout(() => setVisible(true), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, visible]);
+
+  if (!visible) {
+    return <div className="ve-route-suspense-fallback" aria-hidden="true" />;
+  }
+
   return (
     <div
       className="ve-route-suspense-fallback px-4 py-6 md:px-6"

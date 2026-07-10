@@ -30,7 +30,12 @@ function DeferredSpeedInsights() {
   useEffect(() => {
     let timer: number | undefined;
     const enable = () => {
-      timer = window.setTimeout(() => setEnabled(true), 3000);
+      timer = window.setTimeout(() => {
+        setEnabled(true);
+        void import('./lib/registerServiceWorker').then(({ registerServiceWorker }) => {
+          void registerServiceWorker();
+        });
+      }, 3000);
     };
 
     if (document.readyState === 'complete') {

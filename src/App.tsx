@@ -1,11 +1,34 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useSectionNavigation } from './app/useSectionNavigation';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 
 function RouteFallback() {
-  return <div className="ve-route-suspense-fallback" aria-hidden="true" />;
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), 160);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <div
+      className="ve-route-suspense-fallback flex min-h-[45vh] items-center justify-center px-5"
+      role={visible ? 'status' : undefined}
+      aria-live={visible ? 'polite' : undefined}
+      aria-hidden={!visible}
+    >
+      {visible && (
+        <div className="w-full max-w-sm rounded-2xl border border-vouch-cyan/20 bg-black/35 p-6 text-center shadow-[0_0_40px_rgba(0,240,255,0.08)]">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-vouch-cyan" />
+          <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan">
+            Loading VouchEdge
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function PublicLanding({ onAuthed }: { onAuthed: () => void }) {

@@ -67,6 +67,15 @@ function scheduleIdle(task: () => void): void {
   window.setTimeout(task, 250);
 }
 
+function canWarmRoutes(): boolean {
+  if (typeof navigator === 'undefined' || document.visibilityState === 'hidden') return false;
+  const connection = (navigator as Navigator & {
+    connection?: { effectiveType?: string; saveData?: boolean };
+  }).connection;
+  if (connection?.saveData) return false;
+  return !['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '');
+}
+
 export function preloadSection(section: string): void {
   const loader = SECTION_LOADERS[section];
   if (!loader || preloaded.has(section)) return;
@@ -89,11 +98,14 @@ export function preloadMainRouter(): void {
 /** Idle-warm likely next routes from the current section (and a small default set). */
 export function warmLikelyRoutes(activeSection?: string): void {
   scheduleIdle(() => {
+    if (!canWarmRoutes()) return;
     preloadMainRouter();
     const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
     const defaults = ['feed', 'today', 'hr_board'];
-    for (const section of [...neighbors, ...defaults]) {
-      if (section === activeSection) continue;
+    const candidates = [...new Set([...neighbors, ...defaults])]
+      .filter((section) => section !== activeSection)
+      .slice(0, 3);
+    for (const section of candidates) {
       preloadSection(section);
     }
   });
