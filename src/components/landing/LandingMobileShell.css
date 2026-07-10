@@ -110,11 +110,16 @@
   }
 
   .ve-landing-live-section {
-    margin-top: 0.5rem;
+    margin-top: 0;
   }
 
   .ve-landing-live-section .ve-landing-section-intro {
-    display: none;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .ve-landing-live-section .ve-landing-section-intro h2 {
+    font-size: 1.35rem;
   }
 
   .ve-landing-games-panel-header {

@@ -96,13 +96,6 @@ const FEATURES = [
   },
 ] as const;
 
-const TRUST_PILLARS = [
-  { label: 'No Hype', detail: 'No inflated edges' },
-  { label: 'Truth', detail: 'Verified lineups only' },
-  { label: 'Research', detail: 'Judge-backed reads' },
-  { label: 'Play', detail: 'Prove your record' },
-] as const;
-
 function JudgesPlaceholder() {
   return (
     <section
@@ -319,16 +312,19 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </div>
           </header>
 
-          <div className="space-y-8 sm:space-y-16 md:space-y-20">
-            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+          <div className="space-y-8 sm:space-y-12 md:space-y-16">
+            {/* Primary front-page: live games + top 3 HR spotlight cards */}
+            <LandingLiveGamesCenter eager />
+
+            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-4 text-center sm:max-w-5xl sm:items-center sm:space-y-5">
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
                 <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
-                  Verified HR Board · AI Judges
+                  Verified HR Board · Four AI Judges
                 </span>
               </div>
 
-              <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
+              <h1 className="text-[1.65rem] font-black leading-[1.08] tracking-tight text-white sm:text-4xl sm:leading-[1.05] lg:text-5xl">
                 MLB edge research with{' '}
                 <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
                   pristine
@@ -339,28 +335,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
                 Trust-first HR boards, four AI judges, and honest slate data — no fake lineups or inflated edges.
               </p>
-
-              <div className="ve-terminal-trust-strip px-0.5">
-                {TRUST_PILLARS.map((pillar) => (
-                  <div key={pillar.label} className="ve-terminal-trust-strip-item">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vouch-cyan">
-                      {pillar.label}
-                    </p>
-                    <p className="mt-0.5 text-[10px] leading-snug text-white/40">{pillar.detail}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="ve-terminal-trust-grid grid w-full max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
-                {TRUST_PILLARS.map((pillar) => (
-                  <div key={pillar.label} className="bg-black/40 px-3 py-4 text-center backdrop-blur-sm">
-                    <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan">
-                      {pillar.label}
-                    </p>
-                    <p className="mt-1 text-[10px] text-white/35">{pillar.detail}</p>
-                  </div>
-                ))}
-              </div>
 
               <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
                 <button
@@ -391,30 +365,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                     Explore Pro
                   </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={openLogin}
-                  onFocus={preloadAuthModal}
-                  onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openSignup('pro')}
-                  onFocus={preloadAuthModal}
-                  onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-emerald/60`}
-                >
-                  Explore Pro
-                  <ChevronRight size={14} />
-                </button>
               </div>
             </section>
-
-            <LandingLiveGamesCenter />
 
             {/* 4 Judges */}
             <DeferredLandingJudgesDeck />

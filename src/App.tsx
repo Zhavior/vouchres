@@ -3,6 +3,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
+import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
+import { queryKeys } from './hooks/queries/queryKeys';
+import { vouchedgeApi } from './api/vouchedgeApi';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
@@ -35,6 +38,14 @@ function RouteFallback() {
 }
 
 function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
+  useEffect(() => {
+    void warmGuestHrBoardCache();
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.liveGames(),
+      queryFn: () => vouchedgeApi.liveGames(),
+    });
+  }, []);
+
   return (
     <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
       <TerminalBackground />
