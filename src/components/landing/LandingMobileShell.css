@@ -150,6 +150,26 @@
   #judges-heading {
     font-size: 1.5rem;
   }
+
+  .ve-landing-hr-cards {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.35rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ve-landing-hr-cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ve-landing-hr-card {
+    flex: 0 0 min(86vw, 19.5rem);
+    scroll-snap-align: start;
+  }
 }
 
 @media (min-width: 768px) {
