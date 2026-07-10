@@ -96,7 +96,10 @@ function mapDbPick(row: any): PickRecord | null {
     team: "",
     market: String(row.market ?? ""),
     selection: String(row.selection ?? ""),
-    score: typeof row.confidence === "number" ? row.confidence : 0,
+    // Postgres numeric columns can arrive as strings via PostgREST — coerce
+    // with Number() (matching how the rest of the codebase reads numerics)
+    // rather than a strict typeof check that would silently yield 0.
+    score: Number.isFinite(Number(row.confidence)) ? Number(row.confidence) : 0,
     // Real picks store a single explanation string; surface it as reasons[] so
     // the transparency factor reflects "has a written rationale."
     reasons: row.explanation ? [String(row.explanation)] : [],
