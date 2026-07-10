@@ -1,10 +1,9 @@
 import React, { Suspense, lazy } from 'react';
+// App chrome policy: no top header bar — branding, notifications, and logout
+// live only in FeedSidebar (md+) and MobileProfileDrawer (mobile).
 import FeedSidebar from './FeedSidebar';
 import FeedRightRail from './FeedRightRail';
-import MobileProfileDrawer, { TierAvatar } from './MobileProfileDrawer';
-import { Sparkles } from 'lucide-react';
-import AuthStatusBadge from '../../components/auth/AuthStatusBadge';
-import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
+import MobileProfileDrawer from './MobileProfileDrawer';
 import { useTheme } from '../../components/theme/ThemeProvider';
 import { VisualTheme } from '../../theme/themeRegistry';
 import { DeferredBubbleField } from '../../components/vouchedge/DeferredBubbleField';
@@ -12,6 +11,7 @@ import { useAppPosts, useAppProfile, useAppSavedVouches } from '../../context/Ap
 import { FeedScrollProvider } from '../../context/FeedScrollContext';
 import { resetScrollPane } from '../../lib/scroll/resetScrollPane';
 import { handleSaveVouch as saveVouchAction } from '../../domain/vouchActions';
+import { useNavUiStore } from '../../stores/navUiStore';
 import '../../styles/legacy/feed.css';
 import '../../styles/legacy/feed-stream.css';
 
@@ -80,87 +80,23 @@ const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
   );
 });
 
-const DesktopSlimHeader = React.memo(function DesktopSlimHeader({
-  onAuthLogoutComplete,
-}: {
-  onAuthLogoutComplete?: () => void;
-}) {
-  return (
-    <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
-      <NotificationBellButton />
-      <AuthStatusBadge inline onLogoutComplete={onAuthLogoutComplete} />
-    </header>
-  );
-});
-
-const MobileCompactHeader = React.memo(function MobileCompactHeader({
-  activeSection,
-  onSectionChange,
-  onOpenDrawer,
-  onAuthLoginSuccess,
-  onAuthLogoutComplete,
-}: {
-  activeSection: string;
-  onSectionChange: (section: string) => void;
-  onOpenDrawer: () => void;
-  onAuthLoginSuccess?: () => void;
-  onAuthLogoutComplete?: () => void;
-}) {
-  const profile = useAppProfile();
-
-  return (
-    <header className="ve-mobile-header sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-black/20 px-3 py-2.5 backdrop-blur-xl select-none font-z8 supports-[backdrop-filter]:bg-black/40 md:hidden">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <TierAvatar
-          profile={profile}
-          size={36}
-          priority
-          onClick={onOpenDrawer}
-          ariaLabel="Open navigation menu"
-        />
-        <button type="button" onClick={() => onSectionChange('feed')} className="text-sm font-black text-white tracking-wider">
-          VOUCH<span className="text-vouch-cyan">EDGE</span>
-        </button>
-      </div>
-
-      <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
-        <NotificationBellButton size="sm" />
-
-        {profile.subscriptionTier !== 'SELLER_PRO' && (
-          <button
-            onClick={() => onSectionChange('premium')}
-            className="flex items-center gap-1 bg-vouch-emerald/10 border border-vouch-emerald/30 px-2.5 py-1 rounded-full text-vouch-emerald font-bold active:scale-95 transition-all"
-          >
-            <Sparkles className="w-3 h-3" />
-            <span>UPGRADE</span>
-          </button>
-        )}
-
-        <AuthStatusBadge inline onLogoutComplete={onAuthLogoutComplete} />
-      </div>
-    </header>
-  );
-});
-
 const MobileDrawerHost = React.memo(function MobileDrawerHost({
-  open,
-  onClose,
   activeSection,
   onSectionChange,
   onLogoutComplete,
 }: {
-  open: boolean;
-  onClose: () => void;
   activeSection: string;
   onSectionChange: (section: string) => void;
   onLogoutComplete?: () => void;
 }) {
   const profile = useAppProfile();
+  const mobileDrawerOpen = useNavUiStore((s) => s.mobileDrawerOpen);
+  const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
 
   return (
     <MobileProfileDrawer
-      open={open}
-      onClose={onClose}
+      open={mobileDrawerOpen}
+      onClose={closeMobileDrawer}
       profile={profile}
       activeSection={activeSection}
       onSectionChange={onSectionChange}
@@ -175,18 +111,17 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
   children,
   isRouteSwitching = false,
   isPublicFrontPage = false,
-  onAuthLoginSuccess,
   onAuthLogoutComplete,
 }: HomeFeedLayoutProps) {
   const { activeTheme, reduceMotion } = useTheme();
   const scrollPaneRef = React.useRef<HTMLDivElement | null>(null);
   const [cmdKOpen, setCmdKOpen] = React.useState(false);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+  const closeMobileDrawer = useNavUiStore((s) => s.closeMobileDrawer);
 
   const closeNavigationOverlays = React.useCallback(() => {
-    setMobileDrawerOpen(false);
+    closeMobileDrawer();
     setCmdKOpen(false);
-  }, []);
+  }, [closeMobileDrawer]);
 
   const handleSectionChange = React.useCallback((section: string) => {
     closeNavigationOverlays();
@@ -195,14 +130,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
   const handleOpenCmdK = React.useCallback(() => {
     setCmdKOpen(true);
-  }, []);
-
-  const handleOpenMobileDrawer = React.useCallback(() => {
-    setMobileDrawerOpen(true);
-  }, []);
-
-  const handleCloseMobileDrawer = React.useCallback(() => {
-    setMobileDrawerOpen(false);
   }, []);
 
   const handleCloseCmdK = React.useCallback(() => {
@@ -304,20 +231,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
         )}
 
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
-          {!isPublicFrontPage && (
-            <DesktopSlimHeader onAuthLogoutComplete={onAuthLogoutComplete} />
-          )}
-
-          {!isPublicFrontPage && (
-            <MobileCompactHeader
-              activeSection={activeSection}
-              onSectionChange={handleSectionChange}
-              onOpenDrawer={handleOpenMobileDrawer}
-              onAuthLoginSuccess={onAuthLoginSuccess}
-              onAuthLogoutComplete={onAuthLogoutComplete}
-            />
-          )}
-
           <FeedScrollProvider scrollRef={scrollPaneRef}>
             <div className="ve-scroll-pane w-full min-h-0 flex-1" id="inner-view-slot" ref={scrollPaneRef}>
               {children}
@@ -332,8 +245,6 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
       {!isPublicFrontPage && (
         <MobileDrawerHost
-          open={mobileDrawerOpen}
-          onClose={handleCloseMobileDrawer}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           onLogoutComplete={onAuthLogoutComplete}
