@@ -229,7 +229,7 @@ export default function PlayerResearchHub({
   const [sortBy, setSortBy] = useState<"batterScore" | "hr" | "avg" | "ops" | "name">("batterScore");
   const [selectedPlayer, setSelectedPlayer] = useState<MLBPlayer | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
-  const [registryPlayers, setRegistryPlayers] = useState<MLBPlayer[]>([]);
+  const [registryPlayers, setRegistryPlayers] = useState<MLBPlayer[]>(MLB_PLAYER_RECORDS);
   const [allRegistryPlayers, setAllRegistryPlayers] = useState<MLBPlayer[]>([]);
   const [backendCount, setBackendCount] = useState<number | null>(null);
   const [registryStatus, setRegistryStatus] = useState<"loading" | "ready" | "fallback" | "error">("loading");
@@ -299,7 +299,7 @@ export default function PlayerResearchHub({
     };
   }, [search, allRegistryPlayers]);
 
-  const players = registryPlayers.length ? registryPlayers : MLB_PLAYER_RECORDS;
+  const players = registryPlayers;
 
 
   const teams = useMemo(() => {
@@ -435,7 +435,13 @@ export default function PlayerResearchHub({
             </div>
 
             {/* Player list */}
-            {listStyle === "grid" ? (
+            {filtered.length === 0 ? (
+              <div className={`${Z8_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
+                <Search className="mx-auto h-6 w-6 text-white/25" />
+                <p className="mt-3 text-sm font-bold text-white/70">No players found</p>
+                <p className="mt-1 text-xs text-white/40">Try another player, team, or position.</p>
+              </div>
+            ) : listStyle === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {filtered.map((p, i) => (
                   <PlayerCard key={p.id} player={p} index={i} onClick={() => openDetail(p)} />
@@ -634,7 +640,12 @@ function groupTruthMarkets<T extends { prop: { market: string } }>(items: T[]) {
 
   for (const item of items) {
     const group = getTruthMarketGroup(item.prop.market);
-    groups.set(group, [...(groups.get(group) ?? []), item]);
+    const groupItems = groups.get(group);
+    if (groupItems) {
+      groupItems.push(item);
+    } else {
+      groups.set(group, [item]);
+    }
   }
 
   return order
@@ -804,7 +815,7 @@ function CompareSlot({ label, player, players, onSelect, accent }: {
   label: string;
   player: MLBPlayer | null;
   players: MLBPlayer[];
-  onSelect: (p: MLBPlayer) => void;
+  onSelect: (p: MLBPlayer | null) => void;
   accent: string;
 }) {
   return (
@@ -817,7 +828,7 @@ function CompareSlot({ label, player, players, onSelect, accent }: {
             <div className="text-sm font-bold text-white">{player.name}</div>
             <div className="text-[10px] text-white/40">{player.team} · {player.position}</div>
           </div>
-          <button onClick={() => onSelect(null as any)} className="text-white/35 hover:text-white/45">
+          <button type="button" onClick={() => onSelect(null)} aria-label={`Clear ${label}`} className="text-white/35 hover:text-white/45">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -843,7 +854,44 @@ function BuildView({ players, onAddLeg, activeLegs }: {
   onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
   activeLegs: Leg[];
 }) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const prepare = () => setReady(true);
+    if (typeof requestIdleCallback === "function") {
+      const idleId = requestIdleCallback(prepare, { timeout: 250 });
+      return () => cancelIdleCallback(idleId);
+    }
+    const timer = window.setTimeout(prepare, 50);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (!ready) {
+    return (
+      <div className={`${Z8_PANEL_PREMIUM} flex min-h-[280px] items-center justify-center rounded-2xl p-6`} role="status" aria-live="polite">
+        <div className="text-center">
+          <RefreshCw className="mx-auto h-7 w-7 animate-spin text-vouch-cyan" />
+          <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Preparing market board</p>
+          <p className="mt-2 text-xs text-white/40">Loading the first player markets without blocking navigation.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <BuildMarketBoard players={players} onAddLeg={onAddLeg} activeLegs={activeLegs} />;
+}
+
+const INITIAL_MARKETS_PER_GROUP = 12;
+const MARKET_PAGE_SIZE = 12;
+
+function BuildMarketBoard({ players, onAddLeg, activeLegs }: {
+  players: MLBPlayer[];
+  onAddLeg: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; truthLabel?: string }) => void;
+  activeLegs: Leg[];
+}) {
   const [propFilter, setPropFilter] = useState("ALL");
+  const [marketSearch, setMarketSearch] = useState("");
+  const [visiblePerGroup, setVisiblePerGroup] = useState(INITIAL_MARKETS_PER_GROUP);
   const allMarkets = useMemo(() => {
     const markets: Array<{ player: MLBPlayer; prop: any }> = [];
     for (const p of players) {
@@ -854,25 +902,57 @@ function BuildView({ players, onAddLeg, activeLegs }: {
     return markets;
   }, [players]);
 
-  const filtered =
-    propFilter === "ALL"
-      ? allMarkets
-      : allMarkets.filter(({ prop }) => getTruthMarketGroup(prop.market) === propFilter);
+  const filtered = useMemo(() => {
+    const query = marketSearch.trim().toLowerCase();
+    return allMarkets.filter(({ player, prop }) => {
+      if (propFilter !== "ALL" && getTruthMarketGroup(prop.market) !== propFilter) return false;
+      if (!query) return true;
+      return (
+        player.name.toLowerCase().includes(query) ||
+        player.team.toLowerCase().includes(query) ||
+        prop.market.toLowerCase().includes(query)
+      );
+    });
+  }, [allMarkets, marketSearch, propFilter]);
 
-  const groupedMarkets = groupTruthMarkets(filtered);
-  const activeLegIds = new Set(activeLegs.map((l) => l.selection));
+  const groupedMarkets = useMemo(() => groupTruthMarkets(filtered), [filtered]);
+  const activeLegIds = useMemo(() => new Set(activeLegs.map((leg) => leg.selection)), [activeLegs]);
+  const visibleMarketCount = groupedMarkets.reduce(
+    (total, entry) => total + Math.min(entry.items.length, visiblePerGroup),
+    0,
+  );
+  const hasMore = groupedMarkets.some((entry) => entry.items.length > visiblePerGroup);
+
+  useEffect(() => {
+    setVisiblePerGroup(INITIAL_MARKETS_PER_GROUP);
+  }, [marketSearch, propFilter]);
 
   return (
     <div>
       <ProTruthLensIntro />
-      <div className="flex items-center gap-3 mb-5">
-        <div className="text-sm text-white/45">{filtered.length} markets available</div>
-        <div className="flex gap-1.5">
+      <div className={`${Z8_PANEL_PREMIUM} mb-5 space-y-3 rounded-2xl p-3`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-sm text-white/45">
+            Showing {visibleMarketCount} of {filtered.length} markets
+          </div>
+          <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35" />
+            <input
+              type="search"
+              value={marketSearch}
+              onChange={(event) => setMarketSearch(event.target.value)}
+              placeholder="Find player, team, or market"
+              aria-label="Search build markets"
+              className={`${Z8_SURFACE} w-full rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder:text-white/30 focus:border-vouch-cyan/45 focus:outline-none`}
+            />
+          </div>
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
           {["ALL", "Hits", "Base Types", "Run Production", "Speed", "Total Bases"].map((f) => (
             <button
               key={f}
               onClick={() => setPropFilter(f)}
-              className={`text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
+              className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-md transition-all ${propFilter === f ? "text-slate-950" : "text-white/40"}`}
               style={propFilter === f ? { background: "linear-gradient(135deg, #22d3ee, #2563eb)" } : { background: "rgba(255,255,255,0.03)" }}
             >
               {f}
@@ -882,7 +962,16 @@ function BuildView({ players, onAddLeg, activeLegs }: {
       </div>
 
       <div className="space-y-5">
-        {groupedMarkets.map(({ group, items }) => (
+        {groupedMarkets.length === 0 && (
+          <div className={`${Z8_PANEL_PREMIUM} rounded-2xl px-5 py-12 text-center`} role="status">
+            <Search className="mx-auto h-6 w-6 text-white/25" />
+            <p className="mt-3 text-sm font-bold text-white/70">No markets found</p>
+            <p className="mt-1 text-xs text-white/40">Try another player, team, market, or category.</p>
+          </div>
+        )}
+        {groupedMarkets.map(({ group, items }) => {
+          const visibleItems = items.slice(0, visiblePerGroup);
+          return (
           <section
             key={group}
             className="rounded-2xl border border-white/10 bg-obsidian-900/40 p-3 sm:p-4"
@@ -899,14 +988,11 @@ function BuildView({ players, onAddLeg, activeLegs }: {
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {items.map(({ player, prop }, i) => {
+              {visibleItems.map(({ player, prop }) => {
                 const isActive = activeLegIds.has(prop.spec);
                 return (
-                  <motion.div
+                  <div
                     key={prop.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.015 }}
                     className="rounded-xl p-3 flex items-center gap-3"
                     style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${isActive ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.06)"}` }}
                   >
@@ -931,13 +1017,24 @@ function BuildView({ players, onAddLeg, activeLegs }: {
                         {isActive ? "Added" : "+ Slip"}
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
+
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setVisiblePerGroup((count) => count + MARKET_PAGE_SIZE)}
+          className="mx-auto mt-5 flex min-h-11 items-center justify-center rounded-xl border border-vouch-cyan/30 bg-vouch-cyan/10 px-5 py-2 text-xs font-black uppercase tracking-wider text-vouch-cyan hover:bg-vouch-cyan/15"
+        >
+          Load more markets
+        </button>
+      )}
     </div>
   );
 }

@@ -121,10 +121,10 @@ export const StatLeaderboardTable: React.FC<Props> = ({
   }
 
   return (
-    <div className="ve-stat-table-wrap overflow-x-auto rounded-xl border border-white/10 bg-[#0a0e14]">
+    <div className="ve-stat-table-wrap overflow-x-auto rounded-xl border border-white/10 bg-obsidian-800">
       <table className="w-full min-w-[640px] border-collapse text-left">
         <thead>
-          <tr className="border-b border-white/10 bg-[#0d1219]">
+          <tr className="border-b border-white/10 bg-obsidian-700">
             <th className="w-8 px-3 py-2.5 font-mono text-[9px] font-bold uppercase tracking-widest text-white/35">#</th>
             {cols.map(col => {
               const sortable = col.key in SORTABLE;

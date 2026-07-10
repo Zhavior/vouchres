@@ -1,7 +1,6 @@
 import { Menu, Sparkles as EdgeIslandIcon, Flame, Brain } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
-import '../styles/legacy/command-island.css';
 
 type AppNavProps = {
   activeSection: string;

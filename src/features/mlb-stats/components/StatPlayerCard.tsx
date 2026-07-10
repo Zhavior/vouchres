@@ -34,7 +34,7 @@ export const StatPlayerCard: React.FC<Props> = ({ row, statType, onClick }) => {
     <button
       type="button"
       onClick={() => onClick(row)}
-      className="ve-stat-player-card group relative flex w-full flex-col gap-2.5 rounded-xl border border-white/10 bg-[#0a0e14] p-3.5 text-left transition hover:border-white/20 hover:bg-[#0d1219] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/30"
+      className="ve-stat-player-card group relative flex w-full flex-col gap-2.5 rounded-xl border border-white/10 bg-obsidian-800 p-3.5 text-left transition hover:border-white/20 hover:bg-obsidian-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/30"
       aria-label={`${row.playerName}, score ${intelligenceScore}, tier ${tierLabel}`}
     >
       <div className="pointer-events-none absolute inset-y-3 left-0 w-0.5 rounded-full bg-white/25 group-hover:bg-white/40" aria-hidden="true" />

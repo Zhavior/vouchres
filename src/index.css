@@ -11,12 +11,7 @@
 @import "./styles/vouchedge-utilities.css";
 @import "./styles/vouchedge-motion.css";
 @import "./styles/z8-design-system.css";
-
-@import "./styles/legacy/global-overrides.css";
-@import "./styles/legacy/z8-shell.css";
-@import "./styles/legacy/layout.css";
-@import "./styles/legacy/ultrawide.css";
-@import "./styles/legacy/scroll-mobile.css";
+@import "./styles/z8-premium.css";
 
 .scrollbar-none {
   scrollbar-width: none; /* Firefox */

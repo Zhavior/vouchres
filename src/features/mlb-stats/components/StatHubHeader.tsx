@@ -107,7 +107,7 @@ export const StatHubHeader: React.FC<Props> = ({
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             aria-label="Search players"
-            className="w-full rounded-lg border border-white/10 bg-[#0d1219] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-white/25 focus:outline-none focus:ring-1 focus:ring-white/10"
+            className="w-full rounded-lg border border-white/10 bg-obsidian-700 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-white/25 focus:outline-none focus:ring-1 focus:ring-white/10"
           />
         </div>
 
@@ -117,10 +117,10 @@ export const StatHubHeader: React.FC<Props> = ({
           onChange={(e) => onDate(e.target.value)}
           aria-label="Select date"
           disabled={statScope === 'overall'}
-          className={`rounded-lg border border-white/10 bg-[#0d1219] px-2.5 py-2 text-xs text-white focus:border-white/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${statScope === 'overall' ? '' : ''}`}
+          className={`rounded-lg border border-white/10 bg-obsidian-700 px-2.5 py-2 text-xs text-white focus:border-white/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 ${statScope === 'overall' ? '' : ''}`}
         />
 
-        <div role="group" aria-label="Stat range" className="flex rounded-lg border border-white/10 bg-[#0d1219] p-0.5">
+        <div role="group" aria-label="Stat range" className="flex rounded-lg border border-white/10 bg-obsidian-700 p-0.5">
           {(['season', 'overall'] as StatScope[]).map((scope) => {
             const active = statScope === scope;
             return (
