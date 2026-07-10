@@ -1,3 +1,4 @@
+import { syncAnalyticsProfile } from '../lib/syncAnalyticsProfile';
 import { ProductEvents } from '../lib/productEvents';
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useLiveGames } from '../hooks/queries/useLiveGames';
@@ -76,6 +77,13 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     useFeedStore.getState().hydrateFromStorage();
     useSlipsStore.getState().hydrateFromStorage();
     useProfileStore.getState().hydrateFromStorage();
+
+    const profile = selectProfile(useProfileStore.getState());
+
+    syncAnalyticsProfile(
+      'local-profile',
+      profile
+    );
     useVouchesStore.getState().hydrateFromStorage();
   }, []);
 
