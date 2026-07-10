@@ -1,6 +1,7 @@
 import { Flame, Sparkles } from "lucide-react";
 import { notify } from "../../lib/appNotifications";
 import { useTrackedPlayersStore } from "../../stores/trackedPlayersStore";
+import { ProAccessGate } from "../../components/pro/ProAccessGate";
 
 interface FeaturedEdgeCardProps {
   playerName: string;
@@ -74,11 +75,48 @@ export function FeaturedEdgeCard({
           Vouch AI Summary
         </div>
 
-        {reasons.slice(0, 3).map((reason) => (
-          <p key={reason}>
-            ✓ {reason}
-          </p>
-        ))}
+        <div className="space-y-1">
+          {reasons.slice(0, 3).map((reason) => (
+            <p key={reason}>
+              ✓ {reason}
+            </p>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <ProAccessGate
+            feature="vouch_ai_deep_analysis"
+            fallback={
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="font-black text-white">
+                  🔒 Deep Vouch Analysis
+                </p>
+
+                <p className="mt-2 text-xs text-white/60">
+                  Unlock full reasoning, confidence breakdown,
+                  matchup intelligence, and AI explanations.
+                </p>
+
+                <button
+                  onClick={() => onSectionChange?.("premium")}
+                  className="mt-3 rounded-xl bg-vouch-cyan px-4 py-2 text-xs font-black text-black"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+            }
+          >
+            <div className="mt-3 rounded-xl bg-vouch-cyan/10 p-4">
+              <p className="font-black text-vouch-cyan">
+                🧠 Deep Vouch Analysis Unlocked
+              </p>
+
+              <p className="mt-2 text-xs text-white/70">
+                Full AI reasoning and edge breakdown available.
+              </p>
+            </div>
+          </ProAccessGate>
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-2">
