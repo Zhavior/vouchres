@@ -1,10 +1,10 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLiveGames } from '../../hooks/queries/useLiveGames';
 import { useHrBoardToday } from '../../hooks/queries/useHrBoardToday';
 import { buildBoard } from '../../features/hr/utils/normalizeHrWatch';
 import type { HrWatchRow } from '../../features/hr/types/hrWatch';
 import { logoByTeamName } from '../../lib/teamLogos';
-import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
+import { Z8_INTERACTIVE, Z8_LABEL } from './LandingTokens';
 import { ChevronLeft, ChevronRight, Radio, ShieldCheck } from './LandingIcons';
 import LandingHrSpotlightCard from './LandingHrSpotlightCard';
 
@@ -91,7 +91,7 @@ function TeamLogo({ name, size = 52 }: { name: string; size?: number }) {
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/40 p-2 shadow-[0_0_20px_rgba(0,240,255,0.06)]"
+      className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/40 p-2"
       style={{ width: size, height: size }}
     >
       {src ? (
@@ -110,7 +110,7 @@ function GameStatusPill({ game }: { game: LiveGame }) {
   if (live) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-vouch-emerald/35 bg-vouch-emerald/10 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-emerald">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-vouch-emerald shadow-[0_0_8px_rgba(0,255,148,0.7)]" />
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-vouch-emerald" />
         Live
       </span>
     );
@@ -164,16 +164,14 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
 
   return (
     <div
-      className="ve-landing-games-slideshow relative overflow-hidden rounded-xl border border-white/10 bg-black/30"
+      className="ve-landing-games-slideshow"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
     >
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="ve-landing-games-slideshow-header">
         <div className="flex items-center gap-2">
           <Radio size={14} className="text-vouch-cyan" />
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Live Games Center</p>
+          <p className={`${Z8_LABEL} text-vouch-cyan`}>Live Games</p>
         </div>
         <GameStatusPill game={game} />
       </div>
@@ -215,17 +213,17 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
 
       {count > 1 && (
         <>
-          <div className="flex items-center justify-between border-t border-white/10 px-3 py-2">
+          <div className="ve-landing-slideshow-controls">
             <button
               type="button"
               aria-label="Previous game"
               onClick={() => setIndex((current) => (current - 1 + count) % count)}
-              className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
+              className={`ve-landing-slideshow-nav ${Z8_INTERACTIVE}`}
             >
               <ChevronLeft size={16} />
             </button>
 
-            <div className="flex flex-wrap items-center justify-center gap-1.5 px-2">
+            <div className="ve-landing-slideshow-dots">
               {games.slice(0, 12).map((item, dotIndex) => (
                 <button
                   key={item.id}
@@ -233,11 +231,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
                   aria-label={`Show game ${dotIndex + 1}`}
                   aria-current={dotIndex === index}
                   onClick={() => setIndex(dotIndex)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    dotIndex === index
-                      ? 'w-5 bg-vouch-cyan shadow-[0_0_10px_rgba(0,240,255,0.45)]'
-                      : 'w-1.5 bg-white/20 hover:bg-vouch-cyan/40'
-                  }`}
+                  className="ve-landing-slideshow-dot"
                 />
               ))}
             </div>
@@ -246,7 +240,7 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
               type="button"
               aria-label="Next game"
               onClick={() => setIndex((current) => (current + 1) % count)}
-              className={`${Z8_INTERACTIVE} flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/35 text-white/50 hover:border-vouch-cyan/35 hover:text-vouch-cyan`}
+              className={`ve-landing-slideshow-nav ${Z8_INTERACTIVE}`}
             >
               <ChevronRight size={16} />
             </button>
@@ -290,11 +284,11 @@ function GamesSlideshow({ games }: { games: LiveGame[] }) {
 
 function HrCardsPlaceholder() {
   return (
-    <div className="ve-landing-hr-cards grid grid-cols-1 gap-3 md:grid-cols-3">
+    <div className="ve-landing-hr-cards">
       {[1, 2, 3].map((slot) => (
         <div
           key={slot}
-          className="ve-landing-hr-card h-44 animate-pulse rounded-2xl border border-white/10 bg-black/30"
+          className="ve-landing-hr-card h-44 animate-pulse border-white/10 bg-black/30"
           aria-hidden="true"
         />
       ))}
@@ -306,7 +300,7 @@ function HrSpotlightRow({ projectedOnly, rows }: { projectedOnly: boolean; rows:
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-black/30 px-5 py-8 text-center">
-        <p className={`${Z8_LABEL} text-vouch-cyan/70`}>HR Board Preview</p>
+        <p className={`${Z8_LABEL} text-vouch-cyan/70`}>HR Board Spotlight</p>
         <p className="mt-2 text-sm text-white/45">Today&apos;s HR intelligence loads when the slate is ready.</p>
       </div>
     );
@@ -323,7 +317,7 @@ function HrSpotlightRow({ projectedOnly, rows }: { projectedOnly: boolean; rows:
         </div>
       )}
 
-      <div className="ve-landing-hr-cards grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="ve-landing-hr-cards">
         {rows.map((player) => (
           <LandingHrSpotlightCard key={player.stableId} player={player} />
         ))}
@@ -332,7 +326,7 @@ function HrSpotlightRow({ projectedOnly, rows }: { projectedOnly: boolean; rows:
   );
 }
 
-function LiveGamesCenterBody() {
+export default function LandingLiveGamesCenter() {
   const liveQuery = useLiveGames({ refetchInterval: 45_000 });
   const hrQuery = useHrBoardToday(12);
 
@@ -342,116 +336,53 @@ function LiveGamesCenterBody() {
   }, [liveQuery.data?.games]);
 
   const spotlight = useMemo(() => pickSpotlightPlayers(hrQuery.data), [hrQuery.data]);
-
   const liveCount = games.filter((game) => game.isLive || isLiveStatus(game.status)).length;
 
   return (
-    <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
-      <div className="ve-landing-games-panel-header flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Today&apos;s Slate</p>
-          <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">Live games + HR spotlight</h2>
-          <p className="mt-1 hidden text-sm text-white/45 sm:block">
-            Official MLB schedule with trust-first HR board previews — the same cards you get inside the terminal.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-cyan">
-            {games.length} games
-          </span>
-          {liveCount > 0 && (
-            <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-emerald">
-              {liveCount} live
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="ve-landing-games-panel-body flex flex-col gap-5 p-5">
-        <GamesSlideshow games={games} />
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className={`${Z8_LABEL} text-vouch-cyan`}>HR Board Spotlight</p>
-            <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Top 3 today</span>
-          </div>
-          {hrQuery.isLoading ? <HrCardsPlaceholder /> : <HrSpotlightRow {...spotlight} />}
-        </div>
-      </div>
-
-      <div className="border-t border-white/10 bg-vouch-cyan/5 px-5 py-3 text-center">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
-          Real MLB API · No fake lineups · Team mismatch rows blocked before they reach confirmed candidates
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function LiveGamesCenterPlaceholder() {
-  return (
-    <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
-      <div className="border-b border-white/10 px-5 py-4">
-        <p className={`${Z8_LABEL} text-vouch-cyan/70`}>Today&apos;s Slate</p>
-        <h2 className="mt-1 text-xl font-black text-white">Live games + HR spotlight</h2>
-      </div>
-      <div className="flex flex-col gap-5 p-5">
-        <div className="h-52 animate-pulse rounded-xl border border-white/10 bg-black/30" />
-        <HrCardsPlaceholder />
-      </div>
-    </div>
-  );
-}
-
-export default function LandingLiveGamesCenter({ eager = false }: { eager?: boolean }) {
-  const [ready, setReady] = useState(eager);
-  const markerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (eager) {
-      setReady(true);
-      return undefined;
-    }
-
-    const marker = markerRef.current;
-    if (!marker || !('IntersectionObserver' in window)) {
-      setReady(true);
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setReady(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '280px 0px' },
-    );
-
-    observer.observe(marker);
-    return () => observer.disconnect();
-  }, [eager]);
-
-  return (
-    <section ref={markerRef} aria-labelledby="live-games-heading" className="ve-landing-live-section space-y-4">
+    <section aria-labelledby="live-games-heading" className="ve-landing-live-section">
       <div className="ve-landing-section-intro text-center">
         <p className={`${Z8_LABEL} text-vouch-cyan`}>Today&apos;s slate</p>
         <h2 id="live-games-heading" className="mt-2 text-2xl font-black text-white sm:text-3xl">
           Live games + top 3 HR picks
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-          Official MLB matchups with team logos, live status, and trust-first HR spotlight cards from today&apos;s board.
-        </p>
       </div>
 
-      {ready ? (
-        <Suspense fallback={<LiveGamesCenterPlaceholder />}>
-          <LiveGamesCenterBody />
-        </Suspense>
-      ) : (
-        <LiveGamesCenterPlaceholder />
-      )}
+      <div className="ve-landing-games-panel">
+        <div className="ve-landing-games-panel-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className={`${Z8_LABEL} text-vouch-cyan`}>MLB Board</p>
+            <p className="mt-1 text-sm text-white/45">Real schedule · real HR spotlight cards</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-vouch-cyan/25 bg-vouch-cyan/8 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-cyan">
+              {games.length} games
+            </span>
+            {liveCount > 0 && (
+              <span className="rounded-full border border-vouch-emerald/30 bg-vouch-emerald/8 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-vouch-emerald">
+                {liveCount} live
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="ve-landing-games-panel-body">
+          <GamesSlideshow games={games} />
+
+          <div className="space-y-3">
+            <div className="ve-landing-spotlight-label">
+              <p className={`${Z8_LABEL} text-vouch-cyan`}>HR Board Spotlight</p>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Top 3 today</span>
+            </div>
+            {hrQuery.isLoading ? <HrCardsPlaceholder /> : <HrSpotlightRow {...spotlight} />}
+          </div>
+        </div>
+
+        <div className="ve-landing-panel-footer">
+          <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+            No fake lineups · Team mismatch rows blocked before confirmed candidates
+          </p>
+        </div>
+      </div>
     </section>
   );
 }

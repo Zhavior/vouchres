@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -20,6 +20,7 @@ import {
 } from '../components/landing/LandingTokens';
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
+import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -28,7 +29,6 @@ import '../components/landing/LandingMobileShell.css';
 type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
-const LandingJudgesDeck = lazy(() => import('../components/landing/LandingJudgesDeck'));
 const preloadAuthModal = () => {
   void import('../components/auth/AuthModal');
 };
@@ -103,26 +103,6 @@ const TRUST_PILLARS = [
   { label: 'Play', detail: 'Prove your record' },
 ] as const;
 
-function JudgesPlaceholder() {
-  return (
-    <section
-      className={`ve-judges-placeholder rounded-2xl ${Z8_PANEL_PREMIUM} p-6 text-center`}
-      aria-label="AI Judge Council preview"
-    >
-      <p className={`${Z8_LABEL} text-vouch-cyan`}>AI Judge Council</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Four judges on standby</h2>
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
-        Interactive judge profiles load as you scroll — hover or click each AI to explore.
-      </p>
-      <div className="mx-auto mt-6 flex max-w-md justify-center gap-2" aria-hidden="true">
-        {['DS', 'PH', 'MR', 'RA'].map((code) => (
-          <div key={code} className="h-12 w-12 rounded-xl border border-white/10 bg-black/30" />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function AuthModalFallback() {
   return (
     <div
@@ -135,47 +115,6 @@ function AuthModalFallback() {
         <p className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Opening secure access</p>
       </div>
     </div>
-  );
-}
-
-function DeferredLandingJudgesDeck() {
-  const [ready, setReady] = useState(false);
-  const markerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const marker = markerRef.current;
-
-    if (!marker || !('IntersectionObserver' in window)) {
-      setReady(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setReady(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '360px 0px' },
-    );
-
-    observer.observe(marker);
-    return () => observer.disconnect();
-  }, []);
-
-  if (!ready) {
-    return (
-      <div ref={markerRef}>
-        <JudgesPlaceholder />
-      </div>
-    );
-  }
-
-  return (
-    <Suspense fallback={<JudgesPlaceholder />}>
-      <LandingJudgesDeck />
-    </Suspense>
   );
 }
 
@@ -319,10 +258,10 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
             </div>
           </header>
 
-          <div className="space-y-8 sm:space-y-16 md:space-y-20">
-            <LandingLiveGamesCenter eager />
+          <div className="space-y-8 sm:space-y-14 md:space-y-16">
+            <LandingLiveGamesCenter />
 
-            <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
+            <section className="ve-terminal-hero-compact ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-4 text-center sm:max-w-5xl sm:items-center sm:space-y-6">
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
                 <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
@@ -416,10 +355,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
-            {/* 4 Judges */}
-            <DeferredLandingJudgesDeck />
+            <LandingJudgesDeck />
 
-            {/* Platform strengths slideshow */}
             <LandingFeatureSlideshow features={FEATURES} />
 
             {/* Pricing */}

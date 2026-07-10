@@ -15,6 +15,7 @@
 @import "./legacy/layout.css";
 @import "./legacy/ultrawide.css";
 @import "./legacy/scroll-mobile.css";
+@import "./landing-terminal.css";
 
 body {
   background-color: var(--bg-obsidian);

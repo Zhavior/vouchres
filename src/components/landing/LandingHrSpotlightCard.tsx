@@ -114,8 +114,8 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
   const hrPct = player.hrProbability != null ? (player.hrProbability * 100).toFixed(1) : null;
 
   return (
-    <article className="ve-landing-hr-card group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-black/50 to-black/30 shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition hover:border-vouch-cyan/30 hover:shadow-[0_12px_40px_rgba(0,240,255,0.08)]">
-      <div className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${tier.accent}`} aria-hidden="true" />
+    <article className="ve-landing-hr-card group">
+      <div className={`ve-landing-hr-card-accent bg-gradient-to-b ${tier.accent}`} aria-hidden="true" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-vouch-cyan/60 via-vouch-cyan/20 to-transparent opacity-80" aria-hidden="true" />
 
       <div className="relative flex flex-col gap-3 p-4">

@@ -1,0 +1,201 @@
+/* VouchEdge terminal landing — hand-written Lightning CSS (public bundle only) */
+
+.ve-landing-live-section {
+  margin-top: 0;
+}
+
+.ve-landing-section-intro {
+  margin-bottom: 1rem;
+}
+
+.ve-landing-games-panel {
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.72);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.ve-landing-games-panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.25rem;
+}
+
+.ve-landing-games-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.ve-landing-games-slideshow {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ve-landing-games-slideshow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 1rem;
+}
+
+.ve-landing-hr-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.ve-landing-hr-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.ve-landing-hr-card:hover {
+  border-color: rgba(0, 240, 255, 0.28);
+  box-shadow: 0 12px 40px rgba(0, 240, 255, 0.08);
+}
+
+.ve-landing-hr-card-accent {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 6rem;
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.12), transparent);
+}
+
+.ve-landing-spotlight-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ve-landing-panel-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 240, 255, 0.04);
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+}
+
+.ve-landing-judge-slideshow,
+.ve-landing-feature-slideshow {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 6, 23, 0.72);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.ve-landing-judge-track,
+.ve-landing-feature-track {
+  display: flex;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ve-landing-judge-slide,
+.ve-landing-feature-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.ve-landing-slideshow-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.75rem;
+}
+
+.ve-landing-slideshow-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding-inline: 0.5rem;
+}
+
+.ve-landing-slideshow-dot {
+  height: 0.375rem;
+  width: 0.375rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.ve-landing-slideshow-dot[aria-current='true'] {
+  width: 1.25rem;
+  background: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.45);
+}
+
+.ve-landing-slideshow-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.ve-landing-slideshow-nav:hover {
+  border-color: rgba(0, 240, 255, 0.35);
+  color: #00f0ff;
+}
+
+.ve-terminal-hero-compact {
+  text-align: center;
+  padding-block: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .ve-landing-hr-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .ve-landing-hr-cards {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.35rem;
+    scrollbar-width: none;
+  }
+
+  .ve-landing-hr-cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ve-landing-hr-card {
+    flex: 0 0 min(86vw, 19.5rem);
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-landing-judge-track,
+  .ve-landing-feature-track {
+    transition: none;
+  }
+}
