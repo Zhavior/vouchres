@@ -10,7 +10,7 @@ import { apiNotFoundHandler } from "./server/middleware/apiNotFound";
 import { aiLimiter, globalLimiter } from "./server/middleware/rateLimit";
 import { requestContext } from "./server/middleware/requestContext";
 import { routeTiming } from "./server/middleware/routeTiming";
-import { initServerSentry, sentryErrorHandler, isSentryEnabled } from "./server/lib/sentry";
+import { initServerSentry, sentryErrorHandler, isSentryEnabled, captureException } from "./server/lib/sentry";
 import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv";
 
 // Load base env, then local secrets (.env.local) which take precedence.
@@ -102,11 +102,79 @@ export async function createApp(httpServer?: http.Server) {
 return app;
 }
 
+/**
+ * Process-level safety net. Without these, an unhandled promise rejection or
+ * an error thrown in a background task (grading cron, MLB fetch) takes the
+ * whole Node process down with no trace beyond an unexplained restart —
+ * running the money path blind. These log to stdout (Render captures it) AND
+ * to Sentry when configured, so a crash is never silent.
+ */
+function registerProcessSafetyHandlers(httpServer: http.Server): void {
+  process.on("unhandledRejection", (reason: unknown) => {
+    console.error("[fatal] unhandledRejection:", reason);
+    captureException(reason instanceof Error ? reason : new Error(String(reason)), {
+      tags: { kind: "unhandledRejection" },
+    });
+    // Do not exit — a stray rejection shouldn't take down a healthy server;
+    // it's logged + reported so it can be fixed.
+  });
+
+  process.on("uncaughtException", (err: Error) => {
+    console.error("[fatal] uncaughtException:", err);
+    captureException(err, { tags: { kind: "uncaughtException" } });
+    // An uncaught exception leaves the process in an undefined state — drain
+    // and exit so the platform restarts a clean instance.
+    gracefulShutdown(httpServer, "uncaughtException", 1);
+  });
+
+  process.on("SIGTERM", () => gracefulShutdown(httpServer, "SIGTERM", 0));
+  process.on("SIGINT", () => gracefulShutdown(httpServer, "SIGINT", 0));
+}
+
+let shuttingDown = false;
+
+/**
+ * Drain in-flight requests before exiting. Render sends SIGTERM on every
+ * deploy and scale event; without this the process is hard-killed mid-request,
+ * which can orphan a money-path write (e.g. a Stripe webhook between its
+ * "processing" and "finished" states).
+ */
+function gracefulShutdown(httpServer: http.Server, signal: string, code: number): void {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] ${signal} received — draining in-flight requests…`);
+
+  httpServer.close(() => {
+    console.log("[shutdown] all connections drained, exiting.");
+    process.exit(code);
+  });
+
+  // Hard cap so a stuck connection can't block the deploy forever.
+  setTimeout(() => {
+    console.error("[shutdown] drain timed out after 10s, forcing exit.");
+    process.exit(code);
+  }, 10_000).unref();
+}
+
 async function startServer() {
   const httpServer = http.createServer();
   const app = await createApp(httpServer);
   httpServer.on("request", app);
   const PORT = Number(process.env.PORT) || 3000;
+
+  registerProcessSafetyHandlers(httpServer);
+
+  // Loud, unmissable warning if production is running without error tracking —
+  // the two highest-stakes signals (failed payment, crashed grading) funnel to
+  // Sentry, so a missing DSN means running blind. Not a hard boot-fail so a
+  // deploy isn't blocked, but it should never go unnoticed.
+  if (process.env.NODE_ENV === "production" && !isSentryEnabled()) {
+    console.warn(
+      "[boot] ⚠️  SENTRY_DSN is not set — server errors, failed Stripe webhooks, " +
+        "and grading crashes will NOT be reported anywhere except stdout. " +
+        "Set SENTRY_DSN before taking real payments.",
+    );
+  }
 
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {

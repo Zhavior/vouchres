@@ -186,23 +186,33 @@ export async function optionalAuth(
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) return next();
 
-  const token = header.slice(7);
-  const supabaseAdmin = await getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) return next();
+  // optionalAuth must NEVER fail the request — it only *upgrades* an
+  // anonymous request to authenticated when a valid token is present. Any
+  // error (Supabase outage, getSupabaseAdmin throwing on missing env, a
+  // malformed token) must fall through to anonymous, not 500 the public
+  // feed/leaderboard/profile routes that use it.
+  try {
+    const token = header.slice(7);
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data.user) return next();
 
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select(`
-      id, username, handle, tier, is_banned, is_staff, is_demo,
-      age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
-      deletion_scheduled_at
-    `)
-    .eq("id", data.user.id)
-    .single();
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select(`
+        id, username, handle, tier, is_banned, is_staff, is_demo,
+        age_confirmed_at, jurisdiction_confirmed_at, jurisdiction,
+        deletion_scheduled_at
+      `)
+      .eq("id", data.user.id)
+      .single();
 
-  if (profile && !profile.is_banned) {
-    req.user = { id: data.user.id, email: data.user.email, profile };
+    if (profile && !profile.is_banned) {
+      req.user = { id: data.user.id, email: data.user.email, profile };
+    }
+  } catch (err) {
+    // Degrade to anonymous — do not surface the error to the client.
+    console.warn("[auth] optionalAuth soft-failed, continuing anonymously:", (err as Error)?.message ?? err);
   }
   next();
 }
