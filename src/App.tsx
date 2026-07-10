@@ -57,7 +57,7 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 export default function App() {
   const navigation = useSectionNavigation();
 
-  if (navigation.isPublicFrontPage && navigation.activeSection === 'vouchedge_intro') {
+  if (!navigation.isLoggedIn) {
     return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
   }
 
