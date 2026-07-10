@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { ChevronLeft, ChevronRight } from './LandingIcons';
 
-type LandingIconComponent = ComponentType<{ size?: number | string; strokeWidth?: number }>;
+type LandingIconComponent = ComponentType<{ size?: number | string; strokeWidth?: number; className?: string }>;
 
 export type LandingFeature = {
   icon: LandingIconComponent;
