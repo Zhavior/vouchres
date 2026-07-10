@@ -24,6 +24,8 @@ import {
 } from '../../theme/z8Tokens';
 import { performAppLogout } from '../../lib/appLogout';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
+import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
+import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -121,6 +123,8 @@ function MobileProfileDrawer({
 }: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
   const [signingOut, setSigningOut] = useState(false);
+  const { data: liveGamesPayload } = useLiveGames({ enabled: open });
+  const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   useEffect(() => {
     if (!open) return;
@@ -269,6 +273,11 @@ function MobileProfileDrawer({
                             <Icon className="h-3.5 w-3.5" />
                           </span>
                           <span className="truncate text-[12px] font-bold uppercase tracking-wide">{item.label}</span>
+                          {liveGamesActive && item.id === 'live_games' && (
+                            <span className="ml-auto shrink-0">
+                              <SidebarLiveOnAirBadge />
+                            </span>
+                          )}
                         </button>
                       );
                     })}

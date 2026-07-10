@@ -102,7 +102,7 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   live_games: {
     id: "live_games",
-    label: "Live Projections",
+    label: "Live Games",
     description: "In-play game projections and live edges.",
     icon: Tv,
   },
