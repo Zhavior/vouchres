@@ -1,4 +1,4 @@
-import { Home, Plus, Sparkles as EdgeIslandIcon } from 'lucide-react';
+import { Home, Plus, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 
 type AppNavProps = {
@@ -28,19 +28,38 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
       </button>
       <button
         type="button"
-        onClick={() => onNavigate('board')}
-        onMouseEnter={() => preloadSection('board')}
-        onFocus={() => preloadSection('board')}
-        aria-label="Go to Vouch Board"
-        title="Vouch Board"
-        aria-current={activeSection === 'board' ? 'page' : undefined}
-        className={`ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
-          activeSection === 'board'
-            ? 'border-ve-ion/70 shadow-[0_0_20px_rgba(0,229,255,0.35)]'
-            : ''
-        }`}
+        onClick={() => onNavigate('pro_command_center')}
+        onMouseEnter={() => preloadSection('pro_command_center')}
+        onFocus={() => preloadSection('pro_command_center')}
+        aria-label="Go to Pro Edges"
+        title="Pro Edges"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
       >
-        <Plus className={`ve-edge-island-trigger-icon h-4 w-4 ${activeSection === 'board' ? 'text-ve-ion' : ''}`} />
+        <Flame className="ve-edge-island-trigger-icon h-4 w-4" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onNavigate('ai_engine')}
+        onMouseEnter={() => preloadSection('ai_engine')}
+        onFocus={() => preloadSection('ai_engine')}
+        aria-label="Go to AI"
+        title="AI"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
+      >
+        <Brain className="ve-edge-island-trigger-icon h-4 w-4" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onNavigate('notifications')}
+        onMouseEnter={() => preloadSection('notifications')}
+        onFocus={() => preloadSection('notifications')}
+        aria-label="Go to Alerts"
+        title="Alerts"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
+      >
+        <Bell className="ve-edge-island-trigger-icon h-4 w-4" />
       </button>
       <button
         type="button"
