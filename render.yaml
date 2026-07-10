@@ -30,9 +30,17 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: STRIPE_PRICE_GOLD
+      # Stripe price IDs — names MUST match getStripePriceId():
+      #   STRIPE_<TIER>_<INTERVAL>_PRICE_ID  (tiers: PRO, CREATOR)
+      # The old STRIPE_PRICE_GOLD / STRIPE_PRICE_SELLER_PRO names were never
+      # read by the code, so checkout silently produced no price. Fixed.
+      - key: STRIPE_PRO_MONTHLY_PRICE_ID
         sync: false
-      - key: STRIPE_PRICE_SELLER_PRO
+      - key: STRIPE_PRO_YEARLY_PRICE_ID
+        sync: false
+      - key: STRIPE_CREATOR_MONTHLY_PRICE_ID
+        sync: false
+      - key: STRIPE_CREATOR_YEARLY_PRICE_ID
         sync: false
       - key: GEMINI_API_KEY
         sync: false
@@ -47,6 +55,18 @@ services:
       - key: TRUST_PROXY
         value: "1"
       - key: SENTRY_DSN
+        sync: false
+      # REQUIRED in production — validateProductionEnvAtBoot() throws without it,
+      # and cron endpoints fail closed (deny all) if it's unset. Without this key
+      # the web service crashes on boot and never passes the health check.
+      - key: CRON_SECRET
+        sync: false
+      # Rate limiting + HR hybrid cache. Without Upstash, limiters fall back to
+      # per-instance in-memory counters — every limit multiplies by instance
+      # count, defeating the AI-cost and abuse protection on multi-dyno.
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
         sync: false
 
   - type: cron
@@ -68,6 +88,13 @@ services:
         sync: false
       - key: MLB_API_BASE_URL
         value: https://statsapi.mlb.com/api
+      # Distributed grading lock — prevents this cron racing the web app's
+      # HTTP grade-due endpoint (double grading). Degrades to process-local
+      # without it, which is safe only if this is the sole grading trigger.
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
 
   - type: cron
     name: vouchedge-deleter
