@@ -321,9 +321,53 @@ billingRoutes.post(
         case "invoice.payment_failed": {
           const invoice = event.data.object as Stripe.Invoice;
           const subId = (invoice as { subscription?: string | null }).subscription;
+          // ALERT: a customer's renewal payment failed (dunning). syncSubscription
+          // moves them to past_due (which downgrades access), but the owner needs
+          // a loud, actionable signal — this is a business event, not routine.
+          structuredLog({
+            level: "error",
+            event: "stripe.payment_failed",
+            message: `Payment failed for customer ${invoice.customer} (invoice ${invoice.id})` +
+              ` — subscription ${subId ?? "unknown"} moving to past_due.`,
+          });
           if (subId) {
             const sub = await getStripe().subscriptions.retrieve(subId);
             await syncSubscription(sub);
+          }
+          break;
+        }
+        case "charge.refunded":
+        case "charge.dispute.created": {
+          // A refunded/charged-back customer must NOT keep paid access. Revoke
+          // on a FULL refund or any dispute (partial refunds are left alone).
+          const obj = event.data.object as Stripe.Charge | Stripe.Dispute;
+          const charge = event.type === "charge.refunded" ? (obj as Stripe.Charge) : null;
+          const isFullRefund = charge ? charge.amount_refunded >= charge.amount : true;
+          const customerId =
+            typeof (obj as any).customer === "string"
+              ? (obj as any).customer
+              : (obj as any).customer?.id ?? null;
+
+          if (customerId && isFullRefund) {
+            structuredLog({
+              level: "warn",
+              event: "stripe.access_revoked",
+              message: `${event.type} for customer ${customerId} — revoking paid access (tier -> free).`,
+            });
+            await supabaseAdmin
+              .from("subscriptions")
+              .update({ status: "canceled" })
+              .eq("stripe_customer_id", customerId);
+            await supabaseAdmin
+              .from("profiles")
+              .update({ tier: "free", stripe_subscription_id: null })
+              .eq("stripe_customer_id", customerId);
+          } else {
+            structuredLog({
+              level: "info",
+              event: "stripe.refund_partial_or_no_customer",
+              message: `${event.type} not revoked (fullRefund=${isFullRefund}, customer=${customerId ?? "none"}).`,
+            });
           }
           break;
         }

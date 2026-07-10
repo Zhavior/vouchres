@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { AppError } from "../../errors/AppError";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import {
   DATABASE_TIER_BY_CANONICAL,
@@ -132,6 +133,30 @@ export async function createCheckoutSession(opts: {
   cancelUrl: string;
 }) {
   assertStripeConfigured();
+
+  // Guard against double-subscribing: a user with an already-active (or
+  // trialing/past_due) subscription who starts a second checkout would end up
+  // paying for two parallel subscriptions. Send them to the billing portal to
+  // change plans instead.
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: activeSub } = await supabaseAdmin
+    .from("subscriptions")
+    .select("stripe_subscription_id, status, tier")
+    .eq("profile_id", opts.profileId)
+    .in("status", ["active", "trialing", "past_due"])
+    .maybeSingle();
+
+  if (activeSub) {
+    throw new AppError({
+      status: 409,
+      code: "conflict",
+      message:
+        "You already have an active subscription. Manage or change your plan from the billing portal instead of starting a new checkout.",
+      expose: true,
+      details: { reason: "already_subscribed", currentTier: activeSub.tier, status: activeSub.status },
+    });
+  }
+
   const customer = (await ensureStripeCustomer(opts.profileId, opts.email)) as Stripe.Customer;
 
   return getStripe().checkout.sessions.create({
