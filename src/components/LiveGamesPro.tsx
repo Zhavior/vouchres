@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
 import {
   Tv, RefreshCw, Flame, AlertTriangle, ChevronRight, X, Gavel, Activity, CloudSun, Plus, Radio,
 } from 'lucide-react';
@@ -761,7 +762,13 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
               ))}
             </div>
 
-            {/* Pitch-by-pitch sweat screen for the selected live game */}
+            {activeGame && !activeGame.isLive && !activeGame.isFinal && (
+              <div className="mt-6">
+                <PregameAiReadPanel game={activeGame} />
+              </div>
+            )}
+
+            {/* Pitch-by-pitch sweat screen for the selected live/final game */}
             {(activeGame?.isLive || activeGame?.isFinal) && activeGame.gamePk != null && (
               <div className="min-w-0 max-w-4xl mx-auto w-full">
                 <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
