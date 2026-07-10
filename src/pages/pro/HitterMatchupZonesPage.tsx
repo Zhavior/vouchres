@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { ProLockedCard } from "../../components/pro/ProLockedCard";
+import { useEntitlements } from "../../features/hr/hooks/useEntitlements";
 import { Grid3x3, ChevronLeft, ChevronRight, Calendar, RefreshCw, AlertOctagon, Flame } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import PlayerHeadshot from '../../components/parlays/PlayerHeadshot';
@@ -330,6 +332,7 @@ const BestMatchupsTreemap: React.FC<{ rows: HitterRow[] }> = ({ rows }) => {
 // ─── Page ────────────────────────────────────────────────────────────────
 
 export default function HitterMatchupZonesPage() {
+  const { isPro } = useEntitlements();
   const [date, setDate] = useState(todayISO());
   const [games, setGames] = useState<GameMatchup[]>([]);
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
@@ -458,18 +461,36 @@ export default function HitterMatchupZonesPage() {
         ) : selectedGameData ? (
           <>
             <BestMatchupsTreemap rows={combinedRows} />
-            {awayVsHome && (
-              <HitterHeatmapTable
-                title={selectedGameData.home.name}
-                pitcherName={awayVsHome.pitcher.name}
-                rows={awayVsHome.opponent.projectedLineup}
-              />
-            )}
-            {homeVsAway && (
-              <HitterHeatmapTable
-                title={selectedGameData.away.name}
-                pitcherName={homeVsAway.pitcher.name}
-                rows={homeVsAway.opponent.projectedLineup}
+
+            {isPro ? (
+              <>
+                {awayVsHome && (
+                  <HitterHeatmapTable
+                    title={selectedGameData.home.name}
+                    pitcherName={awayVsHome.pitcher.name}
+                    rows={awayVsHome.opponent.projectedLineup}
+                  />
+                )}
+
+                {homeVsAway && (
+                  <HitterHeatmapTable
+                    title={selectedGameData.away.name}
+                    pitcherName={homeVsAway.pitcher.name}
+                    rows={homeVsAway.opponent.projectedLineup}
+                  />
+                )}
+              </>
+            ) : (
+              <ProLockedCard
+                title="Hitter Matchup Zones"
+                description="Unlock pitcher vulnerability, lineup edges, BvP context, and advanced matchup intelligence."
+                onUpgrade={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("vouch:navigate", {
+                      detail: { section: "premium" },
+                    })
+                  )
+                }
               />
             )}
           </>
