@@ -7,7 +7,7 @@
  *  - Collapsible group sections (open by default, user preference persisted in localStorage)
  *  - Sport pill switcher (MLB / NBA / NFL) at top
  *  - BEGINNER/PRO toggle removed → lives in Settings
- *  - Notifications removed from sidebar → header bell icon
+ *  - Notifications live in sidebar toolbar (no duplicate top header bar)
  *  - Cmd+K hint at top for power users
  *  - All 18+ features preserved, just 2-level hierarchy
  */
@@ -30,7 +30,7 @@ import {
 } from '../../lib/featureConfig';
 import { canAccessThemeStore } from '../../lib/adminDevAccess';
 import { preloadSection } from '../../lib/routePreload';
-import { useNotificationUnreadCount } from '../../components/notifications/UnifiedNotificationCenter';
+import { NotificationBellButton, useNotificationUnreadCount } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
 import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -378,6 +378,10 @@ function FeedSidebar({
             </div>
           </button>
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
+        </div>
+
+        <div className="flex items-center justify-center gap-2 px-1">
+          <NotificationBellButton size="sm" />
         </div>
 
         <button

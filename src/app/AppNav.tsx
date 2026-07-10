@@ -1,5 +1,6 @@
-import { Home, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
+import { Menu, Sparkles as EdgeIslandIcon, Flame, Brain, Bell } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
+import { useNavUiStore } from '../stores/navUiStore';
 import '../styles/legacy/command-island.css';
 
 type AppNavProps = {
@@ -9,24 +10,18 @@ type AppNavProps = {
 };
 
 export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavProps) {
+  const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
+
   return (
     <div className="ve-mobile-fab-cluster fixed z-[60] flex items-center gap-2.5 md:bottom-8 md:right-8 md:gap-0">
       <button
         type="button"
-        onClick={() => onNavigate('feed')}
-        onPointerDown={() => preloadSection('feed')}
-        onMouseEnter={() => preloadSection('feed')}
-        onFocus={() => preloadSection('feed')}
-        aria-label="Go to Home Feed"
-        title="Home Feed"
-        aria-current={activeSection === 'feed' ? 'page' : undefined}
-        className={`ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden ${
-          activeSection === 'feed'
-            ? 'border-ve-ion/70 shadow-[0_0_20px_rgba(0,229,255,0.35)]'
-            : ''
-        }`}
+        onClick={openMobileDrawer}
+        aria-label="Open navigation menu"
+        title="Menu"
+        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
       >
-        <Home className={`ve-edge-island-trigger-icon h-4 w-4 ${activeSection === 'feed' ? 'text-ve-ion' : ''}`} />
+        <Menu className="ve-edge-island-trigger-icon h-4 w-4" />
       </button>
       <button
         type="button"
