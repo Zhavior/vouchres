@@ -14,11 +14,12 @@ import {
   Z8_INTERACTIVE,
   Z8_LABEL,
   Z8_PAGE,
-  Z8_PANEL,
   Z8_PANEL_PREMIUM,
   Z8_BTN_TERMINAL_HEADER_LOGIN,
   Z8_BTN_TERMINAL_HEADER_SIGNUP,
 } from '../components/landing/LandingTokens';
+import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
+import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
 
@@ -199,80 +200,6 @@ function DeferredLandingJudgesDeck() {
     <Suspense fallback={<JudgesPlaceholder />}>
       <LandingJudgesDeck />
     </Suspense>
-  );
-}
-
-function PreviewTerminal() {
-  return (
-    <div className={`overflow-hidden rounded-2xl ${Z8_PANEL_PREMIUM}`}>
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <div>
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Terminal Preview</p>
-          <p className="mt-1 text-xs text-white/40">Sign in to unlock live HR board + judge picks</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-vouch-emerald shadow-[0_0_12px_rgba(0,255,148,0.6)]" />
-          <span className="font-mono text-[9px] uppercase tracking-widest text-vouch-emerald/80">Standby</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 border-b border-white/10 sm:grid-cols-4">
-        {[
-          { label: 'HR Board', value: '—' },
-          { label: 'Judges', value: '5' },
-          { label: 'Data Quality', value: 'Verified' },
-          { label: 'Status', value: 'Locked' },
-        ].map((stat) => (
-          <div key={stat.label} className="border-r border-white/5 p-4 last:border-r-0">
-            <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">{stat.label}</p>
-            <p className="mt-1 font-mono text-lg font-bold text-white/80">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-3 p-5">
-        {[
-          { row: 'Confirmed lineup players', status: 'Live when signed in', tone: 'text-vouch-cyan' },
-          { row: 'Projected roster previews', status: 'Labeled + warned', tone: 'text-vouch-amber' },
-          { row: 'AI judge top picks', status: 'Updates with slate', tone: 'text-vouch-emerald' },
-          { row: 'Parlay-ready legs', status: 'Copy after sign-in', tone: 'text-white/60' },
-        ].map((row) => (
-          <div
-            key={row.row}
-            className="ve-terminal-preview-row flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/30 px-4 py-3"
-          >
-            <span className="text-sm text-white/70">{row.row}</span>
-            <span className={`font-mono text-[10px] font-bold uppercase tracking-wide ${row.tone}`}>
-              {row.status}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="border-t border-white/10 bg-vouch-cyan/5 px-5 py-3 text-center">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-white/35">
-          Official lineup not posted yet? We warn you. Team mismatch? We block it.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function FeatureStrip({
-  icon: Icon,
-  eyebrow,
-  title,
-  copy,
-}: (typeof FEATURES)[number]) {
-  return (
-    <article className={`rounded-2xl ${Z8_PANEL} ${Z8_INTERACTIVE} p-5`}>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">
-        <Icon size={18} strokeWidth={2.25} />
-      </div>
-      <p className={`${Z8_LABEL} text-vouch-cyan/70`}>{eyebrow}</p>
-      <h3 className="mt-1 text-lg font-black text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-white/50">{copy}</p>
-    </article>
   );
 }
 
@@ -483,33 +410,14 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
-            {/* Preview terminal — honest, no fake data */}
-            <section className="space-y-4">
-              <div className="text-center">
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
-                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Live terminal preview</h2>
-              </div>
-              <PreviewTerminal />
-            </section>
+            {/* Live games center + HR spotlight */}
+            <LandingLiveGamesCenter />
 
             {/* 5 Judges */}
             <DeferredLandingJudgesDeck />
 
-            {/* Feature strips */}
-            <section className="space-y-6">
-              <div className="text-center">
-                <p className={`${Z8_LABEL} text-vouch-cyan`}>Platform</p>
-                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Built for the full research loop</h2>
-                <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-                  From verified HR boards to judge parlays — every module is honest about what is confirmed vs projected.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {FEATURES.map((feature) => (
-                  <FeatureStrip key={feature.eyebrow} {...feature} />
-                ))}
-              </div>
-            </section>
+            {/* Platform strengths slideshow */}
+            <LandingFeatureSlideshow features={FEATURES} />
 
             {/* Pricing */}
             <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />

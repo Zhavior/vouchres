@@ -119,6 +119,47 @@
   }
 }
 
+.ve-landing-feature-slideshow {
+  position: relative;
+}
+
+.ve-landing-feature-track {
+  display: flex;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ve-landing-feature-slide {
+  flex: 0 0 100%;
+}
+
+.ve-landing-games-shortcuts {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 240, 255, 0.25) transparent;
+}
+
+.ve-landing-games-shortcuts::-webkit-scrollbar {
+  height: 4px;
+}
+
+.ve-landing-games-shortcuts::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(0, 240, 255, 0.25);
+}
+
+.ve-landing-game-slide {
+  animation: ve-terminal-card-rise 360ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-landing-feature-track {
+    transition: none;
+  }
+
+  .ve-landing-game-slide {
+    animation: none;
+  }
+}
+
 @media (max-width: 767px) {
   #root .edge-space-hero {
     min-height: auto;

@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
+import { queryClient } from './lib/queryClient';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
@@ -54,13 +56,15 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 export default function App() {
   const navigation = useSectionNavigation();
 
-  if (!navigation.isLoggedIn) {
-    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
-  }
-
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <AuthenticatedApp navigation={navigation} />
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      {!navigation.isLoggedIn ? (
+        <PublicLanding onAuthed={navigation.handleLoginSuccess} />
+      ) : (
+        <Suspense fallback={<RouteFallback />}>
+          <AuthenticatedApp navigation={navigation} />
+        </Suspense>
+      )}
+    </QueryClientProvider>
   );
 }
