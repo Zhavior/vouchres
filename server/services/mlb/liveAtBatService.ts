@@ -7,11 +7,10 @@
  * (separate free endpoint). Every field is real feed data — the one
  * Statcast-only stat (xBA) is deliberately absent rather than faked.
  */
-import { getGameFeed } from "./mlbClient";
 import { headshotUrl } from "./mlbTypes";
-import { TTLCache } from "../../lib/cache";
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { getSharedGameFeed } from "../hubs/liveGameHub";
 
 const BASE = (process.env.MLB_API_BASE_URL || "https://statsapi.mlb.com/api").replace(/\/$/, "");
 
@@ -68,7 +67,6 @@ export interface LiveAtBatSnapshot {
   updatedAt: string;
 }
 
-const cache = new TTLCache<LiveAtBatSnapshot | null>(5_000);
 const lastGoodSnapshots = new Map<number, { snapshot: LiveAtBatSnapshot; expiresAt: number }>();
 const LAST_GOOD_TTL_MS = 2 * 60_000;
 const MAX_LAST_GOOD_SNAPSHOTS = 64;
@@ -129,7 +127,6 @@ async function resolveLastGoodSnapshot(gamePk: number): Promise<LiveAtBatSnapsho
 
 /** Test-only reset for live at-bat caches and last-good snapshots. */
 export function resetLiveAtBatCachesForTests(): void {
-  cache.clear();
   lastGoodSnapshots.clear();
 }
 
@@ -298,54 +295,51 @@ async function fetchWinProb(gamePk: number): Promise<LiveAtBatSnapshot["winProb"
 }
 
 export async function getLiveAtBat(gamePk: number): Promise<LiveAtBatSnapshot | null> {
-  return cache.getOrSet(`at-bat:${gamePk}`, async () => {
-    try {
-      const feed = await getGameFeed(gamePk);
-      if (!feed) return resolveLastGoodSnapshot(gamePk);
+  try {
+    const shared = await getSharedGameFeed(gamePk);
+    const feed = shared.feed;
+    if (!feed) return resolveLastGoodSnapshot(gamePk);
 
-      const linescore = feed.liveData?.linescore ?? {};
-      const box = feed.liveData?.boxscore;
-      const allPlays: any[] = feed.liveData?.plays?.allPlays ?? [];
-      const currentPlay = feed.liveData?.plays?.currentPlay;
+    const linescore = feed.liveData?.linescore ?? {};
+    const box = feed.liveData?.boxscore;
+    const allPlays: any[] = feed.liveData?.plays?.allPlays ?? [];
+    const currentPlay = feed.liveData?.plays?.currentPlay;
 
-      // Show the in-progress at-bat once it has a pitch; otherwise the most
-      // recent completed at-bat that actually had pitches.
-      const withPitches = (p: any) => (p?.playEvents ?? []).some((e: any) => e?.isPitch);
-      const play = withPitches(currentPlay)
-        ? currentPlay
-        : [...allPlays].reverse().find(withPitches) ?? null;
+    const withPitches = (p: any) => (p?.playEvents ?? []).some((e: any) => e?.isPitch);
+    const play = withPitches(currentPlay)
+      ? currentPlay
+      : [...allPlays].reverse().find(withPitches) ?? null;
 
-      const teamMeta = (side: "away" | "home") => ({
-        teamId: num(feed.gameData?.teams?.[side]?.id),
-        abbr: String(feed.gameData?.teams?.[side]?.abbreviation ?? (side === "away" ? "AWY" : "HOM")),
-        runs: num(linescore.teams?.[side]?.runs),
-      });
+    const teamMeta = (side: "away" | "home") => ({
+      teamId: num(feed.gameData?.teams?.[side]?.id),
+      abbr: String(feed.gameData?.teams?.[side]?.abbreviation ?? (side === "away" ? "AWY" : "HOM")),
+      runs: num(linescore.teams?.[side]?.runs),
+    });
 
-      const snapshot: LiveAtBatSnapshot = {
-        gamePk,
-        status: String(feed.gameData?.status?.detailedState ?? "Unknown"),
-        inning: num(linescore.currentInning),
-        halfInning: linescore.inningHalf ?? null,
-        outs: num(linescore.outs),
-        count: mapCount(linescore, play),
-        runners: mapRunners(linescore),
-        away: teamMeta("away"),
-        home: teamMeta("home"),
-        winProb: await fetchWinProb(gamePk),
-        play: mapPlay(play, box),
-        updatedAt: new Date().toISOString(),
-      };
+    const snapshot: LiveAtBatSnapshot = {
+      gamePk,
+      status: shared.score.status,
+      inning: shared.score.inning,
+      halfInning: shared.score.halfInning,
+      outs: shared.score.outs,
+      count: mapCount(linescore, play),
+      runners: mapRunners(linescore),
+      away: teamMeta("away"),
+      home: teamMeta("home"),
+      winProb: await fetchWinProb(gamePk),
+      play: mapPlay(play, box),
+      updatedAt: shared.asOf,
+    };
 
-      rememberLastGood(gamePk, snapshot);
-      return snapshot;
-    } catch (error) {
-      const lastGood = await resolveLastGoodSnapshot(gamePk);
-      if (lastGood) {
-        console.warn(`[liveAtBat] serving last-good snapshot gamePk=${gamePk}:`, (error as Error).message);
-        return lastGood;
-      }
-
-      throw error;
+    rememberLastGood(gamePk, snapshot);
+    return snapshot;
+  } catch (error) {
+    const lastGood = await resolveLastGoodSnapshot(gamePk);
+    if (lastGood) {
+      console.warn(`[liveAtBat] serving last-good snapshot gamePk=${gamePk}:`, (error as Error).message);
+      return lastGood;
     }
-  });
+
+    throw error;
+  }
 }

@@ -86,13 +86,14 @@ describe("live at-bat API route", () => {
       ok: true,
       data: snapshot,
       meta: {
-        source: "mlb_statsapi_live_feed",
+        source: "live_game_hub",
         dataQuality: "official_mlb_live_feed",
         updatedAt: snapshot.updatedAt,
         warnings: [],
         cache: {
-          strategy: "ttl_cache_with_last_good_snapshot",
-          ttlMs: 60_000,
+          strategy: "live_game_hub_swr",
+          ttlMs: 4_500,
+          asOf: snapshot.updatedAt,
         },
         requestId: expect.any(String),
         timestamp: expect.any(String),

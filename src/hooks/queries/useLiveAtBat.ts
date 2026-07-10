@@ -7,7 +7,7 @@ import { queryKeys } from './queryKeys';
 export const LIVE_AT_BAT_POLL_LIVE_MS = 6_000;
 export const LIVE_AT_BAT_POLL_IDLE_MS = 8_000;
 export const LIVE_AT_BAT_POLL_FINAL_MS = 60_000;
-export const LIVE_AT_BAT_STALE_MS = 4_000;
+export const LIVE_AT_BAT_STALE_MS = 4_500;
 
 function isFinalStatus(status: string | undefined): boolean {
   return /final|completed|game over/i.test(status ?? '');

@@ -24,6 +24,7 @@ import { buildApiMeta } from "../lib/apiResponseMeta";
 import { getCachedValidatedHrBoard, getCachedDeepHrBoard } from "../services/hubs/hrBoardHub";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 import { getLiveAtBat } from "../services/mlb/liveAtBatService";
+import { LIVE_HUB_TTL_MS } from "../services/hubs/liveGameHub";
 import { buildHrBoardApiPayload } from "../services/mlb/hrBoardResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 
@@ -113,11 +114,15 @@ export function registerHrBoardRoutes(app: Express): void {
     }
 
     res.json(apiOk(req, snapshot, buildApiMeta({
-      source: "mlb_statsapi_live_feed",
+      source: "live_game_hub",
       dataQuality: "official_mlb_live_feed",
       updatedAt: snapshot.updatedAt,
       warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
-      cache: { strategy: "ttl_cache_with_last_good_snapshot", ttlMs: 60_000 },
+      cache: {
+        strategy: "live_game_hub_swr",
+        ttlMs: LIVE_HUB_TTL_MS,
+        asOf: snapshot.updatedAt,
+      },
     })));
   }));
 

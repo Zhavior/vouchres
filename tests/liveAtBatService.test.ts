@@ -95,7 +95,9 @@ describe("getLiveAtBat", () => {
   afterEach(async () => {
     vi.useRealTimers();
     const { resetLiveAtBatCachesForTests } = await import("../server/services/mlb/liveAtBatService");
+    const { resetLiveGameHubForTests } = await import("../server/services/hubs/liveGameHub");
     resetLiveAtBatCachesForTests();
+    resetLiveGameHubForTests();
     vi.clearAllMocks();
   });
 
@@ -114,7 +116,7 @@ describe("getLiveAtBat", () => {
     expect(first?.runners.second).toBeNull();
     expect(first?.runners.third?.name).toBe("Runner Three");
 
-    vi.advanceTimersByTime(6_000);
+    vi.advanceTimersByTime(5_000);
     mocks.getGameFeed.mockRejectedValueOnce(new Error("MLB feed timeout"));
 
     const fallback = await getLiveAtBat(1234);
@@ -133,7 +135,7 @@ describe("getLiveAtBat", () => {
     expect(redisSetJson).toHaveBeenCalled();
 
     resetLiveAtBatCachesForTests();
-    vi.advanceTimersByTime(6_000);
+    vi.advanceTimersByTime(5_000);
 
     const storedAt = Date.now() - 5_000;
     vi.mocked(redisGetJson).mockResolvedValueOnce({ snapshot: first, storedAt });

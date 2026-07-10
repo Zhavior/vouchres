@@ -3,6 +3,12 @@ import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
 import { MlbScheduleGame, parseMlbScheduleResponse } from "./mlbStatsApiSchemas";
 import { buildApiMeta, type ApiResponseMeta } from "../../lib/apiResponseMeta";
 import type { NormalizedGame } from "./mlbTypes";
+import { limitConcurrency } from "../../lib/cache";
+import {
+  getSharedGameFeed,
+  LIVE_HUB_TTL_MS,
+  overlayFeedScoreOnCard,
+} from "../hubs/liveGameHub";
 
 type NullableSidePct = { home: number | null; away: number | null };
 
@@ -133,27 +139,56 @@ export function buildLiveGamesResponse(scheduleData: unknown, date: string, now 
 
 export async function getLiveGames(date = todayISO()): Promise<LiveGamesResponse> {
   const scheduleGames = await getScheduleByDate(date);
-  const normalizedGames = scheduleGames.map(normalizeScheduleGame).filter((game) => game.id);
-  const warnings = normalizedGames.length > 0
-    ? ["Probability fields are unavailable until a backed model is connected; no synthetic projections returned."]
+  const cards = scheduleGames.map(normalizeScheduleGame).filter((game) => game.id);
+  const liveCards = cards.filter((game) => game.isLive && !game.isFinal);
+
+  const feedSnapshots = liveCards.length > 0
+    ? await limitConcurrency(
+        liveCards.map((card) => Number(card.id)),
+        6,
+        (gamePk) => getSharedGameFeed(gamePk),
+      )
+    : [];
+
+  const scoreByPk = new Map(feedSnapshots.map((snap) => [snap.gamePk, snap.score]));
+  const asOfTimes = feedSnapshots.map((snap) => snap.asOf);
+  const updatedAt = asOfTimes.length > 0
+    ? asOfTimes.sort().at(-1) ?? new Date().toISOString()
+    : new Date().toISOString();
+
+  const games = cards.map((card) => {
+    const score = scoreByPk.get(Number(card.id));
+    return score ? overlayFeedScoreOnCard(card, score) : card;
+  });
+
+  const warnings = games.length > 0
+    ? [
+        "Probability fields are unavailable until a backed model is connected; no synthetic projections returned.",
+        ...(liveCards.length > 0
+          ? ["Live scores for in-progress games are sourced from the shared live feed hub for consistency with at-bat view."]
+          : []),
+      ]
     : ["Official MLB schedule returned no games for this date; no mock games were substituted."];
-  const updatedAt = new Date().toISOString();
 
   return {
     success: true,
-    isRealApi: normalizedGames.length > 0,
-    dataQuality: normalizedGames.length > 0 ? "official_mlb_schedule" : "official_mlb_empty_schedule",
+    isRealApi: games.length > 0,
+    dataQuality: games.length > 0 ? "official_mlb_schedule" : "official_mlb_empty_schedule",
     source: "mlb_statsapi_schedule",
     date,
-    games: normalizedGames,
+    games,
     warnings,
     updatedAt,
     meta: buildApiMeta({
-      source: "mlb_statsapi_schedule",
-      dataQuality: normalizedGames.length > 0 ? "official_mlb_schedule" : "limited",
+      source: "live_game_hub",
+      dataQuality: games.length > 0 ? "official_mlb_schedule" : "limited",
       updatedAt,
       warnings,
-      cache: { strategy: "shared_schedule_cache", ttlMs: 5 * 60_000 },
+      cache: {
+        strategy: "live_game_hub_swr",
+        ttlMs: LIVE_HUB_TTL_MS,
+        asOf: updatedAt,
+      },
     }),
   };
 }

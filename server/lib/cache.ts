@@ -186,7 +186,7 @@ export async function limitConcurrency<T, I>(
 /** Recommended TTLs (ms) per the VouchEdge caching policy. */
 export const TTL = {
   schedule: 5 * 60_000,
-  liveFeed: 45_000,
+  liveFeed: 5_000,
   dailyReport: 10 * 60_000,
   aiExplanation: 24 * 60 * 60_000,
   trust: 10 * 60_000,

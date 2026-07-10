@@ -17,6 +17,7 @@ export interface ApiResponseMeta {
   cache?: {
     strategy: string;
     ttlMs?: number;
+    asOf?: string;
   };
 }
 
