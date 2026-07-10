@@ -22,7 +22,7 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown,
+  ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
 import {
   ALL_FEATURES, getSidebarFeatures, loadFeatureLayout,
@@ -35,6 +35,7 @@ import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } fr
 import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
+import { performAppLogout } from '../../lib/appLogout';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -253,17 +254,20 @@ interface FeedSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onOpenCmdK?: () => void;
+  onLogoutComplete?: () => void;
 }
 
 function FeedSidebar({
   activeSection,
   onSectionChange,
   onOpenCmdK,
+  onLogoutComplete,
 }: FeedSidebarProps) {
   const profile = useProfileStore(useShallow(selectSidebarProfile));
   const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
+  const [signingOut, setSigningOut] = useState(false);
   const previousSectionRef = useRef(activeSection);
 
   // Reload layout only after leaving Customize — avoids localStorage reads on every nav click.
@@ -294,6 +298,16 @@ function FeedSidebar({
     preloadSection(id);
     onSectionChange(id);
   }, [onSectionChange]);
+
+  const handleLogout = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await performAppLogout(onLogoutComplete);
+    } finally {
+      setSigningOut(false);
+    }
+  }, [onLogoutComplete, signingOut]);
 
   const sidebarFeatures = useMemo(() => {
     const items = getSidebarFeatures(layout, {
@@ -517,6 +531,23 @@ function FeedSidebar({
             </p>
           </div>
           <SidebarNotificationBadge />
+        </button>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={signingOut}
+          className={[
+            'w-full flex items-center justify-center xl:justify-start gap-2 px-3 py-2.5 transition-all',
+            Z8_SIDEBAR_SURFACE,
+            Z8_LABEL,
+            'tracking-[0.12em] text-white/45 hover:bg-rose-500/10 hover:text-rose-200 hover:shadow-[0_0_16px_rgba(244,63,94,0.12)] disabled:opacity-50',
+          ].join(' ')}
+          aria-label="Sign out"
+          id="sidebar-logout-footer"
+        >
+          <LogOut className="h-3.5 w-3.5 shrink-0" />
+          <span className="hidden xl:inline">{signingOut ? 'Leaving…' : 'Log out'}</span>
         </button>
       </div>
     </aside>

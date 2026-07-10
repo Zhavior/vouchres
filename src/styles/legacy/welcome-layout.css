@@ -79,6 +79,33 @@
   animation: ve-terminal-ticker-scroll 28s linear infinite;
 }
 
+.ve-terminal-ticker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+}
+
+.ve-landing-judge-slideshow {
+  position: relative;
+}
+
+.ve-landing-judge-track {
+  display: flex;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ve-landing-judge-slide {
+  flex: 0 0 100%;
+}
+
+.ve-landing-judge-tab:focus-visible {
+  outline: 2px solid rgba(0, 240, 255, 0.55);
+  outline-offset: 2px;
+}
+
 .ve-judges-placeholder {
   min-height: 280px;
 }
@@ -114,8 +141,66 @@
     animation: none;
   }
 
+  .ve-landing-judge-track {
+    transition: none;
+  }
+
   .ve-landing-judge-card {
     animation: none;
+  }
+}
+
+.ve-landing-feature-slideshow {
+  position: relative;
+}
+
+.ve-landing-feature-track {
+  display: flex;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ve-landing-feature-slide {
+  flex: 0 0 100%;
+}
+
+.ve-landing-games-shortcuts {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 240, 255, 0.25) transparent;
+}
+
+.ve-landing-games-shortcuts::-webkit-scrollbar {
+  height: 4px;
+}
+
+.ve-landing-games-shortcuts::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(0, 240, 255, 0.25);
+}
+
+.ve-landing-game-slide {
+  animation: ve-terminal-card-rise 360ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-landing-feature-track {
+    transition: none;
+  }
+
+  .ve-landing-game-slide {
+    animation: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .ve-mobile-header {
+    display: none !important;
+  }
+
+  .ve-terminal-header {
+    margin-bottom: 0;
+    min-height: 0;
+    border-bottom: none;
+    padding-bottom: 0;
   }
 }
 
@@ -139,34 +224,36 @@
     padding-bottom: 5.75rem;
   }
 
-  .ve-terminal-page .starfield {
+  .ve-terminal-page .starfield,
+  .ve-terminal-background .starfield {
     opacity: 0.22;
     animation: none;
   }
 
-  .ve-terminal-page .storm-layer {
+  .ve-terminal-page .storm-layer,
+  .ve-terminal-background .storm-layer {
     opacity: 0.84;
   }
 
   .ve-terminal-header {
-    align-items: stretch;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0;
+    border-bottom: none;
   }
 
   .ve-terminal-header-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
+    display: flex;
+    width: auto;
   }
 
   .ve-terminal-header-actions button {
-    min-height: 44px;
+    min-height: 36px;
   }
 
   .ve-terminal-hero {
-    gap: 1.35rem;
+    gap: 1rem;
   }
 
   .ve-terminal-hero-badge {
@@ -176,12 +263,12 @@
   }
 
   .ve-terminal-hero h1 {
-    font-size: clamp(2.35rem, 12vw, 3.35rem);
-    line-height: 0.98;
+    font-size: clamp(1.65rem, 8.5vw, 2.15rem);
+    line-height: 1.08;
   }
 
   .ve-terminal-hero p {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
   }
 
   .ve-terminal-trust-grid {
@@ -193,7 +280,7 @@
   }
 
   .ve-terminal-cta-row button {
-    min-height: 52px;
+    min-height: 48px;
     max-width: none;
   }
 
@@ -219,6 +306,13 @@
   .ve-judges-placeholder {
     min-height: 250px;
     padding: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .ve-terminal-header-actions {
+    display: flex;
+    width: auto;
   }
 }
 

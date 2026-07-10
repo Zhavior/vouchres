@@ -136,10 +136,9 @@ export default defineConfig(({ mode }) => {
     server: {
       hmr: !disableHmr,
       proxy: {
-        '/api/mlb/hr-board': {
-          target: 'https://vouchres.vercel.app',
+        '/api': {
+          target: 'http://localhost:3000',
           changeOrigin: true,
-          secure: true,
         },
       },
       watch: disableHmr

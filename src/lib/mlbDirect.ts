@@ -357,6 +357,58 @@ async function buildGameRows(games: RawGame[]) {
 
 // ---- Public exports -------------------------------------------------------------
 
+export type LiveGamesDirectPayload = {
+  success: boolean;
+  date: string;
+  games: Array<{
+    id: string;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    status: string;
+    venue: string | null;
+    gameDate: string | null;
+    isLive?: boolean;
+    isFinal?: boolean;
+  }>;
+  warnings: string[];
+  updatedAt: string;
+};
+
+/** Direct MLB Stats API fallback when /api/mlb/live is unreachable. */
+export async function liveGamesDirect(date = today()): Promise<LiveGamesDirectPayload> {
+  const schedule = await fetchSchedule(date);
+  const games = schedule.map((g) => {
+    const status = gameStatus(g);
+    return {
+      id: String(g.gamePk),
+      homeTeam: g.teams?.home?.team?.name ?? "Home Team",
+      awayTeam: g.teams?.away?.team?.name ?? "Away Team",
+      homeScore: Number.isFinite(Number(g.teams?.home?.score)) ? Number(g.teams?.home?.score) : null,
+      awayScore: Number.isFinite(Number(g.teams?.away?.score)) ? Number(g.teams?.away?.score) : null,
+      status,
+      venue: typeof g.venue?.name === "string" ? g.venue.name : null,
+      gameDate: g.gameDate ?? null,
+      isLive: isLive(status),
+      isFinal: isFinal(status),
+    };
+  });
+
+  return {
+    success: true,
+    date,
+    games,
+    warnings: games.length
+      ? [
+          "Fallback mode: schedule loaded directly from MLB Stats API.",
+          "Live score overlays and probability fields are unavailable in fallback mode.",
+        ]
+      : ["Official MLB schedule returned no games for this date."],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export async function hrBoardDirect(date = today()): Promise<HrBoardResponse> {
   const games = await fetchSchedule(date);
   const built = await buildGameRows(games);
