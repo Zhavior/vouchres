@@ -2,7 +2,7 @@ import React from 'react';
 import { BarChart3, Activity, Flame, Check, Plus } from 'lucide-react';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../../../utils/oddsHelper';
 import { getTeamColors } from '../utils/teamColors';
-import type { PlayerResearchModel } from '../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 
 export default function ComparePanel({ model }: { model: PlayerResearchModel }) {
   const {

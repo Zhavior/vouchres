@@ -2,7 +2,7 @@ import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { MLB_PLAYER_RECORDS } from '../../../data/playerData';
 import { Z8_PANEL_PREMIUM } from '../../../theme/z8Tokens';
-import type { PlayerResearchModel } from '../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 
 export default function ConsoleHeader({ model }: { model: PlayerResearchModel }) {
   const {

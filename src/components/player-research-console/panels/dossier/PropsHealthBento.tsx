@@ -1,7 +1,7 @@
 import React from 'react';
-import { Flame, AlertTriangle, Check, Plus, ChevronRight, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Check, ChevronRight, Flame, Info, Plus } from 'lucide-react';
 import { getMarketOdds, getSelectedBookieOddsValue, decimalToAmerican } from '../../../../utils/oddsHelper';
-import type { PlayerResearchModel } from '../../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function PropsHealthBento({ model }: { model: PlayerResearchModel }) {
   const {

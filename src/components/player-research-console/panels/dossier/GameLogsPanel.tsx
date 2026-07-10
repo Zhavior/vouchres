@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Info } from 'lucide-react';
-import type { PlayerResearchModel } from '../../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function GameLogsPanel({ model }: { model: PlayerResearchModel }) {
   const {

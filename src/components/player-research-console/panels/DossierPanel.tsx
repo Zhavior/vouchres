@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import type { PlayerResearchModel } from '../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 import DossierModeToggle from './dossier/DossierModeToggle';
 import SaberHeroPanel from './dossier/SaberHeroPanel';
 import MetricsBento from './dossier/MetricsBento';

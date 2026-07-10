@@ -1,7 +1,7 @@
 import React from 'react';
-import { Activity, Sparkles, RefreshCw, Zap, Target, Trophy, HelpCircle, Clock, ArrowRight } from 'lucide-react';
+import { Activity, ArrowRight, Check, Clock, HelpCircle, RefreshCw, Sparkles, Target, Trophy, Zap } from 'lucide-react';
 import { renderMarkdownText } from '../../utils/markdown';
-import type { PlayerResearchModel } from '../../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function SaberHeroPanel({ model }: { model: PlayerResearchModel }) {
   const {

@@ -2,8 +2,8 @@ import React from 'react';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell
 } from 'recharts';
-import { Activity, Flame, Target, Award, BarChart3 } from 'lucide-react';
-import type { PlayerResearchModel } from '../../../hooks/usePlayerResearchConsole';
+import { Activity, Award, BarChart3, Flame, Target, TrendingUp } from 'lucide-react';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function MetricsBento({ model }: { model: PlayerResearchModel }) {
   const {

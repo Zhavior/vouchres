@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { PlayerResearchModel } from '../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function DossierModeToggle({ model }: { model: PlayerResearchModel }) {
   const {

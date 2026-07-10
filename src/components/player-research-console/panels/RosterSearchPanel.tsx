@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, User, Activity, RefreshCw, Check } from 'lucide-react';
+import { Activity, BarChart3, Check, RefreshCw, Search, User } from 'lucide-react';
+import { MLB_PLAYER_RECORDS } from '../../../data/playerData';
 import { Z8_SECTION_HEADER, Z8_SURFACE } from '../../../theme/z8Tokens';
-import type { PlayerResearchModel } from '../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../hooks/usePlayerResearchConsole";
 
 export default function RosterSearchPanel({ model }: { model: PlayerResearchModel }) {
   const {

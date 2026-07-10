@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Activity } from 'lucide-react';
-import type { PlayerResearchModel } from '../../../hooks/usePlayerResearchConsole';
+import type { PlayerResearchModel } from "../../hooks/usePlayerResearchConsole";
 
 export default function ScoutingBento({ model }: { model: PlayerResearchModel }) {
   const {
