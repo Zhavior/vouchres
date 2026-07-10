@@ -26,7 +26,7 @@ export default function MlbStatHubPage() {
   return (
     <div className="ve-stat-hub-page flex h-full min-h-0 flex-col bg-transparent font-z8 text-white">
       <div className="ve-stat-hub-chrome sticky top-0 z-30 shrink-0 border-b border-white/8 px-3 pt-3 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1600px] rounded-xl border border-white/10 bg-[#0a0e14] p-3 sm:p-4">
+        <div className="mx-auto max-w-[1600px] ve-stat-surface rounded-xl border border-white/10 p-3 sm:p-4">
           <StatHubHeader
             activeStatType={hub.filters.statType}
             date={hub.filters.date}
@@ -232,7 +232,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-3 animate-pulse" aria-busy="true" aria-label="Loading">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-20 rounded-xl border border-white/8 bg-[#0d1219]" />
+        <div key={i} className="ve-stat-surface-raised h-20 rounded-xl border border-white/8" />
       ))}
     </div>
   );
