@@ -84,7 +84,7 @@ const FEATURES = [
     icon: FlaskConical,
     eyebrow: 'AI Edge Lab',
     title: 'Judge-powered research room',
-    copy: 'Five AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
+    copy: 'Four AI judges rank today\'s pool with parlay-ready legs, trust scores, and honest availability checks.',
     route: 'mlb_intelligence',
   },
   {
@@ -337,7 +337,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </h1>
 
               <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
-                Trust-first HR boards, five AI judges, and honest slate data — no fake lineups or inflated edges.
+                Trust-first HR boards, four AI judges, and honest slate data — no fake lineups or inflated edges.
               </p>
 
               <div className="ve-terminal-trust-strip px-0.5">
@@ -416,7 +416,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
             <LandingLiveGamesCenter />
 
-            {/* 5 Judges */}
+            {/* 4 Judges */}
             <DeferredLandingJudgesDeck />
 
             {/* Platform strengths slideshow */}
@@ -449,6 +449,27 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 <ChevronRight size={14} />
               </button>
             </section>
+
+            <footer className="border-t border-white/8 pt-6 text-center">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">
+                Archived previews
+              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="/legacy/edge-island"
+                  className="font-mono text-[10px] uppercase tracking-wider text-white/35 underline-offset-2 hover:text-vouch-cyan hover:underline"
+                >
+                  Legacy Edge Island
+                </a>
+                <span className="text-white/15" aria-hidden="true">·</span>
+                <a
+                  href="/legacy/studio"
+                  className="font-mono text-[10px] uppercase tracking-wider text-white/35 underline-offset-2 hover:text-vouch-cyan hover:underline"
+                >
+                  Legacy AI Studio
+                </a>
+              </div>
+            </footer>
           </div>
         </div>
       </main>

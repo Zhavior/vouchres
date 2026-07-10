@@ -7,6 +7,8 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   welcome: () => import('../pages/EdgeIslandPage'),
   island: () => import('../pages/EdgeIslandPage'),
   vouchedge_intro: () => import('../pages/VouchEdgeTerminalPage'),
+  edge_island_preview: () => import('../pages/EdgeIslandPage'),
+  legacy_studio: () => import('../components/AisLandingPage'),
   hr_board: () => import('../features/hr/pages/HomeRunIntelligencePage'),
   daily_hr_watch_new: () => import('../features/hr/pages/HomeRunIntelligencePage'),
   mlb_stats: () => import('../features/mlb-stats/pages/MlbStatHubPage'),

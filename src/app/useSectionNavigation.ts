@@ -6,6 +6,7 @@ import {
   hasRealAuthToken,
   replaceLandingUrl,
   resolveAuthenticatedSection,
+  resolvePublicSection,
   resolveDevSectionFromLocation,
   saveActiveSection,
   requiresLogin,
@@ -54,7 +55,7 @@ export function useSectionNavigation() {
     if (section !== 'profile') {
       setProfileViewUserId(null);
     }
-    const target = resolveAuthenticatedSection(section);
+    const target = resolveAuthenticatedSection(resolvePublicSection(section));
     if (target !== section) {
       replaceLandingUrl(target);
       commitSection(target);
