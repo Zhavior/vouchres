@@ -34,10 +34,12 @@ const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
   activeSection,
   onSectionChange,
   onOpenCmdK,
+  onLogoutComplete,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onOpenCmdK: () => void;
+  onLogoutComplete?: () => void;
 }) {
   return (
     <div className="ve-edge-rail ve-edge-rail-left">
@@ -45,6 +47,7 @@ const DesktopSidebarRail = React.memo(function DesktopSidebarRail({
         activeSection={activeSection}
         onSectionChange={onSectionChange}
         onOpenCmdK={onOpenCmdK}
+        onLogoutComplete={onLogoutComplete}
       />
     </div>
   );
@@ -144,11 +147,13 @@ const MobileDrawerHost = React.memo(function MobileDrawerHost({
   onClose,
   activeSection,
   onSectionChange,
+  onLogoutComplete,
 }: {
   open: boolean;
   onClose: () => void;
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onLogoutComplete?: () => void;
 }) {
   const profile = useAppProfile();
 
@@ -159,6 +164,7 @@ const MobileDrawerHost = React.memo(function MobileDrawerHost({
       profile={profile}
       activeSection={activeSection}
       onSectionChange={onSectionChange}
+      onLogoutComplete={onLogoutComplete}
     />
   );
 });
@@ -293,6 +299,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
             activeSection={activeSection}
             onSectionChange={handleSectionChange}
             onOpenCmdK={handleOpenCmdK}
+            onLogoutComplete={onAuthLogoutComplete}
           />
         )}
 
@@ -329,6 +336,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
           onClose={handleCloseMobileDrawer}
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
+          onLogoutComplete={onAuthLogoutComplete}
         />
       )}
 

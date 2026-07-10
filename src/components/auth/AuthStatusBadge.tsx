@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { LogOut, ShieldCheck } from 'lucide-react';
+import { clearVouchEdgeLocalAuth, performAppLogout } from '../../lib/appLogout';
 import { supabase } from '../../lib/supabaseClient';
 import { Z8_BTN_TERMINAL_GHOST, Z8_LABEL } from '../landing/LandingTokens';
 
@@ -13,36 +14,6 @@ interface AuthStatusBadgeProps {
 }
 
 const AUTH_SYNC_MS = 250;
-
-function resetToLandingScreen() {
-  localStorage.removeItem('vouchedge_after_auth_destination');
-  localStorage.removeItem('vouchedge_after_auth_mode');
-  localStorage.setItem('vouchedge_active_section', 'vouchedge_intro');
-  localStorage.setItem('activeSection', 'vouchedge_intro');
-  localStorage.setItem('selectedSection', 'vouchedge_intro');
-  sessionStorage.removeItem('vouchedge_active_section');
-}
-
-function clearVouchEdgeLocalAuth() {
-  localStorage.removeItem('vouchedge_auth_token');
-  localStorage.removeItem('mlb_ai_auth_token');
-  localStorage.removeItem('vouchedge_after_auth_destination');
-  localStorage.removeItem('vouchedge_after_auth_mode');
-
-  Object.keys(localStorage).forEach((key) => {
-    const lower = key.toLowerCase();
-    if (
-      lower.includes('demo') ||
-      lower.includes('fake') ||
-      lower.includes('mock') ||
-      lower.includes('guest') ||
-      lower.includes('vouchedge_auth') ||
-      lower.includes('mlb_ai_auth')
-    ) {
-      localStorage.removeItem(key);
-    }
-  });
-}
 
 export default function AuthStatusBadge({
   onLogoutComplete,
@@ -101,15 +72,11 @@ export default function AuthStatusBadge({
     setSigningOut(true);
 
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      await performAppLogout(onLogoutComplete);
     } finally {
-      clearVouchEdgeLocalAuth();
-      resetToLandingScreen();
       setEmail(null);
       setChecking(false);
       setSigningOut(false);
-      window.history.replaceState(null, '', '/');
-      onLogoutComplete?.();
     }
   }
 

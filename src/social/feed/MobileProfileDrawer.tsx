@@ -10,13 +10,13 @@
  * Nav items come from the same featureConfig registry the desktop sidebar
  * uses, so the two menus can never drift apart.
  */
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from '../../lib/motion';
 import {
   X, Settings, Sparkles, Trophy, LayoutDashboard, Home, Award, Tv, Radio,
   Sliders, Cpu, Activity, Flame, ScanLine, Search, ClipboardCheck, BarChart3,
   MessageSquare, ShoppingBag, User, Users, UserRoundSearch, Swords, LineChart,
-  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield,
+  Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
 import {
@@ -28,6 +28,7 @@ import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
 } from '../../theme/z8Tokens';
+import { performAppLogout } from '../../lib/appLogout';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
@@ -112,10 +113,19 @@ interface MobileProfileDrawerProps {
   profile: CreatorProofProfile;
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onLogoutComplete?: () => void;
 }
 
-function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionChange }: MobileProfileDrawerProps) {
+function MobileProfileDrawer({
+  open,
+  onClose,
+  profile,
+  activeSection,
+  onSectionChange,
+  onLogoutComplete,
+}: MobileProfileDrawerProps) {
   const meta = tierMeta(profile.subscriptionTier);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -146,6 +156,17 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
     onSectionChange(section);
     onClose();
   }, [onClose, onSectionChange]);
+
+  const handleLogout = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await performAppLogout(onLogoutComplete);
+      onClose();
+    } finally {
+      setSigningOut(false);
+    }
+  }, [onClose, onLogoutComplete, signingOut]);
 
   return (
     <AnimatePresence>
@@ -259,13 +280,22 @@ function MobileProfileDrawer({ open, onClose, profile, activeSection, onSectionC
             </nav>
 
             {/* Footer */}
-            <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+            <div className="px-2 py-2 pb-[max(env(safe-area-inset-bottom),8px)] shadow-[0_-8px_24px_rgba(0,0,0,0.35)] space-y-1">
               <button
                 type="button"
                 onClick={() => go('settings')}
                 className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL}`}
               >
                 <Settings className="h-4 w-4" /> Settings
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className={`flex w-full min-h-[44px] items-center gap-3 px-3 py-2.5 text-sm transition-all ${Z8_SIDEBAR_IDLE} ${Z8_LABEL} text-white/45 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50`}
+              >
+                <LogOut className="h-4 w-4" />
+                {signingOut ? 'Leaving…' : 'Log out'}
               </button>
             </div>
           </motion.aside>
