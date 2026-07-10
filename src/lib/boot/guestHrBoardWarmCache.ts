@@ -4,8 +4,10 @@ import { queryKeys } from '../../hooks/queries/queryKeys';
 import { todayISO } from '../../hooks/queries/hrBoardQuery';
 import type { HrBoardResponse } from '../../types/hrBoard';
 
+import { HR_BOARD_CANONICAL_FETCH_LIMIT } from '../hrBoardSlice';
+
 const SESSION_KEY = 'vouchedge_guest_hr_warm_v1';
-const PREVIEW_LIMIT = 75;
+const PREVIEW_LIMIT = HR_BOARD_CANONICAL_FETCH_LIMIT;
 
 let warmInFlight: Promise<void> | null = null;
 
@@ -28,9 +30,7 @@ export function markGuestHrBoardWarmComplete(): void {
 export function seedGuestHrBoardQueryCache(board: HrBoardResponse): void {
   const date = todayISO();
   const updatedAt = bootDataStore.getUpdatedAt('dailyHrBoard') ?? Date.now();
-  for (const limit of [PREVIEW_LIMIT, 75, 120]) {
-    queryClient.setQueryData(queryKeys.hrBoard(date, limit), board, { updatedAt });
-  }
+  queryClient.setQueryData(queryKeys.hrBoard(date), board, { updatedAt });
 }
 
 /** Session-only warm cache for anonymous HR board visitors. */

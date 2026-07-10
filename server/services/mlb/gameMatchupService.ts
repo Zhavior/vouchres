@@ -15,6 +15,7 @@ import { scoreRunEnvironment, RunEnvironment } from "../intelligence/runEnvironm
 import { buildHitterRow, HrBoardRow } from "../intelligence/hrEdgeEngine";
 import { clamp } from "../intelligence/scoring";
 import { isMlbFinalStatusText, isMlbLiveStatus } from "./gameStatus";
+import { getCachedValidatedHrBoard } from "../hubs/hrBoardHub";
 
 const LINEUP_SIZE = 9;
 
@@ -331,14 +332,35 @@ function log5(pA: number, pB: number): number {
   return (pA - pA * pB) / denom;
 }
 
-function projectedLineup(hitters: NormalizedPlayer[], hitterStatsMap: Map<number, HitterStats>): NormalizedPlayer[] {
-  return [...hitters]
+function projectedLineup(
+  hitters: NormalizedPlayer[],
+  hitterStatsMap: Map<number, HitterStats>,
+  poolIds?: Set<number>,
+): NormalizedPlayer[] {
+  const scoped = poolIds && poolIds.size > 0
+    ? hitters.filter((h) => poolIds.has(h.playerId))
+    : hitters;
+
+  return [...scoped]
     .sort((a, b) => {
       const sa = hitterStatsMap.get(a.playerId)?.season?.hrPerPA ?? 0;
       const sb = hitterStatsMap.get(b.playerId)?.season?.hrPerPA ?? 0;
       return sb - sa;
     })
     .slice(0, LINEUP_SIZE);
+}
+
+function collectHrPoolPlayerIds(
+  validated: Awaited<ReturnType<typeof getCachedValidatedHrBoard>>,
+): Set<number> {
+  const ids = new Set<number>();
+  for (const player of validated.pool.players) {
+    if (Number.isFinite(player.playerId)) ids.add(player.playerId);
+  }
+  for (const candidate of [...validated.candidates, ...validated.projectedCandidates]) {
+    if (Number.isFinite(candidate.playerId)) ids.add(candidate.playerId);
+  }
+  return ids;
 }
 
 function toWatch(row: HrBoardRow): HrWatch {
@@ -387,7 +409,8 @@ function buildMatchup(
   hittersByTeam: Map<number, NormalizedPlayer[]>,
   hitterStatsMap: Map<number, HitterStats>,
   pitcherStatsMap: Map<number, PitcherSeasonStats | null>,
-  runEnv?: RunEnvironment
+  runEnv?: RunEnvironment,
+  poolIds?: Set<number>,
 ): GameMatchup {
   const awayPStats = game.probablePitchers.away ? pitcherStatsMap.get(game.probablePitchers.away.pitcherId) ?? null : null;
   const homePStats = game.probablePitchers.home ? pitcherStatsMap.get(game.probablePitchers.home.pitcherId) ?? null : null;
@@ -421,13 +444,13 @@ function buildMatchup(
   const watchRows: { row: HrBoardRow; teamName: string; teamAbbr: string }[] = [];
   const proj: "Live" | "Projected" = isLive ? "Live" : "Projected";
   if (game.probablePitchers.away) {
-    projectedLineup(hittersByTeam.get(game.homeTeam.teamId) ?? [], hitterStatsMap).forEach((h, i) => {
+    projectedLineup(hittersByTeam.get(game.homeTeam.teamId) ?? [], hitterStatsMap, poolIds).forEach((h, i) => {
       const hStats = hitterStatsMap.get(h.playerId);
       watchRows.push({ row: buildHitterRow(h, game.probablePitchers.away!, game, i + 1, proj, hStats, awayPStats), teamName: game.homeTeam.name, teamAbbr: game.homeTeam.abbreviation });
     });
   }
   if (game.probablePitchers.home) {
-    projectedLineup(hittersByTeam.get(game.awayTeam.teamId) ?? [], hitterStatsMap).forEach((h, i) => {
+    projectedLineup(hittersByTeam.get(game.awayTeam.teamId) ?? [], hitterStatsMap, poolIds).forEach((h, i) => {
       const hStats = hitterStatsMap.get(h.playerId);
       watchRows.push({ row: buildHitterRow(h, game.probablePitchers.home!, game, i + 1, proj, hStats, homePStats), teamName: game.awayTeam.name, teamAbbr: game.awayTeam.abbreviation });
     });
@@ -474,24 +497,33 @@ function buildMatchup(
 }
 
 export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]> {
-  return reportCache.getOrSet(`matchups_v2:${date}`, async () => {
+  return reportCache.getOrSet(`matchups_v3_hr_pool:${date}`, async () => {
     const games = await getScheduleByDate(date);
     const todayTeamIds = [...new Set(games.flatMap((g) => [g.awayTeam.teamId, g.homeTeam.teamId]))];
     console.log(`[matchupService] fetching hitters for ${todayTeamIds.length} teams in today's slate`);
+
+    const validated = await getCachedValidatedHrBoard(date);
+    const poolIds = collectHrPoolPlayerIds(validated);
+
     const hittersByTeam = await getActiveHittersByTeam(todayTeamIds);
 
-    // Collect all pitcher and hitter IDs
     const pitcherIds = new Set<number>();
     const hitterIds = new Set<number>();
     for (const g of games) {
       if (g.probablePitchers.away?.pitcherId) pitcherIds.add(g.probablePitchers.away.pitcherId);
       if (g.probablePitchers.home?.pitcherId) pitcherIds.add(g.probablePitchers.home.pitcherId);
     }
-    for (const [, players] of hittersByTeam) {
-      for (const p of players) hitterIds.add(p.playerId);
+
+    if (poolIds.size > 0) {
+      for (const id of poolIds) hitterIds.add(id);
+      console.log(`[matchupService] using validated HR pool for stats (${hitterIds.size} hitters)`);
+    } else {
+      for (const [, players] of hittersByTeam) {
+        for (const p of players) hitterIds.add(p.playerId);
+      }
+      console.warn("[matchupService] HR pool empty — falling back to full roster stats fetch");
     }
 
-    // Fetch stats in parallel (concurrency-limited for hitters)
     const BATCH = 20;
     const hitterIdList = [...hitterIds];
     const hitterStatsList: HitterStats[] = [];
@@ -511,7 +543,7 @@ export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]>
     const runEnvs = scoreRunEnvironment(games, pitcherStatsMap);
     const runByPk = new Map(runEnvs.map((r) => [r.gamePk, r]));
 
-    return games.map((g) => buildMatchup(g, hittersByTeam, hitterStatsMap, pitcherStatsMap, runByPk.get(g.gamePk)));
+    return games.map((g) => buildMatchup(g, hittersByTeam, hitterStatsMap, pitcherStatsMap, runByPk.get(g.gamePk), poolIds));
   }, 4 * 60_000) as Promise<GameMatchup[]>;
 }
 

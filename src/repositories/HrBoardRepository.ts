@@ -1,8 +1,8 @@
 import { vouchedgeApi } from "../api/vouchedgeApi";
 
 export const HrBoardRepository = {
-  getToday(previewLimit?: number) {
-    return vouchedgeApi.hrBoardToday(previewLimit);
+  getToday(_previewLimit?: number) {
+    return vouchedgeApi.hrBoardToday();
   },
 
   getByDate(date: string, previewLimit?: number) {

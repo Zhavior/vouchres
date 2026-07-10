@@ -181,10 +181,12 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
     }
 
     if (liveGamesQuery.isError && games.length === 0) {
-      console.warn('Live API fetch warning; using local preview matrix as fallback', liveGamesQuery.error);
-      const fallbackGames = buildFallbackGames();
-      setGames(fallbackGames);
-      setSelectedGameId(fallbackGames[0]?.id ?? null);
+      console.warn('Live API fetch failed — no fallback games in production', liveGamesQuery.error);
+      if (import.meta.env.DEV) {
+        const fallbackGames = buildFallbackGames();
+        setGames(fallbackGames);
+        setSelectedGameId(fallbackGames[0]?.id ?? null);
+      }
     }
   }, [liveGamesQuery.data, liveGamesQuery.isError, liveGamesQuery.error, games.length]);
 

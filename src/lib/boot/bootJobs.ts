@@ -63,7 +63,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     required: true,
     weight: 18,
     timeoutMs: 5500,
-    run: (signal) => runAndCache("dailyHrBoard", "/api/mlb/hr-board/today?previewLimit=75", signal),
+    run: (signal) => runAndCache("dailyHrBoard", "/api/mlb/hr-board/today?previewLimit=350", signal),
   },
   {
     id: "savedParlays",
@@ -105,6 +105,6 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
     required: false,
     weight: 10,
     timeoutMs: 6500,
-    run: (signal) => runAndCache("liveGamesSummary", "/api/mlb/hr-board/today?previewLimit=75", signal),
+    run: (signal) => runAndCache("liveGamesSummary", "/api/mlb/hr-board/today?previewLimit=350", signal),
   },
 ];

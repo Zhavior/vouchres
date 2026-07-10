@@ -72,8 +72,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
       window.location.href = result.url;
     } else {
       const errMsg = (result as { ok: false; error: string }).error;
-      setBillingError(`Stripe not active yet: ${errMsg}. Activating locally for preview.`);
-      onUpdateProfile({ subscriptionTier: tier, verified: true });
+      setBillingError(`Unable to start checkout: ${errMsg}. Please try again or contact support.`);
     }
   };
 
