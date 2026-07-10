@@ -1,21 +1,8 @@
 export const DEV_BYPASS_AUTH =
   import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
 
-export const PUBLIC_SECTIONS = new Set([
-  'welcome',
-  'vouchedge_intro',
-  'feed',
-  'home',
-  'daily_players',
-  'live_games',
-  'hr_board',
-  'game_research',
-  'player_research',
-  'top_cappers',
-  'subscribers_club',
-  'subscriber_club',
-  'mlb_stats',
-]);
+/** Only the public marketing / login terminal is reachable while signed out. */
+export const PUBLIC_SECTIONS = new Set(['vouchedge_intro']);
 
 export const SIGNED_IN_HOME = 'today';
 
@@ -30,8 +17,6 @@ export const SECTIONS_USING_LIVE_GAMES = new Set([
   'player_research',
 ]);
 
-const PROTECTED_SECTIONS = new Set(['billing', 'admin']);
-
 export function getSavedActiveSection(): string | null {
   try {
     return localStorage.getItem('vouchedge_active_section');
@@ -40,9 +25,43 @@ export function getSavedActiveSection(): string | null {
   }
 }
 
+export function saveAfterAuthDestination(section: string) {
+  try {
+    localStorage.setItem('vouchedge_after_auth_destination', section);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function consumeAfterAuthDestination(): string | null {
+  try {
+    const dest = localStorage.getItem('vouchedge_after_auth_destination');
+    localStorage.removeItem('vouchedge_after_auth_destination');
+    return dest;
+  } catch {
+    return null;
+  }
+}
+
+export function redirectToPublicIntro() {
+  if (typeof window === 'undefined') return;
+  window.history.replaceState(null, '', '/vouchedge');
+}
+
+/** Signed-out users are sent to the intro terminal; intended route is saved for post-login. */
+export function gateSectionForAuth(section: string): string {
+  if (hasRealAuthToken()) return section;
+  if (PUBLIC_SECTIONS.has(section)) return section;
+  saveAfterAuthDestination(section);
+  redirectToPublicIntro();
+  return 'vouchedge_intro';
+}
+
 /** Signed-in users must never land on the public intro terminal. */
 export function resolveAuthenticatedSection(section: string): string {
-  if (!hasRealAuthToken()) return section;
+  if (!hasRealAuthToken()) {
+    return gateSectionForAuth(section);
+  }
   if (section !== 'vouchedge_intro') return section;
   const saved = getSavedActiveSection();
   if (saved && saved !== 'vouchedge_intro') return saved;
@@ -108,9 +127,8 @@ export function saveActiveSection(section: string) {
   }
 }
 
-function requiresLogin(section: string) {
-  if (PUBLIC_SECTIONS.has(section)) return false;
-  return PROTECTED_SECTIONS.has(section);
+export function requiresLogin(section: string) {
+  return !PUBLIC_SECTIONS.has(section);
 }
 
 export function resolveDevSectionFromLocation() {
@@ -142,14 +160,14 @@ export function resolveDevSectionFromLocation() {
   }
 
   if (target === 'today' || target === '/today') {
-    return 'today';
+    return gateSectionForAuth('today');
   }
 
   if (
     target === 'welcome' || target === '/welcome' ||
     target === 'island' || target === '/island'
   ) {
-    return 'welcome';
+    return gateSectionForAuth('welcome');
   }
 
   if (
@@ -157,57 +175,52 @@ export function resolveDevSectionFromLocation() {
     target === 'hr-board' || target === '/hr-board' ||
     target === 'daily-hr-board' || target === '/daily-hr-board'
   ) {
-    return 'hr_board';
+    return gateSectionForAuth('hr_board');
   }
 
   if (target === 'daily-players' || target === '/daily-players') {
-    return 'daily_players';
+    return gateSectionForAuth('daily_players');
   }
 
   if (target === 'mlb-stat-hub' || target === '/mlb-stat-hub' || target === 'mlb-stats' || target === '/mlb-stats') {
-    return 'mlb_stats';
+    return gateSectionForAuth('mlb_stats');
   }
 
   if (target === 'intel' || target === '/intel' || target === 'mlb-intelligence' || target === '/mlb-intelligence') {
-    return 'intel';
+    return gateSectionForAuth('intel');
   }
 
   if (target === 'live-parlays' || target === '/live-parlays') {
-    return 'live_parlays';
+    return gateSectionForAuth('live_parlays');
   }
 
   if (target === 'notifications' || target === '/notifications' || target === 'alerts' || target === '/alerts') {
-    return 'notifications';
+    return gateSectionForAuth('notifications');
   }
 
   if (target === 'live-game-lab' || target === '/live-game-lab') {
-    return 'live_game_lab';
+    return gateSectionForAuth('live_game_lab');
   }
 
   if (target === 'player-edge-lab' || target === '/player-edge-lab') {
-    return 'player_edge_lab';
+    return gateSectionForAuth('player_edge_lab');
   }
 
   if (target === 'team-matchup-lab' || target === '/team-matchup-lab') {
-    return 'team_matchup_lab';
+    return gateSectionForAuth('team_matchup_lab');
   }
 
   if (target === 'pro-graphs-lab' || target === '/pro-graphs-lab') {
-    return 'pro_graphs_lab';
+    return gateSectionForAuth('pro_graphs_lab');
   }
 
   if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {
-    return 'live_games';
+    return gateSectionForAuth('live_games');
   }
 
   return null;
 }
 
 export function isPublicFrontPage(activeSection: string, isLoggedIn: boolean) {
-  return (
-    (activeSection === 'welcome' && !isLoggedIn)
-    || (activeSection === 'vouchedge_intro' && !isLoggedIn)
-  );
+  return activeSection === 'vouchedge_intro' && !isLoggedIn;
 }
-
-export { requiresLogin };
