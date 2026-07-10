@@ -78,20 +78,14 @@ const FeedRightRailColumn = React.memo(function FeedRightRailColumn({
 });
 
 const DesktopSlimHeader = React.memo(function DesktopSlimHeader({
-  onAuthLoginSuccess,
   onAuthLogoutComplete,
 }: {
-  onAuthLoginSuccess?: () => void;
   onAuthLogoutComplete?: () => void;
 }) {
   return (
     <header className="sticky top-0 z-30 hidden shrink-0 select-none items-center justify-end gap-2 border-b border-white/5 bg-black/20 px-4 py-2 backdrop-blur-xl md:flex font-z8 supports-[backdrop-filter]:bg-black/40">
       <NotificationBellButton />
-      <AuthStatusBadge
-        inline
-        onLoginSuccess={onAuthLoginSuccess}
-        onLogoutComplete={onAuthLogoutComplete}
-      />
+      <AuthStatusBadge inline onLogoutComplete={onAuthLogoutComplete} />
     </header>
   );
 });
@@ -139,11 +133,7 @@ const MobileCompactHeader = React.memo(function MobileCompactHeader({
           </button>
         )}
 
-        <AuthStatusBadge
-          inline
-          onLoginSuccess={onAuthLoginSuccess}
-          onLogoutComplete={onAuthLogoutComplete}
-        />
+        <AuthStatusBadge inline onLogoutComplete={onAuthLogoutComplete} />
       </div>
     </header>
   );
@@ -308,10 +298,7 @@ const HomeFeedLayoutBody = React.memo(function HomeFeedLayoutBody({
 
         <main className={`flex flex-1 min-h-0 min-w-0 flex-col bg-transparent font-z8 ${isPublicFrontPage ? 'pb-0 border-none' : 'max-md:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0'}`} id="center-main-content-column">
           {!isPublicFrontPage && (
-            <DesktopSlimHeader
-              onAuthLoginSuccess={onAuthLoginSuccess}
-              onAuthLogoutComplete={onAuthLogoutComplete}
-            />
+            <DesktopSlimHeader onAuthLogoutComplete={onAuthLogoutComplete} />
           )}
 
           {!isPublicFrontPage && (

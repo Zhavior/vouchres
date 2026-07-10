@@ -12,7 +12,6 @@ import HomeFeedLayout from '../social/feed/HomeFeedLayout';
 import { preloadMainRouter, warmLikelyRoutes } from '../lib/routePreload';
 import type { CreatorProofProfile, Parlay } from '../types';
 
-const AuthStatusBadge = lazy(() => import('../components/auth/AuthStatusBadge'));
 const DeployUpdateBanner = lazy(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
@@ -96,17 +95,6 @@ export function AppShell({
               {loggingOut && <GoodbyeScreen />}
               <AppErrorBoundary resetKey={activeSection} onBackHome={() => navigateSection('today')}>
                 <NotificationProvider savedSlips={savedSlips} onNavigate={navigateSection}>
-                  <div className="hidden md:block">
-                    {!isPublicFrontPage && (
-                      <Suspense fallback={null}>
-                        <AuthStatusBadge
-                          hideGuest={activeSection === 'welcome' || activeSection === 'vouchedge_intro'}
-                          onLoginSuccess={handleLoginSuccess}
-                          onLogoutComplete={handleLogoutComplete}
-                        />
-                      </Suspense>
-                    )}
-                  </div>
                   {isPublicFrontPage ? (
                     <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
                       <div id="center-main-content-column">
