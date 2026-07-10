@@ -1,49 +1,46 @@
+import { lazy, Suspense } from 'react';
 import { useSectionNavigation } from './app/useSectionNavigation';
-import { useAppBootstrap } from './app/useAppBootstrap';
-import { useAppDomain } from './app/useAppDomain';
-import { AppShell } from './app/AppShell';
+
+const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
+const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
+
+function RouteFallback() {
+  return <div className="ve-route-suspense-fallback" aria-hidden="true" />;
+}
+
+function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
+  return (
+    <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
+      <div className="ve-motion-bg" aria-hidden="true">
+        <div className="ve-motion-grid" />
+        <div className="ve-motion-noise" />
+        <div className="ve-motion-spotlight" />
+      </div>
+      <div className="ve-motion-content">
+        <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
+          <div id="center-main-content-column">
+            <div id="inner-view-slot">
+              <Suspense fallback={<RouteFallback />}>
+                <VouchEdgeTerminalPage onAuthed={onAuthed} />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const navigation = useSectionNavigation();
-  const bootstrap = useAppBootstrap({
-    activeSection: navigation.activeSection,
-    commitSection: navigation.commitSection,
-    isLoggedIn: navigation.isLoggedIn,
-  });
-  const domain = useAppDomain({
-    navigateSection: navigation.navigateSection,
-    handleLoginSuccess: navigation.handleLoginSuccess,
-    handleLogoutComplete: navigation.handleLogoutComplete,
-    handleClearProfileViewUser: navigation.handleClearProfileViewUser,
-    liveGames: bootstrap.liveGames,
-    savedSlips: bootstrap.savedSlips,
-    savedVouches: bootstrap.savedVouches,
-    posts: bootstrap.posts,
-    profile: bootstrap.profile,
-    syncSlips: bootstrap.syncSlips,
-    syncProfile: bootstrap.syncProfile,
-  });
+
+  if (navigation.isPublicFrontPage && navigation.activeSection === 'vouchedge_intro') {
+    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
+  }
 
   return (
-    <AppShell
-      activeSection={navigation.activeSection}
-      loggingOut={navigation.loggingOut}
-      isPendingRoute={navigation.isPendingRoute}
-      isLoggedIn={navigation.isLoggedIn}
-      isPublicFrontPage={navigation.isPublicFrontPage}
-      showGlobalAppChrome={navigation.showGlobalAppChrome}
-      edgeIslandOpen={navigation.edgeIslandOpen}
-      profileViewUserId={navigation.profileViewUserId}
-      canSeeThemeStore={bootstrap.canSeeThemeStore}
-      savedSlips={bootstrap.savedSlips}
-      profile={bootstrap.profile}
-      appShellState={domain.appShellState}
-      navigateSection={navigation.navigateSection}
-      navigateToUserProfile={navigation.navigateToUserProfile}
-      setEdgeIslandOpen={navigation.setEdgeIslandOpen}
-      handleLoginSuccess={domain.handleLoginSuccess}
-      handleLogoutComplete={domain.handleLogoutComplete}
-      handleUpdateProfile={domain.handleUpdateProfile}
-    />
+    <Suspense fallback={<RouteFallback />}>
+      <AuthenticatedApp navigation={navigation} />
+    </Suspense>
   );
 }

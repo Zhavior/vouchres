@@ -1,7 +1,4 @@
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react';
-import { queryClient } from '../lib/queryClient';
-import { queryKeys } from '../hooks/queries/queryKeys';
-import { preloadSection } from '../lib/routePreload';
 import {
   DEV_BYPASS_AUTH,
   PUBLIC_SECTIONS,
@@ -44,7 +41,7 @@ export function useSectionNavigation() {
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
 
   const commitSection = useCallback((target: string) => {
-    preloadSection(target);
+    void import('../lib/routePreload').then(({ preloadSection }) => preloadSection(target));
     startTransition(() => {
       saveActiveSection(target);
       setActiveSection(target);
@@ -97,7 +94,12 @@ export function useSectionNavigation() {
     } catch {
       // ignore storage failures
     }
-    void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
+    void Promise.all([
+      import('../lib/queryClient'),
+      import('../hooks/queries/queryKeys'),
+    ]).then(([{ queryClient }, { queryKeys }]) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feed() });
+    });
     navigateSection('welcome');
   }, [navigateSection]);
 

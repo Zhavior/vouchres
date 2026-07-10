@@ -23,7 +23,7 @@
  *   LIGHTHOUSE_URL=https://staging.example npm run lighthouse-ci
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import net from "node:net";
 
 const DEFAULT_URL = "http://127.0.0.1:4173";
@@ -104,6 +104,7 @@ function lighthouseAvailable() {
 
 async function runLighthouse(url) {
   const outPath = ".lighthouseci/perf-report.json";
+  mkdirSync(".lighthouseci", { recursive: true });
   const args = [
     "lighthouse",
     url,
