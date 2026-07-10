@@ -176,6 +176,7 @@ Why is this a top edge today?
         <button
           onClick={() => {
             trackPlayer(playerName);
+            ProductEvents.firstPlayerTracked();
 
             notify({
               kind: "success",

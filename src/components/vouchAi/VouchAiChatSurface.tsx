@@ -359,6 +359,7 @@ export default function VouchAiChatSurface({
             return;
           }
 
+          ProductEvents.firstVouchQuestion();
           handleSendMessage(e);
         }}
         className={`flex gap-2 ${isIsland ? "mt-3" : "mt-0 items-center"}`}
