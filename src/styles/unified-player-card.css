@@ -6,6 +6,26 @@
   filter: saturate(0.85);
 }
 
+.ve-unified-player-card {
+  background-color: #0a0e14;
+}
+
+.ve-unified-player-card__header-bar {
+  background-color: #111820;
+}
+
+.ve-unified-player-card__panel {
+  background-color: #0d1219;
+}
+
+.ve-player-headshot-bg {
+  background-color: #151b24;
+}
+
+.ve-unified-player-card__header-fade {
+  background: linear-gradient(to top, #0a0e14, rgba(10, 14, 20, 0.4), transparent);
+}
+
 /* HR Intelligence tier shells */
 .ve-tier-elite {
   border-color: rgba(251, 191, 36, 0.45);
