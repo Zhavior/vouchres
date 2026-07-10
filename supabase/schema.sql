@@ -309,46 +309,34 @@ alter table public.post_likes      enable row level security;
 alter table public.post_comments   enable row level security;
 alter table public.follows         enable row level security;
 
--- profiles: anyone can read public fields, only owner can write
+-- profiles: anyone can read public fields. Writes are SERVICE-ROLE ONLY —
+-- there is deliberately NO owner-update policy, because an unrestricted
+-- owner UPDATE would let a user self-grant tier='seller_pro', is_staff=true,
+-- or inflate trust_score from the browser. All legit profile writes go
+-- through the backend (service role, bypasses RLS). See migration
+-- 20260710000100_rls_lockdown_profiles_picks.sql.
 create policy "profiles_read_public"
   on public.profiles for select
   using (true);
-
-create policy "profiles_update_self"
-  on public.profiles for update
-  using (auth.uid() = id);
 
 -- cappers: world-readable, only staff can write (server-side service role bypasses RLS)
 create policy "cappers_read_all"
   on public.cappers for select
   using (true);
 
--- picks: world-readable (social feed needs this), only author can insert/update
+-- picks: world-readable (social feed needs this). Writes are SERVICE-ROLE
+-- ONLY — no owner insert/update policy, because either would let a user
+-- forge a status='won' record. Creation (POST /api/picks) and grading (cron)
+-- run server-side via service role. See the RLS-lockdown migration.
 create policy "picks_read_all"
   on public.picks for select
   using (true);
 
-create policy "picks_insert_self"
-  on public.picks for insert
-  with check (auth.uid() = user_id);
-
-create policy "picks_update_self"
-  on public.picks for update
-  using (auth.uid() = user_id);
-
--- pick_legs: world-readable, writable via pick ownership (RLS cascade)
+-- pick_legs: world-readable. Writes are SERVICE-ROLE ONLY (leg grades must
+-- not be forgeable from the browser); only a read policy is defined here.
 create policy "pick_legs_read_all"
   on public.pick_legs for select
   using (true);
-
-create policy "pick_legs_write_self"
-  on public.pick_legs for all
-  using (
-    exists (
-      select 1 from public.picks p
-      where p.id = pick_id and p.user_id = auth.uid()
-    )
-  );
 
 -- posts: world-readable, only author writes
 create policy "posts_read_all"

@@ -49,6 +49,15 @@ const auditedTables = [
 for (const table of ["profiles", "picks", "pick_legs", "subscriptions", "posts", "post_likes", "post_comments"]) {
   assert(rlsBase.includes(`alter table public.${table}`) && rlsBase.includes("enable row level security"), `${table} RLS must be enabled in base schema`);
 }
+
+// SECURITY REGRESSION GUARD — these owner-write policies were removed because
+// they let a browser client self-escalate tier/is_staff/trust_score or forge a
+// won pick. profiles/picks/pick_legs are service-role-write-only. If anyone
+// re-adds one of these to the base schema, this test fails on purpose.
+// (See migration 20260710000100_rls_lockdown_profiles_picks.sql.)
+for (const forbidden of ["profiles_update_self", "picks_update_self", "picks_insert_self", "pick_legs_write_self"]) {
+  assert(!rlsBase.includes(forbidden), `RLS lockdown regressed: base schema must NOT define owner-write policy "${forbidden}" (writes are service-role only)`);
+}
 for (const table of ["notifications", "notification_preferences", "push_subscriptions"]) {
   assert(rlsNotifications.includes(`alter table public.${table} enable row level security`), `${table} RLS must be enabled`);
 }
