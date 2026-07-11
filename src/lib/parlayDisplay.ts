@@ -16,6 +16,16 @@ export type PublicParlayLeg = {
   status: PublicSlipStatus;
   headshotUrl: string | null;
   resultLabel: string;
+  /** Grading identity — preserved for honest live tracking and repair badges. */
+  selection?: string;
+  game?: string;
+  gamePk?: string;
+  gameId?: string | number | null;
+  playerId?: string | number | null;
+  marketCode?: string | null;
+  statTarget?: string | number | null;
+  comparator?: string | null;
+  eventKey?: string | null;
 };
 
 export type PublicParlaySlip = {
@@ -142,6 +152,7 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
       (String(leg?.selection ?? "").toLowerCase().includes("hr") ? "Anytime HR" : "Player prop");
 
     const legStatus = normalizeSlipStatus(leg?.status);
+    const selection = getPublicLegSelection(leg?.selection) || `${playerName} ${marketLabel}`.trim();
 
     return {
       publicId: compactPublicTicketId(leg?.id ?? `${raw?.id ?? "leg"}-${index}`),
@@ -152,6 +163,15 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
       status: legStatus,
       headshotUrl: leg?.headshot || leg?.headshotUrl || getMlbHeadshotUrl(leg?.player_id || leg?.playerId),
       resultLabel: getLegResultLabel(legStatus),
+      selection,
+      game: cleanCustomerText(leg?.game) || undefined,
+      gamePk: leg?.gamePk != null ? String(leg.gamePk) : leg?.game_pk != null ? String(leg.game_pk) : undefined,
+      gameId: leg?.gameId ?? leg?.game_id ?? leg?.gamePk ?? leg?.game_pk ?? null,
+      playerId: leg?.playerId ?? leg?.player_id ?? leg?.mlbPlayerId ?? null,
+      marketCode: leg?.marketCode ?? leg?.market_code ?? null,
+      statTarget: leg?.statTarget ?? leg?.stat_target ?? leg?.threshold ?? null,
+      comparator: leg?.comparator ?? ">=",
+      eventKey: leg?.eventKey ?? leg?.event_key ?? null,
     };
   });
 

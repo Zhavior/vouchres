@@ -15,6 +15,9 @@ import type { PublicParlaySlip } from '../../../lib/parlayDisplay';
 import { classifyParlayHistoryTab, trustLockCountdownLabel } from '../../../lib/trustLockSchedule';
 import type { TrustAudience } from '../../../lib/trustLockSchedule';
 import { assessClientParlayIdentity } from '../../../lib/parlayIdentity';
+import { repairAllSavedParlays, repairDraftLikeLegRecords } from '../../../lib/parlays/repairSavedParlay';
+import { useAppCommandStore } from '../../../stores/appCommandStore';
+import { useSlipsStore } from '../../../stores/slipsStore';
 import { deriveSlipProgress } from '../../../lib/parlayLegProgress';
 import {
   LEG_STATUS_META,
@@ -40,6 +43,9 @@ function EmptyLiveParlays() {
 
 export default function ParlayHubHistoryPanel() {
   const savedSlips = useParlayCommandStore(selectSavedSlips);
+  const liveGames = useAppCommandStore((s) => s.liveGames);
+  const syncSlips = useSlipsStore((s) => s.syncSlips);
+  const hydrateSavedSlips = useParlayCommandStore((s) => s.hydrateSavedSlips);
   const [treeSlip, setTreeSlip] = useState<PublicParlaySlip | null>(null);
   const [historyTab, setHistoryTab] = useState<TrustAudience>('private');
 
@@ -70,7 +76,22 @@ export default function ParlayHubHistoryPanel() {
     [savedSlips, historyTab],
   );
 
+  const pendingRepairCount = useMemo(() => savedSlips.filter((slip) => {
+    const legs = Array.isArray(slip.legs) ? slip.legs.map((leg) => leg as Record<string, unknown>) : [];
+    const { legs: repaired } = repairDraftLikeLegRecords(legs, liveGames);
+    return !assessClientParlayIdentity(repaired).complete;
+  }).length, [savedSlips, liveGames]);
+
   if (savedSlips.length === 0) return <EmptyLiveParlays />;
+
+  function handleRepairAllSaved() {
+    const raw = useSlipsStore.getState().savedSlips;
+    const { parlays, changed } = repairAllSavedParlays(raw, liveGames);
+    if (changed) {
+      syncSlips(parlays);
+      hydrateSavedSlips(parlays);
+    }
+  }
 
   function SlipCard({ slip }: { slip: PublicParlaySlip }) {
     const status = String(slip.status ?? 'pending').toLowerCase() as SlipGradeStatus;
@@ -80,8 +101,9 @@ export default function ParlayHubHistoryPanel() {
     const pickId = String(slip.sourceId ?? '').trim();
     const showTrustPanel = Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
     const legRecords = legs.map((leg) => leg as Record<string, unknown>);
-    const identity = assessClientParlayIdentity(legRecords);
-    const slipProgress = deriveSlipProgress(legRecords);
+    const { legs: repairedLegs } = repairDraftLikeLegRecords(legRecords, liveGames);
+    const identity = assessClientParlayIdentity(repairedLegs);
+    const slipProgress = deriveSlipProgress(repairedLegs);
 
     return (
       <article
@@ -232,6 +254,21 @@ export default function ParlayHubHistoryPanel() {
         <p className="text-center text-xs text-white/45 py-6">
           No {historyTab} parlays yet. Use <strong className="text-white/70">Lock to Ledger</strong> on Build to start your trust record.
         </p>
+      ) : null}
+
+      {pendingRepairCount > 0 ? (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+          <p className="text-xs text-amber-100/90 flex-1">
+            {pendingRepairCount} saved parlay{pendingRepairCount === 1 ? '' : 's'} need grading identity linked to today&apos;s slate.
+          </p>
+          <button
+            type="button"
+            onClick={handleRepairAllSaved}
+            className="shrink-0 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20 min-h-[2.75rem]"
+          >
+            Repair saved parlays
+          </button>
+        </div>
       ) : null}
 
       <Section title="Live & Pending" slips={liveSlips as PublicParlaySlip[]} live />

@@ -18,6 +18,9 @@ import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
 import { fetchAuthMe } from '../hooks/queries/useAuthMe';
 import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { mapBackendParlay, mapBackendVouch } from './backendMappers';
+import { normalizeSlipStatus } from '../lib/parlayDisplay';
+import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
+import { useParlayCommandStore } from '../stores/parlayCommandStore';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -55,7 +58,8 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   const savedVouches = useVouchesStore(selectSavedVouches);
   const syncVouches = useVouchesStore(selectSyncVouches);
 
-  const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection);
+  const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection)
+    || savedSlips.some((slip) => normalizeSlipStatus(slip.status) === 'PENDING');
   const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
   const liveGames = liveGamesPayload?.games ?? [];
   const { data: backendParlayRows } = useMyParlays();
@@ -214,6 +218,16 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   useEffect(() => {
     if (activeSection === 'results' || activeSection === 'live_parlays') handleGradeResults();
   }, [activeSection, handleGradeResults]);
+
+  useEffect(() => {
+    if (liveGames.length === 0 || savedSlips.length === 0) return;
+
+    const { parlays, changed } = repairAllSavedParlays(savedSlips, liveGames);
+    if (!changed) return;
+
+    syncSlips(parlays);
+    useParlayCommandStore.getState().hydrateSavedSlips(parlays);
+  }, [liveGames, savedSlips, syncSlips]);
 
   const runScheduledAiGeneration = async () => {
     const today = new Date().toISOString().slice(0, 10);
