@@ -6,7 +6,8 @@ import {
   inferFamilyFromText,
   tiersForRole,
 } from "../../../lib/parlays/parlayMarketCatalog";
-import { resolveTierOddsMap, resolveTierOdds } from "../../../lib/parlays/parlayTierOddsResolver";
+import { resolveTierOddsMap, resolveTierOdds, mergeTierOddsQuote } from "../../../lib/parlays/parlayTierOddsResolver";
+import { fetchParlayTierOddsBatch } from "../../../lib/parlays/parlayTierOddsFeed";
 import {
   buildCustomTierFromFamily,
   CUSTOM_STAT_LIMITS,
@@ -26,6 +27,8 @@ export default function ParlayPropPickerModal({
   const context = useParlayOsStore((s) => s.pickerContext);
   const editLegId = useParlayOsStore((s) => s.editLegId);
   const closePicker = useParlayOsStore((s) => s.closePicker);
+  const setPickerLiveOdds = useParlayOsStore((s) => s.setPickerLiveOdds);
+  const pickerLiveOdds = useParlayOsStore((s) => s.pickerLiveOdds);
 
   const player = context?.player;
   const isPitcher = context?.isPitcher ?? false;
@@ -67,12 +70,13 @@ export default function ParlayPropPickerModal({
 
   const customQuote = useMemo(() => {
     if (!customTier) return null;
-    return resolveTierOdds({
+    const research = resolveTierOdds({
       tier: customTier,
       propHint: context?.propHint,
       propositions: player?.propositions ?? [],
     });
-  }, [customTier, context?.propHint, player?.propositions]);
+    return mergeTierOddsQuote(research, pickerLiveOdds[customTier.id]);
+  }, [customTier, context?.propHint, player?.propositions, pickerLiveOdds]);
 
   const tierOddsMap = useMemo(
     () => resolveTierOddsMap({
@@ -82,6 +86,59 @@ export default function ParlayPropPickerModal({
     }),
     [activeFamilyData?.tiers, context?.propHint, player?.propositions],
   );
+
+  useEffect(() => {
+    if (!pickerOpen || !player?.name) return;
+
+    const tiers = PARLAY_MARKET_FAMILIES.flatMap((family) =>
+      family.role === role ? family.tiers : [],
+    );
+    const controller = new AbortController();
+
+    void fetchParlayTierOddsBatch({
+      playerName: player.name,
+      teamName: player.team,
+      tiers,
+    }).then((quotes) => {
+      if (controller.signal.aborted) return;
+      const next: Record<string, ReturnType<typeof resolveTierOdds>> = {};
+      quotes.forEach((quote, tierId) => {
+        next[tierId] = quote;
+      });
+      setPickerLiveOdds(next);
+    });
+
+    return () => controller.abort();
+  }, [pickerOpen, player?.name, player?.team, role, setPickerLiveOdds]);
+
+  useEffect(() => {
+    if (!pickerOpen || !player?.name || !customTier) return;
+
+    const controller = new AbortController();
+
+    void fetchParlayTierOddsBatch({
+      playerName: player.name,
+      teamName: player.team,
+      tiers: [customTier],
+    }).then((quotes) => {
+      if (controller.signal.aborted) return;
+      const quote = quotes.get(customTier.id);
+      if (!quote) return;
+      setPickerLiveOdds({
+        ...useParlayOsStore.getState().pickerLiveOdds,
+        [customTier.id]: quote,
+      });
+    });
+
+    return () => controller.abort();
+  }, [pickerOpen, player?.name, player?.team, customTier, setPickerLiveOdds]);
+
+  const displayQuote = (tierId: string) => {
+    const research = tierOddsMap.get(tierId);
+    const live = pickerLiveOdds[tierId];
+    if (!research) return live ?? null;
+    return mergeTierOddsQuote(research, live);
+  };
 
   const propOdds = context?.propHint?.odds;
   const oddsBadge = propOdds != null && Number.isFinite(Number(propOdds))
@@ -174,7 +231,7 @@ export default function ParlayPropPickerModal({
           <p className="text-[11px] text-white/40 mb-3">{family?.subtitle}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {family?.tiers.map((tier) => {
-              const tierQuote = tierOddsMap.get(tier.id);
+              const tierQuote = displayQuote(tier.id);
               return (
               <button
                 key={tier.id}

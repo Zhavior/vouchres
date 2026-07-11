@@ -5,7 +5,8 @@ import {
   flattenTierLegs,
   type ParlayMarketTier,
 } from "./parlayMarketCatalog";
-import { resolveTierOdds } from "./parlayTierOddsResolver";
+import { resolveTierOdds, mergeTierOddsQuote } from "./parlayTierOddsResolver";
+import { useParlayOsStore } from "../../stores/parlayOsStore";
 import type { DraftParlayLeg } from "../../stores/parlayCommandStore";
 import {
   findPlayerLiveGame,
@@ -59,11 +60,14 @@ export function buildLegsFromTier(
 
   return tiers.map((t, index) => {
     const selection = t.selection(playerName);
-    const tierOdds = resolveTierOdds({
+    const researchOdds = resolveTierOdds({
       tier: t,
       propHint: ctx.propHint,
       propositions: player.propositions,
     });
+    const liveOdds = useParlayOsStore.getState().pickerLiveOdds[t.id];
+    const tierOdds = mergeTierOddsQuote(researchOdds, liveOdds);
+    const oddsFromApi = liveOdds?.source === "live" && tierOdds.source === "live";
     const eventKey = buildEventKey({
       sport: "MLB",
       gamePk,
@@ -91,7 +95,11 @@ export function buildLegsFromTier(
       comparator: t.comparator,
       eventKey,
       popularityKey: `MLB_${playerId ?? "PLAYER"}_${t.marketCode}_${t.statTarget}`,
-      externalProvider: tierOdds.source === "live" ? "parlayos_research" : "parlayos_picker",
+      externalProvider: oddsFromApi
+        ? "odds_api_live"
+        : tierOdds.source === "live"
+          ? "parlayos_research"
+          : "parlayos_picker",
       playerId,
       teamId,
     };
@@ -112,7 +120,11 @@ export function buildLegsFromTier(
       statTarget: leg.statTarget,
       comparator: leg.comparator,
       odds: tierOdds.odds ?? ctx.propHint?.odds ?? undefined,
-      externalProvider: tierOdds.source === "live" ? "parlayos_research" : "parlayos_picker",
+      externalProvider: oddsFromApi
+        ? "odds_api_live"
+        : tierOdds.source === "live"
+          ? "parlayos_research"
+          : "parlayos_picker",
       eventKey: leg.eventKey,
       tags: ["#ParlayOS", `#${t.shortLabel.replace(/\s+/g, "")}`],
     };
