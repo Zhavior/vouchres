@@ -20,9 +20,11 @@ import {
 /**
  * Cron-only parlay maintenance routes.
  *
- * Schedule (Vercel): see vercel.json → crons → `/api/cron/parlays/grade-due`
- *   - Default: `0 10 * * *` UTC (daily morning pass after West-coast finals)
- *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized)
+ * Schedule (Vercel): see vercel.json → crons
+ *   - grade-due: `0 10 * * *` UTC (daily morning pass after West-coast finals)
+ *   - live-hr-sync: `*/10 * * * *` UTC (live HR parlay matching during game windows)
+ *   - integrity: `30 10 * * *` UTC (daily identity scan after grade-due)
+ *   - Auth: `Authorization: Bearer $CRON_SECRET` (assertCronAuthorized; Vercel sends this when CRON_SECRET is set)
  *
  * Multi-instance safety:
  *   - gradePendingPicks() uses process-local coalescing + Upstash distributed lock

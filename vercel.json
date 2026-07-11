@@ -81,6 +81,14 @@
     {
       "path": "/api/cron/parlays/grade-due",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/parlays/live-hr-sync",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/parlays/integrity",
+      "schedule": "30 10 * * *"
     }
   ]
 }
