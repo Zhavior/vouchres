@@ -260,6 +260,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
+      <LandingStatusTicker position="top" />
       <LandingStatusTicker />
 
       <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
@@ -292,7 +293,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </div>
             <div
-              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
+              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-9 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
             >
               <button
                 type="button"
