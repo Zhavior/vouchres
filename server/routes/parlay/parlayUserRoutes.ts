@@ -17,6 +17,8 @@ import {
   hideParlayHandler,
   listLegacyParlaysHandler,
   listMyParlaysHandler,
+  commitParlayTrustHandler,
+  finalizeParlayTrustLockHandler,
   repairParlayIdentityHandler,
   saveMeParlayHandler,
   updateParlayHandler,
@@ -308,6 +310,20 @@ parlayUserRoutes.post(
   requireAuth,
   validate({ body: SaveMeParlaySchema }),
   saveMeParlayHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/commit-trust",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  commitParlayTrustHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/finalize-trust-lock",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  finalizeParlayTrustLockHandler,
 );
 
 parlayUserRoutes.get(

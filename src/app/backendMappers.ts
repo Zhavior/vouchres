@@ -91,6 +91,10 @@ export function mapBackendParlay(pick: any): Parlay {
     backendSyncState: 'synced',
     backendSyncedAt: pick.updated_at || pick.created_at,
     aiGenerated: Boolean(pick.ai_generated),
+    feedLockedAt: pick.locked_at ?? undefined,
+    trustCommittedAt: pick.committed_at ?? undefined,
+    trustLockAt: pick.trust_lock_at ?? undefined,
+    trustAudience: (pick.visibility ?? "private") as Parlay["trustAudience"],
   };
 }
 

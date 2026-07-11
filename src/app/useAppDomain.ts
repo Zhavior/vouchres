@@ -11,7 +11,7 @@ import { useSlipsStore } from '../stores/slipsStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useVouchesStore } from '../stores/vouchesStore';
 import { handleSaveVouch as saveVouchAction } from '../domain/vouchActions';
-import { handleSaveParlaySlip as saveParlaySlipAction } from '../domain/parlayActions';
+import { handleSaveParlaySlip as saveParlaySlipAction, handleCommitParlayTrust as commitParlayTrustAction } from '../domain/parlayActions';
 import { useAppCommandStore } from '../stores/appCommandStore';
 import type { AppShellState } from '../context/AppShellContext';
 import type { CreatorProofProfile, Leg, MLBPlayer, Parlay, Vouch } from '../types';
@@ -129,6 +129,17 @@ export function useAppDomain({
 
   const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
     await saveParlaySlipAction(newParlay, navigateSection);
+  }, [navigateSection]);
+
+  const handleCommitParlayTrust = useCallback(async (input: {
+    parlay: Parlay;
+    audience: "private" | "public" | "subscriber";
+  }) => {
+    await commitParlayTrustAction({
+      parlay: input.parlay,
+      audience: input.audience,
+      navigateSection,
+    });
   }, [navigateSection]);
 
   const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
@@ -275,6 +286,7 @@ export function useAppDomain({
       onLoginSuccess: handleLoginSuccess,
       onClearProfileViewUser: handleClearProfileViewUser,
       onSaveParlaySlip: handleSaveParlaySlip,
+      onCommitParlayTrust: handleCommitParlayTrust,
       onHideSavedParlay: handleHideSavedParlay,
       onAddLegFromResearch: handleAddLegFromResearch,
       onUpdateProfile: handleUpdateProfile,
@@ -286,6 +298,7 @@ export function useAppDomain({
     handleLoginSuccess,
     handleClearProfileViewUser,
     handleSaveParlaySlip,
+    handleCommitParlayTrust,
     handleHideSavedParlay,
     handleAddLegFromResearch,
     handleUpdateProfile,
