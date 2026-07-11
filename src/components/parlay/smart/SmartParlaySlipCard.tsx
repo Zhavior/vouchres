@@ -1,5 +1,5 @@
 import React from "react";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Ticket } from "lucide-react";
 import ParlayOsBadgeRow from "../../trust/ParlayOsBadgeRow";
 import ParlayTrustPanel from "../../trust/ParlayTrustPanel";
 import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
@@ -13,18 +13,31 @@ import type { LegGradeStatus } from "../types/parlayHubTypes";
 
 export type SmartParlaySlipVariant = "hub" | "results" | "embedded";
 
+function Perforation() {
+  return (
+    <div
+      className="flex justify-center gap-[3px] py-1.5 border-b border-dashed border-white/10"
+      aria-hidden="true"
+    >
+      {Array.from({ length: 24 }).map((_, i) => (
+        <span key={i} className="h-1 w-1 rounded-full bg-white/15" />
+      ))}
+    </div>
+  );
+}
+
 function resultsShellStyle(status: string): { background: string; border: string } {
   const normalized = String(status ?? "pending").toUpperCase();
   if (normalized === "WON" || normalized === "won") {
-    return { background: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" };
+    return { background: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.25)" };
   }
   if (normalized === "LOST" || normalized === "lost") {
-    return { background: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" };
+    return { background: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.25)" };
   }
   if (normalized === "VOID" || normalized === "void") {
     return { background: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)" };
   }
-  return { background: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.15)" };
+  return { background: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.18)" };
 }
 
 export default function SmartParlaySlipCard({
@@ -35,7 +48,7 @@ export default function SmartParlaySlipCard({
   showOsBadges = true,
   showIdentityBadge = true,
   maxLegs = 3,
-  legVariant = "row",
+  legVariant = "pro",
   variant = "hub",
   metaLine,
   footerNote,
@@ -63,6 +76,9 @@ export default function SmartParlaySlipCard({
   const showTrust = showTrustPanel && Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
   const visibleLegs = slip.legs.slice(0, maxLegs);
   const resultsStyle = variant === "results" ? resultsShellStyle(slip.status) : null;
+  const identitySummary = slip.identity.complete
+    ? `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked to slate`
+    : `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked — repair before lock`;
 
   const legNodes = visibleLegs.map((leg) =>
     legVariant === "pro" ? (
@@ -79,13 +95,13 @@ export default function SmartParlaySlipCard({
 
   if (variant === "embedded") {
     return (
-      <div className={`flex flex-col gap-3 ${className}`.trim()}>
+      <div className={`flex flex-col gap-2.5 ${className}`.trim()}>
         {showIdentityBadge ? (
           <ParlayIdentityBadge identity={slip.identity} />
         ) : null}
         {legNodes}
         {slip.legCount > maxLegs ? (
-          <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">
+          <p className="text-[9px] text-center text-white/40">
             +{slip.legCount - maxLegs} more legs
           </p>
         ) : null}
@@ -93,14 +109,16 @@ export default function SmartParlaySlipCard({
     );
   }
 
-  const shellClass =
-    variant === "results"
+  const isTicket = variant === "hub";
+  const shellClass = isTicket
+    ? "rounded-2xl border border-dashed border-cyan-400/30 bg-gradient-to-b from-slate-900/95 via-slate-950/90 to-black/80 shadow-lg shadow-cyan-500/5"
+    : variant === "results"
       ? "rounded-xl p-4 backdrop-blur-md"
       : "rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] p-3";
 
   return (
     <article
-      className={`flex flex-col gap-2 ${shellClass} ${className}`.trim()}
+      className={`relative overflow-hidden flex flex-col ${shellClass} ${className}`.trim()}
       style={
         resultsStyle
           ? { background: resultsStyle.background, border: `1px solid ${resultsStyle.border}` }
@@ -108,94 +126,119 @@ export default function SmartParlaySlipCard({
       }
       aria-label={slip.title}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p
-            className={`font-bold truncate ${
-              variant === "results"
-                ? "text-sm text-white"
-                : "text-xs text-[hsl(var(--ve-text-primary))]"
-            }`}
-          >
-            {slip.title}
-          </p>
-          <p
-            className={`mt-0.5 ${
-              variant === "results"
-                ? "text-[10px] text-slate-500"
-                : "text-[10px] text-[hsl(var(--ve-text-muted))]"
-            }`}
-          >
-            {metaLine ??
-              `${slip.legCount} leg${slip.legCount !== 1 ? "s" : ""}${lockLabel ? ` · ${lockLabel}` : ""}${slip.oddsLabel && slip.oddsLabel !== "—" ? ` · ${slip.oddsLabel}` : ""}`}
-          </p>
-          {showOsBadges ? (
-            <ParlayOsBadgeRow
-              className="mt-1.5"
-              input={{
-                id: pickId || slip.publicId,
-                status: slip.status,
-                committedAt: slip.trustCommittedAt,
-                feedLockedAt: slip.feedLockedAt,
-                lockReason: slip.lockReason,
-              }}
-            />
-          ) : null}
-          {showIdentityBadge ? (
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <ParlayIdentityBadge identity={slip.identity} />
-            </div>
-          ) : null}
-          {variant === "hub" ? (
-            <ParlayLockCountdownBanner
-              trustCommittedAt={slip.trustCommittedAt}
-              trustLockAt={slip.trustLockAt}
-              feedLockedAt={slip.feedLockedAt}
-            />
-          ) : null}
-          {onViewProof ? (
-            <button
-              type="button"
-              onClick={onViewProof}
-              className="inline-flex text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 mt-1 min-h-[2rem]"
+      {isTicket ? <Perforation /> : null}
+
+      <div className={`flex flex-col gap-2 ${isTicket ? "px-3 pt-2 pb-3" : ""}`}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            {isTicket ? (
+              <div className="flex items-center gap-1.5 mb-1">
+                <Ticket className="h-3.5 w-3.5 text-cyan-400/80" aria-hidden="true" />
+                <span className="font-mono text-[10px] font-bold tracking-wider text-cyan-300/90">
+                  {slip.publicId}
+                </span>
+              </div>
+            ) : null}
+            <p
+              className={`font-bold truncate ${
+                variant === "results" ? "text-sm text-white" : "text-sm text-white"
+              }`}
             >
-              View proof
-            </button>
-          ) : null}
-          {slip.slipProgress ? (
-            <p className="text-[10px] text-cyan-300/80 font-mono mt-1">
-              Live: {slip.slipProgress.label} ({slip.slipProgress.current}/{slip.slipProgress.target})
+              {slip.title}
             </p>
-          ) : null}
+            <p className="mt-0.5 text-[10px] text-white/45">
+              {metaLine ??
+                `${slip.legCount} leg${slip.legCount !== 1 ? "s" : ""}${lockLabel ? ` · ${lockLabel}` : ""}`}
+            </p>
+            {slip.oddsLabel && slip.oddsLabel !== "—" ? (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2 py-1">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-300/70">Combined</span>
+                <span className="font-mono text-xs font-black text-emerald-300 tabular-nums">{slip.oddsLabel}</span>
+              </div>
+            ) : null}
+            {showOsBadges ? (
+              <ParlayOsBadgeRow
+                className="mt-1.5"
+                input={{
+                  id: pickId || slip.publicId,
+                  status: slip.status,
+                  committedAt: slip.trustCommittedAt,
+                  feedLockedAt: slip.feedLockedAt,
+                  lockReason: slip.lockReason,
+                }}
+              />
+            ) : null}
+            {showIdentityBadge ? (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <ParlayIdentityBadge identity={slip.identity} />
+                <span className={`text-[9px] ${slip.identity.complete ? "text-emerald-300/70" : "text-amber-300/80"}`}>
+                  {identitySummary}
+                </span>
+              </div>
+            ) : null}
+            {variant === "hub" ? (
+              <ParlayLockCountdownBanner
+                trustCommittedAt={slip.trustCommittedAt}
+                trustLockAt={slip.trustLockAt}
+                feedLockedAt={slip.feedLockedAt}
+              />
+            ) : null}
+            {onViewProof ? (
+              <button
+                type="button"
+                onClick={onViewProof}
+                className="inline-flex text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 mt-1 min-h-[2rem]"
+              >
+                View proof
+              </button>
+            ) : null}
+            {slip.slipProgress ? (
+              <p className="text-[10px] text-cyan-300/80 font-mono mt-1 tabular-nums">
+                Live: {slip.slipProgress.label} ({slip.slipProgress.current}/{slip.slipProgress.target})
+              </p>
+            ) : null}
+          </div>
+          <ParlayHubStatusBadge status={status} size="xs" />
         </div>
-        <ParlayHubStatusBadge status={status} size="xs" />
+
+        <div
+          className={
+            isTicket
+              ? "rounded-xl border border-white/10 bg-black/35 p-2 space-y-2"
+              : "space-y-2"
+          }
+        >
+          {legNodes}
+        </div>
+
+        {slip.legCount > maxLegs ? (
+          <p className="text-[9px] text-center text-white/40">
+            +{slip.legCount - maxLegs} more legs
+          </p>
+        ) : null}
+
+        {footerNote ? (
+          <p className="text-[9px] text-slate-500 pt-2 border-t border-white/5">{footerNote}</p>
+        ) : null}
+
+        {onViewStructure && slip.legCount > 0 ? (
+          <button
+            type="button"
+            onClick={onViewStructure}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white/45 transition hover:border-cyan-500/40 hover:text-cyan-300 min-h-[2.75rem]"
+          >
+            <GitBranch className="h-3 w-3" />
+            View Structure
+          </button>
+        ) : null}
+
+        {showTrust ? (
+          <ParlayTrustPanel pickId={pickId} title={slip.title} className="mt-1" />
+        ) : null}
       </div>
 
-      {legNodes}
-
-      {slip.legCount > maxLegs ? (
-        <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">
-          +{slip.legCount - maxLegs} more legs
-        </p>
-      ) : null}
-
-      {footerNote ? (
-        <p className="text-[9px] text-slate-600 pt-2 border-t border-white/5">{footerNote}</p>
-      ) : null}
-
-      {onViewStructure && slip.legCount > 0 ? (
-        <button
-          type="button"
-          onClick={onViewStructure}
-          className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--ve-border)/0.5)] py-1.5 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))] transition hover:border-cyan-500/40 hover:text-cyan-300 min-h-[2.75rem]"
-        >
-          <GitBranch className="h-3 w-3" />
-          View Structure
-        </button>
-      ) : null}
-
-      {showTrust ? (
-        <ParlayTrustPanel pickId={pickId} title={slip.title} className="mt-1" />
+      {isTicket ? (
+        <div className="border-t border-dashed border-white/10 py-1" aria-hidden="true" />
       ) : null}
     </article>
   );
