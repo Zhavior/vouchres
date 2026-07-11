@@ -144,6 +144,55 @@ export async function deleteParlayById(parlayId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function findPublicParlayById(parlayId: string): Promise<ParlayRow | null> {
+  const supabaseAdmin = await admin();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select("*")
+    .eq("id", parlayId)
+    .eq("leg_type", "parlay")
+    .eq("visibility", "public")
+    .is("user_hidden_at", null)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      const { data: row, error: rowError } = await supabaseAdmin
+        .from("picks")
+        .select("*")
+        .eq("id", parlayId)
+        .eq("leg_type", "parlay")
+        .is("user_hidden_at", null)
+        .maybeSingle();
+      if (rowError) throw rowError;
+      if (!row) return null;
+      const { data: postLink } = await supabaseAdmin
+        .from("posts")
+        .select("id")
+        .eq("pick_id", parlayId)
+        .limit(1)
+        .maybeSingle();
+      return postLink ? row : null;
+    }
+    throw error;
+  }
+
+  return data ?? null;
+}
+
+export async function setPickVisibilityPublic(pickId: string, userId: string): Promise<void> {
+  const supabaseAdmin = await admin();
+  const { error } = await supabaseAdmin
+    .from("picks")
+    .update({ visibility: "public", updated_at: new Date().toISOString() })
+    .eq("id", pickId)
+    .eq("user_id", userId);
+
+  if (error && error.code !== "42703" && error.code !== "PGRST204") {
+    throw error;
+  }
+}
+
 export async function hideUserParlay(input: {
   userId: string;
   parlayId: string;

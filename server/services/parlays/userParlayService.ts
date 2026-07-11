@@ -9,6 +9,7 @@ import {
   type ParlayLegRow,
   type ParlayRow,
 } from "../../repositories/parlayRepository";
+import { insertPickAuditLog, listPickAuditLogs, type PickAuditRow } from "../../repositories/pickAuditRepository";
 
 export interface ParlayWithLegs extends ParlayRow {
   legs: ParlayLegRow[];
@@ -79,10 +80,23 @@ export async function updateParlaySummary(input: {
   title?: string;
   stakeUnits?: number;
 }): Promise<ParlayRow> {
-  const updates: Record<string, unknown> = {};
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
 
-  if (input.title) updates.explanation = input.title.slice(0, 200);
-  if (input.stakeUnits != null) updates.stake_units = input.stakeUnits;
+  const updates: Record<string, unknown> = {};
+  const fieldChanges: Record<string, { before: unknown; after: unknown }> = {};
+
+  if (input.title) {
+    const nextTitle = input.title.slice(0, 200);
+    updates.explanation = nextTitle;
+    fieldChanges.explanation = { before: existing.explanation ?? null, after: nextTitle };
+  }
+  if (input.stakeUnits != null) {
+    updates.stake_units = input.stakeUnits;
+    fieldChanges.stake_units = { before: existing.stake_units ?? null, after: input.stakeUnits };
+  }
 
   if (Object.keys(updates).length === 0) {
     throw new AppError({ status: 400, code: "validation_error", message: "No valid parlay fields were provided." });
@@ -94,7 +108,39 @@ export async function updateParlaySummary(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
 
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "update_summary",
+    fieldChanges,
+  }).catch((err) => {
+    console.warn("[updateParlaySummary] audit log failed", (err as Error)?.message);
+  });
+
   return parlay;
+}
+
+export async function getParlayAuditHistory(input: {
+  userId: string;
+  parlayId: string;
+  limit?: number;
+}): Promise<{ entries: PickAuditRow[]; created_at: string | null; updated_at: string | null }> {
+  const parlay = await findUserParlayById(input.userId, input.parlayId);
+  if (!parlay) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
+
+  const entries = await listPickAuditLogs({
+    pickId: input.parlayId,
+    userId: input.userId,
+    limit: input.limit,
+  });
+
+  return {
+    entries,
+    created_at: parlay.created_at ?? null,
+    updated_at: parlay.updated_at ?? null,
+  };
 }
 
 export async function hideUserParlay(input: {

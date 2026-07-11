@@ -12,6 +12,7 @@ import {
   canDeleteParlayPost,
   PARLAY_POST_LOCKED_MESSAGE,
 } from "../lib/postDeletePolicy";
+import { setPickVisibilityPublic } from "../repositories/parlayRepository";
 
 async function denyUnlessOwns(
   userId: string,
@@ -210,6 +211,12 @@ postRoutes.post(
         code: "internal_server_error",
         message: "Failed to create post.",
         cause: error,
+      });
+    }
+
+    if (pick_id) {
+      await setPickVisibilityPublic(pick_id, req.user!.id).catch((err) => {
+        console.warn("[posts] pick visibility update failed", (err as Error)?.message);
       });
     }
 

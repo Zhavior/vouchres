@@ -24,6 +24,8 @@ import {
 import { CreatorProofProfile, Parlay, Vouch } from '../types';
 import { decimalToAmerican } from '../utils/oddsHelper';
 import { getFounderPointsLabel } from "../lib/founderAccess";
+import { useAuth } from '../lib/useAuth';
+import { useSubscriberHubData, type SubscriberChannel } from '../hooks/useSubscriberHubData';
 import {
   Z8_ACTIVE,
   Z8_DISPLAY,
@@ -72,345 +74,82 @@ interface SubscriberHubProps {
   onSectionChange: (section: string) => void;
 }
 
-interface SubscriberCapper {
-  id: string;
-  name: string;
-  username: string;
-  winRate: number;
-  totalPicks: number;
-  bio: string;
-  avatarUrl?: string;
-  subscriberCount: number;
-  monthlyFee: number; // in credits
-  badge: string;
-}
-
-interface ChatMessage {
-  id: string;
-  userId: string;
-  displayName: string;
-  username: string;
-  text: string;
-  timestamp: string;
-  isCapper?: boolean;
-}
-
 export default function SubscriberHub({
-
   profile,
   onUpdateProfile,
   onSectionChange
 }: SubscriberHubProps) {
-  const [activeTab, setActiveTab ] = useState<'explore' | 'channel_settings'>('explore');
+  const { user } = useAuth();
+  const {
+    channels,
+    loading: channelsLoading,
+    error: channelsError,
+    ownerChannelId,
+    subscribedChannelIds,
+    premiumParlays,
+    parlaysLoading,
+    loadChannelParlays,
+    followChannel,
+  } = useSubscriberHubData({
+    userId: user?.id ?? null,
+    displayName: profile.displayName,
+    username: profile.username,
+    bio: profile.bio,
+    winRate: profile.winRate,
+    totalPicks: profile.totalPicks,
+  });
+
+  const [activeTab, setActiveTab] = useState<'explore' | 'channel_settings'>('explore');
   const [selectedCapperId, setSelectedCapperId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
-  const [newMsgText, setNewMsgText] = useState('');
-  const [capperSubscribedIds, setCapperSubscribedIds] = useState<string[]>(() => {
-    const cached = localStorage.getItem('vouchedge_subscribed_cappers');
-    // Default subscribe to user's own channel as owner
-    return cached ? JSON.parse(cached) : ['u-user-current'];
-  });
-
-  // Credit balance
-  const [credits, setCredits] = useState<number>(() => {
-    const cached = localStorage.getItem('vouchedge_theme_credits');
-    return cached ? parseInt(cached, 10) : 1000;
-  });
-
-  // Selected capper state for subscription modal
   const [showSubModal, setShowSubModal] = useState(false);
-  const [selectedCapperForSub, setSelectedCapperForSub] = useState<SubscriberCapper | null>(null);
-
-  // Subscription Configuration edited by owner - Durations and Prices
-  const [subPlans, setSubPlans] = useState(() => {
-    const cached = localStorage.getItem('vouchedge_capper_sub_plans_durations_v1');
-    return cached ? JSON.parse(cached) : [
-      { months: 1, name: 'Month-to-month', price: 50, savings: 'Standard Rate', note: 'Billed monthly. Cancel anytime.' },
-      { months: 3, name: '3 months', price: 135, savings: 'Save 10%', note: 'Billed every 3 months.' },
-      { months: 6, name: '6 months', price: 240, savings: 'Save 20%', note: 'Billed every 6 months.' },
-      { months: 12, name: '1 year', price: 420, savings: 'Save 30% - Best Value', note: 'Billed annually.' }
-    ];
-  });
-
-  // Default Cappers
-  const [cappers, setCappers] = useState<SubscriberCapper[]>([
-    {
-      id: 'c-user-current',
-      name: profile.displayName || 'Current Creator',
-      username: profile.username || 'currentcapper',
-      winRate: profile.winRate || 0,
-      totalPicks: profile.totalPicks || 0,
-      bio: profile.bio || 'Professional MLB predictive metrics expert using core Python regressions.',
-      monthlyFee: 0,
-      subscriberCount: 0,
-      badge: '👑 OWNER'
-    },
-    {
-      id: 'c-alpha-guru',
-      name: 'Demo Capper A',
-      username: 'alphaguru',
-      winRate: 0,
-      totalPicks: 0,
-      bio: 'Correlated multi-leg strikeout props & platoon-adjusted moneyline vectors.',
-      monthlyFee: 50,
-      subscriberCount: 0,
-      badge: '⚡ VIP_EDGE'
-    },
-    {
-      id: 'c-parabolics',
-      name: 'Demo Capper B',
-      username: 'homer_parabola',
-      winRate: 0,
-      totalPicks: 0,
-      bio: 'Exit velocity predictions and heavy batter-vs-pitcher stadium variables.',
-      monthlyFee: 80,
-      subscriberCount: 0,
-      badge: '🏮 LAUNCH_PAD'
-    }
+  const [selectedCapperForSub, setSelectedCapperForSub] = useState<SubscriberChannel | null>(null);
+  const [chatInnerTab, setChatInnerTab] = useState<'chat' | 'parlays' | 'announcements'>('chat');
+  const [parlayReactions, setParlayReactions] = useState<Record<string, Record<string, number>>>({});
+  const [subPlans] = useState([
+    { months: 1, name: 'Follow', price: 0, savings: 'Free during beta', note: 'Follow creators to unlock shared parlays.' },
   ]);
-
-  // Subscribe plans customization states
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editPrice, setEditPrice] = useState<number>(100);
+  const [editPrice, setEditPrice] = useState<number>(0);
   const [editPerk, setEditPerk] = useState<string>('');
 
-  // Active chat section inner tabs ('chat', 'parlays', 'announcements')
-  const [chatInnerTab, setChatInnerTab] = useState<'chat' | 'parlays' | 'announcements'>('chat');
+  const selectedChannel = channels.find((channel) => channel.id === selectedCapperId);
 
-  // React-to-parlays state
-  const [parlayReactions, setParlayReactions] = useState<Record<string, Record<string, number>>>({});
-
-  // Premium subscriber-only parlays list
-  const [premiumParlays, setPremiumParlays] = useState<Parlay[]>([]);
-
-  // Announcements list (connected to vouchers)
-  const [announcements, setAnnouncements] = useState<Record<string, string[]>>({});
-
-  // Synchronize dynamic cappers list on name update
   useEffect(() => {
-    setCappers(prev => prev.map(c => {
-      if (c.id === 'c-user-current') {
-        return {
-          ...c,
-          name: profile.displayName,
-          bio: profile.bio,
-          username: profile.username,
-          winRate: profile.winRate,
-          totalPicks: profile.totalPicks
-        };
-      }
-      return c;
-    }));
-  }, [profile]);
+    if (selectedChannel) {
+      void loadChannelParlays(selectedChannel);
+    }
+  }, [selectedChannel, loadChannelParlays]);
 
-  // Load premium parlays + announcements + messages
-  useEffect(() => {
+  const handleSubscribe = async (channel: SubscriberChannel) => {
     try {
-      // Messages seed
-      const cachedMsgs = localStorage.getItem('vouchedge_sub_messages');
-      if (cachedMsgs) {
-        setMessages(JSON.parse(cachedMsgs));
-      } else {
-        const initialMsgs: Record<string, ChatMessage[]> = {
-          'c-user-current': [
-            { id: 'm1', userId: 'usr-9', displayName: 'Preview Guest', username: 'preview_only', text: 'Preview message — create an account to unlock real subscriber chat.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'm2', userId: 'usr-8', displayName: 'Preview Guest 2', username: 'preview_only_2', text: 'Preview-only layout message. No real user data shown.', timestamp: new Date(Date.now() - 18000000).toISOString() },
-            { id: 'm3', userId: 'c-user-current', displayName: profile.displayName, username: profile.username, text: 'Welcome to the subscriber chat. This is a demo — real messages appear once subscribers join.', timestamp: new Date(Date.now() - 4000000).toISOString(), isCapper: true }
-          ],
-          'c-alpha-guru': [
-            { id: 'ag1', userId: 'usr-2', displayName: 'Preview Guest 3', username: 'preview_only_3', text: 'Preview question — real subscriber messages appear after login.', timestamp: new Date(Date.now() - 36000000).toISOString() },
-            { id: 'ag2', userId: 'c-alpha-guru', displayName: 'Demo Capper A', username: 'alphaguru', text: 'Demo response — subscriber chat is in development.', timestamp: new Date(Date.now() - 10000000).toISOString(), isCapper: true }
-          ],
-          'c-parabolics': [
-            { id: 'hp1', userId: 'usr-5', displayName: 'Preview Guest 4', username: 'preview_only_4', text: 'Preview-only message. No real user data shown.', timestamp: new Date(Date.now() - 20000000).toISOString() }
-          ]
-        };
-        setMessages(initialMsgs);
-        localStorage.setItem('vouchedge_sub_messages', JSON.stringify(initialMsgs));
-      }
-
-      // Premium parlays seed
-      const cachedPremClass = localStorage.getItem('vouchedge_subscriber_parlays');
-      if (cachedPremClass) {
-        setPremiumParlays(JSON.parse(cachedPremClass));
-      } else {
-        // Build initial seed parlay
-        const initialPrem: Parlay[] = [
-          {
-            id: 'prem-parlay-seed-1',
-            title: '🔥 PREMIUM MLB ELITE TRIFECTA 🔥',
-            legs: [
-              { id: 'l1', sport: 'MLB', game: 'SD @ LAD', market: 'Strikeouts Over', selection: 'Shohei Ohtani Over 1.5 Hits', odds: 1.85, status: 'PENDING' },
-              { id: 'l2', sport: 'MLB', game: 'BOS @ NYY', market: 'Total Runs Over', selection: 'Aaron Judge Over 0.5 HRs', odds: 3.10, status: 'PENDING' }
-            ],
-            totalOdds: '+475',
-            oddsValue: 5.75,
-            riskTier: 'HIGH',
-            status: 'PENDING',
-            bookie: 'Capper Premium Hub',
-            wagerAmount: 300,
-            payoutAmount: 1725,
-            createdAt: new Date().toISOString()
-          }
-        ];
-        setPremiumParlays(initialPrem);
-        localStorage.setItem('vouchedge_subscriber_parlays', JSON.stringify(initialPrem));
-      }
-
-      // Parlay Reactions
-      const cachedReacts = localStorage.getItem('vouchedge_subs_parlay_reactions');
-      if (cachedReacts) {
-        setParlayReactions(JSON.parse(cachedReacts));
-      }
-
-      // Announcements connected to vouchers/vouch totals
-      const cachedAnnounce = localStorage.getItem('vouchedge_capper_announcements');
-      if (cachedAnnounce) {
-        setAnnouncements(JSON.parse(cachedAnnounce));
-      } else {
-        const defaultAnnounce: Record<string, string[]> = {
-          'c-user-current': [
-            '📢 CUSTOMER VOUCHER RELEASE: Users who tailed the Red Sox parlay yesterday have earned +100 capper vouch tokens automatically!',
-            '⚾ MODEL RE-GRID: Tonight’s weather report indicates 12mph blowing out at Dodger Stadium. Platoon models are re-generating active scores.'
-          ],
-          'c-alpha-guru': [
-            '📢 OUTLANDISH SPREE: 7 wins in our last 8 premium shared summaries! Thank you for backing the metrics.'
-          ],
-          'c-parabolics': [
-            '📢 Exit velocity charts updated. High density hitters look favorable with current dew index.'
-          ]
-        };
-        setAnnouncements(defaultAnnounce);
-        localStorage.setItem('vouchedge_capper_announcements', JSON.stringify(defaultAnnounce));
-      }
-    } catch (e) {
-      console.error(e);
+      await followChannel(channel);
+      setShowSubModal(false);
+      setSelectedCapperForSub(null);
+      alert(`You are now following ${channel.name}. Shared parlays unlock in their channel.`);
+    } catch (err: any) {
+      alert(err?.message ?? 'Failed to follow this creator.');
     }
-  }, []);
-
-  const handleSubscribe = (capper: SubscriberCapper, price: number, monthsName: string) => {
-    if (credits < price) {
-      alert(`Insufficient credits. This premium ${monthsName} subscription requires ${price} credits. Credit top-up controls are limited during beta.`);
-      return;
-    }
-
-    const nextCre = credits - price;
-    setCredits(nextCre);
-    localStorage.setItem('vouchedge_theme_credits', nextCre.toString());
-
-    const updated = [...capperSubscribedIds, capper.id];
-    setCapperSubscribedIds(updated);
-    localStorage.setItem('vouchedge_subscribed_cappers', JSON.stringify(updated));
-
-    // Increase subscriber count locally
-    setCappers(prev => prev.map(c => {
-      if (c.id === capper.id) {
-        return { ...c, subscriberCount: c.subscriberCount + 1 };
-      }
-      return c;
-    }));
-
-    alert(`🎉 Success! You are now subscribed to "${capper.name}" under the premium ${monthsName}. The exclusive Chatroom is unlocked!`);
-  };
-
-  const handlePostMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMsgText.trim() || !selectedCapperId) return;
-
-    const activeCapperMsgs = messages[selectedCapperId] || [];
-    const newMsg: ChatMessage = {
-      id: `usr-msg-${Date.now()}`,
-      userId: 'u-user-current',
-      displayName: profile.displayName,
-      username: profile.username,
-      text: newMsgText.trim(),
-      timestamp: new Date().toISOString(),
-      isCapper: selectedCapperId === 'c-user-current'
-    };
-
-    const updated = {
-      ...messages,
-      [selectedCapperId]: [...activeCapperMsgs, newMsg]
-    };
-
-    setMessages(updated);
-    localStorage.setItem('vouchedge_sub_messages', JSON.stringify(updated));
-    setNewMsgText('');
-
-    // Trigger funny automated simulated reply if it's not the user's capper to keep room alive
-    if (selectedCapperId !== 'c-user-current') {
-      setTimeout(() => {
-        const responses = [
-          "🎯 Spot on! That correlates perfectly with our deep platoon indices.",
-          "📊 Let's take a look at the live wind coefficient matrix for tonight.",
-          "🔋 I just posted a high-fidelity parlay for subscribers to review. Check the tab above!",
-          "🔥 Super excited for this leg. The sportsbooks are mispricing the line by 14%!",
-          "⚡ That's clean coding. The pitcher analysis supports it as well."
-        ];
-        const randomAnswer = responses[Math.floor(Math.random() * responses.length)];
-        const systemResponse: ChatMessage = {
-          id: `sim-reply-${Date.now()}`,
-          userId: selectedCapperId,
-          displayName: cappers.find(c => c.id === selectedCapperId)?.name || 'Capper Pro',
-          username: cappers.find(c => c.id === selectedCapperId)?.username || 'capper',
-          text: randomAnswer,
-          timestamp: new Date().toISOString(),
-          isCapper: true
-        };
-        const nextUpdated = {
-          ...updated,
-          [selectedCapperId]: [...(updated[selectedCapperId] || []), systemResponse]
-        };
-        setMessages(nextUpdated);
-        localStorage.setItem('vouchedge_sub_messages', JSON.stringify(nextUpdated));
-      }, 1500);
-    }
-  };
-
-  const handleAddEmojiToInput = (emoji: string) => {
-    setNewMsgText(prev => prev + emoji);
   };
 
   const handleReactToParlay = (parlayId: string, emoji: string) => {
-    const activeReacts = parlayReactions[parlayId] || { '🔥': 4, '🎯': 3, '👍': 5, '💰': 6 };
-    const updated = {
+    const activeReacts = parlayReactions[parlayId] || {};
+    setParlayReactions({
       ...parlayReactions,
       [parlayId]: {
         ...activeReacts,
-        [emoji]: (activeReacts[emoji] || 0) + 1
-      }
-    };
-    setParlayReactions(updated);
-    localStorage.setItem('vouchedge_subs_parlay_reactions', JSON.stringify(updated));
+        [emoji]: (activeReacts[emoji] || 0) + 1,
+      },
+    });
   };
 
-  const handleSavePlanEdit = (index: number) => {
-    const updated = [...subPlans];
-    updated[index] = {
-      ...updated[index],
-      price: editPrice,
-      savings: editPerk,
-      perk: editPerk
-    };
-    setSubPlans(updated);
-    localStorage.setItem('vouchedge_capper_sub_plans_durations_v1', JSON.stringify(updated));
+  const handleSavePlanEdit = (_index: number) => {
     setEditingIndex(null);
-    alert('Subscription configuration plan saved successfully!');
+    alert('Paid subscription tiers are not live yet. Follow is free during beta.');
   };
 
-  const handlePublishAnnouncement = (e: React.FormEvent, txt: string) => {
+  const handlePublishAnnouncement = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!txt.trim()) return;
-
-    const currentAnn = announcements['c-user-current'] || [];
-    const updatedAnn = [`📢 ANNOUNCEMENT: ${txt.trim()}`, ...currentAnn];
-    const n = {
-      ...announcements,
-      'c-user-current': updatedAnn
-    };
-    setAnnouncements(n);
-    localStorage.setItem('vouchedge_capper_announcements', JSON.stringify(n));
-    alert('Announcement published and pushed to premium subscriber timelines!');
+    alert('Creator announcements will post to your feed when this feature ships.');
   };
 
   return (
@@ -418,8 +157,8 @@ export default function SubscriberHub({
       
       {/* Demo banner */}
       <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
-        <span className={`${Z8_LABEL} rounded border border-vouch-amber/40 bg-vouch-amber/15 px-1.5 py-0.5 text-vouch-amber`}>Demo</span>
-        Subscriber counts and capper clubs are sample data — real clubs populate when cappers go live.
+        <span className={`${Z8_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
+        Follow cappers to unlock shared parlay picks. Chat and paid tiers are coming soon.
       </div>
 
       {/* Page Header */}
@@ -433,7 +172,8 @@ export default function SubscriberHub({
             Exclusive Subscriber Space
           </h1>
           <p className="text-xs text-white/45">
-            Gain deep regression insights, locked parlays, and community channels. You have <span className="font-extrabold text-vouch-cyan">{credits.toLocaleString()} pts</span> theme & subscribe credits.
+            Follow verified cappers and creators. Shared parlays unlock after you follow — no fake subscriber data.
+            {channelsError ? ` (${channelsError})` : ''}
           </p>
         </div>
 
@@ -469,14 +209,17 @@ export default function SubscriberHub({
               How VouchEdge Subscriptions Work
             </h3>
             <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-              Backing verified cappers. Subscriptions last for the selected months tier and grant unlockable access to a dedicated realtime **Chatroom**, premium model-correlated **Parlay-Only** items (which you can react and build from), and critical **Anouncements/Vouchers** directly connected to creator proof balances.
+              Follow creators to unlock their shared parlay picks. Subscriber chat and paid tiers are not live yet.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cappers.map((capper) => {
-              const isSubscribed = capperSubscribedIds.includes(capper.id);
-              const isOwner = capper.id === 'c-user-current';
+            {channelsLoading && (
+              <div className="col-span-full text-center text-xs font-mono text-white/45 py-8">Loading channels…</div>
+            )}
+            {channels.map((capper) => {
+              const isSubscribed = subscribedChannelIds.includes(capper.id);
+              const isOwner = capper.id === ownerChannelId;
 
               return (
                 <div 
@@ -573,7 +316,7 @@ export default function SubscriberHub({
                   ACTIVE_PREMIUM_SPACE
                 </span>
                 <h3 className="text-base font-black text-white/90 uppercase tracking-tight">
-                  {cappers.find(c => c.id === selectedCapperId)?.name} Exclusive Hub
+                  {channels.find(c => c.id === selectedCapperId)?.name} Exclusive Hub
                 </h3>
               </div>
             </div>
@@ -620,36 +363,36 @@ export default function SubscriberHub({
               <div>
                 <h4 className="text-[10px] font-bold text-vouch-cyan font-mono uppercase tracking-wider mb-2">CLUB IDENTITY CARD</h4>
                 <div className="w-12 h-12 rounded-full bg-indigo-950 flex items-center justify-center border border-indigo-900/50 text-vouch-cyan/80 font-bold mb-3">
-                  {cappers.find(c => c.id === selectedCapperId)?.name.split(' ').map(n=>n[0]).join('')}
+                  {channels.find(c => c.id === selectedCapperId)?.name.split(' ').map(n=>n[0]).join('')}
                 </div>
                 <h3 className="font-extrabold text-white/90 text-sm">
-                  {cappers.find(c => c.id === selectedCapperId)?.name}
+                  {channels.find(c => c.id === selectedCapperId)?.name}
                 </h3>
-                <p className="text-[11px] text-white/40">@{cappers.find(c => c.id === selectedCapperId)?.username}</p>
+                <p className="text-[11px] text-white/40">@{channels.find(c => c.id === selectedCapperId)?.username}</p>
               </div>
 
               <div className="space-y-2.5 text-xs text-white/45">
                 <p className="font-semibold text-white/65">
-                  {cappers.find(c => c.id === selectedCapperId)?.bio}
+                  {channels.find(c => c.id === selectedCapperId)?.bio}
                 </p>
                 <div className="border-t border-slate-850/50 pt-2.5 space-y-1.5 font-mono text-[10px]">
                   <div className="flex justify-between">
                     <span>WINRATE:</span>
-                    <strong className="text-emerald-400">{cappers.find(c => c.id === selectedCapperId)?.winRate}%</strong>
+                    <strong className="text-emerald-400">{channels.find(c => c.id === selectedCapperId)?.winRate}%</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>SUBSCRIBERS:</span>
-                    <strong className="text-white">{cappers.find(c => c.id === selectedCapperId)?.subscriberCount}</strong>
+                    <strong className="text-white">{channels.find(c => c.id === selectedCapperId)?.subscriberCount}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>TRACKED:</span>
-                    <strong className="text-sky-400">{cappers.find(c => c.id === selectedCapperId)?.totalPicks}</strong>
+                    <strong className="text-sky-400">{channels.find(c => c.id === selectedCapperId)?.totalPicks}</strong>
                   </div>
                 </div>
               </div>
 
               <div className="bg-obsidian-900/40 p-3 rounded-lg border border-slate-850 font-mono text-[9px] text-dashed text-white/40 leading-normal">
-                🛡️ All subscription rooms are verified locally. Only owners can broadcast official announcements and exclusive slips.
+                🛡️ Follow-gated picks only. Shared parlays require an active follow relationship.
               </div>
             </div>
 
@@ -658,101 +401,12 @@ export default function SubscriberHub({
               
               {/* RENDERING CHATROOM */}
               {chatInnerTab === 'chat' && (
-                <div className="bg-ve-storm/35 border border-slate-850 rounded-2xl flex flex-col justify-between h-[520px] overflow-hidden" id="tab-chatroom">
-                  
-                  {/* Message displays body */}
-                  <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 scroll-smooth">
-                    {(messages[selectedCapperId] || []).length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-550 py-10 space-y-2">
-                        <MessageSquare className="w-8 h-8 text-white/35 animate-pulse" />
-                        <span className="text-xs uppercase font-mono font-bold tracking-wider">No comments in this premium club yet</span>
-                      </div>
-                    ) : (
-                      (messages[selectedCapperId] || []).map((msg) => {
-                        const isCapperSender = msg.isCapper || msg.userId === selectedCapperId;
-                        return (
-                          <div 
-                            key={msg.id} 
-                            className={`flex gap-3 text-left ${
-                              msg.userId === 'u-user-current' ? 'justify-end' : 'justify-start'
-                            }`}
-                          >
-                            {msg.userId !== 'u-user-current' && (
-                              <div className="w-8 h-8 rounded-full bg-obsidian-700 border border-white/[0.06] flex items-center justify-center font-bold text-sky-450 text-[10px] shrink-0">
-                                {msg.displayName.split(' ').map(n=>n[0]).join('')}
-                              </div>
-                            )}
-
-                            <div className="max-w-[75%] space-y-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className={`text-[10px] font-bold ${isCapperSender ? 'text-vouch-cyan font-extrabold' : 'text-slate-350'}`}>
-                                  {msg.displayName}
-                                </span>
-                                {isCapperSender && (
-                                  <span className="text-[8px] bg-indigo-950 text-vouch-cyan/80 font-black border border-indigo-900/50 px-1 py-0.5 rounded leading-none shrink-0 font-mono">
-                                    CREATOR
-                                  </span>
-                                )}
-                                <span className="text-[9px] text-white/35 font-mono">
-                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <div className={`p-3 rounded-2xl text-xs font-semibold leading-relaxed shadow-sm ${
-                                msg.userId === 'u-user-current'
-                                  ? 'bg-sky-600/90 text-[#121824] rounded-tr-none font-bold'
-                                  : isCapperSender
-                                  ? 'bg-indigo-950/40 border border-indigo-900/50 text-indigo-200 rounded-tl-none'
-                                  : 'bg-black/25 text-white/80 rounded-tl-none border border-slate-850/60'
-                              }`}>
-                                {msg.text}
-                              </div>
-                            </div>
-
-                            {msg.userId === 'u-user-current' && (
-                              <div className="w-8 h-8 rounded-full bg-sky-950 border border-sky-850 flex items-center justify-center font-bold text-sky-400 text-[10px] shrink-0">
-                                {msg.displayName.split(' ').map(n=>n[0]).join('')}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {/* Message sending & emoji controls inputs bar */}
-                  <form onSubmit={handlePostMessage} className="p-4 border-t border-slate-850 bg-obsidian-900/40 space-y-3">
-                    {/* Fast emoji drawer */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 font-mono text-sm leading-none no-scrollbar">
-                      {['🐐', '🔒', '🔥', '💰', '👍', '⚾', '🎯', '👑', '🚨', '🔮'].map(emoji => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => handleAddEmojiToInput(emoji)}
-                          className="p-1 px-2.5 bg-black/25 hover:bg-black/35 rounded-md border border-slate-850 hover:border-white/10 text-xs transition-transform active:scale-90"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newMsgText}
-                        onChange={(e) => setNewMsgText(e.target.value)}
-                        placeholder={`Message Premium Club as @${profile.username}...`}
-                        className="flex-1 bg-obsidian-900 border border-white/10 focus:border-indigo-505 rounded-xl px-4 py-3 text-white/90 text-xs focus:ring-1 focus:ring-indigo-500 placeholder-slate-550 outline-none transition-all font-semibold"
-                        maxLength={180}
-                      />
-                      <button
-                        type="submit"
-                        disabled={!newMsgText.trim()}
-                        className="p-3 bg-indigo-600 hover:bg-indigo-500 text-slate-950 rounded-xl disabled:opacity-50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-lg shadow-indigo-600/30"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </form>
+                <div className="bg-ve-storm/35 border border-slate-850 rounded-2xl flex flex-col justify-center h-[520px] overflow-hidden p-8 text-center" id="tab-chatroom">
+                  <MessageSquare className="w-10 h-10 text-white/35 mx-auto mb-3" />
+                  <h4 className="text-sm font-black uppercase tracking-wider text-white/70">Subscriber chat coming soon</h4>
+                  <p className="mt-2 text-xs text-white/45 max-w-md mx-auto">
+                    Private creator chat is not live yet. Follow creators and use the Parlays tab for shared picks you are authorized to view.
+                  </p>
                 </div>
               )}
 
@@ -764,12 +418,17 @@ export default function SubscriberHub({
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Capper Locked Premium Slips</h4>
                       <p className="text-[10px] text-white/40 leading-normal mt-0.5">
-                        These premium correlated parlay slips have been programmed directly from the **Build Parlay** page with strict subscriber priority constraints enabled. Feel free to react with emojis.
+                        Shared parlays from creators you follow. Each pick links to a public proof record when posted to the feed.
                       </p>
                     </div>
                   </div>
 
-                  {premiumParlays.length === 0 ? (
+                  {parlaysLoading ? (
+                    <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-white/40">
+                      <Sliders className="w-8 h-8 mx-auto text-white/35 mb-2 animate-spin" />
+                      <p className="text-xs uppercase font-mono font-bold tracking-wider">Loading shared parlays…</p>
+                    </div>
+                  ) : premiumParlays.length === 0 ? (
                     <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-white/40">
                       <Sliders className="w-8 h-8 mx-auto text-white/35 mb-2" />
                       <p className="text-xs uppercase font-mono font-bold tracking-wider">No active premium parlays posted yet</p>
@@ -777,7 +436,7 @@ export default function SubscriberHub({
                   ) : (
                     <div className="space-y-5">
                       {premiumParlays.map((parlay) => {
-                        const reactions = parlayReactions[parlay.id] || { '🔥': 4, '🎯': 3, '👍': 5, '💰': 6 };
+                        const reactions = parlayReactions[parlay.id] || {};
                         return (
                           <div key={parlay.id} className="bg-ve-storm/40 border border-slate-850 rounded-2xl p-5 text-left relative overflow-hidden shadow-xl hover:border-white/10 transition-all">
                             {/* Parlay premium badge */}
@@ -860,18 +519,14 @@ export default function SubscriberHub({
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
                       <p className="text-[10px] text-white/40 leading-normal mt-0.5">
-                        These official announcements represent the dynamic vouchers and guidelines broadcasted by the capper to alert followers instantly about live value line updates.
+                        Creator announcements will appear here when the broadcast feature ships. Use the feed for public posts today.
                       </p>
                     </div>
                   </div>
 
-                  {selectedCapperId === 'c-user-current' && (
-                    <form 
-                      onSubmit={(e) => {
-                        const target = e.currentTarget.elements.namedItem('announcement_input') as HTMLInputElement;
-                        handlePublishAnnouncement(e, target.value);
-                        target.value = '';
-                      }}
+                  {selectedCapperId === ownerChannelId && (
+                    <form
+                      onSubmit={handlePublishAnnouncement}
                       className="p-4 bg-black/30 border border-indigo-900/30 rounded-xl space-y-3"
                     >
                       <label className="block text-[9px] text-vouch-cyan font-mono font-black uppercase tracking-wider">
@@ -882,36 +537,25 @@ export default function SubscriberHub({
                           id="announcement_input"
                           name="announcement_input"
                           type="text"
-                          placeholder="Type official details or voucher allocation announcement here..."
-                          className="flex-1 bg-obsidian-900 border border-slate-850 focus:border-indigo-505 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none"
+                          placeholder="Announcements are not live yet"
+                          disabled
+                          className="flex-1 bg-obsidian-900 border border-slate-850 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none opacity-60"
                         />
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-indigo-650 hover:bg-indigo-550 text-white/90 text-xs font-mono font-black rounded-lg transition-all"
+                          disabled
+                          className="px-4 py-2 bg-indigo-650 text-white/90 text-xs font-mono font-black rounded-lg opacity-60"
                         >
-                          BROADCAST
+                          COMING SOON
                         </button>
                       </div>
                     </form>
                   )}
 
                   <div className="space-y-3">
-                    {((announcements[selectedCapperId] || []).length === 0) ? (
-                      <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
-                        No official announcements published yet
-                      </div>
-                    ) : (
-                      (announcements[selectedCapperId] || []).map((ann, idx) => (
-                        <div key={idx} className="p-4 bg-indigo-950/25 border border-indigo-900/30 rounded-xl text-xs relative overflow-hidden flex items-start gap-3 leading-relaxed font-semibold">
-                          <div className="absolute top-0 bottom-0 left-0 w-1 bg-indigo-500" />
-                          <Megaphone className="w-4 h-4 text-vouch-cyan shrink-0 mt-0.5" />
-                          <div className="space-y-1">
-                            <span className="text-[8.5px] font-mono font-black text-vouch-cyan">OFFICIAL CREATOR PROOF LINE</span>
-                            <p className="text-white/80">{ann}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                    <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
+                      No announcements yet
+                    </div>
                   </div>
                 </div>
               )}
@@ -932,7 +576,7 @@ export default function SubscriberHub({
               Customize Subscription Offerings
             </h3>
             <p className="text-xs text-white/45 lines-normal">
-              Represent yourself as a high-frequency analyst. Owners have absolute freedom to configure months tiers, customize pricing in credits points to align with model performance indicators, and define exclusive unlockable incentives.
+              Paid subscription tiers are not live during beta. Follow is free and gates shared parlay picks.
             </p>
           </div>
 
@@ -1155,13 +799,13 @@ export default function SubscriberHub({
 
                       <button
                         onClick={() => {
-                          handleSubscribe(selectedCapperForSub, plan.price, durationLabel);
-                          setShowSubModal(false);
-                          setSelectedCapperForSub(null);
+                          if (selectedCapperForSub) {
+                            void handleSubscribe(selectedCapperForSub);
+                          }
                         }}
                         className="w-full py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white/90 font-bold text-xs rounded-lg transition-all transform hover:scale-[1.02] shadow-md cursor-pointer"
                       >
-                        Subscribe
+                        Follow (Free)
                       </button>
                     </div>
                   </div>
@@ -1171,8 +815,8 @@ export default function SubscriberHub({
 
             {/* Disclaimer & Balance Indicator */}
             <div className="flex flex-col sm:flex-row justify-between items-center text-[10px] text-white/40 font-mono border-t border-white/10 pt-4 gap-2">
-              <span>Your credit balance: <strong className="text-vouch-cyan font-bold">{credits} pts</strong></span>
-              <span>All subscriptions are processed instantly</span>
+              <span>Follow is free during beta</span>
+              <span>Shared parlays unlock after follow</span>
             </div>
 
           </div>
