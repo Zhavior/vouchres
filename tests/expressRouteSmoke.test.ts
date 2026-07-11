@@ -78,7 +78,7 @@ describe("API route smoke envelopes", () => {
     expect(response.body).toMatchObject({
       ok: true,
       service: "vouchedge-backend",
-      schema: "route_metrics_v1",
+      schema: "route_metrics_v2",
       metrics: {
         startedAt: expect.any(String),
         uptimeMs: expect.any(Number),
@@ -98,6 +98,12 @@ describe("API route smoke envelopes", () => {
         routes: expect.any(Array),
         recent: expect.any(Array),
       },
+      parlayGrade: expect.objectContaining({
+        contractVersion: "grade_parlay_v1",
+        totals: expect.objectContaining({
+          requests: expect.any(Number),
+        }),
+      }),
     });
     expect(response.body.metrics.totals.requests).toBeGreaterThan(0);
   });

@@ -36,6 +36,7 @@ import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
 import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
+import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
 import { isUpstashEnabled } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
@@ -178,11 +179,13 @@ export function registerApiRoutes(app: Express): void {
 
   app.get("/api/health/metrics", (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
+    const parlayGrade = getParlayGradeMetricsSnapshot();
     res.json(apiOkFlat(req, {
       service: "vouchedge-backend",
-      schema: "route_metrics_v1",
+      schema: "route_metrics_v2",
       updatedAt: new Date().toISOString(),
       metrics,
+      parlayGrade,
     }));
   });
 

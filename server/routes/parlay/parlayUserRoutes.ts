@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { AuthedRequest, getSupabaseAdmin, requireAuth } from "../../middleware/auth";
+import { AuthedRequest, getSupabaseAdmin, requireAuth, optionalAuth } from "../../middleware/auth";
 import { requireTierOrQuota, incrementQuota } from "../../middleware/entitlements";
 import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
@@ -10,6 +10,14 @@ import { AppError } from "../../errors/AppError";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
 import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutcome } from "../../services/grading/sportGraders";
+import {
+  beginParlayGradeObservability,
+  graderDataSourcesForSports,
+  logParlayGradeFailed,
+  logParlayGradeSucceeded,
+  validateParlayGradeBody,
+  type ParlayGradeRequest,
+} from "../../services/grading/parlayGradeObservability";
 import { getFeedComposerOptions } from "../../services/feed/composerOptionsService";
 import {
   getParlayHandler,
@@ -73,55 +81,104 @@ parlayUserRoutes.post(
 parlayUserRoutes.post(
   "/parlays/grade",
   gradingLimiter,
-  validate({ body: GradeParlaySchema }),
-  asyncHandler(async (req: Request & RequestWithContext, res: Response) => {
+  optionalAuth,
+  beginParlayGradeObservability,
+  validateParlayGradeBody,
+  asyncHandler(async (req: ParlayGradeRequest, res: Response) => {
+    const startedAt = req.parlayGradeStartedAt ?? Date.now();
     const { legs, stakeUnits } = req.body as GradeParlayInput;
     const normalizedLegs = legs as GradableLeg[];
 
-    const gameCache = new Map<string, GameData | null>();
-    for (const leg of normalizedLegs) {
-      const key = `${leg.sport}:${leg.gamePk}`;
-      if (!gameCache.has(key)) {
-        gameCache.set(key, await getGrader(leg.sport).fetchGame(leg.gamePk));
+    try {
+      const gameCache = new Map<string, GameData | null>();
+      let upstreamFetchMisses = 0;
+
+      for (const leg of normalizedLegs) {
+        const key = `${leg.sport}:${leg.gamePk}`;
+        if (!gameCache.has(key)) {
+          const game = await getGrader(leg.sport).fetchGame(leg.gamePk);
+          if (!game) upstreamFetchMisses += 1;
+          gameCache.set(key, game);
+        }
       }
+
+      const gradedLegs = normalizedLegs.map((leg) => {
+        const key = `${leg.sport}:${leg.gamePk}`;
+        const game = gameCache.get(key) ?? null;
+        let outcome: LegOutcome;
+        if (!game) {
+          outcome = { status: "pending", note: "game data unavailable" };
+        } else if (!game.final) {
+          outcome = { status: "pending", note: "game not final" };
+        } else {
+          try {
+            outcome = getGrader(leg.sport).evaluateLeg(leg, game);
+          } catch (err) {
+            logParlayGradeFailed(req, {
+              status: 500,
+              code: "grading_engine_error",
+              message: "Leg evaluation failed during parlay grading.",
+              failureStage: "grading_engine",
+              cause: err,
+            });
+            outcome = { status: "error", note: "grading_engine_error" };
+          }
+        }
+        return {
+          sport: leg.sport,
+          gamePk: leg.gamePk,
+          market: leg.market,
+          selection: leg.selection,
+          oddsDecimal: leg.oddsDecimal ?? null,
+          status: outcome.status,
+          actual: outcome.actual ?? null,
+          note: outcome.note ?? null,
+        };
+      });
+
+      const parlay = settleParlay(
+        gradedLegs.map((leg) => ({
+          outcome: { status: leg.status, actual: leg.actual ?? undefined },
+          oddsDecimal: leg.oddsDecimal ?? undefined,
+        })),
+        stakeUnits,
+      );
+
+      const wonLegCount = gradedLegs.filter((leg) => leg.status === "won").length;
+      const lostLegCount = gradedLegs.filter((leg) => leg.status === "lost").length;
+      const voidLegCount = gradedLegs.filter((leg) => leg.status === "push").length;
+      const pendingLegCount = gradedLegs.filter((leg) => leg.status === "pending").length;
+      const errorLegCount = gradedLegs.filter((leg) => leg.status === "error").length;
+      const gradedLegCount = wonLegCount + lostLegCount + voidLegCount + errorLegCount;
+
+      logParlayGradeSucceeded(req, {
+        legCount: gradedLegs.length,
+        gradedLegCount,
+        pendingLegCount,
+        wonLegCount,
+        lostLegCount,
+        voidLegCount,
+        errorLegCount,
+        parlayStatus: parlay.status,
+        dataSources: graderDataSourcesForSports(normalizedLegs.map((leg) => leg.sport)),
+        warningCount: upstreamFetchMisses + errorLegCount,
+      }, Date.now() - startedAt);
+
+      return res.json(apiOkFlat(req, {
+        legs: gradedLegs,
+        parlay,
+        gradedAt: new Date().toISOString(),
+      }));
+    } catch (err) {
+      logParlayGradeFailed(req, {
+        status: 500,
+        code: "internal_server_error",
+        message: err instanceof Error ? err.message : "Parlay grading failed.",
+        failureStage: "response_build",
+        cause: err,
+      });
+      throw err;
     }
-
-    const gradedLegs = normalizedLegs.map((leg) => {
-      const key = `${leg.sport}:${leg.gamePk}`;
-      const game = gameCache.get(key) ?? null;
-      let outcome: LegOutcome;
-      if (!game) {
-        outcome = { status: "pending", note: "game data unavailable" };
-      } else if (!game.final) {
-        outcome = { status: "pending", note: "game not final" };
-      } else {
-        outcome = getGrader(leg.sport).evaluateLeg(leg, game);
-      }
-      return {
-        sport: leg.sport,
-        gamePk: leg.gamePk,
-        market: leg.market,
-        selection: leg.selection,
-        oddsDecimal: leg.oddsDecimal ?? null,
-        status: outcome.status,
-        actual: outcome.actual ?? null,
-        note: outcome.note ?? null,
-      };
-    });
-
-    const parlay = settleParlay(
-      gradedLegs.map((leg) => ({
-        outcome: { status: leg.status, actual: leg.actual ?? undefined },
-        oddsDecimal: leg.oddsDecimal ?? undefined,
-      })),
-      stakeUnits,
-    );
-
-    return res.json(apiOkFlat(req, {
-      legs: gradedLegs,
-      parlay,
-      gradedAt: new Date().toISOString(),
-    }));
   }),
 );
 
