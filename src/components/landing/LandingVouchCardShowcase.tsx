@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Share2, BadgeCheck, Trophy } from 'lucide-react';
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';
@@ -169,6 +169,28 @@ const FEATURES = [
 
 export default function LandingVouchCardShowcase() {
   const [activeLayout, setActiveLayout] = useState<CardLayoutId>('orbit');
+  const cardRef = useRef<HTMLDivElement>(null);
+  const settleTimer = useRef<number | undefined>(undefined);
+
+  const handleTilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    window.clearTimeout(settleTimer.current);
+    const rect = el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    el.classList.add('is-tilting');
+    el.style.transform = `rotateY(${(x * 10).toFixed(2)}deg) rotateX(${(-y * 8).toFixed(2)}deg) scale(1.015)`;
+  };
+
+  const handleTiltEnd = () => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = '';
+    // Let the transform ease back to neutral before resuming the idle float,
+    // whose keyframes start at neutral — no visible jump.
+    settleTimer.current = window.setTimeout(() => el.classList.remove('is-tilting'), 260);
+  };
 
   return (
     <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-8`} aria-labelledby="vouch-card-system-heading">
@@ -214,9 +236,15 @@ export default function LandingVouchCardShowcase() {
           ))}
         </div>
 
-        {/* The real Vouch Board preview stage — same component the studio renders — floating in 3D. */}
+        {/* The real Vouch Board preview stage — same component the studio renders — floating in 3D.
+            The card tracks the cursor like a holo trading card, then settles back into its idle float. */}
         <div className="ve-vouch-3d-stage">
-          <div className="ve-vouch-3d-card overflow-hidden rounded-2xl border border-white/[0.06]">
+          <div
+            ref={cardRef}
+            onMouseMove={handleTilt}
+            onMouseLeave={handleTiltEnd}
+            className="ve-vouch-3d-card overflow-hidden rounded-2xl border border-white/[0.06]"
+          >
             <PreviewCardStage {...makeDemoProps(activeLayout)} activeStyle={STUDIO_STYLE} />
           </div>
         </div>
