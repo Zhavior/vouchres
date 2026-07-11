@@ -70,15 +70,20 @@ function metaLooksLastGood(meta) {
 
 function isSupabaseUnavailable(status, body) {
   if (status !== 500 && status !== 503) return false;
-  const message = isRecord(body)
-    ? String(
-        (isRecord(body.error) ? body.error.message : undefined)
-          ?? body.message
-          ?? body.error
-          ?? "",
-      )
-    : "";
-  return message.includes("SUPABASE_URL") || message.includes("Supabase admin client");
+  if (!isRecord(body)) return false;
+
+  const errorRow = isRecord(body.error) ? body.error : null;
+  const message = String(errorRow?.message ?? body.message ?? body.error ?? "");
+  if (message.includes("SUPABASE_URL") || message.includes("Supabase admin client")) {
+    return true;
+  }
+
+  // Production error handler masks 500 messages; CI soak runs without Supabase secrets.
+  return (
+    status === 500
+    && errorRow?.code === "internal_server_error"
+    && message === "Internal server error."
+  );
 }
 
 /**
