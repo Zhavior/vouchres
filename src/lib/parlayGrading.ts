@@ -10,6 +10,7 @@
 
 import type { Parlay, Leg } from '../types';
 import { apiClient } from './apiClient';
+import { buildGradeLegPayload } from './parlays/gradeLegMapper';
 
 export interface GradedLeg {
   sport: string;
@@ -40,33 +41,30 @@ const PARLAY_STATUS: Record<string, Parlay['status']> = {
   won: 'WON', lost: 'LOST', push: 'VOID', pending: 'PENDING', error: 'PENDING',
 };
 
-/** A parlay can be graded once at least one leg carries a gamePk + marketCode. */
+/** A parlay can be graded once at least one leg carries a gamePk + market identity. */
 export function parlayIsGradable(p: Parlay): boolean {
-  return (p.legs || []).some((l) => l.gamePk && l.marketCode);
+  return (p.legs || []).some((l) =>
+    Boolean(l.gamePk && (l.marketCode || l.market) && buildGradeLegPayload(l)),
+  );
 }
 
 /** Grade a single parlay against the live feed. Returns null if not gradable. */
 export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
   const legs = (p.legs || [])
-    .filter((l) => l.gamePk && l.marketCode)
-    .map((l) => ({
-      sport: (l.sport || 'mlb').toLowerCase(),
-      gamePk: String(l.gamePk),
-      market: l.marketCode as string,
-      selection: l.selection,
-      threshold: l.threshold,
-      oddsDecimal: l.odds,
-    }));
+    .map((l) => buildGradeLegPayload(l))
+    .filter((leg): leg is NonNullable<typeof leg> => leg != null);
   if (legs.length === 0) return null;
 
   try {
     const data = await apiClient.post<GradeResponse>('/api/parlays/grade', {
       legs,
-      stakeUnits: p.wagerAmount ?? 1,
+      stakeUnits: Math.max(1, Number(p.wagerAmount ?? 1) || 1),
     });
     return data;
   } catch (err) {
-    console.warn("[parlayGrading] grade request failed", err);
+    if (import.meta.env.DEV) {
+      console.warn("[parlayGrading] grade request failed", err);
+    }
     return null;
   }
 }
