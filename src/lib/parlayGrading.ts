@@ -11,6 +11,7 @@
 import type { Parlay, Leg } from '../types';
 import { apiClient } from './apiClient';
 import { buildGradeLegPayload } from './parlays/gradeLegMapper';
+import { GradeParlaySchema } from '../../server/validators/parlaySchemas';
 
 export interface GradedLeg {
   sport: string;
@@ -41,6 +42,42 @@ const PARLAY_STATUS: Record<string, Parlay['status']> = {
   won: 'WON', lost: 'LOST', push: 'VOID', pending: 'PENDING', error: 'PENDING',
 };
 
+/** Parlays that failed validation this session — avoids repeated 400 spam. */
+const validationBlockedParlayIds = new Set<string>();
+
+function parlayGradeFingerprint(p: Parlay): string {
+  const legs = (p.legs || [])
+    .map((leg) => buildGradeLegPayload(leg))
+    .filter(Boolean)
+    .map((leg) => `${leg!.sport}:${leg!.gamePk}:${leg!.market}:${leg!.selection}`)
+    .join('|');
+  return `${p.id}::${legs}`;
+}
+
+function buildGradeRequest(p: Parlay): { legs: NonNullable<ReturnType<typeof buildGradeLegPayload>>[]; stakeUnits: number } | null {
+  const legs = (p.legs || [])
+    .map((l) => buildGradeLegPayload(l))
+    .filter((leg): leg is NonNullable<typeof leg> => leg != null);
+  if (legs.length === 0) return null;
+
+  const stakeUnits = Math.max(1, Number(p.wagerAmount ?? 1) || 1);
+  const parsed = GradeParlaySchema.safeParse({ legs, stakeUnits });
+  if (!parsed.success) {
+    if (import.meta.env.DEV) {
+      console.warn('[parlayGrading] skipped invalid grade payload', {
+        parlayId: p.id,
+        details: parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
+    }
+    return null;
+  }
+
+  return parsed.data;
+}
+
 /** A parlay can be graded once at least one leg maps to a valid grade payload. */
 export function parlayIsGradable(p: Parlay): boolean {
   return (p.legs || []).some((l) => Boolean(buildGradeLegPayload(l)));
@@ -48,21 +85,27 @@ export function parlayIsGradable(p: Parlay): boolean {
 
 /** Grade a single parlay against the live feed. Returns null if not gradable. */
 export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
-  const legs = (p.legs || [])
-    .map((l) => buildGradeLegPayload(l))
-    .filter((leg): leg is NonNullable<typeof leg> => leg != null);
-  if (legs.length === 0) return null;
+  const fingerprint = parlayGradeFingerprint(p);
+  if (validationBlockedParlayIds.has(fingerprint)) return null;
+
+  const request = buildGradeRequest(p);
+  if (!request) return null;
 
   try {
-    const data = await apiClient.post<GradeResponse>('/api/parlays/grade', {
-      legs,
-      stakeUnits: Math.max(1, Number(p.wagerAmount ?? 1) || 1),
-    });
+    const data = await apiClient.post<GradeResponse>('/api/parlays/grade', request);
     return data;
   } catch (err) {
+    const apiErr = err as { code?: string; details?: unknown[]; requestId?: string; status?: number };
+    if (apiErr.code === 'validation_error' || apiErr.status === 400) {
+      validationBlockedParlayIds.add(fingerprint);
+    }
     if (import.meta.env.DEV) {
-      const details = (err as { details?: unknown[] })?.details;
-      console.warn("[parlayGrading] grade request failed", err, details?.length ? { details } : undefined);
+      console.warn('[parlayGrading] grade request failed', {
+        parlayId: p.id,
+        requestId: apiErr.requestId,
+        code: apiErr.code,
+        details: apiErr.details,
+      });
     }
     return null;
   }

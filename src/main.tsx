@@ -51,6 +51,7 @@ function DeferredSpeedInsights() {
   }, []);
 
   if (!enabled) return null;
+  if (!import.meta.env.PROD && import.meta.env.VITE_ENABLE_SPEED_INSIGHTS !== 'true') return null;
   return (
     <Suspense fallback={null}>
       <SpeedInsights />

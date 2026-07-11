@@ -111,4 +111,27 @@ describe("gradeLegMapper", () => {
     expect(payload?.oddsDecimal).toBeUndefined();
     expect(GradeParlaySchema.safeParse({ legs: [payload], stakeUnits: 1 }).success).toBe(true);
   });
+
+  it("parses gamePk from canonical eventKey when gamePk is missing", () => {
+    const payload = buildGradeLegPayload({
+      sport: "MLB",
+      eventKey: "MLB_777001_147_592450_ANYTIME_HR_1_GTE",
+      marketCode: "ANYTIME_HR",
+      selection: "Aaron Judge 1+ HR",
+      odds: -110,
+    });
+    expect(payload?.gamePk).toBe("777001");
+    expect(GradeParlaySchema.safeParse({ legs: [payload], stakeUnits: 1 }).success).toBe(true);
+  });
+
+  it("skips fake gamePk and uses eventKey game id", () => {
+    const payload = buildGradeLegPayload({
+      sport: "mlb",
+      gamePk: "leg-123",
+      eventKey: "MLB_777001_147_592450_HIT_1_GTE",
+      marketCode: "HIT",
+      selection: "Player Hit",
+    });
+    expect(payload?.gamePk).toBe("777001");
+  });
 });

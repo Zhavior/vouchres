@@ -41,6 +41,8 @@ export type GradeLegPayloadInput = {
   game?: string | number | null;
   eventId?: string | number | null;
   event_id?: string | number | null;
+  eventKey?: string | null;
+  event_key?: string | null;
   market?: string | null;
   marketCode?: string | null;
   market_code?: string | null;
@@ -83,10 +85,30 @@ export function isFakeGeneratedGamePk(value: unknown): boolean {
   return FAKE_GAME_PK_PREFIXES.some((prefix) => lower.startsWith(prefix));
 }
 
+export function parseGamePkFromEventKey(eventKey: unknown): string | undefined {
+  const text = cleanIdentity(eventKey);
+  if (!text) return undefined;
+
+  const parts = text.split("_").map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return undefined;
+
+  const sportPart = parts[0]?.toLowerCase();
+  if (sportPart !== "mlb" && sportPart !== "nba" && sportPart !== "nfl") return undefined;
+
+  const candidate = cleanIdentity(parts[1]);
+  if (!candidate || isFakeGeneratedGamePk(candidate)) return undefined;
+  if (/^\d{5,10}$/.test(candidate)) return candidate.slice(0, MAX_GAME_PK_LEN);
+
+  return undefined;
+}
+
 /** Resolve the best available game identity for grading. */
 export function resolveGradeGamePk(input: GradeLegPayloadInput): string | undefined {
   const gameField = cleanIdentity(input.game);
   const numericGame = gameField && /^\d{5,10}$/.test(gameField) ? gameField : undefined;
+  const eventKeyGamePk =
+    parseGamePkFromEventKey(input.eventKey)
+    ?? parseGamePkFromEventKey(input.event_key);
 
   const candidates = [
     input.gamePk,
@@ -95,6 +117,7 @@ export function resolveGradeGamePk(input: GradeLegPayloadInput): string | undefi
     input.game_id,
     input.eventId,
     input.event_id,
+    eventKeyGamePk,
     numericGame,
   ];
 

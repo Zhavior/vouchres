@@ -43,7 +43,6 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
       layout: layout ?? { name: 'cose', animate: false, fit: true, padding: 28 },
       minZoom: 0.4,
       maxZoom: 2.5,
-      wheelSensitivity: 0.25,
     });
     cyRef.current = cy;
 
