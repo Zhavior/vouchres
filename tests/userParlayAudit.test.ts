@@ -54,6 +54,26 @@ describe("updateParlaySummary audit trail", () => {
     );
   });
 
+  it("rejects edits when parlay is locked", async () => {
+    parlayRepository.findUserParlayById.mockResolvedValueOnce({
+      id: "pick-1",
+      explanation: "Locked slip",
+      stake_units: 1,
+      locked_at: "2026-07-10T12:00:00.000Z",
+    });
+
+    await expect(updateParlaySummary({
+      userId: "user-1",
+      parlayId: "pick-1",
+      title: "New title",
+    })).rejects.toMatchObject({
+      status: 403,
+      code: "parlay_locked",
+    });
+
+    expect(parlayRepository.updateUserParlay).not.toHaveBeenCalled();
+  });
+
   it("rejects empty updates", async () => {
     await expect(updateParlaySummary({
       userId: "user-1",

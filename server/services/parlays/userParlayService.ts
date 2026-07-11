@@ -1,10 +1,12 @@
 import { AppError } from "../../errors/AppError";
+import { isPickLocked, PARLAY_LOCKED_MESSAGE } from "../../lib/parlayLockPolicy";
 import {
   findLegsForPick,
   findLegsForPicks,
   findUserParlayById,
   hideUserParlay as hideUserParlayRow,
   listVisibleUserParlayRows,
+  lockPickForFeedShare,
   updateUserParlay,
   type ParlayLegRow,
   type ParlayRow,
@@ -74,6 +76,47 @@ export async function listUserParlayRows(input: {
   return { parlays: rows, total, limit: input.limit, offset: input.offset };
 }
 
+function assertParlayEditable(existing: ParlayRow): void {
+  if (isPickLocked(existing)) {
+    throw new AppError({
+      status: 403,
+      code: "parlay_locked",
+      message: PARLAY_LOCKED_MESSAGE,
+      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null },
+    });
+  }
+}
+
+export async function lockParlayOnFeedShare(input: {
+  userId: string;
+  parlayId: string;
+  postId?: string;
+  lockedAt?: string;
+}): Promise<ParlayRow | null> {
+  const lockedAt = input.lockedAt ?? new Date().toISOString();
+  const parlay = await lockPickForFeedShare({
+    pickId: input.parlayId,
+    userId: input.userId,
+    lockedAt,
+  });
+
+  if (!parlay) return null;
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "lock_feed_share",
+    fieldChanges: {
+      locked_at: { before: null, after: parlay.locked_at ?? lockedAt },
+      ...(input.postId ? { post_id: input.postId } : {}),
+    },
+  }).catch((err) => {
+    console.warn("[lockParlayOnFeedShare] audit log failed", (err as Error)?.message);
+  });
+
+  return parlay;
+}
+
 export async function updateParlaySummary(input: {
   userId: string;
   parlayId: string;
@@ -84,6 +127,7 @@ export async function updateParlaySummary(input: {
   if (!existing) {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
+  assertParlayEditable(existing);
 
   const updates: Record<string, unknown> = {};
   const fieldChanges: Record<string, { before: unknown; after: unknown }> = {};
@@ -124,7 +168,7 @@ export async function getParlayAuditHistory(input: {
   userId: string;
   parlayId: string;
   limit?: number;
-}): Promise<{ entries: PickAuditRow[]; created_at: string | null; updated_at: string | null }> {
+}): Promise<{ entries: PickAuditRow[]; created_at: string | null; updated_at: string | null; locked_at: string | null }> {
   const parlay = await findUserParlayById(input.userId, input.parlayId);
   if (!parlay) {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
@@ -140,6 +184,7 @@ export async function getParlayAuditHistory(input: {
     entries,
     created_at: parlay.created_at ?? null,
     updated_at: parlay.updated_at ?? null,
+    locked_at: parlay.locked_at ?? null,
   };
 }
 
@@ -147,6 +192,12 @@ export async function hideUserParlay(input: {
   userId: string;
   parlayId: string;
 }) {
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found or already hidden." });
+  }
+  assertParlayEditable(existing);
+
   const hiddenAt = new Date().toISOString();
   const parlay = await hideUserParlayRow({ userId: input.userId, parlayId: input.parlayId, hiddenAt });
   if (!parlay) {

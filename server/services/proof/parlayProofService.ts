@@ -30,6 +30,7 @@ export interface PublicParlayProof {
   source: string | null;
   created_at: string;
   updated_at: string;
+  locked_at: string | null;
   legs: ParlayLegRow[];
   author: PublicParlayAuthor | null;
   capper: { id: string; display_name: string } | null;
@@ -90,6 +91,7 @@ export async function getPublicParlayProof(id: string, baseUrl?: string): Promis
     source: parlay.source ?? null,
     created_at: String(parlay.created_at),
     updated_at: String(parlay.updated_at ?? parlay.created_at),
+    locked_at: parlay.locked_at ? String(parlay.locked_at) : null,
     legs,
     author,
     capper,

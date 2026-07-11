@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { Parlay } from '../../types';
+import { formatFeedLockTimestamp } from '../../lib/parlayLockPolicy';
 
 interface ParlayFeedPostCardProps {
   parlay: Parlay;
@@ -8,6 +9,7 @@ interface ParlayFeedPostCardProps {
 
 export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) {
   const [showEdgeReport, setShowEdgeReport] = useState(false);
+  const lockLabel = formatFeedLockTimestamp(parlay.feedLockedAt);
 
   const renderInnerBold = (text: string) => {
     const parts = text.split(/\*\*(.*?)\*\*/g);
@@ -112,6 +114,12 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
           <span className="font-bold text-slate-100 text-xs tracking-wide uppercase">{parlay.title || 'Slip Selection'}</span>
         </div>
         <div className="flex items-center gap-2">
+          {lockLabel && (
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border bg-cyan-950/40 text-cyan-300 border-cyan-800/50 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              LOCKED {lockLabel}
+            </span>
+          )}
           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${getRiskColor(parlay.riskTier)}`}>
             {parlay.riskTier} RISK
           </span>

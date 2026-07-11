@@ -229,6 +229,7 @@ export function registerApiRoutes(app: Express): void {
 
       const authorLabel = escapeHtml(parlayProofAuthorLabel(proof));
       const createdLabel = escapeHtml(formatProofTimestamp(proof.created_at));
+      const lockedLabel = proof.locked_at ? escapeHtml(formatProofTimestamp(proof.locked_at)) : null;
       const titleText = escapeHtml(proof.explanation || proof.selection || `${proof.legs.length}-leg parlay`);
       const title = `${titleText} — VouchEdge Parlay Proof`;
       const description = escapeHtml(
@@ -259,7 +260,7 @@ export function registerApiRoutes(app: Express): void {
 <body>
 <img src="${imageUrl}" alt="${titleText}">
 <p>${description}</p>
-<p class="meta">Authored by <strong>${authorLabel}</strong> · Recorded ${createdLabel}</p>
+<p class="meta">Authored by <strong>${authorLabel}</strong> · Recorded ${createdLabel}${lockedLabel ? ` · <strong>Locked at share</strong> ${lockedLabel}` : ""}</p>
 <ul>${proof.legs.map((leg, index) => `<li><strong>Leg ${index + 1}:</strong> ${escapeHtml(String(leg.selection || leg.market || "Prop"))}</li>`).join("")}</ul>
 <a href="${baseUrl}/">Open in VouchEdge →</a>
 <p style="font-size:12px;color:#9aa8bd">Probability-based. No guarantees. Research and entertainment only.</p>

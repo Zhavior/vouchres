@@ -193,6 +193,52 @@ export async function setPickVisibilityPublic(pickId: string, userId: string): P
   }
 }
 
+/** Lock a pick when shared to feed — idempotent; sets visibility public when available. */
+export async function lockPickForFeedShare(input: {
+  pickId: string;
+  userId: string;
+  lockedAt?: string;
+}): Promise<ParlayRow | null> {
+  const supabaseAdmin = await admin();
+  const lockedAt = input.lockedAt ?? new Date().toISOString();
+
+  const baseUpdate: Record<string, unknown> = { locked_at: lockedAt };
+  let query = supabaseAdmin
+    .from("picks")
+    .update({ ...baseUpdate, visibility: "public" })
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .is("locked_at", null)
+    .select("*")
+    .maybeSingle();
+
+  let { data, error } = await query;
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    ({ data, error } = await supabaseAdmin
+      .from("picks")
+      .update(baseUpdate)
+      .eq("id", input.pickId)
+      .eq("user_id", input.userId)
+      .is("locked_at", null)
+      .select("*")
+      .maybeSingle());
+  }
+
+  if (error) throw error;
+  if (data) return data;
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("picks")
+    .select("*")
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  return existing ?? null;
+}
+
 export async function hideUserParlay(input: {
   userId: string;
   parlayId: string;

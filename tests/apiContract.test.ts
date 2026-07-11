@@ -89,10 +89,12 @@ describe("API contract helpers", () => {
     expect(isApiErrorCode("not_found")).toBe(true);
     expect(isApiErrorCode("upstream_unavailable")).toBe(true);
     expect(isApiErrorCode("parlay_post_locked")).toBe(true);
+    expect(isApiErrorCode("parlay_locked")).toBe(true);
     expect(isApiErrorCode("made_up_code")).toBe(false);
     expect(API_ERROR_CODES.not_found).toBe(404);
     expect(API_ERROR_CODES.upstream_unavailable).toBe(503);
     expect(API_ERROR_CODES.parlay_post_locked).toBe(403);
+    expect(API_ERROR_CODES.parlay_locked).toBe(403);
   });
 
   it("builds success and error envelopes with request metadata", () => {

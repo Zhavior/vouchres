@@ -19,6 +19,8 @@ export type BackendFeedPostRow = {
     selection?: string;
     status?: string;
     settled_units?: number | null;
+    locked_at?: string | null;
+    created_at?: string | null;
   } | null;
   likes_count?: Array<{ count?: number }>;
   comments_count?: Array<{ count?: number }>;
@@ -75,7 +77,8 @@ export function mapBackendFeedPost(row: BackendFeedPostRow): FeedPost {
           oddsValue: 0,
           riskTier: 'MEDIUM',
           status: 'PENDING',
-          createdAt: row.created_at,
+          createdAt: pick.created_at ?? row.created_at,
+          feedLockedAt: pick.locked_at ?? undefined,
         }
       : undefined,
   };

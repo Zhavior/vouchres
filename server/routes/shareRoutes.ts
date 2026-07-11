@@ -138,6 +138,7 @@ shareRoutes.get("/share/parlay/:id/card.png", asyncHandler(async (req, res) => {
       oddsDecimal: proof.odds_decimal,
       authorHandle: parlayProofAuthorLabel(proof).replace(/^@/, ""),
       createdAt: proof.created_at,
+      lockedAt: proof.locked_at,
     });
 
     const png = await sharp(Buffer.from(svg)).png().toBuffer();

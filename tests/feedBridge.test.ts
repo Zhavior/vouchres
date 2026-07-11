@@ -46,4 +46,24 @@ describe("feedBridge", () => {
       },
     });
   });
+
+  it("maps feed lock timestamp onto parlay cards", () => {
+    const mapped = mapBackendFeedPost({
+      id: "post-2",
+      body: "Locked slip",
+      created_at: "2026-07-09T12:00:00.000Z",
+      author: { id: "user-1", username: "edgecapper", display_name: "Edge Capper" },
+      pick: {
+        id: "pick-2",
+        market: "parlay",
+        selection: "2-leg parlay",
+        status: "pending",
+        locked_at: "2026-07-09T12:01:00.000Z",
+        created_at: "2026-07-09T11:55:00.000Z",
+      },
+    });
+
+    expect(mapped.parlay?.feedLockedAt).toBe("2026-07-09T12:01:00.000Z");
+    expect(mapped.parlay?.createdAt).toBe("2026-07-09T11:55:00.000Z");
+  });
 });

@@ -9,6 +9,7 @@ export type ParlayShareCardData = {
   oddsDecimal?: number | null;
   authorHandle?: string | null;
   createdAt?: string | null;
+  lockedAt?: string | null;
 };
 
 export const PARLAY_SHARE_CARD_HEADERS: Record<string, string> = {
@@ -46,6 +47,9 @@ export function renderParlayShareCardSvg(data: ParlayShareCardData): string {
   const created = data.createdAt
     ? new Date(data.createdAt).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })
     : "Timestamp on file";
+  const locked = data.lockedAt
+    ? new Date(data.lockedAt).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : null;
   const odds = data.oddsDecimal != null && Number.isFinite(data.oddsDecimal)
     ? `${Number(data.oddsDecimal).toFixed(2)}x`
     : "—";
@@ -68,6 +72,7 @@ export function renderParlayShareCardSvg(data: ParlayShareCardData): string {
   <text x="116" y="360" fill="${statusColor(status)}" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700">${escapeXml(status)}</text>
   <text x="96" y="430" fill="#cbd5e1" font-family="Inter,Arial,sans-serif" font-size="26">By ${escapeXml(author)}</text>
   <text x="96" y="475" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="22">Created ${escapeXml(created)} UTC</text>
+  ${locked ? `<text x="96" y="515" fill="#22d3ee" font-family="Inter,Arial,sans-serif" font-size="20">Locked at share ${escapeXml(locked)} UTC</text>` : ""}
   <text x="96" y="540" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="18">Probability-based research record · No guarantees</text>
 </svg>`;
 }
