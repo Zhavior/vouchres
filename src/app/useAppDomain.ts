@@ -116,6 +116,8 @@ export function useAppDomain({
     const ctx = useParlayOsStore.getState().pickerContext;
     if (!ctx?.player) return;
 
+    const editLegId = useParlayOsStore.getState().editLegId;
+
     const matchedGameCheck = ctx.player.team?.toLowerCase() ?? '';
     const matchedGame = liveGames.find((g: any) =>
       g.homeTeam.toLowerCase() === matchedGameCheck ||
@@ -143,6 +145,32 @@ export function useAppDomain({
         title: 'Cannot add leg',
         body: validation.blockedReason ?? 'This leg is missing grading identity.',
       });
+      return;
+    }
+
+    if (editLegId) {
+      if (built.length !== 1) {
+        notify({
+          kind: 'info',
+          title: 'Combo not supported',
+          body: 'Replace one leg at a time — pick a single prop tier.',
+        });
+        return;
+      }
+
+      const replacement = built[0];
+      useParlayCommandStore.getState().replaceDraftLeg(editLegId, replacement.draft);
+      setActiveLegs((prev) =>
+        prev.map((leg) => (leg.id === editLegId ? replacement.leg : leg)),
+      );
+      useParlayOsStore.getState().closePicker();
+      notify({
+        kind: 'success',
+        title: 'Leg updated',
+        body: replacement.draft.selection ?? tier.label,
+        section: 'build',
+      });
+      useParlayOsStore.getState().openSheet(true);
       return;
     }
 

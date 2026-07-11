@@ -24,11 +24,17 @@ export type ParlayPickerContext = {
 type ParlayOsState = {
   pickerOpen: boolean;
   pickerContext: ParlayPickerContext | null;
+  /** When set, tier confirm replaces this draft leg instead of adding. */
+  editLegId: string | null;
+  /** Leg being edited in ParlayLegEditorSheet. */
+  editorLegId: string | null;
   sheetOpen: boolean;
   sheetExpanded: boolean;
 
-  openPicker: (ctx: ParlayPickerContext) => void;
+  openPicker: (ctx: ParlayPickerContext, options?: { editLegId?: string }) => void;
   closePicker: () => void;
+  openLegEditor: (legId: string) => void;
+  closeLegEditor: () => void;
   openSheet: (expanded?: boolean) => void;
   closeSheet: () => void;
   toggleSheet: () => void;
@@ -41,21 +47,28 @@ type ParlayOsState = {
 export const useParlayOsStore = create<ParlayOsState>()((set) => ({
   pickerOpen: false,
   pickerContext: null,
+  editLegId: null,
+  editorLegId: null,
   sheetOpen: false,
   sheetExpanded: false,
   proofPickId: null,
 
-  openPicker: (ctx) =>
+  openPicker: (ctx, options) =>
     set({
       pickerOpen: true,
       pickerContext: ctx,
+      editLegId: options?.editLegId ?? null,
     }),
 
   closePicker: () =>
     set({
       pickerOpen: false,
       pickerContext: null,
+      editLegId: null,
     }),
+
+  openLegEditor: (legId) => set({ editorLegId: legId }),
+  closeLegEditor: () => set({ editorLegId: null }),
 
   openSheet: (expanded = true) =>
     set({

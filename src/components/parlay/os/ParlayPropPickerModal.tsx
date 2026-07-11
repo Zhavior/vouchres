@@ -6,7 +6,12 @@ import {
   inferFamilyFromText,
   tiersForRole,
 } from "../../../lib/parlays/parlayMarketCatalog";
-import { resolveTierOddsMap } from "../../../lib/parlays/parlayTierOddsResolver";
+import { resolveTierOddsMap, resolveTierOdds } from "../../../lib/parlays/parlayTierOddsResolver";
+import {
+  buildCustomTierFromFamily,
+  CUSTOM_STAT_LIMITS,
+  validateCustomStatTarget,
+} from "../../../lib/parlays/parlayCustomLine";
 import { useParlayOsStore } from "../../../stores/parlayOsStore";
 import { getFallbackHeadshot, getMlbHeadshotUrl } from "../../../lib/parlayDisplay";
 
@@ -19,6 +24,7 @@ export default function ParlayPropPickerModal({
 }) {
   const pickerOpen = useParlayOsStore((s) => s.pickerOpen);
   const context = useParlayOsStore((s) => s.pickerContext);
+  const editLegId = useParlayOsStore((s) => s.editLegId);
   const closePicker = useParlayOsStore((s) => s.closePicker);
 
   const player = context?.player;
@@ -33,6 +39,8 @@ export default function ParlayPropPickerModal({
 
   const families = useMemo(() => tiersForRole(role), [role]);
   const [activeFamily, setActiveFamily] = useState<ParlayMarketFamilyId>(defaultFamily);
+  const [customTarget, setCustomTarget] = useState(1);
+  const [customError, setCustomError] = useState<string | null>(null);
 
   useEffect(() => {
     if (pickerOpen) setActiveFamily(defaultFamily);
@@ -42,6 +50,29 @@ export default function ParlayPropPickerModal({
     () => families.find((f) => f.id === activeFamily) ?? families[0],
     [families, activeFamily],
   );
+
+  const customLimits = activeFamilyData ? CUSTOM_STAT_LIMITS[activeFamilyData.id] : null;
+
+  useEffect(() => {
+    if (pickerOpen && customLimits) {
+      setCustomTarget(customLimits.min);
+      setCustomError(null);
+    }
+  }, [pickerOpen, activeFamily, customLimits?.min]);
+
+  const customTier = useMemo(() => {
+    if (!activeFamilyData) return null;
+    return buildCustomTierFromFamily(activeFamilyData, customTarget);
+  }, [activeFamilyData, customTarget]);
+
+  const customQuote = useMemo(() => {
+    if (!customTier) return null;
+    return resolveTierOdds({
+      tier: customTier,
+      propHint: context?.propHint,
+      propositions: player?.propositions ?? [],
+    });
+  }, [customTier, context?.propHint, player?.propositions]);
 
   const tierOddsMap = useMemo(
     () => resolveTierOddsMap({
@@ -68,6 +99,16 @@ export default function ParlayPropPickerModal({
     closePicker();
   };
 
+  const handleCustomConfirm = () => {
+    if (!activeFamilyData || !customTier) return;
+    const check = validateCustomStatTarget(activeFamilyData.id, customTarget);
+    if (!check.valid) {
+      setCustomError(check.reason ?? "Invalid line.");
+      return;
+    }
+    handleSelect(customTier);
+  };
+
   return (
     <div
       className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -86,7 +127,9 @@ export default function ParlayPropPickerModal({
         <div className="flex items-center gap-4 p-5 border-b border-white/10 bg-gradient-to-r from-cyan-950/40 to-transparent">
           <img src={headshot} alt="" className="h-14 w-14 rounded-2xl border border-white/15 object-cover" />
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">ParlayOS</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">
+              {editLegId ? "Replace leg" : "ParlayOS"}
+            </p>
             <h2 className="text-lg font-black text-white truncate">{player.name}</h2>
             <p className="text-xs text-white/45 truncate">{player.team} · {role === "pitcher" ? "Pitcher props" : "Batter props"}</p>
             <p className="text-[10px] font-mono mt-1">
@@ -170,6 +213,62 @@ export default function ParlayPropPickerModal({
             );
             })}
           </div>
+
+          {customLimits && customTier ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-cyan-400/25 bg-cyan-500/[0.04] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/80 mb-3">
+                Custom line
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomTarget((v) => Math.max(customLimits.min, v - 1));
+                      setCustomError(null);
+                    }}
+                    disabled={customTarget <= customLimits.min}
+                    className="min-h-[2.75rem] min-w-[2.75rem] rounded-xl border border-white/15 text-white/70 disabled:opacity-30"
+                    aria-label="Decrease custom line"
+                  >
+                    −
+                  </button>
+                  <span className="text-2xl font-black text-cyan-200 min-w-[2.5rem] text-center">{customTarget}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomTarget((v) => Math.min(customLimits.max, v + 1));
+                      setCustomError(null);
+                    }}
+                    disabled={customTarget >= customLimits.max}
+                    className="min-h-[2.75rem] min-w-[2.75rem] rounded-xl border border-white/15 text-white/70 disabled:opacity-30"
+                    aria-label="Increase custom line"
+                  >
+                    +
+                  </button>
+                  <span className="text-[10px] text-white/35 ml-1">{customLimits.min}–{customLimits.max}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{customTier.selection(player.name ?? "Player")}</p>
+                  <p className="text-[10px] font-mono mt-0.5">
+                    <span className={customQuote?.source === "live" ? "text-emerald-300" : "text-amber-200/80"}>
+                      {customQuote?.label ?? "TBD"}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCustomConfirm}
+                  className="shrink-0 min-h-[2.75rem] px-4 rounded-xl border border-cyan-400/40 bg-cyan-500/15 text-[11px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/25"
+                >
+                  Add custom
+                </button>
+              </div>
+              {customError ? (
+                <p role="alert" className="mt-2 text-[10px] text-amber-200/90">{customError}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="p-4 border-t border-white/10 bg-black/30 flex items-center gap-2 text-[10px] text-white/35">

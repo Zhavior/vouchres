@@ -8,6 +8,8 @@ import {
 import { useAppCommandStore } from "../../../stores/appCommandStore";
 import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
+import ParlayLegCardPro from "./ParlayLegCardPro";
+import ParlayLegEditorSheet from "./ParlayLegEditorSheet";
 import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import { draftLegsToUiLegs } from "../../../lib/parlays/draftLegsToUiLegs";
 import { assessSlipOdds } from "../../../lib/parlays/slipOddsPolicy";
@@ -30,11 +32,14 @@ export default function ParlayOsLayer({
 }: ParlayOsLayerProps) {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const removeDraftLeg = useParlayCommandStore((s) => s.removeDraftLeg);
+  const replaceDraftLeg = useParlayCommandStore((s) => s.replaceDraftLeg);
   const sheetOpen = useParlayOsStore((s) => s.sheetOpen);
   const sheetExpanded = useParlayOsStore((s) => s.sheetExpanded);
   const toggleSheet = useParlayOsStore((s) => s.toggleSheet);
   const setSheetExpanded = useParlayOsStore((s) => s.setSheetExpanded);
-  const openPicker = useParlayOsStore((s) => s.openPicker);
+  const editorLegId = useParlayOsStore((s) => s.editorLegId);
+  const openLegEditor = useParlayOsStore((s) => s.openLegEditor);
+  const closeLegEditor = useParlayOsStore((s) => s.closeLegEditor);
 
   const [stake, setStake] = useState(10);
   const [identityExplainerOpen, setIdentityExplainerOpen] = useState(false);
@@ -73,6 +78,28 @@ export default function ParlayOsLayer({
   }, [liveProgressQuery.data]);
 
   const legCount = draftLegs.length;
+  const editingLeg = draftLegs.find((leg) => leg.id === editorLegId) ?? null;
+
+  const legContent = useMemo(() => {
+    if (uiLegs.length === 0) return undefined;
+    return (
+      <div className="flex flex-col gap-3">
+        {uiLegs.map((leg) => (
+          <ParlayLegCardPro
+            key={leg.id}
+            leg={{
+              ...leg,
+              actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
+              statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
+            }}
+            compact
+            onEdit={() => openLegEditor(leg.id)}
+            onRemove={() => removeDraftLeg(leg.id)}
+          />
+        ))}
+      </div>
+    );
+  }, [uiLegs, liveProgressByLegId, openLegEditor, removeDraftLeg]);
 
   const handleOpenHub = useCallback(() => {
     navigateSection?.("build");
@@ -141,6 +168,7 @@ export default function ParlayOsLayer({
               <ParlayBuilderRail
                 layout="sheet"
                 legs={uiLegs}
+                legContent={legContent}
                 onRemoveLeg={(id) => removeDraftLeg(id)}
                 onSaveParlay={onSaveParlay}
                 saveLabel="Save Slip"
@@ -150,7 +178,6 @@ export default function ParlayOsLayer({
                 potentialPayout={potentialPayout}
                 title="Active Slip"
                 subtitle="Add from any player page via +"
-                useProLegCards
                 liveProgressByLegId={liveProgressByLegId}
               />
               <div className="mt-3 flex gap-2">
@@ -185,6 +212,22 @@ export default function ParlayOsLayer({
           onClose={() => setIdentityExplainerOpen(false)}
         />
       ) : null}
+
+      <ParlayLegEditorSheet
+        leg={editingLeg}
+        open={Boolean(editorLegId && editingLeg)}
+        onClose={closeLegEditor}
+        onSave={(updated) => replaceDraftLeg(updated.id, updated)}
+        onSwapPlayer={(leg) => {
+          useParlayOsStore.setState({ editLegId: leg.id });
+          closeLegEditor();
+          notify({
+            kind: "info",
+            title: "Change player",
+            body: "Open Player Research, pick a player, and tap +. This leg will be replaced.",
+          });
+        }}
+      />
     </>
   );
 }

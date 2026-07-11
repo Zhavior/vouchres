@@ -24,11 +24,13 @@ function marketGradient(code?: string | null): string {
 export default function ParlayLegCardPro({
   leg,
   onRemove,
+  onEdit,
   compact = false,
   isWeak = false,
 }: {
   leg: Leg;
   onRemove?: () => void;
+  onEdit?: () => void;
   compact?: boolean;
   isWeak?: boolean;
 }) {
@@ -79,15 +81,26 @@ export default function ParlayLegCardPro({
             </div>
             <div className="text-right shrink-0">
               <span className="text-sm font-mono font-black text-cyan-300">{oddsLabel}</span>
-              {onRemove ? (
-                <button
-                  type="button"
-                  onClick={onRemove}
-                  className="mt-1 block ml-auto text-[10px] text-white/35 hover:text-rose-300 uppercase tracking-wide"
-                >
-                  Remove
-                </button>
-              ) : null}
+              <div className="mt-1 flex flex-col items-end gap-0.5">
+                {onEdit ? (
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    className="text-[10px] text-cyan-300/70 hover:text-cyan-200 uppercase tracking-wide min-h-[1.75rem]"
+                  >
+                    Edit
+                  </button>
+                ) : null}
+                {onRemove ? (
+                  <button
+                    type="button"
+                    onClick={onRemove}
+                    className="text-[10px] text-white/35 hover:text-rose-300 uppercase tracking-wide min-h-[1.75rem]"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
 

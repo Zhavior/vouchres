@@ -100,6 +100,7 @@ import ParlayBuilderRail from './ParlayBuilderRail';
 import ParlayLegCardPro from './os/ParlayLegCardPro';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
 import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParlaySlipLiveProgress';
+import { useParlayOsStore } from '../../stores/parlayOsStore';
 
 function statusColorStyle(token: string) {
   const color = z8StatusColor(token);
@@ -559,6 +560,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const draftMode       = useParlayCommandStore((s) => s.draftMode);
   const removeDraftLeg  = useParlayCommandStore((s) => s.removeDraftLeg);
   const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
+  const openLegEditor   = useParlayOsStore((s) => s.openLegEditor);
   const announce        = useAnnounce();
   const onCommitParlayTrust = useAppCommandStore((s) => s.onCommitParlayTrust);
   const { isCreator } = useEntitlements();
@@ -681,8 +683,13 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
       {uiLegs.map((leg) => (
         <ParlayLegCardPro
           key={leg.id}
-          leg={leg}
+          leg={{
+            ...leg,
+            actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
+            statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
+          }}
           isWeak={verdict.weakLegIds.includes(leg.id)}
+          onEdit={() => openLegEditor(leg.id)}
           onRemove={() => {
             removeDraftLeg(leg.id);
             announce('Leg removed.');
@@ -787,7 +794,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 min-h-0 relative pb-32 xl:pr-80">
+    <div className="flex flex-col gap-4 min-h-0 relative pb-24 xl:pb-8 xl:pr-80">
       {/* Draft mode indicator */}
       {draftMode === 'ai_locked' && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-vouch-emerald/10 border border-vouch-emerald/30">
@@ -1282,7 +1289,7 @@ export default function ParlayCommandCenter({
   const activePanel       = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel    = useParlayCommandStore((s) => s.setActivePanel);
   const hydrateSavedSlips = useParlayCommandStore((s) => s.hydrateSavedSlips);
-  const draftLegs         = useParlayCommandStore(selectDraftLegs);
+  const draftLegCount     = useParlayCommandStore((s) => s.draftLegs.length);
   const commandSavedSlips = useParlayCommandStore(selectSavedSlips);
 
   const tablistId = useId();
@@ -1343,7 +1350,7 @@ export default function ParlayCommandCenter({
           {/* Stats strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             {[
-              { label: 'Draft legs',   value: draftLegs.length,              note: 'queued' },
+              { label: 'Draft legs',   value: draftLegCount,              note: 'queued' },
               { label: 'Live locked',  value: liveCount,                     note: 'in-flight' },
               { label: 'Saved slips',  value: commandSavedSlips.length,      note: 'total' },
               { label: 'Legs tracked', value: totalTracked,                  note: `${gradedCount} graded` },
