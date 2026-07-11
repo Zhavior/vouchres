@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../lib/apiClient";
-import type { Parlay } from "../types";
+import type { Leg, Parlay } from "../types";
 
 export interface SubscriberAnnouncement {
   id: string;
@@ -45,6 +45,22 @@ function winRateFromStats(won: number, lost: number): number {
   return decisions > 0 ? Number(((won / decisions) * 100).toFixed(1)) : 0;
 }
 
+function legStatus(value: unknown): Leg["status"] {
+  const normalized = String(value ?? "PENDING").toUpperCase();
+  if (normalized === "WON" || normalized === "LOST" || normalized === "VOID" || normalized === "PENDING") {
+    return normalized;
+  }
+  return "PENDING";
+}
+
+function parlayStatus(value: unknown): Parlay["status"] {
+  const normalized = String(value ?? "pending").toUpperCase();
+  if (normalized === "WON" || normalized === "LOST" || normalized === "VOID" || normalized === "PENDING") {
+    return normalized;
+  }
+  return "PENDING";
+}
+
 function mapApiPickToParlay(pick: Record<string, any>): Parlay {
   const legs = Array.isArray(pick.legs) ? pick.legs : [];
   const oddsValue = pick.odds_decimal != null ? Number(pick.odds_decimal) : 1;
@@ -58,12 +74,12 @@ function mapApiPickToParlay(pick: Record<string, any>): Parlay {
       market: String(leg.market ?? "prop"),
       selection: String(leg.selection ?? ""),
       odds: leg.odds_decimal != null ? Number(leg.odds_decimal) : 1,
-      status: String(leg.status ?? "PENDING").toUpperCase(),
+      status: legStatus(leg.status),
     })),
     totalOdds: oddsValue >= 2 ? `+${Math.round((oddsValue - 1) * 100)}` : String(oddsValue),
     oddsValue,
     riskTier: "MEDIUM",
-    status: String(pick.status ?? "pending").toUpperCase(),
+    status: parlayStatus(pick.status),
     bookie: "VouchEdge",
     wagerAmount: pick.stake_units != null ? Number(pick.stake_units) : 1,
     payoutAmount: pick.stake_units != null && oddsValue ? Number(pick.stake_units) * oddsValue : undefined,

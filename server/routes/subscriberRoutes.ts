@@ -423,7 +423,7 @@ subscriberRoutes.post("/subscriber/channels/:kind/:targetId/messages", requireAu
     if (error.code === "42P01" || error.code === "PGRST205") {
       throw new AppError({
         status: 503,
-        code: "service_unavailable",
+        code: "upstream_unavailable",
         message: "Subscriber chat is not available until migration 0019 is applied.",
       });
     }

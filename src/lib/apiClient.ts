@@ -96,6 +96,6 @@ export const apiClient = {
     request<T>(path, { method: "PATCH", body }),
   put: <T = any>(path: string, body?: any) =>
     request<T>(path, { method: "PUT", body }),
-  delete: <T = any>(path: string) =>
-    request<T>(path, { method: "DELETE" }),
+  delete: <T = any>(path: string, body?: any) =>
+    request<T>(path, { method: "DELETE", body }),
 };

@@ -324,7 +324,7 @@ ${trustTimeline ? `<ul class="timeline">${trustTimeline}</ul>` : ""}
         parlayId: req.params.id,
         message: error instanceof Error ? error.message : String(error),
       }));
-      captureException(error, { requestId, path: req.originalUrl, parlayId: req.params.id });
+      captureException(error, { requestId, path: req.originalUrl, extra: { parlayId: req.params.id } });
       res.status(500);
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("x-request-id", requestId);
