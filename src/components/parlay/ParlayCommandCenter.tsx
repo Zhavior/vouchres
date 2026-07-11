@@ -821,7 +821,6 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     showLiveIndicator: draftLegs.length > 0,
     subtitle: 'Add from Player Research, VouchCards, or +',
     footerExtra: railFooterExtra,
-    useProLegCards: true,
     liveProgressByLegId,
   };
 

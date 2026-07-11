@@ -4,7 +4,7 @@ import { Parlay } from '../../types';
 import { formatFeedLockTimestamp } from '../../lib/parlayLockPolicy';
 import { projectSmartParlayFromParlay } from '../../domain/parlay';
 import { resolvePublicProofPickId, resolveLocalSlipId } from '../../lib/parlays/parlayProofLinks';
-import SmartParlayLegCard from '../../components/parlay/smart/SmartParlayLegCard';
+import SmartParlaySlipCard from '../../components/parlay/smart/SmartParlaySlipCard';
 
 interface ParlayFeedPostCardProps {
   parlay: Parlay;
@@ -14,6 +14,10 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
   const [showEdgeReport, setShowEdgeReport] = useState(false);
   const lockLabel = formatFeedLockTimestamp(parlay.feedLockedAt);
   const smartSlip = useMemo(() => projectSmartParlayFromParlay(parlay), [parlay]);
+  const legOdds = useMemo(
+    () => Object.fromEntries(parlay.legs.map((leg) => [leg.id, leg.odds])),
+    [parlay.legs],
+  );
   const proofPickId =
     resolvePublicProofPickId({
       backendPickId: parlay.backendPickId,
@@ -144,17 +148,15 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
           <Layers3 className="w-3.5 h-3.5" />
           ParlayOS Slip
         </div>
-        {smartSlip.legs.map((leg) => {
-          const sourceLeg = parlay.legs.find((item) => item.id === leg.id);
-          return (
-            <SmartParlayLegCard
-              key={leg.id}
-              leg={leg}
-              odds={sourceLeg?.odds}
-              compact
-            />
-          );
-        })}
+        <SmartParlaySlipCard
+          slip={smartSlip}
+          variant="embedded"
+          legVariant="pro"
+          maxLegs={99}
+          showTrustPanel={false}
+          showOsBadges={false}
+          legOdds={legOdds}
+        />
       </div>
 
       <div className="bg-ve-storm/50 px-4 py-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono font-bold">

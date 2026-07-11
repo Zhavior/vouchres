@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { ExternalLink, ShieldCheck, Lock, Download, Layers3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import SmartParlayLegCard from "../components/parlay/smart/SmartParlayLegCard";
+import SmartParlaySlipCard from "../components/parlay/smart/SmartParlaySlipCard";
 import ParlayOsBadgeRow from "../components/trust/ParlayOsBadgeRow";
 import ParlayIdentityBadge from "../components/trust/ParlayIdentityBadge";
 import { formatFeedLockTimestamp } from "../lib/parlayLockPolicy";
@@ -99,9 +99,14 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
 
         <section className="space-y-3">
           <h2 className="text-xs font-black uppercase tracking-widest text-white/40">Legs</h2>
-          {smartSlip.legs.map((leg) => (
-            <SmartParlayLegCard key={leg.id} leg={leg} compact />
-          ))}
+          <SmartParlaySlipCard
+            slip={smartSlip}
+            variant="embedded"
+            legVariant="pro"
+            maxLegs={99}
+            showTrustPanel={false}
+            showIdentityBadge={false}
+          />
         </section>
 
         {proof.trust_events && proof.trust_events.length > 0 ? (

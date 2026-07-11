@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "../../lib/motion";
 import {
-  BarChart3, Calendar, CheckCircle2, XCircle, Clock, Lock,
+  BarChart3, Calendar, CheckCircle2, XCircle, Lock,
   TrendingUp, Award, Filter, Search, ChevronLeft, ChevronRight,
-  Info, Trophy, Flame, Zap,
+  Trophy, Flame, Zap,
 } from "lucide-react";
 import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
 import ResultsLedgerSummary from "./ResultsLedgerSummary";
 import ResultsPartition from "./ResultsPartition";
+import SmartParlaySlipCard from "../parlay/smart/SmartParlaySlipCard";
+import { projectSmartParlayFromParlay } from "../../domain/parlay";
 
 /**
  * ResultsStudio — Premium proof dashboard
@@ -52,20 +54,25 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
     return slips;
   }, [savedParlays, profile]);
 
-  // Filter slips
-  const filteredSlips = useMemo(() => {
-    let result = allSlips;
+  const filteredParlays = useMemo(() => {
+    let result = savedParlays;
     if (filter === "wins") result = result.filter((s) => s.status === "WON");
     else if (filter === "losses") result = result.filter((s) => s.status === "LOST");
     else if (filter === "pending") result = result.filter((s) => s.status === "PENDING");
     else if (filter === "voids") result = result.filter((s) => s.status === "VOID");
-    if (selectedDate) result = result.filter((s) => s.resultDate === selectedDate);
+    if (selectedDate) {
+      result = result.filter((s) => s.createdAt.slice(0, 10) === selectedDate);
+    }
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter((s) => s.title.toLowerCase().includes(q) || s.legs.some((l) => l.selection.toLowerCase().includes(q)));
+      result = result.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q)
+          || s.legs.some((l) => l.selection.toLowerCase().includes(q)),
+      );
     }
     return result;
-  }, [allSlips, filter, selectedDate, search]);
+  }, [savedParlays, filter, selectedDate, search]);
 
   // Calendar data — now includes winRate % and net units per day
   const calendarDays = useMemo(() => {
@@ -343,12 +350,17 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
 
             {/* Slip feed */}
             <div className="space-y-3">
-              {filteredSlips.length === 0 ? (
+              {filteredParlays.length === 0 ? (
                 <EmptyResultsState hasSlips={allSlips.length > 0} />
               ) : (
                 <AnimatePresence>
-                  {filteredSlips.map((slip, i) => (
-                    <ResultSlipCard key={slip.id} slip={slip} index={i} />
+                  {filteredParlays.map((parlay, i) => (
+                    <ResultSmartSlipCard
+                      key={parlay.id}
+                      parlay={parlay}
+                      index={i}
+                      ownerName={profile?.displayName || "You"}
+                    />
                   ))}
                 </AnimatePresence>
               )}
@@ -389,38 +401,43 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
 }
 
 
-const cleanCustomerText = (value?: string | number | null): string =>
-  String(value ?? "")
-    .replace(/\|\|meta:.*$/i, "")
-    .replace(/\\n/g, " ")
-    .replace(/source=manual_builder\s*/gi, "")
-    .replace(/source=manual\s*/gi, "")
-    .replace(/clientRef=[^\s]+/gi, "")
-    .replace(/Legacy pick saved before canonical grading identity existed; cannot be honestly graded\.?/gi, "Legacy unverified pick")
-    .replace(/\bleg-\d+-[a-z0-9-]+\b/gi, "")
-    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+function ResultSmartSlipCard({
+  parlay,
+  index,
+  ownerName,
+}: {
+  parlay: Parlay;
+  index: number;
+  ownerName: string;
+}) {
+  const smartSlip = useMemo(() => projectSmartParlayFromParlay(parlay), [parlay]);
+  const metaLine = `${ownerName} · ${parlay.legs.length}-leg · ${new Date(parlay.createdAt).toLocaleDateString()}`;
+  const footerParts = [
+    parlay.oddsValue ? `Odds: ${parlay.oddsValue > 0 ? `+${parlay.oddsValue}` : parlay.oddsValue}` : null,
+    parlay.riskTier ? `Risk: ${parlay.riskTier}` : null,
+    "Graded after final",
+  ].filter(Boolean);
 
-const getCustomerSlipTitle = (title?: string | null, status?: string | null): string => {
-  const cleaned = cleanCustomerText(title);
-  if (!cleaned || cleaned.toLowerCase() === "legacy unverified pick") {
-    return status === "VOID" ? "Legacy Unverified Parlay" : "VouchEdge Parlay";
-  }
-  return cleaned;
-};
-
-const getCustomerLegSelection = (selection?: string | null): string =>
-  cleanCustomerText(selection) || "Player prop";
-
-const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
-  const cleaned = cleanCustomerText(game);
-  if (!cleaned) return false;
-  if (/^leg-/i.test(cleaned)) return false;
-  if (/^[a-f0-9-]{12,}$/i.test(cleaned)) return false;
-  return true;
-};
-
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+    >
+      <SmartParlaySlipCard
+        slip={smartSlip}
+        variant="results"
+        metaLine={metaLine}
+        legVariant="pro"
+        maxLegs={99}
+        showTrustPanel={false}
+        showOsBadges={false}
+        footerNote={footerParts.join(" · ")}
+        legOdds={Object.fromEntries(parlay.legs.map((leg) => [leg.id, leg.odds]))}
+      />
+    </motion.div>
+  );
+}
 
 /* ============ Summary Cards ============ */
 function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number; units: number } }) {
@@ -445,102 +462,6 @@ function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pe
   );
 }
 
-
-function LivePulseBars({ active }: { active: boolean }) {
-  if (!active) return null;
-
-  return (
-    <div className="flex items-end gap-[3px] h-5" aria-label="Live parlay activity">
-      {[0, 1, 2, 3, 4].map((bar) => (
-        <span
-          key={bar}
-          className="w-[3px] rounded-full bg-cyan-300/90 shadow-[0_0_10px_rgba(34,211,238,0.65)]"
-          style={{
-            height: `${8 + (bar % 3) * 4}px`,
-            animation: "ve-live-bar 0.9s ease-in-out infinite",
-            animationDelay: `${bar * 110}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-
-/* ============ Result Slip Card ============ */
-function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
-  const statusConfig = {
-    WON: { label: "Hit", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)", icon: CheckCircle2 },
-    LOST: { label: "Missed", color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)", icon: XCircle },
-    PENDING: { label: "Pending final", color: "#22d3ee", bg: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.15)", icon: Clock },
-    VOID: { label: "Voided", color: "#94a3b8", bg: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)", icon: Info },
-  };
-  const config = statusConfig[slip.status as keyof typeof statusConfig] || statusConfig.PENDING;
-  const Icon = config.icon;
-  const isLivePending = slip.status === "PENDING";
-
-  return (
-    <>
-      <style>{`
-        @keyframes ve-live-bar {
-          0%, 100% { transform: scaleY(0.45); opacity: 0.45; }
-          50% { transform: scaleY(1.25); opacity: 1; }
-        }
-      `}</style>
-      <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="rounded-xl p-4"
-      style={{ background: config.bg, border: `1px solid ${config.border}`, backdropFilter: "blur(8px)" }}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold text-white truncate">{getCustomerSlipTitle(slip.title, slip.status)}</div>
-          <div className="text-[10px] text-slate-500">
-            {slip.ownerName} · {slip.totalLegs}-leg · {new Date(slip.postedAt).toLocaleDateString()}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <LivePulseBars active={isLivePending} />
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: config.bg, border: `1px solid ${config.border}` }}>
-            <Icon className="w-3 h-3" style={{ color: config.color }} />
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.color }}>{config.label}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Legs */}
-      <div className="space-y-1">
-        {slip.legs.map((leg: Leg, i: number) => {
-          const legStatus = {
-            WON: { color: "#34d399", icon: "✓" },
-            LOST: { color: "#f87171", icon: "✗" },
-            PENDING: { color: "#22d3ee", icon: "•" },
-            VOID: { color: "#94a3b8", icon: "—" },
-          };
-          const ls = legStatus[leg.status as keyof typeof legStatus] || legStatus.PENDING;
-          return (
-            <div key={leg.id} className="flex items-center gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <span className="text-[9px] font-mono text-slate-600">{i + 1}.</span>
-              <span className="text-xs text-slate-300 flex-1 truncate">{getCustomerLegSelection(leg.selection)}</span>
-              {shouldShowPublicGameLabel(leg.game) && <span className="text-[9px] text-slate-500">{cleanCustomerText(leg.game)}</span>}
-              <span className="text-xs font-mono font-bold" style={{ color: ls.color }}>{ls.icon}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/5">
-        {slip.oddsValue && <span className="text-[10px] font-mono text-slate-500">Odds: {slip.oddsValue > 0 ? `+${slip.oddsValue}` : slip.oddsValue}</span>}
-        {slip.riskTier && <span className="text-[10px] text-slate-500">Risk: {slip.riskTier}</span>}
-        <span className="text-[9px] text-slate-600 ml-auto">Graded after final</span>
-      </div>
-    </motion.div>
-    </>
-  );
-}
 
 /* ============ Empty State ============ */
 function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {

@@ -11,21 +11,49 @@ import type { SmartParlaySlip } from "../../../domain/parlay";
 import { ParlayHubStatusBadge } from "../hub/parlayHubUi";
 import type { LegGradeStatus } from "../types/parlayHubTypes";
 
+export type SmartParlaySlipVariant = "hub" | "results" | "embedded";
+
+function resultsShellStyle(status: string): { background: string; border: string } {
+  const normalized = String(status ?? "pending").toUpperCase();
+  if (normalized === "WON" || normalized === "won") {
+    return { background: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" };
+  }
+  if (normalized === "LOST" || normalized === "lost") {
+    return { background: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" };
+  }
+  if (normalized === "VOID" || normalized === "void") {
+    return { background: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)" };
+  }
+  return { background: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.15)" };
+}
+
 export default function SmartParlaySlipCard({
   slip,
   onViewStructure,
   onViewProof,
   showTrustPanel = true,
+  showOsBadges = true,
+  showIdentityBadge = true,
   maxLegs = 3,
   legVariant = "row",
+  variant = "hub",
+  metaLine,
+  footerNote,
+  legOdds,
   className = "",
 }: {
   slip: SmartParlaySlip;
   onViewStructure?: () => void;
   onViewProof?: () => void;
   showTrustPanel?: boolean;
+  showOsBadges?: boolean;
+  showIdentityBadge?: boolean;
   maxLegs?: number;
   legVariant?: "row" | "pro";
+  variant?: SmartParlaySlipVariant;
+  metaLine?: string;
+  footerNote?: string;
+  legOdds?: Record<string, number | null | undefined>;
   className?: string;
 }) {
   const status = String(slip.status ?? "pending").toLowerCase() as LegGradeStatus;
@@ -34,38 +62,97 @@ export default function SmartParlaySlipCard({
   const pickId = String(slip.sourceId ?? "").trim();
   const showTrust = showTrustPanel && Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
   const visibleLegs = slip.legs.slice(0, maxLegs);
+  const resultsStyle = variant === "results" ? resultsShellStyle(slip.status) : null;
+
+  const legNodes = visibleLegs.map((leg) =>
+    legVariant === "pro" ? (
+      <SmartParlayLegCard
+        key={leg.id}
+        leg={leg}
+        odds={legOdds?.[leg.id]}
+        compact
+      />
+    ) : (
+      <SmartParlayLegRow key={leg.id} leg={leg} />
+    ),
+  );
+
+  if (variant === "embedded") {
+    return (
+      <div className={`flex flex-col gap-3 ${className}`.trim()}>
+        {showIdentityBadge ? (
+          <ParlayIdentityBadge identity={slip.identity} />
+        ) : null}
+        {legNodes}
+        {slip.legCount > maxLegs ? (
+          <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">
+            +{slip.legCount - maxLegs} more legs
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  const shellClass =
+    variant === "results"
+      ? "rounded-xl p-4 backdrop-blur-md"
+      : "rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] p-3";
 
   return (
     <article
-      className={`flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] ${className}`.trim()}
+      className={`flex flex-col gap-2 ${shellClass} ${className}`.trim()}
+      style={
+        resultsStyle
+          ? { background: resultsStyle.background, border: `1px solid ${resultsStyle.border}` }
+          : undefined
+      }
       aria-label={slip.title}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))] truncate">{slip.title}</p>
-          <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-            {slip.legCount} leg{slip.legCount !== 1 ? "s" : ""}
-            {lockLabel ? ` · ${lockLabel}` : ""}
-            {slip.oddsLabel && slip.oddsLabel !== "—" ? ` · ${slip.oddsLabel}` : ""}
+          <p
+            className={`font-bold truncate ${
+              variant === "results"
+                ? "text-sm text-white"
+                : "text-xs text-[hsl(var(--ve-text-primary))]"
+            }`}
+          >
+            {slip.title}
           </p>
-          <ParlayOsBadgeRow
-            className="mt-1.5"
-            input={{
-              id: pickId || slip.publicId,
-              status: slip.status,
-              committedAt: slip.trustCommittedAt,
-              feedLockedAt: slip.feedLockedAt,
-              lockReason: slip.lockReason,
-            }}
-          />
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <ParlayIdentityBadge identity={slip.identity} />
-          </div>
-          <ParlayLockCountdownBanner
-            trustCommittedAt={slip.trustCommittedAt}
-            trustLockAt={slip.trustLockAt}
-            feedLockedAt={slip.feedLockedAt}
-          />
+          <p
+            className={`mt-0.5 ${
+              variant === "results"
+                ? "text-[10px] text-slate-500"
+                : "text-[10px] text-[hsl(var(--ve-text-muted))]"
+            }`}
+          >
+            {metaLine ??
+              `${slip.legCount} leg${slip.legCount !== 1 ? "s" : ""}${lockLabel ? ` · ${lockLabel}` : ""}${slip.oddsLabel && slip.oddsLabel !== "—" ? ` · ${slip.oddsLabel}` : ""}`}
+          </p>
+          {showOsBadges ? (
+            <ParlayOsBadgeRow
+              className="mt-1.5"
+              input={{
+                id: pickId || slip.publicId,
+                status: slip.status,
+                committedAt: slip.trustCommittedAt,
+                feedLockedAt: slip.feedLockedAt,
+                lockReason: slip.lockReason,
+              }}
+            />
+          ) : null}
+          {showIdentityBadge ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <ParlayIdentityBadge identity={slip.identity} />
+            </div>
+          ) : null}
+          {variant === "hub" ? (
+            <ParlayLockCountdownBanner
+              trustCommittedAt={slip.trustCommittedAt}
+              trustLockAt={slip.trustLockAt}
+              feedLockedAt={slip.feedLockedAt}
+            />
+          ) : null}
           {onViewProof ? (
             <button
               type="button"
@@ -84,18 +171,16 @@ export default function SmartParlaySlipCard({
         <ParlayHubStatusBadge status={status} size="xs" />
       </div>
 
-      {visibleLegs.map((leg) =>
-        legVariant === "pro" ? (
-          <SmartParlayLegCard key={leg.id} leg={leg} compact />
-        ) : (
-          <SmartParlayLegRow key={leg.id} leg={leg} />
-        ),
-      )}
+      {legNodes}
 
       {slip.legCount > maxLegs ? (
         <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">
           +{slip.legCount - maxLegs} more legs
         </p>
+      ) : null}
+
+      {footerNote ? (
+        <p className="text-[9px] text-slate-600 pt-2 border-t border-white/5">{footerNote}</p>
       ) : null}
 
       {onViewStructure && slip.legCount > 0 ? (
