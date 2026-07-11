@@ -97,6 +97,14 @@
     {
       "path": "/api/cron/parlays/anchor-ots?limit=25",
       "schedule": "30 6 * * *"
+    },
+    {
+      "path": "/api/cron/parlays/finalize-trust-locks?limit=50",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/parlays/live-hr-sync",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

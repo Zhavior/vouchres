@@ -69,8 +69,10 @@ export interface Parlay {
   lockAt?: string;
   /** Marks that a "locked / moved to Live" notification was already sent. */
   lockNotified?: boolean;
-  /** ISO time this parlay became immutable after feed share. */
+  /** ISO time this parlay became immutable after lock. */
   feedLockedAt?: string;
+  /** Why the parlay locked: trust ledger commit vs feed share. */
+  lockReason?: 'trust_ledger' | 'feed_share';
   /** Trust ledger: committed to private wins, pending auto-lock. */
   trustCommittedAt?: string;
   /** Scheduled trust ledger lock time (committed + 5 min). */

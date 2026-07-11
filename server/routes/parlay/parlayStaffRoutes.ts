@@ -4,9 +4,10 @@ import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
 import { boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
-import { AuthedRequest, getSupabaseAdmin, requireAuth, requireStaff } from "../../middleware/auth";
+import { AuthedRequest, requireAuth, requireStaff } from "../../middleware/auth";
 import { gradingLimiter } from "../../middleware/rateLimit";
 import { gradePendingPicks } from "../../services/grading/gradingService";
+import { buildGradeDueLogRows, persistGradingRunLogs } from "../../services/grading/gradingLogService";
 import { previewLiveHrParlayMatches } from "../../services/grading/liveHrParlayService";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
 import { partitionGradeDueResult } from "./parlayGradingResponses";
@@ -65,22 +66,8 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
   }));
 
   try {
-    const logRows = [
-      ...settled.map((row) => ({ pick_id: row.pick_id, status: row.status, reason: "graded", source: "grade-due" })),
-      ...pending.map((row) => ({ pick_id: row.pick_id, status: "pending", reason: "pending_not_final", source: "grade-due" })),
-      ...errors.map((row) => ({ pick_id: row.pick_id, status: "graded_error", reason: row.error ?? "error", source: "grade-due" })),
-    ];
-    if (logRows.length > 0) {
-      const supabaseAdmin = await getSupabaseAdmin();
-      const { error: logErr } = await supabaseAdmin.from("grading_logs").insert(logRows);
-      if (logErr && !["42P01", "PGRST205"].includes(logErr.code)) {
-        console.warn("[parlays/grade-due] grading_logs write failed", JSON.stringify({
-          requestId,
-          code: logErr.code,
-          message: logErr.message,
-        }));
-      }
-    }
+    const logRows = buildGradeDueLogRows({ settled, pending, errors, source: "grade-due" });
+    await persistGradingRunLogs(logRows);
   } catch (logErr: any) {
     console.warn("[parlays/grade-due] grading_logs unavailable", JSON.stringify({
       requestId,
