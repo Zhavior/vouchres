@@ -30,6 +30,12 @@ export type PublicParlaySlip = {
   createdAt: string | null;
   isLiveLike: boolean;
   legs: PublicParlayLeg[];
+  trustCommittedAt?: string | null;
+  trustLockAt?: string | null;
+  feedLockedAt?: string | null;
+  trustAudience?: "private" | "public" | "subscriber" | null;
+  trustLockWarningNotified?: boolean;
+  trustLockedNotified?: boolean;
 };
 
 export const cleanCustomerText = (value?: string | number | null): string =>
@@ -168,6 +174,12 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
     syncedLabel: raw?.synced ? "Synced" : raw?.syncStatus ? cleanCustomerText(raw.syncStatus) : "Local",
     createdAt: String(raw?.created_at ?? raw?.createdAt ?? raw?.savedAt ?? raw?.updated_at ?? raw?.updatedAt ?? "") || null,
     isLiveLike: isLiveLikeStatus(status),
+    trustCommittedAt: raw?.trustCommittedAt ?? raw?.committed_at ?? null,
+    trustLockAt: raw?.trustLockAt ?? raw?.trust_lock_at ?? null,
+    feedLockedAt: raw?.feedLockedAt ?? raw?.locked_at ?? null,
+    trustAudience: raw?.trustAudience ?? raw?.visibility ?? "private",
+    trustLockWarningNotified: Boolean(raw?.trustLockWarningNotified),
+    trustLockedNotified: Boolean(raw?.trustLockedNotified),
     legs,
   };
 };

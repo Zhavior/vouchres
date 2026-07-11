@@ -64,6 +64,11 @@ import ResearchNotePostCard from './ResearchNotePostCard';
 import VouchCircleFeedCard from '../../components/VouchCircleFeedCard';
 import VouchCard from '../../components/vouch-system/VouchCard';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
+import CommentThread from './CommentThread';
+import { useFeedStore } from '../../stores/feedStore';
+import { useAuth } from '../../lib/useAuth';
+import { useOptionalSocialGraph } from '../../hooks/SocialGraphProvider';
+import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
 
 const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
@@ -108,7 +113,8 @@ function FeedPostCard({
   onDeletePost,
 }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
+  const [focusReply, setFocusReply] = useState(false);
+  const syncPosts = useFeedStore((state) => state.syncPosts);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [showPostMenu, setShowPostMenu] = useState(false);
@@ -234,98 +240,68 @@ function FeedPostCard({
     }
   };
 
-  // Check if user is following this creator
-  const [followingList, setFollowingList] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_following');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  const socialGraph = useOptionalSocialGraph();
+  const entitlements = useEntitlements();
+  const [followBusy, setFollowBusy] = useState(false);
 
-  const [userProfile, setUserProfile] = useState<any>(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_profile');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+  const relationshipEntry = socialGraph?.findEntry({
+    profileId: post.userId !== 'unknown' ? post.userId : null,
+    username: post.username,
   });
+  const isFollowing = Boolean(relationshipEntry);
+  const isTailing = relationshipEntry?.relationshipType === 'tail';
+  const isSubscribed = relationshipEntry?.relationshipType === 'subscribe';
 
-  React.useEffect(() => {
-    const handleSync = (e: any) => {
-      setFollowingList(e.detail);
-    };
-    window.addEventListener('vouchedge-following-updated', handleSync);
-    
-    const handleProfileSync = () => {
-      try {
-        const stored = localStorage.getItem('vouchedge_profile');
-        if (stored) {
-          setUserProfile(JSON.parse(stored));
+  const handleFollowToggle = async () => {
+    if (!user?.id || !socialGraph || followBusy) return;
+    if (!post.userId || post.userId === 'unknown') return;
+
+    setFollowBusy(true);
+    try {
+      const wantsTail = post.subscriptionTier === 'SELLER_PRO';
+      if (isFollowing) {
+        await socialGraph.unfollowProfile(post.userId);
+        showToast(`Unfollowed @${post.username}`);
+        return;
+      }
+
+      if (wantsTail && !entitlements.isPro) {
+        setShowUpgradeModal(true);
+        return;
+      }
+
+      const relationshipType = wantsTail
+        ? (entitlements.isCreator ? 'subscribe' : 'tail')
+        : 'follow';
+
+      await socialGraph.followProfile({
+        profileId: post.userId,
+        relationshipType,
+      });
+
+      if (post.parlay?.id || post.parlay?.backendPickId) {
+        const pickId = post.parlay.backendPickId ?? post.parlay.id;
+        try {
+          await socialGraph.tailParlay({ pickId, sourcePostId: post.backendPostId ?? post.id });
+          showToast(`Notifications on — tailed @${post.username}'s parlay`);
+        } catch {
+          showToast(`Notifications on — now ${relationshipType === 'subscribe' ? 'subscribed to' : wantsTail ? 'tailing' : 'following'} @${post.username}`);
         }
-      } catch {}
-    };
-    window.addEventListener('vouchedge-profile-updated', handleProfileSync);
-
-    return () => {
-      window.removeEventListener('vouchedge-following-updated', handleSync);
-      window.removeEventListener('vouchedge-profile-updated', handleProfileSync);
-    };
-  }, []);
-
-  const isFollowing = followingList.includes(post.username);
-
-  const handleFollowToggle = () => {
-    if (!userProfile) return;
-
-    const isUpgraded = userProfile.subscriptionTier === 'GOLD' || userProfile.subscriptionTier === 'SELLER_PRO';
-
-    if (!isUpgraded) {
-      // User is BASIC, so trigger the custom upgrade modal!
-      setShowUpgradeModal(true);
-      return;
+      } else {
+        showToast(`Notifications on — now ${relationshipType === 'subscribe' ? 'subscribed to' : wantsTail ? 'tailing' : 'following'} @${post.username}`);
+      }
+    } catch (err: any) {
+      console.error('[FeedPostCard] follow failed', err);
+      alert(err?.message ?? 'Could not update follow status.');
+    } finally {
+      setFollowBusy(false);
     }
-
-    // Upgraded users can follow / tail!
-    let updated: string[];
-    if (isFollowing) {
-      updated = followingList.filter(u => u !== post.username);
-    } else {
-      updated = [...followingList, post.username];
-    }
-
-    setFollowingList(updated);
-    localStorage.setItem('vouchedge_following', JSON.stringify(updated));
-    
-    // Dispatch custom event to sync other feed cards instantly
-    window.dispatchEvent(new CustomEvent('vouchedge-following-updated', { detail: updated }));
   };
 
   const handleInstantUpgrade = () => {
-    try {
-      const stored = localStorage.getItem('vouchedge_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        parsed.subscriptionTier = 'SELLER_PRO';
-        parsed.verified = true;
-        localStorage.setItem('vouchedge_profile', JSON.stringify(parsed));
-        setUserProfile(parsed);
-        
-        // Dispatch event for other components to know we upgraded!
-        window.dispatchEvent(new CustomEvent('vouchedge-profile-updated'));
-        
-        // Follow automatically since they upgraded!
-        const updated = [...followingList, post.username];
-        setFollowingList(updated);
-        localStorage.setItem('vouchedge_following', JSON.stringify(updated));
-        window.dispatchEvent(new CustomEvent('vouchedge-following-updated', { detail: updated }));
-
-        setShowUpgradeModal(false);
-        alert(`💎 Congratulations! You upgraded to SELLER PRO. You are now subscribing & following (tailing) @${post.username}!`);
-      }
-    } catch {}
+    setShowUpgradeModal(false);
+    alert('Upgrade to Gold or Seller Pro to tail verified creators.');
   };
 
   // Relative timestamp helper
@@ -347,17 +323,23 @@ function FeedPostCard({
     }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-    onAddComment(post.id, commentText);
-    setCommentText('');
+  const openComments = (focus = false) => {
+    setShowComments(true);
+    setFocusReply(focus);
+  };
+
+  const handleCommentsCountChange = (count: number) => {
+    syncPosts(
+      useFeedStore.getState().posts.map((p) =>
+        p.id === post.id ? { ...p, commentsCount: count } : p,
+      ),
+    );
   };
 
   // Check if saved
   const isPostVouchSaved = post.vouch ? savedVouchIds.includes(post.vouch.id) : false;
 
-  const isSelf = userProfile && post.username === userProfile.username;
+  const isSelf = Boolean(user?.id && post.userId && post.userId === user.id);
   const showFollowAction = !isSelf && post.userId !== 've-alg-1';
   const postDeleteAllowed = isSelf && canDeleteFeedPost(post);
   const parlayPostLocked = isSelf && isParlayFeedPost(post) && !canDeleteFeedPost(post);
@@ -422,8 +404,8 @@ function FeedPostCard({
   };
 
   const isProTarget = post.subscriptionTier === 'SELLER_PRO';
-  const followButtonText = isFollowing 
-    ? (isProTarget ? '✓ Tailing' : '✓ Following')
+  const followButtonText = isFollowing
+    ? (isTailing ? '✓ Tailing' : isSubscribed ? '✓ Subscribed' : '✓ Following')
     : (isProTarget ? 'Tail' : 'Follow');
 
   if (post.boardConfig && post.boardConfig.gradient) {
@@ -438,11 +420,11 @@ function FeedPostCard({
         <div className="feed-action-row flex items-center justify-between max-w-[425px] text-white/45 text-[13px] -ml-2">
           {/* Comment icon button */}
           <button 
-            onClick={() => setShowComments(!showComments)}
+            onClick={() => openComments(true)}
             className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
               showComments ? 'text-vouch-cyan' : ''
             }`}
-            title="Toggle comments"
+            title="Reply"
             id={`comment-btn-${post.id}`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -490,51 +472,12 @@ function FeedPostCard({
           </button>
         </div>
 
-        {/* Comments drawer */}
-        {showComments && (
-          <div className="pt-2 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
-            {/* Create comment form */}
-            <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
-              <input 
-                type="text" 
-                placeholder="Post your reply..." 
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
-                required
-                id={`comment-input-${post.id}`}
-              />
-              <button 
-                type="submit"
-                className="p-2 bg-vouch-cyan/14 hover:bg-vouch-cyan text-vouch-cyan hover:text-obsidian-900 rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
-                id={`comment-submit-${post.id}`}
-              >
-                <Send className="w-4.5 h-4.5" />
-              </button>
-            </form>
-
-            {/* List and render of comments */}
-            {post.comments && post.comments.length > 0 && (
-              <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1.5 scrollbar-thin mt-2" id={`comments-feed-${post.id}`}>
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="bg-black/30 backdrop-blur-xl p-2.5 rounded-xl border border-white/24 flex flex-col gap-1 text-left animate-slide-up">
-                    <div className="flex justify-between items-center text-[10px] text-white/45 font-medium">
-                      <span className="font-bold text-white/70">
-                        {comment.displayName} <span className="text-white/45">@{comment.username}</span>
-                      </span>
-                      <span className="font-mono text-white/35">
-                        {comment.timestamp && new Date(comment.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/70 leading-normal pl-0.5">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <CommentThread
+          post={post}
+          open={showComments}
+          autoFocus={focusReply}
+          onCountChange={handleCommentsCountChange}
+        />
       </article>
     );
   }
@@ -592,14 +535,15 @@ function FeedPostCard({
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              {showFollowAction && (
+              {showFollowAction && user && (
                 <button
-                  onClick={handleFollowToggle}
+                  onClick={() => void handleFollowToggle()}
+                  disabled={followBusy}
                   className={`rounded-full px-3 py-1 text-[13px] font-bold transition-colors ${
                     isFollowing
                       ? 'border border-white/20 text-white/70 hover:border-rose-500/50 hover:text-rose-400'
                       : 'bg-white text-black hover:bg-white/90'
-                  }`}
+                  } ${followBusy ? 'opacity-60 cursor-wait' : ''}`}
                   id={`follow-tail-btn-${post.id}`}
                 >
                   {followButtonText}
@@ -833,7 +777,7 @@ function FeedPostCard({
       {/* Social interaction reaction bar — X-style */}
       <div className="feed-action-row flex items-center justify-between max-w-[425px] mt-2 text-white/45 text-[13px] -ml-2 relative select-none">
         <button 
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => openComments(true)}
           className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
             showComments ? 'text-vouch-cyan font-bold' : ''
           }`}
@@ -988,53 +932,12 @@ function FeedPostCard({
         </div>
       )}
 
-      {/* Extensible Comments area */}
-      {showComments && (
-        <div className="mt-4 pt-3.5 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
-          {/* Create comment form */}
-          <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
-            <input 
-              type="text" 
-              placeholder="Post your reply..." 
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
-              required
-              id={`comment-input-${post.id}`}
-            />
-            <button 
-              type="submit" 
-              className="p-2 bg-vouch-cyan hover:brightness-110 text-obsidian-900 rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md shadow-vouch-cyan/22 active:scale-95"
-              id={`comment-submit-${post.id}`}
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
-
-          {/* Comments list */}
-          {post.comments && post.comments.length > 0 ? (
-            <div className="space-y-2.5">
-              {post.comments.map((comm) => (
-                <div key={comm.id} className="p-3 bg-black/32 rounded-xl border border-white/25 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
-                  <div className="w-7 h-7 bg-black/56 rounded-full font-bold text-[11px] text-white/70 flex items-center justify-center shrink-0 border border-white/24">
-                    {comm.displayName.split(' ').map(n=>n[0]).join('')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                      <span className="font-bold text-white">{comm.displayName}</span>
-                      <span className="text-white/45 text-[10px]">@{comm.username}</span>
-                      <span className="text-white/45 text-[9px]">• {formatTime(comm.timestamp)}</span>
-                    </div>
-                    <p className="text-white/70 font-medium">{comm.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[11px] text-white/45 py-1 font-mono text-center">No comments yet. Start the conversation!</p>
-          )}
-        </div>
-      )}
+      <CommentThread
+        post={post}
+        open={showComments}
+        autoFocus={focusReply}
+        onCountChange={handleCommentsCountChange}
+      />
 
       {/* 5. Custom premium tail-lock subscription upgrade modal */}
       {showUpgradeModal && (

@@ -17,8 +17,11 @@ import {
   hideParlayHandler,
   listLegacyParlaysHandler,
   listMyParlaysHandler,
+  commitParlayTrustHandler,
+  finalizeParlayTrustLockHandler,
   repairParlayIdentityHandler,
   saveMeParlayHandler,
+  tailParlayHandler,
   updateParlayHandler,
 } from "../../controllers/parlayController";
 import {
@@ -310,6 +313,20 @@ parlayUserRoutes.post(
   saveMeParlayHandler,
 );
 
+parlayUserRoutes.post(
+  "/parlays/:id/commit-trust",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  commitParlayTrustHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/finalize-trust-lock",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  finalizeParlayTrustLockHandler,
+);
+
 parlayUserRoutes.get(
   "/parlays/:id/audit",
   requireAuth,
@@ -329,6 +346,13 @@ parlayUserRoutes.patch(
   requireAuth,
   validate({ params: ParlayIdParamsSchema, body: UpdateParlaySchema }),
   updateParlayHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/tail",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  tailParlayHandler,
 );
 
 parlayUserRoutes.delete(

@@ -1,7 +1,12 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import type { HrEvent } from "../mlb/hrFeedService";
 
-export type NotificationType = "HOME_RUN" | "PARLAY_GRADED";
+export type NotificationType =
+  | "HOME_RUN"
+  | "PARLAY_GRADED"
+  | "NEW_FOLLOWER"
+  | "FOLLOWED_POST"
+  | "PARLAY_TAILED";
 
 export interface NotificationRecord {
   id: string;
@@ -20,6 +25,8 @@ export interface NotificationPrefs {
   in_app_enabled: boolean;
   hr_alerts_enabled: boolean;
   parlay_alerts_enabled: boolean;
+  follow_alerts_enabled: boolean;
+  tail_alerts_enabled: boolean;
   browser_push_enabled: boolean;
 }
 
@@ -49,6 +56,8 @@ const DEFAULT_PREFS: NotificationPrefs = {
   in_app_enabled: true,
   hr_alerts_enabled: true,
   parlay_alerts_enabled: true,
+  follow_alerts_enabled: true,
+  tail_alerts_enabled: true,
   browser_push_enabled: false,
 };
 
@@ -66,6 +75,8 @@ function typeEnabled(type: NotificationType, prefs: NotificationPrefs): boolean 
   if (!prefs.in_app_enabled) return false;
   if (type === "HOME_RUN") return prefs.hr_alerts_enabled;
   if (type === "PARLAY_GRADED") return prefs.parlay_alerts_enabled;
+  if (type === "NEW_FOLLOWER" || type === "FOLLOWED_POST") return prefs.follow_alerts_enabled;
+  if (type === "PARLAY_TAILED") return prefs.tail_alerts_enabled;
   return true;
 }
 
@@ -74,7 +85,7 @@ async function getPrefs(userId: string): Promise<{ prefs: NotificationPrefs; war
     const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("notification_preferences")
-      .select("in_app_enabled, hr_alerts_enabled, parlay_alerts_enabled, browser_push_enabled")
+      .select("in_app_enabled, hr_alerts_enabled, parlay_alerts_enabled, follow_alerts_enabled, tail_alerts_enabled, browser_push_enabled")
       .eq("user_id", userId)
       .maybeSingle();
     if (error) {
@@ -271,6 +282,146 @@ export function buildParlayGradedNotification(args: {
     },
     dedupeKey: `PARLAY_GRADED:${args.parlayId}`,
   };
+}
+
+export async function ensureFollowAlertsEnabled(userId: string): Promise<void> {
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data } = await supabaseAdmin
+      .from("notification_preferences")
+      .select("user_id, follow_alerts_enabled")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!data) {
+      await supabaseAdmin.from("notification_preferences").upsert({
+        user_id: userId,
+        follow_alerts_enabled: true,
+        tail_alerts_enabled: true,
+        updated_at: new Date().toISOString(),
+      });
+      return;
+    }
+
+    if (data.follow_alerts_enabled === false) {
+      await supabaseAdmin
+        .from("notification_preferences")
+        .update({
+          follow_alerts_enabled: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+    }
+  } catch (err: any) {
+    if (missingTable(err)) return;
+    throw err;
+  }
+}
+
+export async function getNotificationPreferences(userId: string): Promise<NotificationPrefs> {
+  const { prefs } = await getPrefs(userId);
+  return prefs;
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  patch: Partial<NotificationPrefs>,
+): Promise<NotificationPrefs> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const payload = {
+    user_id: userId,
+    ...patch,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseAdmin.from("notification_preferences").upsert(payload);
+  if (error && !missingTable(error)) throw error;
+  return getNotificationPreferences(userId);
+}
+
+export async function createNewFollowerNotification(input: {
+  followerId: string;
+  followingProfileId: string;
+  relationshipType: string;
+}): Promise<NotificationCreateResult> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: follower } = await supabaseAdmin
+    .from("profiles")
+    .select("username, display_name")
+    .eq("id", input.followerId)
+    .maybeSingle();
+
+  const name = String(follower?.display_name ?? follower?.username ?? "Someone");
+  const action = input.relationshipType === "tail"
+    ? "started tailing you"
+    : input.relationshipType === "subscribe"
+      ? "subscribed to you"
+      : "followed you";
+
+  return createNotification({
+    userId: input.followingProfileId,
+    type: "NEW_FOLLOWER",
+    title: "New follower",
+    message: `${name} ${action}.`,
+    metadata: {
+      followerId: input.followerId,
+      relationshipType: input.relationshipType,
+    },
+    dedupeKey: `NEW_FOLLOWER:${input.followerId}:${input.followingProfileId}:${input.relationshipType}`,
+  });
+}
+
+export async function createFollowedActivityNotification(input: {
+  userId: string;
+  authorId: string;
+  authorName: string;
+  postId: string;
+  pickId?: string | null;
+  relationshipType: string;
+  message: string;
+}): Promise<NotificationCreateResult> {
+  return createNotification({
+    userId: input.userId,
+    type: "FOLLOWED_POST",
+    title: input.relationshipType === "tail" ? "Tailing update" : "Following update",
+    message: input.message,
+    metadata: {
+      authorId: input.authorId,
+      authorName: input.authorName,
+      postId: input.postId,
+      pickId: input.pickId ?? null,
+      relationshipType: input.relationshipType,
+    },
+    dedupeKey: `FOLLOWED_POST:${input.userId}:${input.postId}`,
+  });
+}
+
+export async function createParlayTailedNotification(input: {
+  sourceUserId: string;
+  tailedByUserId: string;
+  sourcePickId: string;
+  tailedPickId: string;
+}): Promise<NotificationCreateResult> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: tailedBy } = await supabaseAdmin
+    .from("profiles")
+    .select("username, display_name")
+    .eq("id", input.tailedByUserId)
+    .maybeSingle();
+
+  const name = String(tailedBy?.display_name ?? tailedBy?.username ?? "Someone");
+
+  return createNotification({
+    userId: input.sourceUserId,
+    type: "PARLAY_TAILED",
+    title: "Parlay tailed",
+    message: `${name} tailed your parlay slip.`,
+    metadata: {
+      tailedByUserId: input.tailedByUserId,
+      sourcePickId: input.sourcePickId,
+      tailedPickId: input.tailedPickId,
+    },
+    dedupeKey: `PARLAY_TAILED:${input.sourcePickId}:${input.tailedByUserId}`,
+  });
 }
 
 export async function createParlayGradedNotification(args: {
