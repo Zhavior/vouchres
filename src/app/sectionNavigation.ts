@@ -7,6 +7,7 @@ export const PUBLIC_SECTIONS = new Set([
   'edge_island_preview',
   'legacy_studio',
   'feed',
+  'following',
   'home',
   'daily_players',
   'live_games',

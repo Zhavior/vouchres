@@ -14,6 +14,7 @@ const PersonalizedOnboarding = lazy(() =>
     default: module.PersonalizedOnboarding,
   })),
 );
+const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('../TodayDashboard'));
 const EdgeIslandPage = lazy(() => import('../../pages/EdgeIslandPage'));
@@ -171,6 +172,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <FeedShell navigateSection={navigateSection} />
+        </LazyRoute>
+      );
+    case 'following':
+      return (
+        <LazyRoute>
+          <FollowingHubPage />
         </LazyRoute>
       );
     case 'build':

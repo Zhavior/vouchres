@@ -3,6 +3,7 @@ const preloaded = new Set<string>();
 /** Cheap intent-based preload for likely next lazy routes. Paths must match MainViewRouter lazy() imports. */
 const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   feed: () => import('../social/feed/HomeFeedPage'),
+  following: () => import('../pages/FollowingHubPage'),
   today: () => import('../components/TodayDashboard'),
   welcome: () => import('../pages/EdgeIslandPage'),
   island: () => import('../pages/EdgeIslandPage'),
@@ -39,7 +40,8 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
 };
 
 const WARM_NEIGHBORS: Record<string, string[]> = {
-  feed: ['today', 'hr_board', 'live_parlays'],
+  feed: ['today', 'hr_board', 'live_parlays', 'following'],
+  following: ['feed', 'subscriber_hub'],
   today: ['feed', 'hr_board', 'intel'],
   hr_board: ['today', 'mlb_stats', 'daily_players'],
   mlb_stats: ['hr_board', 'daily_players'],
