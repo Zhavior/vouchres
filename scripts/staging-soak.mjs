@@ -68,6 +68,14 @@ function metaLooksLastGood(meta) {
   return hasLastGoodWarnings(meta.warnings);
 }
 
+function isSupabaseUnavailable(status, body) {
+  if (status !== 500 && status !== 503) return false;
+  const message = isRecord(body)
+    ? String(body.message ?? body.error ?? "")
+    : "";
+  return message.includes("SUPABASE_URL") || message.includes("Supabase admin client");
+}
+
 /**
  * @param {unknown} warnings
  */
@@ -224,6 +232,7 @@ const CHECKS = [
     path: "/api/auth/username-check?username=soak_probe_user",
     localOnly: true,
     validate({ status, body }) {
+      if (isSupabaseUnavailable(status, body)) return null;
       if (status !== 200) return `expected HTTP 200, got ${status}`;
       const row = /** @type {Record<string, unknown>} */ (body);
       if (row.ok !== true) return "body.ok !== true";
@@ -236,6 +245,7 @@ const CHECKS = [
     path: "/api/auth/handle-check?handle=soak_probe",
     localOnly: true,
     validate({ status, body }) {
+      if (isSupabaseUnavailable(status, body)) return null;
       if (status !== 200) return `expected HTTP 200, got ${status}`;
       const row = /** @type {Record<string, unknown>} */ (body);
       if (row.ok !== true) return "body.ok !== true";
@@ -325,7 +335,9 @@ async function main() {
           hasLastGoodWarnings(row.warnings) ||
           row.source === "mlb_statsapi_lineups_last_good";
         const suffix = degraded ? " (degraded/last-good)" : "";
-        printResult(check.id, true, `${check.path} -> ${result.status}${suffix}`);
+        const skippedSupabase =
+          isSupabaseUnavailable(result.status, result.body) ? " (skipped: supabase not configured)" : "";
+        printResult(check.id, true, `${check.path} -> ${result.status}${suffix}${skippedSupabase}`);
       }
     } catch (error) {
       if (!skipped && isUnreachableError(error)) {
