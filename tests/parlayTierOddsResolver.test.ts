@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveTierOdds } from "../src/lib/parlays/parlayTierOddsResolver";
+import { mergeTierOddsQuote, resolveTierOdds } from "../src/lib/parlays/parlayTierOddsResolver";
 import { PARLAY_MARKET_FAMILIES } from "../src/lib/parlays/parlayMarketCatalog";
 
 describe("parlayTierOddsResolver", () => {
@@ -38,5 +38,31 @@ describe("parlayTierOddsResolver", () => {
     });
     expect(quote.source).toBe("live");
     expect(quote.odds).toBe(380);
+  });
+
+  it("prefers research odds over live feed fallback", () => {
+    const research = resolveTierOdds({
+      tier: hrTier,
+      propHint: { id: "p1", market: "HR", spec: "Anytime", odds: 400 },
+    });
+    const merged = mergeTierOddsQuote(research, {
+      odds: 350,
+      source: "live",
+      label: "+350",
+      detail: "Live book",
+    });
+    expect(merged.odds).toBe(400);
+  });
+
+  it("uses live feed when research is TBD", () => {
+    const research = resolveTierOdds({ tier: hrTier });
+    const merged = mergeTierOddsQuote(research, {
+      odds: 350,
+      source: "live",
+      label: "+350",
+      detail: "Live book",
+    });
+    expect(merged.odds).toBe(350);
+    expect(merged.source).toBe("live");
   });
 });

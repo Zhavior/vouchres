@@ -12,6 +12,7 @@ import { create } from "zustand";
 import type { MLBPlayer, Vouch } from "../types";
 import type { ResearchProp } from "./appCommandStore";
 import type { ParlayMarketFamilyId } from "../lib/parlays/parlayMarketCatalog";
+import type { TierOddsQuote } from "../lib/parlays/parlayTierOddsResolver";
 
 export type ParlayPickerContext = {
   player: MLBPlayer;
@@ -33,11 +34,15 @@ type ParlayOsState = {
   /** Active slip template guide (tier pattern only — no fake legs). */
   buildTemplateId: string | null;
 
+  /** Live Odds API quotes keyed by tier id — set by picker, consumed when building legs. */
+  pickerLiveOdds: Record<string, TierOddsQuote>;
+
   openPicker: (ctx: ParlayPickerContext, options?: { editLegId?: string }) => void;
   closePicker: () => void;
   openLegEditor: (legId: string) => void;
   closeLegEditor: () => void;
   setBuildTemplate: (templateId: string | null) => void;
+  setPickerLiveOdds: (quotes: Record<string, TierOddsQuote>) => void;
   openSheet: (expanded?: boolean) => void;
   closeSheet: () => void;
   toggleSheet: () => void;
@@ -56,12 +61,14 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
   sheetExpanded: false,
   buildTemplateId: null,
   proofPickId: null,
+  pickerLiveOdds: {},
 
   openPicker: (ctx, options) =>
     set({
       pickerOpen: true,
       pickerContext: ctx,
       editLegId: options?.editLegId ?? null,
+      pickerLiveOdds: {},
     }),
 
   closePicker: () =>
@@ -69,7 +76,11 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
       pickerOpen: false,
       pickerContext: null,
       editLegId: null,
+      pickerLiveOdds: {},
     }),
+
+  setPickerLiveOdds: (quotes: Record<string, TierOddsQuote>) =>
+    set({ pickerLiveOdds: quotes }),
 
   openLegEditor: (legId) => set({ editorLegId: legId }),
   closeLegEditor: () => set({ editorLegId: null }),

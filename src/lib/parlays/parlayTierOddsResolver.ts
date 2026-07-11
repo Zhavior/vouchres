@@ -79,6 +79,20 @@ function quoteFromOdds(odds: number | null, source: TierOddsSource, detail: stri
   };
 }
 
+/** Prefer explicit research prices; fall back to live Odds API quote when available. */
+export function mergeTierOddsQuote(
+  researchQuote: TierOddsQuote,
+  liveQuote?: TierOddsQuote | null,
+): TierOddsQuote {
+  if (researchQuote.source === "live" && researchQuote.odds != null) {
+    return researchQuote;
+  }
+  if (liveQuote?.source === "live" && liveQuote.odds != null) {
+    return liveQuote;
+  }
+  return researchQuote;
+}
+
 /** Honest tier odds — research props and player propositions only; never synthetic books. */
 export function resolveTierOdds(input: {
   tier: ParlayMarketTier;
