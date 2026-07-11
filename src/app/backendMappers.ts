@@ -47,21 +47,37 @@ export function mapParlayToBackendPayload(parlay: Parlay) {
 export function mapBackendParlay(pick: any): Parlay {
   const legs: Leg[] = (pick.legs || []).map((leg: any, i: number) => {
     const dec = typeof leg.odds_decimal === 'number' ? leg.odds_decimal : null;
+    const gamePk =
+      leg.game_pk ??
+      leg.gamePk ??
+      (leg.event_id && leg.event_id !== 'manual' ? leg.event_id : undefined);
+    const statTargetRaw = leg.stat_target ?? leg.statTarget ?? leg.target ?? leg.line;
+    const parsedStatTarget =
+      statTargetRaw != null && Number.isFinite(Number(statTargetRaw)) ? Number(statTargetRaw) : undefined;
+
     return {
       id: leg.id || `${pick.id}-leg-${i}`,
       sport: pick.sport || 'mlb',
-      game: leg.event_id || '',
-      market: leg.market || '',
+      game: leg.game_label ?? leg.game ?? leg.event_id ?? '',
+      market: leg.market_label ?? leg.market ?? '',
       selection: leg.selection || '',
       odds: dec && dec > 1.01 ? decimalToAmerican(dec) : null,
       status: (['WON', 'LOST', 'VOID'].includes(String(leg.status || '').toUpperCase())
         ? (String(leg.status).toUpperCase() as Leg['status'])
         : 'PENDING'),
-      gamePk: leg.event_id && leg.event_id !== 'manual' ? leg.event_id : undefined,
-      marketCode: leg.market || undefined,
-      actual: leg.actual ?? null,
-      gameStartTime: leg.game_start_time || undefined,
-      playerId: normalizePlayerId(leg.player_id),
+      gamePk: gamePk != null ? String(gamePk) : undefined,
+      gameId: gamePk != null ? String(gamePk) : undefined,
+      teamId: leg.team_id ?? leg.teamId ?? undefined,
+      marketCode: leg.market_code ?? leg.market ?? undefined,
+      statTarget: parsedStatTarget,
+      threshold: parsedStatTarget,
+      comparator: leg.comparator ?? leg.operator ?? '>=',
+      eventKey: leg.event_key ?? leg.eventKey ?? undefined,
+      popularityKey: leg.popularity_key ?? leg.popularityKey ?? undefined,
+      externalProvider: leg.external_provider ?? leg.externalProvider ?? undefined,
+      actual: leg.actual_value ?? leg.actual ?? null,
+      gameStartTime: leg.game_start_time ?? leg.gameStartTime ?? undefined,
+      playerId: normalizePlayerId(leg.player_id ?? leg.playerId),
     };
   });
 

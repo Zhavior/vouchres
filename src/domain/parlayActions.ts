@@ -3,7 +3,8 @@ import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from '../lib/supabaseClient';
 import { assessClientParlayIdentity } from '../lib/parlayIdentity';
-import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import { buildBackendSavePayloadFromParlay, draftLegsToParlay } from './parlay/smartParlayPersist';
 import { repairDraftLegsIdentity } from '../lib/parlays/repairDraftLegIdentity';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useParlayCommandStore, type DraftParlayLeg } from '../stores/parlayCommandStore';
@@ -57,14 +58,7 @@ export async function pushParlayToBackend(parlay: Parlay): Promise<void> {
 
     markState('saving', { backendSyncError: undefined });
 
-    const canonicalSlip = normalizeParlaySlip(
-      {
-        ...parlay,
-        source: parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
-      },
-      parlay.aiGenerated ? 'ai_pick' : 'manual_builder',
-    );
-    const payload = buildSaveParlayPayload(canonicalSlip);
+    const payload = buildBackendSavePayloadFromParlay(parlay);
 
     const result = await apiClient.post<BackendParlay & { deduped?: boolean }>('/api/me/parlays', payload);
 
@@ -117,20 +111,20 @@ export async function handleSaveParlaySlip(
           ? 'VOID'
           : 'PENDING';
 
-  const savedParlay: Parlay = {
+  const savedParlay = draftLegsToParlay({
     id: parlayToSave.id || `parlay-${Date.now()}`,
     title: parlayToSave.title,
-    legs: repairedLegs as unknown as Leg[],
+    legs: repairedLegs,
     status: normalizedUiStatus,
     mode: parlayToSave.mode || 'PRACTICE',
     createdAt: parlayToSave.createdAt || new Date().toISOString(),
     totalOdds: 'totalOdds' in parlayToSave ? String(parlayToSave.totalOdds || '') : '',
     oddsValue: 'oddsValue' in parlayToSave ? Number(parlayToSave.oddsValue || 0) : 0,
     riskTier: 'riskTier' in parlayToSave ? parlayToSave.riskTier : 'LOW',
-    lockNotified: false,
-    backendSyncState: 'saving',
     aiGenerated: 'aiGenerated' in parlayToSave ? Boolean(parlayToSave.aiGenerated) : false,
-  };
+  });
+  savedParlay.lockNotified = false;
+  savedParlay.backendSyncState = 'saving';
 
   syncSlips([savedParlay, ...useSlipsStore.getState().savedSlips]);
 
@@ -182,7 +176,21 @@ export async function handleCommitParlayTrust(input: {
     (working.legs || []) as DraftParlayLeg[],
     liveGames,
   );
-  working = { ...working, legs: repairedLegs as unknown as Leg[] };
+  working = {
+    ...working,
+    legs: draftLegsToParlay({
+      id: working.id,
+      title: working.title,
+      legs: repairedLegs,
+      mode: working.mode,
+      status: working.status,
+      createdAt: working.createdAt,
+      totalOdds: working.totalOdds,
+      oddsValue: working.oddsValue,
+      riskTier: working.riskTier,
+      aiGenerated: working.aiGenerated,
+    }).legs,
+  };
 
   const identity = assessClientParlayIdentity(
     (working.legs || []).map((leg) => ({ ...leg } as Record<string, unknown>)),

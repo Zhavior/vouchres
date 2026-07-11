@@ -47,6 +47,8 @@ export type PublicParlaySlip = {
   trustLockWarningNotified?: boolean;
   trustLockedNotified?: boolean;
   lockReason?: "trust_ledger" | "feed_share" | null;
+  backendPickId?: string | null;
+  backendSyncState?: string | null;
 };
 
 export const cleanCustomerText = (value?: string | number | null): string =>
@@ -202,6 +204,8 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
     trustLockWarningNotified: Boolean(raw?.trustLockWarningNotified),
     trustLockedNotified: Boolean(raw?.trustLockedNotified),
     lockReason: raw?.lockReason ?? raw?.lock_reason ?? null,
+    backendPickId: raw?.backendPickId ?? raw?.backend_pick_id ?? null,
+    backendSyncState: raw?.backendSyncState ?? raw?.backend_sync_state ?? null,
     legs,
   };
 };

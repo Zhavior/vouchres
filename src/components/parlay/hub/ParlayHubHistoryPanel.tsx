@@ -1,31 +1,22 @@
 import React, { Suspense, lazy, useMemo, useState } from 'react';
-import { GitBranch, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
 import LazyChunkSkeleton from '../../system/LazyChunkSkeleton';
-import ParlayOsBadgeRow from '../../trust/ParlayOsBadgeRow';
-import ParlayTrustPanel from '../../trust/ParlayTrustPanel';
-import ParlayIdentityBadge from '../../trust/ParlayIdentityBadge';
-import ParlayLockCountdownBanner from '../os/ParlayLockCountdownBanner';
+import SmartParlaySlipCard from '../smart/SmartParlaySlipCard';
 import { ParlayTreeModal } from '../tree/ParlayTreeModal';
 import {
   selectSavedSlips,
   useParlayCommandStore,
 } from '../../../stores/parlayCommandStore';
 import type { PublicParlaySlip } from '../../../lib/parlayDisplay';
-import { classifyParlayHistoryTab, trustLockCountdownLabel } from '../../../lib/trustLockSchedule';
+import { projectSmartParlayFromPublic } from '../../../domain/parlay';
+import { classifyParlayHistoryTab } from '../../../lib/trustLockSchedule';
 import type { TrustAudience } from '../../../lib/trustLockSchedule';
-import { assessClientParlayIdentity } from '../../../lib/parlayIdentity';
-import { repairAllSavedParlays, repairDraftLikeLegRecords } from '../../../lib/parlays/repairSavedParlay';
+import { repairAllSavedParlays } from '../../../lib/parlays/repairSavedParlay';
 import { useAppCommandStore } from '../../../stores/appCommandStore';
+import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import { useSlipsStore } from '../../../stores/slipsStore';
-import { deriveSlipProgress } from '../../../lib/parlayLegProgress';
-import {
-  LEG_STATUS_META,
-  type LegGradeStatus,
-  type SlipGradeStatus,
-} from '../types/parlayHubTypes';
-import { z8StatusColor } from '../../../theme/z8Tokens';
-import { ParlayHubLivePulse, ParlayHubStatusBadge } from './parlayHubUi';
+import { ParlayHubLivePulse } from './parlayHubUi';
 
 const ParlayCorrelationGraph = lazy(() => import('../graph/ParlayCorrelationGraph'));
 
@@ -46,41 +37,48 @@ export default function ParlayHubHistoryPanel() {
   const liveGames = useAppCommandStore((s) => s.liveGames);
   const syncSlips = useSlipsStore((s) => s.syncSlips);
   const hydrateSavedSlips = useParlayCommandStore((s) => s.hydrateSavedSlips);
+  const navigateSection = useAppCommandStore((s) => s.navigateSection);
+  const openProofPage = useParlayOsStore((s) => s.openProofPage);
   const [treeSlip, setTreeSlip] = useState<PublicParlaySlip | null>(null);
   const [historyTab, setHistoryTab] = useState<TrustAudience>('private');
 
+  const smartSlips = useMemo(
+    () => savedSlips.map((slip) => projectSmartParlayFromPublic(slip, liveGames)),
+    [savedSlips, liveGames],
+  );
+
   const liveSlips = useMemo(
-    () => savedSlips.filter((s) =>
-      ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(s.status).toLowerCase())
+    () => smartSlips.filter((s) =>
+      ['pending', 'live', 'open', 'active', 'in_progress', 'upcoming'].includes(String(s.status).toLowerCase())
       && !s.trustCommittedAt && !s.feedLockedAt,
     ),
-    [savedSlips],
+    [smartSlips],
   );
   const gradedSlips = useMemo(
-    () => savedSlips.filter((s) =>
+    () => smartSlips.filter((s) =>
       ['won', 'lost', 'push', 'void', 'cancelled'].includes(String(s.status).toLowerCase()),
     ),
-    [savedSlips],
+    [smartSlips],
   );
   const historySlips = useMemo(
-    () => savedSlips.filter((s) => {
+    () => smartSlips.filter((s) => {
+      const raw = savedSlips.find((slip) => slip.sourceId === s.sourceId);
       const tab = classifyParlayHistoryTab({
-        trustAudience: s.trustAudience as TrustAudience | undefined,
-        visibility: s.trustAudience ?? undefined,
-        committedAt: s.trustCommittedAt ?? undefined,
-        feedLockedAt: s.feedLockedAt ?? undefined,
+        trustAudience: raw?.trustAudience as TrustAudience | undefined,
+        visibility: raw?.trustAudience ?? undefined,
+        committedAt: raw?.trustCommittedAt ?? undefined,
+        feedLockedAt: raw?.feedLockedAt ?? undefined,
       });
       if (tab === 'draft') return false;
       return tab === historyTab;
     }),
-    [savedSlips, historyTab],
+    [smartSlips, savedSlips, historyTab],
   );
 
-  const pendingRepairCount = useMemo(() => savedSlips.filter((slip) => {
-    const legs = Array.isArray(slip.legs) ? slip.legs.map((leg) => leg as Record<string, unknown>) : [];
-    const { legs: repaired } = repairDraftLikeLegRecords(legs, liveGames);
-    return !assessClientParlayIdentity(repaired).complete;
-  }).length, [savedSlips, liveGames]);
+  const pendingRepairCount = useMemo(
+    () => smartSlips.filter((slip) => !slip.identity.complete).length,
+    [smartSlips],
+  );
 
   if (savedSlips.length === 0) return <EmptyLiveParlays />;
 
@@ -93,108 +91,13 @@ export default function ParlayHubHistoryPanel() {
     }
   }
 
-  function SlipCard({ slip }: { slip: PublicParlaySlip }) {
-    const status = String(slip.status ?? 'pending').toLowerCase() as SlipGradeStatus;
-    const legs = Array.isArray(slip.legs) ? slip.legs : [];
-    const pendingLock = slip.trustCommittedAt && !slip.feedLockedAt;
-    const lockLabel = pendingLock ? trustLockCountdownLabel(slip.trustLockAt ?? undefined) : null;
-    const pickId = String(slip.sourceId ?? '').trim();
-    const showTrustPanel = Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
-    const legRecords = legs.map((leg) => leg as Record<string, unknown>);
-    const { legs: repairedLegs } = repairDraftLikeLegRecords(legRecords, liveGames);
-    const identity = assessClientParlayIdentity(repairedLegs);
-    const slipProgress = deriveSlipProgress(repairedLegs);
-
-    return (
-      <article
-        className="flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]"
-        aria-label={String(slip.title ?? 'Saved parlay')}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))] truncate">
-              {String(slip.title ?? 'Saved Parlay')}
-            </p>
-            <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-              {legs.length} leg{legs.length !== 1 ? 's' : ''}
-              {lockLabel ? ` · ${lockLabel}` : ''}
-            </p>
-            <ParlayOsBadgeRow
-              className="mt-1.5"
-              input={{
-                id: pickId || slip.publicId,
-                status: slip.status,
-                committedAt: slip.trustCommittedAt,
-                feedLockedAt: slip.feedLockedAt,
-                lockReason: slip.lockReason,
-              }}
-            />
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <ParlayIdentityBadge identity={identity} />
-            </div>
-            <ParlayLockCountdownBanner
-              trustCommittedAt={slip.trustCommittedAt}
-              trustLockAt={slip.trustLockAt}
-              feedLockedAt={slip.feedLockedAt}
-            />
-            {pickId ? (
-              <a
-                href={`/p/${encodeURIComponent(pickId)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 mt-1"
-              >
-                View proof page
-              </a>
-            ) : null}
-            {slipProgress ? (
-              <p className="text-[10px] text-cyan-300/80 font-mono mt-1">
-                Live: {slipProgress.label} ({slipProgress.current}/{slipProgress.target})
-              </p>
-            ) : null}
-          </div>
-          <ParlayHubStatusBadge status={status as LegGradeStatus} size="xs" />
-        </div>
-
-        {legs.slice(0, 3).map((leg, i) => {
-          const legRec = leg as Record<string, unknown>;
-          const legStatus = String(legRec.status ?? 'pending').toLowerCase() as LegGradeStatus;
-          const legMeta = LEG_STATUS_META[legStatus] ?? LEG_STATUS_META.pending;
-          return (
-            <div key={i} className="flex items-center gap-2 text-[10px] text-[hsl(var(--ve-text-muted))]">
-              <span aria-hidden="true" style={{ color: z8StatusColor(legMeta.token) }}>{legMeta.icon}</span>
-              <span className="truncate">{String(legRec.selection ?? legRec.playerName ?? 'Prop')}</span>
-              <span className="ml-auto text-[9px] font-bold shrink-0" style={{ color: z8StatusColor(legMeta.token) }}>
-                {legMeta.label}
-              </span>
-            </div>
-          );
-        })}
-        {legs.length > 3 ? (
-          <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">+{legs.length - 3} more legs</p>
-        ) : null}
-        {legs.length > 0 ? (
-          <button
-            type="button"
-            onClick={() => setTreeSlip(slip)}
-            className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--ve-border)/0.5)] py-1.5 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))] transition hover:border-cyan-500/40 hover:text-cyan-300 min-h-[2.75rem]"
-          >
-            <GitBranch className="h-3 w-3" />
-            View Structure
-          </button>
-        ) : null}
-        {showTrustPanel ? (
-          <ParlayTrustPanel
-            pickId={pickId}
-            title={String(slip.title ?? 'Saved Parlay')}
-            className="mt-1"
-          />
-        ) : null}
-      </article>
-    );
+  function openSlipProof(pickId: string | null) {
+    if (!pickId) return;
+    openProofPage(pickId);
+    navigateSection('parlay_proof');
   }
 
-  function Section({ title, slips, live }: { title: string; slips: PublicParlaySlip[]; live?: boolean }) {
+  function Section({ title, slips, live }: { title: string; slips: typeof smartSlips; live?: boolean }) {
     if (slips.length === 0) return null;
     return (
       <section aria-label={title}>
@@ -203,9 +106,17 @@ export default function ParlayHubHistoryPanel() {
           {live ? <ParlayHubLivePulse active /> : null}
         </div>
         <div className="flex flex-col gap-2">
-          {slips.map((slip) => (
-            <SlipCard key={slip.publicId ?? slip.sourceId} slip={slip} />
-          ))}
+          {slips.map((slip) => {
+            const publicSlip = savedSlips.find((s) => s.sourceId === slip.sourceId);
+            return (
+              <SmartParlaySlipCard
+                key={slip.sourceId}
+                slip={slip}
+                onViewStructure={publicSlip ? () => setTreeSlip(publicSlip) : undefined}
+                onViewProof={slip.proofPickId ? () => openSlipProof(slip.proofPickId) : undefined}
+              />
+            );
+          })}
         </div>
       </section>
     );
@@ -271,8 +182,8 @@ export default function ParlayHubHistoryPanel() {
         </div>
       ) : null}
 
-      <Section title="Live & Pending" slips={liveSlips as PublicParlaySlip[]} live />
-      <Section title="Graded Results" slips={gradedSlips as PublicParlaySlip[]} />
+      <Section title="Live & Pending" slips={liveSlips} live />
+      <Section title="Graded Results" slips={gradedSlips} />
       <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />
     </div>
   );
