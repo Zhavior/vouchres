@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Share2 } from 'lucide-react';
+import { Share2, Ticket } from 'lucide-react';
 import type { Leg } from '../../types';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
 import { SmartParlayLegCardFromLeg } from './smart/SmartParlayLegCard';
@@ -106,26 +106,37 @@ export default function ParlayBuilderRail({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
-        {legContent ?? (
-          legs.length === 0 ? (
-            <EmptySlip />
-          ) : (
-            legs.map((leg, index) => (
-              <SmartParlayLegCardFromLeg
-                key={leg.id}
-                leg={{
-                  ...leg,
-                  actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
-                  statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
-                }}
-                index={index}
-                liveProgress={liveProgressByLegId?.[leg.id]}
-                onRemove={() => onRemoveLeg(leg.id)}
-                compact={layout === 'sheet'}
-              />
-            ))
-          )
-        )}
+        <div className="rounded-2xl border border-dashed border-cyan-400/25 bg-gradient-to-b from-slate-900/80 to-black/70 overflow-hidden">
+          <div className="flex items-center gap-1.5 border-b border-dashed border-white/10 px-3 py-2">
+            <Ticket className="h-3.5 w-3.5 text-cyan-400/80" aria-hidden="true" />
+            <span className="font-mono text-[10px] font-bold tracking-wider text-cyan-300/90">DRAFT-SLIP</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 ml-auto">
+              {legs.length} leg{legs.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="p-3 space-y-2.5">
+            {legContent ?? (
+              legs.length === 0 ? (
+                <EmptySlip />
+              ) : (
+                legs.map((leg, index) => (
+                  <SmartParlayLegCardFromLeg
+                    key={leg.id}
+                    leg={{
+                      ...leg,
+                      actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
+                      statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
+                    }}
+                    index={index}
+                    liveProgress={liveProgressByLegId?.[leg.id]}
+                    onRemove={() => onRemoveLeg(leg.id)}
+                    compact={layout === 'sheet'}
+                  />
+                ))
+              )
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="p-5 border-t border-fuse bg-graphite shrink-0">

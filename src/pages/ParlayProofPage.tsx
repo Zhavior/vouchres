@@ -97,15 +97,15 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
           </section>
         ) : null}
 
-        <section className="space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-widest text-white/40">Legs</h2>
+        <section>
           <SmartParlaySlipCard
             slip={smartSlip}
-            variant="embedded"
+            variant="hub"
             legVariant="pro"
             maxLegs={99}
             showTrustPanel={false}
             showIdentityBadge={false}
+            showOsBadges={false}
           />
         </section>
 

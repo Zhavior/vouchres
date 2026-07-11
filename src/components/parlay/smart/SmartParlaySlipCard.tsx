@@ -10,8 +10,13 @@ import { trustLockCountdownLabel } from "../../../lib/trustLockSchedule";
 import type { SmartParlaySlip } from "../../../domain/parlay";
 import { ParlayHubStatusBadge } from "../hub/parlayHubUi";
 import type { LegGradeStatus } from "../types/parlayHubTypes";
+import {
+  deriveSlipDisplayTitle,
+  deriveSlipMarketChips,
+  deriveSlipVisualTheme,
+} from "./smartSlipTheme";
 
-export type SmartParlaySlipVariant = "hub" | "results" | "embedded";
+export type SmartParlaySlipVariant = "hub" | "results" | "embedded" | "feed";
 
 function Perforation() {
   return (
@@ -70,6 +75,9 @@ export default function SmartParlaySlipCard({
   className?: string;
 }) {
   const status = String(slip.status ?? "pending").toLowerCase() as LegGradeStatus;
+  const theme = deriveSlipVisualTheme(slip);
+  const displayTitle = deriveSlipDisplayTitle(slip);
+  const marketChips = deriveSlipMarketChips(slip.legs);
   const pendingLock = slip.trustCommittedAt && !slip.feedLockedAt;
   const lockLabel = pendingLock ? trustLockCountdownLabel(slip.trustLockAt ?? undefined) : null;
   const pickId = String(slip.sourceId ?? "").trim();
@@ -80,18 +88,21 @@ export default function SmartParlaySlipCard({
     ? `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked to slate`
     : `${slip.identity.completeLegs}/${slip.identity.totalLegs} legs linked — repair before lock`;
 
-  const legNodes = visibleLegs.map((leg) =>
+  const legNodes = visibleLegs.map((leg, index) =>
     legVariant === "pro" ? (
       <SmartParlayLegCard
         key={leg.id}
         leg={leg}
+        legIndex={index + 1}
         odds={legOdds?.[leg.id]}
         compact
       />
     ) : (
-      <SmartParlayLegRow key={leg.id} leg={leg} />
+      <SmartParlayLegRow key={leg.id} leg={leg} legIndex={index + 1} />
     ),
   );
+
+  const useTicketChrome = variant === "hub" || variant === "feed";
 
   if (variant === "embedded") {
     return (
@@ -109,9 +120,9 @@ export default function SmartParlaySlipCard({
     );
   }
 
-  const isTicket = variant === "hub";
+  const isTicket = useTicketChrome;
   const shellClass = isTicket
-    ? "rounded-2xl border border-dashed border-cyan-400/30 bg-gradient-to-b from-slate-900/95 via-slate-950/90 to-black/80 shadow-lg shadow-cyan-500/5"
+    ? `rounded-2xl border border-dashed bg-gradient-to-b shadow-lg ${theme.borderClass} ${theme.shellGradient}`
     : variant === "results"
       ? "rounded-xl p-4 backdrop-blur-md"
       : "rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] p-3";
@@ -133,9 +144,12 @@ export default function SmartParlaySlipCard({
           <div className="min-w-0">
             {isTicket ? (
               <div className="flex items-center gap-1.5 mb-1">
-                <Ticket className="h-3.5 w-3.5 text-cyan-400/80" aria-hidden="true" />
-                <span className="font-mono text-[10px] font-bold tracking-wider text-cyan-300/90">
+                <Ticket className={`h-3.5 w-3.5 ${theme.ticketIconClass}`} aria-hidden="true" />
+                <span className={`font-mono text-[10px] font-bold tracking-wider ${theme.headerAccent}`}>
                   {slip.publicId}
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-white/30">
+                  {theme.label}
                 </span>
               </div>
             ) : null}
@@ -144,8 +158,20 @@ export default function SmartParlaySlipCard({
                 variant === "results" ? "text-sm text-white" : "text-sm text-white"
               }`}
             >
-              {slip.title}
+              {displayTitle}
             </p>
+            {marketChips.length > 0 ? (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {marketChips.map((chip) => (
+                  <span
+                    key={chip}
+                    className={`rounded-md border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${theme.chipClass}`}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <p className="mt-0.5 text-[10px] text-white/45">
               {metaLine ??
                 `${slip.legCount} leg${slip.legCount !== 1 ? "s" : ""}${lockLabel ? ` · ${lockLabel}` : ""}`}

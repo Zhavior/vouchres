@@ -37,6 +37,7 @@ function IdentityChip({ complete }: { complete: boolean }) {
 
 export default React.memo(function SmartParlayLegCard({
   leg,
+  legIndex,
   odds,
   onRemove,
   onEdit,
@@ -45,6 +46,7 @@ export default React.memo(function SmartParlayLegCard({
   showTicketChrome = true,
 }: {
   leg: SmartParlayLeg;
+  legIndex?: number;
   odds?: number | null;
   onRemove?: () => void;
   onEdit?: () => void;
@@ -68,6 +70,15 @@ export default React.memo(function SmartParlayLegCard({
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${market.stripe}`} aria-hidden="true" />
 
       <div className="flex gap-2.5">
+        {legIndex != null ? (
+          <div
+            className="flex h-10 w-6 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-black/50 font-mono text-[9px] font-black text-white/50"
+            aria-label={`Leg ${legIndex}`}
+          >
+            <span className="text-[7px] uppercase tracking-widest text-white/25">Leg</span>
+            <span>{legIndex}</span>
+          </div>
+        ) : null}
         <img
           src={leg.headshotUrl ?? undefined}
           alt=""
@@ -164,6 +175,7 @@ export function SmartParlayLegCardFromLeg({
   return (
     <SmartParlayLegCard
       leg={smartLeg}
+      legIndex={index + 1}
       odds={leg.odds}
       onEdit={onEdit}
       onRemove={onRemove}
