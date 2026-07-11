@@ -88,6 +88,17 @@
   padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
 }
 
+.ve-terminal-ticker--top {
+  bottom: auto;
+  top: 0;
+  padding-bottom: 0.5rem;
+  padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+}
+
+.ve-terminal-ticker-track--reverse {
+  animation-direction: reverse;
+}
+
 .ve-landing-judge-slideshow {
   position: relative;
 }

@@ -5,7 +5,6 @@ import { bootDataStore } from '../lib/boot/bootDataStore';
 import { MLB_HEADSHOT_IMG_CLASS } from '../lib/mlbHeadshot';
 import { logoByTeamId, logoByTeamName, teamIdByName } from '../lib/teamLogos';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../theme/z8Tokens';
-import '../styles/legacy/daily-players.css';
 
 type Pitcher = {
   id?: number | string;

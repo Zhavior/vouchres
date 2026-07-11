@@ -39,7 +39,6 @@ import {
   setViewMode,
   toggleFeature,
 } from "../lib/featureConfig";
-import { canAccessThemeStore } from "../lib/adminDevAccess";
 import type { CreatorProofProfile } from "../types";
 import {
   Z8_ACTIVE,
@@ -222,8 +221,8 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   themestore: {
     id: "themestore",
-    label: "Theme Store",
-    description: "Premium visual customization and profile styling.",
+    label: "Z8 Visual Standard",
+    description: "The fixed premium visual system used across VouchEdge.",
     icon: Palette,
   },
   profile: {
@@ -311,7 +310,6 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
     showToast("Layout reset");
   };
 
-  const canUseThemes = canAccessThemeStore(profile);
   const previewItems = layout.mode === "pro" ? proPreview : beginnerPreview;
 
   return (
@@ -398,10 +396,8 @@ export function CustomizePage({ profile, onSectionChange }: CustomizePageProps) 
             </div>
 
             <div className="mt-5">
-              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 ${Z8_LABEL} ${
-                canUseThemes ? 'border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald' : 'border-vouch-amber/30 bg-vouch-amber/10 text-vouch-amber'
-              }`}>
-                {canUseThemes ? "Theme Store unlocked" : "Theme Store locked"}
+              <span className={`inline-flex items-center rounded-full border border-vouch-cyan/30 bg-vouch-cyan/10 px-2.5 py-1 ${Z8_LABEL} text-vouch-cyan`}>
+                Z8 premium visual standard
               </span>
             </div>
           </section>

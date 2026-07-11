@@ -28,11 +28,6 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   settings: () => import('../components/SettingsPage'),
   premium: () => import('../components/PremiumSubPage'),
   customize: () => import('../components/CustomizePage'),
-  themestore: () => import('../components/ThemeStore'),
-  epic_themes: () =>
-    import('../components/vouchedge/EpicThemeShowcase').then((module) => ({
-      default: module.EpicThemeShowcase,
-    })),
   subscriber_hub: () => import('../components/SubscriberHub'),
   nba_nfl: () => import('../components/NbaNflArena'),
   live_game_lab: () => import('../pages/LiveGameLabPage'),

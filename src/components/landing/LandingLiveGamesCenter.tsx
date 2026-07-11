@@ -436,12 +436,12 @@ export default function LandingLiveGamesCenter({ eager = false }: { eager?: bool
   return (
     <section ref={markerRef} aria-labelledby="live-games-heading" className="ve-landing-live-section space-y-4">
       <div className="ve-landing-section-intro text-center">
-        <p className={`${Z8_LABEL} text-vouch-cyan`}>Today&apos;s slate</p>
+        <p className={`${Z8_LABEL} text-vouch-cyan`}>What you unlock</p>
         <h2 id="live-games-heading" className="mt-2 text-2xl font-black text-white sm:text-3xl">
-          Live games + top 3 HR picks
+          Live terminal preview
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-white/45">
-          Official MLB matchups with team logos, live status, and trust-first HR spotlight cards from today&apos;s board.
+          Official MLB matchups with team logos, live status, and the same HR player cards powering the daily board.
         </p>
       </div>
 

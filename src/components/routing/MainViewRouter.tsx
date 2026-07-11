@@ -28,12 +28,6 @@ const ResultsStudio = lazy(() => import('../results/ResultsStudio'));
 const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
 const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHub'));
 const Leaderboard = lazy(() => import('../Leaderboard'));
-const ThemeStore = lazy(() => import('../ThemeStore'));
-const EpicThemeShowcase = lazy(() =>
-  import('../vouchedge/EpicThemeShowcase').then((module) => ({
-    default: module.EpicThemeShowcase,
-  })),
-);
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('../../pages/LiveGameLabPage'));
 const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
@@ -334,22 +328,10 @@ function MainViewRouter({
         </LazyRoute>
       );
     case 'themestore':
-      if (!canSeeThemeStore) {
-        return (
-          <LazyRoute>
-            <ProfileShell profileViewUserId={profileViewUserId} />
-          </LazyRoute>
-        );
-      }
-      return (
-        <LazyRoute>
-          <ThemeStoreShell />
-        </LazyRoute>
-      );
     case 'epic_themes':
       return (
         <LazyRoute>
-          <EpicThemeShowcase />
+          <SettingsShell />
         </LazyRoute>
       );
     case 'subscriber_hub':
@@ -662,12 +644,6 @@ function PremiumShell() {
   const { profile } = useAppShell();
   const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
   return <PremiumSubPage profile={profile} onUpdateProfile={onUpdateProfile} />;
-}
-
-function ThemeStoreShell() {
-  const { profile } = useAppShell();
-  const onUpdateProfile = useAppCommandStore((state) => state.onUpdateProfile);
-  return <ThemeStore profile={profile} onUpdateProfile={onUpdateProfile} />;
 }
 
 function SubscriberShell({ navigateSection }: { navigateSection: (section: string) => void }) {

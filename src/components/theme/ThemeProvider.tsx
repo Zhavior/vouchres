@@ -25,6 +25,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const Z8_THEME = THEME_REGISTRY.find((theme) => theme.id === 'vouchedge-prime') ?? THEME_REGISTRY[0];
 
 // Converts a hex like #00B7FF to an rgba() string at the given alpha.
 function hexToRgba(hex: string, alpha: number): string {
@@ -105,32 +106,32 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   const unlockedBorders = profile.unlockedBorderIds || ['default-cyber-ring'];
 
   // Resolve Themes
-  const currentAppTheme = THEME_REGISTRY.find(t => t.id === (profile.appThemeId || profile.activeTheme)) || THEME_REGISTRY[0];
-  const currentProfileTheme = THEME_REGISTRY.find(t => t.id === profile.profileThemeId) || currentAppTheme;
+  const currentAppTheme = Z8_THEME;
+  const currentProfileTheme = Z8_THEME;
   const currentBorder = BORDER_REGISTRY.find(b => b.id === profile.profileBorderId) || BORDER_REGISTRY[0];
 
   // Resolve Active Theme
-  const overrideTheme = overrideThemeId ? (THEME_REGISTRY.find(t => t.id === overrideThemeId) || null) : null;
-  const activeTheme = overrideTheme || currentAppTheme;
+  const overrideTheme = null;
+  const activeTheme = Z8_THEME;
 
-  const setAppTheme = (themeId: string) => {
+  const setAppTheme = (_themeId: string) => {
     onUpdateProfile({ 
-      appThemeId: themeId,
-      activeTheme: themeId // Maintain backward compatibility
+      appThemeId: Z8_THEME.id,
+      activeTheme: Z8_THEME.id,
     });
   };
 
-  const setProfileTheme = (themeId: string) => {
+  const setProfileTheme = (_themeId: string) => {
     if (!canCustomizeProfileHeader(profile)) return;
-    onUpdateProfile({ profileThemeId: themeId });
+    onUpdateProfile({ profileThemeId: Z8_THEME.id });
   };
 
   const setBorder = (borderId: string | null) => {
     onUpdateProfile({ profileBorderId: borderId || undefined });
   };
 
-  const setOverrideTheme = (themeId: string | null) => {
-    setOverrideThemeId(themeId);
+  const setOverrideTheme = (_themeId: string | null) => {
+    setOverrideThemeId(null);
   };
 
   const unlockTheme = (themeId: string) => {
@@ -157,30 +158,17 @@ export function ThemeProvider({ profile, onUpdateProfile, children }: ThemeProvi
   // Add styles to document based on active theme
   useEffect(() => {
     const root = document.documentElement;
-    // Set fontFamily
-    if (activeTheme.fontFamily === 'font-mono') {
-      root.style.fontFamily = '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace';
-    } else {
-      root.style.fontFamily = '"Inter", ui-sans-serif, system-ui, sans-serif';
-    }
-
-    // Resolve the theme's true accent + glow color from its accentText token.
-    // Supports Tailwind color names AND arbitrary hex tokens (e.g. text-[#00B7FF]),
-    // so every premium theme glows in its own color instead of a yellow fallback.
-    const { accent, glow } = resolveThemeAccent(activeTheme.accentText);
-    const borderColor = activeTheme.borderColor || 'rgba(6,182,212,0.2)';
-
-    root.style.setProperty('--theme-accent-color', accent);
-    root.style.setProperty('--theme-border-color', borderColor);
-    root.style.setProperty('--theme-glow-color', glow);
-
-    root.setAttribute('data-theme', activeTheme.id);
-    root.setAttribute('data-vouchedge-theme', activeTheme.id);
-    root.style.setProperty('--ve-accent', accent);
-    root.style.setProperty('--ve-accent-2', accent);
-    root.style.setProperty('--ve-accent-glow', glow);
-    root.style.setProperty('--ve-border-strong', borderColor);
-  }, [activeTheme]);
+    root.style.fontFamily = '"Geist", ui-sans-serif, system-ui, sans-serif';
+    root.style.setProperty('--theme-accent-color', '#00F0FF');
+    root.style.setProperty('--theme-border-color', 'rgba(0,240,255,0.2)');
+    root.style.setProperty('--theme-glow-color', 'rgba(0,240,255,0.2)');
+    root.setAttribute('data-theme', 'z8-premium');
+    root.setAttribute('data-vouchedge-theme', 'z8-premium');
+    root.style.setProperty('--ve-accent', '#00F0FF');
+    root.style.setProperty('--ve-accent-2', '#00FF94');
+    root.style.setProperty('--ve-accent-glow', 'rgba(0,240,255,0.2)');
+    root.style.setProperty('--ve-border-strong', 'rgba(0,240,255,0.2)');
+  }, []);
 
   return (
     <ThemeContext.Provider value={{

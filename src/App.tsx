@@ -1,14 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { TerminalBackground } from './components/layout/TerminalBackground';
 import { useSectionNavigation } from './app/useSectionNavigation';
 import { queryClient } from './lib/queryClient';
 import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import { queryKeys } from './hooks/queries/queryKeys';
 import { vouchedgeApi } from './api/vouchedgeApi';
+import VouchEdgeTerminalPage from './pages/VouchEdgeTerminalPage';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
-const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
@@ -51,14 +50,16 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 
   return (
     <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-      <TerminalBackground />
+      <div className="ve-motion-bg" aria-hidden="true">
+        <div className="ve-motion-grid" />
+        <div className="ve-motion-noise" />
+        <div className="ve-motion-spotlight" />
+      </div>
       <div className="ve-motion-content">
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
             <div id="inner-view-slot">
-              <Suspense fallback={<RouteFallback />}>
-                <VouchEdgeTerminalPage onAuthed={onAuthed} />
-              </Suspense>
+              <VouchEdgeTerminalPage onAuthed={onAuthed} />
             </div>
           </div>
         </div>

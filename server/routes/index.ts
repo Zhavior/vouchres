@@ -34,6 +34,8 @@ import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
 import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
+import { getSupabaseAdmin } from "../middleware/auth";
+import { isUpstashEnabled } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
 import { apiOkFlat } from "../lib/apiResponse";
 import { AppError } from "../errors/AppError";
@@ -119,6 +121,9 @@ export function registerApiRoutes(app: Express): void {
     }))
   );
 
+  // Liveness — is the process up and serving? Deliberately dependency-free so
+  // a transient DB blip doesn't flap Render's deploy health check into a
+  // restart loop. Point Render's healthCheckPath here.
   app.get("/api/health", (req: RequestWithContext, res: Response) =>
     res.json(apiOkFlat(req, {
       status: "ok",
@@ -126,6 +131,41 @@ export function registerApiRoutes(app: Express): void {
       time: new Date().toISOString(),
     }))
   );
+
+  // Readiness — can this instance actually serve requests (dependencies
+  // reachable)? Returns 503 when the database is unreachable so an uptime
+  // monitor / load balancer readiness probe stops routing to a broken
+  // instance instead of seeing a blind 200. Redis is optional (the app
+  // degrades to in-memory), so it's reported but never fails readiness.
+  app.get("/api/health/ready", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const checks: Record<string, { ok: boolean; detail?: string }> = {};
+
+    try {
+      const supabaseAdmin = await getSupabaseAdmin();
+      const probe = (await Promise.race([
+        supabaseAdmin.from("cappers").select("id", { head: true }).limit(1),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("db probe timed out after 3s")), 3000)),
+      ])) as { error?: { message?: string } | null };
+      checks.database = probe?.error
+        ? { ok: false, detail: probe.error.message ?? "query error" }
+        : { ok: true };
+    } catch (err) {
+      checks.database = { ok: false, detail: (err as Error)?.message ?? "unreachable" };
+    }
+
+    checks.redis = isUpstashEnabled()
+      ? { ok: true, detail: "upstash" }
+      : { ok: true, detail: "not configured (degraded to in-memory)" };
+
+    const ready = checks.database.ok;
+    res.status(ready ? 200 : 503).json({
+      ok: ready,
+      status: ready ? "ready" : "degraded",
+      service: "vouchedge-backend",
+      checks,
+      time: new Date().toISOString(),
+    });
+  }));
 
   app.get("/api/health/backend", (req: RequestWithContext, res: Response) => {
     const report = getBackendHealthReport();

@@ -13,6 +13,7 @@ import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
+import { VouchLiveEdge } from './live/command/VouchLiveEdge';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
@@ -777,7 +778,8 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
             {/* Pitch-by-pitch sweat screen for the selected live game */}
             {activeGame?.isLive && activeGame.gamePk != null && (
-              <div className="min-w-0 max-w-4xl mx-auto w-full">
+              <div className="min-w-0 max-w-4xl mx-auto w-full space-y-3">
+                <VouchLiveEdge gamePk={Number(activeGame.gamePk)} />
                 <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
               </div>
             )}

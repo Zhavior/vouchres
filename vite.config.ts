@@ -84,6 +84,8 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       cssMinify: 'lightningcss',
+      // Keep a machine-readable asset graph for production budget checks.
+      manifest: 'vite-manifest.json',
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {

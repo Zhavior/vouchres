@@ -20,6 +20,7 @@ import {
 } from '../components/landing/LandingTokens';
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
+import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -28,7 +29,7 @@ import '../components/landing/LandingMobileShell.css';
 type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
-const LandingJudgesDeck = lazy(() => import('../components/landing/LandingJudgesDeck'));
+const LandingVouchCardShowcase = lazy(() => import('../components/landing/LandingVouchCardShowcase'));
 const preloadAuthModal = () => {
   void import('../components/auth/AuthModal');
 };
@@ -172,9 +173,50 @@ function DeferredLandingJudgesDeck() {
     );
   }
 
+  return <LandingJudgesDeck />;
+}
+
+function VouchCardShowcasePlaceholder() {
+  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} h-96 animate-pulse`} aria-hidden="true" />;
+}
+
+function DeferredVouchCardShowcase() {
+  const [ready, setReady] = useState(false);
+  const markerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+
+    if (!marker || !('IntersectionObserver' in window)) {
+      setReady(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '360px 0px' },
+    );
+
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!ready) {
+    return (
+      <div ref={markerRef}>
+        <VouchCardShowcasePlaceholder />
+      </div>
+    );
+  }
+
   return (
-    <Suspense fallback={<JudgesPlaceholder />}>
-      <LandingJudgesDeck />
+    <Suspense fallback={<VouchCardShowcasePlaceholder />}>
+      <LandingVouchCardShowcase />
     </Suspense>
   );
 }
@@ -264,6 +306,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
+      <LandingStatusTicker position="top" />
       <LandingStatusTicker />
 
       <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
@@ -296,7 +339,7 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </div>
             <div
-              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-5 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
+              className={`ve-terminal-header-actions shrink-0 items-center gap-2 md:fixed md:right-6 md:top-9 md:z-20 ${authOpen ? 'pointer-events-none opacity-0' : ''}`}
             >
               <button
                 type="button"
@@ -320,8 +363,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
           </header>
 
           <div className="space-y-8 sm:space-y-16 md:space-y-20">
-            <LandingLiveGamesCenter eager />
-
             <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
@@ -416,11 +457,16 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               </div>
             </section>
 
+            <LandingLiveGamesCenter />
+
             {/* 4 Judges */}
             <DeferredLandingJudgesDeck />
 
             {/* Platform strengths slideshow */}
             <LandingFeatureSlideshow features={FEATURES} />
+
+            {/* Vouch Card System spotlight */}
+            <DeferredVouchCardShowcase />
 
             {/* Pricing */}
             <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />

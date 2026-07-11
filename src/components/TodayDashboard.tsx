@@ -24,8 +24,9 @@ import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { motion } from '../lib/motion';
 import { useMode } from '../lib/useMode';
-import PortfolioAnalyticsPanel from './PortfolioAnalyticsPanel';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
+
+const PortfolioAnalyticsPanel = React.lazy(() => import('./PortfolioAnalyticsPanel'));
 
 const TODAY_PANELS = ['overview', 'portfolio'] as const;
 type TodayPanel = (typeof TODAY_PANELS)[number];
@@ -404,17 +405,30 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             </div>
 
             <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-              <PortfolioAnalyticsPanel
-                profile={profile}
-                savedSlips={savedSlips}
-                isLoggedIn={isLoggedIn}
-                onSectionChange={onSectionChange}
-              />
+              {activePanel === 'portfolio' && (
+                <React.Suspense fallback={<PortfolioPanelSkeleton />}>
+                  <PortfolioAnalyticsPanel
+                    profile={profile}
+                    savedSlips={savedSlips}
+                    isLoggedIn={isLoggedIn}
+                    onSectionChange={onSectionChange}
+                  />
+                </React.Suspense>
+              )}
             </div>
           </motion.div>
         </div>
       </div>
     </main>
+  );
+}
+
+function PortfolioPanelSkeleton() {
+  return (
+    <div className={`${Z8_PANEL} min-h-[360px] animate-pulse rounded-3xl p-5`} role="status" aria-label="Loading portfolio analytics">
+      <div className="h-4 w-40 rounded bg-white/10" />
+      <div className="mt-5 h-56 rounded-2xl bg-white/5" />
+    </div>
   );
 }
 

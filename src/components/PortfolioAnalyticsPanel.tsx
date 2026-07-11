@@ -442,6 +442,7 @@ export default function PortfolioAnalyticsPanel({
                 </div>
                 <input
                   type="range"
+                  aria-label="Assumed simulation accuracy"
                   min="50"
                   max="99"
                   value={simulatedWinRate}
@@ -457,6 +458,7 @@ export default function PortfolioAnalyticsPanel({
                 </div>
                 <input
                   type="range"
+                  aria-label="Simulation stake per unit"
                   min="50"
                   max="1000"
                   step="50"
@@ -467,8 +469,9 @@ export default function PortfolioAnalyticsPanel({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono block">Risk Profile Bias</label>
+                <label htmlFor="portfolio-risk-profile" className="text-[10px] font-bold text-[hsl(var(--ve-text-muted))] uppercase font-mono block">Risk Profile Bias</label>
                 <select
+                  id="portfolio-risk-profile"
                   value={portfolioRiskFilter}
                   onChange={(e) => setPortfolioRiskFilter(e.target.value as typeof portfolioRiskFilter)}
                   className="w-full text-xs font-semibold bg-[hsl(var(--ve-surface-raised)/0.44)] border border-[hsl(var(--ve-border)/0.30)] text-[hsl(var(--ve-text-secondary))] p-2 rounded-xl outline-none focus:border-vouch-cyan/55"
@@ -573,6 +576,7 @@ export default function PortfolioAnalyticsPanel({
                       </div>
                       <input
                         type="range"
+                        aria-label={`${ps.player.name} assumed AI confidence`}
                         min="50"
                         max="99"
                         value={ps.aiConfidence || 85}
@@ -591,6 +595,7 @@ export default function PortfolioAnalyticsPanel({
                       </div>
                       <input
                         type="range"
+                        aria-label={`${ps.player.name} personal confidence`}
                         min="50"
                         max="99"
                         value={ps.playerConfidence || 80}
