@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Share2, BadgeCheck, Trophy } from 'lucide-react';
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';
-import PrimaryStudioCard from '../vouch-studio-darkroom/panels/preview/PrimaryStudioCard';
+import PreviewCardStage from '../vouch-studio-darkroom/panels/preview/PreviewCardStage';
 import { cardStyleConfigs } from '../vouch-studio-darkroom/utils/cardStyleConfigs';
 import type { CardLayoutId, CustomPlayerSelection, VouchStudioDarkroomProps } from '../vouch-studio-darkroom/types';
 
@@ -167,6 +168,8 @@ const FEATURES = [
 ];
 
 export default function LandingVouchCardShowcase() {
+  const [activeLayout, setActiveLayout] = useState<CardLayoutId>('orbit');
+
   return (
     <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-8`} aria-labelledby="vouch-card-system-heading">
       <div className="text-center">
@@ -193,23 +196,29 @@ export default function LandingVouchCardShowcase() {
       </div>
 
       <div className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Feed-ready cards</p>
-          <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">Swipe to browse</span>
-        </div>
-        <div className="ve-vouch-card-strip flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
           {DEMO_CARDS.map(({ layout, caption }) => (
-            <figure key={layout} className="flex shrink-0 snap-center flex-col items-center">
-              <div className="pointer-events-none select-none" aria-hidden="true" style={{ zoom: 0.68 }}>
-                <div className="w-[420px]">
-                  <PrimaryStudioCard {...makeDemoProps(layout)} activeStyle={STUDIO_STYLE} />
-                </div>
-              </div>
-              <figcaption className="mt-2 text-center font-mono text-[9px] uppercase tracking-widest text-white/35">
-                {caption}
-              </figcaption>
-            </figure>
+            <button
+              key={layout}
+              type="button"
+              onClick={() => setActiveLayout(layout)}
+              aria-pressed={activeLayout === layout}
+              className={`rounded-full border px-3.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest transition ${
+                activeLayout === layout
+                  ? 'border-vouch-cyan/60 bg-vouch-cyan/10 text-vouch-cyan'
+                  : 'border-white/10 bg-black/25 text-white/45 hover:border-vouch-cyan/30 hover:text-white/70'
+              }`}
+            >
+              {caption}
+            </button>
           ))}
+        </div>
+
+        {/* The real Vouch Board preview stage — same component the studio renders — floating in 3D. */}
+        <div className="ve-vouch-3d-stage">
+          <div className="ve-vouch-3d-card overflow-hidden rounded-2xl border border-white/[0.06]">
+            <PreviewCardStage {...makeDemoProps(activeLayout)} activeStyle={STUDIO_STYLE} />
+          </div>
         </div>
       </div>
     </section>
