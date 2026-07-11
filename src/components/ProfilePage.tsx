@@ -10,6 +10,8 @@ import { DeferredBubbleField } from './vouchedge/DeferredBubbleField';
 import { VEButton } from './ui/ve';
 import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
+import { useAuth } from '../lib/useAuth';
+import { useProfileSocialStats } from '../hooks/useSocialGraph';
 import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
 import {
   Area,
@@ -53,7 +55,11 @@ export default function ProfilePage({
   onDeletePost,
   savedParlays = [],
   onSectionChange,
+  viewUserId,
 }: ProfilePageProps) {
+  const { user } = useAuth();
+  const profileUserId = viewUserId ?? user?.id ?? null;
+  const socialStats = useProfileSocialStats(profileUserId);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [displayName, setDisplayName] = useState(profile.displayName);
@@ -97,24 +103,11 @@ export default function ProfilePage({
 
   const activeThemeData = getActiveThemeData();
   
-  const [followingCount, setFollowingCount] = useState(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_following');
-      return stored ? JSON.parse(stored).length : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [followingCount, setFollowingCount] = useState(0);
 
   React.useEffect(() => {
-    const handleSync = (e: any) => {
-      setFollowingCount(e.detail.length);
-    };
-    window.addEventListener('vouchedge-following-updated', handleSync);
-    return () => {
-      window.removeEventListener('vouchedge-following-updated', handleSync);
-    };
-  }, []);
+    setFollowingCount(socialStats.following);
+  }, [socialStats.following]);
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,22 +274,26 @@ export default function ProfilePage({
                   {/* Dynamic Followers and Tailing count belt */}
                   <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-white/45 font-medium ${Z8_TABULAR}`}>
                     <div className="whitespace-nowrap">
-                      <strong className="text-white/90">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? '241' : '38'}
-                      </strong>{' '}
+                      <strong className="text-white/90">{socialStats.followers}</strong>{' '}
                       <span className="text-white/35">followers</span>
                     </div>
                     <div className="whitespace-nowrap">
-                      <strong className="text-white/90 font-bold">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? '156' : '15'}
-                      </strong>{' '}
+                      <strong className="text-white/90 font-bold">{socialStats.subscribers}</strong>{' '}
                       <span className="text-white/35">
-                        {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers (tails)' : 'subscribers'}
+                        {profile.subscriptionTier === 'SELLER_PRO' ? 'subscribers' : 'subscribers'}
                       </span>
+                    </div>
+                    <div className="whitespace-nowrap">
+                      <strong className="text-white/90">{socialStats.friends}</strong>{' '}
+                      <span className="text-white/35">friends</span>
                     </div>
                     <div className="whitespace-nowrap">
                       <strong className="text-white/90">{followingCount}</strong>{' '}
                       <span className="text-white/35">following</span>
+                    </div>
+                    <div className="whitespace-nowrap">
+                      <strong className="text-white/90">{socialStats.tailing}</strong>{' '}
+                      <span className="text-white/35">tailing</span>
                     </div>
                   </div>
 

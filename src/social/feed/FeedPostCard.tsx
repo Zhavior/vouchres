@@ -64,6 +64,9 @@ import ResearchNotePostCard from './ResearchNotePostCard';
 import VouchCircleFeedCard from '../../components/VouchCircleFeedCard';
 import VouchCard from '../../components/vouch-system/VouchCard';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
+import { useAuth } from '../../lib/useAuth';
+import { useOptionalSocialGraph } from '../../hooks/SocialGraphProvider';
+import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
 
 const QuotedPostEmbed = ({ quotedPost }: { quotedPost: FeedPost | undefined }) => {
   if (!quotedPost) return null;
@@ -234,98 +237,68 @@ function FeedPostCard({
     }
   };
 
-  // Check if user is following this creator
-  const [followingList, setFollowingList] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_following');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  const socialGraph = useOptionalSocialGraph();
+  const entitlements = useEntitlements();
+  const [followBusy, setFollowBusy] = useState(false);
 
-  const [userProfile, setUserProfile] = useState<any>(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_profile');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+  const relationshipEntry = socialGraph?.findEntry({
+    profileId: post.userId !== 'unknown' ? post.userId : null,
+    username: post.username,
   });
+  const isFollowing = Boolean(relationshipEntry);
+  const isTailing = relationshipEntry?.relationshipType === 'tail';
+  const isSubscribed = relationshipEntry?.relationshipType === 'subscribe';
 
-  React.useEffect(() => {
-    const handleSync = (e: any) => {
-      setFollowingList(e.detail);
-    };
-    window.addEventListener('vouchedge-following-updated', handleSync);
-    
-    const handleProfileSync = () => {
-      try {
-        const stored = localStorage.getItem('vouchedge_profile');
-        if (stored) {
-          setUserProfile(JSON.parse(stored));
+  const handleFollowToggle = async () => {
+    if (!user?.id || !socialGraph || followBusy) return;
+    if (!post.userId || post.userId === 'unknown') return;
+
+    setFollowBusy(true);
+    try {
+      const wantsTail = post.subscriptionTier === 'SELLER_PRO';
+      if (isFollowing) {
+        await socialGraph.unfollowProfile(post.userId);
+        showToast(`Unfollowed @${post.username}`);
+        return;
+      }
+
+      if (wantsTail && !entitlements.isPro) {
+        setShowUpgradeModal(true);
+        return;
+      }
+
+      const relationshipType = wantsTail
+        ? (entitlements.isCreator ? 'subscribe' : 'tail')
+        : 'follow';
+
+      await socialGraph.followProfile({
+        profileId: post.userId,
+        relationshipType,
+      });
+
+      if (post.parlay?.id || post.parlay?.backendPickId) {
+        const pickId = post.parlay.backendPickId ?? post.parlay.id;
+        try {
+          await socialGraph.tailParlay({ pickId, sourcePostId: post.backendPostId ?? post.id });
+          showToast(`Notifications on — tailed @${post.username}'s parlay`);
+        } catch {
+          showToast(`Notifications on — now ${relationshipType === 'subscribe' ? 'subscribed to' : wantsTail ? 'tailing' : 'following'} @${post.username}`);
         }
-      } catch {}
-    };
-    window.addEventListener('vouchedge-profile-updated', handleProfileSync);
-
-    return () => {
-      window.removeEventListener('vouchedge-following-updated', handleSync);
-      window.removeEventListener('vouchedge-profile-updated', handleProfileSync);
-    };
-  }, []);
-
-  const isFollowing = followingList.includes(post.username);
-
-  const handleFollowToggle = () => {
-    if (!userProfile) return;
-
-    const isUpgraded = userProfile.subscriptionTier === 'GOLD' || userProfile.subscriptionTier === 'SELLER_PRO';
-
-    if (!isUpgraded) {
-      // User is BASIC, so trigger the custom upgrade modal!
-      setShowUpgradeModal(true);
-      return;
+      } else {
+        showToast(`Notifications on — now ${relationshipType === 'subscribe' ? 'subscribed to' : wantsTail ? 'tailing' : 'following'} @${post.username}`);
+      }
+    } catch (err: any) {
+      console.error('[FeedPostCard] follow failed', err);
+      alert(err?.message ?? 'Could not update follow status.');
+    } finally {
+      setFollowBusy(false);
     }
-
-    // Upgraded users can follow / tail!
-    let updated: string[];
-    if (isFollowing) {
-      updated = followingList.filter(u => u !== post.username);
-    } else {
-      updated = [...followingList, post.username];
-    }
-
-    setFollowingList(updated);
-    localStorage.setItem('vouchedge_following', JSON.stringify(updated));
-    
-    // Dispatch custom event to sync other feed cards instantly
-    window.dispatchEvent(new CustomEvent('vouchedge-following-updated', { detail: updated }));
   };
 
   const handleInstantUpgrade = () => {
-    try {
-      const stored = localStorage.getItem('vouchedge_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        parsed.subscriptionTier = 'SELLER_PRO';
-        parsed.verified = true;
-        localStorage.setItem('vouchedge_profile', JSON.stringify(parsed));
-        setUserProfile(parsed);
-        
-        // Dispatch event for other components to know we upgraded!
-        window.dispatchEvent(new CustomEvent('vouchedge-profile-updated'));
-        
-        // Follow automatically since they upgraded!
-        const updated = [...followingList, post.username];
-        setFollowingList(updated);
-        localStorage.setItem('vouchedge_following', JSON.stringify(updated));
-        window.dispatchEvent(new CustomEvent('vouchedge-following-updated', { detail: updated }));
-
-        setShowUpgradeModal(false);
-        alert(`💎 Congratulations! You upgraded to SELLER PRO. You are now subscribing & following (tailing) @${post.username}!`);
-      }
-    } catch {}
+    setShowUpgradeModal(false);
+    alert('Upgrade to Gold or Seller Pro to tail verified creators.');
   };
 
   // Relative timestamp helper
@@ -357,7 +330,7 @@ function FeedPostCard({
   // Check if saved
   const isPostVouchSaved = post.vouch ? savedVouchIds.includes(post.vouch.id) : false;
 
-  const isSelf = userProfile && post.username === userProfile.username;
+  const isSelf = Boolean(user?.id && post.userId && post.userId === user.id);
   const showFollowAction = !isSelf && post.userId !== 've-alg-1';
   const postDeleteAllowed = isSelf && canDeleteFeedPost(post);
   const parlayPostLocked = isSelf && isParlayFeedPost(post) && !canDeleteFeedPost(post);
@@ -422,8 +395,8 @@ function FeedPostCard({
   };
 
   const isProTarget = post.subscriptionTier === 'SELLER_PRO';
-  const followButtonText = isFollowing 
-    ? (isProTarget ? '✓ Tailing' : '✓ Following')
+  const followButtonText = isFollowing
+    ? (isTailing ? '✓ Tailing' : isSubscribed ? '✓ Subscribed' : '✓ Following')
     : (isProTarget ? 'Tail' : 'Follow');
 
   if (post.boardConfig && post.boardConfig.gradient) {
@@ -592,14 +565,15 @@ function FeedPostCard({
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              {showFollowAction && (
+              {showFollowAction && user && (
                 <button
-                  onClick={handleFollowToggle}
+                  onClick={() => void handleFollowToggle()}
+                  disabled={followBusy}
                   className={`rounded-full px-3 py-1 text-[13px] font-bold transition-colors ${
                     isFollowing
                       ? 'border border-white/20 text-white/70 hover:border-rose-500/50 hover:text-rose-400'
                       : 'bg-white text-black hover:bg-white/90'
-                  }`}
+                  } ${followBusy ? 'opacity-60 cursor-wait' : ''}`}
                   id={`follow-tail-btn-${post.id}`}
                 >
                   {followButtonText}

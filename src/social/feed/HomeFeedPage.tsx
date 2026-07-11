@@ -18,6 +18,8 @@ import FeedPostCardSkeleton from './FeedPostCardSkeleton';
 // the "Following" tab (where this graph lives) is ever opened.
 const CapperNetworkGraph = lazy(() => import('./CapperNetworkGraph'));
 import { FeedPost, Parlay, Vouch, CreatorProofProfile } from '../../types';
+import { useOptionalSocialGraph, type SocialGraphBucket } from '../../hooks/SocialGraphProvider';
+import { useAuth } from '../../lib/useAuth';
 import {
   Search,
   AlertTriangle,
@@ -96,25 +98,22 @@ function HomeFeedPage({
     return localStorage.getItem('vEdge_adSponsor') || 'DraftKings';
   });
 
-  // Check if user is following creators
-  const [followingList, setFollowingList] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('vouchedge_following');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  const socialGraph = useOptionalSocialGraph();
+  const [followingFilter, setFollowingFilter] = useState<SocialGraphBucket>('following');
 
-  React.useEffect(() => {
-    const handleSync = (e: any) => {
-      setFollowingList(e.detail);
-    };
-    window.addEventListener('vouchedge-following-updated', handleSync);
-    return () => {
-      window.removeEventListener('vouchedge-following-updated', handleSync);
-    };
-  }, []);
+  const followingList = socialGraph?.followingUsernames ?? [];
+  const tailingList = socialGraph?.tailingUsernames ?? [];
+  const friendList = socialGraph?.friendUsernames ?? [];
+  const subscriberList = socialGraph?.subscriberUsernames ?? [];
+
+  const activeFollowingUsernames = followingFilter === 'tailing'
+    ? tailingList
+    : followingFilter === 'friends'
+      ? friendList
+      : followingFilter === 'subscribers'
+        ? subscriberList
+        : followingList;
 
   const feedScrollRoot = useFeedScrollRoot();
   const feedListRef = useRef<HTMLDivElement | null>(null);
@@ -200,7 +199,7 @@ function HomeFeedPage({
         finalTabList = list;
         break;
       case 'following':
-        finalTabList = list.filter((p) => followingList.includes(p.username));
+        finalTabList = list.filter((p) => activeFollowingUsernames.includes(p.username));
         break;
       case 'mlb':
         finalTabList = list.filter((p) => p.sportBadge?.toUpperCase() === 'MLB');
@@ -226,7 +225,7 @@ function HomeFeedPage({
     }
 
     return finalTabList;
-  }, [posts, searchQuery, activeTab, selectedSport, selectedPostType, proOnlyMode, followingList]);
+  }, [posts, searchQuery, activeTab, selectedSport, selectedPostType, proOnlyMode, activeFollowingUsernames, followingFilter]);
 
   const algorithmPosts = useMemo(() => {
     const chronological = [...filteredPosts].sort(
@@ -452,21 +451,61 @@ function HomeFeedPage({
           />
         </div>
 
-        {activeTab === 'following' && followingList.length > 0 && (
+        {activeTab === 'following' && user && (
+          <div className="px-4 py-3 border-b border-white/[0.08] flex flex-wrap gap-2">
+            {([
+              ['following', 'Following'],
+              ['tailing', 'Tailing'],
+              ['friends', 'Friends'],
+              ['subscribers', 'Subscribers'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFollowingFilter(id)}
+                className={`rounded-full px-3 py-1.5 text-[12px] font-semibold border transition-colors ${
+                  followingFilter === id
+                    ? 'bg-vouch-emerald/15 border-vouch-emerald/40 text-vouch-emerald'
+                    : 'bg-white/[0.03] border-white/10 text-white/55 hover:text-white/80'
+                }`}
+              >
+                {label}
+                {socialGraph?.summary && (
+                  <span className="ml-1 opacity-70">
+                    ({id === 'following' ? socialGraph.summary.following
+                      : id === 'tailing' ? socialGraph.summary.tailing
+                        : id === 'friends' ? socialGraph.summary.friends
+                          : socialGraph.summary.subscribers})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'following' && activeFollowingUsernames.length > 0 && (
           <div className="px-4 py-3 border-b border-white/[0.08]">
             <Suspense fallback={<LazyChunkSkeleton height={320} label="Loading network graph" />}>
-              <CapperNetworkGraph posts={posts} followingList={followingList} />
+              <CapperNetworkGraph posts={posts} followingList={activeFollowingUsernames} />
             </Suspense>
           </div>
         )}
 
         {/* Dynamic empty state — one shared card, three copy variants */}
-        {activeTab === 'following' && followingList.length === 0 ? (
+        {activeTab === 'following' && activeFollowingUsernames.length === 0 ? (
           <FeedEmptyState
             id="empty-following-placeholder-slate"
             icon={<Users className="w-6 h-6" />}
-            title="Not tailing anyone yet"
-            body={<>Go to the <strong className="text-white/70">"For You"</strong> feed tab, find verified sports partners, and click <strong className="text-white/70">"Follow"</strong> or <strong className="text-white/70">"Tail"</strong> to populate your private subscribed ledger deck right here.</>}
+            title={
+              followingFilter === 'tailing'
+                ? 'Not tailing anyone yet'
+                : followingFilter === 'friends'
+                  ? 'No friends yet'
+                  : followingFilter === 'subscribers'
+                    ? 'No subscriber clubs yet'
+                    : 'Not following anyone yet'
+            }
+            body={<>Go to the <strong className="text-white/70">"For You"</strong> feed tab, find verified sports partners, and click <strong className="text-white/70">"Follow"</strong> or <strong className="text-white/70">"Tail"</strong>. Notifications turn on automatically when you follow someone.</>}
           />
         ) : algorithmPosts.length === 0 && posts.length === 0 ? (
           /* Genuinely no posts anywhere yet (no filter/search at play) */

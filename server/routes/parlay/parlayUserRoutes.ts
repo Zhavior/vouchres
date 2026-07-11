@@ -19,6 +19,7 @@ import {
   listMyParlaysHandler,
   repairParlayIdentityHandler,
   saveMeParlayHandler,
+  tailParlayHandler,
   updateParlayHandler,
 } from "../../controllers/parlayController";
 import {
@@ -329,6 +330,13 @@ parlayUserRoutes.patch(
   requireAuth,
   validate({ params: ParlayIdParamsSchema, body: UpdateParlaySchema }),
   updateParlayHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/tail",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  tailParlayHandler,
 );
 
 parlayUserRoutes.delete(

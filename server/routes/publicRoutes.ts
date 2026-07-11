@@ -8,6 +8,15 @@ import type { RequestWithContext } from "../middleware/requestContext";
 import { AppError } from "../errors/AppError";
 import { buildAiJudgeLeaderboard } from "../services/aiJudges/aiJudgeLeaderboardService";
 import {
+  getRelationshipForTarget,
+  getProfileSocialStats,
+  getSocialGraph,
+  removeFollow,
+  upsertFollow,
+  type RelationshipType,
+  type SocialGraphBucket,
+} from "../services/social/followService";
+import {
   EXTENSION_DOCS_PATH,
   getAgent,
   listAgentMeta,
@@ -370,28 +379,8 @@ publicRoutes.get("/profile/:id", asyncHandler(async (req: RequestWithContext, re
 
 publicRoutes.get("/profile/:id/stats", asyncHandler(async (req: RequestWithContext, res: Response) => {
   const { id } = req.params;
-
-  const [followers, following, posts] = await Promise.all([
-    supabaseAdmin
-      .from("follows")
-      .select("*", { count: "exact", head: true })
-      .eq("following_profile_id", id),
-    supabaseAdmin
-      .from("follows")
-      .select("*", { count: "exact", head: true })
-      .eq("follower_id", id),
-    supabaseAdmin
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .eq("author_id", id),
-  ]);
-
-  return res.json(apiOkFlat(req, {
-    followers: followers.count ?? 0,
-    following: following.count ?? 0,
-    subscribers: 0,
-    posts: posts.count ?? 0,
-  }));
+  const stats = await getProfileSocialStats(id);
+  return res.json(apiOkFlat(req, stats as unknown as Record<string, unknown>));
 }));
 
 publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -431,7 +420,12 @@ publicRoutes.get("/profile/:id/picks", requireAuth, asyncHandler(async (req: Aut
 }));
 
 publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const { following_profile_id, following_capper_id } = req.body ?? {};
+  const {
+    following_profile_id,
+    following_capper_id,
+    relationship_type,
+    notify_enabled,
+  } = req.body ?? {};
 
   if (!following_profile_id && !following_capper_id) {
     throw new AppError({
@@ -458,67 +452,87 @@ publicRoutes.post("/follow", requireAuth, asyncHandler(async (req: AuthedRequest
     });
   }
 
-  const { error } = await supabaseAdmin.from("follows").upsert(
-    {
-      follower_id: req.user!.id,
-      following_profile_id: following_profile_id ?? null,
-      following_capper_id: following_capper_id ?? null,
-    },
-    { onConflict: "follower_id,following_profile_id,following_capper_id" },
-  );
-
-  if (error) {
-    console.error("[follow] upsert failed", error);
+  const relationshipType = String(relationship_type ?? "follow").trim().toLowerCase() as RelationshipType;
+  if (!["follow", "tail", "subscribe"].includes(relationshipType)) {
     throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to follow target.",
-      cause: error,
+      status: 400,
+      code: "bad_request",
+      message: "Invalid relationship type.",
+      details: { error: "invalid_relationship_type" },
     });
   }
 
-  return res.json(apiOkFlat(req, {}));
+  const result = await upsertFollow({
+    followerId: req.user!.id,
+    followingProfileId: following_profile_id ?? null,
+    followingCapperId: following_capper_id ?? null,
+    relationshipType,
+    notifyEnabled: notify_enabled !== false,
+  });
+
+  return res.json(apiOkFlat(req, {
+    relationship_type: result.relationshipType,
+    notify_enabled: result.notifyEnabled,
+    notifications_enabled: result.notifyEnabled,
+  }));
 }));
 
 publicRoutes.delete("/follow", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const { following_profile_id, following_capper_id } = req.body ?? {};
 
-  const { error } = await supabaseAdmin
-    .from("follows")
-    .delete()
-    .match({
-      follower_id: req.user!.id,
-      following_profile_id: following_profile_id ?? null,
-      following_capper_id: following_capper_id ?? null,
-    });
-
-  if (error) {
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to unfollow target.",
-      cause: error,
-    });
-  }
+  await removeFollow({
+    followerId: req.user!.id,
+    followingProfileId: following_profile_id ?? null,
+    followingCapperId: following_capper_id ?? null,
+  });
 
   return res.json(apiOkFlat(req, {}));
 }));
 
 publicRoutes.get("/following", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const { data, error } = await supabaseAdmin
-    .from("follows")
-    .select("following_profile_id, following_capper_id, created_at")
-    .eq("follower_id", req.user!.id)
-    .order("created_at", { ascending: false });
+  const graph = await getSocialGraph({
+    userId: req.user!.id,
+    bucket: "following",
+  });
 
-  if (error) {
+  const follows = graph.entries.map((entry) => ({
+    following_profile_id: entry.profileId,
+    following_capper_id: entry.capperId,
+    username: entry.username,
+    display_name: entry.displayName,
+    relationship_type: entry.relationshipType,
+    notify_enabled: entry.notifyEnabled,
+    is_friend: entry.isFriend,
+    created_at: entry.followedAt,
+  }));
+
+  return res.json(apiOkFlat(req, { follows, summary: graph.summary }));
+}));
+
+publicRoutes.get("/social/graph", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const bucket = String(req.query.bucket ?? "all").trim().toLowerCase() as SocialGraphBucket;
+  const allowed: SocialGraphBucket[] = ["all", "following", "followers", "friends", "subscribers", "tailing"];
+  const normalized = allowed.includes(bucket) ? bucket : "all";
+  const graph = await getSocialGraph({ userId: req.user!.id, bucket: normalized });
+  return res.json(apiOkFlat(req, graph as unknown as Record<string, unknown>));
+}));
+
+publicRoutes.get("/social/relationship", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const profileId = typeof req.query.profile_id === "string" ? req.query.profile_id : null;
+  const capperId = typeof req.query.capper_id === "string" ? req.query.capper_id : null;
+  if (!profileId && !capperId) {
     throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to fetch follows.",
-      cause: error,
+      status: 400,
+      code: "bad_request",
+      message: "Must specify profile_id or capper_id.",
     });
   }
 
-  return res.json(apiOkFlat(req, { follows: data ?? [] }));
+  const relationship = await getRelationshipForTarget({
+    viewerId: req.user!.id,
+    profileId,
+    capperId,
+  });
+
+  return res.json(apiOkFlat(req, relationship as unknown as Record<string, unknown>));
 }));
