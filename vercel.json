@@ -73,6 +73,14 @@
       "destination": "/api"
     },
     {
+      "source": "/p/:id",
+      "destination": "/api"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api"
+    },
+    {
       "source": "/((?!api/|assets/|icons/|build-id\\.txt|favicon\\.svg|favicon\\.png|manifest\\.json|offline\\.html|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
