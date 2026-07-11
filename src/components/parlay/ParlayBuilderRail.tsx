@@ -1,4 +1,5 @@
 import React from 'react';
+import { Share2 } from 'lucide-react';
 import type { Leg } from '../../types';
 import { americanLabel } from '../../lib/odds';
 
@@ -6,6 +7,10 @@ export interface ParlayBuilderRailProps {
   legs: Leg[];
   onRemoveLeg: (legId: string) => void;
   onSaveParlay?: () => void;
+  onShareParlay?: () => void;
+  shareLabel?: string;
+  shareDisabled?: boolean;
+  isSharing?: boolean;
   totalOdds?: string;
   stake: number;
   onStakeChange: (stake: number) => void;
@@ -87,6 +92,10 @@ export default function ParlayBuilderRail({
   legs,
   onRemoveLeg,
   onSaveParlay,
+  onShareParlay,
+  shareLabel = 'Lock to Ledger',
+  shareDisabled = false,
+  isSharing = false,
   totalOdds = '—',
   stake,
   onStakeChange,
@@ -174,6 +183,20 @@ export default function ParlayBuilderRail({
         </div>
 
         {footerExtra}
+
+        {onShareParlay ? (
+          <button
+            type="button"
+            onClick={onShareParlay}
+            disabled={shareDisabled || isSharing || legs.length === 0}
+            className="relative mb-3 w-full border border-vouch-emerald/40 bg-vouch-emerald/10 py-3.5 group overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed min-h-[2.75rem] rounded-sm"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2 text-sm font-mono font-bold text-vouch-emerald uppercase tracking-widest">
+              <Share2 className="h-4 w-4" aria-hidden="true" />
+              {isSharing ? 'Locking in…' : shareLabel}
+            </span>
+          </button>
+        ) : null}
 
         {onSaveParlay ? (
           <button

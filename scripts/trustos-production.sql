@@ -89,6 +89,25 @@ create index if not exists picks_ots_stamped_at_idx
   on public.picks(ots_stamped_at)
   where ots_stamped_at is not null;
 
+-- 0021: trust ledger commit window (private wins → auto-lock)
+alter table public.picks
+  add column if not exists committed_at timestamptz;
+
+alter table public.picks
+  add column if not exists trust_lock_at timestamptz;
+
+create index if not exists picks_trust_lock_at_idx
+  on public.picks(trust_lock_at)
+  where trust_lock_at is not null and locked_at is null;
+
+do $$
+begin
+  alter type public.pick_visibility add value if not exists 'subscriber';
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
 -- 0022: Social graph (follow / tail / subscribe + parlay tails)
 alter table public.follows
   add column if not exists relationship_type text not null default 'follow';

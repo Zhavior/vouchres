@@ -33,6 +33,13 @@ import {
   Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
   ChevronUp, ChevronDown, X, Trash2, AlertTriangle, TrendingUp, GitBranch,
 } from 'lucide-react';
+import ParlayTrustLockModal from './ParlayTrustLockModal';
+import { useAppCommandStore } from '../../stores/appCommandStore';
+import { useSlipsStore } from '../../stores/slipsStore';
+import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
+import type { Parlay } from '../../types';
+import type { TrustAudience } from '../../lib/trustLockSchedule';
+import { trustLockCountdownLabel } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { ParlayTreeModal } from './tree/ParlayTreeModal';
 import { lazy, Suspense } from 'react';
@@ -47,6 +54,7 @@ import {
 } from '../../lib/parlays/parlayBridge';
 import type { CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
 import type { PublicParlaySlip } from '../../lib/parlayDisplay';
+import { classifyParlayHistoryTab } from '../../lib/trustLockSchedule';
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
@@ -106,7 +114,7 @@ const TABS: Array<{
   { id: 'build',      label: 'Build',         sub: 'Slip builder',    icon: Layers3 },
   { id: 'ai',         label: 'AI Picks',       sub: 'V.A.I discovery', icon: Bot },
   { id: 'vai_ledger', label: 'Track Record',   sub: 'Every AI pick, graded', icon: Brain },
-  { id: 'live',       label: 'My Parlays',     sub: 'Saved + live',    icon: Radio },
+  { id: 'live',       label: 'History',     sub: 'Private · Public · Subs',    icon: Radio },
   { id: 'premium',    label: 'Community',      sub: 'Posted slips',    icon: Users },
 ];
 
@@ -535,9 +543,14 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const removeDraftLeg  = useParlayCommandStore((s) => s.removeDraftLeg);
   const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
   const announce        = useAnnounce();
+  const onCommitParlayTrust = useAppCommandStore((s) => s.onCommitParlayTrust);
+  const { isCreator } = useEntitlements();
 
   const [isSaving, setIsSaving]             = useState(false);
+  const [isSharing, setIsSharing]           = useState(false);
   const [saveError, setSaveError]            = useState<string | null>(null);
+  const [shareError, setShareError]          = useState<string | null>(null);
+  const [trustModalOpen, setTrustModalOpen]  = useState(false);
   const [riskMode, setRiskMode]              = useState<ParlayRiskMode>('balanced');
   const [verdictOpen, setVerdictOpen]        = useState(false);
   const [stake, setStake]                    = useState(10);
@@ -559,27 +572,30 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   const riskMeta = RISK_MODE_META[riskMode];
 
-  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving;
+  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving && !isSharing;
+  const canShare = draftLegs.length >= 2 && agreedSession && !isSaving && !isSharing;
+
+  function buildDraftParlay() {
+    return normalizeParlaySlip({
+      id: `draft-${Date.now()}`,
+      clientRef: `draft-${Date.now()}`,
+      title: `${riskMeta.label} Parlay — ${new Date().toLocaleDateString()}`,
+      mode: 'PRACTICE',
+      source: draftMode === 'ai_locked' ? 'vai_ai_made_parlay' : 'manual_builder',
+      sport: 'mlb',
+      status: 'pending',
+      wagerAmount: stake,
+      legs: draftLegs.map((l) => normalizeParlayLeg(l)),
+      createdAt: new Date().toISOString(),
+    });
+  }
 
   async function handleSave() {
     if (!canSave || !onSaveParlay) return;
-    // Snapshot for rollback (Judge 9)
     setIsSaving(true);
     setSaveError(null);
     try {
-      const draftParlay = normalizeParlaySlip({
-        id: `draft-${Date.now()}`,
-        clientRef: `draft-${Date.now()}`,
-        title: `${riskMeta.label} Parlay — ${new Date().toLocaleDateString()}`,
-        mode: 'PRACTICE',
-        source: draftMode === 'ai_locked' ? 'vai_ai_made_parlay' : 'manual_builder',
-        sport: 'mlb',
-        status: 'pending',
-        wagerAmount: stake,
-        legs: draftLegs.map((l) => normalizeParlayLeg(l)),
-        createdAt: new Date().toISOString(),
-      });
-      await onSaveParlay(draftParlay);
+      await onSaveParlay(buildDraftParlay());
       announce('Parlay saved.');
       clearDraft();
     } catch (err) {
@@ -588,6 +604,31 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
       announce(`Save failed: ${msg}`);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleTrustConfirm(audience: TrustAudience) {
+    if (!onSaveParlay || draftLegs.length < 2) return;
+    setIsSharing(true);
+    setShareError(null);
+    try {
+      const draftParlay = buildDraftParlay();
+      await onSaveParlay(draftParlay);
+      const saved = useSlipsStore.getState().savedSlips.find((p) => p.id === draftParlay.id)
+        ?? useSlipsStore.getState().savedSlips[0];
+      if (!saved) {
+        throw new Error('Could not save parlay before locking.');
+      }
+      await onCommitParlayTrust({ parlay: saved as Parlay, audience });
+      announce('Parlay sent to Private wins. Locks in 5 minutes.');
+      setTrustModalOpen(false);
+      clearDraft();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Lock in failed';
+      setShareError(msg);
+      announce(`Lock in failed: ${msg}`);
+    } finally {
+      setIsSharing(false);
     }
   }
 
@@ -664,6 +705,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
             : null
         }
         onSaveParlay={handleSave}
+        onShareParlay={() => setTrustModalOpen(true)}
+        shareLabel="Lock to Ledger"
+        shareDisabled={!canShare}
+        isSharing={isSharing}
         saveLabel="Save Slip"
         isSaving={isSaving}
         saveDisabled={!agreedSession || !canSave}
@@ -684,6 +729,13 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
                     Retry
                   </button>
                 </div>
+              </div>
+            ) : null}
+
+            {shareError ? (
+              <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-warning)/0.1)] border border-[hsl(var(--ve-warning)/0.4)]">
+                <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-warning))] shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="text-xs text-[hsl(var(--ve-warning))]">{shareError}</p>
               </div>
             ) : null}
 
@@ -723,6 +775,15 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
           onToggle={() => setVerdictOpen((v) => !v)}
         />
       )}
+
+      <ParlayTrustLockModal
+        open={trustModalOpen}
+        title={`${riskMeta.label} Parlay — ${draftLegs.length} legs`}
+        onClose={() => setTrustModalOpen(false)}
+        onConfirm={handleTrustConfirm}
+        isSubmitting={isSharing}
+        canUseSubscriber={isCreator}
+      />
     </div>
   );
 }
@@ -880,13 +941,84 @@ function MyParlaysPanel({
   const savedSlips = useParlayCommandStore(selectSavedSlips);
   const announce   = useAnnounce();
   const [treeSlip, setTreeSlip] = useState<PublicParlaySlip | null>(null);
+  const [historyTab, setHistoryTab] = useState<TrustAudience>("private");
 
-  const liveSlips   = savedSlips.filter((s) => ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(s.status).toLowerCase()));
+  const liveSlips   = savedSlips.filter((s) => ['pending', 'live', 'open', 'active', 'in_progress'].includes(String(s.status).toLowerCase()) && !s.trustCommittedAt && !s.feedLockedAt);
   const gradedSlips = savedSlips.filter((s) => ['won', 'lost', 'push', 'void', 'cancelled'].includes(String(s.status).toLowerCase()));
+
+  const historySlips = savedSlips.filter((s) => {
+    const tab = classifyParlayHistoryTab({
+      trustAudience: s.trustAudience as TrustAudience | undefined,
+      visibility: s.trustAudience ?? undefined,
+      committedAt: s.trustCommittedAt ?? undefined,
+      feedLockedAt: s.feedLockedAt ?? undefined,
+    });
+    if (tab === "draft") return false;
+    return tab === historyTab;
+  });
 
   if (savedSlips.length === 0) return <EmptyLiveParlays />;
 
-  function Section({ title, slips, live }: { title: string; slips: typeof savedSlips; live?: boolean }) {
+  function SlipCard({ slip }: { slip: PublicParlaySlip }) {
+    const status = String(slip.status ?? 'pending').toLowerCase() as SlipGradeStatus;
+    const legs = Array.isArray(slip.legs) ? slip.legs : [];
+    const pendingLock = slip.trustCommittedAt && !slip.feedLockedAt;
+    const lockLabel = pendingLock ? trustLockCountdownLabel(slip.trustLockAt ?? undefined) : null;
+
+    return (
+      <article
+        className="flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]"
+        aria-label={String(slip.title ?? 'Saved parlay')}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))] truncate">
+              {String(slip.title ?? 'Saved Parlay')}
+            </p>
+            <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
+              {legs.length} leg{legs.length !== 1 ? 's' : ''}
+              {lockLabel ? ` · ${lockLabel}` : ''}
+              {slip.feedLockedAt ? ' · Locked' : ''}
+            </p>
+          </div>
+          <StatusBadge status={status as LegGradeStatus} size="xs" />
+        </div>
+
+        {legs.slice(0, 3).map((leg, i) => {
+          const legRec = leg as Record<string, unknown>;
+          const legStatus = String(legRec.status ?? 'pending').toLowerCase() as LegGradeStatus;
+          const legMeta = LEG_STATUS_META[legStatus] ?? LEG_STATUS_META.pending;
+          return (
+            <div key={i} className="flex items-center gap-2 text-[10px] text-[hsl(var(--ve-text-muted))]">
+              <span aria-hidden="true" style={{ color: z8StatusColor(legMeta.token) }}>{legMeta.icon}</span>
+              <span className="truncate">{String(legRec.selection ?? legRec.playerName ?? 'Prop')}</span>
+              <span
+                className="ml-auto text-[9px] font-bold shrink-0"
+                style={{ color: z8StatusColor(legMeta.token) }}
+              >
+                {legMeta.label}
+              </span>
+            </div>
+          );
+        })}
+        {legs.length > 3 && (
+          <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">+{legs.length - 3} more legs</p>
+        )}
+        {legs.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setTreeSlip(slip)}
+            className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--ve-border)/0.5)] py-1.5 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))] transition hover:border-cyan-500/40 hover:text-cyan-300"
+          >
+            <GitBranch className="h-3 w-3" />
+            View Structure
+          </button>
+        )}
+      </article>
+    );
+  }
+
+  function Section({ title, slips, live }: { title: string; slips: PublicParlaySlip[]; live?: boolean }) {
     if (slips.length === 0) return null;
     return (
       <section aria-label={title}>
@@ -895,73 +1027,55 @@ function MyParlaysPanel({
           {live && <LivePulseBars active={true} />}
         </div>
         <div className="flex flex-col gap-2">
-          {slips.map((slip) => {
-            const status = String(slip.status ?? 'pending').toLowerCase() as SlipGradeStatus;
-            const meta = SLIP_STATUS_META[status] ?? SLIP_STATUS_META.pending;
-            const legs = Array.isArray(slip.legs) ? slip.legs : [];
-            return (
-              <article
-                key={slip.publicId ?? slip.sourceId}
-                className="flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]"
-                aria-label={String(slip.title ?? 'Saved parlay')}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[hsl(var(--ve-text-primary))] truncate">
-                      {String(slip.title ?? 'Saved Parlay')}
-                    </p>
-                    <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
-                      {legs.length} leg{legs.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <StatusBadge status={status as LegGradeStatus} size="xs" />
-                </div>
-
-                {legs.slice(0, 3).map((leg, i) => {
-                  const legRec = leg as Record<string, unknown>;
-                  const legStatus = String(legRec.status ?? 'pending').toLowerCase() as LegGradeStatus;
-                  const legMeta = LEG_STATUS_META[legStatus] ?? LEG_STATUS_META.pending;
-                  return (
-                    <div key={i} className="flex items-center gap-2 text-[10px] text-[hsl(var(--ve-text-muted))]">
-                      <span aria-hidden="true" style={{ color: z8StatusColor(legMeta.token) }}>{legMeta.icon}</span>
-                      <span className="truncate">{String(legRec.selection ?? legRec.playerName ?? 'Prop')}</span>
-                      <span
-                        className="ml-auto text-[9px] font-bold shrink-0"
-                        style={{ color: z8StatusColor(legMeta.token) }}
-                      >
-                        {legMeta.label}
-                      </span>
-                    </div>
-                  );
-                })}
-                {legs.length > 3 && (
-                  <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">+{legs.length - 3} more legs</p>
-                )}
-                {legs.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setTreeSlip(slip)}
-                    className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--ve-border)/0.5)] py-1.5 text-[10px] font-bold uppercase tracking-wide text-[hsl(var(--ve-text-muted))] transition hover:border-cyan-500/40 hover:text-cyan-300"
-                  >
-                    <GitBranch className="h-3 w-3" />
-                    View Structure
-                  </button>
-                )}
-              </article>
-            );
-          })}
+          {slips.map((slip) => (
+            <SlipCard key={slip.publicId ?? slip.sourceId} slip={slip} />
+          ))}
         </div>
       </section>
     );
   }
+
+  const HISTORY_TABS: Array<{ id: TrustAudience; label: string }> = [
+    { id: "private", label: "Private" },
+    { id: "public", label: "Public" },
+    { id: "subscriber", label: "Subscribers" },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
       <Suspense fallback={<LazyChunkSkeleton height={260} label="Loading correlation graph" />}>
         <ParlayCorrelationGraph slips={savedSlips} />
       </Suspense>
-      <Section title="Live & Pending" slips={liveSlips} live />
-      <Section title="Graded Results" slips={gradedSlips} />
+
+      <div role="tablist" aria-label="Parlay history" className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
+        {HISTORY_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={historyTab === tab.id}
+            onClick={() => {
+              setHistoryTab(tab.id);
+              announce(`${tab.label} history`);
+            }}
+            className={`flex-1 rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-wide ${
+              historyTab === tab.id ? "bg-vouch-cyan/15 text-vouch-cyan" : "text-white/50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <Section title={`${historyTab === "private" ? "Private wins" : historyTab === "public" ? "Public ledger" : "Subscriber slips"}`} slips={historySlips} />
+      {historySlips.length === 0 && (
+        <p className="text-center text-xs text-white/45 py-6">
+          No {historyTab} parlays yet. Use <strong className="text-white/70">Lock to Ledger</strong> on Build to start your trust record.
+        </p>
+      )}
+
+      <Section title="Live & Pending" slips={liveSlips as PublicParlaySlip[]} live />
+      <Section title="Graded Results" slips={gradedSlips as PublicParlaySlip[]} />
       <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />
     </div>
   );

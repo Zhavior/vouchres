@@ -8,7 +8,7 @@ import { useFeedQuery, flattenFeedPages } from '../hooks/queries/useFeedQuery';
 import { canAccessThemeStore } from '../lib/adminDevAccess';
 import { notify } from '../lib/appNotifications';
 import { isLive } from '../lib/parlayLifecycle';
-import { pushAiParlaysToBackend } from '../domain/parlayActions';
+import { pushAiParlaysToBackend, finalizeParlayTrustLockClient } from '../domain/parlayActions';
 import { warmGuestHrBoardCache } from '../lib/boot/guestHrBoardWarmCache';
 import { useFeedStore, selectPosts, selectSyncPosts } from '../stores/feedStore';
 import { useSlipsStore, selectSavedSlips, selectSyncSlips } from '../stores/slipsStore';
@@ -238,6 +238,43 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     });
   };
 
+  const checkTrustLockSchedule = () => {
+    const now = Date.now();
+    let changed = false;
+    const updated = useSlipsStore.getState().savedSlips.map((p) => {
+      if (!p.trustCommittedAt || p.feedLockedAt) return p;
+      const lockMs = p.trustLockAt ? new Date(p.trustLockAt).getTime() : 0;
+      if (!lockMs) return p;
+
+      let next = p;
+      if (!p.trustLockWarningNotified && now >= lockMs - 60_000 && now < lockMs) {
+        notify({
+          kind: 'lock',
+          title: `⏳ Locking in 1 minute`,
+          body: `${p.title} locks to your trust ledger soon.`,
+          section: 'live_parlays',
+        });
+        next = { ...next, trustLockWarningNotified: true };
+        changed = true;
+      }
+
+      if (now >= lockMs && !p.feedLockedAt) {
+        void finalizeParlayTrustLockClient(next).then((locked) => {
+          if (locked?.feedLockedAt) {
+            notify({
+              kind: 'lock',
+              title: `🔒 Locked: ${p.title}`,
+              body: 'Now on your graded trust ledger. Edits are blocked.',
+              section: 'live_parlays',
+            });
+          }
+        });
+      }
+      return next;
+    });
+    if (changed) syncSlips(updated);
+  };
+
   const checkParlayLocks = () => {
     let changed = false;
     const updated = useSlipsStore.getState().savedSlips.map((p) => {
@@ -260,6 +297,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   useEffect(() => {
     const tick = () => {
       runScheduledAiGeneration();
+      checkTrustLockSchedule();
       checkParlayLocks();
     };
     const warmup = window.setTimeout(tick, 1500);
