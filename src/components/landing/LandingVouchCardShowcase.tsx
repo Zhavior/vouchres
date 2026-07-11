@@ -35,8 +35,8 @@ const DEMO_SELECTED_PLAYERS: CustomPlayerSelection[] = [
 ];
 
 const DEMO_PROFILE = {
-  displayName: 'ZHAVIOR',
-  username: 'user_7133c107d7a0',
+  displayName: 'user_name',
+  username: 'user_name',
   avatarUrl: undefined,
 };
 
