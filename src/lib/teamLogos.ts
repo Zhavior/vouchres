@@ -37,6 +37,14 @@ export const TEAM_ID_BY_NAME: Record<string, number> = {
   'Milwaukee Brewers': 158,
 };
 
+export const TEAM_ABBR_BY_ID: Record<number, string> = {
+  108: 'LAA', 109: 'AZ', 110: 'BAL', 111: 'BOS', 112: 'CHC', 113: 'CIN',
+  114: 'CLE', 115: 'COL', 116: 'DET', 117: 'HOU', 118: 'KC', 119: 'LAD',
+  120: 'WSH', 121: 'NYM', 133: 'ATH', 134: 'PIT', 135: 'SD', 136: 'SEA',
+  137: 'SF', 138: 'STL', 139: 'TB', 140: 'TEX', 141: 'TOR', 142: 'MIN',
+  143: 'PHI', 144: 'ATL', 145: 'CWS', 146: 'MIA', 147: 'NYY', 158: 'MIL',
+};
+
 export function logoByTeamId(teamId?: number | null): string | null {
   if (!teamId) return null;
   return `https://www.mlbstatic.com/team-logos/${teamId}.svg`;
@@ -64,4 +72,9 @@ export function teamIdByName(name?: string | null): number | null {
     if (lower.includes(team.toLowerCase()) || team.toLowerCase().includes(lower)) return id;
   }
   return null;
+}
+
+export function teamAbbrByName(name?: string | null): string | null {
+  const teamId = teamIdByName(name);
+  return teamId ? TEAM_ABBR_BY_ID[teamId] ?? null : null;
 }

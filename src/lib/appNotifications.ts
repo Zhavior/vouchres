@@ -39,9 +39,13 @@ function save(list: AppNotification[]) {
 }
 
 /** Push a notification. Returns the created record. */
-export function notify(input: { kind: NotifKind; title: string; body?: string; section?: string }): AppNotification {
+export function notify(input: { kind: NotifKind; title: string; body?: string; section?: string; dedupeKey?: string }): AppNotification {
+  const existing = input.dedupeKey
+    ? getNotifications().find((item) => item.id === `n-${input.dedupeKey}`)
+    : undefined;
+  if (existing) return existing;
   const n: AppNotification = {
-    id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: input.dedupeKey ? `n-${input.dedupeKey}` : `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     kind: input.kind,
     title: input.title,
     body: input.body,
@@ -59,6 +63,15 @@ export function notify(input: { kind: NotifKind; title: string; body?: string; s
 
 export function markAllRead(): AppNotification[] {
   const list = getNotifications().map((n) => ({ ...n, read: true }));
+  save(list);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENT, { detail: null }));
+  return list;
+}
+
+export function markNotificationRead(id: string): AppNotification[] {
+  const list = getNotifications().map((notification) =>
+    notification.id === id ? { ...notification, read: true } : notification,
+  );
   save(list);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENT, { detail: null }));
   return list;

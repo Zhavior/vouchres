@@ -1,0 +1,75 @@
+.z8-live-lens {
+  --lens-cyan: #00f0ff;
+  --lens-emerald: #00ff94;
+  --lens-amber: #f59e0b;
+  isolation: isolate;
+}
+
+.z8-live-lens__hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0, 240, 255, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(10, 22, 40, 0.84), rgba(2, 6, 23, 0.94));
+}
+
+.z8-live-lens__hero::before {
+  position: absolute;
+  inset: 12% auto auto 50%;
+  width: min(54vw, 34rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -42%);
+  border: 1px solid rgba(0, 240, 255, 0.13);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, transparent 54%, rgba(0, 240, 255, 0.06) 55%, transparent 57%),
+    conic-gradient(from 30deg, transparent 0 10%, rgba(0, 240, 255, 0.055) 10% 12%, transparent 12% 24%, rgba(0, 255, 148, 0.04) 24% 26%, transparent 26% 100%);
+  content: '';
+  pointer-events: none;
+}
+
+.z8-live-lens__filmstrip {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.z8-live-lens__filmstrip::-webkit-scrollbar {
+  display: none;
+}
+
+.z8-live-lens__filmstrip > button {
+  scroll-snap-align: start;
+}
+
+.z8-live-lens__team-logo {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
+    rgba(2, 6, 23, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+.z8-live-lens__focus-line {
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.68), rgba(0, 255, 148, 0.38), transparent);
+}
+
+.z8-live-lens__tab-panel {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 340px;
+}
+
+@media (max-width: 639px) {
+  .z8-live-lens__hero::before {
+    top: 18%;
+    width: 28rem;
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .z8-live-lens *,
+  .z8-live-lens *::before,
+  .z8-live-lens *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

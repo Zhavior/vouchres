@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { HrBuckets } from '../../hooks/useHrBoardViewModel';
 import type { HrWatchRow } from '../../types/hrWatch';
-import { HrColumn } from './HrColumn';
-import type { HrCardResult } from '../Cards/HrPlayerCard';
+import { HrPlayerCard, type HrCardResult } from '../Cards/HrPlayerCard';
 
 interface HrBoardProps {
   buckets: HrBuckets;
@@ -13,90 +12,67 @@ interface HrBoardProps {
 
 type TierKey = keyof HrBuckets;
 
-const TIER_COLUMNS: Array<{
-  key: TierKey;
-  title: string;
-  icon: string;
-  colorClass: string;
-  borderClass: string;
-}> = [
-  { key: 'Elite', title: 'Elite', icon: '🥇', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Strong', title: 'Strong', icon: '🟢', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Watch', title: 'Watch', icon: '🔵', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
-  { key: 'Sleepers', title: 'Sleepers', icon: '🟣', colorClass: 'text-vouch-cyan', borderClass: 'border-white/10' },
+const TIERS: Array<{ key: TierKey; title: string; index: string; description: string; tone: string }> = [
+  { key: 'Elite', title: 'Elite Lens', index: '01', description: 'Highest-resolution signal stacks on the slate.', tone: 'text-[#00ff94]' },
+  { key: 'Strong', title: 'Strong Targets', index: '02', description: 'Balanced candidates with multiple supporting factors.', tone: 'text-cyan-200' },
+  { key: 'Watch', title: 'Watch List', index: '03', description: 'Useful signals that still need context or confirmation.', tone: 'text-slate-200' },
+  { key: 'Sleepers', title: 'Deep Research', index: '04', description: 'Lower-ranked candidates for deliberate investigation.', tone: 'text-amber-200' },
 ];
 
-export const HrBoard = ({ buckets, onSelectPlayer, onViewProfile, getHrResult }: HrBoardProps) => {
-  const [mobileTier, setMobileTier] = useState<TierKey>('Elite');
-  const activeTier = TIER_COLUMNS.find((t) => t.key === mobileTier) ?? TIER_COLUMNS[0];
+export function HrBoard({ buckets, onSelectPlayer, onViewProfile, getHrResult }: HrBoardProps) {
+  const firstPopulated = useMemo(() => TIERS.find((tier) => buckets[tier.key].length > 0)?.key ?? 'Elite', [buckets]);
+  const [activeTier, setActiveTier] = useState<TierKey>(firstPopulated);
+
+  useEffect(() => {
+    if (buckets[activeTier].length === 0) setActiveTier(firstPopulated);
+  }, [activeTier, buckets, firstPopulated]);
+
+  const active = TIERS.find((tier) => tier.key === activeTier) ?? TIERS[0];
+  const players = buckets[activeTier];
 
   return (
-    <div className="flex flex-col gap-2 md:gap-3">
-      {/* Mobile: one tier at a time — avoids crushed 2×2 columns */}
-      <div
-        className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
-        role="tablist"
-        aria-label="Tier columns"
-      >
-        {TIER_COLUMNS.map((tier) => {
-          const count = buckets[tier.key].length;
-          const active = mobileTier === tier.key;
+    <section className="z8-hr-board space-y-4">
+      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Home run signal tiers">
+        {TIERS.map((tier) => {
+          const selected = tier.key === activeTier;
           return (
             <button
               key={tier.key}
               type="button"
               role="tab"
-              aria-selected={active}
-              onClick={() => setMobileTier(tier.key)}
-              className={[
-                'flex min-h-11 shrink-0 snap-start items-center gap-1.5 border px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-wide transition duration-200 touch-manipulation',
-                active
-                  ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
-                  : 'border-white/10 bg-black/25 text-zinc-500',
-              ].join(' ')}
+              aria-selected={selected}
+              onClick={() => setActiveTier(tier.key)}
+              className={`min-h-14 min-w-[9.5rem] flex-1 snap-start border px-3 py-2.5 text-left transition ${selected ? 'border-[#00ff94]/35 bg-[#00ff94]/[0.08] shadow-[inset_0_-2px_#00ff94]' : 'border-white/8 bg-black/25 hover:border-white/15'}`}
             >
-              <span aria-hidden>{tier.icon}</span>
-              <span>{tier.title}</span>
-              <span className={[
-                'min-w-[1.25rem] border px-1.5 py-0.5 text-center text-[10px] font-black',
-                active ? 'border-vouch-cyan/30 bg-black/30 text-vouch-cyan' : 'border-white/10 bg-black/30 text-zinc-500',
-              ].join(' ')}>
-                {count}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className={`font-mono text-[9px] font-black uppercase tracking-[0.18em] ${selected ? tier.tone : 'text-white/35'}`}>{tier.index} {tier.title}</span>
+                <span className="font-mono text-xs font-black tabular-nums text-white/70">{buckets[tier.key].length}</span>
+              </div>
             </button>
           );
         })}
       </div>
 
-      <div className="md:hidden" role="tabpanel" aria-label={`${activeTier.title} tier`}>
-        <HrColumn
-          title={activeTier.title}
-          icon={activeTier.icon}
-          colorClass={activeTier.colorClass}
-          borderClass={activeTier.borderClass}
-          players={buckets[activeTier.key]}
-          onSelect={onSelectPlayer}
-          onViewProfile={onViewProfile}
-          getHrResult={getHrResult}
-          hideHeader
-        />
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className={`font-mono text-[10px] font-black uppercase tracking-[0.2em] ${active.tone}`}>{active.index} / Signal group</p>
+          <h2 className="mt-1 text-xl font-black tracking-tight text-white sm:text-2xl">{active.title}</h2>
+          <p className="mt-1 text-xs leading-5 text-white/40">{active.description}</p>
+        </div>
+        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">{players.length} candidates · ranked by model score</p>
       </div>
 
-      <div className="hidden items-start gap-3 md:grid md:min-h-0 md:h-[calc(100vh-220px)] md:grid-cols-2 md:items-stretch xl:grid-cols-4">
-        {TIER_COLUMNS.map((tier) => (
-          <HrColumn
-            key={tier.key}
-            title={tier.title}
-            icon={tier.icon}
-            colorClass={tier.colorClass}
-            borderClass={tier.borderClass}
-            players={buckets[tier.key]}
-            onSelect={onSelectPlayer}
+      <div className="z8-hr-card-grid" role="tabpanel" aria-label={active.title}>
+        {players.map((player) => (
+          <HrPlayerCard
+            key={player.stableId}
+            player={player}
+            onClick={() => onSelectPlayer(player)}
             onViewProfile={onViewProfile}
-            getHrResult={getHrResult}
+            hrResult={getHrResult?.(player.playerId) ?? null}
           />
         ))}
       </div>
-    </div>
+    </section>
   );
-};
+}

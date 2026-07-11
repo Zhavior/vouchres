@@ -17,9 +17,9 @@ interface HrColumnProps {
 
 export const HrColumn = React.memo(function HrColumn({ title, icon, colorClass, borderClass, players, onSelect, onViewProfile, getHrResult, hideHeader = false }: HrColumnProps) {
   return (
-    <section className={`flex min-w-0 flex-col border ${borderClass} bg-black/25 md:h-full md:min-h-0 md:overflow-hidden`}>
+    <section className={`z8-hr-tier-section flex min-w-0 flex-col border ${borderClass}`}>
       {!hideHeader && (
-        <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-ve-obsidian/95 px-2 py-1.5 font-mono md:px-3 md:py-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/8 bg-black/30 px-3 py-3 font-mono">
           <div className={`flex min-w-0 items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] md:gap-2 md:text-xs md:tracking-[0.18em] ${colorClass}`}>
             <span className="shrink-0">{icon}</span>
             <span className="truncate">{title}</span>
@@ -28,7 +28,7 @@ export const HrColumn = React.memo(function HrColumn({ title, icon, colorClass, 
         </div>
       )}
 
-      <div className="flex flex-col gap-2 p-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:p-2">
+      <div className="z8-hr-tier-scroll flex flex-col gap-2.5 p-2.5 md:min-h-0 md:flex-1">
         {players.map((player) => (
           <HrPlayerCard
             key={player.stableId}

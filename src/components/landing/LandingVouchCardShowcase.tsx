@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Share2, BadgeCheck, Trophy } from 'lucide-react';
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';

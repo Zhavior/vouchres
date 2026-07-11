@@ -7,7 +7,7 @@
  *
  * Design:
  *   - True full-screen (inset-0), no narrow max-w pocket
- *   - Rich SVG graphs: grouped bar chart for BvP, EV bar chart for team/form,
+ *   - Rich SVG graphs for verified team and recent-form evidence,
  *     wide horizontal rank bars for layers, big sparklines
  *   - Full CSS token system — zero hardcoded hex
  *   - Framer Motion slide-up entry + ESC to close
@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
-  Zap, BarChart2, Target, Users, Activity, ChevronRight,
+  Zap, BarChart2, Target, Users, Activity, ChevronRight, ShieldQuestion,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
 import { fetchRealGameLog, lastNGames, gamesAgainstOpponent, type RealGameLog } from '../../utils/realGameLogs';
@@ -388,14 +388,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const bvpLogs  = useMemo(() => player ? genBvP(player.playerName, player.pitcherName ?? '') : [], [player?.playerName, player?.pitcherName]);
   const formLogs = useMemo(() => lastNGames(realLog ?? [], 10), [realLog]);
   const teamLogs = useMemo(() => player ? gamesAgainstOpponent(realLog ?? [], player.opponent, 5) : [], [realLog, player?.opponent]);
 
-  const bvpCareer = useMemo(() => {
-    const t = bvpLogs.reduce((a, r) => ({ pa: a.pa + r.pa, hrs: a.hrs + r.hrs, avgW: a.avgW + r.avg * r.pa, slgW: a.slgW + r.slg * r.pa }), { pa: 0, hrs: 0, avgW: 0, slgW: 0 });
-    return { pa: t.pa, hrs: t.hrs, avg: t.pa > 0 ? (t.avgW / t.pa).toFixed(3) : '.000', slg: t.pa > 0 ? (t.slgW / t.pa).toFixed(3) : '.000', hrPct: t.pa > 0 ? ((t.hrs / t.pa) * 100).toFixed(1) : '0.0' };
-  }, [bvpLogs]);
 
   const compositeScore = useMemo(() => {
     const ls = getLayers(player);
@@ -422,7 +417,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
     { id: 'layers'   as const, label: '12 Layers' },
-    { id: 'bvp'      as const, label: `vs ${player.pitcherName?.split(' ').pop() ?? 'Pitcher'}` },
+    { id: 'bvp'      as const, label: 'Matchup Data' },
     { id: 'team'     as const, label: `vs ${player.opponent}` },
     { id: 'form'     as const, label: 'Recent Form' },
   ];
@@ -785,69 +780,18 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
         {/* ── BvP ─────────────────────────────────────────────────────────────── */}
         {activeSection === 'bvp' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex min-h-[24rem] flex-col gap-6">
             <Sec
               icon={<Target className="h-4 w-4" style={{ color: '#00F0FF' }} />}
-              title={`vs ${player.pitcherName ?? 'Pitcher'}`}
-              sub="Simulated — no pitcher ID available to fetch real BvP history"
-              simulated
+              title="Verified matchup evidence"
+              sub={`Batter-versus-pitcher history for ${player.pitcherName ?? 'the probable pitcher'}`}
             />
-
-            {/* Career summary chips */}
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {[
-                { label: 'Career PA',  value: bvpCareer.pa,          color: '#ffffff' },
-                { label: 'Career HR',  value: bvpCareer.hrs,          color: '#fbbf24' },
-                { label: 'Career AVG', value: bvpCareer.avg,          color: '#ffffff' },
-                { label: 'Career SLG', value: bvpCareer.slg,          color: '#00FF94' },
-                { label: 'HR / PA',    value: `${bvpCareer.hrPct}%`,  color: '#00F0FF' },
-              ].map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* BvP bar chart */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>AVG + SLG by Season (gold dot = HR)</p>
-              <BvPBarChart logs={bvpLogs} h={150} />
-            </div>
-
-            {/* Season table */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
-              <div className="grid grid-cols-6 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
-                <span>Season</span><span className="text-right">PA</span><span className="text-right">HR</span><span className="text-right">AVG</span><span className="text-right">SLG</span><span className="text-right">OBP</span>
-              </div>
-              {bvpLogs.map((row, i) => (
-                <div key={row.season} className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                  <span className="text-sm font-bold" style={{ color: '#ffffff' }}>{row.season}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{row.pa}</span>
-                  <span className="text-right text-sm font-bold tabular-nums" style={{ color: row.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{row.hrs}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.avg.toFixed(3)}</span>
-                  <span className="text-right text-sm font-semibold tabular-nums" style={{ color: row.slg > 0.450 ? '#00FF94' : '#ffffff' }}>{row.slg.toFixed(3)}</span>
-                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.obp.toFixed(3)}</span>
-                </div>
-              ))}
-              <div className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: '#050505', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
-                <span className="text-xs font-black uppercase" style={{ color: '#00F0FF' }}>Career</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#00F0FF' }}>{bvpCareer.pa}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>{bvpCareer.hrs}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.avg}</span>
-                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.slg}</span>
-                <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
-              </div>
-            </div>
-
-            {/* Verdict */}
-            <div className="flex items-center gap-4 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              {Number(bvpCareer.hrs) >= 2 ? <TrendingUp className="h-6 w-6 shrink-0" style={{ color: '#00FF94' }} /> : Number(bvpCareer.hrs) === 0 ? <TrendingDown className="h-6 w-6 shrink-0" style={{ color: '#fb7185' }} /> : <Minus className="h-6 w-6 shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-              <div>
-                <p className="text-sm font-bold" style={{ color: '#ffffff' }}>
-                  {Number(bvpCareer.hrs) >= 2 ? `Owns This Pitcher — ${bvpCareer.hrs} career HRs` : Number(bvpCareer.hrs) === 1 ? 'One career HR against this pitcher' : 'No career HRs against this pitcher'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{bvpCareer.hrPct}% HR rate · {bvpCareer.pa} career PA</p>
+            <div className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.025] p-8 text-center">
+              <div className="max-w-lg">
+                <ShieldQuestion className="mx-auto h-10 w-10 text-cyan-200/60" />
+                <h3 className="mt-4 text-xl font-black text-white">Matchup history is not verified yet</h3>
+                <p className="mt-2 text-sm leading-6 text-white/45">The current board provides the pitcher name but not a verified MLB pitcher identifier. Home Run Intelligence will not generate or infer batter-versus-pitcher records from a name.</p>
+                <div className="mt-5 border border-[#00ff94]/15 bg-[#00ff94]/[0.05] px-4 py-3 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#8affcd]">Excluded from the decision until an official source is available</div>
               </div>
             </div>
           </div>

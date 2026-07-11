@@ -1,9 +1,11 @@
 import { ProductEvents } from "../../lib/productEvents";
-import { Bell, Info, Trash2, Trophy, X } from 'lucide-react';
+import { Bell, CheckCheck, Info, Search, Trash2, Trophy, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 import {
   clearNotifications,
   markAllRead,
+  markNotificationRead,
   type AppNotification,
 } from '../../lib/appNotifications';
 import { useAppNotifications } from '../../hooks/queries/useAppNotifications';
@@ -53,14 +55,22 @@ function timeAgo(iso: string): string {
 
 export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
   const { data: list = [] } = useAppNotifications();
+  const [filter, setFilter] = useState<'all' | 'unread' | 'signals'>('all');
+  const [query, setQuery] = useState('');
 
   const unread = list.filter((notification) => !notification.read).length;
 
-  markAllRead();
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return list.filter((notification) => {
+      if (filter === 'unread' && notification.read) return false;
+      if (filter === 'signals' && !['ai', 'result', 'success'].includes(notification.kind)) return false;
+      return !needle || `${notification.title} ${notification.body ?? ''}`.toLowerCase().includes(needle);
+    });
+  }, [filter, list, query]);
 
   const handleClear = () => {
     clearNotifications();
-    window.location.reload();
   };
 
   const renderNotification = (notification: AppNotification) => {
@@ -75,6 +85,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
         role={notification.section ? 'button' : undefined}
         tabIndex={notification.section ? 0 : undefined}
         onClick={() => {
+          markNotificationRead(notification.id);
           ProductEvents.notificationOpened(notification.kind);
 
           if (notification.section) {
@@ -86,6 +97,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             ProductEvents.notificationOpened(notification.kind);
+            markNotificationRead(notification.id);
             onSectionChange(notification.section);
           }
         }}
@@ -139,7 +151,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
             </h1>
 
             <p className="max-w-2xl text-sm leading-6 text-white/45">
-              Track saved parlays, grading events, AI signals, and account updates from one native inbox.
+              A precision inbox for validated signals, lineup changes, graded results, and account events.
             </p>
             <div className="z8-accent-line mt-2 w-full max-w-xs" />
           </div>
@@ -164,17 +176,30 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           </div>
         </header>
 
-        {list.length === 0 ? (
+        <section className="grid gap-3 border border-white/10 bg-black/25 p-3 sm:grid-cols-[1fr_auto]">
+          <label className="flex min-h-11 items-center gap-2 border border-white/10 bg-black/30 px-3 text-white/45 focus-within:border-[#00ff94]/35">
+            <Search className="h-4 w-4" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search alerts" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25" />
+          </label>
+          <div className="flex gap-1 overflow-x-auto">
+            {(['all', 'unread', 'signals'] as const).map((value) => (
+              <button key={value} type="button" onClick={() => setFilter(value)} aria-pressed={filter === value} className={`min-h-11 whitespace-nowrap border px-3 font-mono text-[10px] font-black uppercase tracking-wider ${filter === value ? 'border-[#00ff94]/35 bg-[#00ff94]/10 text-[#00ff94]' : 'border-white/10 text-white/40'}`}>{value}</button>
+            ))}
+            {unread > 0 && <button type="button" onClick={() => markAllRead()} className="flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-white/10 px-3 font-mono text-[10px] font-black uppercase text-white/55"><CheckCheck className="h-3.5 w-3.5" />Read all</button>}
+          </div>
+        </section>
+
+        {visible.length === 0 ? (
           <div className="mt-8">
             <VEState
               tone="empty"
               icon={<X className="h-6 w-6" />}
-              title="No notifications yet"
-              description="Save parlays, generate AI picks, or wait for lock and grading events to populate this inbox."
+              title={list.length === 0 ? 'No notifications yet' : 'No alerts match this view'}
+              description={list.length === 0 ? 'Save parlays, generate AI picks, or wait for lock and grading events to populate this inbox.' : 'Change the filter or search term to see more alerts.'}
             />
           </div>
         ) : (
-          <div className="mt-6 space-y-3">{list.map(renderNotification)}</div>
+          <div className="mt-6 space-y-3">{visible.map(renderNotification)}</div>
         )}
       </div>
     </main>
