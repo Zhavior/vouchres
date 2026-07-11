@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock, ExternalLink } from 'lucide-react';
+import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock, ExternalLink, Layers3 } from 'lucide-react';
 import { Parlay } from '../../types';
 import { formatFeedLockTimestamp } from '../../lib/parlayLockPolicy';
+import ParlayLegCardPro from '../../components/parlay/os/ParlayLegCardPro';
 
 interface ParlayFeedPostCardProps {
   parlay: Parlay;
@@ -131,32 +132,15 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
         </div>
       </div>
 
-      {/* Parlay Legs list */}
-      <div className="p-3.5 space-y-3 divide-y divide-slate-800/60">
-        {parlay.legs.map((leg) => {
-          return (
-            <div key={leg.id} className="pt-2.5 first:pt-0 flex items-start justify-between gap-3 text-xs" id={`leg-item-${leg.id}`}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[9px] bg-slate-850 text-slate-300 px-1.5 py-0.2 rounded font-semibold uppercase">{leg.sport}</span>
-                  <span className="text-slate-400 font-medium truncate max-w-[170px] xl:max-w-xs">{leg.game}</span>
-                </div>
-                <h5 className="font-bold text-slate-200">{leg.selection}</h5>
-                <p className="text-slate-400 text-[10px]">{leg.market}</p>
-              </div>
-
-              <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
-                <span className="font-mono text-sky-400 font-bold bg-sky-950/30 px-1.5 py-0.5 rounded">
-                  {leg.odds > 0 && leg.odds < 100 ? `x${leg.odds.toFixed(2)}` : leg.odds}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase flex items-center gap-1">
-                  {getStatusIcon(leg.status)}
-                  {leg.status}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      {/* ParlayOS leg cards */}
+      <div className="p-3.5 space-y-3">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-cyan-400/80">
+          <Layers3 className="w-3.5 h-3.5" />
+          ParlayOS Slip
+        </div>
+        {parlay.legs.map((leg) => (
+          <ParlayLegCardPro key={leg.id} leg={leg} compact />
+        ))}
       </div>
 
       {/* Ticket Footer / Summary */}

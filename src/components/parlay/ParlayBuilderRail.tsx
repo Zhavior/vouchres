@@ -2,6 +2,7 @@ import React from 'react';
 import { Share2 } from 'lucide-react';
 import type { Leg } from '../../types';
 import { americanLabel } from '../../lib/odds';
+import ParlayLegCardPro from './os/ParlayLegCardPro';
 
 export interface ParlayBuilderRailProps {
   legs: Leg[];
@@ -25,6 +26,8 @@ export interface ParlayBuilderRailProps {
   legContent?: React.ReactNode;
   footerExtra?: React.ReactNode;
   className?: string;
+  /** Use rich ParlayOS leg cards */
+  useProLegCards?: boolean;
   /** inline = flows in parent column; fixed = xl+ right rail only; sheet = mobile bottom sheet body */
   layout?: 'inline' | 'fixed' | 'sheet';
 }
@@ -111,6 +114,7 @@ export default function ParlayBuilderRail({
   footerExtra,
   className = '',
   layout = 'inline',
+  useProLegCards = false,
 }: ParlayBuilderRailProps) {
   const legCountLabel = legs.length === 0
     ? 'No legs queued'
@@ -144,14 +148,23 @@ export default function ParlayBuilderRail({
           legs.length === 0 ? (
             <EmptySlip />
           ) : (
-            legs.map((leg) => (
-              <RailLegCard
-                key={leg.id}
-                leg={leg}
-                oddsLabel={formatLegOdds(leg)}
-                onRemove={() => onRemoveLeg(leg.id)}
-              />
-            ))
+            legs.map((leg) =>
+              useProLegCards ? (
+                <ParlayLegCardPro
+                  key={leg.id}
+                  leg={leg}
+                  onRemove={() => onRemoveLeg(leg.id)}
+                  compact={layout === 'sheet'}
+                />
+              ) : (
+                <RailLegCard
+                  key={leg.id}
+                  leg={leg}
+                  oddsLabel={formatLegOdds(leg)}
+                  onRemove={() => onRemoveLeg(leg.id)}
+                />
+              ),
+            )
           )
         )}
       </div>

@@ -90,6 +90,8 @@ import {
 import { withAlpha } from '../../theme/colors';
 import type { Leg } from '../../types';
 import ParlayBuilderRail from './ParlayBuilderRail';
+import ParlayLegCardPro from './os/ParlayLegCardPro';
+import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
 
 function statusColorStyle(token: string) {
   const color = z8StatusColor(token);
@@ -569,6 +571,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   ), [draftLegs]);
 
   const combinedOdds = useMemo(() => computeCombinedOdds(draftLegs), [draftLegs]);
+  const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
 
   const riskMeta = RISK_MODE_META[riskMode];
 
@@ -674,17 +677,17 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
       </div>
 
       <ParlayBuilderRail
-        legs={draftLegs as unknown as Leg[]}
+        legs={uiLegs}
         legContent={
-          draftLegs.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {draftLegs.map((leg) => (
-                <DraftLegCard
+          uiLegs.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {uiLegs.map((leg) => (
+                <ParlayLegCardPro
                   key={leg.id}
                   leg={leg}
                   isWeak={verdict.weakLegIds.includes(leg.id)}
-                  onRemove={(id) => {
-                    removeDraftLeg(id);
+                  onRemove={() => {
+                    removeDraftLeg(leg.id);
                     announce('Leg removed.');
                   }}
                 />
@@ -714,6 +717,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         saveDisabled={!agreedSession || !canSave}
         showLiveIndicator={draftLegs.length > 0}
         layout="inline"
+        subtitle="Add from Player Research, VouchCards, or +"
         footerExtra={(
           <div className="space-y-3 mb-4">
             {saveError ? (
