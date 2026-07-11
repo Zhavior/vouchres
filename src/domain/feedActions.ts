@@ -7,6 +7,9 @@ import { useFeedStore } from '../stores/feedStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useVouchesStore } from '../stores/vouchesStore';
 import { pushVouchToBackend } from './vouchActions';
+import { handleAddComment } from './commentActions';
+
+export { handleAddComment };
 
 export function createFeedPost(postData: Partial<FeedPost>): FeedPost {
   const profile = useProfileStore.getState().profile ?? INITIAL_PROFILE;
@@ -157,27 +160,3 @@ export function handleDeletePost(postId: string): void {
   })();
 }
 
-export function handleAddComment(postId: string, commentContent: string): void {
-  const profile = useProfileStore.getState().profile ?? INITIAL_PROFILE;
-  const syncPosts = useFeedStore.getState().syncPosts;
-  syncPosts(
-    useFeedStore.getState().posts.map((p) => {
-      if (p.id !== postId) return p;
-      const newComm = {
-        id: `c-user-${Date.now()}`,
-        postId,
-        userId: 'u-user-current',
-        displayName: profile.displayName,
-        username: profile.username,
-        timestamp: new Date().toISOString(),
-        content: commentContent,
-        likesCount: 0,
-      };
-      return {
-        ...p,
-        commentsCount: p.commentsCount + 1,
-        comments: [...(p.comments || []), newComm],
-      };
-    }),
-  );
-}

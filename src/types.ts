@@ -205,6 +205,11 @@ export interface FeedComment {
   content: string;
   likesCount: number;
   isLiked?: boolean;
+  parentId?: string | null;
+  replyToUserId?: string | null;
+  replyToUsername?: string;
+  replyToDisplayName?: string;
+  replies?: FeedComment[];
 }
 
 export interface CreatorProofProfile {

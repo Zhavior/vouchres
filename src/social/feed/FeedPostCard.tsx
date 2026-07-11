@@ -64,6 +64,8 @@ import ResearchNotePostCard from './ResearchNotePostCard';
 import VouchCircleFeedCard from '../../components/VouchCircleFeedCard';
 import VouchCard from '../../components/vouch-system/VouchCard';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
+import CommentThread from './CommentThread';
+import { useFeedStore } from '../../stores/feedStore';
 import { useAuth } from '../../lib/useAuth';
 import { useOptionalSocialGraph } from '../../hooks/SocialGraphProvider';
 import { useEntitlements } from '../../features/hr/hooks/useEntitlements';
@@ -111,7 +113,8 @@ function FeedPostCard({
   onDeletePost,
 }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
+  const [focusReply, setFocusReply] = useState(false);
+  const syncPosts = useFeedStore((state) => state.syncPosts);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [showPostMenu, setShowPostMenu] = useState(false);
@@ -320,11 +323,17 @@ function FeedPostCard({
     }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-    onAddComment(post.id, commentText);
-    setCommentText('');
+  const openComments = (focus = false) => {
+    setShowComments(true);
+    setFocusReply(focus);
+  };
+
+  const handleCommentsCountChange = (count: number) => {
+    syncPosts(
+      useFeedStore.getState().posts.map((p) =>
+        p.id === post.id ? { ...p, commentsCount: count } : p,
+      ),
+    );
   };
 
   // Check if saved
@@ -411,11 +420,11 @@ function FeedPostCard({
         <div className="feed-action-row flex items-center justify-between max-w-[425px] text-white/45 text-[13px] -ml-2">
           {/* Comment icon button */}
           <button 
-            onClick={() => setShowComments(!showComments)}
+            onClick={() => openComments(true)}
             className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
               showComments ? 'text-vouch-cyan' : ''
             }`}
-            title="Toggle comments"
+            title="Reply"
             id={`comment-btn-${post.id}`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -463,51 +472,12 @@ function FeedPostCard({
           </button>
         </div>
 
-        {/* Comments drawer */}
-        {showComments && (
-          <div className="pt-2 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
-            {/* Create comment form */}
-            <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
-              <input 
-                type="text" 
-                placeholder="Post your reply..." 
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
-                required
-                id={`comment-input-${post.id}`}
-              />
-              <button 
-                type="submit"
-                className="p-2 bg-vouch-cyan/14 hover:bg-vouch-cyan text-vouch-cyan hover:text-obsidian-900 rounded-xl transition-all font-bold text-[10px] tracking-widest uppercase flex items-center justify-center cursor-pointer shadow-md"
-                id={`comment-submit-${post.id}`}
-              >
-                <Send className="w-4.5 h-4.5" />
-              </button>
-            </form>
-
-            {/* List and render of comments */}
-            {post.comments && post.comments.length > 0 && (
-              <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1.5 scrollbar-thin mt-2" id={`comments-feed-${post.id}`}>
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="bg-black/30 backdrop-blur-xl p-2.5 rounded-xl border border-white/24 flex flex-col gap-1 text-left animate-slide-up">
-                    <div className="flex justify-between items-center text-[10px] text-white/45 font-medium">
-                      <span className="font-bold text-white/70">
-                        {comment.displayName} <span className="text-white/45">@{comment.username}</span>
-                      </span>
-                      <span className="font-mono text-white/35">
-                        {comment.timestamp && new Date(comment.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/70 leading-normal pl-0.5">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <CommentThread
+          post={post}
+          open={showComments}
+          autoFocus={focusReply}
+          onCountChange={handleCommentsCountChange}
+        />
       </article>
     );
   }
@@ -807,7 +777,7 @@ function FeedPostCard({
       {/* Social interaction reaction bar — X-style */}
       <div className="feed-action-row flex items-center justify-between max-w-[425px] mt-2 text-white/45 text-[13px] -ml-2 relative select-none">
         <button 
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => openComments(true)}
           className={`feed-action-btn group flex items-center gap-1 hover:text-vouch-cyan transition-colors ${
             showComments ? 'text-vouch-cyan font-bold' : ''
           }`}
@@ -962,53 +932,12 @@ function FeedPostCard({
         </div>
       )}
 
-      {/* Extensible Comments area */}
-      {showComments && (
-        <div className="mt-4 pt-3.5 border-t border-white/28 space-y-3.5" id={`comments-expanded-${post.id}`}>
-          {/* Create comment form */}
-          <form onSubmit={handleCommentSubmit} className="flex gap-2.5 items-center">
-            <input 
-              type="text" 
-              placeholder="Post your reply..." 
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 text-xs bg-black/44 text-white border border-white/30 rounded-xl px-3 py-2 outline-none focus:border-vouch-cyan/75 transition-all font-medium placeholder:text-white/45"
-              required
-              id={`comment-input-${post.id}`}
-            />
-            <button 
-              type="submit" 
-              className="p-2 bg-vouch-cyan hover:brightness-110 text-obsidian-900 rounded-xl transition-colors shrink-0 flex items-center justify-center shadow-md shadow-vouch-cyan/22 active:scale-95"
-              id={`comment-submit-${post.id}`}
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
-
-          {/* Comments list */}
-          {post.comments && post.comments.length > 0 ? (
-            <div className="space-y-2.5">
-              {post.comments.map((comm) => (
-                <div key={comm.id} className="p-3 bg-black/32 rounded-xl border border-white/25 text-xs flex gap-2.5 leading-normal" id={`comment-item-${comm.id}`}>
-                  <div className="w-7 h-7 bg-black/56 rounded-full font-bold text-[11px] text-white/70 flex items-center justify-center shrink-0 border border-white/24">
-                    {comm.displayName.split(' ').map(n=>n[0]).join('')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                      <span className="font-bold text-white">{comm.displayName}</span>
-                      <span className="text-white/45 text-[10px]">@{comm.username}</span>
-                      <span className="text-white/45 text-[9px]">• {formatTime(comm.timestamp)}</span>
-                    </div>
-                    <p className="text-white/70 font-medium">{comm.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[11px] text-white/45 py-1 font-mono text-center">No comments yet. Start the conversation!</p>
-          )}
-        </div>
-      )}
+      <CommentThread
+        post={post}
+        open={showComments}
+        autoFocus={focusReply}
+        onCountChange={handleCommentsCountChange}
+      />
 
       {/* 5. Custom premium tail-lock subscription upgrade modal */}
       {showUpgradeModal && (
