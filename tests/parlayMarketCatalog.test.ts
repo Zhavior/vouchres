@@ -3,6 +3,7 @@ import {
   flattenTierLegs,
   inferFamilyFromText,
   PARLAY_MARKET_FAMILIES,
+  resolveParlayPlayerRole,
 } from "../src/lib/parlays/parlayMarketCatalog";
 
 describe("parlayMarketCatalog", () => {
@@ -23,5 +24,21 @@ describe("parlayMarketCatalog", () => {
       ?.tiers.find((t) => t.id === "hr_run_combo");
     expect(combo).toBeTruthy();
     expect(flattenTierLegs(combo!)).toHaveLength(2);
+  });
+
+  it("keeps HR props on batter role even when spec mentions pitcher K rate", () => {
+    expect(resolveParlayPlayerRole({
+      position: "RF",
+      marketHint: "Home Run",
+      specHint: "Aaron Judge Anytime HR vs Smith (11 K/9)",
+    })).toBe("batter");
+  });
+
+  it("uses pitcher role for SP position", () => {
+    expect(resolveParlayPlayerRole({
+      position: "SP",
+      marketHint: "Strikeouts",
+      specHint: "Gerrit Cole 6+ K",
+    })).toBe("pitcher");
   });
 });

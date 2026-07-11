@@ -5,6 +5,8 @@ import {
   PARLAY_MARKET_FAMILIES,
   inferFamilyFromText,
   tiersForRole,
+  resolveParlayPlayerRole,
+  type ParlayPlayerRole,
 } from "../../../lib/parlays/parlayMarketCatalog";
 import { resolveTierOddsMap, resolveTierOdds, mergeTierOddsQuote } from "../../../lib/parlays/parlayTierOddsResolver";
 import { fetchParlayTierOddsBatch } from "../../../lib/parlays/parlayTierOddsFeed";
@@ -31,8 +33,16 @@ export default function ParlayPropPickerModal({
   const pickerLiveOdds = useParlayOsStore((s) => s.pickerLiveOdds);
 
   const player = context?.player;
-  const isPitcher = context?.isPitcher ?? false;
-  const role = isPitcher ? "pitcher" : "batter";
+  const inferredRole = useMemo(
+    (): ParlayPlayerRole => resolveParlayPlayerRole({
+      position: player?.position,
+      marketHint: context?.propHint?.market ?? context?.vouch?.market,
+      specHint: context?.propHint?.spec ?? context?.vouch?.selection,
+    }),
+    [player?.position, context?.propHint, context?.vouch],
+  );
+  const [roleOverride, setRoleOverride] = useState<ParlayPlayerRole | null>(null);
+  const role = roleOverride ?? (context?.isPitcher ? "pitcher" : inferredRole);
 
   const defaultFamily = useMemo((): ParlayMarketFamilyId => {
     if (context?.initialFamily) return context.initialFamily;
@@ -46,7 +56,10 @@ export default function ParlayPropPickerModal({
   const [customError, setCustomError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (pickerOpen) setActiveFamily(defaultFamily);
+    if (pickerOpen) {
+      setActiveFamily(defaultFamily);
+      setRoleOverride(null);
+    }
   }, [pickerOpen, defaultFamily]);
 
   const activeFamilyData = useMemo(
@@ -189,6 +202,25 @@ export default function ParlayPropPickerModal({
             </p>
             <h2 className="text-lg font-black text-white truncate">{player.name}</h2>
             <p className="text-xs text-white/45 truncate">{player.team} · {role === "pitcher" ? "Pitcher props" : "Batter props"}</p>
+            <div className="mt-2 flex gap-2">
+              {(["batter", "pitcher"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    setRoleOverride(option);
+                    setActiveFamily(option === "pitcher" ? "pitcher" : "home_runs");
+                  }}
+                  className={`rounded-lg border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${
+                    role === option
+                      ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-200"
+                      : "border-white/10 text-white/40 hover:border-white/25"
+                  }`}
+                >
+                  {option === "batter" ? "Batter" : "Pitcher"}
+                </button>
+              ))}
+            </div>
             <p className="text-[10px] font-mono mt-1">
               <span className={oddsBadge.source === "live" ? "text-emerald-300" : "text-amber-200/80"}>
                 Odds {oddsBadge.label}
