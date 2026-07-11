@@ -17,6 +17,7 @@ import {
   repairLegacyParlayIdentityForSync,
 } from "./parlayRepairHelpers";
 import { backfillOpenTimestampsForLockedPicks } from "../../services/trust/pickProofAnchorService";
+import { finalizeDueTrustLocks } from "../../services/parlays/userParlayService";
 
 /**
  * Cron-only parlay maintenance routes.
@@ -296,6 +297,19 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     skippedCount: skipped.length,
     quarantined: quarantined.slice(0, 20),
     skipped: skipped.slice(0, 20),
+    checkedAt: new Date().toISOString(),
+  }));
+}));
+
+parlayCronRoutes.get("/cron/parlays/finalize-trust-locks", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  assertCronAuthorized(req);
+
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 200);
+  const result = await finalizeDueTrustLocks(limit);
+
+  return res.json(apiOkFlat(req, {
+    mode: "finalize_trust_locks",
+    ...result,
     checkedAt: new Date().toISOString(),
   }));
 }));

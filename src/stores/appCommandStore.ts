@@ -32,6 +32,10 @@ type AppCommandBindings = {
   onLoginSuccess: () => void;
   onClearProfileViewUser: () => void;
   onSaveParlaySlip: (newParlay: Parlay | CanonicalParlaySlip) => Promise<void>;
+  onCommitParlayTrust: (input: {
+    parlay: Parlay;
+    audience: "private" | "public" | "subscriber";
+  }) => Promise<void>;
   onHideSavedParlay: (parlayId: string) => Promise<void>;
   onAddLegFromResearch: (player: MLBPlayer, prop: ResearchProp) => void;
   onUpdateProfile: (updatedProfile: Partial<CreatorProofProfile>) => void;
@@ -57,6 +61,7 @@ const defaultBindings: AppCommandBindings = {
   onLoginSuccess: () => {},
   onClearProfileViewUser: () => {},
   onSaveParlaySlip: noopAsync,
+  onCommitParlayTrust: noopAsync,
   onHideSavedParlay: noopAsync,
   onAddLegFromResearch: () => {},
   onUpdateProfile: () => {},

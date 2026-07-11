@@ -71,6 +71,14 @@ export interface Parlay {
   lockNotified?: boolean;
   /** ISO time this parlay became immutable after feed share. */
   feedLockedAt?: string;
+  /** Trust ledger: committed to private wins, pending auto-lock. */
+  trustCommittedAt?: string;
+  /** Scheduled trust ledger lock time (committed + 5 min). */
+  trustLockAt?: string;
+  /** Target visibility after lock: private | public | subscriber */
+  trustAudience?: 'private' | 'public' | 'subscriber';
+  trustLockWarningNotified?: boolean;
+  trustLockedNotified?: boolean;
   /** Backend pick id after /api/parlays accepts this slip. */
   backendPickId?: string;
   /** Whether the backend knows about this slip yet. */
