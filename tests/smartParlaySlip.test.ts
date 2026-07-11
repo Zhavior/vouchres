@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   projectSmartParlayFromParlay,
   projectSmartParlayFromPublic,
+  projectSmartParlayFromProof,
   draftLegsToParlay,
   canonicalToParlay,
   parlayToCanonical,
@@ -121,6 +122,26 @@ describe("smart parlay slip projection", () => {
 
     expect(smart.legs[0].gamePk).toBe("777001");
     expect(smart.identity.complete).toBe(true);
+  });
+
+  it("projects proof records into smart slip legs", () => {
+    const smart = projectSmartParlayFromProof({
+      id: "proof-uuid",
+      status: "pending",
+      explanation: "Judge HR",
+      created_at: new Date().toISOString(),
+      legs: [{
+        id: "leg-proof",
+        selection: "Aaron Judge Anytime HR",
+        player_id: "592450",
+        market_code: "ANYTIME_HR",
+        stat_target: 1,
+        comparator: ">=",
+        game_pk: "777001",
+      }],
+    });
+    expect(smart.identity.complete).toBe(true);
+    expect(smart.legs[0].identityComplete).toBe(true);
   });
 });
 

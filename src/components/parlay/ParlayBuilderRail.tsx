@@ -3,7 +3,7 @@ import { Share2 } from 'lucide-react';
 import type { Leg } from '../../types';
 import { americanLabel } from '../../lib/odds';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
-import ParlayLegCardPro from './os/ParlayLegCardPro';
+import { SmartParlayLegCardFromLeg } from './smart/SmartParlayLegCard';
 
 export interface ParlayBuilderRailProps {
   legs: Leg[];
@@ -164,15 +164,16 @@ export default function ParlayBuilderRail({
           legs.length === 0 ? (
             <EmptySlip />
           ) : (
-            legs.map((leg) =>
+            legs.map((leg, index) =>
               useProLegCards ? (
-                <ParlayLegCardPro
+                <SmartParlayLegCardFromLeg
                   key={leg.id}
                   leg={{
                     ...leg,
                     actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
                     statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
                   }}
+                  index={index}
                   onRemove={() => onRemoveLeg(leg.id)}
                   compact={layout === 'sheet'}
                 />

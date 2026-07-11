@@ -93,7 +93,7 @@ import {
 import { withAlpha } from '../../theme/colors';
 import type { Leg } from '../../types';
 import ParlayBuilderRail from './ParlayBuilderRail';
-import ParlayLegCardPro from './os/ParlayLegCardPro';
+import { SmartParlayLegList } from './smart/SmartParlayLegCard';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
 import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParlaySlipLiveProgress';
 import { useAutoRepairDraftIdentity } from '../../hooks/useAutoRepairDraftIdentity';
@@ -698,24 +698,19 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   }, [liveProgressQuery.data]);
 
   const legContent = uiLegs.length > 0 ? (
-    <div className="flex flex-col gap-3">
-      {uiLegs.map((leg) => (
-        <ParlayLegCardPro
-          key={leg.id}
-          leg={{
-            ...leg,
-            actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
-            statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
-          }}
-          isWeak={verdict.weakLegIds.includes(leg.id)}
-          onEdit={() => openLegEditor(leg.id)}
-          onRemove={() => {
-            removeDraftLeg(leg.id);
-            announce('Leg removed.');
-          }}
-        />
-      ))}
-    </div>
+    <SmartParlayLegList
+      legs={uiLegs.map((leg) => ({
+        ...leg,
+        actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
+        statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
+      }))}
+      weakLegIds={verdict.weakLegIds}
+      onEdit={(legId) => openLegEditor(legId)}
+      onRemove={(legId) => {
+        removeDraftLeg(legId);
+        announce('Leg removed.');
+      }}
+    />
   ) : undefined;
 
   const railFooterExtra = (

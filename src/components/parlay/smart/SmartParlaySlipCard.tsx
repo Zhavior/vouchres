@@ -5,6 +5,7 @@ import ParlayTrustPanel from "../../trust/ParlayTrustPanel";
 import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
 import ParlayLockCountdownBanner from "../os/ParlayLockCountdownBanner";
 import SmartParlayLegRow from "./SmartParlayLegRow";
+import SmartParlayLegCard from "./SmartParlayLegCard";
 import { trustLockCountdownLabel } from "../../../lib/trustLockSchedule";
 import type { SmartParlaySlip } from "../../../domain/parlay";
 import { ParlayHubStatusBadge } from "../hub/parlayHubUi";
@@ -16,12 +17,16 @@ export default function SmartParlaySlipCard({
   onViewProof,
   showTrustPanel = true,
   maxLegs = 3,
+  legVariant = "row",
+  className = "",
 }: {
   slip: SmartParlaySlip;
   onViewStructure?: () => void;
   onViewProof?: () => void;
   showTrustPanel?: boolean;
   maxLegs?: number;
+  legVariant?: "row" | "pro";
+  className?: string;
 }) {
   const status = String(slip.status ?? "pending").toLowerCase() as LegGradeStatus;
   const pendingLock = slip.trustCommittedAt && !slip.feedLockedAt;
@@ -32,7 +37,7 @@ export default function SmartParlaySlipCard({
 
   return (
     <article
-      className="flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)]"
+      className={`flex flex-col gap-2 p-3 rounded-xl border border-[hsl(var(--ve-border)/0.5)] bg-[hsl(var(--ve-surface)/0.6)] ${className}`.trim()}
       aria-label={slip.title}
     >
       <div className="flex items-start justify-between gap-2">
@@ -79,9 +84,13 @@ export default function SmartParlaySlipCard({
         <ParlayHubStatusBadge status={status} size="xs" />
       </div>
 
-      {visibleLegs.map((leg) => (
-        <SmartParlayLegRow key={leg.id} leg={leg} />
-      ))}
+      {visibleLegs.map((leg) =>
+        legVariant === "pro" ? (
+          <SmartParlayLegCard key={leg.id} leg={leg} compact />
+        ) : (
+          <SmartParlayLegRow key={leg.id} leg={leg} />
+        ),
+      )}
 
       {slip.legCount > maxLegs ? (
         <p className="text-[9px] text-[hsl(var(--ve-text-muted))] text-center">

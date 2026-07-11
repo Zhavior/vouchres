@@ -264,6 +264,55 @@ export function projectSmartParlayFromDraft(
   });
 }
 
+export function projectSmartParlayLeg(raw: Record<string, unknown>, index = 0): SmartParlayLeg {
+  return projectLegFromRecord(raw, index);
+}
+
+export function projectSmartParlayLegFromLeg(leg: Leg, index = 0): SmartParlayLeg {
+  return projectLegFromRecord(leg as unknown as Record<string, unknown>, index);
+}
+
+export type LegLiveProgress = { current: number; target: number; label: string };
+
+export function applySmartLegLiveProgress(
+  leg: SmartParlayLeg,
+  live?: LegLiveProgress | null,
+): SmartParlayLeg {
+  if (!live) return leg;
+  return {
+    ...leg,
+    actual: live.current,
+    progress: { label: live.label, current: live.current, target: live.target },
+  };
+}
+
+export function projectSmartParlayFromProof(proof: {
+  id: string;
+  selection?: string | null;
+  explanation?: string | null;
+  status?: string | null;
+  odds_decimal?: number | null;
+  created_at?: string;
+  locked_at?: string | null;
+  committed_at?: string | null;
+  legs?: Array<Record<string, unknown>>;
+}): SmartParlaySlip {
+  const legs = (proof.legs ?? []).map((leg, index) => projectLegFromRecord(leg, index));
+  const status = toSmartStatus(proof.status);
+  return projectSlipShell({
+    id: proof.id,
+    sourceId: proof.id,
+    title: proof.explanation ?? proof.selection ?? `${legs.length}-Leg Parlay`,
+    status,
+    oddsLabel: proof.odds_decimal != null ? getOddsLabel(proof.odds_decimal) : "—",
+    legs,
+    feedLockedAt: proof.locked_at,
+    trustCommittedAt: proof.committed_at,
+    backendPickId: proof.id,
+    createdAt: proof.created_at ?? null,
+  });
+}
+
 export function smartParlayLegToLeg(leg: SmartParlayLeg): Leg {
   return {
     id: leg.id,

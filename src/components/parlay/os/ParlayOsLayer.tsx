@@ -8,7 +8,7 @@ import {
 import { useAppCommandStore } from "../../../stores/appCommandStore";
 import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
-import ParlayLegCardPro from "./ParlayLegCardPro";
+import { SmartParlayLegList } from "../smart/SmartParlayLegCard";
 import ParlayLegEditorSheet from "./ParlayLegEditorSheet";
 import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import { draftLegsToUiLegs } from "../../../lib/parlays/draftLegsToUiLegs";
@@ -88,21 +88,16 @@ export default function ParlayOsLayer({
   const legContent = useMemo(() => {
     if (uiLegs.length === 0) return undefined;
     return (
-      <div className="flex flex-col gap-3">
-        {uiLegs.map((leg) => (
-          <ParlayLegCardPro
-            key={leg.id}
-            leg={{
-              ...leg,
-              actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
-              statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
-            }}
-            compact
-            onEdit={() => openLegEditor(leg.id)}
-            onRemove={() => removeDraftLeg(leg.id)}
-          />
-        ))}
-      </div>
+      <SmartParlayLegList
+        legs={uiLegs.map((leg) => ({
+          ...leg,
+          actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
+          statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
+        }))}
+        compact
+        onEdit={(legId) => openLegEditor(legId)}
+        onRemove={(legId) => removeDraftLeg(legId)}
+      />
     );
   }, [uiLegs, liveProgressByLegId, openLegEditor, removeDraftLeg]);
 

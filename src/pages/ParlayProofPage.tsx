@@ -1,33 +1,14 @@
 import React, { useMemo } from "react";
 import { ExternalLink, ShieldCheck, Lock, Download, Layers3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import ParlayLegCardPro from "../components/parlay/os/ParlayLegCardPro";
+import SmartParlayLegCard from "../components/parlay/smart/SmartParlayLegCard";
 import ParlayOsBadgeRow from "../components/trust/ParlayOsBadgeRow";
 import ParlayIdentityBadge from "../components/trust/ParlayIdentityBadge";
-import { assessClientParlayIdentity } from "../lib/parlayIdentity";
 import { formatFeedLockTimestamp } from "../lib/parlayLockPolicy";
 import { fetchParlayProofRecord } from "../lib/parlays/fetchParlayProof";
 import type { ClientParlayProof } from "../lib/parlays/parlayProofClient";
 import { isBackendProofPickId } from "../lib/parlays/parlayProofLinks";
-import type { Leg } from "../types";
-
-function mapProofLeg(leg: Record<string, unknown>, index: number): Leg {
-  return {
-    id: String(leg.id ?? `leg-${index}`),
-    sport: String(leg.sport ?? "MLB"),
-    game: String(leg.game_label ?? leg.game ?? ""),
-    market: String(leg.market_label ?? leg.market ?? "Prop"),
-    selection: String(leg.selection ?? leg.player_name ?? "Prop"),
-    odds: leg.odds_decimal != null ? Number(leg.odds_decimal) : null,
-    status: String(leg.status ?? "PENDING").toUpperCase() as Leg["status"],
-    gamePk: leg.game_id != null ? String(leg.game_id) : leg.game_pk != null ? String(leg.game_pk) : undefined,
-    playerId: leg.player_id != null ? String(leg.player_id) : undefined,
-    marketCode: leg.market_code != null ? String(leg.market_code) : undefined,
-    statTarget: leg.stat_target != null ? Number(leg.stat_target) : undefined,
-    comparator: leg.comparator != null ? String(leg.comparator) : undefined,
-    actual: leg.actual_value != null ? Number(leg.actual_value) : null,
-  };
-}
+import { projectSmartParlayFromProof } from "../domain/parlay";
 
 function scopeLabel(proof: ClientParlayProof): string {
   if (proof.proofScope === "public") return "Public proof record";
@@ -42,13 +23,9 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
     staleTime: 60_000,
   });
 
-  const uiLegs = useMemo(
-    () => (proof?.legs ?? []).map((leg, index) => mapProofLeg(leg, index)),
-    [proof?.legs],
-  );
-  const identity = useMemo(
-    () => assessClientParlayIdentity((proof?.legs ?? []) as Record<string, unknown>[]),
-    [proof?.legs],
+  const smartSlip = useMemo(
+    () => (proof ? projectSmartParlayFromProof(proof) : null),
+    [proof],
   );
 
   if (isLoading) {
@@ -59,7 +36,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
     );
   }
 
-  if (error || !proof) {
+  if (error || !proof || !smartSlip) {
     return (
       <div className="min-h-screen bg-[var(--bg-obsidian)] text-white flex flex-col items-center justify-center gap-4 p-8">
         <ShieldCheck className="w-10 h-10 text-amber-400/70" />
@@ -88,7 +65,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
             <span className="text-[11px] font-black uppercase tracking-[0.25em]">ParlayOS Proof</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black leading-tight">
-            {proof.explanation || proof.selection || `${uiLegs.length}-leg parlay`}
+            {smartSlip.title}
           </h1>
           <p className="text-sm text-white/45">
             {proof.proofScope === "local" ? scopeLabel(proof) : `by ${author}`} · {new Date(proof.created_at).toLocaleString()}
@@ -110,7 +87,7 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
               otsStampedAt: proof.ots_stamped_at ?? undefined,
             }}
           />
-          <ParlayIdentityBadge identity={identity} />
+          <ParlayIdentityBadge identity={smartSlip.identity} />
         </header>
 
         {proof.proof_hash ? (
@@ -122,8 +99,8 @@ export default function ParlayProofPage({ pickId }: { pickId: string }) {
 
         <section className="space-y-3">
           <h2 className="text-xs font-black uppercase tracking-widest text-white/40">Legs</h2>
-          {uiLegs.map((leg) => (
-            <ParlayLegCardPro key={leg.id} leg={leg} compact />
+          {smartSlip.legs.map((leg) => (
+            <SmartParlayLegCard key={leg.id} leg={leg} compact />
           ))}
         </section>
 
