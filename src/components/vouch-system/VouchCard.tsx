@@ -27,7 +27,7 @@ import { Vouch, Parlay, CreatorProofProfile, FeedPost } from '../../types';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { vouchToPlayer } from '../../lib/parlays/parlayOsLegBuilder';
-import { inferFamilyFromText } from '../../lib/parlays/parlayMarketCatalog';
+import { inferFamilyFromText, resolveParlayPlayerRole } from '../../lib/parlays/parlayMarketCatalog';
 
 interface VouchCardProps {
   key?: any;
@@ -171,7 +171,11 @@ export default React.memo(function VouchCard({
         playerId: parlayLeg?.playerId ?? player.id,
       } : undefined,
       initialFamily: inferFamilyFromText(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
-      isPitcher: /pitcher|strikeout|\bk\b/i.test(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
+      isPitcher: resolveParlayPlayerRole({
+        position: player.position,
+        marketHint: vouch.market,
+        specHint: vouch.selection ?? vouch.line,
+      }) === "pitcher",
     });
     triggerToast('Opening ParlayOS prop picker…');
   };

@@ -169,8 +169,21 @@ const FEATURES = [
 
 export default function LandingVouchCardShowcase() {
   const [activeLayout, setActiveLayout] = useState<CardLayoutId>('orbit');
+  const [paused, setPaused] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const settleTimer = useRef<number | undefined>(undefined);
+
+  // Auto-advance through the card layouts; holds while the cursor is on the card.
+  useEffect(() => {
+    if (paused) return undefined;
+    const id = window.setInterval(() => {
+      setActiveLayout((prev) => {
+        const idx = DEMO_CARDS.findIndex((card) => card.layout === prev);
+        return DEMO_CARDS[(idx + 1) % DEMO_CARDS.length].layout;
+      });
+    }, 1500);
+    return () => window.clearInterval(id);
+  }, [paused]);
 
   const handleTilt = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
@@ -241,8 +254,12 @@ export default function LandingVouchCardShowcase() {
         <div className="ve-vouch-3d-stage">
           <div
             ref={cardRef}
+            onMouseEnter={() => setPaused(true)}
             onMouseMove={handleTilt}
-            onMouseLeave={handleTiltEnd}
+            onMouseLeave={() => {
+              setPaused(false);
+              handleTiltEnd();
+            }}
             className="ve-vouch-3d-card overflow-hidden rounded-2xl border border-white/[0.06]"
           >
             <PreviewCardStage {...makeDemoProps(activeLayout)} activeStyle={STUDIO_STYLE} />

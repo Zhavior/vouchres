@@ -8,7 +8,7 @@ import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
 import { validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
-import { inferFamilyFromText } from '../lib/parlays/parlayMarketCatalog';
+import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
 import { useFeedStore } from '../stores/feedStore';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useProfileStore } from '../stores/profileStore';
@@ -203,7 +203,11 @@ export function useAppDomain({
       return;
     }
 
-    const isPitcher = /pitcher|strikeout|\bp\b|\bk\b/i.test(`${prop.market} ${prop.spec}`);
+    const isPitcher = resolveParlayPlayerRole({
+      position: player.position,
+      marketHint: prop.market,
+      specHint: prop.spec,
+    }) === "pitcher";
     useParlayOsStore.getState().openPicker({
       player,
       propHint: prop,
