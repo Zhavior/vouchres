@@ -11,6 +11,8 @@ const VITEST_FILES = [
   "tests/parlayCustomLine.test.ts",
   "tests/parlayLegValidator.test.ts",
   "tests/slipOddsPolicy.test.ts",
+  "tests/templateProgress.test.ts",
+  "tests/parlayOddsFeedService.test.ts",
 ].join(" ");
 
 console.log("[verify:parlayos] Running ParlayOS trust unit suite…");

@@ -230,4 +230,14 @@ export function registerMlbRoutes(app: Express): void {
     );
     return res.json(apiOkFlat(req, { legs: progress }));
   }));
+
+  app.post("/api/mlb/parlay-tier-odds", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchLiveTierOdds } = await import("../services/mlb/parlayOddsFeedService");
+    const quote = await fetchLiveTierOdds({
+      playerName: req.body?.playerName ?? req.body?.player_name,
+      marketCode: req.body?.marketCode ?? req.body?.market_code,
+      statTarget: req.body?.statTarget ?? req.body?.stat_target,
+    });
+    return res.json(apiOkFlat(req, quote));
+  }));
 }

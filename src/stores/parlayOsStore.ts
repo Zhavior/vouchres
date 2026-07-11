@@ -30,11 +30,14 @@ type ParlayOsState = {
   editorLegId: string | null;
   sheetOpen: boolean;
   sheetExpanded: boolean;
+  /** Active slip template guide (tier pattern only — no fake legs). */
+  buildTemplateId: string | null;
 
   openPicker: (ctx: ParlayPickerContext, options?: { editLegId?: string }) => void;
   closePicker: () => void;
   openLegEditor: (legId: string) => void;
   closeLegEditor: () => void;
+  setBuildTemplate: (templateId: string | null) => void;
   openSheet: (expanded?: boolean) => void;
   closeSheet: () => void;
   toggleSheet: () => void;
@@ -51,6 +54,7 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
   editorLegId: null,
   sheetOpen: false,
   sheetExpanded: false,
+  buildTemplateId: null,
   proofPickId: null,
 
   openPicker: (ctx, options) =>
@@ -69,6 +73,8 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
 
   openLegEditor: (legId) => set({ editorLegId: legId }),
   closeLegEditor: () => set({ editorLegId: null }),
+
+  setBuildTemplate: (templateId) => set({ buildTemplateId: templateId }),
 
   openSheet: (expanded = true) =>
     set({

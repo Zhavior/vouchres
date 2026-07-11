@@ -46,6 +46,7 @@ const checks = [
   { id: "0019 subscriber_channel_messages", run: () => tableOk("subscriber_channel_messages") },
   { id: "0020 picks.ots_proof", run: () => pickColumnOk("ots_proof") },
   { id: "0020 picks.ots_stamped_at", run: () => pickColumnOk("ots_stamped_at") },
+  { id: "0025 picks.lock_reason", run: () => pickColumnOk("lock_reason") },
 ];
 
 let failed = 0;

@@ -34,6 +34,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: ParlayOS trust gates
+        run: npm run verify:parlayos
+
       - name: Auth smoke (static audit)
         run: npm run verify:auth-smoke
 
@@ -66,3 +69,38 @@ jobs:
       - name: Lighthouse CI (graceful)
         run: LIGHTHOUSE_START_PREVIEW=1 LIGHTHOUSE_SKIP=0 npm run lighthouse-ci
         continue-on-error: true
+
+  parlayos-e2e:
+    runs-on: ubuntu-latest
+    needs: test-build-budget
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Build app
+        run: npm run build
+        env:
+          VITE_DEV_BYPASS_AUTH: "true"
+
+      - name: ParlayOS smoke E2E
+        run: |
+          NODE_ENV=development PORT=3011 node dist/server.cjs &
+          SERVER_PID=$!
+          for i in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:3011/api/health/backend > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:3011 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:e2e:parlay
+          kill $SERVER_PID

@@ -43,8 +43,11 @@ import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
 const ParlayHubHistoryPanel = lazy(() => import('./hub/ParlayHubHistoryPanel'));
 import ParlayHubMobileSlipDock from './hub/ParlayHubMobileSlipDock';
+import ParlayHubTemplatesRow from './hub/ParlayHubTemplatesRow';
+import ParlayHubTemplateGuide from './hub/ParlayHubTemplateGuide';
 import { ParlayHubPanelSkeleton } from './hub/parlayHubUi';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
+import { assessTemplateProgress } from '../../lib/parlays/templateProgress';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
 import {
   normalizeParlayLeg,
@@ -551,6 +554,8 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
   const openLegEditor   = useParlayOsStore((s) => s.openLegEditor);
   const openSheet       = useParlayOsStore((s) => s.openSheet);
+  const buildTemplateId = useParlayOsStore((s) => s.buildTemplateId);
+  const setBuildTemplate = useParlayOsStore((s) => s.setBuildTemplate);
   const announce        = useAnnounce();
   const onCommitParlayTrust = useAppCommandStore((s) => s.onCommitParlayTrust);
   const { isCreator } = useEntitlements();
@@ -587,6 +592,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const draftIdentity = useMemo(
     () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
     [draftLegs],
+  );
+  const templateProgress = useMemo(
+    () => assessTemplateProgress(buildTemplateId, draftLegs),
+    [buildTemplateId, draftLegs],
   );
 
   const riskMeta = RISK_MODE_META[riskMode];
@@ -789,6 +798,20 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 min-h-0 relative pb-36 xl:pb-8 xl:pr-80">
+      <ParlayHubTemplatesRow
+        activeTemplateId={buildTemplateId}
+        onSelect={(id) => {
+          setBuildTemplate(id);
+          announce(`Template ${id} selected.`);
+        }}
+        onClear={() => {
+          setBuildTemplate(null);
+          announce('Template guide cleared.');
+        }}
+      />
+
+      {templateProgress ? <ParlayHubTemplateGuide progress={templateProgress} /> : null}
+
       {draftLegs.length === 0 ? <EmptyBuildSlip /> : null}
 
       {draftLegs.length > 0 ? (

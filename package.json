@@ -26,6 +26,7 @@
     "test:e2e": "playwright test",
     "test:e2e:parlay": "playwright test e2e/parlay-os.smoke.spec.ts",
     "verify:parlayos": "tsx scripts/verifyParlayOs.ts",
+    "verify:parlayos-db": "node --env-file=.env.local scripts/verifyTrustOsMigration.mjs",
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "perf-check": "node scripts/perf-check.mjs",
     "staging-soak": "node scripts/staging-soak.mjs",
