@@ -1,5 +1,10 @@
 import { toDecimalOrNull } from "../odds";
 
+const MAX_SELECTION_LEN = 280;
+const MAX_GAME_PK_LEN = 64;
+const MAX_ODDS_DECIMAL = 10000;
+const FAKE_GAME_PK_PREFIXES = ["leg-", "ai-leg-", "manual-"];
+
 /** Map canonical ParlayOS market codes to sport grader market keys. */
 export function mapMarketCodeToGraderMarket(
   marketCode: unknown,
@@ -32,6 +37,10 @@ export type GradeLegPayloadInput = {
   gamePk?: string | number | null;
   gameId?: string | number | null;
   game_pk?: string | number | null;
+  game_id?: string | number | null;
+  game?: string | number | null;
+  eventId?: string | number | null;
+  event_id?: string | number | null;
   market?: string | null;
   marketCode?: string | null;
   market_code?: string | null;
@@ -60,20 +69,57 @@ function normalizeSport(raw: unknown): "mlb" | "nba" | "nfl" | null {
   return null;
 }
 
+function cleanIdentity(value: unknown): string | undefined {
+  const text = String(value ?? "").trim();
+  if (!text || text === "0" || text === "undefined" || text === "null") return undefined;
+  if (text.toUpperCase().includes("TBD")) return undefined;
+  return text;
+}
+
+export function isFakeGeneratedGamePk(value: unknown): boolean {
+  const text = cleanIdentity(value);
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return FAKE_GAME_PK_PREFIXES.some((prefix) => lower.startsWith(prefix));
+}
+
+/** Resolve the best available game identity for grading. */
+export function resolveGradeGamePk(input: GradeLegPayloadInput): string | undefined {
+  const gameField = cleanIdentity(input.game);
+  const numericGame = gameField && /^\d{5,10}$/.test(gameField) ? gameField : undefined;
+
+  const candidates = [
+    input.gamePk,
+    input.gameId,
+    input.game_pk,
+    input.game_id,
+    input.eventId,
+    input.event_id,
+    numericGame,
+  ];
+
+  for (const candidate of candidates) {
+    const text = cleanIdentity(candidate);
+    if (!text || isFakeGeneratedGamePk(text)) continue;
+    return text.slice(0, MAX_GAME_PK_LEN);
+  }
+
+  return undefined;
+}
+
 export function buildGradeLegPayload(input: GradeLegPayloadInput): GradeLegPayload | null {
   const sport = normalizeSport(input.sport);
-  const gamePk = String(
-    input.gamePk ?? input.gameId ?? input.game_pk ?? "",
-  ).trim();
+  const gamePk = resolveGradeGamePk(input);
   const marketCode = input.marketCode ?? input.market_code ?? input.market;
   const statTarget = input.statTarget ?? input.threshold ?? input.stat_target ?? undefined;
-  const market = mapMarketCodeToGraderMarket(marketCode, statTarget);
-  const selection =
+  const market = mapMarketCodeToGraderMarket(marketCode, statTarget).slice(0, 80);
+  const selectionRaw =
     String(input.selection ?? "").trim() ||
     [input.playerName, input.marketLabel].filter(Boolean).join(" ").trim() ||
     "Player prop";
+  const selection = selectionRaw.slice(0, MAX_SELECTION_LEN);
 
-  if (!sport || !gamePk || !selection) return null;
+  if (!sport || !gamePk || !selection || !market) return null;
 
   const oddsDecimal = toDecimalOrNull(input.oddsDecimal ?? input.odds ?? null) ?? undefined;
   const threshold = statTarget != null && Number.isFinite(Number(statTarget))
@@ -87,6 +133,8 @@ export function buildGradeLegPayload(input: GradeLegPayloadInput): GradeLegPaylo
     selection,
   };
   if (threshold != null) payload.threshold = threshold;
-  if (oddsDecimal != null && oddsDecimal > 1) payload.oddsDecimal = oddsDecimal;
+  if (oddsDecimal != null && oddsDecimal > 1 && oddsDecimal <= MAX_ODDS_DECIMAL) {
+    payload.oddsDecimal = oddsDecimal;
+  }
   return payload;
 }

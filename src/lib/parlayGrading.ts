@@ -41,11 +41,9 @@ const PARLAY_STATUS: Record<string, Parlay['status']> = {
   won: 'WON', lost: 'LOST', push: 'VOID', pending: 'PENDING', error: 'PENDING',
 };
 
-/** A parlay can be graded once at least one leg carries a gamePk + market identity. */
+/** A parlay can be graded once at least one leg maps to a valid grade payload. */
 export function parlayIsGradable(p: Parlay): boolean {
-  return (p.legs || []).some((l) =>
-    Boolean(l.gamePk && (l.marketCode || l.market) && buildGradeLegPayload(l)),
-  );
+  return (p.legs || []).some((l) => Boolean(buildGradeLegPayload(l)));
 }
 
 /** Grade a single parlay against the live feed. Returns null if not gradable. */
@@ -63,7 +61,8 @@ export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
     return data;
   } catch (err) {
     if (import.meta.env.DEV) {
-      console.warn("[parlayGrading] grade request failed", err);
+      const details = (err as { details?: unknown[] })?.details;
+      console.warn("[parlayGrading] grade request failed", err, details?.length ? { details } : undefined);
     }
     return null;
   }

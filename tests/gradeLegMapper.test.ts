@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildGradeLegPayload, mapMarketCodeToGraderMarket } from "../src/lib/parlays/gradeLegMapper";
+import {
+  buildGradeLegPayload,
+  isFakeGeneratedGamePk,
+  mapMarketCodeToGraderMarket,
+  resolveGradeGamePk,
+} from "../src/lib/parlays/gradeLegMapper";
+import { GradeParlaySchema } from "../server/validators/parlaySchemas";
 
 describe("gradeLegMapper", () => {
   it("maps ANYTIME_HR to hr grader market", () => {
@@ -48,5 +54,61 @@ describe("gradeLegMapper", () => {
     });
     expect(payload?.selection).toContain("Aaron Judge");
     expect(payload?.market).toBe("run");
+  });
+
+  it("falls back from empty gamePk to gameId", () => {
+    expect(resolveGradeGamePk({ gamePk: "", gameId: "777001" })).toBe("777001");
+    const payload = buildGradeLegPayload({
+      sport: "mlb",
+      gamePk: "",
+      gameId: "777001",
+      marketCode: "ANYTIME_HR",
+      selection: "Judge HR",
+    });
+    expect(payload?.gamePk).toBe("777001");
+    expect(GradeParlaySchema.safeParse({ legs: [payload], stakeUnits: 1 }).success).toBe(true);
+  });
+
+  it("uses numeric game field when gamePk is missing", () => {
+    const payload = buildGradeLegPayload({
+      sport: "mlb",
+      game: "777001",
+      marketCode: "HIT",
+      selection: "Player Hit",
+    });
+    expect(payload?.gamePk).toBe("777001");
+  });
+
+  it("rejects fake generated game ids", () => {
+    expect(isFakeGeneratedGamePk("leg-123")).toBe(true);
+    expect(buildGradeLegPayload({
+      sport: "mlb",
+      gamePk: "leg-123",
+      marketCode: "HIT",
+      selection: "Player Hit",
+    })).toBeNull();
+  });
+
+  it("truncates oversized selections for schema compatibility", () => {
+    const payload = buildGradeLegPayload({
+      sport: "mlb",
+      gamePk: "777001",
+      marketCode: "ANYTIME_HR",
+      selection: "x".repeat(300),
+    });
+    expect(payload?.selection).toHaveLength(280);
+    expect(GradeParlaySchema.safeParse({ legs: [payload], stakeUnits: 1 }).success).toBe(true);
+  });
+
+  it("drops oddsDecimal values above schema max", () => {
+    const payload = buildGradeLegPayload({
+      sport: "mlb",
+      gamePk: "777001",
+      marketCode: "ANYTIME_HR",
+      selection: "Longshot HR",
+      odds: 1_000_000,
+    });
+    expect(payload?.oddsDecimal).toBeUndefined();
+    expect(GradeParlaySchema.safeParse({ legs: [payload], stakeUnits: 1 }).success).toBe(true);
   });
 });
