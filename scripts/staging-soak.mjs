@@ -71,7 +71,12 @@ function metaLooksLastGood(meta) {
 function isSupabaseUnavailable(status, body) {
   if (status !== 500 && status !== 503) return false;
   const message = isRecord(body)
-    ? String(body.message ?? body.error ?? "")
+    ? String(
+        (isRecord(body.error) ? body.error.message : undefined)
+          ?? body.message
+          ?? body.error
+          ?? "",
+      )
     : "";
   return message.includes("SUPABASE_URL") || message.includes("Supabase admin client");
 }
