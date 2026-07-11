@@ -68,6 +68,10 @@ export async function migrateLocalStorage(): Promise<{
   const totalMigrated = results.filter((r) => r.success).reduce((sum, r) => sum + r.count, 0);
   const totalFailed = results.filter((r) => !r.success).length;
 
+  if (totalFailed === 0) {
+    localStorage.setItem(MIGRATION_KEY, Date.now().toString());
+  }
+
   console.log(
     `[migrate] done: ${totalMigrated} items migrated, ${totalFailed} migrations failed`,
     results

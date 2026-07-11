@@ -356,6 +356,41 @@ export async function savePushSubscription(userId: string, input: PushSubscripti
   return { ok: true, warnings };
 }
 
+export async function getNotificationPreferences(userId: string): Promise<{ prefs: NotificationPrefs; warnings: string[] }> {
+  return getPrefs(userId);
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  partial: Partial<NotificationPrefs>,
+): Promise<{ prefs: NotificationPrefs; warnings: string[] }> {
+  const warnings: string[] = [];
+  try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    const current = await getPrefs(userId);
+    const next = { ...current.prefs, ...partial };
+    const { error } = await supabaseAdmin
+      .from("notification_preferences")
+      .upsert(
+        {
+          user_id: userId,
+          ...next,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+    if (error) {
+      if (missingTable(error)) {
+        return { prefs: next, warnings: ["notification_preferences table missing; saved locally only"] };
+      }
+      return { prefs: current.prefs, warnings: [`preference update failed: ${error.message}`] };
+    }
+    return { prefs: next, warnings };
+  } catch (err: any) {
+    return { prefs: DEFAULT_PREFS, warnings: [`preference update unavailable: ${err?.message ?? "unknown error"}`] };
+  }
+}
+
 export async function deletePushSubscription(userId: string, endpoint: string): Promise<{ ok: boolean; warnings: string[] }> {
   const supabaseAdmin = await getSupabaseAdmin();
   const { error } = await supabaseAdmin

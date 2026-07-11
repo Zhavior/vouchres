@@ -24,6 +24,24 @@ vi.mock("../server/services/notifications/notificationService", () => ({
   savePushSubscription: vi.fn(async () => ({ ok: true })),
   deletePushSubscription: vi.fn(async () => ({ ok: true })),
   processHomeRunEvents: vi.fn(async () => ({ scanned: 3, created: 1 })),
+  getNotificationPreferences: vi.fn(async () => ({
+    prefs: {
+      in_app_enabled: true,
+      hr_alerts_enabled: true,
+      parlay_alerts_enabled: false,
+      browser_push_enabled: false,
+    },
+    warnings: [],
+  })),
+  updateNotificationPreferences: vi.fn(async (_userId: string, partial: Record<string, boolean>) => ({
+    prefs: {
+      in_app_enabled: true,
+      hr_alerts_enabled: partial.hr_alerts_enabled ?? true,
+      parlay_alerts_enabled: partial.parlay_alerts_enabled ?? false,
+      browser_push_enabled: partial.browser_push_enabled ?? false,
+    },
+    warnings: [],
+  })),
 }));
 
 vi.mock("../server/services/mlb/hrFeedService", () => ({
@@ -107,6 +125,33 @@ describe("notification routes", () => {
         requestId: expect.any(String),
         timestamp: expect.any(String),
       },
+    });
+  });
+
+  it("returns ok envelope for notification preferences", async () => {
+    const response = await fetch(`${baseUrl}/api/notifications/preferences`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      hr_alerts_enabled: true,
+      parlay_alerts_enabled: false,
+    });
+  });
+
+  it("updates notification preferences", async () => {
+    const response = await fetch(`${baseUrl}/api/notifications/preferences`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parlay_alerts_enabled: true }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      parlay_alerts_enabled: true,
     });
   });
 });

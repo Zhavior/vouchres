@@ -14,10 +14,35 @@ import {
   markNotificationRead,
   processHomeRunEvents,
   savePushSubscription,
+  deletePushSubscription,
+  getNotificationPreferences,
+  updateNotificationPreferences,
 } from "../services/notifications/notificationService";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 
 export const notificationRoutes = Router();
+
+notificationRoutes.get("/notifications/preferences", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const out = await getNotificationPreferences(req.user!.id);
+  return res.json(apiOkFlat(req, { ...out.prefs, warnings: out.warnings }));
+}));
+
+notificationRoutes.patch("/notifications/preferences", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body ?? {};
+  const partial: Record<string, boolean> = {};
+  for (const key of ["in_app_enabled", "hr_alerts_enabled", "parlay_alerts_enabled", "browser_push_enabled"] as const) {
+    if (typeof body[key] === "boolean") partial[key] = body[key];
+  }
+  if (Object.keys(partial).length === 0) {
+    throw new AppError({
+      status: 400,
+      code: "bad_request",
+      message: "No preference updates provided.",
+    });
+  }
+  const out = await updateNotificationPreferences(req.user!.id, partial);
+  return res.json(apiOkFlat(req, { ...out.prefs, warnings: out.warnings }));
+}));
 
 notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();

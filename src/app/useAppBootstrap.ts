@@ -289,6 +289,12 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     };
   }, [isLoggedIn, syncProfile]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    void import('../lib/migrateLocalStorage').then(({ migrateLocalStorage }) => migrateLocalStorage());
+  }, [isLoggedIn]);
+
   return {
     posts,
     profile,

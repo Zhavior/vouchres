@@ -22,7 +22,12 @@ import {
 import { CreatorProofProfile } from '../types';
 import { apiClient } from '../lib/apiClient';
 import { VEButton } from './ui/ve';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { patchAuthProfile } from '../lib/profileApi';
+import {
+  fetchNotificationPreferences,
+  updateNotificationPreferences,
+} from '../lib/notificationPreferencesApi';
 import {
   fetchBillingStatus,
   openBillingPortal,
@@ -175,6 +180,8 @@ export default function SettingsPage({
 
   const [privacyLoading, setPrivacyLoading] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
   const [billingPortalError, setBillingPortalError] = useState<string | null>(null);
 
   const [newPassword, setNewPassword] = useState('');
@@ -199,11 +206,32 @@ export default function SettingsPage({
   };
 
   useEffect(() => {
-    localStorage.setItem('vouchedge_email_alerts', String(emailAlerts));
-    localStorage.setItem('vouchedge_push_alerts', String(pushAlerts));
-    localStorage.setItem('vouchedge_weekly_summary', String(weeklySummary));
     localStorage.setItem('vouchedge_profile_public', String(profilePublic));
-  }, [emailAlerts, pushAlerts, weeklySummary, profilePublic]);
+  }, [profilePublic]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    void fetchNotificationPreferences()
+      .then((prefs) => {
+        setEmailAlerts(prefs.hr_alerts_enabled);
+        setWeeklySummary(prefs.parlay_alerts_enabled);
+        setPushAlerts(prefs.browser_push_enabled);
+      })
+      .catch(() => {
+        // Fall back to localStorage defaults when offline or unsigned in.
+      });
+  }, []);
+
+  const syncNotificationPref = async (
+    patch: Partial<{ hr_alerts_enabled: boolean; parlay_alerts_enabled: boolean; browser_push_enabled: boolean }>,
+  ) => {
+    if (!isSupabaseConfigured) return;
+    try {
+      await updateNotificationPreferences(patch);
+    } catch {
+      // Keep local toggle; server sync retries on next visit.
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -230,9 +258,12 @@ export default function SettingsPage({
     showToast(message ?? 'Billing status refreshed.');
   };
 
-  const handleProfileSave = (e: React.FormEvent) => {
+  const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateProfile({
+    setProfileSaveError(null);
+    setProfileSaving(true);
+
+    const localPatch = {
       displayName: displayName.trim(),
       username: username.trim(),
       bio: bio.trim(),
@@ -241,10 +272,33 @@ export default function SettingsPage({
       discord: discord.trim(),
       telegram: telegram.trim(),
       customTitle: customTitle.trim(),
-    } as any);
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 2000);
-    showToast('Profile saved.');
+    } as Partial<CreatorProofProfile>;
+
+    try {
+      if (isSupabaseConfigured) {
+        const synced = await patchAuthProfile(
+          {
+            displayName: localPatch.displayName,
+            username: localPatch.username,
+            bio: localPatch.bio,
+          },
+          profile,
+        );
+        onUpdateProfile({ ...localPatch, ...synced });
+      } else {
+        onUpdateProfile(localPatch);
+      }
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+      showToast('Profile saved to your account.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Profile save failed.';
+      setProfileSaveError(message);
+      onUpdateProfile(localPatch);
+      showToast(`Saved locally — server sync failed: ${message}`, 'err');
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleUpgrade = async (tier: AppTier) => {
@@ -557,15 +611,19 @@ export default function SettingsPage({
                 <div className="flex flex-col gap-3 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-end">
                   <button
                     type="submit"
+                    disabled={profileSaving}
                     className={`ve-touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:w-auto ${
                       profileSaved
                         ? 'bg-emerald-600 text-white'
                         : 'bg-blue-600 text-white hover:bg-blue-500'
-                    }`}
+                    } disabled:opacity-60`}
                   >
-                    {profileSaved ? <Check className="h-4 w-4" /> : null}
-                    {profileSaved ? 'Saved' : 'Save changes'}
+                    {profileSaving ? <Loader className="h-4 w-4 animate-spin" /> : profileSaved ? <Check className="h-4 w-4" /> : null}
+                    {profileSaving ? 'Saving…' : profileSaved ? 'Saved' : 'Save changes'}
                   </button>
+                  {profileSaveError && (
+                    <p className="text-xs text-amber-300 sm:col-span-2">{profileSaveError}</p>
+                  )}
                 </div>
               </form>
 
@@ -792,13 +850,25 @@ export default function SettingsPage({
             {/* ── NOTIFICATIONS ── */}
             {activeTab === 'notifications' && (
               <div className="space-y-8">
-                <Section title="Email" subtitle="Control which emails VouchEdge sends to you.">
+                <Section title="Alerts" subtitle="In-app alert preferences sync to your account. Email digests are coming soon.">
                   <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
-                    <PrefRow label="Account alerts" detail="Security and billing notifications.">
-                      <Toggle checked={emailAlerts} onChange={setEmailAlerts} />
+                    <PrefRow label="HR & slate alerts" detail="Home run feed and high-signal board updates.">
+                      <Toggle
+                        checked={emailAlerts}
+                        onChange={(v) => {
+                          setEmailAlerts(v);
+                          void syncNotificationPref({ hr_alerts_enabled: v });
+                        }}
+                      />
                     </PrefRow>
-                    <PrefRow label="Weekly recap" detail="A summary of your picks, results, and activity each week.">
-                      <Toggle checked={weeklySummary} onChange={setWeeklySummary} />
+                    <PrefRow label="Parlay graded alerts" detail="Notify when your saved slips are graded.">
+                      <Toggle
+                        checked={weeklySummary}
+                        onChange={(v) => {
+                          setWeeklySummary(v);
+                          void syncNotificationPref({ parlay_alerts_enabled: v });
+                        }}
+                      />
                     </PrefRow>
                   </div>
                 </Section>
@@ -807,8 +877,14 @@ export default function SettingsPage({
 
                 <Section title="In-app" subtitle="Push alerts and real-time updates inside the app.">
                   <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
-                    <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
-                      <Toggle checked={pushAlerts} onChange={setPushAlerts} />
+                    <PrefRow label="Browser push" detail="Parlay grading, HR board hits, and live game alerts.">
+                      <Toggle
+                        checked={pushAlerts}
+                        onChange={(v) => {
+                          setPushAlerts(v);
+                          void syncNotificationPref({ browser_push_enabled: v });
+                        }}
+                      />
                     </PrefRow>
                     <PrefRow label="Public profile" detail="Show your creator profile and stats on public leaderboards.">
                       <Toggle checked={profilePublic} onChange={setProfilePublic} />

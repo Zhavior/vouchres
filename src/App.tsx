@@ -9,6 +9,7 @@ import { vouchedgeApi } from './api/vouchedgeApi';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 const VouchEdgeTerminalPage = lazy(() => import('./pages/VouchEdgeTerminalPage'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
 const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
@@ -68,7 +69,21 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 }
 
 export default function App() {
+  const isAuthCallback =
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/auth/callback';
+
   const navigation = useSectionNavigation();
+
+  if (isAuthCallback) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<RouteFallback />}>
+          <AuthCallbackPage />
+        </Suspense>
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

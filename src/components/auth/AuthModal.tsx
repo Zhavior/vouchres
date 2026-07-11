@@ -27,6 +27,7 @@ import {
   signInWithEmail,
   signUpWithEmail,
   signInWithMagicLink,
+  resetPasswordForEmail,
   isSupabaseConfigured,
 } from '../../lib/supabaseClient';
 import { apiUrl } from '../../lib/apiBase';
@@ -37,7 +38,7 @@ import { Z8_INTERACTIVE, Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from '../../th
 import '../../styles/public-auth.css';
 import '../../styles/auth-modal.css';
 
-type Mode = 'login' | 'signup';
+type Mode = 'login' | 'signup' | 'forgot';
 type HandleState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type SignupPlan = 'free' | 'pro' | 'capper';
 type SignupStep = 'intro' | 'plan' | 'policy' | 'form';
@@ -283,6 +284,20 @@ export default function AuthModal({
     }
 
     if (!email.trim()) { setError('Enter your email.'); return; }
+
+    if (mode === 'forgot') {
+      setBusy(true);
+      try {
+        const { error } = await resetPasswordForEmail(email.trim());
+        if (error) { setError(friendlyError(error.message)); return; }
+        setEmailSent(true);
+        setNotice('Password reset link sent — check your email.');
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (!password) { setError('Enter your password.'); return; }
     if (mode === 'signup') {
       const normalizedHandle = handle.trim().toLowerCase();
@@ -798,6 +813,7 @@ export default function AuthModal({
               )}
 
             {/* Password */}
+            {mode !== 'forgot' && (
             <div>
               <Field icon={<Lock className="w-4 h-4" />}>
                 <input
@@ -812,6 +828,15 @@ export default function AuthModal({
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </Field>
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(null); setNotice(null); }}
+                  className="mt-1.5 text-[11px] font-semibold text-vouch-cyan/80 hover:text-vouch-cyan"
+                >
+                  Forgot password?
+                </button>
+              )}
               {mode === 'signup' && password.length > 0 && (
                 <div className="flex gap-1 mt-1.5 px-1">
                   {[0, 1, 2, 3].map((i) => (
@@ -829,6 +854,13 @@ export default function AuthModal({
                 </div>
               )}
             </div>
+            )}
+
+            {mode === 'forgot' && (
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                We&apos;ll email a secure link to reset your password. The link opens VouchEdge so you can choose a new password.
+              </p>
+            )}
 
             {/* Invite code (signup) — optional during preview, required at private-beta launch */}
               {mode === 'signup' && (
@@ -890,13 +922,16 @@ export default function AuthModal({
                 <>
                   {mode === 'signup'
                     ? plan === 'free' ? 'Create account' : `Create account & continue to ${PLAN_OPTIONS.find((p) => p.id === plan)?.label}`
-                    : 'Log in'}
+                    : mode === 'forgot'
+                      ? 'Send reset link'
+                      : 'Log in'}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
 
             {/* Magic link */}
+            {mode !== 'forgot' && (
             <button
               type="button"
               onClick={handleMagicLink}
@@ -906,6 +941,16 @@ export default function AuthModal({
               <Wand2 className="w-3.5 h-3.5" style={{ color: BLURPLE }} />
               Email me a magic link instead
             </button>
+            )}
+            {mode === 'forgot' && (
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setError(null); setNotice(null); setEmailSent(false); }}
+                className="w-full py-2 text-[13px] font-bold text-white/60 hover:text-white"
+              >
+                Back to log in
+              </button>
+            )}
           </form>
 
           {/* Footer — guest + trust */}

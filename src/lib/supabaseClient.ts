@@ -103,12 +103,25 @@ export async function signInWithEmail(opts: { email: string; password: string })
 /**
  * Send a magic-link sign-in email (alternative to password).
  */
+export function authRedirectUrl(path = "/auth/callback"): string {
+  if (typeof window === "undefined") return path;
+  return `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export async function signInWithMagicLink(email: string) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      emailRedirectTo: authRedirectUrl("/auth/callback"),
     },
+  });
+  return { data, error };
+}
+
+/** Password reset email — link lands on /auth/callback for recovery session. */
+export async function resetPasswordForEmail(email: string) {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: authRedirectUrl("/auth/callback"),
   });
   return { data, error };
 }
