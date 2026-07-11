@@ -256,3 +256,46 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
     })),
   }));
 }));
+
+async function loadProfileAnnouncementPosts(profileId: string, limit: number) {
+  const { data, error } = await supabaseAdmin
+    .from("posts")
+    .select(`
+      id, body, created_at, view_count, pick_id,
+      author:profiles!posts_author_id_fkey(id, username, display_name, avatar_url, handle)
+    `)
+    .eq("author_id", profileId)
+    .is("pick_id", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to load creator announcements.",
+      cause: error,
+    });
+  }
+
+  return data ?? [];
+}
+
+subscriberRoutes.get("/subscriber/profiles/:id/posts", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const userId = req.user!.id;
+  const profileId = req.params.id;
+  await assertFollowsProfile(userId, profileId);
+
+  const limit = Math.min(Number(req.query.limit ?? 20), 50);
+  const posts = await loadProfileAnnouncementPosts(profileId, limit);
+
+  return res.json(apiOkFlat(req, { posts }));
+}));
+
+subscriberRoutes.get("/subscriber/me/posts", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const userId = req.user!.id;
+  const limit = Math.min(Number(req.query.limit ?? 20), 50);
+  const posts = await loadProfileAnnouncementPosts(userId, limit);
+
+  return res.json(apiOkFlat(req, { posts }));
+}));

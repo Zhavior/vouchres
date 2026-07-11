@@ -17,6 +17,7 @@ import {
   hideParlayHandler,
   listLegacyParlaysHandler,
   listMyParlaysHandler,
+  repairParlayIdentityHandler,
   saveMeParlayHandler,
   updateParlayHandler,
 } from "../../controllers/parlayController";
@@ -314,6 +315,13 @@ parlayUserRoutes.get(
   requireAuth,
   validate({ params: ParlayIdParamsSchema }),
   getParlayAuditHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/repair-identity",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  repairParlayIdentityHandler,
 );
 
 parlayUserRoutes.patch(

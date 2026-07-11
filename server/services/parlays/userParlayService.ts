@@ -12,9 +12,11 @@ import {
   type ParlayRow,
 } from "../../repositories/parlayRepository";
 import { insertPickAuditLog, listPickAuditLogs, type PickAuditRow } from "../../repositories/pickAuditRepository";
+import { assessParlayIdentity } from "./parlayIdentityService";
 
 export interface ParlayWithLegs extends ParlayRow {
   legs: ParlayLegRow[];
+  identity?: ReturnType<typeof assessParlayIdentity>;
 }
 
 export function enrichParlayForDisplay(row: ParlayRow, legs: ParlayLegRow[]): ParlayWithLegs {
@@ -26,6 +28,7 @@ export function enrichParlayForDisplay(row: ParlayRow, legs: ParlayLegRow[]): Pa
     source: isAiPickRow(row) ? "AI" : (row.source ?? "manual"),
     ai_generated: isAiPickRow(row),
     game_date: row.game_date ?? ymdFromValue(row.created_at),
+    identity: assessParlayIdentity(legs as Record<string, unknown>[]),
   };
 }
 
@@ -212,4 +215,32 @@ export async function hideUserParlay(input: {
     updated_at: parlay.updated_at,
     truth_rule: "status_preserved_void_reserved_for_sportsbook_no_action",
   };
+}
+
+export async function repairUserParlayIdentity(input: {
+  userId: string;
+  parlayId: string;
+}) {
+  const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
+  const result = await repairParlayIdentityForPick({
+    pickId: input.parlayId,
+    userId: input.userId,
+    externalProvider: "user_repair_identity",
+  });
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "repair_identity",
+    fieldChanges: {
+      repairedCount: result.repairedCount,
+      skippedCount: result.skippedCount,
+      scanned: result.scanned,
+    },
+  }).catch((err) => {
+    console.warn("[repairUserParlayIdentity] audit log failed", (err as Error)?.message);
+  });
+
+  const parlay = await getUserParlay({ userId: input.userId, parlayId: input.parlayId });
+  return { result, parlay };
 }

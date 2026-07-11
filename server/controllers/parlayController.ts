@@ -11,6 +11,7 @@ import {
   hideUserParlay,
   listUserParlayRows,
   listUserParlays,
+  repairUserParlayIdentity,
   updateParlaySummary,
 } from "../services/parlays/userParlayService";
 import { saveUserParlay } from "../services/parlays/parlayCreationService";
@@ -112,6 +113,27 @@ export const getParlayAuditHandler = asyncHandler(async (req: ParlayReq, res: Re
     limit: 50,
   });
   return res.json(apiOkFlat(req, history as unknown as Record<string, unknown>));
+});
+
+export const repairParlayIdentityHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+  const owned = await assertUserOwnsResource(req.user!.id, "parlay", req.params.id);
+  if (owned.ok === false) {
+    if (owned.warning === "resource not found for authenticated user") {
+      throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Ownership check failed.",
+      details: { warning: owned.warning },
+    });
+  }
+
+  const payload = await repairUserParlayIdentity({
+    userId: req.user!.id,
+    parlayId: req.params.id,
+  });
+  return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
 });
 
 export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {

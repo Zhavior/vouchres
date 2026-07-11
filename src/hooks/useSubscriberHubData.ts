@@ -2,6 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiClient } from "../lib/apiClient";
 import type { Parlay } from "../types";
 
+export interface SubscriberAnnouncement {
+  id: string;
+  body: string;
+  createdAt: string;
+  viewCount: number;
+  authorName: string;
+  authorHandle: string;
+}
+
 export type SubscriberChannelKind = "owner" | "capper" | "profile";
 
 export interface SubscriberChannel {
@@ -53,6 +62,18 @@ function mapApiPickToParlay(pick: Record<string, any>): Parlay {
   };
 }
 
+function mapApiPostToAnnouncement(post: Record<string, any>): SubscriberAnnouncement {
+  const author = post.author ?? {};
+  return {
+    id: String(post.id),
+    body: String(post.body ?? "").trim(),
+    createdAt: String(post.created_at ?? new Date().toISOString()),
+    viewCount: Number(post.view_count ?? 0),
+    authorName: String(author.display_name ?? author.username ?? "Creator"),
+    authorHandle: String(author.handle ?? author.username ?? author.id ?? "creator"),
+  };
+}
+
 export function useSubscriberHubData(input: {
   userId: string | null;
   displayName: string;
@@ -66,6 +87,8 @@ export function useSubscriberHubData(input: {
   const [error, setError] = useState<string | null>(null);
   const [premiumParlays, setPremiumParlays] = useState<Parlay[]>([]);
   const [parlaysLoading, setParlaysLoading] = useState(false);
+  const [announcements, setAnnouncements] = useState<SubscriberAnnouncement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
 
   const ownerChannelId = input.userId ? channelKey("owner", input.userId) : null;
 
@@ -193,6 +216,46 @@ export function useSubscriberHubData(input: {
     }
   }, [input.userId]);
 
+  const loadChannelAnnouncements = useCallback(async (channel: SubscriberChannel | undefined) => {
+    if (!channel || !input.userId) {
+      setAnnouncements([]);
+      return;
+    }
+    if (channel.kind === "capper") {
+      setAnnouncements([]);
+      return;
+    }
+    if (channel.kind === "profile" && !channel.isFollowing) {
+      setAnnouncements([]);
+      return;
+    }
+
+    setAnnouncementsLoading(true);
+    try {
+      const path = channel.kind === "owner"
+        ? "/api/subscriber/me/posts"
+        : `/api/subscriber/profiles/${encodeURIComponent(channel.targetId)}/posts`;
+      const data = await apiClient.get<{ posts?: Record<string, any>[] }>(path);
+      setAnnouncements((data.posts ?? []).map(mapApiPostToAnnouncement).filter((row) => row.body));
+    } catch (err) {
+      console.error("[SubscriberHub] announcements load failed", err);
+      setAnnouncements([]);
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, [input.userId]);
+
+  const publishAnnouncement = useCallback(async (body: string) => {
+    if (!input.userId) {
+      throw new Error("Sign in to publish announcements.");
+    }
+    const trimmed = body.trim();
+    if (!trimmed) {
+      throw new Error("Announcement text is required.");
+    }
+    await apiClient.post("/api/posts", { body: trimmed });
+  }, [input.userId]);
+
   const followChannel = useCallback(async (channel: SubscriberChannel) => {
     if (!input.userId || channel.kind === "owner") return;
     const body = channel.kind === "capper"
@@ -224,7 +287,11 @@ export function useSubscriberHubData(input: {
     subscribedChannelIds,
     premiumParlays,
     parlaysLoading,
+    announcements,
+    announcementsLoading,
     loadChannelParlays,
+    loadChannelAnnouncements,
+    publishAnnouncement,
     followChannel,
     unfollowChannel,
     refreshChannels,

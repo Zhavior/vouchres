@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock, ExternalLink } from 'lucide-react';
 import { Parlay } from '../../types';
 import { formatFeedLockTimestamp } from '../../lib/parlayLockPolicy';
 
@@ -10,6 +10,7 @@ interface ParlayFeedPostCardProps {
 export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) {
   const [showEdgeReport, setShowEdgeReport] = useState(false);
   const lockLabel = formatFeedLockTimestamp(parlay.feedLockedAt);
+  const proofPickId = parlay.backendPickId || parlay.id;
 
   const renderInnerBold = (text: string) => {
     const parts = text.split(/\*\*(.*?)\*\*/g);
@@ -202,11 +203,22 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
       )}
 
       {/* Safety Legal Warning */}
-      <div className="bg-rose-950/20 px-4 py-1.5 border-t border-rose-950/30 text-center">
+      <div className="bg-rose-950/20 px-4 py-1.5 border-t border-rose-950/30 flex items-center justify-between gap-2">
         <p className="text-[9px] text-rose-450 leading-none flex items-center justify-center gap-1 uppercase tracking-wider font-semibold">
           <AlertTriangle className="w-3 h-3 flex-shrink-0" />
           No guaranteed wins. Keep wagering standard.
         </p>
+        {proofPickId && (
+          <a
+            href={`/p/${encodeURIComponent(proofPickId)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] font-mono font-black uppercase text-vouch-cyan hover:text-cyan-300 flex items-center gap-1 shrink-0"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View proof
+          </a>
+        )}
       </div>
     </div>
   );

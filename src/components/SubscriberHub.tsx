@@ -88,7 +88,11 @@ export default function SubscriberHub({
     subscribedChannelIds,
     premiumParlays,
     parlaysLoading,
+    announcements,
+    announcementsLoading,
     loadChannelParlays,
+    loadChannelAnnouncements,
+    publishAnnouncement,
     followChannel,
   } = useSubscriberHubData({
     userId: user?.id ?? null,
@@ -105,6 +109,8 @@ export default function SubscriberHub({
   const [selectedCapperForSub, setSelectedCapperForSub] = useState<SubscriberChannel | null>(null);
   const [chatInnerTab, setChatInnerTab] = useState<'chat' | 'parlays' | 'announcements'>('chat');
   const [parlayReactions, setParlayReactions] = useState<Record<string, Record<string, number>>>({});
+  const [announcementDraft, setAnnouncementDraft] = useState('');
+  const [announcementPublishing, setAnnouncementPublishing] = useState(false);
   const [subPlans] = useState([
     { months: 1, name: 'Follow', price: 0, savings: 'Free during beta', note: 'Follow creators to unlock shared parlays.' },
   ]);
@@ -117,8 +123,9 @@ export default function SubscriberHub({
   useEffect(() => {
     if (selectedChannel) {
       void loadChannelParlays(selectedChannel);
+      void loadChannelAnnouncements(selectedChannel);
     }
-  }, [selectedChannel, loadChannelParlays]);
+  }, [selectedChannel, loadChannelParlays, loadChannelAnnouncements]);
 
   const handleSubscribe = async (channel: SubscriberChannel) => {
     try {
@@ -147,9 +154,21 @@ export default function SubscriberHub({
     alert('Paid subscription tiers are not live yet. Follow is free during beta.');
   };
 
-  const handlePublishAnnouncement = (e: React.FormEvent) => {
+  const handlePublishAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Creator announcements will post to your feed when this feature ships.');
+    if (!announcementDraft.trim()) return;
+    setAnnouncementPublishing(true);
+    try {
+      await publishAnnouncement(announcementDraft);
+      setAnnouncementDraft('');
+      if (selectedChannel) {
+        await loadChannelAnnouncements(selectedChannel);
+      }
+    } catch (err: any) {
+      alert(err?.message ?? 'Failed to publish announcement.');
+    } finally {
+      setAnnouncementPublishing(false);
+    }
   };
 
   return (
@@ -158,7 +177,7 @@ export default function SubscriberHub({
       {/* Demo banner */}
       <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
         <span className={`${Z8_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
-        Follow cappers to unlock shared parlay picks. Chat and paid tiers are coming soon.
+        Follow cappers to unlock shared parlay picks. Announcements are live for creator clubs; chat and paid tiers are coming soon.
       </div>
 
       {/* Page Header */}
@@ -519,7 +538,7 @@ export default function SubscriberHub({
                     <div>
                       <h4 className="text-xs font-black uppercase tracking-wider text-white/65">Club Announcements Feed</h4>
                       <p className="text-[10px] text-white/40 leading-normal mt-0.5">
-                        Creator announcements will appear here when the broadcast feature ships. Use the feed for public posts today.
+                        Text-only club broadcasts for followers. Parlay shares still go through the main feed and lock on share.
                       </p>
                     </div>
                   </div>
@@ -537,25 +556,52 @@ export default function SubscriberHub({
                           id="announcement_input"
                           name="announcement_input"
                           type="text"
-                          placeholder="Announcements are not live yet"
-                          disabled
-                          className="flex-1 bg-obsidian-900 border border-slate-850 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none opacity-60"
+                          value={announcementDraft}
+                          onChange={(e) => setAnnouncementDraft(e.target.value)}
+                          placeholder="Share an update with your subscribers"
+                          className="flex-1 bg-obsidian-900 border border-slate-850 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none"
                         />
                         <button
                           type="submit"
-                          disabled
-                          className="px-4 py-2 bg-indigo-650 text-white/90 text-xs font-mono font-black rounded-lg opacity-60"
+                          disabled={announcementPublishing || !announcementDraft.trim()}
+                          className="px-4 py-2 bg-indigo-650 text-white/90 text-xs font-mono font-black rounded-lg disabled:opacity-60"
                         >
-                          COMING SOON
+                          {announcementPublishing ? 'POSTING…' : 'BROADCAST'}
                         </button>
                       </div>
                     </form>
                   )}
 
                   <div className="space-y-3">
-                    <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
-                      No announcements yet
-                    </div>
+                    {announcementsLoading ? (
+                      <div className="p-8 text-center text-slate-505 font-semibold text-xs uppercase font-mono">
+                        Loading announcements…
+                      </div>
+                    ) : announcements.length === 0 ? (
+                      <div className="p-12 text-center bg-black/25/35 border border-dashed border-slate-850 rounded-2xl text-slate-505 font-semibold text-xs uppercase font-mono py-12">
+                        No announcements yet
+                      </div>
+                    ) : (
+                      announcements.map((post) => (
+                        <article
+                          key={post.id}
+                          className="rounded-xl border border-slate-850 bg-black/25 p-4 space-y-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-[10px] font-mono font-black uppercase text-vouch-cyan">
+                              @{post.authorHandle}
+                            </div>
+                            <time className="text-[10px] text-white/35 font-mono">
+                              {new Date(post.createdAt).toLocaleString()}
+                            </time>
+                          </div>
+                          <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap">{post.body}</p>
+                          <div className="text-[9px] text-white/30 font-mono uppercase">
+                            {post.viewCount} views
+                          </div>
+                        </article>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
