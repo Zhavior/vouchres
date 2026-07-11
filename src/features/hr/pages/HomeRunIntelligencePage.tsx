@@ -219,7 +219,7 @@ const HomeRunIntelligencePage: React.FC = () => {
               <h1 className="mt-4 max-w-3xl text-3xl font-black leading-[.98] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl">See the power.<br /><span className="text-[#00ff94]">Understand the signal.</span></h1>
               <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52 sm:text-base">Every candidate is resolved through observable power, pitcher vulnerability, park context and recent form. No hidden certainty. No projected lineup presented as official.</p>
               <div className="mt-5 flex flex-wrap gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
-                <span className="border border-[#00ff94]/20 bg-[#00ff94]/[0.06] px-2.5 py-1.5 text-[#7dffc5]">Official data first</span>
+                <span className="border border-[hsl(var(--ve-success)/0.2)] bg-[hsl(var(--ve-success)/0.06)] px-2.5 py-1.5 text-[#7dffc5]">Official data first</span>
                 <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Explainable score</span>
                 <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Alert-safe</span>
               </div>

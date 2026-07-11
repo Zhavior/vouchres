@@ -42,7 +42,7 @@ export function HrBoard({ buckets, onSelectPlayer, onViewProfile, getHrResult }:
               role="tab"
               aria-selected={selected}
               onClick={() => setActiveTier(tier.key)}
-              className={`min-h-14 min-w-[9.5rem] flex-1 snap-start border px-3 py-2.5 text-left transition ${selected ? 'border-[#00ff94]/35 bg-[#00ff94]/[0.08] shadow-[inset_0_-2px_#00ff94]' : 'border-white/8 bg-black/25 hover:border-white/15'}`}
+              className={`min-h-14 min-w-[9.5rem] flex-1 snap-start border px-3 py-2.5 text-left transition ${selected ? 'border-[hsl(var(--ve-success)/0.35)] bg-[hsl(var(--ve-success)/0.08)] shadow-[inset_0_-2px_hsl(var(--ve-success))]' : 'border-white/8 bg-black/25 hover:border-white/15'}`}
             >
               <div className="flex items-center justify-between gap-3">
                 <span className={`font-mono text-[9px] font-black uppercase tracking-[0.18em] ${selected ? tier.tone : 'text-white/35'}`}>{tier.index} {tier.title}</span>

@@ -791,7 +791,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 <ShieldQuestion className="mx-auto h-10 w-10 text-cyan-200/60" />
                 <h3 className="mt-4 text-xl font-black text-white">Matchup history is not verified yet</h3>
                 <p className="mt-2 text-sm leading-6 text-white/45">The current board provides the pitcher name but not a verified MLB pitcher identifier. Home Run Intelligence will not generate or infer batter-versus-pitcher records from a name.</p>
-                <div className="mt-5 border border-[#00ff94]/15 bg-[#00ff94]/[0.05] px-4 py-3 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#8affcd]">Excluded from the decision until an official source is available</div>
+                <div className="mt-5 border border-[hsl(var(--ve-success)/0.15)] bg-[hsl(var(--ve-success)/0.05)] px-4 py-3 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#8affcd]">Excluded from the decision until an official source is available</div>
               </div>
             </div>
           </div>

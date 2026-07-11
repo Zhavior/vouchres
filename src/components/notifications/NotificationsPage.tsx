@@ -183,7 +183,7 @@ export function NotificationsPage({ onSectionChange }: NotificationsPageProps) {
           </label>
           <div className="flex gap-1 overflow-x-auto">
             {(['all', 'unread', 'signals'] as const).map((value) => (
-              <button key={value} type="button" onClick={() => setFilter(value)} aria-pressed={filter === value} className={`min-h-11 whitespace-nowrap border px-3 font-mono text-[10px] font-black uppercase tracking-wider ${filter === value ? 'border-[#00ff94]/35 bg-[#00ff94]/10 text-[#00ff94]' : 'border-white/10 text-white/40'}`}>{value}</button>
+              <button key={value} type="button" onClick={() => setFilter(value)} aria-pressed={filter === value} className={`min-h-11 whitespace-nowrap border px-3 font-mono text-[10px] font-black uppercase tracking-wider ${filter === value ? 'border-[hsl(var(--ve-success)/0.35)] bg-[hsl(var(--ve-success)/0.1)] text-[#00ff94]' : 'border-white/10 text-white/40'}`}>{value}</button>
             ))}
             {unread > 0 && <button type="button" onClick={() => markAllRead()} className="flex min-h-11 items-center gap-1.5 whitespace-nowrap border border-white/10 px-3 font-mono text-[10px] font-black uppercase text-white/55"><CheckCheck className="h-3.5 w-3.5" />Read all</button>}
           </div>
