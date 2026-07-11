@@ -37,6 +37,8 @@ export interface PublicParlayProof {
   proof_hash: string | null;
   ots_stamped_at: string | null;
   has_ots_proof: boolean;
+  lock_reason?: string | null;
+  committed_at?: string | null;
   legs: ParlayLegRow[];
   author: PublicParlayAuthor | null;
   capper: { id: string; display_name: string } | null;
@@ -116,6 +118,8 @@ export async function getPublicParlayProof(id: string, baseUrl?: string): Promis
     proof_hash: proofHash,
     ots_stamped_at: parlay.ots_stamped_at ? String(parlay.ots_stamped_at) : null,
     has_ots_proof: Boolean(parlay.ots_proof),
+    lock_reason: parlay.lock_reason ? String(parlay.lock_reason) : null,
+    committed_at: parlay.committed_at ? String(parlay.committed_at) : null,
     legs,
     author,
     capper,

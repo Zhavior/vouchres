@@ -58,6 +58,8 @@ import { classifyParlayHistoryTab } from '../../lib/trustLockSchedule';
 import ParlayOsBadgeRow from '../trust/ParlayOsBadgeRow';
 import ParlayTrustPanel from '../trust/ParlayTrustPanel';
 import ParlayIdentityBadge from '../trust/ParlayIdentityBadge';
+import ParlayIdentityExplainer from '../trust/ParlayIdentityExplainer';
+import ParlayLockCountdownBanner from './os/ParlayLockCountdownBanner';
 import { assessClientParlayIdentity } from '../../lib/parlayIdentity';
 import { deriveLegProgress, deriveSlipProgress } from '../../lib/parlayLegProgress';
 import {
@@ -570,6 +572,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const [stake, setStake]                    = useState(10);
   // One-time responsible agreement per session (Judge 10)
   const [agreedSession, setAgreedSession]   = useState(false);
+  const [identityExplainerOpen, setIdentityExplainerOpen] = useState(false);
 
   const verdict = useMemo(() => computeJudgeVerdict(
     draftLegs.map((l) => ({
@@ -738,7 +741,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
           <div className="space-y-3 mb-4">
             {draftLegs.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2">
-                <ParlayIdentityBadge identity={draftIdentity} />
+                <ParlayIdentityBadge
+                  identity={draftIdentity}
+                  onExplain={() => setIdentityExplainerOpen(true)}
+                />
                 {!draftIdentity.complete ? (
                   <p className="text-[10px] text-amber-200/80 leading-snug">
                     Repair legs missing gamePk or playerId before save or lock.
@@ -805,6 +811,13 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
           onToggle={() => setVerdictOpen((v) => !v)}
         />
       )}
+
+      {identityExplainerOpen ? (
+        <ParlayIdentityExplainer
+          identity={draftIdentity}
+          onClose={() => setIdentityExplainerOpen(false)}
+        />
+      ) : null}
 
       <ParlayTrustLockModal
         open={trustModalOpen}
@@ -1027,6 +1040,21 @@ function MyParlaysPanel({
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <ParlayIdentityBadge identity={identity} />
             </div>
+            <ParlayLockCountdownBanner
+              trustCommittedAt={slip.trustCommittedAt}
+              trustLockAt={slip.trustLockAt}
+              feedLockedAt={slip.feedLockedAt}
+            />
+            {pickId ? (
+              <a
+                href={`/p/${encodeURIComponent(pickId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 mt-1"
+              >
+                View proof page
+              </a>
+            ) : null}
             {slipProgress && (
               <p className="text-[10px] text-cyan-300/80 font-mono mt-1">
                 Live: {slipProgress.label} ({slipProgress.current}/{slipProgress.target})

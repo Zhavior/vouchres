@@ -139,6 +139,7 @@ shareRoutes.get("/share/parlay/:id/card.png", asyncHandler(async (req, res) => {
       authorHandle: parlayProofAuthorLabel(proof).replace(/^@/, ""),
       createdAt: proof.created_at,
       lockedAt: proof.locked_at,
+      lockReason: proof.lock_reason,
     });
 
     const png = await sharp(Buffer.from(svg)).png().toBuffer();

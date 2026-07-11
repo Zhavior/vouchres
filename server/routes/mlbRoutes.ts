@@ -215,4 +215,19 @@ export function registerMlbRoutes(app: Express): void {
       throw upstreamUnavailable("Run environments unavailable.", err);
     }
   }));
+
+  app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchParlayLegProgressBatch } = await import("../services/mlb/parlayLiveProgressService");
+    const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
+    const progress = await fetchParlayLegProgressBatch(
+      legs.map((leg: Record<string, unknown>, index: number) => ({
+        id: String(leg.id ?? `leg-${index}`),
+        gamePk: String(leg.gamePk ?? leg.game_pk ?? ""),
+        playerId: leg.playerId ?? leg.player_id ?? "",
+        marketCode: leg.marketCode ?? leg.market_code ?? null,
+        statTarget: leg.statTarget ?? leg.stat_target ?? 1,
+      })),
+    );
+    return res.json(apiOkFlat(req, { legs: progress }));
+  }));
 }

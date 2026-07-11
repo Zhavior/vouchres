@@ -33,6 +33,9 @@ type ParlayOsState = {
   closeSheet: () => void;
   toggleSheet: () => void;
   setSheetExpanded: (expanded: boolean) => void;
+  proofPickId: string | null;
+  openProofPage: (pickId: string) => void;
+  clearProofPage: () => void;
 };
 
 export const useParlayOsStore = create<ParlayOsState>()((set) => ({
@@ -40,6 +43,7 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
   pickerContext: null,
   sheetOpen: false,
   sheetExpanded: false,
+  proofPickId: null,
 
   openPicker: (ctx) =>
     set({
@@ -72,4 +76,7 @@ export const useParlayOsStore = create<ParlayOsState>()((set) => ({
     })),
 
   setSheetExpanded: (expanded) => set({ sheetExpanded: expanded }),
+
+  openProofPage: (pickId) => set({ proofPickId: pickId }),
+  clearProofPage: () => set({ proofPickId: null }),
 }));

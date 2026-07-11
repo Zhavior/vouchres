@@ -37,6 +37,11 @@ export default function ParlayPropPickerModal({
     if (pickerOpen) setActiveFamily(defaultFamily);
   }, [pickerOpen, defaultFamily]);
 
+  const propOdds = context?.propHint?.odds;
+  const oddsBadge = propOdds != null && Number.isFinite(Number(propOdds))
+    ? { label: String(propOdds), source: "live" as const }
+    : { label: "TBD", source: "tbd" as const };
+
   if (!pickerOpen || !player) return null;
 
   const family = families.find((f) => f.id === activeFamily) ?? families[0];
@@ -69,6 +74,14 @@ export default function ParlayPropPickerModal({
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">ParlayOS</p>
             <h2 className="text-lg font-black text-white truncate">{player.name}</h2>
             <p className="text-xs text-white/45 truncate">{player.team} · {role === "pitcher" ? "Pitcher props" : "Batter props"}</p>
+            <p className="text-[10px] font-mono mt-1">
+              <span className={oddsBadge.source === "live" ? "text-emerald-300" : "text-amber-200/80"}>
+                Odds {oddsBadge.label}
+              </span>
+              <span className="text-white/30 ml-2 uppercase tracking-wide">
+                {oddsBadge.source === "live" ? "· from research" : "· TBD until book price linked"}
+              </span>
+            </p>
           </div>
           <button
             type="button"

@@ -10,9 +10,11 @@ import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
 import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import { draftLegsToUiLegs } from "../../../lib/parlays/draftLegsToUiLegs";
+import { assessSlipOdds } from "../../../lib/parlays/slipOddsPolicy";
 import { assessClientParlayIdentity } from "../../../lib/parlayIdentity";
+import { useParlaySlipLiveProgress, liveProgressMap } from "../../../hooks/useParlaySlipLiveProgress";
+import ParlayIdentityExplainer from "../../trust/ParlayIdentityExplainer";
 import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
-import { computeCombinedOdds } from "../types/parlayHubTypes";
 import { notify } from "../../../lib/appNotifications";
 
 export type ParlayOsLayerProps = {
@@ -35,16 +37,40 @@ export default function ParlayOsLayer({
   const openPicker = useParlayOsStore((s) => s.openPicker);
 
   const [stake, setStake] = useState(10);
+  const [identityExplainerOpen, setIdentityExplainerOpen] = useState(false);
 
   const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
   const slipIdentity = useMemo(
     () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
     [draftLegs],
   );
-  const combined = useMemo(() => computeCombinedOdds(uiLegs), [uiLegs]);
-  const totalOdds = combined?.american ?? "—";
-  const decimal = combined?.decimal ?? null;
-  const potentialPayout = decimal != null ? Math.round(decimal * stake * 100) / 100 : null;
+  const oddsAssessment = useMemo(() => assessSlipOdds(uiLegs), [uiLegs]);
+  const totalOdds = oddsAssessment.canShowCombined ? (oddsAssessment.combined?.american ?? "—") : "TBD";
+  const potentialPayout =
+    oddsAssessment.canShowPayout && oddsAssessment.combined?.decimal != null
+      ? Math.round(oddsAssessment.combined.decimal * stake * 100) / 100
+      : null;
+
+  const liveProgressQuery = useParlaySlipLiveProgress(
+    draftLegs.map((leg) => ({
+      id: leg.id,
+      gamePk: leg.gamePk,
+      playerId: leg.playerId,
+      marketCode: leg.marketCode,
+      statTarget: leg.statTarget != null ? Number(leg.statTarget) : null,
+    })),
+    { enabled: sheetOpen && draftLegs.length > 0 },
+  );
+  const liveProgressByLegId = useMemo(() => {
+    const map = liveProgressMap(liveProgressQuery.data);
+    const out: Record<string, { current: number; target: number; label: string }> = {};
+    map.forEach((value, key) => {
+      if (value.current != null) {
+        out[key] = { current: value.current, target: value.target, label: value.label };
+      }
+    });
+    return out;
+  }, [liveProgressQuery.data]);
 
   const legCount = draftLegs.length;
 
@@ -84,7 +110,12 @@ export default function ParlayOsLayer({
               <Layers3 className="w-4 h-4 text-cyan-400" />
               <span className="text-sm font-black text-white">ParlayOS Slip</span>
               <span className="text-[10px] font-mono text-white/40">{legCount} leg{legCount !== 1 ? "s" : ""}</span>
-              {legCount > 0 ? <ParlayIdentityBadge identity={slipIdentity} /> : null}
+              {legCount > 0 ? (
+                <ParlayIdentityBadge
+                  identity={slipIdentity}
+                  onExplain={() => setIdentityExplainerOpen(true)}
+                />
+              ) : null}
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -120,6 +151,7 @@ export default function ParlayOsLayer({
                 title="Active Slip"
                 subtitle="Add from any player page via +"
                 useProLegCards
+                liveProgressByLegId={liveProgressByLegId}
               />
               <div className="mt-3 flex gap-2">
                 <button
@@ -145,6 +177,13 @@ export default function ParlayOsLayer({
             </div>
           )}
         </div>
+      ) : null}
+
+      {identityExplainerOpen ? (
+        <ParlayIdentityExplainer
+          identity={slipIdentity}
+          onClose={() => setIdentityExplainerOpen(false)}
+        />
       ) : null}
     </>
   );
