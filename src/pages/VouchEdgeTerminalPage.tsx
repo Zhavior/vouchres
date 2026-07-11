@@ -316,8 +316,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
           </header>
 
           <div className="space-y-8 sm:space-y-16 md:space-y-20">
-            <LandingLiveGamesCenter eager />
-
             <section className="ve-terminal-hero mx-auto flex w-full max-w-none flex-col items-stretch space-y-5 text-center sm:max-w-5xl sm:items-center sm:space-y-8">
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
@@ -411,6 +409,8 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 </button>
               </div>
             </section>
+
+            <LandingLiveGamesCenter />
 
             {/* 4 Judges */}
             <DeferredLandingJudgesDeck />
