@@ -11,6 +11,15 @@ export interface SubscriberAnnouncement {
   authorHandle: string;
 }
 
+export interface SubscriberChatMessage {
+  id: string;
+  body: string;
+  createdAt: string;
+  authorName: string;
+  authorHandle: string;
+  authorId: string;
+}
+
 export type SubscriberChannelKind = "owner" | "capper" | "profile";
 
 export interface SubscriberChannel {
@@ -74,6 +83,25 @@ function mapApiPostToAnnouncement(post: Record<string, any>): SubscriberAnnounce
   };
 }
 
+function mapApiMessage(row: Record<string, any>): SubscriberChatMessage {
+  const author = row.author ?? {};
+  return {
+    id: String(row.id),
+    body: String(row.body ?? "").trim(),
+    createdAt: String(row.created_at ?? new Date().toISOString()),
+    authorName: String(author.display_name ?? author.username ?? "Member"),
+    authorHandle: String(author.handle ?? author.username ?? author.id ?? "member"),
+    authorId: String(author.id ?? row.author_id ?? ""),
+  };
+}
+
+function channelApiPath(channel: SubscriberChannel): { kind: string; targetId: string } {
+  return {
+    kind: channel.kind,
+    targetId: channel.targetId,
+  };
+}
+
 export function useSubscriberHubData(input: {
   userId: string | null;
   displayName: string;
@@ -89,6 +117,8 @@ export function useSubscriberHubData(input: {
   const [parlaysLoading, setParlaysLoading] = useState(false);
   const [announcements, setAnnouncements] = useState<SubscriberAnnouncement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<SubscriberChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const ownerChannelId = input.userId ? channelKey("owner", input.userId) : null;
 
@@ -221,11 +251,11 @@ export function useSubscriberHubData(input: {
       setAnnouncements([]);
       return;
     }
-    if (channel.kind === "capper") {
+    if (channel.kind === "profile" && !channel.isFollowing) {
       setAnnouncements([]);
       return;
     }
-    if (channel.kind === "profile" && !channel.isFollowing) {
+    if (channel.kind === "capper" && !channel.isFollowing) {
       setAnnouncements([]);
       return;
     }
@@ -234,7 +264,9 @@ export function useSubscriberHubData(input: {
     try {
       const path = channel.kind === "owner"
         ? "/api/subscriber/me/posts"
-        : `/api/subscriber/profiles/${encodeURIComponent(channel.targetId)}/posts`;
+        : channel.kind === "capper"
+          ? `/api/subscriber/cappers/${encodeURIComponent(channel.targetId)}/posts`
+          : `/api/subscriber/profiles/${encodeURIComponent(channel.targetId)}/posts`;
       const data = await apiClient.get<{ posts?: Record<string, any>[] }>(path);
       setAnnouncements((data.posts ?? []).map(mapApiPostToAnnouncement).filter((row) => row.body));
     } catch (err) {
@@ -244,6 +276,51 @@ export function useSubscriberHubData(input: {
       setAnnouncementsLoading(false);
     }
   }, [input.userId]);
+
+  const loadChannelMessages = useCallback(async (channel: SubscriberChannel | undefined) => {
+    if (!channel || !input.userId) {
+      setChatMessages([]);
+      return;
+    }
+    if (channel.kind === "profile" && !channel.isFollowing) {
+      setChatMessages([]);
+      return;
+    }
+    if (channel.kind === "capper" && !channel.isFollowing) {
+      setChatMessages([]);
+      return;
+    }
+
+    setChatLoading(true);
+    try {
+      const { kind, targetId } = channelApiPath(channel);
+      const data = await apiClient.get<{ messages?: Record<string, any>[] }>(
+        `/api/subscriber/channels/${encodeURIComponent(kind)}/${encodeURIComponent(targetId)}/messages`,
+      );
+      setChatMessages((data.messages ?? []).map(mapApiMessage).filter((row) => row.body));
+    } catch (err) {
+      console.error("[SubscriberHub] chat load failed", err);
+      setChatMessages([]);
+    } finally {
+      setChatLoading(false);
+    }
+  }, [input.userId]);
+
+  const sendChannelMessage = useCallback(async (channel: SubscriberChannel | undefined, body: string) => {
+    if (!channel || !input.userId) {
+      throw new Error("Select a channel to chat.");
+    }
+    const trimmed = body.trim();
+    if (!trimmed) {
+      throw new Error("Message cannot be empty.");
+    }
+    const { kind, targetId } = channelApiPath(channel);
+    await apiClient.post(
+      `/api/subscriber/channels/${encodeURIComponent(kind)}/${encodeURIComponent(targetId)}/messages`,
+      { body: trimmed },
+    );
+    await loadChannelMessages(channel);
+  }, [input.userId, loadChannelMessages]);
 
   const publishAnnouncement = useCallback(async (body: string) => {
     if (!input.userId) {
@@ -289,8 +366,12 @@ export function useSubscriberHubData(input: {
     parlaysLoading,
     announcements,
     announcementsLoading,
+    chatMessages,
+    chatLoading,
     loadChannelParlays,
     loadChannelAnnouncements,
+    loadChannelMessages,
+    sendChannelMessage,
     publishAnnouncement,
     followChannel,
     unfollowChannel,

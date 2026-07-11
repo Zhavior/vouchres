@@ -69,6 +69,7 @@ export default function ParlayTrustPanel({
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [identityComplete, setIdentityComplete] = useState<boolean | null>(null);
   const [missingLegs, setMissingLegs] = useState<number[]>([]);
+  const [proofHash, setProofHash] = useState<string | null>(null);
 
   const loadTrust = useCallback(async () => {
     if (!pickId) return;
@@ -82,7 +83,7 @@ export default function ParlayTrustPanel({
           updated_at?: string | null;
           locked_at?: string | null;
         }>(`/api/parlays/${encodeURIComponent(pickId)}/audit`),
-        apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] } } }>(
+        apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] }; proof_hash?: string | null } }>(
           `/api/parlays/${encodeURIComponent(pickId)}`,
         ).catch(() => null),
       ]);
@@ -91,6 +92,7 @@ export default function ParlayTrustPanel({
       setCreatedAt(audit.created_at ?? null);
       setUpdatedAt(audit.updated_at ?? null);
       setLockedAt(audit.locked_at ?? null);
+      setProofHash(parlayPayload?.parlay?.proof_hash ?? null);
 
       const identity = parlayPayload?.parlay?.identity;
       if (identity) {
@@ -186,6 +188,13 @@ export default function ParlayTrustPanel({
                   <div className="text-white/80">{lockLabel || (lockedAt ? formatTimestamp(lockedAt) : "Not locked")}</div>
                 </div>
               </div>
+
+              {proofHash && (
+                <div className="rounded-lg border border-cyan-900/40 bg-cyan-950/15 p-2">
+                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mb-1">Proof hash (SHA-256)</div>
+                  <div className="text-[10px] font-mono text-cyan-200 break-all">{proofHash}</div>
+                </div>
+              )}
 
               {identityComplete === false && !lockedAt && (
                 <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

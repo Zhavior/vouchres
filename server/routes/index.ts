@@ -230,6 +230,10 @@ export function registerApiRoutes(app: Express): void {
       const authorLabel = escapeHtml(parlayProofAuthorLabel(proof));
       const createdLabel = escapeHtml(formatProofTimestamp(proof.created_at));
       const lockedLabel = proof.locked_at ? escapeHtml(formatProofTimestamp(proof.locked_at)) : null;
+      const proofHashLabel = proof.proof_hash ? escapeHtml(proof.proof_hash) : null;
+      const trustTimeline = (proof.trust_events ?? [])
+        .map((event) => `<li><strong>${escapeHtml(event.label)}</strong> · ${escapeHtml(formatProofTimestamp(event.created_at))}</li>`)
+        .join("");
       const titleText = escapeHtml(proof.explanation || proof.selection || `${proof.legs.length}-leg parlay`);
       const title = `${titleText} — VouchEdge Parlay Proof`;
       const description = escapeHtml(
@@ -255,13 +259,15 @@ export function registerApiRoutes(app: Express): void {
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${imageUrl}">
-<style>body{font-family:Inter,Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:16px}img{max-width:600px;width:100%;border-radius:16px}a{color:#22d3ee;font-weight:700;text-decoration:none}.meta{font-size:13px;color:#9aa8bd;text-align:center;max-width:640px;line-height:1.5}ul{max-width:640px;width:100%;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}li{background:#0b1220;border:1px solid #164e63;border-radius:12px;padding:12px 14px;font-size:14px}</style>
+<style>body{font-family:Inter,Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:16px}img{max-width:600px;width:100%;border-radius:16px}a{color:#22d3ee;font-weight:700;text-decoration:none}.meta{font-size:13px;color:#9aa8bd;text-align:center;max-width:640px;line-height:1.5}.hash{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;color:#67e8f9;background:#0b1220;border:1px solid #164e63;border-radius:10px;padding:10px 12px;max-width:640px;width:100%}ul{max-width:640px;width:100%;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}li{background:#0b1220;border:1px solid #164e63;border-radius:12px;padding:12px 14px;font-size:14px}.timeline li{background:#071018;border-color:#1e293b;font-size:12px}</style>
 </head>
 <body>
 <img src="${imageUrl}" alt="${titleText}">
 <p>${description}</p>
 <p class="meta">Authored by <strong>${authorLabel}</strong> · Recorded ${createdLabel}${lockedLabel ? ` · <strong>Locked at share</strong> ${lockedLabel}` : ""}</p>
+${proofHashLabel ? `<p class="hash"><strong>Proof hash (SHA-256):</strong><br>${proofHashLabel}</p>` : ""}
 <ul>${proof.legs.map((leg, index) => `<li><strong>Leg ${index + 1}:</strong> ${escapeHtml(String(leg.selection || leg.market || "Prop"))}</li>`).join("")}</ul>
+${trustTimeline ? `<ul class="timeline">${trustTimeline}</ul>` : ""}
 <a href="${baseUrl}/">Open in VouchEdge →</a>
 <p style="font-size:12px;color:#9aa8bd">Probability-based. No guarantees. Research and entertainment only.</p>
 </body>

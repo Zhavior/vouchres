@@ -2,9 +2,12 @@ import { getSupabaseAdmin } from "../../middleware/auth";
 import {
   findLegsForPick,
   findPublicParlayById,
+  updatePickProofHash,
   type ParlayLegRow,
   type ParlayRow,
 } from "../../repositories/parlayRepository";
+import { computeParlayProofHash } from "../../lib/parlayProofHash";
+import { listPublicTrustEventsForPick, type PublicTrustEvent } from "../trust/publicPickAuditService";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -31,10 +34,12 @@ export interface PublicParlayProof {
   created_at: string;
   updated_at: string;
   locked_at: string | null;
+  proof_hash: string | null;
   legs: ParlayLegRow[];
   author: PublicParlayAuthor | null;
   capper: { id: string; display_name: string } | null;
   proof_url: string;
+  trust_events: PublicTrustEvent[];
 }
 
 async function loadProfileAuthor(userId: string): Promise<PublicParlayAuthor | null> {
@@ -71,9 +76,23 @@ export async function getPublicParlayProof(id: string, baseUrl?: string): Promis
   const userId = parlay.user_id ? String(parlay.user_id) : null;
   const capperId = parlay.capper_id ? String(parlay.capper_id) : null;
 
-  const [author, capper] = await Promise.all([
+  let proofHash = parlay.proof_hash ? String(parlay.proof_hash) : null;
+  if (!proofHash && parlay.locked_at) {
+    proofHash = computeParlayProofHash({
+      id: String(parlay.id),
+      created_at: parlay.created_at,
+      locked_at: parlay.locked_at,
+      odds_decimal: parlay.odds_decimal,
+      stake_units: parlay.stake_units,
+      legs,
+    });
+    await updatePickProofHash(id, proofHash).catch(() => undefined);
+  }
+
+  const [author, capper, trustEvents] = await Promise.all([
     userId ? loadProfileAuthor(userId) : Promise.resolve(null),
     capperId ? loadCapperAuthor(capperId) : Promise.resolve(null),
+    listPublicTrustEventsForPick(id),
   ]);
 
   const host = baseUrl?.replace(/\/$/, "") ?? "";
@@ -92,10 +111,12 @@ export async function getPublicParlayProof(id: string, baseUrl?: string): Promis
     created_at: String(parlay.created_at),
     updated_at: String(parlay.updated_at ?? parlay.created_at),
     locked_at: parlay.locked_at ? String(parlay.locked_at) : null,
+    proof_hash: proofHash,
     legs,
     author,
     capper,
     proof_url: host ? `${host}/p/${encodeURIComponent(id)}` : `/p/${encodeURIComponent(id)}`,
+    trust_events: trustEvents,
   };
 }
 

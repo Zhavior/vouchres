@@ -90,8 +90,12 @@ export default function SubscriberHub({
     parlaysLoading,
     announcements,
     announcementsLoading,
+    chatMessages,
+    chatLoading,
     loadChannelParlays,
     loadChannelAnnouncements,
+    loadChannelMessages,
+    sendChannelMessage,
     publishAnnouncement,
     followChannel,
   } = useSubscriberHubData({
@@ -111,6 +115,8 @@ export default function SubscriberHub({
   const [parlayReactions, setParlayReactions] = useState<Record<string, Record<string, number>>>({});
   const [announcementDraft, setAnnouncementDraft] = useState('');
   const [announcementPublishing, setAnnouncementPublishing] = useState(false);
+  const [chatDraft, setChatDraft] = useState('');
+  const [chatSending, setChatSending] = useState(false);
   const [subPlans] = useState([
     { months: 1, name: 'Follow', price: 0, savings: 'Free during beta', note: 'Follow creators to unlock shared parlays.' },
   ]);
@@ -124,8 +130,9 @@ export default function SubscriberHub({
     if (selectedChannel) {
       void loadChannelParlays(selectedChannel);
       void loadChannelAnnouncements(selectedChannel);
+      void loadChannelMessages(selectedChannel);
     }
-  }, [selectedChannel, loadChannelParlays, loadChannelAnnouncements]);
+  }, [selectedChannel, loadChannelParlays, loadChannelAnnouncements, loadChannelMessages]);
 
   const handleSubscribe = async (channel: SubscriberChannel) => {
     try {
@@ -154,6 +161,20 @@ export default function SubscriberHub({
     alert('Paid subscription tiers are not live yet. Follow is free during beta.');
   };
 
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedChannel || !chatDraft.trim()) return;
+    setChatSending(true);
+    try {
+      await sendChannelMessage(selectedChannel, chatDraft);
+      setChatDraft('');
+    } catch (err: any) {
+      alert(err?.message ?? 'Failed to send message.');
+    } finally {
+      setChatSending(false);
+    }
+  };
+
   const handlePublishAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!announcementDraft.trim()) return;
@@ -177,7 +198,7 @@ export default function SubscriberHub({
       {/* Demo banner */}
       <div className="flex items-center gap-2.5 rounded-xl border border-vouch-amber/25 bg-vouch-amber/8 p-2.5 text-[11px] text-vouch-amber/85">
         <span className={`${Z8_LABEL} rounded border border-vouch-cyan/40 bg-vouch-cyan/15 px-1.5 py-0.5 text-vouch-cyan`}>Live</span>
-        Follow cappers to unlock shared parlay picks. Announcements are live for creator clubs; chat and paid tiers are coming soon.
+        Follow cappers to unlock shared parlay picks. Club chat and announcements are live; paid tiers remain in beta.
       </div>
 
       {/* Page Header */}
@@ -228,7 +249,7 @@ export default function SubscriberHub({
               How VouchEdge Subscriptions Work
             </h3>
             <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-              Follow creators to unlock their shared parlay picks. Subscriber chat and paid tiers are not live yet.
+              Follow creators to unlock their shared parlay picks. Club chat and announcements are live; paid tiers remain in beta.
             </p>
           </div>
 
@@ -420,12 +441,53 @@ export default function SubscriberHub({
               
               {/* RENDERING CHATROOM */}
               {chatInnerTab === 'chat' && (
-                <div className="bg-ve-storm/35 border border-slate-850 rounded-2xl flex flex-col justify-center h-[520px] overflow-hidden p-8 text-center" id="tab-chatroom">
-                  <MessageSquare className="w-10 h-10 text-white/35 mx-auto mb-3" />
-                  <h4 className="text-sm font-black uppercase tracking-wider text-white/70">Subscriber chat coming soon</h4>
-                  <p className="mt-2 text-xs text-white/45 max-w-md mx-auto">
-                    Private creator chat is not live yet. Follow creators and use the Parlays tab for shared picks you are authorized to view.
-                  </p>
+                <div className="bg-ve-storm/35 border border-slate-850 rounded-2xl flex flex-col h-[520px] overflow-hidden" id="tab-chatroom">
+                  <div className="px-4 py-3 border-b border-slate-850 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-vouch-cyan" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-white/70">Subscriber Club Chat</h4>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 text-left">
+                    {chatLoading ? (
+                      <p className="text-center text-xs text-white/40 font-mono uppercase py-8">Loading chat…</p>
+                    ) : chatMessages.length === 0 ? (
+                      <p className="text-center text-xs text-white/40 font-mono uppercase py-8">
+                        No messages yet. Follow this club and say hello.
+                      </p>
+                    ) : (
+                      chatMessages.map((message) => (
+                        <div key={message.id} className="rounded-xl border border-slate-850 bg-black/20 p-3">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-[10px] font-mono font-black uppercase text-vouch-cyan">
+                              @{message.authorHandle}
+                            </span>
+                            <time className="text-[10px] text-white/30 font-mono">
+                              {new Date(message.createdAt).toLocaleString()}
+                            </time>
+                          </div>
+                          <p className="text-sm text-white/85 whitespace-pre-wrap">{message.body}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <form onSubmit={handleSendChat} className="border-t border-slate-850 p-3 flex gap-2">
+                    <input
+                      type="text"
+                      value={chatDraft}
+                      onChange={(e) => setChatDraft(e.target.value)}
+                      placeholder={selectedChannel?.isFollowing || selectedChannel?.kind === 'owner' ? 'Message the club…' : 'Follow to join chat'}
+                      disabled={!selectedChannel || (selectedChannel.kind !== 'owner' && !selectedChannel.isFollowing) || chatSending}
+                      className="flex-1 bg-obsidian-900 border border-slate-850 rounded-lg px-3 py-2 text-white/90 text-xs placeholder-slate-550 outline-none disabled:opacity-60"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!selectedChannel || (selectedChannel.kind !== 'owner' && !selectedChannel.isFollowing) || chatSending || !chatDraft.trim()}
+                      className="px-3 py-2 bg-indigo-650 text-white/90 rounded-lg disabled:opacity-60"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
                 </div>
               )}
 

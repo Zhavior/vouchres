@@ -169,6 +169,23 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
   }));
 }));
 
+parlayCronRoutes.get("/cron/parlays/repair-identity", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  assertCronAuthorized(req);
+
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
+  const result = await repairLegacyParlayIdentityForSync({
+    dryRun,
+    limit,
+    externalProvider: "repair_identity",
+  });
+
+  return res.json(apiOkFlat(req, {
+    ...result,
+    checkedAt: new Date().toISOString(),
+  }));
+}));
+
 parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 

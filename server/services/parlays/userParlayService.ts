@@ -1,5 +1,6 @@
 import { AppError } from "../../errors/AppError";
 import { isPickLocked, PARLAY_LOCKED_MESSAGE } from "../../lib/parlayLockPolicy";
+import { computeParlayProofHash } from "../../lib/parlayProofHash";
 import {
   findLegsForPick,
   findLegsForPicks,
@@ -7,6 +8,7 @@ import {
   hideUserParlay as hideUserParlayRow,
   listVisibleUserParlayRows,
   lockPickForFeedShare,
+  updatePickProofHash,
   updateUserParlay,
   type ParlayLegRow,
   type ParlayRow,
@@ -51,7 +53,20 @@ export async function getUserParlay(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
 
-  const legs = await findLegsForPick(input.parlayId);
+  let legs = await findLegsForPick(input.parlayId);
+  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
+  if (!identity.complete && !isPickLocked(parlay)) {
+    const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
+    await repairParlayIdentityForPick({
+      pickId: input.parlayId,
+      userId: input.userId,
+      externalProvider: "auto_repair_on_read",
+    }).catch((err) => {
+      console.warn("[getUserParlay] auto identity repair failed", (err as Error)?.message);
+    });
+    legs = await findLegsForPick(input.parlayId);
+  }
+
   return enrichParlayForDisplay(parlay, legs);
 }
 
@@ -104,6 +119,21 @@ export async function lockParlayOnFeedShare(input: {
   });
 
   if (!parlay) return null;
+
+  const legs = await findLegsForPick(input.parlayId);
+  const effectiveLockedAt = String(parlay.locked_at ?? lockedAt);
+  const proofHash = computeParlayProofHash({
+    id: String(parlay.id),
+    created_at: parlay.created_at,
+    locked_at: effectiveLockedAt,
+    odds_decimal: parlay.odds_decimal,
+    stake_units: parlay.stake_units,
+    legs,
+  });
+  await updatePickProofHash(input.parlayId, proofHash).catch((err) => {
+    console.warn("[lockParlayOnFeedShare] proof hash failed", (err as Error)?.message);
+  });
+  parlay.proof_hash = proofHash;
 
   await insertPickAuditLog({
     pickId: input.parlayId,

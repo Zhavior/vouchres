@@ -100,3 +100,19 @@ parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingL
     checkedAt: new Date().toISOString(),
   }));
 }));
+
+parlayStaffRoutes.post("/parlays/repair-identity", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const dryRun = String((req.body as { dryRun?: boolean } | undefined)?.dryRun ?? req.query.dryRun ?? "false") === "true";
+  const limit = boundedInt((req.body as { limit?: number } | undefined)?.limit ?? req.query.limit, "limit", 100, 1, 250);
+  const result = await repairLegacyParlayIdentityForSync({
+    dryRun,
+    limit,
+    externalProvider: "staff_repair_identity",
+  });
+
+  return res.json(apiOkFlat(req, {
+    mode: "repair_identity",
+    ...result,
+    checkedAt: new Date().toISOString(),
+  }));
+}));

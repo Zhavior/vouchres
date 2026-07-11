@@ -239,6 +239,18 @@ export async function lockPickForFeedShare(input: {
   return existing ?? null;
 }
 
+export async function updatePickProofHash(pickId: string, proofHash: string): Promise<void> {
+  const supabaseAdmin = await admin();
+  const { error } = await supabaseAdmin
+    .from("picks")
+    .update({ proof_hash: proofHash })
+    .eq("id", pickId);
+
+  if (error && error.code !== "42703" && error.code !== "PGRST204") {
+    throw error;
+  }
+}
+
 export async function hideUserParlay(input: {
   userId: string;
   parlayId: string;

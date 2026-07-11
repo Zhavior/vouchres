@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { Response } from "express";
+import { z } from "zod";
 import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
@@ -298,4 +299,141 @@ subscriberRoutes.get("/subscriber/me/posts", requireAuth, asyncHandler(async (re
   const posts = await loadProfileAnnouncementPosts(userId, limit);
 
   return res.json(apiOkFlat(req, { posts }));
+}));
+
+type SubscriberChannelKind = "owner" | "capper" | "profile";
+
+async function assertCanAccessSubscriberChannel(userId: string, kind: SubscriberChannelKind, targetId: string) {
+  if (kind === "capper") {
+    await assertFollowsCapper(userId, targetId);
+    return;
+  }
+  await assertFollowsProfile(userId, targetId);
+}
+
+async function loadCapperAnnouncementPosts(capperId: string, limit: number) {
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select("id, explanation, selection, created_at, status")
+    .eq("capper_id", capperId)
+    .eq("leg_type", "parlay")
+    .is("user_hidden_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to load capper announcements.",
+      cause: error,
+    });
+  }
+
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    id: String(row.id),
+    body: `New shared slip: ${String(row.explanation || row.selection || "Premium parlay").split("\n")[0]}`,
+    created_at: row.created_at,
+    view_count: 0,
+    pick_id: row.id,
+    kind: "capper_pick",
+    status: row.status,
+  }));
+}
+
+subscriberRoutes.get("/subscriber/cappers/:id/posts", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const userId = req.user!.id;
+  const capperId = req.params.id;
+  await assertFollowsCapper(userId, capperId);
+
+  const limit = Math.min(Number(req.query.limit ?? 20), 50);
+  const posts = await loadCapperAnnouncementPosts(capperId, limit);
+
+  return res.json(apiOkFlat(req, { posts }));
+}));
+
+const ChannelParamsSchema = z.object({
+  kind: z.enum(["owner", "capper", "profile"]),
+  targetId: z.string().min(1),
+});
+
+const ChannelMessageSchema = z.object({
+  body: z.string().trim().min(1).max(2000),
+});
+
+subscriberRoutes.get("/subscriber/channels/:kind/:targetId/messages", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const userId = req.user!.id;
+  const params = ChannelParamsSchema.parse({
+    kind: req.params.kind,
+    targetId: req.params.targetId,
+  });
+  await assertCanAccessSubscriberChannel(userId, params.kind, params.targetId);
+
+  const limit = Math.min(Number(req.query.limit ?? 50), 100);
+  const { data, error } = await supabaseAdmin
+    .from("subscriber_channel_messages")
+    .select(`
+      id, channel_kind, channel_target_id, body, created_at,
+      author:profiles!subscriber_channel_messages_author_id_fkey(id, username, display_name, avatar_url, handle)
+    `)
+    .eq("channel_kind", params.kind)
+    .eq("channel_target_id", params.targetId)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return res.json(apiOkFlat(req, { messages: [] }));
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to load subscriber chat.",
+      cause: error,
+    });
+  }
+
+  return res.json(apiOkFlat(req, { messages: data ?? [] }));
+}));
+
+subscriberRoutes.post("/subscriber/channels/:kind/:targetId/messages", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const userId = req.user!.id;
+  const params = ChannelParamsSchema.parse({
+    kind: req.params.kind,
+    targetId: req.params.targetId,
+  });
+  const { body } = ChannelMessageSchema.parse(req.body);
+  await assertCanAccessSubscriberChannel(userId, params.kind, params.targetId);
+
+  const { data, error } = await supabaseAdmin
+    .from("subscriber_channel_messages")
+    .insert({
+      channel_kind: params.kind,
+      channel_target_id: params.targetId,
+      author_id: userId,
+      body,
+    })
+    .select(`
+      id, channel_kind, channel_target_id, body, created_at,
+      author:profiles!subscriber_channel_messages_author_id_fkey(id, username, display_name, avatar_url, handle)
+    `)
+    .single();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      throw new AppError({
+        status: 503,
+        code: "service_unavailable",
+        message: "Subscriber chat is not available until migration 0019 is applied.",
+      });
+    }
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to send subscriber chat message.",
+      cause: error,
+    });
+  }
+
+  return res.status(201).json(apiOkFlat(req, { message: data }));
 }));
