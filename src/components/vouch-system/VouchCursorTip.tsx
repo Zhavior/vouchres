@@ -79,7 +79,7 @@ export default function VouchCursorTip({ title, body, children }: VouchCursorTip
       {active && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="ve-vouch-cursor-tip pointer-events-none fixed z-[120] max-w-[16rem] rounded-lg border border-white/15 bg-[#0c111b]/95 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md"
+              className="ve-vouch-cursor-tip pointer-events-none fixed z-[120] max-w-[16rem] rounded-lg border border-white/15 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md"
               style={tipStyle}
               role="tooltip"
             >
