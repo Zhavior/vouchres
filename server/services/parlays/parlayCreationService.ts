@@ -80,6 +80,7 @@ function normalizeSource(source: unknown, aiGenerated: boolean): string {
   if (aiGenerated || raw === "vai_ai_made_parlay" || raw === "vai_smart_pick") return "ai_pick";
   if (raw === "command_center") return "command_center";
   if (raw === "hr_board" || raw === "player_research" || raw === "manual_builder") return "manual";
+  if (raw === "tailed_parlay") return "manual";
   return "manual";
 }
 

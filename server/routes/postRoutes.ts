@@ -14,6 +14,7 @@ import {
 } from "../lib/postDeletePolicy";
 import { setPickVisibilityPublic } from "../repositories/parlayRepository";
 import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
+import { notifyFollowersOfAuthorPost } from "../services/social/followService";
 
 async function denyUnlessOwns(
   userId: string,
@@ -225,6 +226,15 @@ postRoutes.post(
         return setPickVisibilityPublic(pick_id, req.user!.id);
       });
     }
+
+    notifyFollowersOfAuthorPost({
+      authorId: req.user!.id,
+      postId: String(data.id),
+      body: postBody,
+      pickId: pick_id ?? null,
+    }).catch((err) => {
+      console.warn("[posts] follower notifications failed", (err as Error)?.message);
+    });
 
     return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),

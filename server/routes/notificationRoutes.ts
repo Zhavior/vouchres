@@ -9,15 +9,40 @@ import type { RequestWithContext } from "../middleware/requestContext";
 import { assertUserOwnsResource } from "../middleware/ownership";
 import {
   deletePushSubscription,
+  getNotificationPreferences,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
   processHomeRunEvents,
   savePushSubscription,
+  updateNotificationPreferences,
 } from "../services/notifications/notificationService";
 import { getTodayHomeRuns } from "../services/mlb/hrFeedService";
 
 export const notificationRoutes = Router();
+
+notificationRoutes.get("/notification-preferences", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const prefs = await getNotificationPreferences(req.user!.id);
+  return res.json(apiOkFlat(req, { preferences: prefs }));
+}));
+
+notificationRoutes.patch("/notification-preferences", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body ?? {};
+  const patch: Record<string, boolean> = {};
+  for (const key of [
+    "in_app_enabled",
+    "hr_alerts_enabled",
+    "parlay_alerts_enabled",
+    "follow_alerts_enabled",
+    "tail_alerts_enabled",
+    "browser_push_enabled",
+  ] as const) {
+    if (typeof body[key] === "boolean") patch[key] = body[key];
+  }
+
+  const prefs = await updateNotificationPreferences(req.user!.id, patch);
+  return res.json(apiOkFlat(req, { preferences: prefs }));
+}));
 
 notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();

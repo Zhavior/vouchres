@@ -6,6 +6,7 @@ import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFe
 import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
+import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
 import '../index.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
@@ -71,7 +72,9 @@ export default function AuthenticatedApp({ navigation }: { navigation: Navigatio
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthenticatedAppContent navigation={navigation} />
+      <SocialGraphProvider>
+        <AuthenticatedAppContent navigation={navigation} />
+      </SocialGraphProvider>
     </QueryClientProvider>
   );
 }

@@ -17,6 +17,7 @@ import {
   finalizeParlayTrustLock,
 } from "../services/parlays/userParlayService";
 import { saveUserParlay } from "../services/parlays/parlayCreationService";
+import { tailParlayForUser } from "../services/social/parlayTailService";
 import type { ListParlaysQuery, SaveMeParlayInput, UpdateParlayInput } from "../validators/parlaySchemas";
 
 type ParlayReq = AuthedRequest & RequestWithContext;
@@ -136,6 +137,16 @@ export const repairParlayIdentityHandler = asyncHandler(async (req: ParlayReq, r
     parlayId: req.params.id,
   });
   return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
+});
+
+export const tailParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
+  const sourcePostId = typeof req.body?.source_post_id === "string" ? req.body.source_post_id : null;
+  const result = await tailParlayForUser({
+    userId: req.user!.id,
+    sourcePickId: req.params.id,
+    sourcePostId,
+  });
+  return res.status(201).json(apiOkFlat(req, result as unknown as Record<string, unknown>));
 });
 
 export const hideParlayHandler = asyncHandler(async (req: ParlayReq, res: Response) => {
