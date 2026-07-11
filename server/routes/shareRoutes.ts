@@ -11,7 +11,9 @@ import {
   renderHrShareCardSvg,
 } from "../services/share/hrShareCard";
 import { renderVouchShareCardSvg, VOUCH_SHARE_CARD_HEADERS } from "../services/share/vouchShareCard";
+import { renderParlayShareCardSvg, PARLAY_SHARE_CARD_HEADERS } from "../services/share/parlayShareCard";
 import { getPublicVouch } from "../services/persistence/vouchService";
+import { getPublicParlayProof, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 
 export const shareRoutes = Router();
 
@@ -107,6 +109,47 @@ shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
         message: err?.message ?? "Unknown error",
         route: "/api/share/hr-card",
       },
+      cause: error,
+    });
+  }
+}));
+
+/**
+ * GET /api/share/parlay/:id/card.png
+ * Public share-card image for a parlay proof at /p/:id.
+ */
+shareRoutes.get("/share/parlay/:id/card.png", asyncHandler(async (req, res) => {
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const proof = await getPublicParlayProof(req.params.id, baseUrl);
+  if (!proof) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Parlay not found.",
+      details: { error: "parlay_not_found" },
+    });
+  }
+
+  try {
+    const svg = renderParlayShareCardSvg({
+      title: proof.explanation || proof.selection || `${proof.legs.length}-leg parlay`,
+      legCount: proof.legs.length,
+      status: proof.status,
+      oddsDecimal: proof.odds_decimal,
+      authorHandle: parlayProofAuthorLabel(proof).replace(/^@/, ""),
+      createdAt: proof.created_at,
+      lockedAt: proof.locked_at,
+    });
+
+    const png = await sharp(Buffer.from(svg)).png().toBuffer();
+    Object.entries(PARLAY_SHARE_CARD_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
+    return res.status(200).send(png);
+  } catch (error) {
+    console.error("[share] parlay card render failed", error);
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to render parlay share card.",
       cause: error,
     });
   }

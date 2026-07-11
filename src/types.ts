@@ -69,6 +69,8 @@ export interface Parlay {
   lockAt?: string;
   /** Marks that a "locked / moved to Live" notification was already sent. */
   lockNotified?: boolean;
+  /** ISO time this parlay became immutable after feed share. */
+  feedLockedAt?: string;
   /** Backend pick id after /api/parlays accepts this slip. */
   backendPickId?: string;
   /** Whether the backend knows about this slip yet. */

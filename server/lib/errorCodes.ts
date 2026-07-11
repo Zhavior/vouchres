@@ -9,6 +9,7 @@ export const API_ERROR_CODES = {
   forbidden: 403,
   entitlement_required: 403,
   parlay_post_locked: 403,
+  parlay_locked: 403,
   not_found: 404,
   gone: 410,
   conflict: 409,

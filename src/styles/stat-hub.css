@@ -3,6 +3,9 @@
 .ve-stat-hub-page {
   --ve-stat-panel: #0a0e14;
   --ve-stat-panel-raised: #0d1219;
+  --ve-stat-panel-muted: #111820;
+  --ve-stat-avatar: #151b24;
+  --ve-stat-tooltip: #0c111b;
   --ve-stat-border: rgba(255, 255, 255, 0.1);
 }
 

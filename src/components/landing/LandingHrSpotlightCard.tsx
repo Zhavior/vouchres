@@ -69,8 +69,8 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
   const topReason = player.reasons?.[0];
 
   return (
-    <article className="ve-landing-hr-card overflow-hidden rounded-xl border border-white/12 bg-[#0a0e14] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-      <div className="relative h-28 overflow-hidden border-b border-white/8 bg-[#111820]">
+    <article className="ve-landing-hr-card overflow-hidden rounded-xl border border-white/12 bg-obsidian-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+      <div className="relative h-28 overflow-hidden border-b border-white/8 bg-obsidian-700">
         {player.headshotUrl && !imgError ? (
           <img
             src={player.headshotUrl}
@@ -83,7 +83,7 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
             className="ve-landing-hr-headshot absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[#151b24] font-mono text-2xl font-black text-white/35">
+          <div className="flex h-full w-full items-center justify-center bg-obsidian-600 font-mono text-2xl font-black text-white/35">
             {initials(player.playerName)}
           </div>
         )}
@@ -147,7 +147,7 @@ export default function LandingHrSpotlightCard({ player }: { player: HrWatchRow 
           </div>
         )}
 
-        <div className="rounded-lg border border-white/10 bg-[#0d1219] p-2.5">
+        <div className="rounded-lg border border-white/10 bg-obsidian-700 p-2.5">
           <div className="flex items-center justify-between gap-2">
             <p className={`${Z8_LABEL} text-[9px] text-white/45`}>Vouch System</p>
             <span className="font-mono text-[8px] uppercase tracking-wider text-white/30">Graded ledger</span>

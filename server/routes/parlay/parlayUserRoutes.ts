@@ -13,9 +13,11 @@ import { getGrader, settleParlay, type GameData, type GradableLeg, type LegOutco
 import { getFeedComposerOptions } from "../../services/feed/composerOptionsService";
 import {
   getParlayHandler,
+  getParlayAuditHandler,
   hideParlayHandler,
   listLegacyParlaysHandler,
   listMyParlaysHandler,
+  repairParlayIdentityHandler,
   saveMeParlayHandler,
   updateParlayHandler,
 } from "../../controllers/parlayController";
@@ -306,6 +308,20 @@ parlayUserRoutes.post(
   requireAuth,
   validate({ body: SaveMeParlaySchema }),
   saveMeParlayHandler,
+);
+
+parlayUserRoutes.get(
+  "/parlays/:id/audit",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  getParlayAuditHandler,
+);
+
+parlayUserRoutes.post(
+  "/parlays/:id/repair-identity",
+  requireAuth,
+  validate({ params: ParlayIdParamsSchema }),
+  repairParlayIdentityHandler,
 );
 
 parlayUserRoutes.patch(

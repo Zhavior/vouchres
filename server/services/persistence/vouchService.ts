@@ -84,6 +84,35 @@ export async function getPublicVouch(id: string): Promise<VouchRecord | null> {
   return (data as VouchRecord) ?? null;
 }
 
+export interface VouchAuthorProfile {
+  id: string;
+  handle: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+/** Public vouch with linked profile for authorship proof. */
+export async function getPublicVouchWithAuthor(id: string): Promise<{
+  vouch: VouchRecord;
+  author: VouchAuthorProfile | null;
+} | null> {
+  const vouch = await getPublicVouch(id);
+  if (!vouch) return null;
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: author } = await supabaseAdmin
+    .from("profiles")
+    .select("id, handle, username, display_name, avatar_url")
+    .eq("id", vouch.user_id)
+    .maybeSingle();
+
+  return {
+    vouch,
+    author: (author as VouchAuthorProfile) ?? null,
+  };
+}
+
 /** User-facing hide, not a real delete — mirrors picks.user_hidden_at. */
 export async function hideVouch(id: string, userId: string): Promise<boolean> {
   if (!UUID_RE.test(id)) return false;

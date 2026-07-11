@@ -1,17 +1,24 @@
 import { AppError } from "../../errors/AppError";
+import { isPickLocked, PARLAY_LOCKED_MESSAGE } from "../../lib/parlayLockPolicy";
+import { computeParlayProofHash } from "../../lib/parlayProofHash";
 import {
   findLegsForPick,
   findLegsForPicks,
   findUserParlayById,
   hideUserParlay as hideUserParlayRow,
   listVisibleUserParlayRows,
+  lockPickForFeedShare,
+  updatePickProofHash,
   updateUserParlay,
   type ParlayLegRow,
   type ParlayRow,
 } from "../../repositories/parlayRepository";
+import { insertPickAuditLog, listPickAuditLogs, type PickAuditRow } from "../../repositories/pickAuditRepository";
+import { assessParlayIdentity } from "./parlayIdentityService";
 
 export interface ParlayWithLegs extends ParlayRow {
   legs: ParlayLegRow[];
+  identity?: ReturnType<typeof assessParlayIdentity>;
 }
 
 export function enrichParlayForDisplay(row: ParlayRow, legs: ParlayLegRow[]): ParlayWithLegs {
@@ -23,6 +30,7 @@ export function enrichParlayForDisplay(row: ParlayRow, legs: ParlayLegRow[]): Pa
     source: isAiPickRow(row) ? "AI" : (row.source ?? "manual"),
     ai_generated: isAiPickRow(row),
     game_date: row.game_date ?? ymdFromValue(row.created_at),
+    identity: assessParlayIdentity(legs as Record<string, unknown>[]),
   };
 }
 
@@ -45,7 +53,20 @@ export async function getUserParlay(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
 
-  const legs = await findLegsForPick(input.parlayId);
+  let legs = await findLegsForPick(input.parlayId);
+  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
+  if (!identity.complete && !isPickLocked(parlay)) {
+    const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
+    await repairParlayIdentityForPick({
+      pickId: input.parlayId,
+      userId: input.userId,
+      externalProvider: "auto_repair_on_read",
+    }).catch((err) => {
+      console.warn("[getUserParlay] auto identity repair failed", (err as Error)?.message);
+    });
+    legs = await findLegsForPick(input.parlayId);
+  }
+
   return enrichParlayForDisplay(parlay, legs);
 }
 
@@ -73,16 +94,100 @@ export async function listUserParlayRows(input: {
   return { parlays: rows, total, limit: input.limit, offset: input.offset };
 }
 
+function assertParlayEditable(existing: ParlayRow): void {
+  if (isPickLocked(existing)) {
+    throw new AppError({
+      status: 403,
+      code: "parlay_locked",
+      message: PARLAY_LOCKED_MESSAGE,
+      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null },
+    });
+  }
+}
+
+export async function lockParlayOnFeedShare(input: {
+  userId: string;
+  parlayId: string;
+  postId?: string;
+  lockedAt?: string;
+}): Promise<ParlayRow | null> {
+  const lockedAt = input.lockedAt ?? new Date().toISOString();
+  const parlay = await lockPickForFeedShare({
+    pickId: input.parlayId,
+    userId: input.userId,
+    lockedAt,
+  });
+
+  if (!parlay) return null;
+
+  const legs = await findLegsForPick(input.parlayId);
+  const effectiveLockedAt = String(parlay.locked_at ?? lockedAt);
+  const proofHash = computeParlayProofHash({
+    id: String(parlay.id),
+    created_at: parlay.created_at,
+    locked_at: effectiveLockedAt,
+    odds_decimal: parlay.odds_decimal,
+    stake_units: parlay.stake_units,
+    legs,
+  });
+  await updatePickProofHash(input.parlayId, proofHash).catch((err) => {
+    console.warn("[lockParlayOnFeedShare] proof hash failed", (err as Error)?.message);
+  });
+  parlay.proof_hash = proofHash;
+
+  void import("../trust/pickProofAnchorService")
+    .then(({ anchorParlayProofOpenTimestamp }) => anchorParlayProofOpenTimestamp({
+      pickId: input.parlayId,
+      proofHash,
+    }))
+    .then((result) => {
+      if (result.anchored) {
+        parlay.ots_stamped_at = result.stampedAt ?? null;
+      }
+    })
+    .catch((err) => {
+      console.warn("[lockParlayOnFeedShare] OTS anchor failed", (err as Error)?.message);
+    });
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "lock_feed_share",
+    fieldChanges: {
+      locked_at: { before: null, after: parlay.locked_at ?? lockedAt },
+      ...(input.postId ? { post_id: input.postId } : {}),
+    },
+  }).catch((err) => {
+    console.warn("[lockParlayOnFeedShare] audit log failed", (err as Error)?.message);
+  });
+
+  return parlay;
+}
+
 export async function updateParlaySummary(input: {
   userId: string;
   parlayId: string;
   title?: string;
   stakeUnits?: number;
 }): Promise<ParlayRow> {
-  const updates: Record<string, unknown> = {};
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
+  assertParlayEditable(existing);
 
-  if (input.title) updates.explanation = input.title.slice(0, 200);
-  if (input.stakeUnits != null) updates.stake_units = input.stakeUnits;
+  const updates: Record<string, unknown> = {};
+  const fieldChanges: Record<string, { before: unknown; after: unknown }> = {};
+
+  if (input.title) {
+    const nextTitle = input.title.slice(0, 200);
+    updates.explanation = nextTitle;
+    fieldChanges.explanation = { before: existing.explanation ?? null, after: nextTitle };
+  }
+  if (input.stakeUnits != null) {
+    updates.stake_units = input.stakeUnits;
+    fieldChanges.stake_units = { before: existing.stake_units ?? null, after: input.stakeUnits };
+  }
 
   if (Object.keys(updates).length === 0) {
     throw new AppError({ status: 400, code: "validation_error", message: "No valid parlay fields were provided." });
@@ -94,13 +199,52 @@ export async function updateParlaySummary(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
 
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "update_summary",
+    fieldChanges,
+  }).catch((err) => {
+    console.warn("[updateParlaySummary] audit log failed", (err as Error)?.message);
+  });
+
   return parlay;
+}
+
+export async function getParlayAuditHistory(input: {
+  userId: string;
+  parlayId: string;
+  limit?: number;
+}): Promise<{ entries: PickAuditRow[]; created_at: string | null; updated_at: string | null; locked_at: string | null }> {
+  const parlay = await findUserParlayById(input.userId, input.parlayId);
+  if (!parlay) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
+
+  const entries = await listPickAuditLogs({
+    pickId: input.parlayId,
+    userId: input.userId,
+    limit: input.limit,
+  });
+
+  return {
+    entries,
+    created_at: parlay.created_at ?? null,
+    updated_at: parlay.updated_at ?? null,
+    locked_at: parlay.locked_at ?? null,
+  };
 }
 
 export async function hideUserParlay(input: {
   userId: string;
   parlayId: string;
 }) {
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found or already hidden." });
+  }
+  assertParlayEditable(existing);
+
   const hiddenAt = new Date().toISOString();
   const parlay = await hideUserParlayRow({ userId: input.userId, parlayId: input.parlayId, hiddenAt });
   if (!parlay) {
@@ -115,4 +259,32 @@ export async function hideUserParlay(input: {
     updated_at: parlay.updated_at,
     truth_rule: "status_preserved_void_reserved_for_sportsbook_no_action",
   };
+}
+
+export async function repairUserParlayIdentity(input: {
+  userId: string;
+  parlayId: string;
+}) {
+  const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
+  const result = await repairParlayIdentityForPick({
+    pickId: input.parlayId,
+    userId: input.userId,
+    externalProvider: "user_repair_identity",
+  });
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "repair_identity",
+    fieldChanges: {
+      repairedCount: result.repairedCount,
+      skippedCount: result.skippedCount,
+      scanned: result.scanned,
+    },
+  }).catch((err) => {
+    console.warn("[repairUserParlayIdentity] audit log failed", (err as Error)?.message);
+  });
+
+  const parlay = await getUserParlay({ userId: input.userId, parlayId: input.parlayId });
+  return { result, parlay };
 }

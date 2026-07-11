@@ -152,6 +152,97 @@ export async function repairLegacyParlayIdentityForSync(options: {
   };
 }
 
+export async function repairParlayIdentityForPick(input: {
+  pickId: string;
+  userId: string;
+  externalProvider?: string;
+}) {
+  const supabaseAdmin = await getSupabaseAdmin();
+
+  const { data: pick, error: pickError } = await supabaseAdmin
+    .from("picks")
+    .select("id, user_id, locked_at, leg_type")
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .eq("leg_type", "parlay")
+    .maybeSingle();
+
+  if (pickError) throw pickError;
+  if (!pick) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
+  if (pick.locked_at) {
+    throw new AppError({
+      status: 403,
+      code: "parlay_locked",
+      message: "Locked parlays cannot be repaired.",
+      details: { error: "parlay_locked", locked_at: pick.locked_at },
+    });
+  }
+
+  const { data: rows, error } = await supabaseAdmin
+    .from("pick_legs")
+    .select("id,pick_id,leg_index,sport,game_id,event_id,team_id,player_id,market,selection,market_code,stat_target,comparator,event_key,popularity_key,external_provider,status,picks(event_id,metadata)")
+    .eq("pick_id", input.pickId)
+    .or("event_key.is.null,market_code.is.null,stat_target.is.null,comparator.is.null");
+
+  if (error) throw error;
+
+  let repairedCount = 0;
+  let skippedCount = 0;
+
+  for (const row of rows ?? []) {
+    const sport = repairCleanKey(row.sport || "MLB", "MLB") || "MLB";
+    const gameId = repairGameIdFromRow(row);
+    const teamId = repairCleanKey(row.team_id || "TEAM", "TEAM") || "TEAM";
+    const playerId = repairCleanKey(row.player_id || repairPlayerIdFromSelection(row.selection));
+    const marketCode = repairMarketCode(row);
+    const statTarget = repairStatTarget(row, marketCode);
+    const comparator = String(row.comparator || (statTarget != null ? ">=" : "")).trim() || null;
+    const comparatorKey = repairComparatorKey(comparator);
+
+    if (!gameId || !playerId || !marketCode || statTarget == null || !comparatorKey) {
+      skippedCount += 1;
+      continue;
+    }
+
+    const eventKey = [sport, gameId, teamId, playerId, marketCode, statTarget, comparatorKey].join("_");
+    const popularityKey = [sport, playerId, marketCode, statTarget, comparatorKey].join("_");
+
+    const patch = {
+      sport,
+      game_id: gameId,
+      team_id: teamId,
+      player_id: playerId,
+      market_code: marketCode,
+      stat_target: statTarget,
+      comparator,
+      event_key: eventKey,
+      popularity_key: popularityKey,
+      external_provider: row.external_provider || input.externalProvider || "user_repair_identity",
+    };
+
+    const { error: updateError } = await supabaseAdmin
+      .from("pick_legs")
+      .update(patch)
+      .eq("id", row.id);
+
+    if (updateError) {
+      skippedCount += 1;
+      continue;
+    }
+
+    repairedCount += 1;
+  }
+
+  return {
+    pickId: input.pickId,
+    scanned: rows?.length ?? 0,
+    repairedCount,
+    skippedCount,
+  };
+}
+
 export function isLegacyManualEventId(value: unknown): boolean {
   const raw = String(value ?? "").trim();
   return raw.startsWith("leg-") || raw.startsWith("ai-leg-") || raw.startsWith("manual-");

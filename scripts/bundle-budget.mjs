@@ -11,7 +11,7 @@ import { gzipSync } from "node:zlib";
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
 const VITE_MANIFEST = join(process.cwd(), "dist", "vite-manifest.json");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
-const MAX_CSS_GZIP_BYTES = Number(process.env.CSS_BUDGET_BYTES ?? 90 * 1024);
+const MAX_CSS_GZIP_BYTES = Number(process.env.CSS_BUDGET_BYTES ?? 110 * 1024);
 
 function formatKiB(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;

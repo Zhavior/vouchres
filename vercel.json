@@ -73,6 +73,14 @@
       "destination": "/api"
     },
     {
+      "source": "/p/:id",
+      "destination": "/api"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api"
+    },
+    {
       "source": "/((?!api/|assets/|icons/|build-id\\.txt|favicon\\.svg|favicon\\.png|manifest\\.json|offline\\.html|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
@@ -81,6 +89,14 @@
     {
       "path": "/api/cron/parlays/grade-due",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/parlays/repair-identity?dryRun=false&limit=100",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/parlays/anchor-ots?limit=25",
+      "schedule": "30 6 * * *"
     }
   ]
 }

@@ -16,6 +16,7 @@ import {
   isLegacyManualEventId,
   repairLegacyParlayIdentityForSync,
 } from "./parlayRepairHelpers";
+import { backfillOpenTimestampsForLockedPicks } from "../../services/trust/pickProofAnchorService";
 
 /**
  * Cron-only parlay maintenance routes.
@@ -169,6 +170,23 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
   }));
 }));
 
+parlayCronRoutes.get("/cron/parlays/repair-identity", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  assertCronAuthorized(req);
+
+  const dryRun = boolQuery(req.query.dryRun, true);
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 250);
+  const result = await repairLegacyParlayIdentityForSync({
+    dryRun,
+    limit,
+    externalProvider: "repair_identity",
+  });
+
+  return res.json(apiOkFlat(req, {
+    ...result,
+    checkedAt: new Date().toISOString(),
+  }));
+}));
+
 parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req: RequestWithContext, res: Response) => {
   assertCronAuthorized(req);
 
@@ -278,6 +296,19 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     skippedCount: skipped.length,
     quarantined: quarantined.slice(0, 20),
     skipped: skipped.slice(0, 20),
+    checkedAt: new Date().toISOString(),
+  }));
+}));
+
+parlayCronRoutes.get("/cron/parlays/anchor-ots", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  assertCronAuthorized(req);
+
+  const limit = boundedInt(req.query.limit, "limit", 25, 1, 100);
+  const result = await backfillOpenTimestampsForLockedPicks({ limit });
+
+  return res.json(apiOkFlat(req, {
+    mode: "anchor_ots",
+    ...result,
     checkedAt: new Date().toISOString(),
   }));
 }));

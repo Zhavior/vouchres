@@ -15,6 +15,8 @@ import { feedRoutes } from "./feedRoutes";
 import { notificationRoutes } from "./notificationRoutes";
 import { playerRegistryRoutes } from "./playerRegistryRoutes";
 import { shareRoutes } from "./shareRoutes";
+import { proofRoutes } from "./proofRoutes";
+import { subscriberRoutes } from "./subscriberRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
@@ -28,7 +30,8 @@ import { worldChatRoutes } from "./worldChatRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
 import { requireAuth, requireStaff } from "../middleware/auth";
 import { authLimiter, generationLimiter } from "../middleware/rateLimit";
-import { getPublicVouch } from "../services/persistence/vouchService";
+import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
+import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
@@ -64,6 +67,8 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", notificationRoutes);
   app.use("/api", playerRegistryRoutes);
   app.use("/api", shareRoutes);
+  app.use("/api", proofRoutes);
+  app.use("/api", subscriberRoutes);
   app.use("/api", worldChatRoutes);
 
   registerMlbRoutes(app);
@@ -183,19 +188,27 @@ export function registerApiRoutes(app: Express): void {
   // already runs before that catch-all.
   app.get("/v/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
-      const vouch = await getPublicVouch(req.params.id);
+      const result = await getPublicVouchWithAuthor(req.params.id);
       const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-      if (!vouch) {
+      if (!result) {
         res.status(404);
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("x-request-id", req.requestId ?? "unknown");
         return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>Vouch not found — VouchEdge</title></head><body><p>This vouch isn't available.</p></body></html>`);
       }
 
+      const { vouch, author } = result;
+      const authorLabel = author?.handle
+        ? `@${author.handle}`
+        : author?.username
+          ? `@${author.username}`
+          : "VouchEdge user";
+      const createdLabel = formatProofTimestamp(vouch.created_at);
+
       const title = escapeHtml(`${vouch.player_or_team || vouch.market} — ${vouch.market}`);
       const description = escapeHtml(
-        `${vouch.odds} odds${vouch.ai_confidence != null ? ` · ${Math.round(vouch.ai_confidence)}% AI confidence` : ""} — ${vouch.game_name}`
+        `${vouch.odds} odds${vouch.ai_confidence != null ? ` · ${Math.round(vouch.ai_confidence)}% AI confidence` : ""} — ${vouch.game_name} · by ${authorLabel} · ${createdLabel}`
       );
       const imageUrl = `${baseUrl}/api/share/vouch/${encodeURIComponent(vouch.id)}/card.png`;
       const pageUrl = `${baseUrl}/v/${encodeURIComponent(vouch.id)}`;
@@ -217,11 +230,12 @@ export function registerApiRoutes(app: Express): void {
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${imageUrl}">
-<style>body{font-family:Inter,Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:16px}img{max-width:600px;width:100%;border-radius:16px}a{color:#22d3ee;font-weight:700;text-decoration:none}</style>
+<style>body{font-family:Inter,Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:16px}img{max-width:600px;width:100%;border-radius:16px}a{color:#22d3ee;font-weight:700;text-decoration:none}.meta{font-size:13px;color:#9aa8bd;text-align:center;max-width:640px;line-height:1.5}</style>
 </head>
 <body>
 <img src="${imageUrl}" alt="${title}">
 <p>${description}</p>
+<p class="meta">Authored by <strong>${escapeHtml(authorLabel)}</strong> · Recorded ${escapeHtml(createdLabel)}</p>
 <a href="${baseUrl}/">Open in VouchEdge →</a>
 <p style="font-size:12px;color:#9aa8bd">Probability-based. No guarantees. Research and entertainment only.</p>
 </body>
@@ -238,6 +252,83 @@ export function registerApiRoutes(app: Express): void {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("x-request-id", requestId);
       return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this vouch.</p></body></html>`);
+    }
+  }));
+
+  app.get("/p/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    try {
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const proof = await getPublicParlayProof(req.params.id, baseUrl);
+
+      if (!proof) {
+        res.status(404);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("x-request-id", req.requestId ?? "unknown");
+        return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>Parlay not found — VouchEdge</title></head><body><p>This parlay proof isn't available.</p></body></html>`);
+      }
+
+      const authorLabel = escapeHtml(parlayProofAuthorLabel(proof));
+      const createdLabel = escapeHtml(formatProofTimestamp(proof.created_at));
+      const lockedLabel = proof.locked_at ? escapeHtml(formatProofTimestamp(proof.locked_at)) : null;
+      const proofHashLabel = proof.proof_hash ? escapeHtml(proof.proof_hash) : null;
+      const otsDownloadUrl = proof.has_ots_proof
+        ? `${baseUrl}/api/proof/parlay/${encodeURIComponent(proof.id)}/ots`
+        : null;
+      const otsStampLabel = proof.ots_stamped_at ? escapeHtml(formatProofTimestamp(proof.ots_stamped_at)) : null;
+      const trustTimeline = (proof.trust_events ?? [])
+        .map((event) => `<li><strong>${escapeHtml(event.label)}</strong> · ${escapeHtml(formatProofTimestamp(event.created_at))}</li>`)
+        .join("");
+      const titleText = escapeHtml(proof.explanation || proof.selection || `${proof.legs.length}-leg parlay`);
+      const title = `${titleText} — VouchEdge Parlay Proof`;
+      const description = escapeHtml(
+        `${proof.legs.length} legs · ${proof.odds_decimal != null ? `${Number(proof.odds_decimal).toFixed(2)}x` : "combined odds pending"} · ${proof.status.toUpperCase()} · by ${authorLabel.replace(/&amp;/g, "&")} · ${createdLabel.replace(/&amp;/g, "&")}`
+      );
+      const imageUrl = `${baseUrl}/api/share/parlay/${encodeURIComponent(proof.id)}/card.png`;
+      const pageUrl = `${baseUrl}/p/${encodeURIComponent(proof.id)}`;
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=300");
+      return res.send(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<meta name="description" content="${description}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:image" content="${imageUrl}">
+<meta property="og:url" content="${pageUrl}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${imageUrl}">
+<style>body{font-family:Inter,Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:16px}img{max-width:600px;width:100%;border-radius:16px}a{color:#22d3ee;font-weight:700;text-decoration:none}.meta{font-size:13px;color:#9aa8bd;text-align:center;max-width:640px;line-height:1.5}.hash{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;color:#67e8f9;background:#0b1220;border:1px solid #164e63;border-radius:10px;padding:10px 12px;max-width:640px;width:100%}ul{max-width:640px;width:100%;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}li{background:#0b1220;border:1px solid #164e63;border-radius:12px;padding:12px 14px;font-size:14px}.timeline li{background:#071018;border-color:#1e293b;font-size:12px}</style>
+</head>
+<body>
+<img src="${imageUrl}" alt="${titleText}">
+<p>${description}</p>
+<p class="meta">Authored by <strong>${authorLabel}</strong> · Recorded ${createdLabel}${lockedLabel ? ` · <strong>Locked at share</strong> ${lockedLabel}` : ""}</p>
+${proofHashLabel ? `<p class="hash"><strong>Proof hash (SHA-256):</strong><br>${proofHashLabel}</p>` : ""}
+${otsDownloadUrl ? `<p class="meta"><a href="${otsDownloadUrl}">Download OpenTimestamp proof (.ots)</a>${otsStampLabel ? ` · stamped ${otsStampLabel}` : ""}</p>` : ""}
+<ul>${proof.legs.map((leg, index) => `<li><strong>Leg ${index + 1}:</strong> ${escapeHtml(String(leg.selection || leg.market || "Prop"))}</li>`).join("")}</ul>
+${trustTimeline ? `<ul class="timeline">${trustTimeline}</ul>` : ""}
+<a href="${baseUrl}/">Open in VouchEdge →</a>
+<p style="font-size:12px;color:#9aa8bd">Probability-based. No guarantees. Research and entertainment only.</p>
+</body>
+</html>`);
+    } catch (error) {
+      const requestId = req.requestId ?? "unknown";
+      console.error("[share] /p/:id failed", JSON.stringify({
+        requestId,
+        parlayId: req.params.id,
+        message: error instanceof Error ? error.message : String(error),
+      }));
+      captureException(error, { requestId, path: req.originalUrl, extra: { parlayId: req.params.id } });
+      res.status(500);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("x-request-id", requestId);
+      return res.send(`<!doctype html><html><head><meta charset="utf-8"><title>VouchEdge</title></head><body><p>Something went wrong loading this parlay proof.</p></body></html>`);
     }
   }));
 }

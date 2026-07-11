@@ -12,6 +12,8 @@ import {
   canDeleteParlayPost,
   PARLAY_POST_LOCKED_MESSAGE,
 } from "../lib/postDeletePolicy";
+import { setPickVisibilityPublic } from "../repositories/parlayRepository";
+import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
 
 async function denyUnlessOwns(
   userId: string,
@@ -69,7 +71,7 @@ postRoutes.get("/feed", optionalAuth, asyncHandler(async (req: AuthedRequest, re
     .select(`
       id, body, created_at, view_count, is_demo,
       author:profiles!posts_author_id_fkey(id, username, display_name, avatar_url, tier),
-      pick:picks(id, market, selection, status, settled_units),
+      pick:picks(id, market, selection, status, settled_units, locked_at, created_at),
       likes_count:post_likes(count),
       comments_count:post_comments(count)
     `, { count: "exact" })
@@ -124,7 +126,7 @@ postRoutes.get("/feed/discover", asyncHandler(async (req: RequestWithContext, re
     .select(`
       id, body, created_at, view_count, is_demo,
       author:profiles!posts_author_id_fkey(id, username, display_name, avatar_url, tier),
-      pick:picks(id, market, selection, status),
+      pick:picks(id, market, selection, status, locked_at, created_at),
       likes_count:post_likes(count),
       comments_count:post_comments(count)
     `)
@@ -213,6 +215,17 @@ postRoutes.post(
       });
     }
 
+    if (pick_id) {
+      await lockParlayOnFeedShare({
+        userId: req.user!.id,
+        parlayId: pick_id,
+        postId: String(data.id),
+      }).catch((err) => {
+        console.warn("[posts] parlay lock failed", (err as Error)?.message);
+        return setPickVisibilityPublic(pick_id, req.user!.id);
+      });
+    }
+
     return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
@@ -224,7 +237,7 @@ postRoutes.get("/posts/:id", optionalAuth, asyncHandler(async (req: AuthedReques
     .select(`
       id, body, created_at, view_count, is_demo,
       author:profiles!posts_author_id_fkey(id, username, display_name, avatar_url, tier),
-      pick:picks(id, market, selection, status, settled_units),
+      pick:picks(id, market, selection, status, settled_units, locked_at, created_at),
       likes_count:post_likes(count),
       comments_count:post_comments(count)
     `)

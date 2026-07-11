@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { FeedPost, Leg, MLBPlayer, CreatorProofProfile, Parlay } from '../types';
 import ResultsLedgerSummary from './results/ResultsLedgerSummary';
+import ParlayTrustPanel from './trust/ParlayTrustPanel';
 import { MLB_PLAYER_RECORDS } from '../data/playerData';
 import { isGuestMode } from '../lib/authDisplay';
 import { apiClient } from "../lib/apiClient";
@@ -861,6 +862,32 @@ const getFriendlyParlayTitle = (parlay: any) => {
       </section>
 
       <ResultsLedgerSummary savedParlays={savedParlays} />
+
+      {savedParlays.some((parlay) => parlay.backendPickId) && (
+        <section className={`${Z8_PANEL_PREMIUM} rounded-2xl p-4 space-y-3`}>
+          <div className={Z8_SECTION_HEADER}>
+            <h3 className={`${Z8_DISPLAY} text-lg flex items-center gap-2`}>
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              Account Parlay Trust
+            </h3>
+            <p className="text-xs text-white/45">
+              Audit history, lock status, and public proof links for synced account parlays.
+            </p>
+          </div>
+          <div className="space-y-2">
+            {savedParlays
+              .filter((parlay) => parlay.backendPickId)
+              .slice(0, 5)
+              .map((parlay) => (
+                <ParlayTrustPanel
+                  key={parlay.backendPickId}
+                  pickId={String(parlay.backendPickId)}
+                  title={parlay.title}
+                />
+              ))}
+          </div>
+        </section>
+      )}
 
       {/* Toast Notification */}
       {visualToast && (

@@ -1,3 +1,14 @@
+.ve-unified-player-card {
+  --ve-player-panel: #0a0e14;
+  --ve-player-panel-raised: #0d1219;
+  --ve-player-panel-muted: #111820;
+  --ve-player-avatar: #151b24;
+}
+
+.ve-vouch-cursor-tip {
+  background: rgba(12, 17, 27, 0.95);
+}
+
 .ve-player-face {
   object-position: center 22%;
 }

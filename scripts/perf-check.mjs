@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST_ASSETS = join(process.cwd(), "dist", "assets");
+const VITE_MANIFEST = join(process.cwd(), "dist", "vite-manifest.json");
 const MAX_JS_GZIP_BYTES = Number(process.env.BUNDLE_BUDGET_BYTES ?? 130 * 1024);
 const MAX_PUBLIC_CSS_GZIP_BYTES = Number(process.env.PERF_PUBLIC_CSS_BUDGET_BYTES ?? 24 * 1024);
 const MAX_AUTH_CSS_GZIP_BYTES = Number(process.env.PERF_AUTH_CSS_BUDGET_BYTES ?? 88 * 1024);
@@ -61,7 +62,47 @@ if (indexChunks.length === 0) {
 
 const totalCssGzip = cssChunks.reduce((sum, chunk) => sum + chunk.gzipBytes, 0);
 const largestIndex = indexChunks[0];
-const publicCss = cssChunks.find((chunk) => chunk.name.startsWith('VouchEdgeTerminalPage-'));
+
+function collectInitialCss(manifest, chunk, files, visitedChunks) {
+  if (visitedChunks.has(chunk.file)) return;
+  visitedChunks.add(chunk.file);
+  for (const cssFile of chunk.css ?? []) files.add(cssFile);
+  for (const importedFile of chunk.imports ?? []) {
+    const importedChunk = manifest[importedFile];
+    if (importedChunk) collectInitialCss(manifest, importedChunk, files, visitedChunks);
+  }
+}
+
+function bootCssGzipBytes(manifest, entryNames) {
+  const entry = Object.values(manifest).find((chunk) => chunk.isEntry && chunk.src === "index.html");
+  if (!entry) return 0;
+
+  const entryCssFiles = new Set();
+  collectInitialCss(manifest, entry, entryCssFiles, new Set());
+
+  return entryNames.reduce((max, name) => {
+    const chunk = Object.values(manifest).find((candidate) => candidate.name === name && candidate.isDynamicEntry);
+    const files = new Set(entryCssFiles);
+    if (chunk) collectInitialCss(manifest, chunk, files, new Set());
+    const gzipBytes = [...files].reduce(
+      (sum, file) => sum + gzipSize(join(process.cwd(), "dist", file)).gzipBytes,
+      0,
+    );
+    return Math.max(max, gzipBytes);
+  }, 0);
+}
+
+let publicCss = cssChunks.find((chunk) => chunk.name.startsWith("VouchEdgeTerminalPage-"));
+if (!publicCss && existsSync(VITE_MANIFEST)) {
+  const manifest = JSON.parse(readFileSync(VITE_MANIFEST, "utf8"));
+  const publicGzip = bootCssGzipBytes(manifest, ["VouchEdgeTerminalPage"]);
+  if (publicGzip > 0) {
+    publicCss = { name: "index boot (eager landing)", gzipBytes: publicGzip };
+  }
+}
+if (!publicCss) {
+  publicCss = cssChunks.find((chunk) => /^index-.*\.css$/.test(chunk.name));
+}
 const authenticatedCss = cssChunks.find((chunk) => chunk.name.startsWith('AuthenticatedApp-'));
 const modalCss = cssChunks.find((chunk) => chunk.name.startsWith('AuthModal-'));
 

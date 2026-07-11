@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sliders, AlertTriangle, CheckCircle2, XCircle, Clock, Sparkles, ChevronDown, ChevronUp, Lock, ExternalLink } from 'lucide-react';
 import { Parlay } from '../../types';
+import { formatFeedLockTimestamp } from '../../lib/parlayLockPolicy';
 
 interface ParlayFeedPostCardProps {
   parlay: Parlay;
@@ -8,6 +9,8 @@ interface ParlayFeedPostCardProps {
 
 export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) {
   const [showEdgeReport, setShowEdgeReport] = useState(false);
+  const lockLabel = formatFeedLockTimestamp(parlay.feedLockedAt);
+  const proofPickId = parlay.backendPickId || parlay.id;
 
   const renderInnerBold = (text: string) => {
     const parts = text.split(/\*\*(.*?)\*\*/g);
@@ -112,6 +115,12 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
           <span className="font-bold text-slate-100 text-xs tracking-wide uppercase">{parlay.title || 'Slip Selection'}</span>
         </div>
         <div className="flex items-center gap-2">
+          {lockLabel && (
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border bg-cyan-950/40 text-cyan-300 border-cyan-800/50 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              LOCKED {lockLabel}
+            </span>
+          )}
           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${getRiskColor(parlay.riskTier)}`}>
             {parlay.riskTier} RISK
           </span>
@@ -194,11 +203,22 @@ export default function ParlayFeedPostCard({ parlay }: ParlayFeedPostCardProps) 
       )}
 
       {/* Safety Legal Warning */}
-      <div className="bg-rose-950/20 px-4 py-1.5 border-t border-rose-950/30 text-center">
+      <div className="bg-rose-950/20 px-4 py-1.5 border-t border-rose-950/30 flex items-center justify-between gap-2">
         <p className="text-[9px] text-rose-450 leading-none flex items-center justify-center gap-1 uppercase tracking-wider font-semibold">
           <AlertTriangle className="w-3 h-3 flex-shrink-0" />
           No guaranteed wins. Keep wagering standard.
         </p>
+        {proofPickId && (
+          <a
+            href={`/p/${encodeURIComponent(proofPickId)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] font-mono font-black uppercase text-vouch-cyan hover:text-cyan-300 flex items-center gap-1 shrink-0"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View proof
+          </a>
+        )}
       </div>
     </div>
   );
