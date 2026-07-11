@@ -1,7 +1,7 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "../apiClient";
 import { americanLabel } from "../odds";
-import type { TierOddsQuote } from "./parlays/parlayTierOddsResolver";
-import type { ParlayMarketTier } from "./parlays/parlayMarketCatalog";
+import type { TierOddsQuote } from "./parlayTierOddsResolver";
+import type { ParlayMarketTier } from "./parlayMarketCatalog";
 
 type LiveOddsApiQuote = {
   odds: number | null;
