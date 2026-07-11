@@ -23,12 +23,15 @@ export type ParlayOsLayerProps = {
   onConfirmTier: (tier: ParlayMarketTier) => void;
   onSaveParlay?: () => void;
   navigateSection?: (section: string) => void;
+  /** Hide global floating dock when Hub provides its own slip bar. */
+  suppressFloatingDock?: boolean;
 };
 
 export default function ParlayOsLayer({
   onConfirmTier,
   onSaveParlay,
   navigateSection,
+  suppressFloatingDock = false,
 }: ParlayOsLayerProps) {
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const removeDraftLeg = useParlayCommandStore((s) => s.removeDraftLeg);
@@ -110,7 +113,7 @@ export default function ParlayOsLayer({
       <ParlayPropPickerModal onConfirmTier={onConfirmTier} />
 
       {/* Floating dock */}
-      {!sheetOpen && (
+      {!sheetOpen && !suppressFloatingDock && (
         <button
           type="button"
           onClick={() => toggleSheet()}

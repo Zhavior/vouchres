@@ -21,7 +21,7 @@ function marketGradient(code?: string | null): string {
   return MARKET_COLORS[key] ?? "from-white/5 to-white/[0.02] border-white/15";
 }
 
-export default function ParlayLegCardPro({
+export default React.memo(function ParlayLegCardPro({
   leg,
   onRemove,
   onEdit,
@@ -122,4 +122,4 @@ export default function ParlayLegCardPro({
       </div>
     </article>
   );
-}
+});
