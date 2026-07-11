@@ -207,6 +207,16 @@ export function resolveDevSectionFromLocation() {
     return 'live_parlays';
   }
 
+  const proofMatch = pathname.match(/^\/p\/([0-9a-f-]{36})$/i);
+  if (proofMatch?.[1]) {
+    try {
+      sessionStorage.setItem('vouchedge_proof_pick_id', proofMatch[1]);
+    } catch {
+      // ignore
+    }
+    return 'parlay_proof';
+  }
+
   if (target === 'notifications' || target === '/notifications' || target === 'alerts' || target === '/alerts') {
     return 'notifications';
   }

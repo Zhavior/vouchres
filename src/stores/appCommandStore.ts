@@ -16,6 +16,9 @@ export type AppLiveGame = {
   awayTeam: string;
   status: string;
   gamePk?: string | number;
+  id?: string | number;
+  homeTeamId?: number | string | null;
+  awayTeamId?: number | string | null;
 };
 
 export type ResearchProp = {
@@ -38,6 +41,7 @@ type AppCommandBindings = {
   }) => Promise<void>;
   onHideSavedParlay: (parlayId: string) => Promise<void>;
   onAddLegFromResearch: (player: MLBPlayer, prop: ResearchProp) => void;
+  onConfirmParlayTier: (tier: import("../lib/parlays/parlayMarketCatalog").ParlayMarketTier) => void;
   onUpdateProfile: (updatedProfile: Partial<CreatorProofProfile>) => void;
   onResetDatabase: () => void;
   liveGames: AppLiveGame[];
@@ -64,6 +68,7 @@ const defaultBindings: AppCommandBindings = {
   onCommitParlayTrust: noopAsync,
   onHideSavedParlay: noopAsync,
   onAddLegFromResearch: () => {},
+  onConfirmParlayTier: () => {},
   onUpdateProfile: () => {},
   onResetDatabase: () => {},
   liveGames: [],

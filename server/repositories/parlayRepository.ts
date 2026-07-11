@@ -202,7 +202,7 @@ export async function lockPickForFeedShare(input: {
   const supabaseAdmin = await admin();
   const lockedAt = input.lockedAt ?? new Date().toISOString();
 
-  const baseUpdate: Record<string, unknown> = { locked_at: lockedAt };
+  const baseUpdate: Record<string, unknown> = { locked_at: lockedAt, lock_reason: "feed_share" };
   const query = supabaseAdmin
     .from("picks")
     .update({ ...baseUpdate, visibility: "public" })
@@ -305,6 +305,7 @@ export async function lockPickForTrustLedger(input: {
     locked_at: input.lockedAt,
     trust_lock_at: null,
     updated_at: input.lockedAt,
+    lock_reason: "trust_ledger",
   };
 
   const withVisibility = { ...baseUpdate, visibility: input.audience };

@@ -1,5 +1,5 @@
 import { AppError } from "../../errors/AppError";
-import { isPickLocked, PARLAY_LOCKED_MESSAGE } from "../../lib/parlayLockPolicy";
+import { isPickLocked, lockedParlayMessage } from "../../lib/parlayLockPolicy";
 import { computeParlayProofHash } from "../../lib/parlayProofHash";
 import {
   findLegsForPick,
@@ -58,19 +58,6 @@ export async function getUserParlay(input: {
   }
 
   let legs = await findLegsForPick(input.parlayId);
-  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
-  if (!identity.complete && !isPickLocked(parlay)) {
-    const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
-    await repairParlayIdentityForPick({
-      pickId: input.parlayId,
-      userId: input.userId,
-      externalProvider: "auto_repair_on_read",
-    }).catch((err) => {
-      console.warn("[getUserParlay] auto identity repair failed", (err as Error)?.message);
-    });
-    legs = await findLegsForPick(input.parlayId);
-  }
-
   return enrichParlayForDisplay(parlay, legs);
 }
 
@@ -103,8 +90,8 @@ function assertParlayEditable(existing: ParlayRow): void {
     throw new AppError({
       status: 403,
       code: "parlay_locked",
-      message: PARLAY_LOCKED_MESSAGE,
-      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null },
+      message: lockedParlayMessage(existing as Record<string, unknown>),
+      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null, lock_reason: existing.lock_reason ?? null },
     });
   }
   if (existing.committed_at) {
@@ -191,6 +178,17 @@ export async function commitParlayTrustLedger(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
   assertParlayEditable(existing);
+
+  const legs = await findLegsForPick(input.parlayId);
+  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
+  if (!identity.complete) {
+    throw new AppError({
+      status: 422,
+      code: "validation_error",
+      message: "Complete canonical leg identity before locking to the trust ledger.",
+      details: { error: "identity_incomplete", missingLegIndexes: identity.missingLegIndexes },
+    });
+  }
 
   const audience = normalizeTrustAudience(input.audience ?? existing.visibility ?? "private");
   const committedAt = new Date().toISOString();

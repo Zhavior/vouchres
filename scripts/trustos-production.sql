@@ -288,3 +288,30 @@ create policy "dm_messages_read_participant"
         and p.user_id = auth.uid()
     )
   );
+
+-- 0025: Lock reason (trust ledger vs feed share)
+alter table public.picks
+  add column if not exists lock_reason text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'picks_lock_reason_check'
+  ) then
+    alter table public.picks
+      add constraint picks_lock_reason_check
+      check (lock_reason is null or lock_reason in ('trust_ledger', 'feed_share'));
+  end if;
+end $$;
+
+update public.picks
+set lock_reason = 'trust_ledger'
+where locked_at is not null
+  and committed_at is not null
+  and lock_reason is null;
+
+update public.picks
+set lock_reason = 'feed_share'
+where locked_at is not null
+  and lock_reason is null;

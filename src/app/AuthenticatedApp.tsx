@@ -53,6 +53,8 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
       handleLoginSuccess={domain.handleLoginSuccess}
       handleLogoutComplete={domain.handleLogoutComplete}
       handleUpdateProfile={domain.handleUpdateProfile}
+      onConfirmParlayTier={domain.handleConfirmParlayTier}
+      onSaveParlaySlip={() => navigation.navigateSection('build')}
     />
   );
 }

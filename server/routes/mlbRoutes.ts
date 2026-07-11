@@ -215,4 +215,29 @@ export function registerMlbRoutes(app: Express): void {
       throw upstreamUnavailable("Run environments unavailable.", err);
     }
   }));
+
+  app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchParlayLegProgressBatch } = await import("../services/mlb/parlayLiveProgressService");
+    const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
+    const progress = await fetchParlayLegProgressBatch(
+      legs.map((leg: Record<string, unknown>, index: number) => ({
+        id: String(leg.id ?? `leg-${index}`),
+        gamePk: String(leg.gamePk ?? leg.game_pk ?? ""),
+        playerId: leg.playerId ?? leg.player_id ?? "",
+        marketCode: leg.marketCode ?? leg.market_code ?? null,
+        statTarget: leg.statTarget ?? leg.stat_target ?? 1,
+      })),
+    );
+    return res.json(apiOkFlat(req, { legs: progress }));
+  }));
+
+  app.post("/api/mlb/parlay-tier-odds", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchLiveTierOdds } = await import("../services/mlb/parlayOddsFeedService");
+    const quote = await fetchLiveTierOdds({
+      playerName: req.body?.playerName ?? req.body?.player_name,
+      marketCode: req.body?.marketCode ?? req.body?.market_code,
+      statTarget: req.body?.statTarget ?? req.body?.stat_target,
+    });
+    return res.json(apiOkFlat(req, quote));
+  }));
 }
