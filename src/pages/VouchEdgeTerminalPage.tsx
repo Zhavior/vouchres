@@ -29,6 +29,7 @@ import '../components/landing/LandingMobileShell.css';
 type SignupPlan = 'free' | 'pro' | 'capper';
 
 const AuthModal = lazy(() => import('../components/auth/AuthModal'));
+const LandingVouchCardShowcase = lazy(() => import('../components/landing/LandingVouchCardShowcase'));
 const preloadAuthModal = () => {
   void import('../components/auth/AuthModal');
 };
@@ -173,6 +174,51 @@ function DeferredLandingJudgesDeck() {
   }
 
   return <LandingJudgesDeck />;
+}
+
+function VouchCardShowcasePlaceholder() {
+  return <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} h-96 animate-pulse`} aria-hidden="true" />;
+}
+
+function DeferredVouchCardShowcase() {
+  const [ready, setReady] = useState(false);
+  const markerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+
+    if (!marker || !('IntersectionObserver' in window)) {
+      setReady(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '360px 0px' },
+    );
+
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!ready) {
+    return (
+      <div ref={markerRef}>
+        <VouchCardShowcasePlaceholder />
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={<VouchCardShowcasePlaceholder />}>
+      <LandingVouchCardShowcase />
+    </Suspense>
+  );
 }
 
 function PricingGrid({
@@ -418,6 +464,9 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
             {/* Platform strengths slideshow */}
             <LandingFeatureSlideshow features={FEATURES} />
+
+            {/* Vouch Card System spotlight */}
+            <DeferredVouchCardShowcase />
 
             {/* Pricing */}
             <PricingGrid onSelectPlan={openSignup} onPlanIntent={preloadAuthModal} />
