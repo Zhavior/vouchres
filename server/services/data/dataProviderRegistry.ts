@@ -68,6 +68,14 @@ export const DATA_PROVIDERS: Record<string, DataProviderDefinition> = {
     capabilities: ["auth", "picks", "grading_logs", "realtime"],
     trustNote: "Primary persistence — not a sports stats upstream.",
   },
+  nfl_stats: {
+    id: "nfl_stats",
+    label: "NFL Stats Provider (planned)",
+    cost: "free",
+    authRequired: false,
+    capabilities: ["schedule", "boxscore", "player_stats", "grading"],
+    trustNote: "Not wired yet — NFL parlays save/grade-preview only until a free provider is registered.",
+  },
 };
 
 export function listDataProviders(): DataProviderDefinition[] {

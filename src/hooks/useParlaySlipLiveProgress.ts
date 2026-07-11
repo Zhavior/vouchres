@@ -3,6 +3,7 @@ import { apiClient } from "../lib/apiClient";
 
 export type LiveProgressLegInput = {
   id: string;
+  sport?: string | null;
   gamePk?: string | null;
   playerId?: string | number | null;
   marketCode?: string | null;
@@ -30,10 +31,11 @@ export function useParlaySlipLiveProgress(
     queryFn: async () => {
       if (gradable.length === 0) return [] as LiveProgressLegResult[];
       const payload = await apiClient.post<{ legs: LiveProgressLegResult[] }>(
-        "/api/mlb/parlay-leg-progress",
+        "/api/parlays/live-progress",
         {
           legs: gradable.map((leg) => ({
             id: leg.id,
+            sport: leg.sport ?? "mlb",
             gamePk: String(leg.gamePk),
             playerId: leg.playerId,
             marketCode: leg.marketCode,

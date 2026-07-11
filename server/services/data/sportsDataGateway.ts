@@ -141,6 +141,12 @@ export function getSportsDataGatewayStatus() {
       hrBoardCanonical: "validated_pipeline",
       parlayReadModel: "smart_parlay_slip",
       clientDirectMlbFallback: "disabled_in_production_by_default",
+      parlayLiveProgress: "sport_dispatched",
+      parlaySportsReady: {
+        mlb: "full",
+        nfl: "save_and_grade_preview_only",
+        nba: "save_and_grade_preview_only",
+      },
     },
   };
 }

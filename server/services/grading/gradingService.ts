@@ -3,6 +3,7 @@ import { runWithDistributedLock } from "../../lib/distributedLock";
 import { captureGradingFailure } from "../../lib/sentry";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
+import { getGrader, type LegOutcome } from "./sportGraders";
 import { gradePick } from "../persistence/pickService";
 import { createParlayGradedNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
@@ -502,7 +503,7 @@ async function gradeParlayPick(
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")
     .select(
-      "leg_index, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal"
+      "leg_index, sport, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal"
     )
     .eq("pick_id", pick.id)
     .order("leg_index", { ascending: true });
@@ -525,7 +526,53 @@ async function gradeParlayPick(
   }> = [];
 
   for (const leg of legs as any[]) {
+    const legSport = String(leg.sport ?? "mlb").trim().toLowerCase();
     const rawGamePk = String(leg.game_id || leg.event_id || "").trim();
+
+    if (legSport !== "mlb") {
+      const grader = getGrader(legSport);
+      let outcome: LegOutcome;
+      if (!rawGamePk) {
+        outcome = { status: "pending", note: "missing_game_id" };
+      } else {
+        const game = await grader.fetchGame(rawGamePk);
+        if (!game) {
+          outcome = { status: "pending", note: "game data unavailable" };
+        } else if (!game.final) {
+          outcome = { status: "pending", note: "game not final" };
+        } else {
+          outcome = grader.evaluateLeg(
+            {
+              sport: legSport,
+              gamePk: rawGamePk,
+              market: String(leg.market_code || leg.market || "").toLowerCase(),
+              selection: String(leg.selection ?? ""),
+              threshold: leg.stat_target != null ? Number(leg.stat_target) : undefined,
+              oddsDecimal: leg.odds_decimal != null ? Number(leg.odds_decimal) : undefined,
+            },
+            game,
+          );
+        }
+      }
+
+      if (outcome.status === "pending" || outcome.status === "error") {
+        return {
+          pick_id: pick.id,
+          status: "graded_error",
+          settled_units: null,
+          error: `${legSport}_parlay_leg_not_ready:${rawGamePk || "missing"}`,
+          warnings: [outcome.note ?? `${legSport} leg not ready for grading.`],
+        };
+      }
+
+      legResults.push({
+        leg_index: Number(leg.leg_index),
+        status: outcome.status,
+        odds: Number(leg.odds_decimal ?? 2.0),
+        note: outcome.note,
+      });
+      continue;
+    }
 
     if (!isLikelyMlbGamePk(rawGamePk)) {
       legResults.push({

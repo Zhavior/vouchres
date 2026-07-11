@@ -18,6 +18,7 @@ import { shareRoutes } from "./shareRoutes";
 import { proofRoutes } from "./proofRoutes";
 import { subscriberRoutes } from "./subscriberRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
+import { registerNflRoutes } from "./nflRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
@@ -74,6 +75,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", socialHubRoutes);
 
   registerMlbRoutes(app);
+  registerNflRoutes(app);
   registerHrBoardRoutes(app);
   registerMatchupRoutes(app);
   registerAgentRoutes(app);

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { parlayCronRoutes } from "./parlay/parlayCronRoutes";
 import { parlayStaffRoutes } from "./parlay/parlayStaffRoutes";
 import { parlayUserRoutes } from "./parlay/parlayUserRoutes";
+import { parlayLiveRoutes } from "./parlay/parlayLiveRoutes";
 
 /**
  * Parlay routes — thin composer mounting cron, staff, and user sub-routers.
@@ -12,6 +13,7 @@ import { parlayUserRoutes } from "./parlay/parlayUserRoutes";
  */
 export const parlayRoutes = Router();
 
+parlayRoutes.use(parlayLiveRoutes);
 parlayRoutes.use(parlayCronRoutes);
 parlayRoutes.use(parlayStaffRoutes);
 parlayRoutes.use(parlayUserRoutes);
