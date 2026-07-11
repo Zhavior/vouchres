@@ -394,6 +394,9 @@ function JudgeVerdictDrawer({
           <span className="text-xs text-[hsl(var(--ve-text-muted))] truncate max-w-xs">
             {verdict.headline}
           </span>
+          <span className="hidden sm:inline text-[9px] text-[hsl(var(--ve-text-muted))] uppercase tracking-wide shrink-0">
+            Advisory
+          </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm font-extrabold" style={{ color: tierColor }}>
@@ -576,7 +579,8 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     draftLegs.map((l) => ({
       id: l.id,
       confidence: Number((l as Record<string, unknown>).confidence ?? null),
-      gameId: l.gameId,
+      gameId: l.gameId ?? l.gamePk,
+      gamePk: l.gamePk ?? l.gameId,
       teamId: l.teamId,
       marketCode: l.marketCode,
       source: l.source,
@@ -602,6 +606,14 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   const canSave = draftLegs.length > 0 && draftIdentity.complete && Boolean(onSaveParlay) && !isSaving && !isSharing;
   const canShare = draftLegs.length >= 2 && draftIdentity.complete && agreedSession && !isSaving && !isSharing;
+  const saveBlockReason = !agreedSession
+    ? 'Check the responsible-play box below to enable Save.'
+    : !draftIdentity.complete
+      ? 'Repair legs missing gamePk or playerId before save.'
+      : !onSaveParlay
+        ? 'Save is unavailable in this view.'
+        : null;
+  const saveDisabled = !agreedSession || !canSave;
 
   function buildDraftParlay() {
     return normalizeParlaySlip({
@@ -749,9 +761,15 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
             className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
           />
           <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
-            I confirm this is for entertainment/research purposes. Bet responsibly.
+            I confirm this is for entertainment/research purposes. Bet responsibly. (Required to save.)
           </span>
         </label>
+      ) : null}
+
+      {saveBlockReason && draftLegs.length > 0 ? (
+        <p className="text-[10px] text-amber-200/90 leading-snug" role="status">
+          {saveBlockReason}
+        </p>
       ) : null}
 
       {draftLegs.length > 0 ? (
@@ -788,7 +806,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     isSharing,
     saveLabel: 'Save Slip',
     isSaving,
-    saveDisabled: !agreedSession || !canSave,
+    saveDisabled,
     showLiveIndicator: draftLegs.length > 0,
     subtitle: 'Add from Player Research, VouchCards, or +',
     footerExtra: railFooterExtra,
@@ -886,7 +904,8 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         legCount={draftLegs.length}
         totalOdds={displayTotalOdds}
         identity={draftIdentity}
-        canSave={canSave}
+        canSave={canSave && agreedSession}
+        saveBlockReason={saveBlockReason}
         canLock={canShare}
         isSaving={isSaving}
         isSharing={isSharing}

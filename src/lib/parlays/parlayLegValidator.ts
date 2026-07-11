@@ -1,4 +1,5 @@
 import { normalizePlayerId } from "../mlbHeadshot";
+import { playerTeamMatchesGameSide } from "../mlb/teamNameMatch";
 import { isClientLegIdentityComplete } from "../parlayIdentity";
 import type { Leg, MLBPlayer } from "../../types";
 
@@ -30,10 +31,6 @@ export interface ParlayLegValidation {
   warnings: string[];
 }
 
-function normalizeTeamName(value: unknown): string {
-  return String(value ?? "").trim().toLowerCase();
-}
-
 export function resolveLiveGamePk(game?: LiveGameRef | null): string | undefined {
   if (!game) return undefined;
   const pk = game.gamePk ?? game.id;
@@ -41,16 +38,31 @@ export function resolveLiveGamePk(game?: LiveGameRef | null): string | undefined
 }
 
 export function findPlayerLiveGame(
-  player: Pick<MLBPlayer, "team">,
+  player: Pick<MLBPlayer, "team"> & Partial<PlayerTeamFields>,
   liveGames: LiveGameRef[],
 ): LiveGameRef | undefined {
-  const playerTeam = normalizeTeamName(player.team);
-  if (!playerTeam) return undefined;
-  return liveGames.find((game) => {
-    const home = normalizeTeamName(game.homeTeam);
-    const away = normalizeTeamName(game.awayTeam);
-    return home === playerTeam || away === playerTeam;
-  });
+  const extraLabels = [
+    (player as PlayerTeamFields).teamAbbrev,
+    (player as PlayerTeamFields).sourceTeamAbbrev,
+  ];
+
+  const byName = liveGames.find(
+    (game) =>
+      playerTeamMatchesGameSide(player.team, game.homeTeam, extraLabels)
+      || playerTeamMatchesGameSide(player.team, game.awayTeam, extraLabels),
+  );
+  if (byName) return byName;
+
+  const teamId = player.teamId != null ? Number(player.teamId) : null;
+  if (teamId != null && Number.isFinite(teamId)) {
+    return liveGames.find((game) => {
+      const homeId = game.homeTeamId != null ? Number(game.homeTeamId) : null;
+      const awayId = game.awayTeamId != null ? Number(game.awayTeamId) : null;
+      return teamId === homeId || teamId === awayId;
+    });
+  }
+
+  return undefined;
 }
 
 function hasPlaceholderToken(value: unknown): boolean {
@@ -81,10 +93,11 @@ export function assessPlayerTeamSafety(
       }
     }
 
-    const playerTeam = normalizeTeamName(player.team);
-    const home = normalizeTeamName(matchedGame.homeTeam);
-    const away = normalizeTeamName(matchedGame.awayTeam);
-    if (playerTeam && playerTeam !== home && playerTeam !== away) {
+    if (
+      player.team &&
+      !playerTeamMatchesGameSide(player.team, matchedGame.homeTeam, [player.teamAbbrev, player.sourceTeamAbbrev])
+      && !playerTeamMatchesGameSide(player.team, matchedGame.awayTeam, [player.teamAbbrev, player.sourceTeamAbbrev])
+    ) {
       return {
         valid: false,
         blockedReason: TEAM_MISMATCH_REASON,

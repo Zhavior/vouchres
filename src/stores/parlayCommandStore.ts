@@ -89,10 +89,17 @@ const makeDraftLegId = (leg: Partial<DraftParlayLeg>) => {
   return stable || `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
-const normalizeDraftLeg = (leg: DraftParlayLeg): DraftParlayLeg => ({
-  ...leg,
-  id: leg.id || makeDraftLegId(leg),
-});
+const normalizeDraftLeg = (leg: DraftParlayLeg): DraftParlayLeg => {
+  const gamePk = leg.gamePk ?? (leg.gameId != null ? String(leg.gameId) : undefined);
+  const gameId = leg.gameId ?? leg.gamePk ?? null;
+  return {
+    ...leg,
+    id: leg.id || makeDraftLegId(leg),
+    gamePk,
+    gameId,
+    comparator: leg.comparator ?? ">=",
+  };
+};
 
 export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => ({
   activePanel: "build",

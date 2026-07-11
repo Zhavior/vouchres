@@ -11,6 +11,7 @@ export type ParlayHubMobileSlipDockProps = {
   canLock: boolean;
   isSaving: boolean;
   isSharing: boolean;
+  saveBlockReason?: string | null;
   onOpenSlip: () => void;
   onSave: () => void;
   onLock: () => void;
@@ -25,6 +26,7 @@ export default function ParlayHubMobileSlipDock({
   canLock,
   isSaving,
   isSharing,
+  saveBlockReason,
   onOpenSlip,
   onSave,
   onLock,
@@ -59,6 +61,11 @@ export default function ParlayHubMobileSlipDock({
         </button>
 
         <div className="grid grid-cols-2 gap-2 p-2">
+          {saveBlockReason ? (
+            <p className="col-span-2 px-1 text-[10px] text-amber-200/90 leading-snug" role="status">
+              {saveBlockReason}
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={onSave}

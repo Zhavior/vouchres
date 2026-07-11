@@ -146,6 +146,7 @@ export function computeJudgeVerdict(legs: {
   id: string;
   confidence?: number | null;
   gameId?: string | number | null;
+  gamePk?: string | number | null;
   teamId?: string | number | null;
   marketCode?: string | null;
   source: string;
@@ -167,7 +168,7 @@ export function computeJudgeVerdict(legs: {
   const correlations: CorrelationWarning[] = [];
   const byGame: Record<string, string[]> = {};
   for (const l of legs) {
-    const gk = String(l.gameId ?? '');
+    const gk = String(l.gameId ?? l.gamePk ?? '');
     if (gk) { byGame[gk] = [...(byGame[gk] ?? []), l.id]; }
   }
   for (const [, ids] of Object.entries(byGame)) {
@@ -214,7 +215,7 @@ export function computeJudgeVerdict(legs: {
     solid:     'Solid structure. One or two weak points — manageable.',
     caution:   'Some concerns. Review highlighted legs before saving.',
     risky:     'High-risk configuration. Strongly consider trimming.',
-    reject:    'This slip has too many red flags. Do not save as-is.',
+    reject:    'Heavy risk flags — review legs before locking. Saving is still allowed.',
   };
 
   const reasons: string[] = [];

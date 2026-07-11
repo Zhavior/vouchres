@@ -6,7 +6,7 @@ import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
-import { validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
+import { findPlayerLiveGame, validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
 import { useFeedStore } from '../stores/feedStore';
@@ -105,8 +105,9 @@ export function useAppDomain({
         externalProvider: newLeg.externalProvider ?? 'parlayos',
         eventKey: newLeg.eventKey,
         teamId: newLeg.teamId,
-        gamePk: newLeg.gamePk,
-        tags: ['#ParlayOS'],
+      gamePk: newLeg.gamePk,
+      gameId: newLeg.gamePk ?? newLeg.gameId,
+      tags: ['#ParlayOS'],
       });
     }
     useParlayOsStore.getState().openSheet(true);
@@ -118,11 +119,7 @@ export function useAppDomain({
 
     const editLegId = useParlayOsStore.getState().editLegId;
 
-    const matchedGameCheck = ctx.player.team?.toLowerCase() ?? '';
-    const matchedGame = liveGames.find((g: any) =>
-      g.homeTeam.toLowerCase() === matchedGameCheck ||
-      g.awayTeam.toLowerCase() === matchedGameCheck,
-    );
+    const matchedGame = findPlayerLiveGame(ctx.player, liveGames);
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
       notify({ kind: 'info', title: 'Cannot add legs', body: 'Player\'s game is already final.' });
       return;
@@ -192,11 +189,7 @@ export function useAppDomain({
   }, [liveGames, commitLegsToSlip]);
 
   const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
-    const matchedGameCheck = player.team ? player.team.toLowerCase() : '';
-    const matchedGame = liveGames.find((g: any) =>
-      g.homeTeam.toLowerCase() === matchedGameCheck ||
-      g.awayTeam.toLowerCase() === matchedGameCheck,
-    );
+    const matchedGame = findPlayerLiveGame(player, liveGames);
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
       notify({ kind: 'info', title: 'Game final', body: `Cannot add — ${player.name}'s game is already final.` });
