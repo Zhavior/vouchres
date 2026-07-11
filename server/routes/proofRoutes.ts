@@ -6,6 +6,9 @@ import { apiOkFlat } from "../lib/apiResponse";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { getPublicParlayProof } from "../services/proof/parlayProofService";
 import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
+import { decodeOtsProofBase64 } from "../services/trust/openTimestampService";
+import { getSupabaseAdmin } from "../middleware/auth";
+import { findPublicParlayById } from "../repositories/parlayRepository";
 
 export const proofRoutes = Router();
 
@@ -20,6 +23,49 @@ proofRoutes.get("/proof/parlay/:id", asyncHandler(async (req: RequestWithContext
     });
   }
   return res.json(apiOkFlat(req, { proof }));
+}));
+
+proofRoutes.get("/proof/parlay/:id/ots", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  const parlay = await findPublicParlayById(req.params.id);
+  if (!parlay) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "Parlay proof not found or not public.",
+    });
+  }
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select("proof_hash, ots_proof")
+    .eq("id", req.params.id)
+    .maybeSingle();
+
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to load OpenTimestamp proof.",
+      cause: error,
+    });
+  }
+
+  const proofBytes = decodeOtsProofBase64(String(data?.ots_proof ?? ""));
+  if (!proofBytes) {
+    throw new AppError({
+      status: 404,
+      code: "not_found",
+      message: "OpenTimestamp proof is not available for this parlay yet.",
+      details: { proof_hash: data?.proof_hash ?? null },
+    });
+  }
+
+  const filename = `${req.params.id}.ots`;
+  res.setHeader("Content-Type", "application/vnd.opentimestamps.ots");
+  res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+  res.setHeader("Cache-Control", "public, max-age=300");
+  return res.send(proofBytes);
 }));
 
 proofRoutes.get("/proof/vouch/:id", asyncHandler(async (req: RequestWithContext, res: Response) => {

@@ -135,6 +135,20 @@ export async function lockParlayOnFeedShare(input: {
   });
   parlay.proof_hash = proofHash;
 
+  void import("../trust/pickProofAnchorService")
+    .then(({ anchorParlayProofOpenTimestamp }) => anchorParlayProofOpenTimestamp({
+      pickId: input.parlayId,
+      proofHash,
+    }))
+    .then((result) => {
+      if (result.anchored) {
+        parlay.ots_stamped_at = result.stampedAt ?? null;
+      }
+    })
+    .catch((err) => {
+      console.warn("[lockParlayOnFeedShare] OTS anchor failed", (err as Error)?.message);
+    });
+
   await insertPickAuditLog({
     pickId: input.parlayId,
     userId: input.userId,

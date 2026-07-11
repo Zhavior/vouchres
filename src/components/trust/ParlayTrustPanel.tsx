@@ -70,6 +70,8 @@ export default function ParlayTrustPanel({
   const [identityComplete, setIdentityComplete] = useState<boolean | null>(null);
   const [missingLegs, setMissingLegs] = useState<number[]>([]);
   const [proofHash, setProofHash] = useState<string | null>(null);
+  const [otsStampedAt, setOtsStampedAt] = useState<string | null>(null);
+  const [hasOtsProof, setHasOtsProof] = useState(false);
 
   const loadTrust = useCallback(async () => {
     if (!pickId) return;
@@ -83,7 +85,7 @@ export default function ParlayTrustPanel({
           updated_at?: string | null;
           locked_at?: string | null;
         }>(`/api/parlays/${encodeURIComponent(pickId)}/audit`),
-        apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] }; proof_hash?: string | null } }>(
+        apiClient.get<{ parlay?: { identity?: { complete?: boolean; missingLegIndexes?: number[] }; proof_hash?: string | null; ots_stamped_at?: string | null; has_ots_proof?: boolean } }>(
           `/api/parlays/${encodeURIComponent(pickId)}`,
         ).catch(() => null),
       ]);
@@ -93,6 +95,8 @@ export default function ParlayTrustPanel({
       setUpdatedAt(audit.updated_at ?? null);
       setLockedAt(audit.locked_at ?? null);
       setProofHash(parlayPayload?.parlay?.proof_hash ?? null);
+      setOtsStampedAt(parlayPayload?.parlay?.ots_stamped_at ?? null);
+      setHasOtsProof(Boolean(parlayPayload?.parlay?.has_ots_proof));
 
       const identity = parlayPayload?.parlay?.identity;
       if (identity) {
@@ -193,6 +197,16 @@ export default function ParlayTrustPanel({
                 <div className="rounded-lg border border-cyan-900/40 bg-cyan-950/15 p-2">
                   <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mb-1">Proof hash (SHA-256)</div>
                   <div className="text-[10px] font-mono text-cyan-200 break-all">{proofHash}</div>
+                  {hasOtsProof && (
+                    <a
+                      href={`/api/proof/parlay/${encodeURIComponent(pickId)}/ots`}
+                      className="inline-flex items-center gap-1 mt-2 text-[10px] font-mono font-black uppercase text-vouch-cyan hover:text-cyan-300"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Download OpenTimestamp proof
+                      {otsStampedAt ? ` · ${formatTimestamp(otsStampedAt)}` : ""}
+                    </a>
+                  )}
                 </div>
               )}
 

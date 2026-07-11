@@ -231,6 +231,10 @@ export function registerApiRoutes(app: Express): void {
       const createdLabel = escapeHtml(formatProofTimestamp(proof.created_at));
       const lockedLabel = proof.locked_at ? escapeHtml(formatProofTimestamp(proof.locked_at)) : null;
       const proofHashLabel = proof.proof_hash ? escapeHtml(proof.proof_hash) : null;
+      const otsDownloadUrl = proof.has_ots_proof
+        ? `${baseUrl}/api/proof/parlay/${encodeURIComponent(proof.id)}/ots`
+        : null;
+      const otsStampLabel = proof.ots_stamped_at ? escapeHtml(formatProofTimestamp(proof.ots_stamped_at)) : null;
       const trustTimeline = (proof.trust_events ?? [])
         .map((event) => `<li><strong>${escapeHtml(event.label)}</strong> · ${escapeHtml(formatProofTimestamp(event.created_at))}</li>`)
         .join("");
@@ -266,6 +270,7 @@ export function registerApiRoutes(app: Express): void {
 <p>${description}</p>
 <p class="meta">Authored by <strong>${authorLabel}</strong> · Recorded ${createdLabel}${lockedLabel ? ` · <strong>Locked at share</strong> ${lockedLabel}` : ""}</p>
 ${proofHashLabel ? `<p class="hash"><strong>Proof hash (SHA-256):</strong><br>${proofHashLabel}</p>` : ""}
+${otsDownloadUrl ? `<p class="meta"><a href="${otsDownloadUrl}">Download OpenTimestamp proof (.ots)</a>${otsStampLabel ? ` · stamped ${otsStampLabel}` : ""}</p>` : ""}
 <ul>${proof.legs.map((leg, index) => `<li><strong>Leg ${index + 1}:</strong> ${escapeHtml(String(leg.selection || leg.market || "Prop"))}</li>`).join("")}</ul>
 ${trustTimeline ? `<ul class="timeline">${trustTimeline}</ul>` : ""}
 <a href="${baseUrl}/">Open in VouchEdge →</a>
