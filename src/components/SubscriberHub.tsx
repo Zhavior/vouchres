@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { appAlert } from '../lib/appToast';
 import { 
   Sparkles, 
   MessageSquare, 
@@ -290,7 +291,7 @@ export default function SubscriberHub({
 
   const handleSubscribe = (capper: SubscriberCapper, price: number, monthsName: string) => {
     if (credits < price) {
-      alert(`Insufficient credits. This premium ${monthsName} subscription requires ${price} credits. Credit top-up controls are limited during beta.`);
+      appAlert(`Insufficient credits. This premium ${monthsName} subscription requires ${price} credits. Credit top-up controls are limited during beta.`);
       return;
     }
 
@@ -310,7 +311,7 @@ export default function SubscriberHub({
       return c;
     }));
 
-    alert(`🎉 Success! You are now subscribed to "${capper.name}" under the premium ${monthsName}. The exclusive Chatroom is unlocked!`);
+    appAlert(`🎉 Success! You are now subscribed to "${capper.name}" under the premium ${monthsName}. The exclusive Chatroom is unlocked!`);
   };
 
   const handlePostMessage = (e: React.FormEvent) => {
@@ -395,7 +396,7 @@ export default function SubscriberHub({
     setSubPlans(updated);
     localStorage.setItem('vouchedge_capper_sub_plans_durations_v1', JSON.stringify(updated));
     setEditingIndex(null);
-    alert('Subscription configuration plan saved successfully!');
+    appAlert('Subscription configuration plan saved successfully!');
   };
 
   const handlePublishAnnouncement = (e: React.FormEvent, txt: string) => {
@@ -410,7 +411,7 @@ export default function SubscriberHub({
     };
     setAnnouncements(n);
     localStorage.setItem('vouchedge_capper_announcements', JSON.stringify(n));
-    alert('Announcement published and pushed to premium subscriber timelines!');
+    appAlert('Announcement published and pushed to premium subscriber timelines!');
   };
 
   return (

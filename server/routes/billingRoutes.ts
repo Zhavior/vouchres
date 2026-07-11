@@ -7,6 +7,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { AuthedRequest, requireAuth, supabaseAdmin } from "../middleware/auth";
 import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
+import { sendOpsAlert } from "../lib/opsAlert";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { webhookLimiter } from "../middleware/rateLimit";
 import { validate } from "../middleware/validation";
@@ -329,6 +330,12 @@ billingRoutes.post(
             event: "stripe.payment_failed",
             message: `Payment failed for customer ${invoice.customer} (invoice ${invoice.id})` +
               ` — subscription ${subId ?? "unknown"} moving to past_due.`,
+          });
+          void sendOpsAlert({
+            severity: "warning",
+            title: "Stripe payment failed",
+            detail: `Customer ${invoice.customer}, invoice ${invoice.id}, sub ${subId ?? "unknown"}`,
+            tags: { event: "stripe.payment_failed" },
           });
           if (subId) {
             const sub = await getStripe().subscriptions.retrieve(subId);

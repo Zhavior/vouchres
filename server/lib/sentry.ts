@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import type { Express, Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import { sendOpsAlert } from "./opsAlert";
 
 /**
  * Sentry integration for the Express server.
@@ -163,6 +164,16 @@ export function captureGradingFailure(
     extra: {
       dryRun: context.dryRun,
       ...context.extra,
+    },
+  });
+
+  void sendOpsAlert({
+    severity: context.cron || context.source === "job" ? "critical" : "warning",
+    title: `Grading failure (${context.source})`,
+    detail: err instanceof Error ? err.message : String(err),
+    tags: {
+      source: context.source,
+      ...(context.pickId ? { pick_id: context.pickId } : {}),
     },
   });
 }

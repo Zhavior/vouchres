@@ -120,6 +120,17 @@ export function useSentryUser(user: { id: string; username: string } | null) {
 }
 
 /**
+ * Capture a client-side exception when Sentry is initialized.
+ */
+export function captureException(error: Error, context?: { extra?: Record<string, unknown> }) {
+  if (!initialized) return;
+  Sentry.withScope((scope) => {
+    if (context?.extra) scope.setExtras(context.extra);
+    Sentry.captureException(error);
+  });
+}
+
+/**
  * Capture a custom event for analytics-adjacent tracking.
  * Respects cookie consent — if user denied analytics, this is a no-op.
  */

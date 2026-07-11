@@ -1,4 +1,5 @@
 import { Z8_SURFACE } from '../../theme/z8Tokens';
+import { appAlert } from '../../lib/appToast';
 import React, { useState } from 'react';
 import { 
   Heart, 
@@ -230,7 +231,7 @@ function FeedPostCard({
       setShowQuoteModal(false);
       showToast('💬 Published quote vouch successfully!');
     } else {
-      alert('Local beta posting issue: missing callback');
+      appAlert('Local beta posting issue: missing callback');
     }
   };
 
@@ -323,7 +324,7 @@ function FeedPostCard({
         window.dispatchEvent(new CustomEvent('vouchedge-following-updated', { detail: updated }));
 
         setShowUpgradeModal(false);
-        alert(`💎 Congratulations! You upgraded to SELLER PRO. You are now subscribing & following (tailing) @${post.username}!`);
+        appAlert(`💎 Congratulations! You upgraded to SELLER PRO. You are now subscribing & following (tailing) @${post.username}!`);
       }
     } catch {}
   };

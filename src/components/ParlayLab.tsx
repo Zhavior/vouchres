@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { appAlert } from '../lib/appToast';
 import { apiClient } from '../lib/apiClient';
 import { 
   Plus, 
@@ -101,7 +102,7 @@ export default function ParlayLab({
 
   const handleGenerateEdgeReport = async () => {
     if (legs.length === 0) {
-      alert("Please add at least 1 MLB player prop leg to run an Edge Report analysis!");
+      appAlert("Please add at least 1 MLB player prop leg to run an Edge Report analysis!");
       return;
     }
 
@@ -261,13 +262,13 @@ export default function ParlayLab({
     );
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
-      alert(`⚠️ Cannot bet on player: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) has already played and is concluded (status: Final). You cannot place picks on completed games.`);
+      appAlert(`⚠️ Cannot bet on player: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) has already played and is concluded (status: Final). You cannot place picks on completed games.`);
       return;
     }
 
     // 1. Check if exact same selection spec is already added
     if (legs.some(l => l.selection === prop.spec)) {
-      alert(`This player prop selection is already added to your current parlay slip!`);
+      appAlert(`This player prop selection is already added to your current parlay slip!`);
       return;
     }
 
@@ -328,7 +329,7 @@ export default function ParlayLab({
 
   const handleSaveParlaySlip = () => {
     if (legs.length === 0) {
-      alert("Please add at least 1 MLB player prop leg to build your parlay!");
+      appAlert("Please add at least 1 MLB player prop leg to build your parlay!");
       return;
     }
 
@@ -363,12 +364,12 @@ export default function ParlayLab({
     setLegs([]);
     setEdgeReport(null);
     setIsPremiumSubOnly(false);
-    alert(isPremiumSubOnly ? `🔒 EXCLUSIVE SUBSCRIBER PARLAY SECURED: "${newParlay.title}" compiled and instantly broadcasted to your Premium Subscriber Clubs Room!` : `🎯 SUCCESS: "${newParlay.title}" compiled & saved to live sports database! You can easily select this parlay slip inside the Home Feed Composer now.`);
+    appAlert(isPremiumSubOnly ? `🔒 EXCLUSIVE SUBSCRIBER PARLAY SECURED: "${newParlay.title}" compiled and instantly broadcasted to your Premium Subscriber Clubs Room!` : `🎯 SUCCESS: "${newParlay.title}" compiled & saved to live sports database! You can easily select this parlay slip inside the Home Feed Composer now.`);
   };
 
   const handleShareToVouchPage = () => {
     if (legs.length === 0) {
-      alert("Please add at least 1 MLB player prop leg to build your parlay and post!");
+      appAlert("Please add at least 1 MLB player prop leg to build your parlay and post!");
       return;
     }
 
@@ -445,7 +446,7 @@ export default function ParlayLab({
     setEdgeReport(null);
     setIsPremiumSubOnly(false);
 
-    alert(`🚀 COMPILED & SHARED: "${newParlay.title}" uploaded! Redirecting you to the Vouch Board where you can customize its display styles under various high-contrast themes.`);
+    appAlert(`🚀 COMPILED & SHARED: "${newParlay.title}" uploaded! Redirecting you to the Vouch Board where you can customize its display styles under various high-contrast themes.`);
     
     // Redirect
     onSectionChange('board');

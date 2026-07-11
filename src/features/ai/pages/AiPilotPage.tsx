@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { appAlert } from '../../../lib/appToast';
 import { Cpu, Database, Gauge, Shield } from 'lucide-react';
 import { Leg, Parlay } from '../../../types';
 import { normalizeParlaySlip } from '../../../lib/parlays/parlayBridge';
@@ -70,7 +71,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
   }, [realCandidates]);
 
   const handleAddCustomParlayToSlip = () => {
-    alert(
+    appAlert(
       'V.A.I parlays are locked and cannot be transferred into the manual builder. Save this as an AI Made Parlay so results stay separate and trustworthy.',
     );
   };
@@ -135,7 +136,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
 
     onSaveParlay(normalizeParlaySlip(parlay, 'vai_ai_made_parlay'));
     const gradable = legs.filter((l) => l.gamePk).length;
-    alert(
+    appAlert(
       `✅ Saved locked AI Made Parlay: "${parlay.title}"\n${gradable}/${legs.length} legs are tied to live MLB games and will auto-grade in Results after the games go final.`,
     );
     onSectionChange('results');

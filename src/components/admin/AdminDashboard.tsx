@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../../lib/apiClient";
+import { appAlert } from "../../lib/appToast";
+import { AdminHealthTab } from "./AdminHealthTab";
 
 /**
  * AdminDashboard — staff-only UI for managing the beta waitlist,
@@ -30,7 +32,7 @@ interface DashboardStats {
   estimated_mrr: number;
 }
 
-type Tab = "stats" | "beta" | "users" | "cappers" | "grading";
+type Tab = "stats" | "beta" | "users" | "cappers" | "grading" | "health";
 
 export function AdminDashboard() {
   const [tab, setTab] = useState<Tab>("stats");
@@ -86,6 +88,10 @@ export function AdminDashboard() {
           onClick={() => setTab("grading")}
           className={tab === "grading" ? "active" : ""}
         >Grading</button>
+        <button
+          onClick={() => setTab("health")}
+          className={tab === "health" ? "active" : ""}
+        >System Health</button>
       </nav>
 
       <main className="admin-main">
@@ -94,6 +100,7 @@ export function AdminDashboard() {
         {tab === "users" && <UsersTab />}
         {tab === "cappers" && <CappersTab />}
         {tab === "grading" && <GradingTab />}
+        {tab === "health" && <AdminHealthTab />}
       </main>
     </div>
   );
@@ -181,7 +188,7 @@ function BetaTab() {
       await apiClient.post("/api/admin/beta/invite", { email });
       await fetchSignups();
     } catch (err: any) {
-      alert(`Failed to invite ${email}: ${err?.error ?? "unknown"}`);
+      appAlert(`Failed to invite ${email}: ${err?.error ?? "unknown"}`, "error");
     }
   }
 
@@ -199,11 +206,11 @@ function BetaTab() {
       );
       const ok = result.results.filter((r) => r.ok).length;
       const failed = result.results.filter((r) => !r.ok).length;
-      alert(`Invited ${ok}, failed ${failed}`);
+      appAlert(`Invited ${ok}, failed ${failed}`, failed > 0 ? "warning" : "success");
       setBatchEmails("");
       await fetchSignups();
     } catch (err: any) {
-      alert(`Batch invite failed: ${err?.error ?? "unknown"}`);
+      appAlert(`Batch invite failed: ${err?.error ?? "unknown"}`, "error");
     }
   }
 
@@ -213,7 +220,7 @@ function BetaTab() {
       await apiClient.delete(`/api/admin/beta/${encodeURIComponent(email)}`);
       await fetchSignups();
     } catch (err: any) {
-      alert(`Failed to delete: ${err?.error ?? "unknown"}`);
+      appAlert(`Failed to delete: ${err?.error ?? "unknown"}`, "error");
     }
   }
 
@@ -342,7 +349,7 @@ function UsersTab() {
       await apiClient.patch(`/api/admin/users/${id}`, updates);
       await fetchUsers();
     } catch (err: any) {
-      alert(`Failed: ${err?.error ?? "unknown"}`);
+      appAlert(`Failed: ${err?.error ?? "unknown"}`, "error");
     }
   }
 
@@ -431,7 +438,7 @@ function CappersTab() {
       setNewCapper({ id: "", display_name: "", tagline: "", is_demo: true });
       await fetchCappers();
     } catch (err: any) {
-      alert(`Failed: ${err?.error ?? "unknown"}`);
+      appAlert(`Failed: ${err?.error ?? "unknown"}`, "error");
     }
   }
 

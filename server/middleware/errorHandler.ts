@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AppError, isAppError } from "../errors/AppError";
 import { buildApiErrorResponse } from "../lib/apiResponse";
 import { captureException, isSentryEnabled } from "../lib/sentry";
+import { sendOpsAlert } from "../lib/opsAlert";
 import { structuredLog } from "../lib/structuredLog";
 import type { RequestWithContext } from "./requestContext";
 
@@ -65,6 +66,13 @@ export const apiErrorHandler: ErrorRequestHandler = (error, req: RequestWithCont
         code: normalized.code,
       });
     }
+    void sendOpsAlert({
+      severity: "critical",
+      title: `API ${status}: ${normalized.code}`,
+      detail: normalized.message,
+      requestId,
+      tags: { route: req.originalUrl, method: req.method ?? "?" },
+    });
   }
 
   res.setHeader("x-request-id", requestId);

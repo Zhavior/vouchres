@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { appAlert } from '../lib/appToast';
 import { useLiveGames, type LiveGamesPayload } from '../hooks/queries/useLiveGames';
 import { 
   Tv, 
@@ -275,7 +276,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
   // Trigger add individual player prop leg to parlay slip context safely
   const handlePickToParlay = (player: MLBPlayer) => {
     if (activeSelectedGame && activeSelectedGame.status.toLowerCase() === 'final') {
-      alert(`⚠️ Cannot select player prop: This matchup (${activeSelectedGame.awayTeam} @ ${activeSelectedGame.homeTeam}) is concluded (status: Final). Placing picks on concluded games is strictly prohibited.`);
+      appAlert(`⚠️ Cannot select player prop: This matchup (${activeSelectedGame.awayTeam} @ ${activeSelectedGame.homeTeam}) is concluded (status: Final). Placing picks on concluded games is strictly prohibited.`);
       return;
     }
 
@@ -289,7 +290,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
       });
       onSectionChange('build');
     } else {
-      alert("No active propositions available for this athlete currently.");
+      appAlert("No active propositions available for this athlete currently.");
     }
   };
 

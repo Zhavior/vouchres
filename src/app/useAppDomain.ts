@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { appAlert } from '../lib/appToast';
 import { INITIAL_PROFILE } from '../data/mockData';
 import { resolveMarket } from '../sports/markets';
 import { notify } from '../lib/appNotifications';
@@ -151,12 +152,12 @@ export function useAppDomain({
     );
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
-      alert(`⚠️ Cannot bet on player: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) has already played and is concluded (status: Final). You cannot place picks on completed games.`);
+      appAlert(`⚠️ Cannot bet on player: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) has already played and is concluded (status: Final). You cannot place picks on completed games.`);
       return;
     }
 
     if (activeLegsRef.current.some((l) => l.selection === prop.spec)) {
-      alert('This player prop selection is already added to your current parlay slip!');
+      appAlert('This player prop selection is already added to your current parlay slip!');
       return;
     }
     const { marketCode, statTarget, threshold, comparator } = resolvePlayerResearchMarket(prop.market, prop.spec);
@@ -234,7 +235,7 @@ export function useAppDomain({
       gamePk: newLeg.gamePk,
       tags: draftTags,
     });
-    alert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
+    appAlert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
   }, [liveGames]);
 
   const handleHideSavedParlay = useCallback(async (parlayId: string) => {

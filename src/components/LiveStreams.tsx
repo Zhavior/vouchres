@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { appAlert } from '../lib/appToast';
 import { 
   Tv, 
   Users, 
@@ -502,7 +503,7 @@ export default function LiveStreams({
   const handleQuickVouchOverlay = (chan: StreamChannel) => {
     const vouchId = `vouch-live-stream-${chan.id}`;
     if (savedVouchIds.includes(vouchId)) {
-      alert("You have already vouched this live parlay prop!");
+      appAlert("You have already vouched this live parlay prop!");
       return;
     }
 
@@ -534,7 +535,7 @@ export default function LiveStreams({
       });
     }
 
-    alert(`🎉 Successfully Vouched & Tailed @${chan.streamerUsername}'s live prop! Saved to your active deck and automatically published to your profile ledger.`);
+    appAlert(`🎉 Successfully Vouched & Tailed @${chan.streamerUsername}'s live prop! Saved to your active deck and automatically published to your profile ledger.`);
   };
 
   const formatSecs = (totalSecs: number) => {

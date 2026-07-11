@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { appAlert } from '../../../lib/appToast';
 import { apiClient } from '../../../lib/apiClient';
 import { MLBPlayer, Vouch } from '../../../types';
 import { MLB_PLAYER_RECORDS } from '../../../data/playerData';
@@ -188,7 +189,7 @@ export function usePlayerResearchConsole({
     );
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
-      alert(`⚠️ Cannot select player prop: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) is already done (status: Final). Placing picks on concluded games is strictly prohibited.`);
+      appAlert(`⚠️ Cannot select player prop: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) is already done (status: Final). Placing picks on concluded games is strictly prohibited.`);
       return;
     }
 

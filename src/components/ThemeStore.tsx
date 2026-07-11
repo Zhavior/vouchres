@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { appAlert } from '../lib/appToast';
 import { apiClient } from '../lib/apiClient';
 import {
   Sparkles,
@@ -110,7 +111,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
 
   const handleBuyTheme = (theme: VisualTheme) => {
     if (userCredits < theme.cost) {
-      alert("❌ Insufficient store credits! Please click 'Claim Free Credits' to top up your balance instantly.");
+      appAlert("❌ Insufficient store credits! Please click 'Claim Free Credits' to top up your balance instantly.");
       return;
     }
 
@@ -124,7 +125,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
   const handleBuyBorder = (border: ProfileBorder) => {
     const cost = border.rarity === 'legendary' ? 300 : border.rarity === 'epic' ? 200 : 100;
     if (userCredits < cost) {
-      alert("❌ Insufficient store credits! Please click 'Claim Free Credits' to top up your balance instantly.");
+      appAlert("❌ Insufficient store credits! Please click 'Claim Free Credits' to top up your balance instantly.");
       return;
     }
 
@@ -201,7 +202,7 @@ export default function ThemeStore({ profile, onUpdateProfile }: ThemeStoreProps
   const handleMintTheme = (e: React.FormEvent) => {
     e.preventDefault();
     if (!mName.trim() || !mDesc.trim()) {
-      alert("❌ Please provide a name and description for your custom theme!");
+      appAlert("❌ Please provide a name and description for your custom theme!");
       return;
     }
 

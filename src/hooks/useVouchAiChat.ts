@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { appAlert } from '../lib/appToast';
 import { apiClient } from "../lib/apiClient";
 import { canAccessThemeStore } from "../lib/adminDevAccess";
 import {
@@ -213,7 +214,7 @@ export function useVouchAiChat({
 
   const submitEmailSimulation = (target: EmailTarget) => {
     if (!emailSubject.trim() || !emailBody.trim()) {
-      alert("Please fill out both the email subject and message body.");
+      appAlert("Please fill out both the email subject and message body.");
       return;
     }
 

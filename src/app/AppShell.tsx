@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { ThemeProvider } from '../components/theme/ThemeProvider';
 import { AppErrorBoundary } from '../components/system/AppErrorBoundary';
+import { AppToastHost } from '../components/system/AppToastHost';
 import { NotificationProvider } from '../components/notifications/UnifiedNotificationCenter';
 import GoodbyeScreen from '../components/auth/GoodbyeScreen';
 import VouchEdgeBootGate from '../components/boot/VouchEdgeBootGate';
@@ -110,6 +111,7 @@ export function AppShell({
 
                   {showGlobalAppChrome && (
                     <>
+                      <AppToastHost />
                       <Suspense fallback={null}>
                         <DeployUpdateBanner />
                       </Suspense>

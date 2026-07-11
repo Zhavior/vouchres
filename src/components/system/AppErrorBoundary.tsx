@@ -38,6 +38,13 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
 
   componentDidCatch(error: unknown, errorInfo: unknown) {
     console.error('[VouchEdge Stability Shield]', error, errorInfo);
+    void import('../../lib/sentry').then(({ captureException }) => {
+      captureException(error instanceof Error ? error : new Error(String(error)), {
+        extra: { componentStack: errorInfo },
+      });
+    }).catch(() => {
+      /* Sentry optional */
+    });
   }
 
   handleReload = () => {

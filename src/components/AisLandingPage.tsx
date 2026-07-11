@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { appAlert } from '../lib/appToast';
 import '../styles/ais-landing.css';
 import { 
   Sparkles, 
@@ -998,7 +999,7 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.displayName.trim() || !formData.username.trim()) {
-      alert('Please initialize display traits correctly.');
+      appAlert('Please initialize display traits correctly.');
       return;
     }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { appAlert } from '../lib/appToast';
 import {
   Cpu,
   Database,
@@ -125,7 +126,7 @@ export default function SmartAiEngine({
   );
 
   const handleAddCandidateToSlip = (_candidate: RealCandidate) => {
-    alert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
+    appAlert('Verified candidates are research inputs only. To protect AI Made Parlay records, save a full locked V.A.I parlay instead of adding single AI legs to the manual builder.');
   };
 
   // Safe redirect to Player Research Console with the real MLB player id.
