@@ -96,6 +96,7 @@ import ParlayBuilderRail from './ParlayBuilderRail';
 import ParlayLegCardPro from './os/ParlayLegCardPro';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
 import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParlaySlipLiveProgress';
+import { useAutoRepairDraftIdentity } from '../../hooks/useAutoRepairDraftIdentity';
 
 function statusColorStyle(token: string) {
   const color = z8StatusColor(token);
@@ -555,6 +556,9 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const draftMode       = useParlayCommandStore((s) => s.draftMode);
   const removeDraftLeg  = useParlayCommandStore((s) => s.removeDraftLeg);
   const clearDraft      = useParlayCommandStore((s) => s.clearDraft);
+  const batchRepairDraftLegs = useParlayCommandStore((s) => s.batchRepairDraftLegs);
+  const liveGames = useAppCommandStore((s) => s.liveGames);
+  useAutoRepairDraftIdentity(draftLegs.length > 0);
   const openLegEditor   = useParlayOsStore((s) => s.openLegEditor);
   const openSheet       = useParlayOsStore((s) => s.openSheet);
   const buildTemplateId = useParlayOsStore((s) => s.buildTemplateId);
@@ -723,9 +727,21 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
             onExplain={() => setIdentityExplainerOpen(true)}
           />
           {!draftIdentity.complete ? (
-            <p className="text-[10px] text-amber-200/80 leading-snug">
-              Repair legs missing gamePk or playerId before save or lock.
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[10px] text-amber-200/80 leading-snug">
+                Repair legs missing gamePk or playerId before save or lock.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  batchRepairDraftLegs(liveGames);
+                  announce('Attempted identity repair from today\'s slate.');
+                }}
+                className="text-[10px] font-bold uppercase tracking-wide text-cyan-300 hover:text-cyan-200 underline min-h-[2rem]"
+              >
+                Repair identity
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}

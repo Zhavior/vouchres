@@ -4,8 +4,10 @@ import { apiClient } from '../lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from '../lib/supabaseClient';
 import { assessClientParlayIdentity } from '../lib/parlayIdentity';
 import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import { repairDraftLegsIdentity } from '../lib/parlays/repairDraftLegIdentity';
 import { useSlipsStore } from '../stores/slipsStore';
-import { useParlayCommandStore } from '../stores/parlayCommandStore';
+import { useParlayCommandStore, type DraftParlayLeg } from '../stores/parlayCommandStore';
+import { useAppCommandStore } from '../stores/appCommandStore';
 
 type BackendParlay = {
   id: string;
@@ -87,14 +89,19 @@ export async function handleSaveParlaySlip(
   newParlay: Parlay | CanonicalParlaySlip,
   navigateSection: (section: string) => void,
 ): Promise<void> {
+  const liveGames = useAppCommandStore.getState().liveGames;
+  const rawLegs = (Array.isArray(newParlay.legs) ? newParlay.legs : []) as DraftParlayLeg[];
+  const { legs: repairedLegs } = repairDraftLegsIdentity(rawLegs, liveGames);
+  const parlayToSave = { ...newParlay, legs: repairedLegs };
+
   const identity = assessClientParlayIdentity(
-    (Array.isArray(newParlay.legs) ? newParlay.legs : []).map((leg) => leg as Record<string, unknown>),
+    repairedLegs.map((leg) => leg as Record<string, unknown>),
   );
   if (!identity.complete) {
     notify({
       kind: 'info',
       title: 'Cannot save parlay',
-      body: `Leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity (gamePk, playerId, market, target).`,
+      body: `Leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity (gamePk, playerId, market, target). Open Player Research to pick an official player, then re-add the leg.`,
     });
     throw new Error('Parlay legs are missing grading identity.');
   }
@@ -102,27 +109,27 @@ export async function handleSaveParlaySlip(
   const syncSlips = useSlipsStore.getState().syncSlips;
 
   const normalizedUiStatus =
-    newParlay.status === 'won'
+    parlayToSave.status === 'won'
       ? 'WON'
-      : newParlay.status === 'lost'
+      : parlayToSave.status === 'lost'
         ? 'LOST'
-        : newParlay.status === 'void'
+        : parlayToSave.status === 'void'
           ? 'VOID'
           : 'PENDING';
 
   const savedParlay: Parlay = {
-    id: newParlay.id || `parlay-${Date.now()}`,
-    title: newParlay.title,
-    legs: Array.isArray(newParlay.legs) ? (newParlay.legs as unknown as Leg[]) : [],
+    id: parlayToSave.id || `parlay-${Date.now()}`,
+    title: parlayToSave.title,
+    legs: repairedLegs as unknown as Leg[],
     status: normalizedUiStatus,
-    mode: newParlay.mode || 'PRACTICE',
-    createdAt: newParlay.createdAt || new Date().toISOString(),
-    totalOdds: 'totalOdds' in newParlay ? String(newParlay.totalOdds || '') : '',
-    oddsValue: 'oddsValue' in newParlay ? Number(newParlay.oddsValue || 0) : 0,
-    riskTier: 'riskTier' in newParlay ? newParlay.riskTier : 'LOW',
+    mode: parlayToSave.mode || 'PRACTICE',
+    createdAt: parlayToSave.createdAt || new Date().toISOString(),
+    totalOdds: 'totalOdds' in parlayToSave ? String(parlayToSave.totalOdds || '') : '',
+    oddsValue: 'oddsValue' in parlayToSave ? Number(parlayToSave.oddsValue || 0) : 0,
+    riskTier: 'riskTier' in parlayToSave ? parlayToSave.riskTier : 'LOW',
     lockNotified: false,
     backendSyncState: 'saving',
-    aiGenerated: 'aiGenerated' in newParlay ? Boolean(newParlay.aiGenerated) : false,
+    aiGenerated: 'aiGenerated' in parlayToSave ? Boolean(parlayToSave.aiGenerated) : false,
   };
 
   syncSlips([savedParlay, ...useSlipsStore.getState().savedSlips]);
@@ -170,6 +177,12 @@ export async function handleCommitParlayTrust(input: {
   navigateSection: (section: string) => void;
 }): Promise<Parlay> {
   let working = { ...input.parlay };
+  const liveGames = useAppCommandStore.getState().liveGames;
+  const { legs: repairedLegs } = repairDraftLegsIdentity(
+    (working.legs || []) as DraftParlayLeg[],
+    liveGames,
+  );
+  working = { ...working, legs: repairedLegs as unknown as Leg[] };
 
   const identity = assessClientParlayIdentity(
     (working.legs || []).map((leg) => ({ ...leg } as Record<string, unknown>)),

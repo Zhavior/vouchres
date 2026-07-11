@@ -18,6 +18,7 @@ import { useParlaySlipLiveProgress, liveProgressMap } from "../../../hooks/usePa
 import ParlayIdentityExplainer from "../../trust/ParlayIdentityExplainer";
 import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
 import { notify } from "../../../lib/appNotifications";
+import { useAutoRepairDraftIdentity } from "../../../hooks/useAutoRepairDraftIdentity";
 
 export type ParlayOsLayerProps = {
   onConfirmTier: (tier: ParlayMarketTier) => void;
@@ -36,6 +37,7 @@ export default function ParlayOsLayer({
   const draftLegs = useParlayCommandStore(selectDraftLegs);
   const removeDraftLeg = useParlayCommandStore((s) => s.removeDraftLeg);
   const replaceDraftLeg = useParlayCommandStore((s) => s.replaceDraftLeg);
+  useAutoRepairDraftIdentity(draftLegs.length > 0);
   const sheetOpen = useParlayOsStore((s) => s.sheetOpen);
   const sheetExpanded = useParlayOsStore((s) => s.sheetExpanded);
   const toggleSheet = useParlayOsStore((s) => s.toggleSheet);

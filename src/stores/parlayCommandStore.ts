@@ -5,6 +5,8 @@ import {
   normalizeSlipStatus,
   isLiveLikeStatus,
 } from "../lib/parlayDisplay";
+import { repairDraftLegIdentity, repairDraftLegsIdentity } from "../lib/parlays/repairDraftLegIdentity";
+import type { LiveGameRef } from "../lib/parlays/parlayLegValidator";
 
 export type ParlayCommandPanel = "build" | "ai" | "vai_ledger" | "live" | "premium";
 
@@ -70,6 +72,7 @@ type ParlayCommandState = {
   setSaving: (saving: boolean) => void;
   setPosting: (posting: boolean) => void;
   setError: (message: string | null) => void;
+  batchRepairDraftLegs: (liveGames: LiveGameRef[]) => void;
 };
 
 const makeDraftLegId = (leg: Partial<DraftParlayLeg>) => {
@@ -89,15 +92,16 @@ const makeDraftLegId = (leg: Partial<DraftParlayLeg>) => {
   return stable || `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
-const normalizeDraftLeg = (leg: DraftParlayLeg): DraftParlayLeg => {
-  const gamePk = leg.gamePk ?? (leg.gameId != null ? String(leg.gameId) : undefined);
-  const gameId = leg.gameId ?? leg.gamePk ?? null;
+const normalizeDraftLeg = (leg: DraftParlayLeg, liveGames: LiveGameRef[] = []): DraftParlayLeg => {
+  const { leg: repaired } = repairDraftLegIdentity(leg, liveGames);
+  const gamePk = repaired.gamePk ?? (repaired.gameId != null ? String(repaired.gameId) : undefined);
+  const gameId = repaired.gameId ?? repaired.gamePk ?? null;
   return {
-    ...leg,
-    id: leg.id || makeDraftLegId(leg),
+    ...repaired,
+    id: leg.id || makeDraftLegId(repaired),
     gamePk,
     gameId,
-    comparator: leg.comparator ?? ">=",
+    comparator: repaired.comparator ?? ">=",
   };
 };
 
@@ -246,6 +250,15 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
     set((state) => ({
       optimistic: { ...state.optimistic, lastError: message },
     })),
+
+  batchRepairDraftLegs: (liveGames) =>
+    set((state) => {
+      const { legs, changed } = repairDraftLegsIdentity(state.draftLegs, liveGames);
+      if (!changed) return state;
+      return {
+        draftLegs: legs.map((leg) => normalizeDraftLeg(leg, liveGames)),
+      };
+    }),
 }));
 
 export const selectActiveParlayPanel = (state: ParlayCommandState) => state.activePanel;

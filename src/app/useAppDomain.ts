@@ -6,6 +6,7 @@ import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
+import type { DraftParlayLeg } from '../stores/parlayCommandStore';
 import { findPlayerLiveGame, validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
@@ -84,30 +85,13 @@ export function useAppDomain({
     useProfileStore.getState().resetProfile();
   }, []);
 
-  const commitLegsToSlip = useCallback((newLegs: Leg[]) => {
-    if (newLegs.length === 0) return;
-    setActiveLegs((prev) => [...prev, ...newLegs]);
-    for (const newLeg of newLegs) {
+  const commitBuiltLegsToSlip = useCallback((built: Array<{ leg: Leg; draft: DraftParlayLeg }>) => {
+    if (built.length === 0) return;
+    setActiveLegs((prev) => [...prev, ...built.map((entry) => entry.leg)]);
+    for (const entry of built) {
       useParlayCommandStore.getState().addDraftLeg({
-        id: newLeg.id,
-        source: 'manual',
-        sport: newLeg.sport,
-        game: newLeg.game,
-        selection: newLeg.selection,
-        odds: newLeg.odds ?? undefined,
-        marketCode: newLeg.marketCode,
-        marketLabel: newLeg.market,
-        playerId: newLeg.playerId,
-        playerName: newLeg.selection.split(' ')[0],
-        teamLabel: undefined,
-        statTarget: newLeg.statTarget ?? newLeg.threshold,
-        comparator: newLeg.comparator,
-        externalProvider: newLeg.externalProvider ?? 'parlayos',
-        eventKey: newLeg.eventKey,
-        teamId: newLeg.teamId,
-      gamePk: newLeg.gamePk,
-      gameId: newLeg.gamePk ?? newLeg.gameId,
-      tags: ['#ParlayOS'],
+        ...entry.draft,
+        tags: entry.draft.tags ?? ['#ParlayOS'],
       });
     }
     useParlayOsStore.getState().openSheet(true);
@@ -179,14 +163,14 @@ export function useAppDomain({
       return;
     }
 
-    commitLegsToSlip(built.map((b) => b.leg));
+    commitBuiltLegsToSlip(built);
     notify({
       kind: 'success',
       title: built.length > 1 ? `${built.length} legs added` : 'Leg added',
       body: tier.label,
       section: 'build',
     });
-  }, [liveGames, commitLegsToSlip]);
+  }, [liveGames, commitBuiltLegsToSlip]);
 
   const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
     const matchedGame = findPlayerLiveGame(player, liveGames);
