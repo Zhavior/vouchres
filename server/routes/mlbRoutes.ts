@@ -18,6 +18,7 @@ import {
   upstreamUnavailable,
   ymdOrDefault,
 } from "../lib/requestValidators";
+import { getSportsDataGatewayStatus } from "../services/data/sportsDataGateway";
 
 function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
@@ -41,6 +42,10 @@ export function registerMlbRoutes(app: Express): void {
     const report = await getMlbHealthReport(date);
     const status = report.status === "down" ? 503 : 200;
     return res.status(status).json(apiOkFlat(req, report as unknown as Record<string, unknown>));
+  }));
+
+  app.get("/api/mlb/gateway/status", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, getSportsDataGatewayStatus()));
   }));
 
   app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {

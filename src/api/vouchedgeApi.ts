@@ -19,6 +19,7 @@ import type { HrFeedResponse } from "../types/notifications";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
+import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
 import { apiUrl } from "../lib/apiBase";
 import { unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
@@ -36,11 +37,12 @@ async function getJson<T>(url: string): Promise<T> {
   return unwrapApiPayload<T>(await res.json());
 }
 
-/** Try the backend, fall back to a direct-statsapi client build (real data, no mock). */
+/** Try the backend; optional direct Stats API fallback (dev / explicit flag only). */
 async function withFallback<T>(primary: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
   try {
     return await primary();
-  } catch {
+  } catch (err) {
+    if (!isMlbDirectFallbackAllowed()) throw err;
     return await fallback();
   }
 }

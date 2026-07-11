@@ -1,6 +1,4 @@
-import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
-
-const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
+import { fetchMlbGameLiveState } from "../data/sportsDataGateway";
 
 const MARKET_STAT_MAP: Record<string, { side: "batting" | "pitching"; stat: string }> = {
   ANYTIME_HR: { side: "batting", stat: "homeRuns" },
@@ -92,25 +90,12 @@ export async function fetchParlayLegProgressBatch(
   for (const [gamePk, gameLegs] of byGame.entries()) {
     let boxscore: any = null;
     let gameStatus: string | null = null;
+    let hrCountByPlayer: Record<string, number> = {};
     try {
-      const [linescore, box] = await Promise.all([
-        sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/linescore`, {
-          cacheKey: `live-progress:linescore:${gamePk}`,
-          ttlMs: 15_000,
-          timeoutMs: 8_000,
-          retries: 1,
-          debugLabel: "parlayLiveProgress",
-        }),
-        sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/boxscore`, {
-          cacheKey: `live-progress:boxscore:${gamePk}`,
-          ttlMs: 15_000,
-          timeoutMs: 10_000,
-          retries: 1,
-          debugLabel: "parlayLiveProgress",
-        }),
-      ]);
-      boxscore = box;
-      gameStatus = String(linescore?.status?.detailedState ?? linescore?.status ?? "");
+      const liveState = await fetchMlbGameLiveState(gamePk);
+      boxscore = liveState.boxscore;
+      gameStatus = liveState.gameStatus;
+      hrCountByPlayer = liveState.hrCountByPlayer;
     } catch {
       boxscore = null;
     }
@@ -118,7 +103,15 @@ export async function fetchParlayLegProgressBatch(
     for (const leg of gameLegs) {
       const target = Number(leg.statTarget ?? 1);
       const marketCode = String(leg.marketCode ?? "ANYTIME_HR");
-      const current = boxscore ? readPlayerStat(boxscore, leg.playerId, marketCode) : null;
+      const code = marketCode.toUpperCase();
+      const isHrMarket = code.includes("HR") || code === "HOME_RUN";
+      const playerIdKey = String(leg.playerId).replace(/\D/g, "");
+      const hrFromFeed = isHrMarket && playerIdKey ? hrCountByPlayer[playerIdKey] : undefined;
+      const current = hrFromFeed !== undefined
+        ? hrFromFeed
+        : boxscore
+          ? readPlayerStat(boxscore, leg.playerId, marketCode)
+          : null;
       results.push({
         id: leg.id,
         current,
