@@ -16,6 +16,9 @@ export type AppLiveGame = {
   awayTeam: string;
   status: string;
   gamePk?: string | number;
+  id?: string | number;
+  homeTeamId?: number | string | null;
+  awayTeamId?: number | string | null;
 };
 
 export type ResearchProp = {

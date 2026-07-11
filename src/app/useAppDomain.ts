@@ -6,6 +6,7 @@ import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
+import { validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
 import { inferFamilyFromText } from '../lib/parlays/parlayMarketCatalog';
 import { useFeedStore } from '../stores/feedStore';
@@ -130,6 +131,20 @@ export function useAppDomain({
       propHint: ctx.propHint,
       liveGames,
     });
+
+    const validation = validateParlayLegBatch(
+      built.map((entry) => entry.leg),
+      ctx.player,
+      liveGames,
+    );
+    if (!validation.valid) {
+      notify({
+        kind: 'info',
+        title: 'Cannot add leg',
+        body: validation.blockedReason ?? 'This leg is missing grading identity.',
+      });
+      return;
+    }
 
     const duplicate = built.some((b) =>
       activeLegsRef.current.some((l) => l.eventKey && l.eventKey === b.leg.eventKey),

@@ -8,6 +8,7 @@ import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators"
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePendingPicks } from "../../services/grading/gradingService";
+import { buildGradeDueLogRows, persistGradingRunLogs } from "../../services/grading/gradingLogService";
 import { captureGradingFailure } from "../../lib/sentry";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
 import { partitionGradeDueResult } from "./parlayGradingResponses";
@@ -76,6 +77,17 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
     pendingLegs: pending.length,
     errorCount: errors.length,
   }));
+
+  try {
+    await persistGradingRunLogs(buildGradeDueLogRows({
+      settled,
+      pending,
+      errors,
+      source: "cron_grade_due",
+    }));
+  } catch (logErr) {
+    console.warn("[cron/grade-due] grading_logs unavailable", (logErr as Error)?.message);
+  }
 
   return res.json(apiOkFlat(req, {
     mode: "cron_grade_due",

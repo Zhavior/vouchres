@@ -1,16 +1,22 @@
 import { normalizePlayerId } from "../mlbHeadshot";
-import type { Leg, MLBPlayer } from "../../types";
+import type { Leg, MLBPlayer, Vouch } from "../../types";
 import type { ResearchProp } from "../../stores/appCommandStore";
 import {
   flattenTierLegs,
   type ParlayMarketTier,
 } from "./parlayMarketCatalog";
 import type { DraftParlayLeg } from "../../stores/parlayCommandStore";
+import {
+  findPlayerLiveGame,
+  resolveLiveGamePk,
+  type LiveGameRef,
+  type PlayerTeamFields,
+} from "./parlayLegValidator";
 
 export type ParlayLegBuildContext = {
-  player: MLBPlayer;
+  player: PlayerTeamFields;
   propHint?: ResearchProp;
-  liveGames: Array<{ homeTeam: string; awayTeam: string; status: string; gamePk?: string | number }>;
+  liveGames: LiveGameRef[];
 };
 
 function buildEventKey(parts: {
@@ -35,19 +41,16 @@ export function buildLegsFromTier(
 ): { leg: Leg; draft: DraftParlayLeg }[] {
   const tiers = flattenTierLegs(tier);
   const player = ctx.player;
-  const playerTeam = player.team ? player.team.toLowerCase() : "";
-  const matchedGame = ctx.liveGames.find(
-    (g) =>
-      g.homeTeam.toLowerCase() === playerTeam ||
-      g.awayTeam.toLowerCase() === playerTeam,
-  );
+  const matchedGame = findPlayerLiveGame(player, ctx.liveGames);
 
   const gamePk =
     ctx.propHint?.gamePk != null
       ? String(ctx.propHint.gamePk)
-      : matchedGame?.gamePk != null
-        ? String(matchedGame.gamePk)
-        : undefined;
+      : resolveLiveGamePk(matchedGame) ??
+        (() => {
+          const resolved = (ctx.player as PlayerTeamFields & { resolvedGamePk?: string }).resolvedGamePk;
+          return resolved && String(resolved).trim() !== "" ? String(resolved) : undefined;
+        })();
 
   const playerId = normalizePlayerId(ctx.propHint?.playerId ?? player.id);
   const playerName = player.name ?? "Player";
@@ -112,21 +115,33 @@ export function buildLegsFromTier(
   });
 }
 
-export function vouchToPlayer(vouch: {
-  playerOrTeam?: string;
-  sport?: string;
-  gameName?: string;
-}): MLBPlayer {
-  return {
-    id: "0",
-    name: vouch.playerOrTeam ?? "Player",
-    team: vouch.gameName?.split("@")[0]?.trim() ?? "MLB",
+export function vouchToPlayer(vouch: Vouch): PlayerTeamFields {
+  const parlayLeg = vouch.parlay?.legs?.[0];
+  const extended = vouch as Vouch & {
+    playerId?: string | number;
+    mlbPlayerId?: string | number;
+    player_id?: string | number;
+  };
+  const rawPlayerId =
+    parlayLeg?.playerId ??
+    parlayLeg?.mlbPlayerId ??
+    extended.playerId ??
+    extended.mlbPlayerId ??
+    extended.player_id ??
+    null;
+  const normalizedId = rawPlayerId != null ? normalizePlayerId(rawPlayerId) : "";
+  const teamFromGame = vouch.gameName?.split("@")[0]?.trim();
+
+  const shell: PlayerTeamFields = {
+    id: normalizedId || "",
+    name: vouch.playerOrTeam ?? vouch.selection ?? "Player",
+    team: teamFromGame || "MLB",
     position: "",
     number: "",
     headshot: "",
     injuryStatus: "",
     injurySeverity: "NONE" as const,
-    injuryNotes: "",
+    injuryNotes: normalizedId ? "" : "Open from Player Research for official playerId before locking.",
     batterScore: 0,
     seasonStats: { avg: "0", hr: "0", rbi: "0", ops: "0" },
     gameLogs: [],
@@ -153,4 +168,13 @@ export function vouchToPlayer(vouch: {
       riskFactor: "LOW" as const,
     },
   };
+
+  if (parlayLeg?.teamId != null) {
+    shell.teamId = parlayLeg.teamId;
+  }
+  if (parlayLeg?.gamePk != null) {
+    shell.resolvedGamePk = String(parlayLeg.gamePk);
+  }
+
+  return shell;
 }

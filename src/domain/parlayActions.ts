@@ -2,6 +2,7 @@ import type { Parlay, Leg } from '../types';
 import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from '../lib/supabaseClient';
+import { assessClientParlayIdentity } from '../lib/parlayIdentity';
 import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
@@ -86,6 +87,18 @@ export async function handleSaveParlaySlip(
   newParlay: Parlay | CanonicalParlaySlip,
   navigateSection: (section: string) => void,
 ): Promise<void> {
+  const identity = assessClientParlayIdentity(
+    (Array.isArray(newParlay.legs) ? newParlay.legs : []).map((leg) => leg as Record<string, unknown>),
+  );
+  if (!identity.complete) {
+    notify({
+      kind: 'info',
+      title: 'Cannot save parlay',
+      body: `Leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity (gamePk, playerId, market, target).`,
+    });
+    throw new Error('Parlay legs are missing grading identity.');
+  }
+
   const syncSlips = useSlipsStore.getState().syncSlips;
 
   const normalizedUiStatus =
@@ -157,6 +170,15 @@ export async function handleCommitParlayTrust(input: {
   navigateSection: (section: string) => void;
 }): Promise<Parlay> {
   let working = { ...input.parlay };
+
+  const identity = assessClientParlayIdentity(
+    (working.legs || []).map((leg) => ({ ...leg } as Record<string, unknown>)),
+  );
+  if (!identity.complete) {
+    throw new Error(
+      `Cannot lock to ledger — leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity.`,
+    );
+  }
 
   if (!working.backendPickId) {
     await pushParlayToBackend(working);

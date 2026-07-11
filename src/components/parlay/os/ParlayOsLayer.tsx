@@ -10,6 +10,8 @@ import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
 import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import { draftLegsToUiLegs } from "../../../lib/parlays/draftLegsToUiLegs";
+import { assessClientParlayIdentity } from "../../../lib/parlayIdentity";
+import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
 import { computeCombinedOdds } from "../types/parlayHubTypes";
 import { notify } from "../../../lib/appNotifications";
 
@@ -35,6 +37,10 @@ export default function ParlayOsLayer({
   const [stake, setStake] = useState(10);
 
   const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
+  const slipIdentity = useMemo(
+    () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
+    [draftLegs],
+  );
   const combined = useMemo(() => computeCombinedOdds(uiLegs), [uiLegs]);
   const totalOdds = combined?.american ?? "—";
   const decimal = combined?.decimal ?? null;
@@ -78,6 +84,7 @@ export default function ParlayOsLayer({
               <Layers3 className="w-4 h-4 text-cyan-400" />
               <span className="text-sm font-black text-white">ParlayOS Slip</span>
               <span className="text-[10px] font-mono text-white/40">{legCount} leg{legCount !== 1 ? "s" : ""}</span>
+              {legCount > 0 ? <ParlayIdentityBadge identity={slipIdentity} /> : null}
             </div>
             <div className="flex items-center gap-1">
               <button

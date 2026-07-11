@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { previewLiveHrParlayMatches } from "./liveHrParlayService";
+import { persistGradingRunLogs } from "./gradingLogService";
 
 export interface LiveHrSyncResult {
   checked: number;
@@ -138,7 +139,22 @@ export async function applyLiveHrParlayMatches(date?: string): Promise<LiveHrSyn
     result.updatedLegs += updatedCount;
 
     if (updatedCount > 0) {
-      await refreshParentPickStatusFromLegs(admin, String(leg.pick_id));
+      const parentRefreshed = await refreshParentPickStatusFromLegs(admin, String(leg.pick_id));
+      await persistGradingRunLogs([{
+        pick_id: String(leg.pick_id),
+        status: "won",
+        reason: "live_hr_detected",
+        source: "live-hr-sync",
+        previous_status: "pending",
+        evidence: {
+          leg_index: leg.leg_index,
+          player_id: event.playerId ?? leg.player_id,
+          event_key: eventKey,
+          parent_refreshed: parentRefreshed,
+        },
+      }]).catch((err) => {
+        console.warn("[liveHrParlayWrite] grading log failed", (err as Error)?.message);
+      });
     }
   }
 

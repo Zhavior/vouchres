@@ -154,9 +154,22 @@ export default React.memo(function VouchCard({
   const handleParlayOsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const player = vouchToPlayer(vouch);
+    const parlayLeg = vouch.parlay?.legs?.[0];
+    if (!player.id) {
+      triggerToast('Open this player in Research first — ParlayOS needs an official playerId.');
+      return;
+    }
     useParlayOsStore.getState().openPicker({
       player,
       vouch,
+      propHint: parlayLeg?.gamePk || parlayLeg?.playerId ? {
+        id: String(parlayLeg?.id ?? vouch.id),
+        market: vouch.market ?? '',
+        odds: parlayLeg?.odds != null ? Number(parlayLeg.odds) : null,
+        spec: vouch.selection ?? vouch.line ?? vouch.market ?? '',
+        gamePk: parlayLeg?.gamePk,
+        playerId: parlayLeg?.playerId ?? player.id,
+      } : undefined,
       initialFamily: inferFamilyFromText(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
       isPitcher: /pitcher|strikeout|\bk\b/i.test(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
     });

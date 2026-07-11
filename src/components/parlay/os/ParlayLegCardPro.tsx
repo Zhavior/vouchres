@@ -2,6 +2,7 @@ import React from "react";
 import type { Leg } from "../../../types";
 import { americanLabel } from "../../../lib/odds";
 import { deriveLegProgress } from "../../../lib/parlayLegProgress";
+import { isClientLegIdentityComplete } from "../../../lib/parlayIdentity";
 import { getMlbHeadshotUrl, getFallbackHeadshot } from "../../../lib/parlayDisplay";
 
 const MARKET_COLORS: Record<string, string> = {
@@ -37,7 +38,11 @@ export default function ParlayLegCardPro({
     marketCode: leg.marketCode,
     market: leg.market,
     selection: leg.selection,
+    statTarget: leg.statTarget ?? leg.threshold,
+    threshold: leg.threshold ?? leg.statTarget,
+    actual: leg.actual,
   });
+  const identityComplete = isClientLegIdentityComplete(leg as unknown as Record<string, unknown>, 0);
   const headshot =
     getMlbHeadshotUrl(leg.playerId) ??
     getFallbackHeadshot(String(leg.selection ?? "").split(" ")[0]);
@@ -63,6 +68,11 @@ export default function ParlayLegCardPro({
               <p className={`font-bold text-white truncate ${compact ? "text-xs" : "text-sm"}`}>
                 {leg.selection}
               </p>
+              {!identityComplete ? (
+                <p className="text-[9px] font-bold uppercase tracking-wide text-amber-300/90 mt-0.5">
+                  Needs identity repair
+                </p>
+              ) : null}
               {leg.game ? (
                 <p className="text-[10px] text-white/40 truncate mt-0.5">{leg.game}</p>
               ) : null}

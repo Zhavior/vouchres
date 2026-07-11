@@ -36,6 +36,7 @@ export type PublicParlaySlip = {
   trustAudience?: "private" | "public" | "subscriber" | null;
   trustLockWarningNotified?: boolean;
   trustLockedNotified?: boolean;
+  lockReason?: "trust_ledger" | "feed_share" | null;
 };
 
 export const cleanCustomerText = (value?: string | number | null): string =>
@@ -180,6 +181,7 @@ export const normalizePublicSlip = (raw: any): PublicParlaySlip => {
     trustAudience: raw?.trustAudience ?? raw?.visibility ?? "private",
     trustLockWarningNotified: Boolean(raw?.trustLockWarningNotified),
     trustLockedNotified: Boolean(raw?.trustLockedNotified),
+    lockReason: raw?.lockReason ?? raw?.lock_reason ?? null,
     legs,
   };
 };

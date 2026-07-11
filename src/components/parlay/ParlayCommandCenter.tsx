@@ -55,6 +55,11 @@ import {
 import type { CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
 import type { PublicParlaySlip } from '../../lib/parlayDisplay';
 import { classifyParlayHistoryTab } from '../../lib/trustLockSchedule';
+import ParlayOsBadgeRow from '../trust/ParlayOsBadgeRow';
+import ParlayTrustPanel from '../trust/ParlayTrustPanel';
+import ParlayIdentityBadge from '../trust/ParlayIdentityBadge';
+import { assessClientParlayIdentity } from '../../lib/parlayIdentity';
+import { deriveLegProgress, deriveSlipProgress } from '../../lib/parlayLegProgress';
 import {
   selectActiveParlayPanel,
   selectDraftLegs,
@@ -228,7 +233,14 @@ const DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }:
   const confidence = Number(record.confidence ?? record.edgeScore ?? null);
   const hasConf = Number.isFinite(confidence);
   const dfsCtx = record.dfsContext as DfsLegContext | undefined;
-  const liveProgress = record.liveProgress as { current: number; target: number } | undefined;
+  const liveProgress =
+    (record.liveProgress as { current: number; target: number } | undefined) ??
+    deriveLegProgress({
+      status: String(record.status ?? "pending"),
+      marketCode: String(record.marketCode ?? record.market ?? ""),
+      market: String(record.market ?? record.marketLabel ?? ""),
+      selection: String(record.selection ?? record.playerName ?? ""),
+    });
   const oddsSource = record.oddsSource as string | undefined;
   const status = (record.status as LegGradeStatus | undefined) ?? 'pending';
   const statusMeta = LEG_STATUS_META[status as LegGradeStatus] ?? LEG_STATUS_META.pending;
@@ -572,11 +584,15 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   const combinedOdds = useMemo(() => computeCombinedOdds(draftLegs), [draftLegs]);
   const uiLegs = useMemo(() => draftLegsToUiLegs(draftLegs), [draftLegs]);
+  const draftIdentity = useMemo(
+    () => assessClientParlayIdentity(draftLegs as unknown as Record<string, unknown>[]),
+    [draftLegs],
+  );
 
   const riskMeta = RISK_MODE_META[riskMode];
 
-  const canSave = draftLegs.length > 0 && Boolean(onSaveParlay) && !isSaving && !isSharing;
-  const canShare = draftLegs.length >= 2 && agreedSession && !isSaving && !isSharing;
+  const canSave = draftLegs.length > 0 && draftIdentity.complete && Boolean(onSaveParlay) && !isSaving && !isSharing;
+  const canShare = draftLegs.length >= 2 && draftIdentity.complete && agreedSession && !isSaving && !isSharing;
 
   function buildDraftParlay() {
     return normalizeParlaySlip({
@@ -720,6 +736,16 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         subtitle="Add from Player Research, VouchCards, or +"
         footerExtra={(
           <div className="space-y-3 mb-4">
+            {draftLegs.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <ParlayIdentityBadge identity={draftIdentity} />
+                {!draftIdentity.complete ? (
+                  <p className="text-[10px] text-amber-200/80 leading-snug">
+                    Repair legs missing gamePk or playerId before save or lock.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             {saveError ? (
               <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
                 <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
@@ -968,6 +994,11 @@ function MyParlaysPanel({
     const legs = Array.isArray(slip.legs) ? slip.legs : [];
     const pendingLock = slip.trustCommittedAt && !slip.feedLockedAt;
     const lockLabel = pendingLock ? trustLockCountdownLabel(slip.trustLockAt ?? undefined) : null;
+    const pickId = String(slip.sourceId ?? '').trim();
+    const showTrustPanel = Boolean(pickId && (slip.trustCommittedAt || slip.feedLockedAt));
+    const legRecords = legs.map((leg) => leg as Record<string, unknown>);
+    const identity = assessClientParlayIdentity(legRecords);
+    const slipProgress = deriveSlipProgress(legRecords);
 
     return (
       <article
@@ -982,8 +1013,25 @@ function MyParlaysPanel({
             <p className="text-[10px] text-[hsl(var(--ve-text-muted))] mt-0.5">
               {legs.length} leg{legs.length !== 1 ? 's' : ''}
               {lockLabel ? ` · ${lockLabel}` : ''}
-              {slip.feedLockedAt ? ' · Locked' : ''}
             </p>
+            <ParlayOsBadgeRow
+              className="mt-1.5"
+              input={{
+                id: pickId || slip.publicId,
+                status: slip.status,
+                committedAt: slip.trustCommittedAt,
+                feedLockedAt: slip.feedLockedAt,
+                lockReason: slip.lockReason,
+              }}
+            />
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <ParlayIdentityBadge identity={identity} />
+            </div>
+            {slipProgress && (
+              <p className="text-[10px] text-cyan-300/80 font-mono mt-1">
+                Live: {slipProgress.label} ({slipProgress.current}/{slipProgress.target})
+              </p>
+            )}
           </div>
           <StatusBadge status={status as LegGradeStatus} size="xs" />
         </div>
@@ -1017,6 +1065,13 @@ function MyParlaysPanel({
             <GitBranch className="h-3 w-3" />
             View Structure
           </button>
+        )}
+        {showTrustPanel && (
+          <ParlayTrustPanel
+            pickId={pickId}
+            title={String(slip.title ?? 'Saved Parlay')}
+            className="mt-1"
+          />
         )}
       </article>
     );
