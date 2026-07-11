@@ -63,7 +63,7 @@ proofRoutes.get("/proof/parlay/:id/ots", asyncHandler(async (req: RequestWithCon
 
   const filename = `${req.params.id}.ots`;
   res.setHeader("Content-Type", "application/vnd.opentimestamps.ots");
-  res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.setHeader("Cache-Control", "public, max-age=300");
   return res.send(proofBytes);
 }));

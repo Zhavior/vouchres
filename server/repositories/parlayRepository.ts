@@ -203,7 +203,7 @@ export async function lockPickForFeedShare(input: {
   const lockedAt = input.lockedAt ?? new Date().toISOString();
 
   const baseUpdate: Record<string, unknown> = { locked_at: lockedAt };
-  let query = supabaseAdmin
+  const query = supabaseAdmin
     .from("picks")
     .update({ ...baseUpdate, visibility: "public" })
     .eq("id", input.pickId)

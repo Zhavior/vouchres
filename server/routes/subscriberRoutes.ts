@@ -173,7 +173,7 @@ subscriberRoutes.get("/subscriber/profiles/:id/picks", requireAuth, asyncHandler
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
 
   // Public/shared parlays only: visibility=public when available, else linked to a feed post.
-  let query = supabaseAdmin
+  const query = supabaseAdmin
     .from("picks")
     .select("*")
     .eq("user_id", profileId)
