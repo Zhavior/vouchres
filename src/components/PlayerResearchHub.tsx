@@ -24,6 +24,8 @@ import {
 import { MLBPlayer, Leg, Vouch } from "../types";
 import { MLB_PLAYER_RECORDS } from "../data/playerData";
 import { apiClient } from "../lib/apiClient";
+import { useParlayOsStore } from "../stores/parlayOsStore";
+import { resolveParlayPlayerRole } from "../lib/parlays/parlayMarketCatalog";
 import {
   Z8_ACTIVE,
   Z8_DISPLAY,
@@ -1053,6 +1055,24 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
   researching: boolean;
   onRunAI: () => void;
 }) {
+  const openParlayPicker = (initialFamily: "home_runs" | "hits" | "rbi" | "stolen_base" | "pitcher" = "home_runs") => {
+    const hrProp = player.propositions.find((prop) => /home run|\bhr\b/i.test(`${prop.market} ${prop.spec}`));
+    useParlayOsStore.getState().openPicker({
+      player,
+      propHint: hrProp
+        ? {
+            id: hrProp.id,
+            market: hrProp.market,
+            odds: hrProp.odds,
+            spec: hrProp.spec,
+            playerId: player.id,
+          }
+        : undefined,
+      initialFamily,
+      isPitcher: resolveParlayPlayerRole({ position: player.position }) === "pitcher",
+    });
+  };
+
   const tabs: { id: DetailTab; label: string; icon: any }[] = [
     { id: "overview", label: "Overview", icon: Activity },
     { id: "splits", label: "Splits", icon: BarChart3 },
@@ -1092,6 +1112,13 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
               <span className="text-[10px] text-white/40">{player.injuryStatus}</span>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => openParlayPicker("home_runs")}
+            className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-200 hover:bg-cyan-500/20"
+          >
+            <Plus className="w-3.5 h-3.5" /> ParlayOS
+          </button>
           <button onClick={onClose} className="text-white/35 hover:text-white p-2"><X className="w-5 h-5" /></button>
         </div>
 
@@ -1110,7 +1137,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
-          {tab === "overview" && <OverviewTab player={player} />}
+          {tab === "overview" && <OverviewTab player={player} onOpenParlay={() => openParlayPicker("home_runs")} />}
           {tab === "splits" && <SplitsTab player={player} />}
           {tab === "gamelog" && <GameLogTab player={player} />}
           {tab === "ai" && <AITab player={player} report={aiReport} researching={researching} onRun={onRunAI} />}
@@ -1122,7 +1149,7 @@ function PlayerDetailModal({ player, tab, onTabChange, onClose, onAddLeg, onSave
 }
 
 /* ============ Overview Tab ============ */
-function OverviewTab({ player }: { player: MLBPlayer }) {
+function OverviewTab({ player, onOpenParlay }: { player: MLBPlayer; onOpenParlay?: () => void }) {
   const stats = [
     { label: "AVG", value: getOfficialSeasonStat(player, "avg"), color: "#e2e8f0" },
     { label: "HR", value: getOfficialSeasonStat(player, "hr"), color: "#fbbf24" },
@@ -1140,6 +1167,20 @@ function OverviewTab({ player }: { player: MLBPlayer }) {
 
   return (
     <div className="space-y-5">
+      {onOpenParlay ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/[0.06] p-3">
+          <p className="text-[11px] text-white/55 flex-1 min-w-[12rem]">
+            Season stats above — to build a parlay leg, open ParlayOS for HR, hits, RBI, SB, and more.
+          </p>
+          <button
+            type="button"
+            onClick={onOpenParlay}
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/15 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cyan-100 hover:bg-cyan-500/25"
+          >
+            <Plus className="w-3.5 h-3.5" /> Home Runs & props
+          </button>
+        </div>
+      ) : null}
       {/* Season stats */}
       <div className="grid grid-cols-4 gap-2">
         {stats.map((s) => (
