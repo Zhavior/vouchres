@@ -6,6 +6,7 @@ import {
   inferFamilyFromText,
   tiersForRole,
 } from "../../../lib/parlays/parlayMarketCatalog";
+import { resolveTierOddsMap } from "../../../lib/parlays/parlayTierOddsResolver";
 import { useParlayOsStore } from "../../../stores/parlayOsStore";
 import { getFallbackHeadshot, getMlbHeadshotUrl } from "../../../lib/parlayDisplay";
 
@@ -37,6 +38,20 @@ export default function ParlayPropPickerModal({
     if (pickerOpen) setActiveFamily(defaultFamily);
   }, [pickerOpen, defaultFamily]);
 
+  const activeFamilyData = useMemo(
+    () => families.find((f) => f.id === activeFamily) ?? families[0],
+    [families, activeFamily],
+  );
+
+  const tierOddsMap = useMemo(
+    () => resolveTierOddsMap({
+      tiers: activeFamilyData?.tiers ?? [],
+      propHint: context?.propHint,
+      propositions: player?.propositions ?? [],
+    }),
+    [activeFamilyData?.tiers, context?.propHint, player?.propositions],
+  );
+
   const propOdds = context?.propHint?.odds;
   const oddsBadge = propOdds != null && Number.isFinite(Number(propOdds))
     ? { label: String(propOdds), source: "live" as const }
@@ -44,7 +59,7 @@ export default function ParlayPropPickerModal({
 
   if (!pickerOpen || !player) return null;
 
-  const family = families.find((f) => f.id === activeFamily) ?? families[0];
+  const family = activeFamilyData;
   const headshot =
     getMlbHeadshotUrl(player.id) ?? getFallbackHeadshot(player.name);
 
@@ -115,7 +130,9 @@ export default function ParlayPropPickerModal({
         <div className="flex-1 overflow-y-auto p-4">
           <p className="text-[11px] text-white/40 mb-3">{family?.subtitle}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {family?.tiers.map((tier) => (
+            {family?.tiers.map((tier) => {
+              const tierQuote = tierOddsMap.get(tier.id);
+              return (
               <button
                 key={tier.id}
                 type="button"
@@ -132,13 +149,26 @@ export default function ParlayPropPickerModal({
                       </p>
                     ) : null}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-cyan-400 shrink-0 mt-0.5" />
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {tierQuote ? (
+                      <span
+                        className={`text-[11px] font-mono font-bold ${
+                          tierQuote.source === "live" ? "text-emerald-300" : "text-amber-200/80"
+                        }`}
+                        title={tierQuote.detail}
+                      >
+                        {tierQuote.label}
+                      </span>
+                    ) : null}
+                    <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-cyan-400" />
+                  </div>
                 </div>
                 <p className="mt-2 text-[10px] font-mono text-white/35 truncate">
                   {tier.selection(player.name ?? "Player")}
                 </p>
               </button>
-            ))}
+            );
+            })}
           </div>
         </div>
 

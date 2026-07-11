@@ -5,6 +5,7 @@ import {
   flattenTierLegs,
   type ParlayMarketTier,
 } from "./parlayMarketCatalog";
+import { resolveTierOdds } from "./parlayTierOddsResolver";
 import type { DraftParlayLeg } from "../../stores/parlayCommandStore";
 import {
   findPlayerLiveGame,
@@ -58,6 +59,11 @@ export function buildLegsFromTier(
 
   return tiers.map((t, index) => {
     const selection = t.selection(playerName);
+    const tierOdds = resolveTierOdds({
+      tier: t,
+      propHint: ctx.propHint,
+      propositions: player.propositions,
+    });
     const eventKey = buildEventKey({
       sport: "MLB",
       gamePk,
@@ -76,7 +82,7 @@ export function buildLegsFromTier(
         : `${player.team ?? "MLB"} Live Target`,
       market: t.marketLabel,
       selection,
-      odds: ctx.propHint?.odds ?? null,
+      odds: tierOdds.odds ?? ctx.propHint?.odds ?? null,
       status: "PENDING",
       gamePk,
       marketCode: t.marketCode,
@@ -85,7 +91,7 @@ export function buildLegsFromTier(
       comparator: t.comparator,
       eventKey,
       popularityKey: `MLB_${playerId ?? "PLAYER"}_${t.marketCode}_${t.statTarget}`,
-      externalProvider: "parlayos_picker",
+      externalProvider: tierOdds.source === "live" ? "parlayos_research" : "parlayos_picker",
       playerId,
       teamId,
     };
@@ -105,8 +111,8 @@ export function buildLegsFromTier(
       marketLabel: leg.market,
       statTarget: leg.statTarget,
       comparator: leg.comparator,
-      odds: leg.odds ?? undefined,
-      externalProvider: leg.externalProvider,
+      odds: tierOdds.odds ?? ctx.propHint?.odds ?? undefined,
+      externalProvider: tierOdds.source === "live" ? "parlayos_research" : "parlayos_picker",
       eventKey: leg.eventKey,
       tags: ["#ParlayOS", `#${t.shortLabel.replace(/\s+/g, "")}`],
     };

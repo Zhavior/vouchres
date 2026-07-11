@@ -99,6 +99,7 @@ import type { Leg } from '../../types';
 import ParlayBuilderRail from './ParlayBuilderRail';
 import ParlayLegCardPro from './os/ParlayLegCardPro';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
+import { useParlaySlipLiveProgress, liveProgressMap } from '../../hooks/useParlaySlipLiveProgress';
 
 function statusColorStyle(token: string) {
   const color = z8StatusColor(token);
@@ -654,8 +655,139 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     }
   }
 
+  const liveProgressQuery = useParlaySlipLiveProgress(
+    draftLegs.map((leg) => ({
+      id: leg.id,
+      gamePk: leg.gamePk,
+      playerId: leg.playerId,
+      marketCode: leg.marketCode,
+      statTarget: leg.statTarget != null ? Number(leg.statTarget) : null,
+    })),
+    { enabled: draftLegs.length > 0 },
+  );
+  const liveProgressByLegId = useMemo(() => {
+    const map = liveProgressMap(liveProgressQuery.data);
+    const out: Record<string, { current: number; target: number; label: string }> = {};
+    map.forEach((value, key) => {
+      if (value.current != null) {
+        out[key] = { current: value.current, target: value.target, label: value.label };
+      }
+    });
+    return out;
+  }, [liveProgressQuery.data]);
+
+  const legContent = uiLegs.length > 0 ? (
+    <div className="flex flex-col gap-3">
+      {uiLegs.map((leg) => (
+        <ParlayLegCardPro
+          key={leg.id}
+          leg={leg}
+          isWeak={verdict.weakLegIds.includes(leg.id)}
+          onRemove={() => {
+            removeDraftLeg(leg.id);
+            announce('Leg removed.');
+          }}
+        />
+      ))}
+    </div>
+  ) : undefined;
+
+  const railFooterExtra = (
+    <div className="space-y-3 mb-4">
+      {draftLegs.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <ParlayIdentityBadge
+            identity={draftIdentity}
+            onExplain={() => setIdentityExplainerOpen(true)}
+          />
+          {!draftIdentity.complete ? (
+            <p className="text-[10px] text-amber-200/80 leading-snug">
+              Repair legs missing gamePk or playerId before save or lock.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {saveError ? (
+        <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
+          <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {shareError ? (
+        <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-warning)/0.1)] border border-[hsl(var(--ve-warning)/0.4)]">
+          <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-warning))] shrink-0 mt-0.5" aria-hidden="true" />
+          <p className="text-xs text-[hsl(var(--ve-warning))]">{shareError}</p>
+        </div>
+      ) : null}
+
+      {!agreedSession ? (
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agreedSession}
+            onChange={(e) => setAgreedSession(e.target.checked)}
+            className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
+          />
+          <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
+            I confirm this is for entertainment/research purposes. Bet responsibly.
+          </span>
+        </label>
+      ) : null}
+
+      {draftLegs.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => { clearDraft(); announce('Draft cleared.'); }}
+          aria-label="Clear all legs from draft"
+          className="w-full min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan text-xs font-bold uppercase tracking-wide"
+        >
+          Clear Draft
+        </button>
+      ) : null}
+    </div>
+  );
+
+  const sharedRailProps = {
+    legs: uiLegs,
+    legContent,
+    onRemoveLeg: (id: string) => {
+      removeDraftLeg(id);
+      announce('Leg removed.');
+    },
+    totalOdds: combinedOdds?.american ?? '—',
+    stake,
+    onStakeChange: setStake,
+    potentialPayout:
+      combinedOdds?.decimal != null && Number.isFinite(combinedOdds.decimal)
+        ? Math.round(stake * combinedOdds.decimal * 100) / 100
+        : null,
+    onSaveParlay: handleSave,
+    onShareParlay: () => setTrustModalOpen(true),
+    shareLabel: 'Lock to Ledger',
+    shareDisabled: !canShare,
+    isSharing,
+    saveLabel: 'Save Slip',
+    isSaving,
+    saveDisabled: !agreedSession || !canSave,
+    showLiveIndicator: draftLegs.length > 0,
+    subtitle: 'Add from Player Research, VouchCards, or +',
+    footerExtra: railFooterExtra,
+    useProLegCards: true,
+    liveProgressByLegId,
+  };
+
   return (
-    <div className="flex flex-col gap-4 min-h-0 relative pb-32">
+    <div className="flex flex-col gap-4 min-h-0 relative pb-32 xl:pr-80">
       {/* Draft mode indicator */}
       {draftMode === 'ai_locked' && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-vouch-emerald/10 border border-vouch-emerald/30">
@@ -695,113 +827,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         })}
       </div>
 
-      <ParlayBuilderRail
-        legs={uiLegs}
-        legContent={
-          uiLegs.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {uiLegs.map((leg) => (
-                <ParlayLegCardPro
-                  key={leg.id}
-                  leg={leg}
-                  isWeak={verdict.weakLegIds.includes(leg.id)}
-                  onRemove={() => {
-                    removeDraftLeg(leg.id);
-                    announce('Leg removed.');
-                  }}
-                />
-              ))}
-            </div>
-          ) : undefined
-        }
-        onRemoveLeg={(id) => {
-          removeDraftLeg(id);
-          announce('Leg removed.');
-        }}
-        totalOdds={combinedOdds?.american ?? '—'}
-        stake={stake}
-        onStakeChange={setStake}
-        potentialPayout={
-          combinedOdds?.decimal != null && Number.isFinite(combinedOdds.decimal)
-            ? Math.round(stake * combinedOdds.decimal * 100) / 100
-            : null
-        }
-        onSaveParlay={handleSave}
-        onShareParlay={() => setTrustModalOpen(true)}
-        shareLabel="Lock to Ledger"
-        shareDisabled={!canShare}
-        isSharing={isSharing}
-        saveLabel="Save Slip"
-        isSaving={isSaving}
-        saveDisabled={!agreedSession || !canSave}
-        showLiveIndicator={draftLegs.length > 0}
-        layout="inline"
-        subtitle="Add from Player Research, VouchCards, or +"
-        footerExtra={(
-          <div className="space-y-3 mb-4">
-            {draftLegs.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <ParlayIdentityBadge
-                  identity={draftIdentity}
-                  onExplain={() => setIdentityExplainerOpen(true)}
-                />
-                {!draftIdentity.complete ? (
-                  <p className="text-[10px] text-amber-200/80 leading-snug">
-                    Repair legs missing gamePk or playerId before save or lock.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-            {saveError ? (
-              <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-danger)/0.1)] border border-[hsl(var(--ve-danger)/0.4)]">
-                <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-danger))] shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-[hsl(var(--ve-danger))]">{saveError}</p>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className="mt-1 text-xs font-bold text-[hsl(var(--ve-danger))] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {shareError ? (
-              <div role="alert" className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[hsl(var(--ve-warning)/0.1)] border border-[hsl(var(--ve-warning)/0.4)]">
-                <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ve-warning))] shrink-0 mt-0.5" aria-hidden="true" />
-                <p className="text-xs text-[hsl(var(--ve-warning))]">{shareError}</p>
-              </div>
-            ) : null}
-
-            {!agreedSession ? (
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={agreedSession}
-                  onChange={(e) => setAgreedSession(e.target.checked)}
-                  className="rounded border-[hsl(var(--ve-border))] bg-transparent accent-vouch-cyan focus-visible:ring-2 focus-visible:ring-vouch-cyan"
-                />
-                <span className="text-[10px] text-[hsl(var(--ve-text-muted))] leading-snug">
-                  I confirm this is for entertainment/research purposes. Bet responsibly.
-                </span>
-              </label>
-            ) : null}
-
-            {draftLegs.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => { clearDraft(); announce('Draft cleared.'); }}
-                aria-label="Clear all legs from draft"
-                className="w-full min-h-[2.75rem] px-3 rounded-xl border border-[hsl(var(--ve-danger)/0.3)] text-[hsl(var(--ve-danger))] hover:bg-[hsl(var(--ve-danger)/0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-vouch-cyan text-xs font-bold uppercase tracking-wide"
-              >
-                Clear Draft
-              </button>
-            ) : null}
-          </div>
-        )}
-      />
+      <div className="xl:hidden">
+        <ParlayBuilderRail {...sharedRailProps} layout="inline" />
+      </div>
+      <ParlayBuilderRail {...sharedRailProps} layout="fixed" />
 
       {/* Judge Verdict peek drawer (Judge 3) */}
       {draftLegs.length > 0 && (
