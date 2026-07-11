@@ -14,6 +14,7 @@ import {
 } from "../lib/postDeletePolicy";
 import { setPickVisibilityPublic } from "../repositories/parlayRepository";
 import { lockParlayOnFeedShare } from "../services/parlays/userParlayService";
+import { notifyFollowersOfAuthorPost } from "../services/social/followService";
 
 async function denyUnlessOwns(
   userId: string,
@@ -226,6 +227,15 @@ postRoutes.post(
       });
     }
 
+    notifyFollowersOfAuthorPost({
+      authorId: req.user!.id,
+      postId: String(data.id),
+      body: postBody,
+      pickId: pick_id ?? null,
+    }).catch((err) => {
+      console.warn("[posts] follower notifications failed", (err as Error)?.message);
+    });
+
     return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
   }),
 );
@@ -388,7 +398,32 @@ postRoutes.delete("/posts/:id/like", requireAuth, asyncHandler(async (req: Authe
 
 const CreateCommentSchema = z.object({
   body: z.string().min(1).max(1000),
+  parent_id: z.string().uuid().optional(),
+  reply_to_user_id: z.string().uuid().optional(),
 });
+
+const COMMENT_SELECT = `
+  id, body, created_at, parent_id, reply_to_user_id,
+  author:profiles!post_comments_author_id_fkey(id, username, display_name, avatar_url),
+  reply_to:profiles!post_comments_reply_to_user_id_fkey(id, username, display_name),
+  likes_count:comment_likes(count)
+`;
+
+async function hydrateCommentLikes(comments: Record<string, unknown>[], userId?: string) {
+  if (!userId || comments.length === 0) {
+    return comments.map((row) => ({ ...row, liked_by_me: false }));
+  }
+
+  const ids = comments.map((row) => String(row.id));
+  const { data: likedRows } = await supabaseAdmin
+    .from("comment_likes")
+    .select("comment_id")
+    .eq("profile_id", userId)
+    .in("comment_id", ids);
+
+  const liked = new Set((likedRows ?? []).map((row: { comment_id: string }) => row.comment_id));
+  return comments.map((row) => ({ ...row, liked_by_me: liked.has(String(row.id)) }));
+}
 
 postRoutes.post(
   "/posts/:id/comments",
@@ -396,7 +431,7 @@ postRoutes.post(
   validate({ body: CreateCommentSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
-    const { body: commentBody } = req.body as z.infer<typeof CreateCommentSchema>;
+    const { body: commentBody, parent_id, reply_to_user_id } = req.body as z.infer<typeof CreateCommentSchema>;
 
     const { data: post } = await supabaseAdmin.from("posts").select("id").eq("id", id).single();
     if (!post) {
@@ -408,18 +443,49 @@ postRoutes.post(
       });
     }
 
-    const { data, error } = await supabaseAdmin
+    if (parent_id) {
+      const { data: parentComment } = await supabaseAdmin
+        .from("post_comments")
+        .select("id, post_id")
+        .eq("id", parent_id)
+        .maybeSingle();
+      if (!parentComment || parentComment.post_id !== id) {
+        throw new AppError({
+          status: 400,
+          code: "bad_request",
+          message: "Invalid reply target.",
+        });
+      }
+    }
+
+    const insertPayload: Record<string, unknown> = {
+      post_id: id,
+      author_id: req.user!.id,
+      body: commentBody,
+      parent_id: parent_id ?? null,
+      reply_to_user_id: reply_to_user_id ?? null,
+    };
+
+    let { data, error } = await supabaseAdmin
       .from("post_comments")
-      .insert({
-        post_id: id,
-        author_id: req.user!.id,
-        body: commentBody,
-      })
-      .select(`
-        id, body, created_at,
-        author:profiles!post_comments_author_id_fkey(id, username, display_name, avatar_url)
-      `)
+      .insert(insertPayload)
+      .select(COMMENT_SELECT)
       .single();
+
+    if (error && (error.code === "42703" || error.code === "PGRST204")) {
+      ({ data, error } = await supabaseAdmin
+        .from("post_comments")
+        .insert({
+          post_id: id,
+          author_id: req.user!.id,
+          body: commentBody,
+        })
+        .select(`
+          id, body, created_at,
+          author:profiles!post_comments_author_id_fkey(id, username, display_name, avatar_url)
+        `)
+        .single());
+    }
 
     if (error) {
       throw new AppError({
@@ -430,24 +496,42 @@ postRoutes.post(
       });
     }
 
-    return res.status(201).json(apiOkFlat(req, data as unknown as Record<string, unknown>));
+    const [hydrated] = await hydrateCommentLikes([data as Record<string, unknown>], req.user!.id);
+    return res.status(201).json(apiOkFlat(req, hydrated as unknown as Record<string, unknown>));
   }),
 );
 
-postRoutes.get("/posts/:id/comments", asyncHandler(async (req: RequestWithContext, res: Response) => {
+postRoutes.get("/posts/:id/comments", optionalAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
   const { id } = req.params;
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
 
-  const { data, error } = await supabaseAdmin
+  let data: Record<string, unknown>[] | null = null;
+  let error: { code?: string; message?: string } | null = null;
+
+  const primary = await supabaseAdmin
     .from("post_comments")
-    .select(`
-      id, body, created_at,
-      author:profiles!post_comments_author_id_fkey(id, username, display_name, avatar_url)
-    `)
+    .select(COMMENT_SELECT)
     .eq("post_id", id)
     .order("created_at", { ascending: true })
     .range(offset, offset + limit - 1);
+
+  data = (primary.data ?? []) as Record<string, unknown>[];
+  error = primary.error;
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    const fallback = await supabaseAdmin
+      .from("post_comments")
+      .select(`
+        id, body, created_at,
+        author:profiles!post_comments_author_id_fkey(id, username, display_name, avatar_url)
+      `)
+      .eq("post_id", id)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + limit - 1);
+    data = (fallback.data ?? []) as Record<string, unknown>[];
+    error = fallback.error;
+  }
 
   if (error) {
     throw new AppError({
@@ -458,7 +542,57 @@ postRoutes.get("/posts/:id/comments", asyncHandler(async (req: RequestWithContex
     });
   }
 
-  return res.json(apiOkFlat(req, { comments: data ?? [] }));
+  const comments = await hydrateCommentLikes((data ?? []) as Record<string, unknown>[], req.user?.id);
+  return res.json(apiOkFlat(req, { comments, limit, offset }));
+}));
+
+postRoutes.post("/comments/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const { id } = req.params;
+  const { data: comment } = await supabaseAdmin
+    .from("post_comments")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!comment) {
+    throw new AppError({ status: 404, code: "not_found", message: "Comment not found." });
+  }
+
+  const { error } = await supabaseAdmin.from("comment_likes").upsert(
+    { comment_id: id, profile_id: req.user!.id },
+    { onConflict: "comment_id,profile_id" },
+  );
+
+  if (error && error.code !== "23505" && error.code !== "42P01") {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to like comment.",
+      cause: error,
+    });
+  }
+
+  return res.json(apiOkFlat(req, { liked: true }));
+}));
+
+postRoutes.delete("/comments/:id/like", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {
+  const { id } = req.params;
+  const { error } = await supabaseAdmin
+    .from("comment_likes")
+    .delete()
+    .eq("comment_id", id)
+    .eq("profile_id", req.user!.id);
+
+  if (error && error.code !== "42P01") {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to unlike comment.",
+      cause: error,
+    });
+  }
+
+  return res.json(apiOkFlat(req, { liked: false }));
 }));
 
 postRoutes.delete("/comments/:id", requireAuth, asyncHandler(async (req: AuthedRequest, res: Response) => {

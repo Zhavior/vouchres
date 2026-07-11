@@ -21,10 +21,13 @@ import {
   Sliders,
   ChevronDown,
   ChevronUp,
-  MessageSquare
+  Layers3,
 } from 'lucide-react';
 import { Vouch, Parlay, CreatorProofProfile, FeedPost } from '../../types';
 import { getFounderPointsLabel } from "../../lib/founderAccess";
+import { useParlayOsStore } from '../../stores/parlayOsStore';
+import { vouchToPlayer } from '../../lib/parlays/parlayOsLegBuilder';
+import { inferFamilyFromText } from '../../lib/parlays/parlayMarketCatalog';
 
 interface VouchCardProps {
   key?: any;
@@ -146,6 +149,31 @@ export default React.memo(function VouchCard({
     setLocalVouched(nextVal);
     setVouchCount(prev => nextVal ? prev + 1 : Math.max(0, prev - 1));
     triggerToast(nextVal ? '🔥 Vouched for this pick!' : 'Removed vouch');
+  };
+
+  const handleParlayOsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const player = vouchToPlayer(vouch);
+    const parlayLeg = vouch.parlay?.legs?.[0];
+    if (!player.id) {
+      triggerToast('Open this player in Research first — ParlayOS needs an official playerId.');
+      return;
+    }
+    useParlayOsStore.getState().openPicker({
+      player,
+      vouch,
+      propHint: parlayLeg?.gamePk || parlayLeg?.playerId ? {
+        id: String(parlayLeg?.id ?? vouch.id),
+        market: vouch.market ?? '',
+        odds: parlayLeg?.odds != null ? Number(parlayLeg.odds) : null,
+        spec: vouch.selection ?? vouch.line ?? vouch.market ?? '',
+        gamePk: parlayLeg?.gamePk,
+        playerId: parlayLeg?.playerId ?? player.id,
+      } : undefined,
+      initialFamily: inferFamilyFromText(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
+      isPitcher: /pitcher|strikeout|\bk\b/i.test(`${vouch.market ?? ''} ${vouch.selection ?? ''}`),
+    });
+    triggerToast('Opening ParlayOS prop picker…');
   };
 
   const handleTailClick = (e: React.MouseEvent) => {
@@ -584,6 +612,17 @@ export default React.memo(function VouchCard({
             >
               <Activity className="w-3.5 h-3.5" />
               <span>Tail Pick</span>
+            </button>
+
+            {/* ParlayOS Button */}
+            <button
+              type="button"
+              onClick={handleParlayOsClick}
+              className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all bg-cyan-500/10 border-cyan-400/35 text-cyan-200 hover:border-cyan-300/55 hover:bg-cyan-500/15"
+              id={`parlayos-action-btn-${vouch.id}`}
+            >
+              <Layers3 className="w-3.5 h-3.5" />
+              <span>ParlayOS</span>
             </button>
 
             {/* Save to Board Button */}

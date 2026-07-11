@@ -69,8 +69,18 @@ export interface Parlay {
   lockAt?: string;
   /** Marks that a "locked / moved to Live" notification was already sent. */
   lockNotified?: boolean;
-  /** ISO time this parlay became immutable after feed share. */
+  /** ISO time this parlay became immutable after lock. */
   feedLockedAt?: string;
+  /** Why the parlay locked: trust ledger commit vs feed share. */
+  lockReason?: 'trust_ledger' | 'feed_share';
+  /** Trust ledger: committed to private wins, pending auto-lock. */
+  trustCommittedAt?: string;
+  /** Scheduled trust ledger lock time (committed + 5 min). */
+  trustLockAt?: string;
+  /** Target visibility after lock: private | public | subscriber */
+  trustAudience?: 'private' | 'public' | 'subscriber';
+  trustLockWarningNotified?: boolean;
+  trustLockedNotified?: boolean;
   /** Backend pick id after /api/parlays accepts this slip. */
   backendPickId?: string;
   /** Whether the backend knows about this slip yet. */
@@ -197,6 +207,11 @@ export interface FeedComment {
   content: string;
   likesCount: number;
   isLiked?: boolean;
+  parentId?: string | null;
+  replyToUserId?: string | null;
+  replyToUsername?: string;
+  replyToDisplayName?: string;
+  replies?: FeedComment[];
 }
 
 export interface CreatorProofProfile {

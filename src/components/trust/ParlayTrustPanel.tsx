@@ -42,12 +42,20 @@ function formatTimestamp(value: string | null | undefined): string {
 
 function actionLabel(action: string): string {
   switch (action) {
+    case "commit_trust_pending":
+      return "Committed to trust ledger";
+    case "lock_trust_ledger":
+      return "Locked on trust ledger";
     case "update_summary":
       return "Summary updated";
     case "lock_feed_share":
       return "Locked on feed share";
     case "repair_identity":
       return "Identity repaired";
+    case "grade_live_hr":
+      return "Graded live (HR detected)";
+    case "grade_correction":
+      return "Result corrected";
     default:
       return action.replace(/_/g, " ");
   }

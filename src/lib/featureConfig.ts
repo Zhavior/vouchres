@@ -83,6 +83,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Social
   { id: "feed", label: "Home", icon: "Home", enabled: true, order: 15, group: "Social" },
+  { id: "following", label: "Following", icon: "Users", enabled: true, order: 15.5, group: "Social", locked: true },
   { id: "leaderboard", label: "Top Cappers", icon: "Trophy", enabled: true, order: 16, group: "Social" },
   { id: "subscriber_hub", label: "Subscribers Club", icon: "Crown", enabled: true, order: 17, group: "Social" },
 

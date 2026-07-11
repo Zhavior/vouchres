@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { INITIAL_PROFILE } from '../data/mockData';
-import { resolveMarket } from '../sports/markets';
 import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
-import { normalizePlayerId } from '../lib/mlbHeadshot';
 import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
+import { useParlayOsStore } from '../stores/parlayOsStore';
+import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
+import { validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
+import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
+import { inferFamilyFromText } from '../lib/parlays/parlayMarketCatalog';
 import { useFeedStore } from '../stores/feedStore';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useProfileStore } from '../stores/profileStore';
 import { useVouchesStore } from '../stores/vouchesStore';
 import { handleSaveVouch as saveVouchAction } from '../domain/vouchActions';
-import { handleSaveParlaySlip as saveParlaySlipAction } from '../domain/parlayActions';
+import { handleSaveParlaySlip as saveParlaySlipAction, handleCommitParlayTrust as commitParlayTrustAction } from '../domain/parlayActions';
 import { useAppCommandStore } from '../stores/appCommandStore';
 import type { AppShellState } from '../context/AppShellContext';
 import type { CreatorProofProfile, Leg, MLBPlayer, Parlay, Vouch } from '../types';
@@ -29,79 +32,6 @@ type UseAppDomainArgs = {
   syncSlips: (slips: Parlay[]) => void;
   syncProfile: (profile: CreatorProofProfile) => void;
 };
-
-function resolvePlayerResearchMarket(market: string, spec: string) {
-  const text = `${market} ${spec}`.toLowerCase();
-
-  const parseTarget = (fallback = 1) => {
-    const plus = text.match(/(\d+)\s*\+/);
-    if (plus) return Number.parseInt(plus[1], 10);
-
-    const leading = text.match(/^\s*(\d+)\b/);
-    if (leading) return Number.parseInt(leading[1], 10);
-
-    return fallback;
-  };
-
-  if (/home\s*run|\bhr\b/.test(text)) {
-    return { marketCode: 'ANYTIME_HR', statTarget: 1, threshold: 1, comparator: '>=' };
-  }
-
-  if (/stolen\s*base|\bsb\b/.test(text)) {
-    return { marketCode: 'STOLEN_BASE', statTarget: 1, threshold: 1, comparator: '>=' };
-  }
-
-  if (/total\s*bases|\btb\b/.test(text)) {
-    const target = parseTarget(1);
-    return { marketCode: 'TOTAL_BASES', statTarget: target, threshold: target, comparator: '>=' };
-  }
-
-  if (/\brbi\b|runs?\s+batted\s+in/.test(text)) {
-    const target = parseTarget(1);
-    return { marketCode: 'RBI', statTarget: target, threshold: target, comparator: '>=' };
-  }
-
-  if (/\btriple\b/.test(text)) {
-    return { marketCode: 'TRIPLE', statTarget: 1, threshold: 1, comparator: '>=' };
-  }
-
-  if (/\bdouble\b/.test(text)) {
-    return { marketCode: 'DOUBLE', statTarget: 1, threshold: 1, comparator: '>=' };
-  }
-
-  if (/\bsingle\b/.test(text)) {
-    return { marketCode: 'SINGLE', statTarget: 1, threshold: 1, comparator: '>=' };
-  }
-
-  if (/\bhits?\b/.test(text)) {
-    const target = parseTarget(1);
-    return { marketCode: 'HIT', statTarget: target, threshold: target, comparator: '>=' };
-  }
-
-  const fallback = resolveMarket('mlb', market, spec);
-  return {
-    marketCode: fallback.marketCode,
-    statTarget: fallback.threshold,
-    threshold: fallback.threshold,
-    comparator: '>=',
-  };
-}
-
-function buildPlayerResearchEventKey(parts: {
-  sport: string;
-  gamePk?: string;
-  playerId?: string | number | null;
-  marketCode?: string | null;
-  statTarget?: string | number | null;
-  comparator?: string | null;
-}) {
-  const gamePart = parts.gamePk ?? 'GAME_TBD';
-  const playerPart = parts.playerId ?? 'PLAYER_TBD';
-  const marketPart = parts.marketCode ?? 'MARKET_TBD';
-  const targetPart = parts.statTarget ?? 'TARGET_TBD';
-  const comparatorPart = String(parts.comparator ?? '>=').replace(/[^a-zA-Z0-9]+/g, '');
-  return `${parts.sport}_${gamePart}_${playerPart}_${marketPart}_${targetPart}_${comparatorPart}`;
-}
 
 export function useAppDomain({
   navigateSection,
@@ -131,6 +61,17 @@ export function useAppDomain({
     await saveParlaySlipAction(newParlay, navigateSection);
   }, [navigateSection]);
 
+  const handleCommitParlayTrust = useCallback(async (input: {
+    parlay: Parlay;
+    audience: "private" | "public" | "subscriber";
+  }) => {
+    await commitParlayTrustAction({
+      parlay: input.parlay,
+      audience: input.audience,
+      navigateSection,
+    });
+  }, [navigateSection]);
+
   const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
     const cur = useProfileStore.getState().profile ?? INITIAL_PROFILE;
     syncProfile({ ...cur, ...updatedProfile });
@@ -143,98 +84,132 @@ export function useAppDomain({
     useProfileStore.getState().resetProfile();
   }, []);
 
-  const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
-    const playerTeam = player.team ? player.team.toLowerCase() : '';
+  const commitLegsToSlip = useCallback((newLegs: Leg[]) => {
+    if (newLegs.length === 0) return;
+    setActiveLegs((prev) => [...prev, ...newLegs]);
+    for (const newLeg of newLegs) {
+      useParlayCommandStore.getState().addDraftLeg({
+        id: newLeg.id,
+        source: 'manual',
+        sport: newLeg.sport,
+        game: newLeg.game,
+        selection: newLeg.selection,
+        odds: newLeg.odds ?? undefined,
+        marketCode: newLeg.marketCode,
+        marketLabel: newLeg.market,
+        playerId: newLeg.playerId,
+        playerName: newLeg.selection.split(' ')[0],
+        teamLabel: undefined,
+        statTarget: newLeg.statTarget ?? newLeg.threshold,
+        comparator: newLeg.comparator,
+        externalProvider: newLeg.externalProvider ?? 'parlayos',
+        eventKey: newLeg.eventKey,
+        teamId: newLeg.teamId,
+        gamePk: newLeg.gamePk,
+        tags: ['#ParlayOS'],
+      });
+    }
+    useParlayOsStore.getState().openSheet(true);
+  }, []);
+
+  const handleConfirmParlayTier = useCallback((tier: ParlayMarketTier) => {
+    const ctx = useParlayOsStore.getState().pickerContext;
+    if (!ctx?.player) return;
+
+    const editLegId = useParlayOsStore.getState().editLegId;
+
+    const matchedGameCheck = ctx.player.team?.toLowerCase() ?? '';
     const matchedGame = liveGames.find((g: any) =>
-      g.homeTeam.toLowerCase() === playerTeam ||
-      g.awayTeam.toLowerCase() === playerTeam,
+      g.homeTeam.toLowerCase() === matchedGameCheck ||
+      g.awayTeam.toLowerCase() === matchedGameCheck,
+    );
+    if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
+      notify({ kind: 'info', title: 'Cannot add legs', body: 'Player\'s game is already final.' });
+      return;
+    }
+
+    const built = buildLegsFromTier(tier, {
+      player: ctx.player,
+      propHint: ctx.propHint,
+      liveGames,
+    });
+
+    const validation = validateParlayLegBatch(
+      built.map((entry) => entry.leg),
+      ctx.player,
+      liveGames,
+    );
+    if (!validation.valid) {
+      notify({
+        kind: 'info',
+        title: 'Cannot add leg',
+        body: validation.blockedReason ?? 'This leg is missing grading identity.',
+      });
+      return;
+    }
+
+    if (editLegId) {
+      if (built.length !== 1) {
+        notify({
+          kind: 'info',
+          title: 'Combo not supported',
+          body: 'Replace one leg at a time — pick a single prop tier.',
+        });
+        return;
+      }
+
+      const replacement = built[0];
+      useParlayCommandStore.getState().replaceDraftLeg(editLegId, replacement.draft);
+      setActiveLegs((prev) =>
+        prev.map((leg) => (leg.id === editLegId ? replacement.leg : leg)),
+      );
+      useParlayOsStore.getState().closePicker();
+      notify({
+        kind: 'success',
+        title: 'Leg updated',
+        body: replacement.draft.selection ?? tier.label,
+        section: 'build',
+      });
+      useParlayOsStore.getState().openSheet(true);
+      return;
+    }
+
+    const duplicate = built.some((b) =>
+      activeLegsRef.current.some((l) => l.eventKey && l.eventKey === b.leg.eventKey),
+    );
+    if (duplicate) {
+      notify({ kind: 'info', title: 'Already on slip', body: 'This prop is already on your ParlayOS slip.' });
+      return;
+    }
+
+    commitLegsToSlip(built.map((b) => b.leg));
+    notify({
+      kind: 'success',
+      title: built.length > 1 ? `${built.length} legs added` : 'Leg added',
+      body: tier.label,
+      section: 'build',
+    });
+  }, [liveGames, commitLegsToSlip]);
+
+  const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
+    const matchedGameCheck = player.team ? player.team.toLowerCase() : '';
+    const matchedGame = liveGames.find((g: any) =>
+      g.homeTeam.toLowerCase() === matchedGameCheck ||
+      g.awayTeam.toLowerCase() === matchedGameCheck,
     );
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
-      alert(`⚠️ Cannot bet on player: The game for ${player.name} (${matchedGame.awayTeam} @ ${matchedGame.homeTeam}) has already played and is concluded (status: Final). You cannot place picks on completed games.`);
+      notify({ kind: 'info', title: 'Game final', body: `Cannot add — ${player.name}'s game is already final.` });
       return;
     }
 
-    if (activeLegsRef.current.some((l) => l.selection === prop.spec)) {
-      alert('This player prop selection is already added to your current parlay slip!');
-      return;
-    }
-    const { marketCode, statTarget, threshold, comparator } = resolvePlayerResearchMarket(prop.market, prop.spec);
-    const gamePk = prop.gamePk != null ? String(prop.gamePk) : (matchedGame?.gamePk != null ? String(matchedGame.gamePk) : undefined);
-    const playerId = normalizePlayerId(prop.playerId ?? player.id ?? prop.id);
-    const teamId = (player as { teamId?: string | number | null }).teamId ?? null;
-    const eventKey = buildPlayerResearchEventKey({
-      sport: 'MLB',
-      gamePk,
-      playerId,
-      marketCode,
-      statTarget,
-      comparator,
+    const isPitcher = /pitcher|strikeout|\bp\b|\bk\b/i.test(`${prop.market} ${prop.spec}`);
+    useParlayOsStore.getState().openPicker({
+      player,
+      propHint: prop,
+      initialFamily: inferFamilyFromText(`${prop.market} ${prop.spec}`),
+      isPitcher,
     });
-    const popularityKey = `MLB_${playerId ?? 'PLAYER_TBD'}_${marketCode || 'MARKET_TBD'}_${statTarget ?? 'TARGET_TBD'}`;
-    const makeTag = (value: unknown) => {
-      const raw = String(value ?? '')
-        .trim()
-        .replace(/[^a-zA-Z0-9]+/g, '');
-
-      return raw ? `#${raw}` : null;
-    };
-
-    const marketTag =
-      prop.market.toLowerCase().includes('home run') || prop.market.toLowerCase().includes('hr')
-        ? '#HR'
-        : makeTag(prop.market);
-
-    const draftTags = [
-      makeTag('MLB'),
-      makeTag(player.team),
-      makeTag(player.name),
-      marketTag,
-      makeTag('PlayerProp'),
-      makeTag('Research'),
-    ].filter((tag): tag is string => Boolean(tag));
-
-    const newLeg: Leg = {
-      id: `leg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      sport: 'MLB',
-      game: matchedGame ? `${matchedGame.awayTeam} @ ${matchedGame.homeTeam}` : `${player.team} Live Target`,
-      market: prop.market,
-      selection: prop.spec,
-      odds: prop.odds,
-      status: 'PENDING',
-      gamePk,
-      marketCode,
-      statTarget,
-      threshold,
-      comparator,
-      eventKey,
-      popularityKey,
-      externalProvider: 'vouchedge_player_research',
-      playerId,
-      teamId,
-    };
-    setActiveLegs((prev) => [...prev, newLeg]);
-    useParlayCommandStore.getState().addDraftLeg({
-      id: newLeg.id,
-      source: 'manual',
-      sport: newLeg.sport,
-      game: newLeg.game,
-      selection: newLeg.selection,
-      odds: newLeg.odds ?? undefined,
-      marketCode: newLeg.marketCode,
-      marketLabel: newLeg.market,
-      playerId: newLeg.playerId,
-      playerName: player.name,
-      teamLabel: player.team,
-      statTarget: newLeg.statTarget ?? newLeg.threshold,
-      comparator: newLeg.comparator,
-      externalProvider: newLeg.externalProvider ?? 'vouchedge_player_research',
-      eventKey: newLeg.eventKey,
-      teamId: newLeg.teamId,
-      gamePk: newLeg.gamePk,
-      tags: draftTags,
-    });
-    alert(`🎯 Added "${prop.spec}" to your active parlay slip context and Command Center Build Slip!`);
   }, [liveGames]);
 
   const handleHideSavedParlay = useCallback(async (parlayId: string) => {
@@ -275,8 +250,10 @@ export function useAppDomain({
       onLoginSuccess: handleLoginSuccess,
       onClearProfileViewUser: handleClearProfileViewUser,
       onSaveParlaySlip: handleSaveParlaySlip,
+      onCommitParlayTrust: handleCommitParlayTrust,
       onHideSavedParlay: handleHideSavedParlay,
       onAddLegFromResearch: handleAddLegFromResearch,
+      onConfirmParlayTier: handleConfirmParlayTier,
       onUpdateProfile: handleUpdateProfile,
       onResetDatabase: handleResetDatabase,
       liveGames,
@@ -286,8 +263,10 @@ export function useAppDomain({
     handleLoginSuccess,
     handleClearProfileViewUser,
     handleSaveParlaySlip,
+    handleCommitParlayTrust,
     handleHideSavedParlay,
     handleAddLegFromResearch,
+    handleConfirmParlayTier,
     handleUpdateProfile,
     handleResetDatabase,
     liveGames,
@@ -326,6 +305,7 @@ export function useAppDomain({
     handleUpdateProfile,
     handleSaveVouch,
     handleSaveParlaySlip,
+    handleConfirmParlayTier,
     handleLoginSuccess,
     handleLogoutComplete,
   };

@@ -7,15 +7,23 @@ export interface PublicTrustEvent {
 }
 
 const PUBLIC_ACTIONS = new Set([
+  "commit_trust_pending",
+  "lock_trust_ledger",
   "lock_feed_share",
   "repair_identity",
   "update_summary",
+  "grade_live_hr",
+  "grade_correction",
 ]);
 
 const ACTION_LABELS: Record<string, string> = {
+  commit_trust_pending: "Committed to trust ledger",
+  lock_trust_ledger: "Locked on trust ledger",
   lock_feed_share: "Locked on feed share",
   repair_identity: "Canonical identity verified",
   update_summary: "Summary updated",
+  grade_live_hr: "Graded live (home run detected)",
+  grade_correction: "Result corrected",
 };
 
 export async function listPublicTrustEventsForPick(pickId: string, limit = 20): Promise<PublicTrustEvent[]> {

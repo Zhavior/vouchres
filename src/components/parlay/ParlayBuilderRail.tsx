@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { Share2 } from 'lucide-react';
 import type { Leg } from '../../types';
 import { americanLabel } from '../../lib/odds';
+import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
+import ParlayLegCardPro from './os/ParlayLegCardPro';
 
 export interface ParlayBuilderRailProps {
   legs: Leg[];
   onRemoveLeg: (legId: string) => void;
   onSaveParlay?: () => void;
+  onShareParlay?: () => void;
+  shareLabel?: string;
+  shareDisabled?: boolean;
+  isSharing?: boolean;
   totalOdds?: string;
   stake: number;
   onStakeChange: (stake: number) => void;
@@ -20,6 +27,10 @@ export interface ParlayBuilderRailProps {
   legContent?: React.ReactNode;
   footerExtra?: React.ReactNode;
   className?: string;
+  /** Use rich ParlayOS leg cards */
+  useProLegCards?: boolean;
+  /** Live stat progress keyed by leg id */
+  liveProgressByLegId?: Record<string, { current: number; target: number; label: string }>;
   /** inline = flows in parent column; fixed = xl+ right rail only; sheet = mobile bottom sheet body */
   layout?: 'inline' | 'fixed' | 'sheet';
 }
@@ -87,6 +98,10 @@ export default function ParlayBuilderRail({
   legs,
   onRemoveLeg,
   onSaveParlay,
+  onShareParlay,
+  shareLabel = 'Lock to Ledger',
+  shareDisabled = false,
+  isSharing = false,
   totalOdds = '—',
   stake,
   onStakeChange,
@@ -102,7 +117,21 @@ export default function ParlayBuilderRail({
   footerExtra,
   className = '',
   layout = 'inline',
+  useProLegCards = false,
+  liveProgressByLegId,
 }: ParlayBuilderRailProps) {
+  const oddsAssessment = useMemo(
+    () => assessSlipOdds(legs.map((leg) => ({
+      odds: leg.odds,
+      oddsSource: leg.oddsSource,
+    }))),
+    [legs],
+  );
+  const displayTotalOdds = oddsAssessment.canShowCombined
+    ? (totalOdds !== '—' ? totalOdds : oddsAssessment.combined?.american ?? '—')
+    : 'TBD';
+  const displayPayout = oddsAssessment.canShowPayout ? potentialPayout : null;
+
   const legCountLabel = legs.length === 0
     ? 'No legs queued'
     : `${legs.length} ${legs.length === 1 ? 'Edge' : 'Edges'} Queued`;
@@ -135,22 +164,38 @@ export default function ParlayBuilderRail({
           legs.length === 0 ? (
             <EmptySlip />
           ) : (
-            legs.map((leg) => (
-              <RailLegCard
-                key={leg.id}
-                leg={leg}
-                oddsLabel={formatLegOdds(leg)}
-                onRemove={() => onRemoveLeg(leg.id)}
-              />
-            ))
+            legs.map((leg) =>
+              useProLegCards ? (
+                <ParlayLegCardPro
+                  key={leg.id}
+                  leg={{
+                    ...leg,
+                    actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
+                    statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
+                  }}
+                  onRemove={() => onRemoveLeg(leg.id)}
+                  compact={layout === 'sheet'}
+                />
+              ) : (
+                <RailLegCard
+                  key={leg.id}
+                  leg={leg}
+                  oddsLabel={formatLegOdds(leg)}
+                  onRemove={() => onRemoveLeg(leg.id)}
+                />
+              ),
+            )
           )
         )}
       </div>
 
       <div className="p-5 border-t border-fuse bg-graphite shrink-0">
+        {oddsAssessment.blockReason ? (
+          <p className="mb-3 text-[10px] font-mono text-amber-200/80 leading-snug">{oddsAssessment.blockReason}</p>
+        ) : null}
         <div className="flex justify-between items-center mb-4">
           <span className="text-xs font-mono text-flash opacity-60 uppercase tracking-widest">Total Odds</span>
-          <span className="text-xl font-bold font-mono text-voltage">{totalOdds}</span>
+          <span className="text-xl font-bold font-mono text-voltage">{displayTotalOdds}</span>
         </div>
 
         <div className="relative flex items-center mb-6 border border-fuse bg-[var(--bg-obsidian)] focus-within:border-ion transition-colors">
@@ -169,11 +214,25 @@ export default function ParlayBuilderRail({
         <div className="flex justify-between items-center mb-6">
           <span className="text-[10px] font-mono text-flash opacity-50 uppercase tracking-widest">To Win</span>
           <span className="text-lg font-bold font-mono text-flash">
-            {potentialPayout != null ? `$${potentialPayout.toFixed(2)}` : '—'}
+            {displayPayout != null ? `$${displayPayout.toFixed(2)}` : oddsAssessment.hasTbdLegs || oddsAssessment.hasEstimatedLegs ? '—' : '—'}
           </span>
         </div>
 
         {footerExtra}
+
+        {onShareParlay ? (
+          <button
+            type="button"
+            onClick={onShareParlay}
+            disabled={shareDisabled || isSharing || legs.length === 0}
+            className="relative mb-3 w-full border border-vouch-emerald/40 bg-vouch-emerald/10 py-3.5 group overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed min-h-[2.75rem] rounded-sm"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2 text-sm font-mono font-bold text-vouch-emerald uppercase tracking-widest">
+              <Share2 className="h-4 w-4" aria-hidden="true" />
+              {isSharing ? 'Locking in…' : shareLabel}
+            </span>
+          </button>
+        ) : null}
 
         {onSaveParlay ? (
           <button

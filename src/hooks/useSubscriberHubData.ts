@@ -354,7 +354,11 @@ export function useSubscriberHubData(input: {
     const body = channel.kind === "capper"
       ? { following_capper_id: channel.targetId }
       : { following_profile_id: channel.targetId };
-    await apiClient.post("/api/follow", body);
+    await apiClient.post("/api/follow", {
+      ...body,
+      relationship_type: channel.kind === "profile" ? "subscribe" : "follow",
+      notify_enabled: true,
+    });
     await refreshChannels();
   }, [input.userId, refreshChannels]);
 

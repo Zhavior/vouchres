@@ -202,7 +202,7 @@ export async function lockPickForFeedShare(input: {
   const supabaseAdmin = await admin();
   const lockedAt = input.lockedAt ?? new Date().toISOString();
 
-  const baseUpdate: Record<string, unknown> = { locked_at: lockedAt };
+  const baseUpdate: Record<string, unknown> = { locked_at: lockedAt, lock_reason: "feed_share" };
   const query = supabaseAdmin
     .from("picks")
     .update({ ...baseUpdate, visibility: "public" })
@@ -249,6 +249,121 @@ export async function updatePickProofHash(pickId: string, proofHash: string): Pr
   if (error && error.code !== "42703" && error.code !== "PGRST204") {
     throw error;
   }
+}
+
+export type TrustAudience = "private" | "public" | "subscriber";
+
+export async function commitPickTrustPending(input: {
+  pickId: string;
+  userId: string;
+  audience: TrustAudience;
+  committedAt: string;
+  trustLockAt: string;
+}): Promise<ParlayRow | null> {
+  const supabaseAdmin = await admin();
+  const updates: Record<string, unknown> = {
+    committed_at: input.committedAt,
+    trust_lock_at: input.trustLockAt,
+    updated_at: input.committedAt,
+  };
+
+  const withVisibility = { ...updates, visibility: input.audience };
+  let { data, error } = await supabaseAdmin
+    .from("picks")
+    .update(withVisibility)
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .is("locked_at", null)
+    .is("committed_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    ({ data, error } = await supabaseAdmin
+      .from("picks")
+      .update(updates)
+      .eq("id", input.pickId)
+      .eq("user_id", input.userId)
+      .is("locked_at", null)
+      .is("committed_at", null)
+      .select("*")
+      .maybeSingle());
+  }
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function lockPickForTrustLedger(input: {
+  pickId: string;
+  userId: string;
+  lockedAt: string;
+  audience: TrustAudience;
+}): Promise<ParlayRow | null> {
+  const supabaseAdmin = await admin();
+  const baseUpdate: Record<string, unknown> = {
+    locked_at: input.lockedAt,
+    trust_lock_at: null,
+    updated_at: input.lockedAt,
+    lock_reason: "trust_ledger",
+  };
+
+  const withVisibility = { ...baseUpdate, visibility: input.audience };
+  let { data, error } = await supabaseAdmin
+    .from("picks")
+    .update(withVisibility)
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .is("locked_at", null)
+    .not("committed_at", "is", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    ({ data, error } = await supabaseAdmin
+      .from("picks")
+      .update(baseUpdate)
+      .eq("id", input.pickId)
+      .eq("user_id", input.userId)
+      .is("locked_at", null)
+      .not("committed_at", "is", null)
+      .select("*")
+      .maybeSingle());
+  }
+
+  if (error) throw error;
+  if (data) return data;
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("picks")
+    .select("*")
+    .eq("id", input.pickId)
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  return existing ?? null;
+}
+
+export async function listDueTrustLockPicks(limit = 50): Promise<ParlayRow[]> {
+  const supabaseAdmin = await admin();
+  const now = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from("picks")
+    .select("*")
+    .eq("leg_type", "parlay")
+    .is("locked_at", null)
+    .not("committed_at", "is", null)
+    .not("trust_lock_at", "is", null)
+    .lte("trust_lock_at", now)
+    .order("trust_lock_at", { ascending: true })
+    .limit(limit);
+
+  if (error && (error.code === "42703" || error.code === "PGRST204")) {
+    return [];
+  }
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function hideUserParlay(input: {

@@ -215,4 +215,49 @@ export function registerMlbRoutes(app: Express): void {
       throw upstreamUnavailable("Run environments unavailable.", err);
     }
   }));
+
+  app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchParlayLegProgressBatch } = await import("../services/mlb/parlayLiveProgressService");
+    const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
+    const progress = await fetchParlayLegProgressBatch(
+      legs.map((leg: Record<string, unknown>, index: number) => ({
+        id: String(leg.id ?? `leg-${index}`),
+        gamePk: String(leg.gamePk ?? leg.game_pk ?? ""),
+        playerId: leg.playerId ?? leg.player_id ?? "",
+        marketCode: leg.marketCode ?? leg.market_code ?? null,
+        statTarget: leg.statTarget ?? leg.stat_target ?? 1,
+      })),
+    );
+    return res.json(apiOkFlat(req, { legs: progress }));
+  }));
+
+  app.post("/api/mlb/parlay-tier-odds", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchLiveTierOdds } = await import("../services/mlb/parlayOddsFeedService");
+    const quote = await fetchLiveTierOdds({
+      playerName: req.body?.playerName ?? req.body?.player_name,
+      teamName: req.body?.teamName ?? req.body?.team_name,
+      homeTeam: req.body?.homeTeam ?? req.body?.home_team,
+      awayTeam: req.body?.awayTeam ?? req.body?.away_team,
+      marketCode: req.body?.marketCode ?? req.body?.market_code,
+      statTarget: req.body?.statTarget ?? req.body?.stat_target,
+    });
+    return res.json(apiOkFlat(req, quote));
+  }));
+
+  app.post("/api/mlb/parlay-tier-odds/batch", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const { fetchLiveTierOddsBatch } = await import("../services/mlb/parlayOddsFeedService");
+    const tiers = Array.isArray(req.body?.tiers) ? req.body.tiers : [];
+    const quotes = await fetchLiveTierOddsBatch({
+      playerName: req.body?.playerName ?? req.body?.player_name,
+      teamName: req.body?.teamName ?? req.body?.team_name,
+      homeTeam: req.body?.homeTeam ?? req.body?.home_team,
+      awayTeam: req.body?.awayTeam ?? req.body?.away_team,
+      tiers: tiers.map((tier: Record<string, unknown>, index: number) => ({
+        key: String(tier.key ?? tier.id ?? index),
+        marketCode: tier.marketCode ?? tier.market_code,
+        statTarget: tier.statTarget ?? tier.stat_target,
+      })),
+    });
+    return res.json(apiOkFlat(req, { quotes }));
+  }));
 }

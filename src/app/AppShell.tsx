@@ -18,6 +18,7 @@ const DeployUpdateBanner = lazy(() =>
 );
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
 const EdgeIslandCommandCenter = lazy(() => import('../components/theEdge/EdgeIslandCommandCenter'));
+const ParlayOsLayer = lazy(() => import('../components/parlay/os/ParlayOsLayer'));
 
 export type AppShellProps = {
   activeSection: string;
@@ -38,6 +39,8 @@ export type AppShellProps = {
   handleLoginSuccess: () => void;
   handleLogoutComplete: () => void;
   handleUpdateProfile: (profile: Partial<CreatorProofProfile>) => void;
+  onConfirmParlayTier: (tier: import('../lib/parlays/parlayMarketCatalog').ParlayMarketTier) => void;
+  onSaveParlaySlip: () => void;
 };
 
 export function AppShell({
@@ -59,6 +62,8 @@ export function AppShell({
   handleLoginSuccess,
   handleLogoutComplete,
   handleUpdateProfile,
+  onConfirmParlayTier,
+  onSaveParlaySlip,
 }: AppShellProps) {
   useEffect(() => {
     if (isPublicFrontPage) return;
@@ -119,6 +124,20 @@ export function AppShell({
                         onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
                       />
                     </>
+                  )}
+
+                  {showGlobalAppChrome && isLoggedIn && !isPublicFrontPage && (
+                    <Suspense fallback={null}>
+                      <ParlayOsLayer
+                        onConfirmTier={onConfirmParlayTier}
+                        onSaveParlay={() => {
+                          onSaveParlaySlip();
+                          navigateSection('build');
+                        }}
+                        navigateSection={navigateSection}
+                        suppressFloatingDock={activeSection === 'build'}
+                      />
+                    </Suspense>
                   )}
 
                   {showGlobalAppChrome && (

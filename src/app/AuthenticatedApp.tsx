@@ -6,6 +6,7 @@ import { patchPublicNotificationsFetch } from '../lib/patchPublicNotificationsFe
 import { useAppBootstrap } from './useAppBootstrap';
 import { useAppDomain } from './useAppDomain';
 import { AppShell } from './AppShell';
+import { SocialGraphProvider } from '../hooks/SocialGraphProvider';
 import '../index.css';
 
 type NavigationState = ReturnType<typeof useSectionNavigation>;
@@ -52,6 +53,8 @@ function AuthenticatedAppContent({ navigation }: { navigation: NavigationState }
       handleLoginSuccess={domain.handleLoginSuccess}
       handleLogoutComplete={domain.handleLogoutComplete}
       handleUpdateProfile={domain.handleUpdateProfile}
+      onConfirmParlayTier={domain.handleConfirmParlayTier}
+      onSaveParlaySlip={() => navigation.navigateSection('build')}
     />
   );
 }
@@ -71,7 +74,9 @@ export default function AuthenticatedApp({ navigation }: { navigation: Navigatio
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthenticatedAppContent navigation={navigation} />
+      <SocialGraphProvider>
+        <AuthenticatedAppContent navigation={navigation} />
+      </SocialGraphProvider>
     </QueryClientProvider>
   );
 }

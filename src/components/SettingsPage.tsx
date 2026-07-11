@@ -158,6 +158,8 @@ export default function SettingsPage({
 
   const [emailAlerts, setEmailAlerts] = useState(() => localStorage.getItem('vouchedge_email_alerts') !== 'false');
   const [pushAlerts, setPushAlerts] = useState(() => localStorage.getItem('vouchedge_push_alerts') !== 'false');
+  const [followAlerts, setFollowAlerts] = useState(true);
+  const [tailAlerts, setTailAlerts] = useState(true);
   const [weeklySummary, setWeeklySummary] = useState(() => localStorage.getItem('vouchedge_weekly_summary') !== 'false');
   const [profilePublic, setProfilePublic] = useState(() => localStorage.getItem('vouchedge_profile_public') !== 'false');
   const [reduceMotion, setReduceMotion] = useState(Boolean(profile.reduceMotion));
@@ -196,6 +198,35 @@ export default function SettingsPage({
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiClient
+      .get<{ preferences?: { follow_alerts_enabled?: boolean; tail_alerts_enabled?: boolean } }>(
+        '/api/notification-preferences',
+      )
+      .then((data) => {
+        if (cancelled || !data.preferences) return;
+        if (typeof data.preferences.follow_alerts_enabled === 'boolean') {
+          setFollowAlerts(data.preferences.follow_alerts_enabled);
+        }
+        if (typeof data.preferences.tail_alerts_enabled === 'boolean') {
+          setTailAlerts(data.preferences.tail_alerts_enabled);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persistNotificationPref = async (patch: Record<string, boolean>) => {
+    try {
+      await apiClient.patch('/api/notification-preferences', patch);
+    } catch (err) {
+      console.warn('[Settings] notification pref save failed', err);
+    }
   };
 
   useEffect(() => {
@@ -809,6 +840,24 @@ export default function SettingsPage({
                   <div className="divide-y divide-slate-800 rounded-xl border border-slate-800">
                     <PrefRow label="Push notifications" detail="Parlay grading, HR board hits, and live game alerts.">
                       <Toggle checked={pushAlerts} onChange={setPushAlerts} />
+                    </PrefRow>
+                    <PrefRow label="Following alerts" detail="Posts and activity from people you follow. Turned on automatically when you follow someone.">
+                      <Toggle
+                        checked={followAlerts}
+                        onChange={(value) => {
+                          setFollowAlerts(value);
+                          void persistNotificationPref({ follow_alerts_enabled: value });
+                        }}
+                      />
+                    </PrefRow>
+                    <PrefRow label="Tailing alerts" detail="When creators you tail lock slips or share parlays.">
+                      <Toggle
+                        checked={tailAlerts}
+                        onChange={(value) => {
+                          setTailAlerts(value);
+                          void persistNotificationPref({ tail_alerts_enabled: value });
+                        }}
+                      />
                     </PrefRow>
                     <PrefRow label="Public profile" detail="Show your creator profile and stats on public leaderboards.">
                       <Toggle checked={profilePublic} onChange={setProfilePublic} />

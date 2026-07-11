@@ -1,5 +1,5 @@
 import { AppError } from "../../errors/AppError";
-import { isPickLocked, PARLAY_LOCKED_MESSAGE } from "../../lib/parlayLockPolicy";
+import { isPickLocked, lockedParlayMessage } from "../../lib/parlayLockPolicy";
 import { computeParlayProofHash } from "../../lib/parlayProofHash";
 import {
   findLegsForPick,
@@ -8,10 +8,14 @@ import {
   hideUserParlay as hideUserParlayRow,
   listVisibleUserParlayRows,
   lockPickForFeedShare,
+  commitPickTrustPending,
+  lockPickForTrustLedger,
+  listDueTrustLockPicks,
   updatePickProofHash,
   updateUserParlay,
   type ParlayLegRow,
   type ParlayRow,
+  type TrustAudience,
 } from "../../repositories/parlayRepository";
 import { insertPickAuditLog, listPickAuditLogs, type PickAuditRow } from "../../repositories/pickAuditRepository";
 import { assessParlayIdentity } from "./parlayIdentityService";
@@ -54,19 +58,6 @@ export async function getUserParlay(input: {
   }
 
   let legs = await findLegsForPick(input.parlayId);
-  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
-  if (!identity.complete && !isPickLocked(parlay)) {
-    const { repairParlayIdentityForPick } = await import("../../routes/parlay/parlayRepairHelpers");
-    await repairParlayIdentityForPick({
-      pickId: input.parlayId,
-      userId: input.userId,
-      externalProvider: "auto_repair_on_read",
-    }).catch((err) => {
-      console.warn("[getUserParlay] auto identity repair failed", (err as Error)?.message);
-    });
-    legs = await findLegsForPick(input.parlayId);
-  }
-
   return enrichParlayForDisplay(parlay, legs);
 }
 
@@ -99,10 +90,188 @@ function assertParlayEditable(existing: ParlayRow): void {
     throw new AppError({
       status: 403,
       code: "parlay_locked",
-      message: PARLAY_LOCKED_MESSAGE,
-      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null },
+      message: lockedParlayMessage(existing as Record<string, unknown>),
+      details: { error: "parlay_locked", locked_at: existing.locked_at ?? null, lock_reason: existing.lock_reason ?? null },
     });
   }
+  if (existing.committed_at) {
+    throw new AppError({
+      status: 403,
+      code: "parlay_locked",
+      message: "This parlay is committed to your trust ledger window and cannot be edited.",
+      details: { error: "parlay_committed", committed_at: existing.committed_at },
+    });
+  }
+}
+
+const TRUST_LOCK_WINDOW_MS = 5 * 60_000;
+const TRUST_LOCK_WARN_MS = 4 * 60_000;
+
+export function trustLockAtFromCommitted(committedAt: string): string {
+  return new Date(new Date(committedAt).getTime() + TRUST_LOCK_WINDOW_MS).toISOString();
+}
+
+export function trustLockWarnAtFromCommitted(committedAt: string): string {
+  return new Date(new Date(committedAt).getTime() + TRUST_LOCK_WARN_MS).toISOString();
+}
+
+function normalizeTrustAudience(value: unknown): TrustAudience {
+  const raw = String(value ?? "private").toLowerCase();
+  if (raw === "public" || raw === "subscriber") return raw;
+  return "private";
+}
+
+async function applyTrustLockProof(input: {
+  parlayId: string;
+  userId: string;
+  parlay: ParlayRow;
+  lockedAt: string;
+  auditAction: string;
+  extraAudit?: Record<string, unknown>;
+}): Promise<ParlayRow> {
+  const legs = await findLegsForPick(input.parlayId);
+  const effectiveLockedAt = String(input.parlay.locked_at ?? input.lockedAt);
+  const proofHash = computeParlayProofHash({
+    id: String(input.parlay.id),
+    created_at: input.parlay.created_at,
+    locked_at: effectiveLockedAt,
+    odds_decimal: input.parlay.odds_decimal,
+    stake_units: input.parlay.stake_units,
+    legs,
+  });
+  await updatePickProofHash(input.parlayId, proofHash).catch((err) => {
+    console.warn("[trustLock] proof hash failed", (err as Error)?.message);
+  });
+  input.parlay.proof_hash = proofHash;
+
+  void import("../trust/pickProofAnchorService")
+    .then(({ anchorParlayProofOpenTimestamp }) => anchorParlayProofOpenTimestamp({
+      pickId: input.parlayId,
+      proofHash,
+    }))
+    .catch((err) => {
+      console.warn("[trustLock] OTS anchor failed", (err as Error)?.message);
+    });
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: input.auditAction,
+    fieldChanges: {
+      locked_at: { before: null, after: input.parlay.locked_at ?? input.lockedAt },
+      ...(input.extraAudit ?? {}),
+    },
+  }).catch((err) => {
+    console.warn("[trustLock] audit log failed", (err as Error)?.message);
+  });
+
+  return input.parlay;
+}
+
+export async function commitParlayTrustLedger(input: {
+  userId: string;
+  parlayId: string;
+  audience?: TrustAudience;
+}): Promise<ParlayRow> {
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) {
+    throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
+  }
+  assertParlayEditable(existing);
+
+  const legs = await findLegsForPick(input.parlayId);
+  const identity = assessParlayIdentity(legs as Record<string, unknown>[]);
+  if (!identity.complete) {
+    throw new AppError({
+      status: 422,
+      code: "validation_error",
+      message: "Complete canonical leg identity before locking to the trust ledger.",
+      details: { error: "identity_incomplete", missingLegIndexes: identity.missingLegIndexes },
+    });
+  }
+
+  const audience = normalizeTrustAudience(input.audience ?? existing.visibility ?? "private");
+  const committedAt = new Date().toISOString();
+  const trustLockAt = trustLockAtFromCommitted(committedAt);
+
+  const parlay = await commitPickTrustPending({
+    pickId: input.parlayId,
+    userId: input.userId,
+    audience,
+    committedAt,
+    trustLockAt,
+  });
+
+  if (!parlay) {
+    throw new AppError({
+      status: 409,
+      code: "conflict",
+      message: "Parlay is already committed or locked.",
+    });
+  }
+
+  await insertPickAuditLog({
+    pickId: input.parlayId,
+    userId: input.userId,
+    action: "commit_trust_pending",
+    fieldChanges: {
+      committed_at: { before: null, after: committedAt },
+      trust_lock_at: { before: null, after: trustLockAt },
+      visibility: { before: existing.visibility ?? "private", after: audience },
+    },
+  }).catch((err) => {
+    console.warn("[commitParlayTrustLedger] audit log failed", (err as Error)?.message);
+  });
+
+  return parlay;
+}
+
+export async function finalizeParlayTrustLock(input: {
+  userId: string;
+  parlayId: string;
+}): Promise<ParlayRow | null> {
+  const existing = await findUserParlayById(input.userId, input.parlayId);
+  if (!existing) return null;
+  if (isPickLocked(existing)) return existing;
+  if (!existing.committed_at) return null;
+
+  const trustLockAt = existing.trust_lock_at ? new Date(String(existing.trust_lock_at)).getTime() : 0;
+  if (trustLockAt > Date.now()) return null;
+
+  const audience = normalizeTrustAudience(existing.visibility ?? "private");
+  const lockedAt = new Date().toISOString();
+  const parlay = await lockPickForTrustLedger({
+    pickId: input.parlayId,
+    userId: input.userId,
+    lockedAt,
+    audience,
+  });
+
+  if (!parlay) return existing;
+
+  return applyTrustLockProof({
+    parlayId: input.parlayId,
+    userId: input.userId,
+    parlay,
+    lockedAt,
+    auditAction: "lock_trust_ledger",
+  });
+}
+
+export async function finalizeDueTrustLocks(limit = 50): Promise<{ finalized: number; ids: string[] }> {
+  const due = await listDueTrustLockPicks(limit);
+  const ids: string[] = [];
+  for (const row of due) {
+    const result = await finalizeParlayTrustLock({
+      userId: String(row.user_id),
+      parlayId: String(row.id),
+    }).catch((err) => {
+      console.warn("[finalizeDueTrustLocks] failed", String(row.id), (err as Error)?.message);
+      return null;
+    });
+    if (result?.locked_at) ids.push(String(result.id));
+  }
+  return { finalized: ids.length, ids };
 }
 
 export async function lockParlayOnFeedShare(input: {

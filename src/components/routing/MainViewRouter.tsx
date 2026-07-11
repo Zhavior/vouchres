@@ -4,6 +4,7 @@ import RouteShellSkeleton from '../boot/RouteShellSkeleton';
 import FadeInMount from '../system/FadeInMount';
 import { useAppShell } from '../../context/AppShellContext';
 import { useAppCommandStore } from '../../stores/appCommandStore';
+import { useParlayOsStore } from '../../stores/parlayOsStore';
 import { useFeedQuery } from '../../hooks/queries/useFeedQuery';
 
 const ProAccessGate = lazy(() =>
@@ -14,6 +15,7 @@ const PersonalizedOnboarding = lazy(() =>
     default: module.PersonalizedOnboarding,
   })),
 );
+const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('../TodayDashboard'));
 const EdgeIslandPage = lazy(() => import('../../pages/EdgeIslandPage'));
@@ -42,8 +44,30 @@ const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZ
 const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
 const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
+const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
+
+function ParlayProofShell() {
+  const storePickId = useParlayOsStore((s) => s.proofPickId);
+  const pickId = storePickId ?? (() => {
+    try {
+      return sessionStorage.getItem('vouchedge_proof_pick_id');
+    } catch {
+      return null;
+    }
+  })();
+
+  if (!pickId) {
+    return (
+      <div className="p-8 text-center text-white/60">
+        <p>Missing parlay proof id.</p>
+      </div>
+    );
+  }
+
+  return <ParlayProofPage pickId={pickId} />;
+}
 
 function LazyRoute({ children }: { children: React.ReactNode }) {
   return (
@@ -173,6 +197,12 @@ function MainViewRouter({
           <FeedShell navigateSection={navigateSection} />
         </LazyRoute>
       );
+    case 'following':
+      return (
+        <LazyRoute>
+          <FollowingHubPage />
+        </LazyRoute>
+      );
     case 'build':
       return (
         <LazyRoute>
@@ -220,6 +250,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <ParlayShell key="live_parlays" panel="live" navigateSection={navigateSection} />
+        </LazyRoute>
+      );
+    case 'parlay_proof':
+      return (
+        <LazyRoute>
+          <ParlayProofShell />
         </LazyRoute>
       );
     case 'live_game_lab':

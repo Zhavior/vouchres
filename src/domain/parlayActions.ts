@@ -2,6 +2,7 @@ import type { Parlay, Leg } from '../types';
 import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
 import { getAuthToken, isSupabaseConfigured } from '../lib/supabaseClient';
+import { assessClientParlayIdentity } from '../lib/parlayIdentity';
 import { normalizeParlaySlip, buildSaveParlayPayload, type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useSlipsStore } from '../stores/slipsStore';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
@@ -86,6 +87,18 @@ export async function handleSaveParlaySlip(
   newParlay: Parlay | CanonicalParlaySlip,
   navigateSection: (section: string) => void,
 ): Promise<void> {
+  const identity = assessClientParlayIdentity(
+    (Array.isArray(newParlay.legs) ? newParlay.legs : []).map((leg) => leg as Record<string, unknown>),
+  );
+  if (!identity.complete) {
+    notify({
+      kind: 'info',
+      title: 'Cannot save parlay',
+      body: `Leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity (gamePk, playerId, market, target).`,
+    });
+    throw new Error('Parlay legs are missing grading identity.');
+  }
+
   const syncSlips = useSlipsStore.getState().syncSlips;
 
   const normalizedUiStatus =
@@ -132,5 +145,104 @@ export async function pushAiParlaysToBackend(parlays: Parlay[]): Promise<void> {
   for (const parlay of parlays) {
     if (!parlay.aiGenerated) continue;
     await pushParlayToBackend(parlay);
+  }
+}
+
+function patchSlipTrustFields(parlayId: string, patch: Partial<Parlay>): void {
+  const syncSlips = useSlipsStore.getState().syncSlips;
+  syncSlips(
+    useSlipsStore.getState().savedSlips.map((p) =>
+      p.id === parlayId || p.backendPickId === parlayId ? { ...p, ...patch } : p,
+    ),
+  );
+  const slips = useSlipsStore.getState().savedSlips.map((p) => {
+    if (p.id === parlayId || p.backendPickId === parlayId) {
+      return { ...p, ...patch };
+    }
+    return p;
+  });
+  useParlayCommandStore.getState().hydrateSavedSlips(slips);
+}
+
+export async function handleCommitParlayTrust(input: {
+  parlay: Parlay;
+  audience: "private" | "public" | "subscriber";
+  navigateSection: (section: string) => void;
+}): Promise<Parlay> {
+  let working = { ...input.parlay };
+
+  const identity = assessClientParlayIdentity(
+    (working.legs || []).map((leg) => ({ ...leg } as Record<string, unknown>)),
+  );
+  if (!identity.complete) {
+    throw new Error(
+      `Cannot lock to ledger — leg${identity.missingLegIndexes.length === 1 ? '' : 's'} ${identity.missingLegIndexes.map((i) => i + 1).join(', ')} missing grading identity.`,
+    );
+  }
+
+  if (!working.backendPickId) {
+    await pushParlayToBackend(working);
+    working = useSlipsStore.getState().savedSlips.find((p) => p.id === input.parlay.id) ?? working;
+  }
+
+  const pickId = working.backendPickId ?? working.id;
+  if (!pickId) {
+    throw new Error("Save this parlay to your account before locking to the trust ledger.");
+  }
+
+  const result = await apiClient.post<{ parlay?: Record<string, unknown> }>(
+    `/api/parlays/${encodeURIComponent(pickId)}/commit-trust`,
+    { audience: input.audience },
+  );
+
+  const row = result?.parlay ?? {};
+  const committedAt = String(row.committed_at ?? new Date().toISOString());
+  const trustLockAt = String(row.trust_lock_at ?? "");
+  const audience = (row.visibility ?? input.audience) as Parlay["trustAudience"];
+
+  const patch: Partial<Parlay> = {
+    backendPickId: pickId,
+    trustCommittedAt: committedAt,
+    trustLockAt: trustLockAt || undefined,
+    trustAudience: audience,
+    trustLockWarningNotified: false,
+    trustLockedNotified: false,
+  };
+
+  patchSlipTrustFields(pickId, patch);
+
+  notify({
+    kind: "success",
+    title: "Private wins",
+    body: `${working.title || "Your parlay"} is in Private wins. It locks to your trust ledger in 5 minutes.`,
+    section: "live_parlays",
+  });
+
+  useParlayCommandStore.getState().setActivePanel("live");
+  input.navigateSection("live_parlays");
+
+  return { ...working, ...patch };
+}
+
+export async function finalizeParlayTrustLockClient(parlay: Parlay): Promise<Parlay | null> {
+  const pickId = parlay.backendPickId ?? parlay.id;
+  if (!pickId || parlay.feedLockedAt) return parlay;
+
+  try {
+    const result = await apiClient.post<{ parlay?: Record<string, unknown> }>(
+      `/api/parlays/${encodeURIComponent(pickId)}/finalize-trust-lock`,
+    );
+    const row = result?.parlay;
+    if (!row?.locked_at) return null;
+
+    const patch: Partial<Parlay> = {
+      feedLockedAt: String(row.locked_at),
+      trustLockAt: undefined,
+      trustLockedNotified: true,
+    };
+    patchSlipTrustFields(pickId, patch);
+    return { ...parlay, ...patch };
+  } catch {
+    return null;
   }
 }

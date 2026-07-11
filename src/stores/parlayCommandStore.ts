@@ -59,6 +59,8 @@ type ParlayCommandState = {
   addDraftLeg: (leg: DraftParlayLeg) => void;
   addAiLegToDraft: (leg: AiRecommendedLeg) => void;
   removeDraftLeg: (id: string) => void;
+  updateDraftLeg: (id: string, patch: Partial<DraftParlayLeg>) => void;
+  replaceDraftLeg: (id: string, leg: DraftParlayLeg) => void;
   clearDraft: () => void;
   setAiPicks: (legs: AiRecommendedLeg[]) => void;
   hydrateSavedSlips: (rawSlips: unknown[]) => void;
@@ -152,6 +154,20 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
         draftMode: nextDraftLegs.length === 0 ? "manual" : state.draftMode,
       };
     }),
+
+  updateDraftLeg: (id, patch) =>
+    set((state) => ({
+      draftLegs: state.draftLegs.map((leg) =>
+        leg.id === id ? normalizeDraftLeg({ ...leg, ...patch, id: leg.id }) : leg,
+      ),
+    })),
+
+  replaceDraftLeg: (id, leg) =>
+    set((state) => ({
+      draftLegs: state.draftLegs.map((existing) =>
+        existing.id === id ? normalizeDraftLeg({ ...leg, id: existing.id }) : existing,
+      ),
+    })),
 
   clearDraft: () => set({ draftLegs: [], draftMode: "manual" }),
 

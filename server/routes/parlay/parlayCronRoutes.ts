@@ -8,6 +8,7 @@ import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators"
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { gradePendingPicks } from "../../services/grading/gradingService";
+import { buildGradeDueLogRows, persistGradingRunLogs } from "../../services/grading/gradingLogService";
 import { captureGradingFailure } from "../../lib/sentry";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
 import { partitionGradeDueResult } from "./parlayGradingResponses";
@@ -17,6 +18,7 @@ import {
   repairLegacyParlayIdentityForSync,
 } from "./parlayRepairHelpers";
 import { backfillOpenTimestampsForLockedPicks } from "../../services/trust/pickProofAnchorService";
+import { finalizeDueTrustLocks } from "../../services/parlays/userParlayService";
 
 /**
  * Cron-only parlay maintenance routes.
@@ -75,6 +77,17 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
     pendingLegs: pending.length,
     errorCount: errors.length,
   }));
+
+  try {
+    await persistGradingRunLogs(buildGradeDueLogRows({
+      settled,
+      pending,
+      errors,
+      source: "cron_grade_due",
+    }));
+  } catch (logErr) {
+    console.warn("[cron/grade-due] grading_logs unavailable", (logErr as Error)?.message);
+  }
 
   return res.json(apiOkFlat(req, {
     mode: "cron_grade_due",
@@ -296,6 +309,19 @@ parlayCronRoutes.post("/cron/parlays/quarantine-legacy", asyncHandler(async (req
     skippedCount: skipped.length,
     quarantined: quarantined.slice(0, 20),
     skipped: skipped.slice(0, 20),
+    checkedAt: new Date().toISOString(),
+  }));
+}));
+
+parlayCronRoutes.get("/cron/parlays/finalize-trust-locks", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  assertCronAuthorized(req);
+
+  const limit = boundedInt(req.query.limit, "limit", 50, 1, 200);
+  const result = await finalizeDueTrustLocks(limit);
+
+  return res.json(apiOkFlat(req, {
+    mode: "finalize_trust_locks",
+    ...result,
     checkedAt: new Date().toISOString(),
   }));
 }));
