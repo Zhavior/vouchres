@@ -278,6 +278,30 @@ export function inferFamilyFromText(text: string): ParlayMarketFamilyId {
   return "home_runs";
 }
 
+const PITCHER_POSITIONS = new Set(["P", "SP", "RP", "CP", "LHP", "RHP"]);
+
+/** Batter vs pitcher for ParlayOS — avoids false positives from matchup text (e.g. "11 K/9"). */
+export function resolveParlayPlayerRole(input: {
+  position?: string | null;
+  marketHint?: string | null;
+  specHint?: string | null;
+}): ParlayPlayerRole {
+  const pos = String(input.position ?? "").trim().toUpperCase();
+  if (PITCHER_POSITIONS.has(pos)) return "pitcher";
+
+  const market = String(input.marketHint ?? "").toLowerCase();
+  const spec = String(input.specHint ?? "").toLowerCase();
+  const text = `${market} ${spec}`.trim();
+
+  if (/home run|\bhr\b|to hit a home run|anytime hr/.test(text)) return "batter";
+  if (/stolen base|\bsb\b|\brbi\b|\btotal bases|\bhit(s)?\b|\brun(s)?\b|to score/.test(text)) return "batter";
+
+  if (/pitcher strikeout|pitching out|\b\d+\+\s*k\b|to record.*strikeout/.test(text)) return "pitcher";
+  if (/^pitcher\b|\bpitcher props\b/.test(market)) return "pitcher";
+
+  return "batter";
+}
+
 export function tiersForRole(role: ParlayPlayerRole): ParlayMarketFamily[] {
   return PARLAY_MARKET_FAMILIES.filter((f) => f.role === role);
 }
