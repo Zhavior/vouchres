@@ -12,7 +12,7 @@ test.describe("ParlayOS smoke", () => {
       await page.goto("/?section=build");
     }
 
-    await expect(page.getByRole("region", { name: /parlay hub/i })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("region", { name: /parlayos/i })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("tab", { name: /build/i })).toBeVisible();
   });
 
@@ -20,7 +20,7 @@ test.describe("ParlayOS smoke", () => {
     await page.goto("/?section=build");
     await page.waitForLoadState("domcontentloaded");
 
-    const hub = page.getByRole("region", { name: /parlay hub/i });
+    const hub = page.getByRole("region", { name: /parlayos/i });
     await expect(hub).toBeVisible({ timeout: 30_000 });
 
     const buildWithParlay = page.getByText(/build with parlayos/i);
