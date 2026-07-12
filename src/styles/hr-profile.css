@@ -4,6 +4,8 @@
 .ve-hr-drawer {
   --ve-hr-panel: #0a0e14;
   --ve-hr-panel-raised: #0d1219;
+  --ve-hr-shell: #02060e;
+  --ve-hr-tooltip: #111820;
   --ve-hr-border: rgba(255, 255, 255, 0.08);
   --ve-hr-border-strong: rgba(255, 255, 255, 0.12);
 }
@@ -15,7 +17,7 @@
 }
 
 .ve-hr-profile-shell {
-  background: #02060e;
+  background: var(--ve-hr-shell);
 }
 
 .ve-hr-profile-sidebar {
