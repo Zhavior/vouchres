@@ -5,7 +5,7 @@
  * every leg is a confirmed starter and carries gamePk + gameStartTime (for the
  * 30-min lock) + marketCode (for grading).
  *
- * Judge-panel upgrade (Parlay Hub redesign):
+ * Judge-panel upgrade for the ParlayOS workspace:
  *  - Multi-market support: ANYTIME_HR, HIT, TOTAL_BASES, RBI, RUN, STRIKEOUTS, STOLEN_BASE
  *  - All estimated odds carry oddsSource: 'estimated' (never silently presented as sportsbook prices)
  *  - Estimated odds stored as American integers (consistent with Leg.odds type)

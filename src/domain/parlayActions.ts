@@ -131,7 +131,7 @@ export async function handleSaveParlaySlip(
   notify({
     kind: 'success',
     title: '✅ Parlay Saved',
-    body: `${savedParlay.title || 'Your parlay'} was saved to Parlay Hub.`,
+    body: `${savedParlay.title || 'Your parlay'} was saved to ParlayOS.`,
     section: 'live_parlays',
   });
 

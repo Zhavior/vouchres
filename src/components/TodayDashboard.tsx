@@ -77,7 +77,7 @@ const TODAY_TOOLS: DashboardCard[] = [
   {
     icon: Sliders,
     section: 'build',
-    title: 'Parlay Hub',
+    title: 'ParlayOS',
     eyebrow: 'Builder',
     description: 'Build slips from research legs and track them into the ledger.',
     accent: 'cyan',
@@ -289,7 +289,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <CommandButton label="Open Daily Players" section="daily_players" onSectionChange={onSectionChange} primary />
                 <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} />
-                <CommandButton label="Build Parlay" section="build" onSectionChange={onSectionChange} />
+                <CommandButton label="Open ParlayOS" section="build" onSectionChange={onSectionChange} />
               </div>
             </div>
 

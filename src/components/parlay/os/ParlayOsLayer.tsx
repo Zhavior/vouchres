@@ -219,7 +219,7 @@ export default function ParlayOsLayer({
                   onClick={handleOpenHub}
                   className="flex-1 rounded-xl border border-white/15 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white/70 hover:border-cyan-400/40 hover:text-cyan-200"
                 >
-                  Open Parlay Hub
+                  Open ParlayOS
                 </button>
                 <button
                   type="button"

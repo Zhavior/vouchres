@@ -161,14 +161,14 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   live_parlays: {
     id: "live_parlays",
-    label: "Parlay Hub",
-    description: "Manual builder, saved slips, and parlay command tools.",
+    label: "ParlayOS",
+    description: "Canonical builder, saved slips, and live parlay intelligence.",
     icon: Radio,
   },
   build: {
     id: "build",
-    label: "Build Parlay",
-    description: "Create and edit parlay slips.",
+    label: "ParlayOS Builder",
+    description: "Create, edit, and lock ParlayOS slips.",
     icon: Sliders,
   },
   research: {

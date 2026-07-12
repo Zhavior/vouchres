@@ -1,5 +1,5 @@
 /**
- * ParlayCommandCenter — Redesigned Parlay Hub
+ * ParlayCommandCenter — ParlayOS workspace surface
  *
  * 12-judge panel synthesis applied:
  *
@@ -1133,7 +1133,7 @@ export default function ParlayCommandCenter({
 
       <section
         className={`${Z8_PAGE} flex flex-col`}
-        aria-label="Parlay Hub"
+        aria-label="ParlayOS"
       >
         {/* Header */}
         <div className={`${Z8_PAGE_PAD_X} pt-5 pb-0 shrink-0`}>
@@ -1141,7 +1141,7 @@ export default function ParlayCommandCenter({
             <div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-vouch-cyan/25 bg-vouch-cyan/10 ${Z8_LABEL} text-vouch-cyan`}>
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                Parlay Hub
+                ParlayOS
               </div>
               <h1 className="mt-2 text-xl font-extrabold text-white sm:text-3xl font-z8">
                 Build. Select. Track.
@@ -1178,7 +1178,7 @@ export default function ParlayCommandCenter({
           <div
             id={tablistId}
             role="tablist"
-            aria-label="Parlay Hub sections"
+            aria-label="ParlayOS sections"
             className="flex gap-0.5 sm:gap-1 overflow-x-auto pb-0 border-b border-[hsl(var(--ve-border)/0.4)] snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
           >

@@ -247,7 +247,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays for today`,
-      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay Hub.',
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to ParlayOS.',
       section: 'live_parlays',
     });
   };
@@ -298,7 +298,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
         notify({
           kind: 'lock',
           title: `🔒 Locked: ${p.title}`,
-          body: 'Moved to Parlay Hub. It will auto-grade when the games are final.',
+      body: 'Moved to ParlayOS. It will auto-grade when the games are final.',
           section: 'live_parlays',
         });
         return { ...p, lockNotified: true };

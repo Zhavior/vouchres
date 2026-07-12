@@ -240,7 +240,7 @@ export default function AiPilotPage({ onSectionChange, onSaveParlay }: AiPilotPa
         <div className={Z8_STAT_CHIP}>
           <Shield className="mb-2 h-5 w-5 text-vouch-emerald" />
           <h3 className="text-sm font-black text-white">Locked separation</h3>
-          <p className="mt-1 text-xs text-white/45">AI Made Parlays stay separate from manual Build Parlay slips.</p>
+          <p className="mt-1 text-xs text-white/45">AI Made Parlays stay separate from manual ParlayOS slips.</p>
         </div>
       </footer>
     </main>

@@ -74,8 +74,8 @@ export const ALL_FEATURES: FeatureConfig[] = [
   { id: "ai_engine", label: "V.A.I Research Center", icon: "Activity", enabled: true, order: 11.7, group: "AI", sports: ALL_SPORTS },
 
   // Build & Track
-  { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
-  { id: "build", label: "Build Parlay", icon: "Sliders", enabled: true, order: 11, group: "Build & Track", locked: true },
+  { id: "live_parlays", label: "ParlayOS", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
+  { id: "build", label: "ParlayOS Builder", icon: "Sliders", enabled: true, order: 11, group: "Build & Track", locked: true },
   { id: "research", label: "Player Research", icon: "Search", enabled: true, order: 12, group: "Build & Track" },
   { id: "board", label: "Vouch Board", icon: "ClipboardCheck", enabled: true, order: 13, group: "Build & Track", locked: true },
   { id: "results", label: "Results", icon: "BarChart3", enabled: true, order: 14, group: "Build & Track" },
