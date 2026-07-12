@@ -17,7 +17,6 @@ import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
 
 interface Props {
-  onSectionChange: (section: string) => void;
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
 
@@ -309,71 +308,6 @@ function StatusBadge({ m }: { m: GameMatchup }) {
 
 const ENV_COLOR: Record<string, string> = { SHOOTOUT: '#f87171', HIGH: '#fb923c', MODERATE: '#fbbf24', LOW: '#64748b' };
 
-const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen }) => {
-  const winProbability = m.winProbability ?? { away: 0, home: 0 };
-  const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
-  const homeFav = winProbability.home >= winProbability.away;
-  return (
-    <button onClick={onOpen}
-      className={`text-left rounded-2xl border p-4 transition-all hover:scale-[1.01] w-full ${m.isLive ? 'border-red-500/30 bg-gradient-to-br from-red-950/20 via-[#0b1120] to-[#0b1120] shadow-[0_0_24px_rgba(239,68,68,0.12)]' : 'border-slate-800 bg-gradient-to-br from-slate-900/40 to-[#0b1120]'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <StatusBadge m={m} />
-        <span className="text-[10px] text-slate-500 font-mono truncate max-w-[55%]">{m.venue}</span>
-      </div>
-
-      {/* Teams */}
-      {[m.away, m.home].map((t, i) => {
-        const pct = i === 0 ? winProbability.away : winProbability.home;
-        const fav = i === 0 ? !homeFav : homeFav;
-        const score = i === 0 ? m.score?.away : m.score?.home;
-        return (
-          <div key={`${t.teamId}-${t.name}`} className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <TeamLogo src={t.logo} alt={t.name} />
-              <div className="min-w-0">
-                <p className={`text-sm font-black truncate ${fav ? 'text-slate-100' : 'text-slate-300'}`}>{t.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">
-                  {(m.isLive || m.isFinal) ? (m.isFinal ? 'Final score' : 'Live score') : (t.record ? `${t.record.wins}-${t.record.losses}` : 'Scheduled')}
-                </p>
-              </div>
-            </div>
-            <span className="text-xl font-mono font-black text-white">{(m.isLive || m.isFinal) ? score : ''}</span>
-          </div>
-        );
-      })}
-
-      {/* Win prob bar */}
-      <div className="mt-1 h-1.5 rounded-full overflow-hidden bg-slate-800 flex">
-        <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
-        <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
-      </div>
-
-      {/* Run env + top HR watch */}
-      <div className="flex items-center justify-between mt-3">
-        {m.runEnvironment && (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded border" style={{ color: ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8', borderColor: (ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8') + '44' }}>
-            🔥 {m.runEnvironment.tier} RUN ENV
-          </span>
-        )}
-        <span className="flex items-center gap-1 text-[10px] text-sky-400 font-bold">AI Breakdown <ChevronRight className="w-3 h-3" /></span>
-      </div>
-
-      {topHrWatch.length > 0 && (
-        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-800/60">
-          <span className="text-[9px] text-slate-500 font-mono uppercase mr-1">HR Watch</span>
-          {topHrWatch.slice(0, 3).map((w) => (
-            <span key={w.playerId} className="flex items-center gap-1">
-              <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={20} />
-              <span className="text-[10px] text-slate-300 truncate max-w-[70px]">{w.playerName.split(' ').slice(-1)[0]}</span>
-              <span className="text-[9px] font-mono font-bold" style={{ color: gradeColor(w.grade) }}>{w.hrEdge}</span>
-            </span>
-          ))}
-        </div>
-      )}
-    </button>
-  );
-};
-
 function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () => void; onAddLeg: (w: HrWatch) => void }) {
   const Section: React.FC<{ icon: any; title: string; tone?: string; children: React.ReactNode }> = ({ icon: Icon, title, tone = '#38bdf8', children }) => (
     <div>
@@ -515,7 +449,7 @@ function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[
   });
 }
 
-export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Props) {
+export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   const liveGamesQuery = useLiveGames();
   const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
@@ -674,23 +608,23 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
       <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-4 sm:p-5 mb-4 sm:mb-5`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-5 h-5 sm:w-6 sm:h-6 text-vouch-cyan shrink-0" /> Live Games Center</h1>
-            <p className="text-xs text-white/50 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
-            <p className={`mt-2 ${Z8_LABEL} text-vouch-cyan`}>{sourceNote}</p>
+            <h1 className="flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
+            <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
+            <p className={`mt-2 ${Z8_LABEL} text-vouch-emerald`}>{sourceNote}</p>
           </div>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan shrink-0 self-start sm:self-auto">
+          <button onClick={load} className="z8-control flex shrink-0 items-center gap-1.5 self-start border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs text-vouch-emerald transition-colors hover:border-vouch-emerald/50 sm:self-auto">
             <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
         <div className="flex items-center gap-2 mt-4">
-          <button onClick={() => setLiveOnly(false)} className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
-          <button onClick={() => setLiveOnly(true)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
+          <button onClick={() => setLiveOnly(false)} className={`z8-control px-3 py-1.5 text-xs font-bold border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
+          <button onClick={() => setLiveOnly(true)} className={`z8-control flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
             <Radio className="w-3.5 h-3.5" /> Live only ({liveCount})
           </button>
         </div>
       </div>
 
-      {error && <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-sm text-red-300">{error}</div>}
+      {error && <div className="z8-data-surface p-6 text-center text-sm text-red-300"><p>{error}</p><button type="button" onClick={load} className="z8-control mt-4 border border-red-300/30 px-4 text-white">Try again</button></div>}
 
       {loading && matchups.length === 0 && (
         <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className={`h-52 rounded-2xl ${Z8_SURFACE} animate-pulse`} />)}</div>
@@ -698,7 +632,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
       {!error && matchups.length > 0 && (
         shown.length === 0 ? (
-          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/50 font-mono`}>No active live games right now. Switch to “All games”.</div>
+          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/55`}><p>No games are live right now.</p><button type="button" onClick={() => setLiveOnly(false)} className="z8-control mt-4 border border-white/15 px-4 text-white">Show today&apos;s schedule</button></div>
         ) : (
           <div className="space-y-4 min-w-0">
             {activeGame && (
@@ -709,7 +643,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5 min-w-0">
                   <div className="min-w-0">
                     <p className={`${Z8_LABEL} text-vouch-cyan`}>
-                      Live Games Center
+                      Current game
                     </p>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">
                       {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
@@ -776,7 +710,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                   <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
-                    <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
+                    <p className="text-sm font-black text-slate-100">{activeGame.topHrWatch?.length ?? 0} players</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
@@ -784,34 +718,22 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                   <button
                     onClick={() => setSelected(activeGame)}
-                    className="rounded-xl sm:rounded-2xl bg-sky-500/15 border border-sky-500/40 p-2.5 sm:p-3 text-left hover:bg-sky-500/25 transition min-w-0"
+                    className="z8-control min-w-0 border border-vouch-emerald/40 bg-vouch-emerald/10 p-2.5 text-left transition hover:bg-vouch-emerald/15 sm:p-3"
                   >
-                    <p className="text-[10px] text-sky-300 font-mono uppercase">Details</p>
-                    <p className="text-sm font-black text-sky-100">Open game room</p>
+                    <p className="text-[11px] font-mono uppercase text-vouch-emerald">Details</p>
+                    <p className="text-sm font-black text-white">Open matchup</p>
                   </button>
                 </div>
 
-                <div className="relative mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[
-                    'Stolen Base Tracker',
-                    'RBI Opportunity Meter',
-                    'Live Parlay Impact'
-                  ].map((label) => (
-                    <div key={label} className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3">
-                      <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300">🔒 Pro</p>
-                      <p className="text-xs font-bold text-slate-200 mt-1">{label}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 min-w-0">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {shown.map((m) => (
                 <button
                   key={m.gamePk}
                   onClick={() => setActiveGamePk(m.gamePk)}
-                  className={`min-w-[140px] sm:min-w-[180px] text-left rounded-xl border p-2.5 sm:p-3 transition-all shrink-0 ${
+                  className={`z8-control min-w-0 text-left border p-2.5 transition-all sm:p-3 ${
                     String(activeGame?.gamePk) === String(m.gamePk)
                       ? 'bg-sky-500/15 border-sky-500/50'
                       : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
@@ -843,36 +765,12 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
-              {shown.map((m) => (
-                <GameCard
-                  key={m.gamePk}
-                  m={m}
-                  onOpen={() => {
-                    setActiveGamePk(m.gamePk);
-                    setSelected(m);
-                  }}
-                />
-              ))}
-            </div>
           </div>
         )
       )}
 
       {selected && <MatchupDrawer m={selected} onClose={() => setSelected(null)} onAddLeg={addLeg} />}
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="pointer-events-auto border-t border-amber-400/25 bg-ve-obsidian/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
-          <button
-            type="button"
-            onClick={() => onSectionChange('premium')}
-            className="flex w-full min-h-12 items-center justify-center gap-2 rounded-xl border border-amber-400/45 bg-amber-400/10 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-200"
-          >
-            Unlock Pro live modules
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
     </main>
   );
 }

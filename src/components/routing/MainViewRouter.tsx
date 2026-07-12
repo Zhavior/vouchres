@@ -542,10 +542,10 @@ function ProGateShell({
   );
 }
 
-function LiveGamesShell({ navigateSection }: { navigateSection: (section: string) => void }) {
+function LiveGamesShell({ navigateSection: _navigateSection }: { navigateSection: (section: string) => void }) {
   const onAddLegFromResearch = useAppCommandStore((state) => state.onAddLegFromResearch);
   return (
-    <LiveGamesPro onSectionChange={navigateSection} onAddLegToParlay={onAddLegFromResearch} />
+    <LiveGamesPro onAddLegToParlay={onAddLegFromResearch} />
   );
 }
 
