@@ -5,10 +5,9 @@ import {
   selectDraftLegs,
   useParlayCommandStore,
 } from "../../../stores/parlayCommandStore";
-import { useAppCommandStore } from "../../../stores/appCommandStore";
 import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
-import { SmartParlayLegList } from "../smart/SmartParlayLegCard";
+import SmartParlaySlipCard from "../smart/SmartParlaySlipCard";
 import ParlayLegEditorSheet from "./ParlayLegEditorSheet";
 import type { ParlayMarketTier } from "../../../lib/parlays/parlayMarketCatalog";
 import { draftLegsToUiLegs } from "../../../lib/parlays/draftLegsToUiLegs";
@@ -19,6 +18,7 @@ import ParlayIdentityExplainer from "../../trust/ParlayIdentityExplainer";
 import ParlayIdentityBadge from "../../trust/ParlayIdentityBadge";
 import { notify } from "../../../lib/appNotifications";
 import { useAutoRepairDraftIdentity } from "../../../hooks/useAutoRepairDraftIdentity";
+import { projectSmartParlayFromDraft } from "../../../domain/parlay";
 
 export type ParlayOsLayerProps = {
   onConfirmTier: (tier: ParlayMarketTier) => void;
@@ -43,7 +43,6 @@ export default function ParlayOsLayer({
   const toggleSheet = useParlayOsStore((s) => s.toggleSheet);
   const setSheetExpanded = useParlayOsStore((s) => s.setSheetExpanded);
   const editorLegId = useParlayOsStore((s) => s.editorLegId);
-  const openLegEditor = useParlayOsStore((s) => s.openLegEditor);
   const closeLegEditor = useParlayOsStore((s) => s.closeLegEditor);
 
   const [stake, setStake] = useState(10);
@@ -87,19 +86,53 @@ export default function ParlayOsLayer({
 
   const legContent = useMemo(() => {
     if (uiLegs.length === 0) return undefined;
+    const projectedSlip = projectSmartParlayFromDraft(draftLegs, {
+      id: "active-parlayos-slip",
+      title: "Active Slip",
+    });
+
     return (
-      <SmartParlayLegList
-        legs={uiLegs.map((leg) => ({
-          ...leg,
-          actual: liveProgressByLegId[leg.id]?.current ?? leg.actual,
-          statTarget: liveProgressByLegId[leg.id]?.target ?? leg.statTarget,
-        }))}
-        compact
-        onEdit={(legId) => openLegEditor(legId)}
-        onRemove={(legId) => removeDraftLeg(legId)}
-      />
+      <div className="space-y-2">
+        <SmartParlaySlipCard
+          slip={{
+            ...projectedSlip,
+            legs: projectedSlip.legs.map((leg) => {
+              const progress = liveProgressByLegId[leg.id];
+              return progress
+                ? { ...leg, actual: progress.current, progress }
+                : leg;
+            }),
+          }}
+          variant="hub"
+          legVariant="pro"
+          maxLegs={3}
+          showTrustPanel={false}
+          showOsBadges
+          showIdentityBadge
+        />
+        <div className="flex flex-wrap gap-1.5 px-1" aria-label="Edit active slip legs">
+          {draftLegs.map((leg, index) => (
+            <React.Fragment key={leg.id}>
+              <button
+                type="button"
+                onClick={() => useParlayOsStore.getState().openLegEditor(leg.id)}
+                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-white/55 hover:border-cyan-400/40 hover:text-cyan-200"
+              >
+                Edit leg {index + 1}
+              </button>
+              <button
+                type="button"
+                onClick={() => removeDraftLeg(leg.id)}
+                className="rounded-lg border border-rose-300/10 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-rose-200/55 hover:border-rose-300/35 hover:text-rose-200"
+              >
+                Remove {index + 1}
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
     );
-  }, [uiLegs, liveProgressByLegId, openLegEditor, removeDraftLeg]);
+  }, [uiLegs, draftLegs, liveProgressByLegId, removeDraftLeg]);
 
   const handleOpenHub = useCallback(() => {
     navigateSection?.("build");
