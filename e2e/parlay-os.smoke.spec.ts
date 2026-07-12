@@ -9,7 +9,7 @@ test.describe("ParlayOS smoke", () => {
     if (await buildLink.isVisible().catch(() => false)) {
       await buildLink.click();
     } else {
-      await page.goto("/?section=build");
+      await page.goto("/#build");
     }
 
     await expect(page.getByRole("region", { name: /parlayos/i })).toBeVisible({ timeout: 30_000 });
@@ -17,7 +17,7 @@ test.describe("ParlayOS smoke", () => {
   });
 
   test("ParlayOS empty build state guides user", async ({ page }) => {
-    await page.goto("/?section=build");
+    await page.goto("/#build");
     await page.waitForLoadState("domcontentloaded");
 
     const hub = page.getByRole("region", { name: /parlayos/i });
