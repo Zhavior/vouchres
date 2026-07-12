@@ -1,0 +1,60 @@
+/*
+ * VouchEdge Lightning Theme — Tailwind v4 @theme tokens.
+ * Imported from index.css after @import "tailwindcss" (never duplicate that import here).
+ * Usage: bg-ve-obsidian, text-ve-ion, border-ve-fuse, shadow-ve-glow-cyan
+ */
+
+@theme {
+  /* Core surfaces (cinematic obsidian / ion palette) */
+  --color-ve-obsidian: #060709;
+  --color-ve-graphite: #0c0e12;
+  --color-ve-storm: #13171f;
+  --color-ve-surface-panel: #171c26;
+
+  /* Accents & signals */
+  --color-ve-ion: #00e5ff;
+  --color-ve-flash: #e6faff;
+  --color-ve-voltage: #00f5a0;
+  --color-ve-locked: #2b3344;
+
+  /* Borders */
+  --color-ve-fuse: rgba(31, 38, 51, 0.7);
+  --color-ve-charged: rgba(0, 229, 255, 0.3);
+
+  /* Typography */
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Glow shadows */
+  --shadow-ve-glow-cyan: 0 0 20px rgba(0, 240, 255, 0.15);
+  --shadow-ve-glow-emerald: 0 0 20px rgba(0, 255, 148, 0.15);
+
+  /* Z8 / tailwind.config.ts aliases — same palette, no duplicate hex drift */
+  --color-graphite: #0c0e12;
+  --color-storm: #13171f;
+  --color-ion: #00e5ff;
+  --color-flash: #e6faff;
+  --color-voltage: #00f5a0;
+  --color-locked: #2b3344;
+  --color-surface-panel: #171c26;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Legacy CSS vars consumed by tailwind.config.ts and existing components */
+  --bg-obsidian: #060709;
+  --bg-graphite: #0c0e12;
+  --bg-storm: #13171f;
+  --surface-panel: #171c26;
+  --border-fuse: rgba(31, 38, 51, 0.7);
+  --border-charged: rgba(0, 229, 255, 0.3);
+  --ion-core: #00e5ff;
+  --lightning-flash: #e6faff;
+  --voltage-green: #00f5a0;
+  --locked-slate: #2b3344;
+
+  --ve-ion: var(--ion-core);
+  --ve-voltage: var(--voltage-green);
+  --ve-obsidian: var(--bg-obsidian);
+}

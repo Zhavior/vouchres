@@ -1,0 +1,3 @@
+@import "tailwindcss" source(none);
+@config "../../tailwind.public-auth.config.ts";
+@source "../components/auth/**/*.{ts,tsx}";

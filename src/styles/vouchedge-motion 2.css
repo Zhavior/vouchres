@@ -1,0 +1,97 @@
+/*
+ * VouchEdge Motion Policy
+ * Transform-only entrances. No opacity: 0 on root or above-fold mounts.
+ */
+
+.ve-slide-up {
+  animation: ve-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-scale-in {
+  animation: ve-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-strike-pop {
+  animation: ve-strike-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ve-hr-pulse {
+  animation: ve-hr-pulse 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ve-strike-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.55);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ve-hr-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ve-slide-up {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ve-scale-in {
+  from {
+    transform: scale(0.98);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Global motion preferences — keep animations opt-in and accessible */
+/* Mobile-safe utilities — safe areas + touch targets */
+.ve-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ve-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ve-slide-up,
+  .ve-scale-in,
+  .ve-strike-pop,
+  .ve-hr-pulse,
+  .lazy-mount-fade,
+  .plasma-shimmer::after,
+  .lighting-pulse::before,
+  .starfield {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
