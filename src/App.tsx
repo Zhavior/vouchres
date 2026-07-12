@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useSectionNavigation } from './app/useSectionNavigation';
+import { PUBLIC_SECTIONS } from './app/sectionNavigation';
 import { queryClient } from './lib/queryClient';
 import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import { queryKeys } from './hooks/queries/queryKeys';
@@ -65,10 +66,16 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 
 export default function App() {
   const navigation = useSectionNavigation();
+  const canRenderLoggedOutRoute =
+    PUBLIC_SECTIONS.has(navigation.activeSection) && navigation.activeSection !== 'vouchedge_intro';
+  const showPublicLanding =
+    !navigation.isLoggedIn &&
+    !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
+    !canRenderLoggedOutRoute;
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!navigation.isLoggedIn && !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) ? (
+      {showPublicLanding ? (
         <PublicLanding onAuthed={navigation.handleLoginSuccess} />
       ) : (
         <Suspense fallback={<RouteFallback />}>
