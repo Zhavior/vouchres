@@ -33,6 +33,8 @@ const Leaderboard = lazy(() => import('../Leaderboard'));
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
 const LiveGameLabPage = lazy(() => import('../../pages/LiveGameLabPage'));
 const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
+const BrainPicksPage = lazy(() => import('../../features/brain/BrainPicksPage'));
+const BrainPerformancePage = lazy(() => import('../../features/brain/BrainPerformancePage'));
 const AiPilotPage = lazy(() => import('../../features/ai/pages/AiPilotPage'));
 const MlbStatHubPage = lazy(() => import('../../features/mlb-stats/pages/MlbStatHubPage'));
 const DailyPlayersPage = lazy(() => import('../../pages/DailyPlayersPage'));
@@ -106,7 +108,7 @@ function MainViewRouter({
   navigateSection,
   isLoggedIn,
   profileViewUserId,
-  canSeeThemeStore,
+  canSeeThemeStore: _canSeeThemeStore,
 }: MainViewRouterProps) {
   const onLoginSuccess = useAppCommandStore((state) => state.onLoginSuccess);
 
@@ -231,7 +233,23 @@ function MainViewRouter({
     case 'hr_board':
       return (
         <LazyRoute>
-          <HomeRunIntelligencePage />
+          <HomeRunIntelligencePage onSectionChange={navigateSection} />
+        </LazyRoute>
+      );
+    case 'brain_picks':
+      return (
+        <LazyRoute>
+          <ProGateShell featureName="Brain Picks" navigateSection={navigateSection}>
+            <BrainPicksPage onNavigate={navigateSection} />
+          </ProGateShell>
+        </LazyRoute>
+      );
+    case 'brain_performance':
+      return (
+        <LazyRoute>
+          <ProGateShell featureName="Brain Performance" navigateSection={navigateSection}>
+            <BrainPerformancePage onNavigate={navigateSection} />
+          </ProGateShell>
         </LazyRoute>
       );
     case 'mlb_stats':

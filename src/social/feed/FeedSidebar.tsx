@@ -22,8 +22,8 @@ import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
-  Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown, LogOut,
+  Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
+  ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair,
 } from 'lucide-react';
 import {
   ALL_FEATURES, getSidebarFeatures, loadFeatureLayout,
@@ -59,7 +59,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown,
+  CalendarDays, Grid3x3, Crown, Crosshair,
 };
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */

@@ -1,41 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, Flame, Award, Eye, Moon } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox, Brain, ChartNoAxesCombined } from 'lucide-react';
 import {
-  Z8_LABEL,
   Z8_PAGE,
   Z8_PAGE_GAP,
   Z8_PAGE_PAD_X,
   Z8_PAGE_PAD_Y,
-  Z8_PANEL_PREMIUM,
-  Z8_STAT_CHIP,
 } from '../../../theme/z8Tokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
-import { HrHeader } from '../components/Header/HrHeader';
-import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
-
-interface MiniStatChipProps {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClasses: string;
-  glowClasses: string;
-}
-
-const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
-  <div className={`${Z8_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
-    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
-    <div className="flex flex-col leading-tight">
-      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
-    </div>
-  </div>
-);
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -164,7 +141,7 @@ const EmptyState: React.FC<{
   );
 };
 
-const HomeRunIntelligencePage: React.FC = () => {
+const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) => void }> = ({ onSectionChange }) => {
   const vm = useHrBoardViewModel();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -205,6 +182,12 @@ const HomeRunIntelligencePage: React.FC = () => {
   return (
     <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
       <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
+        {onSectionChange && (
+          <nav className="grid grid-cols-2 gap-2" aria-label="VouchEdge Brain pages">
+            <button type="button" onClick={() => onSectionChange('brain_picks')} className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-vouch-emerald/30 bg-vouch-emerald/8 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-vouch-emerald hover:border-vouch-emerald/55"><Brain className="h-4 w-4" /> Brain Picks · Pro</button>
+            <button type="button" onClick={() => onSectionChange('brain_performance')} className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-white/10 bg-black/25 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-white/55 hover:border-vouch-cyan/30 hover:text-white"><ChartNoAxesCombined className="h-4 w-4" /> Performance · Pro</button>
+          </nav>
+        )}
         <HrCommandCenter
           mode={vm.mode}
           viewMode={viewMode}

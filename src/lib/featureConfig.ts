@@ -72,6 +72,8 @@ export const ALL_FEATURES: FeatureConfig[] = [
   // AI — V.A.I pilot tools
   { id: "ai_pilot", label: "V.A.I Dynamic Creator", icon: "Cpu", enabled: true, order: 11.6, group: "AI", sports: ALL_SPORTS, locked: true },
   { id: "ai_engine", label: "V.A.I Research Center", icon: "Activity", enabled: true, order: 11.7, group: "AI", sports: ALL_SPORTS },
+  { id: "brain_picks", label: "Brain Picks", icon: "Crosshair", enabled: true, order: 11.8, group: "AI", sports: ["mlb"], locked: true },
+  { id: "brain_performance", label: "Brain Performance", icon: "LineChart", enabled: true, order: 11.9, group: "AI", sports: ["mlb"], locked: true },
 
   // Build & Track
   { id: "live_parlays", label: "Parlay Hub", icon: "Radio", enabled: true, order: 10.5, group: "Build & Track", locked: true },
