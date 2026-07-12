@@ -442,7 +442,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="fixed inset-0 z-50"
+            className="fixed inset-y-0 left-0 right-0 z-30 md:left-[72px] xl:left-[280px]"
             style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(10px)' }}
             aria-hidden="true"
           />
@@ -455,7 +455,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="fixed inset-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
+            className="fixed inset-y-0 left-0 right-0 z-[60] flex min-w-0 flex-col overflow-hidden md:left-[72px] lg:flex-row xl:left-[280px]"
             style={{
               background: '#050505',
               // on mobile show a slight inset so it feels like a sheet
