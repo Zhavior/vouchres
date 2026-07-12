@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { bootDataStore } from "../../lib/boot/bootDataStore";
 import { resolveHrBoardQueryTiming } from "../../lib/hrBoardCache";
+import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../../lib/hrBoardSlice";
 import type { HrBoardResponse } from "../../types/hrBoard";
 import { queryKeys } from "./queryKeys";
 
@@ -18,20 +19,20 @@ export function getHrBoardBootInitialUpdatedAt(date: string): number | undefined
   return bootDataStore.getUpdatedAt("dailyHrBoard");
 }
 
-async function fetchHrBoard(date: string, previewLimit: number): Promise<HrBoardResponse> {
+async function fetchHrBoard(date: string): Promise<HrBoardResponse> {
   const { loadHrBoard } = await import('../../kernel/loaders/hrBoardLoader');
-  return loadHrBoard(date, previewLimit) as Promise<HrBoardResponse>;
+  return loadHrBoard(date, HR_BOARD_CANONICAL_FETCH_LIMIT) as Promise<HrBoardResponse>;
 }
 
-export function hrBoardQueryOptions(date: string, previewLimit = 120) {
+export function hrBoardQueryOptions(date: string) {
   const isToday = date === todayISO();
   const { staleTime, gcTime, refetchInterval } = resolveHrBoardQueryTiming();
   const bootSeed = getHrBoardBootInitialData(date);
   const bootUpdatedAt = getHrBoardBootInitialUpdatedAt(date);
 
   return queryOptions({
-    queryKey: queryKeys.hrBoard(date, previewLimit),
-    queryFn: () => fetchHrBoard(date, previewLimit),
+    queryKey: queryKeys.hrBoard(date),
+    queryFn: () => fetchHrBoard(date),
     initialData: bootSeed,
     initialDataUpdatedAt: bootUpdatedAt,
     staleTime,

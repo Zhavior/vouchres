@@ -37,6 +37,7 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { performAppLogout } from '../../lib/appLogout';
+import { SECTIONS_USING_LIVE_GAMES } from '../../app/sectionNavigation';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
@@ -344,7 +345,12 @@ function FeedSidebar({
     [profile.displayName],
   );
 
-  const { data: liveGamesPayload } = useLiveGames();
+  const needsFastLivePoll =
+    SECTIONS_USING_LIVE_GAMES.has(activeSection) || activeSection === 'today';
+
+  const { data: liveGamesPayload } = useLiveGames({
+    refetchInterval: needsFastLivePoll ? undefined : 45_000,
+  });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   return (

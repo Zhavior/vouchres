@@ -107,13 +107,13 @@ function PlayerHeadshot({ name, url }: { name: string; url: string | null }) {
         loading="lazy"
         decoding="async"
         onError={() => setImgError(true)}
-        className="ve-player-face h-14 w-14 shrink-0 rounded-lg border border-white/12 bg-obsidian-600 object-cover"
+        className="ve-player-face ve-player-headshot-bg h-14 w-14 shrink-0 rounded-lg border border-white/12 object-cover"
       />
     );
   }
 
   return (
-    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-obsidian-600 font-mono text-sm font-black text-white/35">
+    <div className="ve-player-headshot-bg flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/12 font-mono text-sm font-black text-white/35">
       {initials(name)}
     </div>
   );
@@ -174,13 +174,13 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
       onClick={interactive ? () => onClick?.(player) : undefined}
       onKeyDown={handleKeyDown}
       className={[
-        've-unified-player-card ve-landing-hr-card overflow-hidden rounded-xl border bg-obsidian-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
+        've-unified-player-card ve-landing-hr-card overflow-hidden rounded-xl border shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition',
         tier.shell,
         interactive ? 've-unified-player-card--interactive cursor-pointer' : '',
         className,
       ].filter(Boolean).join(' ')}
     >
-      <div className={`relative h-24 overflow-hidden border-b border-white/8 bg-obsidian-700 ${tier.shell}-header`}>
+      <div className={`ve-unified-player-card__header-bar relative h-24 overflow-hidden border-b border-white/8 ${tier.shell}-header`}>
         {teamLogo ? (
           <>
             <img
@@ -202,7 +202,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
           <div className="absolute bottom-2 left-3 font-mono text-lg font-black text-white/25">{player.team.slice(0, 3).toUpperCase()}</div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/40 to-transparent" aria-hidden="true" />
+        <div className="ve-unified-player-card__header-fade pointer-events-none absolute inset-0" aria-hidden="true" />
 
         {hasWarnings && (
           <span
@@ -240,7 +240,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
       </div>
 
       <div className="flex flex-col gap-3 p-3.5">
-        <div className="flex items-start gap-3 rounded-lg border border-white/8 bg-obsidian-700 p-2.5">
+        <div className="ve-unified-player-card__panel flex items-start gap-3 rounded-lg border border-white/8 p-2.5">
           <PlayerHeadshot name={player.playerName} url={player.headshotUrl} />
 
           <div className="min-w-0 flex-1 space-y-2">
@@ -296,7 +296,7 @@ export const UnifiedPlayerCard = React.memo(function UnifiedPlayerCard({
           </div>
         )}
 
-        <div className="rounded-lg border border-white/10 bg-obsidian-700 p-2.5">
+        <div className="ve-unified-player-card__panel rounded-lg border border-white/10 p-2.5">
           <div className="flex items-center justify-between gap-2">
             <p className={`${CARD_LABEL} text-[9px] text-white/45`}>Vouch System</p>
             <span className="font-mono text-[8px] uppercase tracking-wider text-white/30">Graded ledger</span>

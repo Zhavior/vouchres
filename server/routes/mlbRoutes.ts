@@ -51,6 +51,7 @@ export function registerMlbRoutes(app: Express): void {
   app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const live = await getLiveGames(date);
+    res.setHeader("Cache-Control", "private, max-age=4, stale-while-revalidate=15");
     return res.json(apiOkFlat(req, live as unknown as Record<string, unknown>));
   }));
 

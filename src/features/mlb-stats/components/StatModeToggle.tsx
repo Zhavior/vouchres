@@ -30,7 +30,7 @@ export const StatModeToggle: React.FC<Props> = ({ value, onChange }) => {
     <div
       role="group"
       aria-label="View mode"
-      className="flex rounded-lg border border-white/10 bg-obsidian-700 p-0.5"
+      className="ve-stat-surface-raised flex rounded-lg border border-white/10 p-0.5"
     >
       {btn('cards', 'Cards')}
       {btn('spreadsheet', 'Table')}

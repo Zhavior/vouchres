@@ -208,7 +208,7 @@ function ConnectionBadge({ snap, isFetching, isError }: { snap: LiveAtBatSnapsho
       </span>
     );
   }
-  if (isFetching) {
+  if (isFetching && !snap) {
     return (
       <span className="flex items-center gap-1 text-[10px] font-bold uppercase" style={{ color: CYAN }}>
         <Activity className="h-3 w-3 animate-pulse" /> Syncing

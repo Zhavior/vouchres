@@ -1,0 +1,161 @@
+/* Live Games Pro — mobile-first layout, stable updates, touch targets */
+
+.ve-live-games-page {
+  --ve-live-card-gap: 0.75rem;
+  --ve-live-picker-height: 3.25rem;
+}
+
+.ve-live-games-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .ve-live-games-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.ve-live-games-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background: linear-gradient(145deg, rgba(2, 6, 23, 0.98), rgba(15, 23, 42, 0.92), rgba(34, 211, 238, 0.08));
+  padding: 0.875rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 768px) {
+  .ve-live-games-hero {
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+}
+
+.ve-live-scoreboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.75rem;
+}
+
+@media (min-width: 400px) {
+  .ve-live-scoreboard {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .ve-live-scoreboard-center {
+    order: 0;
+  }
+}
+
+.ve-live-scoreboard-center {
+  order: -1;
+  text-align: center;
+}
+
+.ve-live-score-digits {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: clamp(1.75rem, 8vw, 3.5rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #fff;
+}
+
+.ve-live-game-picker {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ve-live-game-picker::-webkit-scrollbar {
+  display: none;
+}
+
+.ve-live-game-picker-card {
+  flex: 0 0 min(72vw, 11.5rem);
+  scroll-snap-align: start;
+  min-height: var(--ve-live-picker-height);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.72);
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease;
+  touch-action: manipulation;
+}
+
+.ve-live-game-picker-card[aria-current='true'] {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.ve-live-game-picker-card:active {
+  transform: scale(0.985);
+}
+
+.ve-live-state-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.25rem 0.625rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ve-live-state-pill--live {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+}
+
+.ve-live-state-pill--final {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.1);
+  color: #a7f3d0;
+}
+
+.ve-live-state-pill--scheduled {
+  border-color: rgba(148, 163, 184, 0.25);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.ve-live-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ve-live-filter-btn {
+  min-height: 2.5rem;
+  padding-inline: 0.875rem;
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-live-game-picker-card {
+    transition: none;
+  }
+
+  .ve-live-game-picker-card:active {
+    transform: none;
+  }
+}

@@ -18,23 +18,33 @@ import type { HrBoardResponse, HrBoardRow } from "../types/hrBoard";
 import type { HrFeedResponse } from "../types/notifications";
 import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
+import type { LiveGamesPayload } from "../types/liveGames";
 import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
 import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
 import { apiUrl } from "../lib/apiBase";
 import { unwrapApiPayload } from "../lib/apiEnvelope";
 import { recordHrBoardCacheControl } from "../lib/hrBoardCache";
+import { HR_BOARD_CANONICAL_FETCH_LIMIT } from "../lib/hrBoardSlice";
 
-async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(apiUrl(url));
-  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-  if (url.includes("/api/mlb/hr-board/")) {
-    recordHrBoardCacheControl(res.headers.get("cache-control"));
+const CLIENT_FETCH_TIMEOUT_MS = 12_000;
+
+async function getJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): Promise<T> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(apiUrl(url), { signal: controller.signal });
+    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+    if (url.includes("/api/mlb/hr-board/")) {
+      recordHrBoardCacheControl(res.headers.get("cache-control"));
+    }
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
+    }
+    return unwrapApiPayload<T>(await res.json());
+  } finally {
+    window.clearTimeout(timeout);
   }
-  const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
-    throw new Error(`GET ${url} -> expected JSON, received ${contentType || "unknown content-type"}`);
-  }
-  return unwrapApiPayload<T>(await res.json());
 }
 
 /** Try the backend; optional direct Stats API fallback (dev / explicit flag only). */
@@ -67,9 +77,8 @@ function normalizeLiveAtBatSnapshot(raw: LiveAtBatSnapshot | { data?: LiveAtBatS
   return (raw as { data?: LiveAtBatSnapshot })?.data ?? (raw as LiveAtBatSnapshot);
 }
 
-async function hrBoardTodayWithFallback(previewLimit?: number): Promise<HrBoardResponse> {
-  const query = previewLimit ? `?previewLimit=${previewLimit}` : "";
-  const localPath = `/api/mlb/hr-board/today${query}`;
+async function hrBoardTodayWithFallback(): Promise<HrBoardResponse> {
+  const localPath = `/api/mlb/hr-board/today?previewLimit=${HR_BOARD_CANONICAL_FETCH_LIMIT}`;
 
   return withFallback(
     () => getJson<HrBoardResponse>(localPath),
@@ -135,27 +144,7 @@ export const vouchedgeApi = {
   // Live Games matchups
   liveGames: () =>
     withFallback(
-      () =>
-        getJson<{
-          success: boolean;
-          date: string;
-          games: Array<{
-            id: string;
-            homeTeam: string;
-            awayTeam: string;
-            homeScore: number | null;
-            awayScore: number | null;
-            status: string;
-            venue: string | null;
-            gameDate: string | null;
-            isLive?: boolean;
-            isFinal?: boolean;
-            predictionsAvailable?: boolean;
-            warnings?: string[];
-          }>;
-          warnings?: string[];
-          updatedAt: string;
-        }>("/api/mlb/live"),
+      () => getJson<LiveGamesPayload>("/api/mlb/live"),
       () => liveGamesDirect(),
     ),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
@@ -163,7 +152,7 @@ export const vouchedgeApi = {
   scoresToday: () => getJson<{ scores: LiveScore[]; updatedAt: string }>("/api/mlb/scores/today"),
 
   // Daily HR Board
-  hrBoardToday: (previewLimit?: number) => hrBoardTodayWithFallback(previewLimit),
+  hrBoardToday: () => hrBoardTodayWithFallback(),
   hrBoardByDate: (date: string, previewLimit?: number) =>
     getJson<HrBoardResponse>(`/api/mlb/hr-board/date/${date}${previewLimit ? `?previewLimit=${previewLimit}` : ""}`),
   hrBoardPlayer: (playerId: number, date?: string) =>
