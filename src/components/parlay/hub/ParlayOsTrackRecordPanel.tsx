@@ -5,7 +5,7 @@ import { ParlayOsPanelSkeleton } from './parlayOsUi';
 
 const ResultsStudio = lazy(() => import('../../results/ResultsStudio'));
 
-export default function ParlayHubTrackRecordPanel({
+export default function ParlayOsTrackRecordPanel({
   savedSlips,
   onSectionChange,
 }: {

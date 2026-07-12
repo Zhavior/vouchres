@@ -1,7 +1,7 @@
 import React from "react";
 import type { TemplateProgress } from "../../../lib/parlays/templateProgress";
 
-export default function ParlayHubTemplateGuide({
+export default function ParlayOsTemplateGuide({
   progress,
 }: {
   progress: TemplateProgress;

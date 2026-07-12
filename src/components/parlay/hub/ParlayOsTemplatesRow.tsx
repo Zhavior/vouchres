@@ -1,7 +1,7 @@
 import React from "react";
 import { PARLAY_SLIP_TEMPLATES } from "../../../lib/parlays/parlaySlipTemplates";
 
-export default function ParlayHubTemplatesRow({
+export default function ParlayOsTemplatesRow({
   activeTemplateId,
   onSelect,
   onClear,

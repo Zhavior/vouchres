@@ -3,7 +3,7 @@ import { Layers3, Lock, Save } from 'lucide-react';
 import ParlayIdentityBadge from '../../trust/ParlayIdentityBadge';
 import type { ClientIdentityAssessment } from '../../../lib/parlayIdentity';
 
-export type ParlayHubMobileSlipDockProps = {
+export type ParlayOsMobileSlipDockProps = {
   legCount: number;
   totalOdds: string;
   identity: ClientIdentityAssessment;
@@ -18,7 +18,7 @@ export type ParlayHubMobileSlipDockProps = {
 };
 
 /** Sticky mobile slip bar — opens full ParlayOS sheet for leg editing. */
-export default function ParlayHubMobileSlipDock({
+export default function ParlayOsMobileSlipDock({
   legCount,
   totalOdds,
   identity,
@@ -30,7 +30,7 @@ export default function ParlayHubMobileSlipDock({
   onOpenSlip,
   onSave,
   onLock,
-}: ParlayHubMobileSlipDockProps) {
+}: ParlayOsMobileSlipDockProps) {
   if (legCount === 0) return null;
 
   return (

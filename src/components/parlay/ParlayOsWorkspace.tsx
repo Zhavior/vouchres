@@ -42,9 +42,9 @@ import type { TrustAudience } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
 const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
-import ParlayHubMobileSlipDock from './hub/ParlayHubMobileSlipDock';
-import ParlayHubTemplatesRow from './hub/ParlayHubTemplatesRow';
-import ParlayHubTemplateGuide from './hub/ParlayHubTemplateGuide';
+import ParlayOsMobileSlipDock from './hub/ParlayOsMobileSlipDock';
+import ParlayOsTemplatesRow from './hub/ParlayOsTemplatesRow';
+import ParlayOsTemplateGuide from './hub/ParlayOsTemplateGuide';
 import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
 import { assessTemplateProgress } from '../../lib/parlays/templateProgress';
@@ -108,7 +108,7 @@ function statusColorStyle(token: string) {
 }
 
 const SmartAiEngine  = lazy(() => import('../SmartAiEngine'));
-const ParlayHubTrackRecordPanel = lazy(() => import('./hub/ParlayHubTrackRecordPanel'));
+const ParlayOsTrackRecordPanel = lazy(() => import('./hub/ParlayOsTrackRecordPanel'));
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -826,7 +826,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 min-h-0 relative pb-36 xl:pb-8 xl:pr-80">
-      <ParlayHubTemplatesRow
+      <ParlayOsTemplatesRow
         activeTemplateId={buildTemplateId}
         onSelect={(id) => {
           setBuildTemplate(id);
@@ -838,7 +838,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         }}
       />
 
-      {templateProgress ? <ParlayHubTemplateGuide progress={templateProgress} /> : null}
+      {templateProgress ? <ParlayOsTemplateGuide progress={templateProgress} /> : null}
 
       {draftLegs.length === 0 ? <EmptyBuildSlip /> : null}
 
@@ -910,7 +910,7 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
         canUseSubscriber={isCreator}
       />
 
-      <ParlayHubMobileSlipDock
+      <ParlayOsMobileSlipDock
         legCount={draftLegs.length}
         totalOdds={displayTotalOdds}
         identity={draftIdentity}
@@ -1049,7 +1049,7 @@ function TabContent({
       return (
         <PanelErrorBoundary>
           <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
-            <ParlayHubTrackRecordPanel savedSlips={savedSlips} onSectionChange={onSectionChange} />
+            <ParlayOsTrackRecordPanel savedSlips={savedSlips} onSectionChange={onSectionChange} />
           </Suspense>
         </PanelErrorBoundary>
       );
