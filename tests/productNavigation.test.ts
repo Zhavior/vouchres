@@ -1,9 +1,15 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   PRODUCT_WORKSPACES,
   getPrimaryProductNavigation,
   getProductWorkspace,
 } from '../src/app/productNavigation';
+
+const shellSources = [
+  '../src/social/feed/FeedSidebar.tsx',
+  '../src/social/feed/MobileProfileDrawer.tsx',
+].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'));
 
 describe('customer-facing product navigation', () => {
   it('exposes exactly five stable product concepts', () => {
@@ -29,5 +35,12 @@ describe('customer-facing product navigation', () => {
 
   it('falls back safely to Today for unknown legacy routes', () => {
     expect(getProductWorkspace('unknown-route').id).toBe('today');
+  });
+
+  it('drives desktop and mobile navigation from the workspace model', () => {
+    for (const source of shellSources) {
+      expect(source).toContain('getPrimaryProductNavigation()');
+      expect(source).toContain('getProductWorkspace(activeSection)');
+    }
   });
 });

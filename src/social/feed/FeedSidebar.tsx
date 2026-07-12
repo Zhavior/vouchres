@@ -13,7 +13,7 @@
  *  - All 18+ features preserved, just 2-level hierarchy
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -25,11 +25,7 @@ import {
   Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
   ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
-import {
-  ALL_FEATURES, getSidebarFeatures, loadFeatureLayout,
-  FeatureLayout,
-} from '../../lib/featureConfig';
-import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { getPrimaryProductNavigation, getProductWorkspace } from '../../app/productNavigation';
 import { preloadSection } from '../../lib/routePreload';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
@@ -269,21 +265,9 @@ function FeedSidebar({
   onLogoutComplete,
 }: FeedSidebarProps) {
   const profile = useProfileStore(useShallow(selectSidebarProfile));
-  const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
   const [signingOut, setSigningOut] = useState(false);
-  const previousSectionRef = useRef(activeSection);
-
-  // Reload layout only after leaving Customize — avoids localStorage reads on every nav click.
-  useEffect(() => {
-    const previous = previousSectionRef.current;
-    previousSectionRef.current = activeSection;
-    if (previous === 'customize' && activeSection !== 'customize') {
-      setLayout(loadFeatureLayout());
-    }
-  }, [activeSection]);
-
   useEffect(() => onSportChange(setActiveSportState), []);
 
   const handleSportClick = useCallback((id: SportId) => {
@@ -315,20 +299,15 @@ function FeedSidebar({
   }, [onLogoutComplete, signingOut]);
 
   const sidebarFeatures = useMemo(() => {
-    const items = getSidebarFeatures(layout, {
-      canAccessThemeStore: canAccessThemeStore(profile),
-      activeSport,
-    });
-    for (const id of ['today', 'hr_board', 'mlb_stats'] as const) {
-      if (!items.some(f => f.id === id)) {
-        const feature = ALL_FEATURES.find(f => f.id === id);
-        if (feature) items.push(feature);
-      }
-    }
-    return items
-      .filter(f => f.id !== 'notifications')
-      .sort((a, b) => a.order - b.order);
-  }, [layout, profile, activeSport]);
+    const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
+    return getPrimaryProductNavigation().map((item, order) => ({
+      id: item.section,
+      label: item.label,
+      icon: icons[item.id],
+      order,
+      group: undefined,
+    }));
+  }, []);
 
   const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
   const grouped = useMemo(
@@ -457,7 +436,7 @@ function FeedSidebar({
                   id={f.id}
                   label={f.label}
                   icon={f.icon}
-                  isActive={activeSection === f.id}
+                  isActive={getProductWorkspace(activeSection).defaultSection === f.id}
                   onNavigate={handleNavigate}
                 />
               ))}
