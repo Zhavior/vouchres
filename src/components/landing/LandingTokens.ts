@@ -1,6 +1,6 @@
 export const Z8_CYAN_HEX = '#00F0FF';
 export const Z8_INTERACTIVE = 'z8-interactive';
-export const Z8_LABEL = 'font-mono text-[10px] font-bold uppercase tracking-wide';
+export const Z8_LABEL = 'font-mono text-[11px] font-bold uppercase tracking-[0.08em]';
 export const Z8_PAGE = 'bg-transparent font-z8 text-white min-h-full';
 export const Z8_PANEL = 'glass-panel-strong glass-border border-vouch-cyan/20 bg-black/20 font-z8';
 export const Z8_PANEL_PREMIUM =
@@ -35,7 +35,7 @@ export const Z8_AUTH_PLAN_IDLE =
 
 /** Landing header auth actions — reuse in terminal page + auth modal tabs */
 export const Z8_BTN_TERMINAL_HEADER_LOGIN =
-  `${Z8_INTERACTIVE} rounded-xl border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60 transition hover:border-vouch-cyan/40 hover:text-white`;
+  `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
 
 export const Z8_BTN_TERMINAL_HEADER_SIGNUP =
-  `${Z8_INTERACTIVE} rounded-xl border border-vouch-cyan/50 bg-vouch-cyan/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.1)] transition hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black`;
+  `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:bg-[#4dffb2]`;

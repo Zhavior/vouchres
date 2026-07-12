@@ -10,7 +10,6 @@ import {
   Users,
 } from '../components/landing/LandingIcons';
 import {
-  Z8_CYAN_HEX,
   Z8_INTERACTIVE,
   Z8_LABEL,
   Z8_PAGE,
@@ -99,10 +98,10 @@ const FEATURES = [
 ] as const;
 
 const TRUST_PILLARS = [
-  { label: 'No Hype', detail: 'No inflated edges' },
-  { label: 'Truth', detail: 'Verified lineups only' },
-  { label: 'Research', detail: 'Judge-backed reads' },
-  { label: 'Play', detail: 'Prove your record' },
+  { label: 'Lineups', detail: 'Official status shown' },
+  { label: 'Sources', detail: 'Evidence, not hype' },
+  { label: 'Reasoning', detail: 'Every score explained' },
+  { label: 'Record', detail: 'Results stay visible' },
 ] as const;
 
 function JudgesPlaceholder() {
@@ -367,20 +366,17 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               <div className="ve-terminal-hero-badge mx-auto inline-flex max-w-full items-center gap-2 rounded-full border border-vouch-cyan/20 bg-vouch-cyan/8 px-3 py-1.5 sm:px-4 sm:py-1.5">
                 <ShieldCheck size={13} className="shrink-0 text-vouch-cyan" />
                 <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-vouch-cyan/90 sm:text-[10px] sm:tracking-widest">
-                  Verified HR Board · AI Judges
+                  Official lineup status · Explainable scoring
                 </span>
               </div>
 
               <h1 className="text-[1.75rem] font-black leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] sm:tracking-tighter lg:text-6xl">
-                MLB edge research with{' '}
-                <span className="bg-gradient-to-r from-vouch-cyan to-vouch-emerald bg-clip-text text-transparent">
-                  pristine
-                </span>{' '}
-                intelligence.
+                Understand today&apos;s home run candidates{' '}
+                <span className="text-vouch-emerald">before you save a pick.</span>
               </h1>
 
               <p className="ve-terminal-hero-lead mx-auto max-w-md px-1 sm:max-w-2xl sm:text-base">
-                Trust-first HR boards, four AI judges, and honest slate data — no fake lineups or inflated edges.
+                Compare power, pitcher risk, park context, lineup status, and model confidence in one research workflow.
               </p>
 
               <div className="ve-terminal-trust-strip px-0.5">
@@ -411,17 +407,18 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                   onClick={() => openSignup('free')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-primary flex h-14 w-full max-w-[260px] items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black`}
+                  className={`ve-terminal-cta-primary z8-control flex h-14 w-full max-w-[280px] items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
                 >
                   <Sparkles size={14} />
-                  Enter the Edge
+                  Start researching free
                 </button>
+                <p className="-mt-2 text-xs text-white/45">No credit card required</p>
                 <button
                   type="button"
                   onClick={openLogin}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className="font-mono text-[10px] uppercase tracking-widest text-white/40 transition hover:text-white/70"
+                  className="z8-control px-3 font-mono text-[11px] font-bold text-white/55 transition hover:text-white"
                 >
                   Already have an account? Sign in
                 </button>
@@ -450,22 +447,21 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
               className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-8 text-center`}
               style={{ boxShadow: `0 0 48px rgba(0,240,255,0.06)` }}
             >
-              <p className={`${Z8_LABEL} text-vouch-cyan`}>Ready when you are</p>
+              <p className={`${Z8_LABEL} text-vouch-emerald`}>Research with visible evidence</p>
               <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
-                Command the board. Prove your edge.
+                Build a record you can verify later.
               </h2>
               <p className="mx-auto mt-3 max-w-lg text-sm text-white/45">
-                Sign in to load today&apos;s verified HR board, judge picks, and live slate intelligence.
+                Start with the free board. Upgrade only when the deeper research tools become useful to you.
               </p>
               <button
                 type="button"
                 onClick={() => openSignup('free')}
                 onFocus={preloadAuthModal}
                 onMouseEnter={preloadAuthModal}
-                className={`mt-6 inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan px-8 font-mono text-[11px] font-bold uppercase tracking-widest text-black shadow-[0_0_32px_rgba(0,240,255,0.2)] ${Z8_INTERACTIVE}`}
-                style={{ ['--tw-shadow-color' as string]: Z8_CYAN_HEX }}
+                className={`z8-control mt-6 inline-flex h-14 items-center justify-center gap-2 border border-vouch-emerald/55 bg-vouch-emerald px-8 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-black ${Z8_INTERACTIVE}`}
               >
-                Enter the Edge
+                Create a free account
                 <ChevronRight size={14} />
               </button>
             </section>
