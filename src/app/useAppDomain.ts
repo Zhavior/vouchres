@@ -59,7 +59,7 @@ export function useAppDomain({
   }, []);
 
   const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
-    await saveParlaySlipAction(newParlay, navigateSection);
+    return saveParlaySlipAction(newParlay, navigateSection);
   }, [navigateSection]);
 
   const handleCommitParlayTrust = useCallback(async (input: {

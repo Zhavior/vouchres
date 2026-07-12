@@ -54,6 +54,7 @@ import {
   normalizeParlaySlip,
 } from '../../lib/parlays/parlayBridge';
 import type { CanonicalParlaySlip } from '../../lib/parlays/parlayBridge';
+import type { ParlaySaveResult } from '../../domain/parlayActions';
 import ParlayIdentityBadge from '../trust/ParlayIdentityBadge';
 import ParlayIdentityExplainer from '../trust/ParlayIdentityExplainer';
 import { assessClientParlayIdentity } from '../../lib/parlayIdentity';
@@ -543,7 +544,7 @@ const _StakePayout = function StakePayout({
 // ─── Build Slip panel ─────────────────────────────────────────────────────────
 
 interface BuildSlipPanelProps {
-  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
 }
 
 function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
@@ -615,9 +616,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
   const saveDisabled = !agreedSession || !canSave;
 
   function buildDraftParlay() {
+    const draftId = `draft-${Date.now()}`;
     return normalizeParlaySlip({
-      id: `draft-${Date.now()}`,
-      clientRef: `draft-${Date.now()}`,
+      id: draftId,
+      clientRef: draftId,
       title: `${riskMeta.label} Parlay — ${new Date().toLocaleDateString()}`,
       mode: 'PRACTICE',
       source: draftMode === 'ai_locked' ? 'vai_ai_made_parlay' : 'manual_builder',
@@ -634,8 +636,8 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     setIsSaving(true);
     setSaveError(null);
     try {
-      await onSaveParlay(buildDraftParlay());
-      announce('Parlay saved.');
+      const result = await onSaveParlay(buildDraftParlay());
+      announce(result.syncState === 'synced' ? 'Parlay saved to your account.' : 'Parlay saved on this device.');
       clearDraft();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Save failed';
@@ -652,11 +654,10 @@ function BuildSlipPanel({ onSaveParlay }: BuildSlipPanelProps) {
     setShareError(null);
     try {
       const draftParlay = buildDraftParlay();
-      await onSaveParlay(draftParlay);
-      const saved = useSlipsStore.getState().savedSlips.find((p) => p.id === draftParlay.id)
-        ?? useSlipsStore.getState().savedSlips[0];
-      if (!saved) {
-        throw new Error('Could not save parlay before locking.');
+      const saveResult = await onSaveParlay(draftParlay);
+      const saved = saveResult.parlay;
+      if (!saved.backendPickId || saveResult.syncState !== 'synced') {
+        throw new Error('Parlay was saved locally but must sync to your account before locking.');
       }
       await onCommitParlayTrust({ parlay: saved as Parlay, audience });
       announce('Parlay sent to Private wins. Locks in 5 minutes.');
@@ -1071,7 +1072,7 @@ interface ParlayOsWorkspaceProps {
   onAddLegToParlay?: (...args: any[]) => void;
   onSaveVouch?:    (...args: any[]) => void;
   onPostCreated?:  (...args: any[]) => void;
-  onSaveParlay?:   (parlay: CanonicalParlaySlip) => Promise<void> | void;
+  onSaveParlay?:   (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
   onHideParlay?:   (parlayId: string) => Promise<void> | void;
 }
 
