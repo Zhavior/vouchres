@@ -152,18 +152,18 @@ const STUDIO_STYLE = cardStyleConfigs.cyberpunk;
 const FEATURES = [
   {
     icon: Share2,
-    title: 'Post straight to your feed',
-    copy: 'Build a card in the Vouch Board and share it to your feed in one tap — no screenshots, no re-uploading.',
+    title: 'One-tap feed post',
+    copy: 'Share straight from the Vouch Board.',
   },
   {
     icon: Trophy,
     title: 'Auto win/loss grading',
-    copy: 'Every card settles itself. When your pick hits or misses, it flips to WON or LOST automatically for everyone to see.',
+    copy: 'Cards settle themselves — WON or LOST.',
   },
   {
     icon: BadgeCheck,
-    title: 'Your name on a verified pick',
-    copy: 'Each card carries your handle and the exact verified pick, so your record speaks for itself.',
+    title: 'Verified to your name',
+    copy: 'Your handle. Your exact pick. Your record.',
   },
 ];
 
@@ -181,7 +181,7 @@ export default function LandingVouchCardShowcase() {
         const idx = DEMO_CARDS.findIndex((card) => card.layout === prev);
         return DEMO_CARDS[(idx + 1) % DEMO_CARDS.length].layout;
       });
-    }, 1500);
+    }, 4000);
     return () => window.clearInterval(id);
   }, [paused]);
 
@@ -213,8 +213,7 @@ export default function LandingVouchCardShowcase() {
           Turn every pick into a Vouch Card
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/50">
-          Design a card in the Vouch Board, then post it straight to your feed. Cards grade themselves — the
-          community sees whether your pick won or lost, tied to your name and the exact verified pick.
+          Build it. Post it. It grades itself.
         </p>
       </div>
 

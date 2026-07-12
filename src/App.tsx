@@ -49,13 +49,8 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   }, []);
 
   return (
-    <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-      <div className="ve-motion-bg" aria-hidden="true">
-        <div className="ve-motion-grid" />
-        <div className="ve-motion-noise" />
-        <div className="ve-motion-spotlight" />
-      </div>
-      <div className="ve-motion-content">
+    <div className="z8-app-shell ve-theme-transition font-z8" style={{ background: '#000' }}>
+      <div>
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
             <div id="inner-view-slot">
