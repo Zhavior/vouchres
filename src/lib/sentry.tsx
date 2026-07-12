@@ -23,6 +23,11 @@ import { hasConsent } from "../components/legal/CookieConsentBanner";
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN ?? "";
 const SENTRY_ENV = import.meta.env.VITE_SENTRY_ENV ?? "development";
 const CLIENT_VERSION = import.meta.env.VITE_CLIENT_VERSION ?? "0.1.0-beta";
+declare const __SENTRY_RELEASE__: string | undefined;
+const SENTRY_RELEASE =
+  typeof __SENTRY_RELEASE__ !== "undefined"
+    ? __SENTRY_RELEASE__
+    : `vouchedge-frontend@${CLIENT_VERSION}`;
 
 let initialized = false;
 
@@ -32,7 +37,7 @@ export function initSentry() {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: SENTRY_ENV,
-    release: `vouchedge-frontend@${CLIENT_VERSION}`,
+    release: SENTRY_RELEASE,
     integrations: [
       // Browser performance monitoring — sample at 10% to control quota
       Sentry.browserTracingIntegration(),
