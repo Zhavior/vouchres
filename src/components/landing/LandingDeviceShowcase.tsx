@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Heart, MessageCircle, Repeat2, Search, ShieldCheck, Share, Feather } from 'lucide-react';
 import { Z8_LABEL } from './LandingTokens';
 import PreviewCardStage from '../vouch-studio-darkroom/panels/preview/PreviewCardStage';
 import { cardStyleConfigs } from '../vouch-studio-darkroom/utils/cardStyleConfigs';
@@ -241,19 +242,186 @@ function MacBookFrame() {
   );
 }
 
+/* ── Static iPhone mockup screens ────────────────────────────────────── */
+
+function MockAvatar({ initials, accent = 'cyan' }: { initials: string; accent?: 'cyan' | 'emerald' | 'amber' }) {
+  const bg = accent === 'emerald' ? 'bg-vouch-emerald/20 text-vouch-emerald' : accent === 'amber' ? 'bg-vouch-amber/20 text-vouch-amber' : 'bg-vouch-cyan/20 text-vouch-cyan';
+  return <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${bg}`}>{initials}</div>;
+}
+
+function MockFeedPost({ initials, name, handle, content, accent, likes, vouches, comments }: {
+  initials: string; name: string; handle: string; content: string; accent?: 'cyan' | 'emerald' | 'amber';
+  likes: number; vouches: number; comments: number;
+}) {
+  return (
+    <div className="border-b border-white/[0.06] px-4 py-3">
+      <div className="flex gap-3">
+        <MockAvatar initials={initials} accent={accent} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] font-extrabold text-white">{name}</span>
+            <span className="text-[11px] text-white/30">@{handle}</span>
+          </div>
+          <p className="mt-1 text-[12px] leading-[1.4] text-white/65">{content}</p>
+          <div className="mt-2 flex items-center gap-5 text-[10px] text-white/25">
+            <span className="flex items-center gap-1"><MessageCircle className="h-3 w-3" />{comments}</span>
+            <span className="flex items-center gap-1"><Repeat2 className="h-3 w-3" />{vouches}</span>
+            <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{likes}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockHomeFeed() {
+  return (
+    <div className="flex min-h-full flex-col bg-[#0a0a0f] font-z8 text-white">
+      <header className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#0a0a0f]/90 backdrop-blur-md">
+        <div className="flex h-[46px] items-center justify-between px-4">
+          <span className="text-[17px] font-extrabold">Home</span>
+          <div className="flex items-center gap-1">
+            <Search className="h-4 w-4 text-white/40" />
+            <Feather className="ml-1 h-4 w-4 text-white/40" />
+          </div>
+        </div>
+      </header>
+      <div className="flex gap-0 border-b border-white/[0.06]">
+        {['For You', 'Following', 'MLB'].map((tab, i) => (
+          <button key={tab} type="button" className={`flex-1 py-2.5 text-center text-[11px] font-bold ${i === 0 ? 'border-b-2 border-vouch-cyan text-vouch-cyan' : 'text-white/35'}`}>{tab}</button>
+        ))}
+      </div>
+      <MockFeedPost initials="SP" name="sharp_props" handle="sharp_props" content="Twins lineup confirmed. Buxton cleanup tonight — launch angle data is screaming." accent="emerald" likes={24} vouches={8} comments={5} />
+      <MockFeedPost initials="VE" name="VouchEdge AI" handle="ve_data_scout" content="HR Board alert: 3 Elite-tier candidates just moved to confirmed lineups." accent="cyan" likes={41} vouches={14} comments={9} />
+      <MockFeedPost initials="MR" name="momentum_read" handle="momentum_read" content="CHC @ CIN run environment 82/100. Park factor + bullpen fatigue = value." accent="amber" likes={18} vouches={6} comments={3} />
+      <MockFeedPost initials="JK" name="jake_capper" handle="jakecapper" content="2-leg parlay locked: Buxton HR + Twins ML. Card posted to the board." likes={32} vouches={11} comments={7} />
+    </div>
+  );
+}
+
+function MockProfilePage() {
+  return (
+    <div className="flex min-h-full flex-col bg-[#0a0a0f] font-z8 text-white">
+      <div className="relative h-24 bg-gradient-to-r from-sky-600/25 to-indigo-600/25">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
+        <div className="absolute -bottom-8 left-4 z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-vouch-cyan/40 bg-[#0a0a0f] text-lg font-black text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+          VE
+        </div>
+      </div>
+      <div className="px-4 pt-10 pb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-extrabold">VouchEdge Pro</span>
+          <span className="flex items-center gap-0.5 rounded-full border border-vouch-emerald/25 bg-vouch-emerald/10 px-1.5 py-0.5 text-[8px] font-bold text-vouch-emerald">
+            <ShieldCheck className="h-2.5 w-2.5" /> PRO
+          </span>
+        </div>
+        <p className="mt-0.5 text-[10px] text-white/35">@vouchedge_pro</p>
+        <div className="mt-2 flex gap-4 text-[10px] text-white/40">
+          <span><strong className="text-white/80">247</strong> followers</span>
+          <span><strong className="text-white/80">89</strong> following</span>
+          <span><strong className="text-white/80">31</strong> friends</span>
+        </div>
+        <p className="mt-2.5 text-[11px] leading-[1.4] text-white/50">Trust-first MLB research. Every pick graded, every miss shown.</p>
+      </div>
+
+      <div className="flex border-y border-white/[0.06]">
+        {['Posts', 'Results', 'Vouches'].map((tab, i) => (
+          <button key={tab} type="button" className={`flex-1 py-2 text-center text-[10px] font-bold ${i === 0 ? 'border-b-2 border-vouch-cyan text-vouch-cyan' : 'text-white/30'}`}>{tab}</button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 p-3">
+        {[
+          { label: 'Win Rate', value: '64%', sub: 'Verified' },
+          { label: 'MLB Record', value: '42-24', sub: 'Season' },
+          { label: 'ROI', value: '+18.2u', sub: 'Tracked' },
+          { label: 'Streak', value: 'W5', sub: 'Current' },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
+            <div className="text-[8px] font-bold uppercase tracking-wider text-white/25">{s.label}</div>
+            <div className="mt-0.5 text-[14px] font-black tabular-nums text-white">{s.value}</div>
+            <div className="text-[8px] text-white/20">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <MockFeedPost initials="VP" name="VouchEdge Pro" handle="vouchedge_pro" content="Tonight's 3-leg locked and posted. Full rationale on the card." accent="cyan" likes={28} vouches={9} comments={4} />
+    </div>
+  );
+}
+
+const IPHONE_SLIDES = ['feed', 'profile', 'card'] as const;
+type IPhoneSlide = (typeof IPHONE_SLIDES)[number];
+const IPHONE_LABELS: Record<IPhoneSlide, string> = { feed: 'Home Feed', profile: 'Your Profile', card: 'Vouch Card' };
+const IPHONE_CYCLE_MS = 6000;
+
 function IPhoneFrame() {
+  const [active, setActive] = useState<IPhoneSlide>('feed');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCycle = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setActive((s) => IPHONE_SLIDES[(IPHONE_SLIDES.indexOf(s) + 1) % IPHONE_SLIDES.length]);
+    }, IPHONE_CYCLE_MS);
+  }, []);
+
+  useEffect(() => {
+    startCycle();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [startCycle]);
+
+  const pickSlide = useCallback((slide: IPhoneSlide) => {
+    setActive(slide);
+    startCycle();
+  }, [startCycle]);
+
   return (
     <div className="ve-device-iphone">
       <div className="ve-device-iphone-frame">
         <div className="ve-device-iphone-island" />
         <div className="ve-device-iphone-screen">
           <div className="ve-device-screen-content ve-device-scale-wrapper">
-            <div className="ve-device-scale-inner ve-device-scale-iphone pointer-events-none select-none">
-              <PreviewCardStage {...makeDemoProps('orbit')} activeStyle={STUDIO_STYLE} />
+            <div className="ve-device-scale-inner ve-device-scale-iphone pointer-events-none select-none" style={{ position: 'relative', height: '100%' }}>
+              {IPHONE_SLIDES.map((slide) => (
+                <div
+                  key={slide}
+                  style={{
+                    background: '#0a0a0f',
+                    position: slide === 'feed' ? 'relative' : 'absolute',
+                    inset: slide === 'feed' ? undefined : 0,
+                    opacity: active === slide ? 1 : 0,
+                    zIndex: active === slide ? 2 : 1,
+                    transition: 'opacity 0.8s ease-in-out',
+                  }}
+                >
+                  {slide === 'feed' && <MockHomeFeed />}
+                  {slide === 'profile' && <MockProfilePage />}
+                  {slide === 'card' && <PreviewCardStage {...makeDemoProps('orbit')} activeStyle={STUDIO_STYLE} />}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      <div className="mt-4 flex items-center justify-center gap-1.5">
+        {IPHONE_SLIDES.map((slide) => (
+          <button
+            key={slide}
+            type="button"
+            onClick={() => pickSlide(slide)}
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              active === slide ? 'w-5 bg-vouch-cyan' : 'w-1.5 bg-white/20 hover:bg-white/35'
+            }`}
+            aria-label={IPHONE_LABELS[slide]}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-white/25">
+        {IPHONE_LABELS[active]}
+      </p>
     </div>
   );
 }
@@ -277,9 +445,6 @@ export default function LandingDeviceShowcase() {
         </div>
         <div className="w-full max-w-[200px] sm:w-auto">
           <IPhoneFrame />
-          <p className="mt-5 text-center font-mono text-[10px] uppercase tracking-widest text-white/25">
-            Your Vouch Card
-          </p>
         </div>
       </div>
     </section>
