@@ -1025,7 +1025,7 @@ function TabContent({
 }: {
   activePanel: ParlayCommandPanel;
   savedSlips:  unknown[];
-  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
+  onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<ParlaySaveResult>;
   onSectionChange?: (section: string) => void;
 }) {
   switch (activePanel) {
