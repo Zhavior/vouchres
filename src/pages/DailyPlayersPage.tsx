@@ -1467,40 +1467,25 @@ function DailyMatchupTheater({
           </button>
         </div>
 
-        <div className="no-scrollbar -mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:px-0" aria-label="Matchup shortcuts">
-          {games.map((game, index) => {
-            const chipAway = resolveDailyTeam(game, "away");
-            const chipHome = resolveDailyTeam(game, "home");
-            const isActive = index === selectedGameIndex;
-            const chipStatus = getDailyStatus(game);
-
-            return (
-              <button
-                type="button"
-                key={`daily-chip-${game?.gamePk || game?.game_id || game?.id || index}`}
-                className={`flex min-w-[132px] shrink-0 snap-start flex-col gap-1 border px-2.5 py-2 text-left font-z8 transition sm:min-w-[160px] sm:px-2 sm:py-1.5 ${
-                  isActive ? Z8_ACTIVE : Z8_IDLE
-                }`}
-                onClick={() => setSelectedGameIndex(index)}
-                aria-label={`Open ${getTeamLabel(chipAway)} versus ${getTeamLabel(chipHome)}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <DailyTeamIcon team={chipAway} gameTeamId={game?.awayTeamId} size="sm" />
-                  <span className={`${Z8_LABEL} text-vouch-cyan/80`}>vs</span>
-                  <DailyTeamIcon team={chipHome} gameTeamId={game?.homeTeamId} size="sm" />
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[10px] font-bold text-white">
-                    {getTeamAbbrSafe(chipAway)} @ {getTeamAbbrSafe(chipHome)}
-                  </span>
-                  <span className={`${Z8_LABEL} ${chipStatus === 'Confirmed' ? 'text-vouch-emerald' : 'text-vouch-cyan/70'}`}>
-                    {chipStatus}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <label className="grid min-w-0 gap-1">
+          <span className={`${Z8_LABEL} text-white/45`}>Choose matchup</span>
+          <select
+            value={selectedGameIndex}
+            onChange={(event) => setSelectedGameIndex(Number(event.target.value))}
+            className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3 font-mono text-xs font-bold uppercase tracking-wide text-white outline-none focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
+            aria-label="Choose matchup"
+          >
+            {games.map((game, index) => {
+              const optionAway = resolveDailyTeam(game, "away");
+              const optionHome = resolveDailyTeam(game, "home");
+              return (
+                <option key={`daily-option-${game?.gamePk || game?.game_id || game?.id || index}`} value={index}>
+                  {getTeamAbbrSafe(optionAway)} @ {getTeamAbbrSafe(optionHome)} — {getDailyStatus(game)}
+                </option>
+              );
+            })}
+          </select>
+        </label>
       </div>
 
       {isProjectedSlate && (
@@ -1625,11 +1610,40 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
     [data?.games]
   );
 
+  const boardStatusCounts = useMemo(() => {
+    const allGames = data?.games || [];
+    return allGames.reduce(
+      (counts, game) => {
+        if (dataQuality(game) === 'CONFIRMED') counts.confirmed += 1;
+        else counts.preview += 1;
+        return counts;
+      },
+      { confirmed: 0, preview: 0 }
+    );
+  }, [data?.games]);
+
   useEffect(() => {
     if (selectedGameIndex > Math.max(games.length - 1, 0)) {
       setSelectedGameIndex(0);
     }
   }, [games.length, selectedGameIndex]);
+
+  useEffect(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return;
+
+    const firstMatchingGame = games.findIndex((game) => {
+      const teams = `${getTeamLabel(resolveDailyTeam(game, 'away'))} ${getTeamLabel(resolveDailyTeam(game, 'home'))}`;
+      const players = getGamePlayers(game)
+        .map((player) => `${getDailyPlayerName(player)} ${getDailyPlayerPosition(player)}`)
+        .join(' ');
+      return `${teams} ${players}`.toLowerCase().includes(query);
+    });
+
+    if (firstMatchingGame >= 0 && firstMatchingGame !== selectedGameIndex) {
+      setSelectedGameIndex(firstMatchingGame);
+    }
+  }, [games, search, selectedGameIndex]);
 
   const getTeamLabel = (team: any) => {
     if (!team) return "TBD";
@@ -1696,10 +1710,12 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
             {[
               { label: 'Games Loaded', value: data?.totalGames ?? games.length },
-              { label: 'Players Starting', value: totalPlayers },
+              { label: 'Confirmed', value: boardStatusCounts.confirmed },
+              { label: 'Preview Only', value: boardStatusCounts.preview },
+              { label: 'Players Listed', value: totalPlayers },
               { label: 'Last Updated', value: lastUpdated ? lastUpdated.toLocaleTimeString() : 'Not yet' },
             ].map((stat) => (
               <div key={stat.label} className={`${Z8_SURFACE} px-3 py-2.5`}>
@@ -1711,12 +1727,15 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
         </header>
 
         <section className={`${Z8_PANEL_PREMIUM} flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between`}>
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search player, team, position..."
-            className={`${Z8_SURFACE} w-full px-3.5 py-2.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20 md:max-w-md`}
-          />
+          <label className="grid w-full gap-1 md:max-w-md">
+            <span className={`${Z8_LABEL} text-white/45`}>Find a player or team</span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Player, team, or position"
+              className={`${Z8_SURFACE} z8-control min-h-11 w-full px-3.5 font-mono text-sm text-white outline-none placeholder:text-white/30 focus:border-vouch-cyan/45 focus:ring-1 focus:ring-vouch-cyan/20`}
+            />
+          </label>
 
           <div className="flex flex-wrap gap-1.5">
             {(['all', 'confirmed', 'pending', 'pitchers'] as const).map((item) => (
@@ -1728,7 +1747,7 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
                   filter === item ? Z8_ACTIVE : Z8_IDLE
                 }`}
               >
-                {item}
+                {item === 'pending' ? 'Preview' : item}
               </button>
             ))}
           </div>
