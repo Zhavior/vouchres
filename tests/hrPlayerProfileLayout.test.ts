@@ -13,6 +13,13 @@ describe('HR full profile layout', () => {
     expect(source).toContain('document.body,');
   });
 
+  it('uses the dedicated premium dossier stylesheet', () => {
+    expect(source).toContain("import './hr-player-profile.css';");
+    expect(source).toContain('hr-profile__rail');
+    expect(source).toContain('hr-profile__metrics');
+    expect(source).toContain('max-w-[1320px]');
+  });
+
   it('uses the full viewport on mobile and only the content column on desktop', () => {
     expect(source).toContain('inset-y-0 left-0 right-0');
     expect(source).toContain('md:left-[72px]');

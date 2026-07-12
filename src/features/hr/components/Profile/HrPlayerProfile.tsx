@@ -23,6 +23,7 @@ import {
 import type { HrWatchRow } from '../../types/hrWatch';
 import { fetchRealGameLog, lastNGames, gamesAgainstOpponent, type RealGameLog } from '../../utils/realGameLogs';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
+import './hr-player-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -428,9 +429,6 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     { value: player.hrScore,                label: 'HR Score',   color: tier.color },
     { value: compositeScore,                  label: 'Composite',  color: '#fbbf24' },
     { value: player.hitterPower ?? 0,         label: 'Power',      color: '#00F0FF' },
-    { value: player.pitcherVulnerability ?? 0, label: 'Pitcher',   color: '#fb7185' },
-    { value: player.recentForm ?? 0,           label: 'Form',       color: '#00FF94' },
-    { value: player.parkFactor ?? 0,           label: 'Park',       color: '#00F0FF' },
   ];
 
   return createPortal(
@@ -456,35 +454,26 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="fixed inset-y-0 left-0 right-0 z-[60] flex min-w-0 flex-col overflow-hidden md:left-[72px] lg:flex-row xl:left-[280px]"
-            style={{
-              background: '#050505',
-              // on mobile show a slight inset so it feels like a sheet
-            }}
+            className="hr-profile fixed inset-y-0 left-0 right-0 z-[60] flex min-w-0 flex-col overflow-hidden md:left-[72px] lg:flex-row xl:left-[280px]"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
             <div
-              className="relative flex-shrink-0 overflow-hidden lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto xl:w-80"
-              style={{
-                background: `linear-gradient(160deg, hsl(${hue} 50% 7%) 0%, #050505 65%)`,
-                borderRight: 'none',
-              }}
+              className="hr-profile__rail relative flex-shrink-0 overflow-hidden lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto xl:w-80"
             >
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}
+                className="hr-profile__close absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
 
               {/* Hero identity block */}
-              <div className="relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:pt-8">
+              <div className="relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:px-6 lg:pt-8">
                 {/* Avatar */}
                 <div className="relative shrink-0">
                   <div
-                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 lg:h-24 lg:w-24"
+                    className="hr-profile__portrait flex h-20 w-20 items-center justify-center overflow-hidden lg:h-28 lg:w-28"
                     style={{ background: `hsl(${hue} 45% 16%)`, ['--tw-ring-color' as string]: `hsl(${hue} 55% 30%)` } as React.CSSProperties}
                   >
                     {showImg ? (
@@ -504,7 +493,8 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
                 {/* Name + meta */}
                 <div className="flex-1 min-w-0 lg:mt-2">
-                  <h2 className="text-xl font-black leading-tight tracking-tight lg:text-2xl" style={{ color: '#ffffff' }}>
+                  <p className="mb-2 hidden font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-[#00ff94] lg:block">Player intelligence dossier</p>
+                  <h2 className="text-xl font-black leading-[0.95] tracking-[-0.04em] text-white lg:text-3xl">
                     {player.playerName}
                   </h2>
                   <p className="mt-0.5 text-xs font-semibold lg:text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
@@ -542,9 +532,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               </div>
 
               {/* Score arc grid — desktop sidebar only */}
-              <div className="hidden lg:block px-5 mt-4">
-                <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Score Breakdown</p>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="hidden px-6 lg:block">
+                <p className="mb-3 font-mono text-[9px] font-black uppercase tracking-[0.22em] text-white/35">Decision signals</p>
+                <div className="grid grid-cols-3 gap-1 border-y border-white/10 py-4">
                   {ARCS.map(a => (
                     <Arc key={a.label} value={a.value} color={a.color} label={a.label} size={76} />
                   ))}
@@ -577,7 +567,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                     <button
                       key={n.id}
                       onClick={() => setActiveSection(n.id)}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-all"
+                      className="hr-profile__nav-item flex items-center gap-3 px-3 py-2.5 text-left text-xs font-bold uppercase tracking-[0.08em] transition-all"
                       style={{
                         background: activeSection === n.id ? `rgba(${tier.rgb}, 0.12)` : 'transparent',
                         color: activeSection === n.id ? tier.color : 'rgba(255,255,255,0.4)',
@@ -613,20 +603,16 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
             {/* ── RIGHT CONTENT AREA ──────────────────────────────────────────── */}
             <div
-              className="flex-1 overflow-y-auto"
-              style={{
-                scrollbarColor: 'rgba(255,255,255,0.15) transparent',
-                background: '#0A0A0A',
-              }}
+              className="hr-profile__content flex-1 overflow-y-auto"
             >
               {/* Desktop right border */}
-              <div className="hidden lg:block h-full" style={{ borderLeft: '1px solid rgba(255,255,255,0.25)' }}>
-                <div className="p-6 xl:p-8">
+              <div className="hidden h-full lg:block">
+                <div className="mx-auto max-w-[1320px] p-8 xl:p-10 2xl:p-12">
                   {renderContent()}
                 </div>
               </div>
               {/* Mobile content */}
-              <div className="lg:hidden p-4">
+              <div className="p-4 sm:p-5 lg:hidden">
                 {renderContent()}
               </div>
             </div>
@@ -646,7 +632,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
           <div className="flex flex-col gap-6">
 
             {/* Mobile score arcs */}
-            <div className="lg:hidden rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
+            <div className="hr-profile__panel p-4 lg:hidden">
               <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Score Breakdown</p>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {ARCS.map(a => (
@@ -658,7 +644,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             {/* Key stats — 4-col grid on desktop */}
             <div>
               <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Key Metrics</p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="hr-profile__metrics grid grid-cols-2 sm:grid-cols-4">
                 {[
                   { label: 'HR Score',       value: fmtScore(player.hrScore),              color: tier.color },
                   { label: 'Edge Score',      value: fmtScore(player.vouchScore),           color: '#fbbf24' },
@@ -671,8 +657,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 ].map(s => (
                   <div
                     key={s.label}
-                    className="flex flex-col gap-1.5 rounded-2xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.3)' }}
+                    className="hr-profile__metric flex min-h-24 flex-col justify-between gap-3 p-4"
                   >
                     <span className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
                     <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
