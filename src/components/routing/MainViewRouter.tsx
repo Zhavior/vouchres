@@ -43,7 +43,7 @@ const TeamMatchupLabPage = lazy(() => import('../../pages/pro/TeamMatchupLabPage
 const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
-const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
+const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
@@ -526,7 +526,7 @@ function ParlayShell({
   } = useAppCommandStore();
 
   return (
-    <ParlayCommandCenter
+    <ParlayOsWorkspace
       savedSlips={savedSlips}
       liveGames={liveGames}
       onSectionChange={navigateSection}

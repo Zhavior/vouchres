@@ -1,5 +1,5 @@
 /**
- * ParlayCommandCenter — ParlayOS workspace surface
+ * ParlayOS workspace — canonical builder, live tracking, and proof surface.
  *
  * 12-judge panel synthesis applied:
  *
@@ -1070,7 +1070,7 @@ function TabContent({
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-interface ParlayCommandCenterProps {
+interface ParlayOsWorkspaceProps {
   savedSlips?:     unknown[];
   liveGames?:      unknown[];
   initialPanel?:   ParlayCommandPanel;
@@ -1085,13 +1085,13 @@ interface ParlayCommandCenterProps {
   onHideParlay?:   (parlayId: string) => Promise<void> | void;
 }
 
-export default function ParlayCommandCenter({
+export default function ParlayOsWorkspace({
   savedSlips    = [],
   initialPanel  = 'live',
   onSectionChange,
   onSaveParlay,
   onHideParlay,
-}: ParlayCommandCenterProps) {
+}: ParlayOsWorkspaceProps) {
   const activePanel       = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel    = useParlayCommandStore((s) => s.setActivePanel);
   const hydrateSavedSlips = useParlayCommandStore((s) => s.hydrateSavedSlips);
