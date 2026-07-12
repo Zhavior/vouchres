@@ -94,6 +94,7 @@ export function mapBackendParlay(pick: any): Parlay {
 
   return {
     id: pick.id,
+    clientRef: pick.client_ref ?? undefined,
     title: pick.explanation || pick.market || 'Saved Parlay',
     legs,
     totalOdds,
