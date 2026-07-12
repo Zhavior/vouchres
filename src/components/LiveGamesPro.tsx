@@ -15,6 +15,7 @@ import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import './live/live-games-lens.css';
 
 interface Props {
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
@@ -132,7 +133,15 @@ function matchupFromLiveGame(game: LiveGameApiCard): GameMatchup {
   };
 }
 
-function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
+function sortBySchedule(games: GameMatchup[]): GameMatchup[] {
+  return [...games].sort((a, b) => {
+    const timeDelta = Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
+    if (Number.isFinite(timeDelta) && timeDelta !== 0) return timeDelta;
+    return String(a.gamePk).localeCompare(String(b.gamePk));
+  });
+}
+
+export function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
   const byGame = new Map<string, GameMatchup>();
   base.forEach((game) => byGame.set(String(game.gamePk), game));
 
@@ -144,11 +153,12 @@ function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMat
       return;
     }
 
+    const isFinal = existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status);
     byGame.set(key, {
       ...rich,
       status: existing.status || rich.status,
-      isLive: existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status),
-      isFinal: existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status),
+      isLive: !isFinal && (existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status)),
+      isFinal,
       score: existing.score ?? rich.score,
       gameTime: existing.gameTime || rich.gameTime,
       venue: rich.venue || existing.venue,
@@ -157,15 +167,11 @@ function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMat
     });
   });
 
-  return Array.from(byGame.values()).sort((a, b) => {
-    const liveDelta = Number(b.isLive) - Number(a.isLive);
-    if (liveDelta) return liveDelta;
-    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
-  });
+  return sortBySchedule(Array.from(byGame.values()));
 }
 
 /** Overlay fresh official scores/status onto enriched rows without dropping model fields. */
-function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
+export function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
   if (official.length === 0) return enriched;
 
   const officialByPk = new Map(official.map((game) => [String(game.gamePk), game]));
@@ -177,11 +183,12 @@ function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup
     const next = officialByPk.get(key);
     if (!next) return game;
 
+    const isFinal = next.isFinal || isFinalStatus(next.status);
     return {
       ...game,
       status: next.status || game.status,
-      isLive: next.isLive || game.isLive || isLiveStatus(next.status) || isLiveStatus(game.status),
-      isFinal: next.isFinal || game.isFinal || isFinalStatus(next.status) || isFinalStatus(game.status),
+      isLive: !isFinal && (next.isLive || isLiveStatus(next.status)),
+      isFinal,
       score: next.score ?? game.score,
       gameTime: next.gameTime || game.gameTime,
     };
@@ -192,11 +199,7 @@ function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup
     if (!seen.has(key)) merged.push(game);
   }
 
-  return merged.sort((a, b) => {
-    const liveDelta = Number(b.isLive) - Number(a.isLive);
-    if (liveDelta) return liveDelta;
-    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
-  });
+  return sortBySchedule(merged);
 }
 
 function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
@@ -433,7 +436,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
 }
 
 /** Merge live scores into matchup list by gamePk. */
-function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
+export function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
   if (!scores.length) return matchups;
   const map = new Map(scores.map((s) => [String(s.gamePk), s]));
   return matchups.map((m) => {
@@ -442,7 +445,7 @@ function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[
     return {
       ...m,
       score: s.score,
-      isLive: s.isLive || isLiveStatus(s.status),
+      isLive: !s.isFinal && (s.isLive || isLiveStatus(s.status)),
       isFinal: s.isFinal || isFinalStatus(s.status),
       status: s.status,
     };
@@ -456,7 +459,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
-  const [selected, setSelected] = useState<GameMatchup | null>(null);
+  const [selectedGamePk, setSelectedGamePk] = useState<number | string | null>(null);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
 
@@ -586,6 +589,9 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   const activeGame =
     shown.find((m) => String(m.gamePk) === String(activeGamePk)) ??
     preferredGame;
+  const selected = selectedGamePk == null
+    ? null
+    : matchups.find((game) => String(game.gamePk) === String(selectedGamePk)) ?? null;
 
   useEffect(() => {
     if (!activeGamePk && preferredGame?.gamePk) {
@@ -603,14 +609,14 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-w-0 overflow-x-hidden ve-safe-bottom max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5 pb-24 md:pb-5`}>
+    <main className={`${Z8_PAGE} live-games-lens ve-page-shell mx-auto min-w-0 max-w-6xl overflow-x-hidden px-3 py-4 pb-24 sm:px-4 sm:py-5 md:pb-5`}>
       {/* Header */}
-      <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-4 sm:p-5 mb-4 sm:mb-5`}>
+      <div className="live-games-lens__header z8-data-surface mb-4 p-4 sm:mb-5 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
             <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
-            <p className={`mt-2 ${Z8_LABEL} text-vouch-emerald`}>{sourceNote}</p>
+            <p role="status" aria-live="polite" className={`mt-2 flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}><span className="h-1.5 w-1.5 bg-vouch-emerald" aria-hidden="true" />{sourceNote}</p>
           </div>
           <button onClick={load} className="z8-control flex shrink-0 items-center gap-1.5 self-start border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs text-vouch-emerald transition-colors hover:border-vouch-emerald/50 sm:self-auto">
             <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching ? 'animate-spin' : ''}`} /> Refresh
@@ -636,9 +642,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
         ) : (
           <div className="space-y-4 min-w-0">
             {activeGame && (
-              <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-3 sm:p-4 md:p-5 shadow-2xl ${Z8_PANEL_PREMIUM}`}>
-                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+              <div className="live-game-focus relative overflow-hidden p-3 sm:p-4 md:p-5">
 
                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5 min-w-0">
                   <div className="min-w-0">
@@ -664,7 +668,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
                   </div>
                 </div>
 
-                <div className="relative grid grid-cols-1 min-[400px]:grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-xl sm:rounded-2xl border border-slate-700/70 bg-black/25 p-3 sm:p-4 min-w-0">
+                <div className="live-game-scoreboard relative grid min-w-0 grid-cols-1 items-center gap-3 p-3 min-[400px]:grid-cols-[1fr_auto_1fr] sm:p-4">
                   <div className="text-left min-w-0">
                     <div className="flex items-center gap-2 mb-1 sm:mb-2">
                       <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={28} />
@@ -717,7 +721,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
                     <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
                   </div>
                   <button
-                    onClick={() => setSelected(activeGame)}
+                    onClick={() => setSelectedGamePk(activeGame.gamePk)}
                     className="z8-control min-w-0 border border-vouch-emerald/40 bg-vouch-emerald/10 p-2.5 text-left transition hover:bg-vouch-emerald/15 sm:p-3"
                   >
                     <p className="text-[11px] font-mono uppercase text-vouch-emerald">Details</p>
@@ -728,7 +732,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
               </div>
             )}
 
-            <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="live-game-selector grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {shown.map((m) => (
                 <button
                   key={m.gamePk}
@@ -769,7 +773,7 @@ export default function LiveGamesPro({ onAddLegToParlay }: Props) {
         )
       )}
 
-      {selected && <MatchupDrawer m={selected} onClose={() => setSelected(null)} onAddLeg={addLeg} />}
+      {selected && <MatchupDrawer m={selected} onClose={() => setSelectedGamePk(null)} onAddLeg={addLeg} />}
 
     </main>
   );

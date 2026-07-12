@@ -13,6 +13,13 @@ describe('Live Games decision-first layout', () => {
     expect(source).toContain('Open matchup');
   });
 
+  it('uses the dedicated live scoreboard visual system', () => {
+    expect(source).toContain("import './live/live-games-lens.css';");
+    expect(source).toContain('live-game-focus');
+    expect(source).toContain('live-game-scoreboard');
+    expect(source).not.toContain('bg-vouch-cyan/20 blur-3xl');
+  });
+
   it('uses an adaptive selector instead of nested horizontal scrolling', () => {
     expect(source).toContain('grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4');
     expect(source).not.toContain('flex gap-2 overflow-x-auto');
