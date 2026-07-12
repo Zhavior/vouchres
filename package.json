@@ -24,6 +24,7 @@
     "migrate:trustos": "node --env-file=.env.local scripts/applyTrustOsMigration.mjs",
     "verify:billing-hardening": "tsx scripts/verifyBillingHardening.ts",
     "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts",
+    "sentry:test": "tsx scripts/sentryTestError.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:parlay": "playwright test e2e/parlay-os.smoke.spec.ts",
