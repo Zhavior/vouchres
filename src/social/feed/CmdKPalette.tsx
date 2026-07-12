@@ -12,7 +12,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Search, Command, Home, Flame, Users, Tv, Activity, Radio,
-  UserRoundSearch, Swords, LineChart, Cpu, Sliders, ClipboardCheck,
+  UserRoundSearch, Swords, LineChart, Cpu, ClipboardCheck,
   BarChart3, Trophy, Sparkles, Settings, LayoutDashboard, ShoppingBag,
   User, X,
 } from 'lucide-react';
@@ -61,7 +61,6 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'ai_engine',       label: 'V.A.I Research Center', group: 'AI',            icon: Cpu,             keywords: ['ai', 'research', 'vai', 'rooms', 'smart'] },
   // Build & Track
   { id: 'live_parlays',    label: 'ParlayOS',               group: 'Build & Track', icon: Radio,           keywords: ['parlay', 'os', 'live', 'slips'] },
-  { id: 'build',           label: 'ParlayOS Builder',       group: 'Build & Track', icon: Sliders,         keywords: ['build', 'parlay', 'create', 'legs', 'slip'] },
   { id: 'research',        label: 'Player Research',        group: 'Build & Track', icon: Search,          keywords: ['research', 'player', 'stats', 'search'] },
   { id: 'board',           label: 'Vouch Board',            group: 'Build & Track', icon: ClipboardCheck,  keywords: ['vouch', 'board', 'picks', 'ledger'] },
   { id: 'results',         label: 'Results',                group: 'Build & Track', icon: BarChart3,       keywords: ['results', 'record', 'history', 'wins', 'losses'] },

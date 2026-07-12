@@ -19,7 +19,6 @@ import {
   RefreshCcw,
   Search,
   Settings,
-  Sliders,
   Sparkles,
   Swords,
   Trophy,
@@ -164,12 +163,6 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     label: "ParlayOS",
     description: "Canonical builder, saved slips, and live parlay intelligence.",
     icon: Radio,
-  },
-  build: {
-    id: "build",
-    label: "ParlayOS Builder",
-    description: "Create, edit, and lock ParlayOS slips.",
-    icon: Sliders,
   },
   research: {
     id: "research",
