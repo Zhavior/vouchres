@@ -27,6 +27,7 @@ import { registerAiRoutes } from "./aiRoutes";
 import { registerTrustRoutes } from "./trustRoutes";
 import { registerResultRoutes } from "./resultRoutes";
 import { registerAiJudgeSocialRoutes } from "./aiJudgeSocialRoutes";
+import { registerCentralBrainRoutes } from "./centralBrainRoutes";
 import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
@@ -85,6 +86,7 @@ export function registerApiRoutes(app: Express): void {
   registerTrustRoutes(app);
   registerResultRoutes(app);
   registerAiJudgeSocialRoutes(app);
+  registerCentralBrainRoutes(app);
 
   // Skills introspection + generic runner.
   app.get("/api/skills", (req: RequestWithContext, res: Response) =>
