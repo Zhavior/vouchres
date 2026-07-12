@@ -194,7 +194,11 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   return (
     <main className={`${Z8_PAGE} ve-page-shell min-h-0 bg-ve-obsidian text-ve-flash px-3 py-4 sm:px-4 lg:py-5`}>
       <div className="mx-auto max-w-[1320px] space-y-4">
-        <div className={`${Z8_PANEL} glass-command ve-premium-panel p-3 sm:p-4`}>
+        <div
+          className={`${Z8_PANEL} glass-command ve-premium-panel p-3 sm:p-4`}
+          onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
+          onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
+        >
           <div className="flex flex-wrap items-center justify-center gap-2" role="tablist" aria-label="Today dashboard pages">
             <button
               type="button"
@@ -236,30 +240,16 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             ))}
           </div>
           <p className="mt-2 text-center text-[10px] font-mono text-white/35">
-            Swipe left/right or tap tabs to switch pages
+            Tap tabs to switch pages (swipe the tab bar on mobile)
           </p>
         </div>
 
-        <div
-          className="overflow-x-hidden touch-pan-y"
-          onTouchStart={(e) => onTouchStart(e.touches[0]?.clientX ?? 0)}
-          onTouchEnd={(e) => onTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
-        >
+        <div className="overflow-x-hidden">
           <motion.div
             className="flex items-start"
             style={{ width: `${TODAY_PANELS.length * 100}%` }}
             animate={{ x: `-${(activeIndex * 100) / TODAY_PANELS.length}%` }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.14}
-            onDragEnd={(_, info) => {
-              if (info.offset.x < -SWIPE_THRESHOLD && activeIndex < TODAY_PANELS.length - 1) {
-                setActivePanel(TODAY_PANELS[activeIndex + 1]);
-              } else if (info.offset.x > SWIPE_THRESHOLD && activeIndex > 0) {
-                setActivePanel(TODAY_PANELS[activeIndex - 1]);
-              }
-            }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
         <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
@@ -404,17 +394,21 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
         </p>
             </div>
 
-            <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-              {activePanel === 'portfolio' && (
-                <React.Suspense fallback={<PortfolioPanelSkeleton />}>
+            <div
+              className="shrink-0 px-0.5 touch-pan-y"
+              style={{ width: `${100 / TODAY_PANELS.length}%` }}
+              aria-hidden={activePanel !== 'portfolio'}
+            >
+              <React.Suspense fallback={<PortfolioPanelSkeleton />}>
+                <div className={activePanel === 'portfolio' ? undefined : 'pointer-events-none'}>
                   <PortfolioAnalyticsPanel
                     profile={profile}
                     savedSlips={savedSlips}
                     isLoggedIn={isLoggedIn}
                     onSectionChange={onSectionChange}
                   />
-                </React.Suspense>
-              )}
+                </div>
+              </React.Suspense>
             </div>
           </motion.div>
         </div>
