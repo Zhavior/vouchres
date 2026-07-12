@@ -81,7 +81,7 @@
       "destination": "/api"
     },
     {
-      "source": "/((?!api/|assets/|icons/|build-id\\.txt|favicon\\.svg|favicon\\.png|manifest\\.json|offline\\.html|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/((?!api/|assets/|icons/|build-id\\.txt|favicon(?:%20| )?2\\.svg|favicon\\.svg|favicon\\.png|manifest\\.json|offline\\.html|og-image\\.png|vouchedge-icon\\.svg|service-worker\\.js|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ],
