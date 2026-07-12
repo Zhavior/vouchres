@@ -229,7 +229,7 @@ function MacBookFrame() {
             type="button"
             onClick={() => pickSlide(slide)}
             className={`h-1.5 rounded-full transition-all duration-500 ${
-              active === slide ? 'w-6 bg-[#00ff94]' : 'w-1.5 bg-white/20 hover:bg-white/35'
+              active === slide ? 'w-6 bg-vouch-emerald' : 'w-1.5 bg-white/20 hover:bg-white/35'
             }`}
             aria-label={SLIDE_LABELS[slide]}
           />
@@ -276,8 +276,8 @@ function MockFeedPost({ initials, name, handle, content, accent, likes, vouches,
 
 function MockHomeFeed() {
   return (
-    <div className="flex min-h-full flex-col bg-[#0a0a0f] font-z8 text-white">
-      <header className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#0a0a0f]/90 backdrop-blur-md">
+    <div className="flex min-h-full flex-col bg-obsidian-900 font-z8 text-white">
+      <header className="sticky top-0 z-10 border-b border-white/[0.06] bg-obsidian-900/90 backdrop-blur-md">
         <div className="flex h-[46px] items-center justify-between px-4">
           <span className="text-[17px] font-extrabold">Home</span>
           <div className="flex items-center gap-1">
@@ -301,11 +301,11 @@ function MockHomeFeed() {
 
 function MockProfilePage() {
   return (
-    <div className="flex min-h-full flex-col bg-[#0a0a0f] font-z8 text-white">
+    <div className="flex min-h-full flex-col bg-obsidian-900 font-z8 text-white">
       <div className="relative h-24 bg-gradient-to-r from-sky-600/25 to-indigo-600/25">
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/50 to-transparent" />
-        <div className="absolute -bottom-8 left-4 z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-vouch-cyan/40 bg-[#0a0a0f] text-lg font-black text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+        <div className="absolute -bottom-8 left-4 z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-vouch-cyan/40 bg-obsidian-900 text-lg font-black text-vouch-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
           VE
         </div>
       </div>
