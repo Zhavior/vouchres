@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
@@ -388,9 +389,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const bvpLogs  = useMemo(() => player ? genBvP(player.playerName, player.pitcherName ?? '') : [], [player?.playerName, player?.pitcherName]);
+  const bvpLogs  = useMemo(() => player ? genBvP(player.playerName, player.pitcherName ?? '') : [], [player]);
   const formLogs = useMemo(() => lastNGames(realLog ?? [], 10), [realLog]);
-  const teamLogs = useMemo(() => player ? gamesAgainstOpponent(realLog ?? [], player.opponent, 5) : [], [realLog, player?.opponent]);
+  const teamLogs = useMemo(() => player ? gamesAgainstOpponent(realLog ?? [], player.opponent, 5) : [], [realLog, player]);
 
   const bvpCareer = useMemo(() => {
     const t = bvpLogs.reduce((a, r) => ({ pa: a.pa + r.pa, hrs: a.hrs + r.hrs, avgW: a.avgW + r.avg * r.pa, slgW: a.slgW + r.slg * r.pa }), { pa: 0, hrs: 0, avgW: 0, slgW: 0 });
@@ -405,7 +406,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   }, [player]);
 
   // ── All hooks above ── null guard safe ──
-  if (!player) return null;
+  if (!player || typeof document === 'undefined') return null;
 
   const tier    = tierConfig(player.hrScore);
   const layers  = getLayers(player);
@@ -437,7 +438,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     { value: player.parkFactor ?? 0,           label: 'Park',       color: '#00F0FF' },
   ];
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -447,7 +448,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="fixed inset-0 z-50"
+            className="fixed inset-0 z-[190]"
             style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(10px)' }}
             aria-hidden="true"
           />
@@ -460,7 +461,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="fixed inset-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
+            className="fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
             style={{
               background: '#050505',
               // on mobile show a slight inset so it feels like a sheet
@@ -637,7 +638,8 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 
   // ─── Content renderer ────────────────────────────────────────────────────────
