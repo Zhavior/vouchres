@@ -22,8 +22,10 @@ import {
 import type { CreatorProofProfile, Parlay } from '../types';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
+import { useLiveGames } from '../hooks/queries/useLiveGames';
 import { motion } from '../lib/motion';
 import { useMode } from '../lib/useMode';
+import SlateGamesSlideshow, { sortSlateGames } from './slate/SlateGamesSlideshow';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
 const PortfolioAnalyticsPanel = React.lazy(() => import('./PortfolioAnalyticsPanel'));
@@ -162,8 +164,13 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
   const [activePanel, setActivePanel] = useState<TodayPanel>('overview');
   const touchStartX = useRef<number | null>(null);
   const dailyReportQuery = useDailyReport();
+  const liveGamesQuery = useLiveGames();
   const report = dailyReportQuery.data ?? null;
   const loading = dailyReportQuery.isLoading;
+  const slateGames = useMemo(
+    () => sortSlateGames((liveGamesQuery.data?.games ?? []).slice(0, 18)),
+    [liveGamesQuery.data?.games],
+  );
 
   const pendingSlips = useMemo(
     () => savedSlips.filter((slip) => String(slip.status || 'PENDING').toUpperCase() === 'PENDING').length,
@@ -252,6 +259,24 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
+        <SlateGamesSlideshow
+          games={slateGames}
+          loading={liveGamesQuery.isLoading && slateGames.length === 0}
+          eyebrow="Today's Slate"
+          title="Team vs team matchups"
+        />
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => onSectionChange('live_games')}
+            className={`inline-flex items-center gap-1.5 rounded-full border border-vouch-cyan/30 bg-vouch-cyan/8 px-3 py-1.5 ${Z8_LABEL} text-vouch-cyan hover:border-vouch-cyan/50`}
+          >
+            Open live games
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
         <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
