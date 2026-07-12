@@ -5,6 +5,11 @@
 @source "../components/landing/**/*.{ts,tsx}";
 /* Vouch Card System spotlight renders the real studio cards on the landing. */
 @source "../components/vouch-studio-darkroom/panels/preview/*.{ts,tsx}";
+/* Device showcase renders the real HR Board and Today dashboard inside frames. */
+@source "../features/hr/**/*.{ts,tsx}";
+@source "../components/TodayDashboard.tsx";
+@source "../components/PortfolioAnalyticsPanel.tsx";
+@source "../theme/z8Tokens.ts";
 
 @import "./vouchedge-tokens.css";
 @import "./vouchedge-utilities.css";
@@ -59,5 +64,295 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ve-vouch-3d-card {
     animation: none;
+  }
+}
+
+/* ── Device mockup frames ──────────────────────────────────────────────
+   High-fidelity CSS-only MacBook Pro + iPhone 15 Pro. */
+
+/* ── MacBook Pro ─────────────────────────────────────────────────────── */
+.ve-device-macbook {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+}
+
+/* Lid — the aluminum shell around the screen */
+.ve-device-macbook-lid {
+  position: relative;
+  border-radius: 12px 12px 0 0;
+  padding: 8px 8px 0;
+  background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%);
+  border: 1px solid #3a3a3c;
+  border-bottom: none;
+}
+
+/* Notch cutout in the top bezel */
+.ve-device-macbook-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: 18%;
+  height: 8px;
+  border-radius: 0 0 10px 10px;
+  background: #1c1c1e;
+}
+
+/* Camera dot inside the notch */
+.ve-device-macbook-notch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0a0a0c;
+  box-shadow: inset 0 0 0 0.5px #3a3a3c;
+}
+
+/* Screen bezel */
+.ve-device-macbook-screen {
+  position: relative;
+  border-radius: 6px;
+  background: #0a0a0f;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Subtle glass reflection across the screen */
+.ve-device-macbook-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.018) 43%,
+    rgba(255, 255, 255, 0.025) 46%,
+    transparent 47%
+  );
+  border-radius: inherit;
+}
+
+.ve-device-screen-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Bottom lip / hinge area */
+.ve-device-macbook-base {
+  position: relative;
+  width: 104%;
+  margin-left: -2%;
+  height: 8px;
+  background: linear-gradient(180deg, #3a3a3c 0%, #2c2c2e 40%, #1c1c1e 100%);
+  border-radius: 0 0 4px 4px;
+  border: 1px solid #3a3a3c;
+  border-top: 1px solid #4a4a4c;
+}
+
+/* Hinge indent line */
+.ve-device-macbook-base::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: #4a4a4c;
+  border-radius: 1px;
+}
+
+/* Feet pad beneath the base */
+.ve-device-macbook-base::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  background: linear-gradient(180deg, #1c1c1e, #0f0f10);
+  border-radius: 0 0 3px 3px;
+}
+
+/* ── iPhone 15 Pro ───────────────────────────────────────────────────── */
+.ve-device-iphone {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+  margin-inline: auto;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+}
+
+/* Titanium frame */
+.ve-device-iphone-frame {
+  position: relative;
+  border-radius: 28px;
+  padding: 5px;
+  background: linear-gradient(160deg, #48484a 0%, #2c2c2e 30%, #1c1c1e 70%, #2c2c2e 100%);
+  border: 0.5px solid #5a5a5c;
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Side buttons — volume */
+.ve-device-iphone-frame::before {
+  content: '';
+  position: absolute;
+  left: -2.5px;
+  top: 22%;
+  width: 2px;
+  height: 10%;
+  border-radius: 1px 0 0 1px;
+  background: linear-gradient(180deg, #3a3a3c, #2c2c2e);
+  box-shadow:
+    0 16px 0 0 #2c2c2e,
+    0 17px 0 0 #2c2c2e;
+}
+
+/* Side button — power */
+.ve-device-iphone-frame::after {
+  content: '';
+  position: absolute;
+  right: -2.5px;
+  top: 26%;
+  width: 2px;
+  height: 12%;
+  border-radius: 0 1px 1px 0;
+  background: linear-gradient(180deg, #3a3a3c, #2c2c2e);
+}
+
+/* Screen area */
+.ve-device-iphone-screen {
+  position: relative;
+  border-radius: 24px;
+  background: #0a0a0f;
+  overflow: hidden;
+  aspect-ratio: 9 / 19.5;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+}
+
+/* Glass reflection */
+.ve-device-iphone-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    130deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.02) 39%,
+    rgba(255, 255, 255, 0.03) 43%,
+    transparent 44%
+  );
+  border-radius: inherit;
+}
+
+/* Dynamic Island */
+.ve-device-iphone-island {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  width: 30%;
+  height: 10px;
+  border-radius: 99px;
+  background: #000;
+  box-shadow:
+    0 0 0 0.5px #1c1c1e,
+    inset 0 0.5px 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Camera lens inside the island */
+.ve-device-iphone-island::before {
+  content: '';
+  position: absolute;
+  right: 18%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0c0c14 40%, #1a1a2e 70%);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+/* Scale real components into device frames */
+.ve-device-scale-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ve-device-scale-inner {
+  transform-origin: top left;
+  width: var(--scale-width);
+  min-height: 100%;
+}
+
+.ve-device-scale-macbook {
+  --scale-width: 1200px;
+  transform: scale(calc(100% / 1200));
+  transform: scale(0.52);
+}
+
+.ve-device-scale-iphone {
+  --scale-width: 420px;
+  transform: scale(0.45);
+}
+
+@media (max-width: 639px) {
+  .ve-device-macbook {
+    max-width: 360px;
+  }
+
+  .ve-device-iphone {
+    max-width: 150px;
+  }
+
+  .ve-device-macbook-lid {
+    padding: 5px 5px 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .ve-device-macbook-notch {
+    height: 5px;
+  }
+
+  .ve-device-macbook-screen {
+    border-radius: 4px;
+  }
+
+  .ve-device-scale-macbook {
+    transform: scale(0.3);
+  }
+
+  .ve-device-scale-iphone {
+    transform: scale(0.34);
+  }
+
+  .ve-device-iphone-frame {
+    border-radius: 22px;
+    padding: 4px;
+  }
+
+  .ve-device-iphone-screen {
+    border-radius: 19px;
   }
 }
