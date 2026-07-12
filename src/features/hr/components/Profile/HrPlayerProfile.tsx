@@ -7,23 +7,38 @@
  *
  * Design:
  *   - True full-screen (inset-0), no narrow max-w pocket
- *   - Rich SVG graphs for verified team and recent-form evidence,
+ *   - Rich SVG graphs: grouped bar chart for BvP, EV bar chart for team/form,
  *     wide horizontal rank bars for layers, big sparklines
  *   - Full CSS token system — zero hardcoded hex
  *   - Framer Motion slide-up entry + ESC to close
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
-  Zap, BarChart2, Target, Users, Activity, ChevronRight, ShieldQuestion,
+  BarChart2, Target, Users, Activity,
 } from 'lucide-react';
 import type { HrWatchRow } from '../../types/hrWatch';
-import { fetchRealGameLog, lastNGames, gamesAgainstOpponent, type RealGameLog } from '../../utils/realGameLogs';
+import { lastNGames, gamesAgainstOpponent } from '../../utils/realGameLogs';
+import { generateBvPLogs, bvpCareerTotals } from '../../utils/bvpSimulated';
+import { useRealGameLog } from '../../hooks/useRealGameLog';
+import { logoByTeamName } from '../../../../lib/teamLogos';
 import { Z8_LABEL } from '../../../../theme/z8Tokens';
-import './hr-player-profile.css';
+import {
+  BvPSeasonChart,
+  FormTrendChart,
+  GameLogEmpty,
+  GameLogLoading,
+  HrActivityChart,
+  LayerHorizontalChart,
+  LayerRadarChart,
+  ProductionBarChart,
+  SimulatedBadge,
+  type LayerChartRow,
+} from './HrProfileCharts';
+import { HrOverviewDossier } from './HrOverviewDossier';
+import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -70,48 +85,7 @@ function tierConfig(score: number) {
   return             { label: 'FADE',    color: 'rgba(255,255,255,0.4)', rgb: '255,255,255', icon: <Minus className="h-3.5 w-3.5" /> };
 }
 
-// ─── Simulated data (BvP only) ────────────────────────────────────────────────
-// Real per-batter-vs-THIS-PITCHER history needs a real pitcher MLB id, which
-// HrWatchRow doesn't carry (only pitcherName, a display string) — matching a
-// name to an id reliably isn't safe to do client-side. "Recent Form" and
-// "vs Team" below use REAL data instead (see utils/realGameLogs.ts), since
-// those only require the batter's own id, which is real (player.playerId).
-
-interface BvPLog { season: string; pa: number; hrs: number; avg: number; slg: number; obp: number; }
-
-function rng(seed: number, n: number) { return ((seed * 9301 + 49297 + n * 6547) % 233280) / 233280; }
-function seedOf(s: string) { return s.split('').reduce((a, c) => a + c.charCodeAt(0), 0); }
-
-function genBvP(player: string, pitcher: string): BvPLog[] {
-  const s = seedOf(player + pitcher);
-  return ['2021','2022','2023','2024','2025'].map((season, i) => {
-    const pa   = Math.round(4 + rng(s, i * 3) * 18);
-    const hrs  = Math.round(rng(s, i * 3 + 1) * Math.min(pa * 0.18, 3));
-    const avg  = Math.min(+(0.18 + rng(s, i * 3 + 2) * 0.22).toFixed(3), 0.500);
-    const slg  = Math.min(+(avg + 0.08 + (hrs / Math.max(pa, 1)) * 3 + rng(s, i * 7) * 0.15).toFixed(3), 0.900);
-    const obp  = Math.min(+(avg + 0.04 + rng(s, i * 5) * 0.09).toFixed(3), 0.600);
-    return { season, pa, hrs, avg, slg, obp };
-  });
-}
-
 // ─── SVG Chart Primitives ─────────────────────────────────────────────────────
-
-const Sparkline: React.FC<{ values: number[]; color: string; w?: number; h?: number }> = ({ values, color, w = 200, h = 48 }) => {
-  if (values.length < 2) return null;
-  const pad = 4;
-  const iw = w - pad * 2, ih = h - pad * 2;
-  const mx = Math.max(...values, 0.01);
-  const pts = values.map((v, i) => `${pad + (i / (values.length - 1)) * iw},${pad + ih - (v / mx) * ih}`);
-  const lx = parseFloat(pts[pts.length - 1].split(',')[0]);
-  const ly = parseFloat(pts[pts.length - 1].split(',')[1]);
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none" style={{ width: '100%', height: h }}>
-      <polygon points={`${pad},${pad+ih} ${pts.join(' ')} ${lx},${pad+ih}`} fill={color} opacity="0.12" />
-      <polyline points={pts.join(' ')} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9" />
-      <circle cx={lx} cy={ly} r="3" fill={color} />
-    </svg>
-  );
-};
 
 /** Horizontal rank bar with league-avg tick */
 const RankBar: React.FC<{ value: number | null | undefined; avg?: number; color: string }> = ({ value, avg = 50, color }) => {
@@ -146,153 +120,6 @@ const Arc: React.FC<{ value: number; color: string; label: string; size?: number
   );
 };
 
-/** BvP grouped bar chart — premium matchup trend */
-const BvPBarChart: React.FC<{ logs: BvPLog[]; w?: number; h?: number }> = ({ logs, w = 520, h = 170 }) => {
-  if (!logs.length) return null;
-
-  const pad = { t: 18, r: 18, b: 42, l: 42 };
-  const iw = w - pad.l - pad.r;
-  const ih = h - pad.t - pad.b;
-  const maxValue = Math.max(0.75, ...logs.flatMap((row) => [row.avg, row.slg, row.obp]));
-  const groupW = iw / logs.length;
-  const bw = Math.max(10, groupW * 0.18);
-  const yLines = [0, 0.2, 0.4, 0.6, 0.8].filter((v) => v <= maxValue + 0.05);
-
-  const yFor = (value: number) => pad.t + ih - (value / maxValue) * ih;
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-      <div className="mb-2 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/60">Pitcher matchup trend</p>
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30">AVG / OBP / SLG by season</p>
-        </div>
-        <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-white/40">
-          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> AVG</span>
-          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> OBP</span>
-          <span className="inline-flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-amber-300" /> SLG</span>
-        </div>
-      </div>
-
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%' }}>
-        <defs>
-          <linearGradient id="avgBarGradient" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.35" />
-          </linearGradient>
-          <linearGradient id="obpBarGradient" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#059669" stopOpacity="0.35" />
-          </linearGradient>
-          <linearGradient id="slgBarGradient" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0.35" />
-          </linearGradient>
-        </defs>
-
-        {yLines.map((v) => {
-          const y = yFor(v);
-          return (
-            <g key={v}>
-              <line x1={pad.l} y1={y} x2={w - pad.r} y2={y} stroke="rgba(148,163,184,0.16)" strokeWidth="1" strokeDasharray="4 4" />
-              <text x={pad.l - 7} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(226,232,240,0.45)">{v.toFixed(1)}</text>
-            </g>
-          );
-        })}
-
-        {logs.map((row, i) => {
-          const x = pad.l + i * groupW + groupW / 2;
-          const avgH = (row.avg / maxValue) * ih;
-          const obpH = (row.obp / maxValue) * ih;
-          const slgH = (row.slg / maxValue) * ih;
-          const bars = [
-            { key: 'avg', value: row.avg, h: avgH, fill: 'url(#avgBarGradient)', dx: -bw - 3 },
-            { key: 'obp', value: row.obp, h: obpH, fill: 'url(#obpBarGradient)', dx: 0 },
-            { key: 'slg', value: row.slg, h: slgH, fill: 'url(#slgBarGradient)', dx: bw + 3 },
-          ];
-
-          return (
-            <g key={row.season}>
-              {bars.map((bar) => (
-                <rect
-                  key={bar.key}
-                  x={x + bar.dx - bw / 2}
-                  y={pad.t + ih - bar.h}
-                  width={bw}
-                  height={Math.max(2, bar.h)}
-                  rx={4}
-                  fill={bar.fill}
-                >
-                  <title>{row.season} {bar.key.toUpperCase()}: {bar.value.toFixed(3)}</title>
-                </rect>
-              ))}
-
-              {row.hrs > 0 && (
-                <g>
-                  <circle cx={x + bw + 3} cy={Math.max(10, yFor(row.slg) - 10)} r={6} fill="#fbbf24" opacity="0.95" />
-                  <text x={x + bw + 3} y={Math.max(13, yFor(row.slg) - 7)} textAnchor="middle" fontSize="7" fontWeight="900" fill="#020617">{row.hrs}</text>
-                </g>
-              )}
-
-              <text x={x} y={h - 18} textAnchor="middle" fontSize="10" fontWeight="800" fill="rgba(226,232,240,0.55)">{row.season}</text>
-              <text x={x} y={h - 5} textAnchor="middle" fontSize="8" fill="rgba(148,163,184,0.5)">{row.pa} PA</text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-};
-
-/** EV bar chart per game */
-/** Real per-game production bar chart — total bases (singles=1, 2B=2, 3B=3, HR=4). Exit velocity isn't in the public MLB Stats API gameLog feed, so this uses a real metric that is. */
-const ProductionBarChart: React.FC<{ logs: RealGameLog[]; h?: number }> = ({ logs, h = 100 }) => {
-  if (!logs.length) return null;
-  const w = 500;
-  const pad = { t: 10, r: 8, b: 24, l: 24 };
-  const iw = w - pad.l - pad.r;
-  const ih = h - pad.t - pad.b;
-  const maxTB = Math.max(4, ...logs.map((g) => g.totalBases));
-  const bw = Math.max(6, (iw / logs.length) - 4);
-  const yLines = [0, 2, 4, 6].filter((v) => v <= maxTB || v === 0);
-  return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%' }}>
-      {yLines.map(v => {
-        const y = pad.t + ih - (v / maxTB) * ih;
-        return (
-          <g key={v}>
-            <line x1={pad.l} y1={y} x2={w - pad.r} y2={y} stroke="rgba(255,255,255,0.18)" strokeWidth="1" strokeDasharray="3 3" />
-            <text x={pad.l - 4} y={y + 4} textAnchor="end" fontSize="8" fill="rgba(255,255,255,0.4)">{v}</text>
-          </g>
-        );
-      })}
-      {/* Extra-base-hit threshold */}
-      {(() => {
-        const y = pad.t + ih - (2 / maxTB) * ih;
-        return <line x1={pad.l} y1={y} x2={w - pad.r} y2={y} stroke="#fbbf24" strokeWidth="1" strokeDasharray="4 2" opacity="0.5" />;
-      })()}
-      {logs.map((g, i) => {
-        const barH = Math.max(2, (g.totalBases / maxTB) * ih);
-        const x = pad.l + i * (iw / logs.length) + (iw / logs.length - bw) / 2;
-        const color = g.hrs > 0 ? '#fbbf24' : g.totalBases >= 2 ? '#00FF94' : g.hits > 0 ? '#00F0FF' : 'rgba(255,255,255,0.15)';
-        return (
-          <g key={i}>
-            <rect x={x} y={pad.t + ih - barH} width={bw} height={barH} rx={2} fill={color} opacity="0.8">
-              <title>{g.date} vs {g.opponentAbbr}: {g.hits}-{g.ab}, {g.totalBases} TB</title>
-            </rect>
-            <text x={x + bw / 2} y={h - pad.b + 12} textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.4)">{g.opponentAbbr}</text>
-          </g>
-        );
-      })}
-      {/* Legend */}
-      <rect x={pad.l} y={h - 6} width={6} height={4} rx={1} fill="#fbbf24" opacity="0.8" />
-      <text x={pad.l + 8} y={h - 2} fontSize="7" fill="rgba(255,255,255,0.4)">HR game</text>
-      <line x1={pad.l + 50} y1={h - 4} x2={pad.l + 60} y2={h - 4} stroke="#fbbf24" strokeWidth="1" strokeDasharray="3 1" opacity="0.6" />
-      <text x={pad.l + 62} y={h - 2} fontSize="7" fill="rgba(255,255,255,0.4)">2+ total bases</text>
-    </svg>
-  );
-};
-
 // ─── Sub-section header ────────────────────────────────────────────────────────
 
 const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simulated?: boolean }> = ({ icon, title, sub, simulated }) => (
@@ -301,15 +128,7 @@ const Sec: React.FC<{ icon: React.ReactNode; title: string; sub?: string; simula
     <div>
       <div className="flex items-center gap-2">
         <p className="text-sm font-black uppercase tracking-[0.16em] text-white">{title}</p>
-        {simulated && (
-          <span
-            className="rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em]"
-            style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24' }}
-            title="Illustrative — real head-to-head/per-game history isn't available yet, this is a modeled example, not this player's actual record"
-          >
-            Simulated
-          </span>
-        )}
+        {simulated && <SimulatedBadge />}
       </div>
       {sub && <p className="text-[10px] text-white/40">{sub}</p>}
     </div>
@@ -322,7 +141,7 @@ const Dot: React.FC<{ hrs: number }> = ({ hrs }) => (
 
 // ─── Layer definitions ─────────────────────────────────────────────────────────
 
-interface LayerRow { id: string; label: string; icon: string; value: number | null | undefined; weight: number; avg: number; color: string; }
+interface LayerRow extends LayerChartRow { icon: string; avg: number; color: string; }
 
 function getLayers(p: HrWatchRow | null): LayerRow[] {
   if (!p) return [];
@@ -347,32 +166,11 @@ function getLayers(p: HrWatchRow | null): LayerRow[] {
 export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen, onClose }) => {
   const [imgErr, setImgErr] = useState(false);
   const [activeSection, setActiveSection] = useState<'overview' | 'layers' | 'bvp' | 'team' | 'form'>('overview');
-  const [realLog, setRealLog] = useState<RealGameLog[] | null>(null);
-  const [realLogState, setRealLogState] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  const { logs: realLog, state: realLogState } = useRealGameLog(player?.playerId, isOpen);
 
   useEffect(() => {
     if (isOpen) { setImgErr(false); setActiveSection('overview'); }
   }, [isOpen, player?.stableId]);
-
-  // Real per-game hitting log (used for "Recent Form" + "vs Team") — only
-  // needs the batter's own MLB id, unlike BvP which needs a pitcher id we
-  // don't have.
-  useEffect(() => {
-    if (!isOpen || !player?.playerId) { setRealLog(null); setRealLogState('idle'); return; }
-    let alive = true;
-    setRealLogState('loading');
-    fetchRealGameLog(player.playerId).then((logs) => {
-      if (!alive) return;
-      if (logs && logs.length > 0) {
-        setRealLog(logs);
-        setRealLogState('ready');
-      } else {
-        setRealLog(null);
-        setRealLogState('unavailable');
-      }
-    });
-    return () => { alive = false; };
-  }, [isOpen, player?.playerId]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -390,9 +188,11 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
+  const bvpLogs  = useMemo(() => player ? generateBvPLogs(player.playerName, player.pitcherName ?? '') : [], [player?.playerName, player?.pitcherName]);
   const formLogs = useMemo(() => lastNGames(realLog ?? [], 10), [realLog]);
   const teamLogs = useMemo(() => player ? gamesAgainstOpponent(realLog ?? [], player.opponent, 5) : [], [realLog, player?.opponent]);
 
+  const bvpCareer = useMemo(() => bvpCareerTotals(bvpLogs), [bvpLogs]);
 
   const compositeScore = useMemo(() => {
     const ls = getLayers(player);
@@ -402,7 +202,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   }, [player]);
 
   // ── All hooks above ── null guard safe ──
-  if (!player || typeof document === 'undefined') return null;
+  if (!player) return null;
 
   const tier    = tierConfig(player.hrScore);
   const layers  = getLayers(player);
@@ -413,25 +213,18 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   const formTB  = formLogs.length > 0 ? +(formLogs.reduce((s, g) => s + g.totalBases, 0) / formLogs.length).toFixed(1) : 0;
   const teamHRs = teamLogs.reduce((s, g) => s + g.hrs, 0);
   const teamTB  = teamLogs.length > 0 ? +(teamLogs.reduce((s, g) => s + g.totalBases, 0) / teamLogs.length).toFixed(1) : 0;
-  const maxTBForSeries = Math.max(4, ...formLogs.map(g => g.totalBases), 1);
-  const TBSeries = formLogs.map(g => g.totalBases / maxTBForSeries);
+  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
+  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
 
   const NAV = [
     { id: 'overview' as const, label: 'Overview' },
     { id: 'layers'   as const, label: '12 Layers' },
-    { id: 'bvp'      as const, label: 'Matchup Data' },
+    { id: 'bvp'      as const, label: `vs ${player.pitcherName?.split(' ').pop() ?? 'Pitcher'}` },
     { id: 'team'     as const, label: `vs ${player.opponent}` },
     { id: 'form'     as const, label: 'Recent Form' },
   ];
 
-  // ─── Score arcs for sidebar ───────────────────────────────────────────────
-  const ARCS = [
-    { value: player.hrScore,                label: 'HR Score',   color: tier.color },
-    { value: compositeScore,                  label: 'Composite',  color: '#fbbf24' },
-    { value: player.hitterPower ?? 0,         label: 'Power',      color: '#00F0FF' },
-  ];
-
-  return createPortal(
+  return (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -441,8 +234,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="fixed inset-y-0 left-0 right-0 z-30 md:left-[72px] xl:left-[280px]"
-            style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(10px)' }}
+            className="ve-hr-profile-backdrop fixed inset-0 z-50"
             aria-hidden="true"
           />
 
@@ -454,26 +246,25 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="hr-profile fixed inset-y-0 left-0 right-0 z-[60] flex min-w-0 flex-col overflow-hidden md:left-[72px] lg:flex-row xl:left-[280px]"
+            className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
-            <div
-              className="hr-profile__rail relative flex-shrink-0 overflow-hidden lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto xl:w-80"
-            >
+            <div className="ve-hr-profile-sidebar relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
               {/* Close button */}
               <button
                 onClick={onClose} aria-label="Close"
-                className="hr-profile__close absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center transition-colors"
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}
               >
                 <X className="h-4 w-4" />
               </button>
 
               {/* Hero identity block */}
-              <div className="relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:px-6 lg:pt-8">
+              <div className="relative flex items-center gap-4 p-5 lg:flex-col lg:items-start lg:pt-8">
                 {/* Avatar */}
                 <div className="relative shrink-0">
                   <div
-                    className="hr-profile__portrait flex h-20 w-20 items-center justify-center overflow-hidden lg:h-28 lg:w-28"
+                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 lg:h-24 lg:w-24"
                     style={{ background: `hsl(${hue} 45% 16%)`, ['--tw-ring-color' as string]: `hsl(${hue} 55% 30%)` } as React.CSSProperties}
                   >
                     {showImg ? (
@@ -493,13 +284,16 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
                 {/* Name + meta */}
                 <div className="flex-1 min-w-0 lg:mt-2">
-                  <p className="mb-2 hidden font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-[#00ff94] lg:block">Player intelligence dossier</p>
-                  <h2 className="text-xl font-black leading-[0.95] tracking-[-0.04em] text-white lg:text-3xl">
+                  <h2 className="text-xl font-black leading-tight tracking-tight text-white lg:text-2xl">
                     {player.playerName}
                   </h2>
-                  <p className="mt-0.5 text-xs font-semibold lg:text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {player.team} · vs {player.opponent}
-                  </p>
+                  <div className="ve-hr-team-header mt-2 w-fit">
+                    {teamLogo && <img src={teamLogo} alt="" loading="lazy" decoding="async" />}
+                    <span className="text-xs font-semibold text-white/70">{player.team}</span>
+                    <span className="text-white/30">vs</span>
+                    {oppLogo && <img src={oppLogo} alt="" loading="lazy" decoding="async" />}
+                    <span className="text-xs font-semibold text-white/70">{player.opponent}</span>
+                  </div>
                   {player.pitcherName && (
                     <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
                       vs {player.pitcherName}
@@ -531,31 +325,23 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                 </div>
               </div>
 
-              {/* Score arc grid — desktop sidebar only */}
-              <div className="hidden px-6 lg:block">
-                <p className="mb-3 font-mono text-[9px] font-black uppercase tracking-[0.22em] text-white/35">Decision signals</p>
-                <div className="grid grid-cols-3 gap-1 border-y border-white/10 py-4">
-                  {ARCS.map(a => (
-                    <Arc key={a.label} value={a.value} color={a.color} label={a.label} size={76} />
-                  ))}
+              {/* Sidebar composite — replaces 6-arc wall */}
+              <div className="ve-hr-sidebar-composite hidden px-5 lg:block">
+                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">Weighted composite</p>
+                <p className="ve-hr-sidebar-composite-score mt-1">{compositeScore}</p>
+                <div className="ve-hr-sidebar-composite-row">
+                  <span>Power <strong>{fmtScore(player.hitterPower)}</strong></span>
+                  <span>Pitcher <strong>{fmtScore(player.pitcherVulnerability)}</strong></span>
+                  <span>Form <strong>{fmtScore(player.recentForm)}</strong></span>
                 </div>
-
-                {/* Vegas edge callout */}
                 {player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null && (() => {
                   const edge = player.hrProbability - player.impliedProbability;
-                  const pos = edge >= 0.02, neg = edge <= -0.02;
+                  const pos = edge >= 0.02;
+                  const neg = edge <= -0.02;
                   return (
-                    <div className="mt-4 rounded-2xl p-3" style={{ background: pos ? 'rgba(0,255,148,0.08)' : neg ? 'rgba(251,113,133,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid hsl(var(--${pos ? 've-success' : neg ? 've-danger' : 've-border'}) / 0.3)` }}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>VouchEdge Signal</p>
-                          <p className="mt-0.5 text-2xl font-black" style={{ color: pos ? '#00FF94' : neg ? '#fb7185' : 'rgba(255,255,255,0.4)' }}>
-                            {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(2)}%
-                          </p>
-                        </div>
-                        <Zap className="h-8 w-8 opacity-15" style={{ color: pos ? '#00FF94' : 'rgba(255,255,255,0.4)' }} />
-                      </div>
-                    </div>
+                    <p className={`mt-3 font-mono text-[11px] ${pos ? 'text-emerald-400/90' : neg ? 'text-rose-400/90' : 'text-white/40'}`}>
+                      Edge {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(1)}%
+                    </p>
                   );
                 })()}
               </div>
@@ -567,7 +353,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
                     <button
                       key={n.id}
                       onClick={() => setActiveSection(n.id)}
-                      className="hr-profile__nav-item flex items-center gap-3 px-3 py-2.5 text-left text-xs font-bold uppercase tracking-[0.08em] transition-all"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-all"
                       style={{
                         background: activeSection === n.id ? `rgba(${tier.rgb}, 0.12)` : 'transparent',
                         color: activeSection === n.id ? tier.color : 'rgba(255,255,255,0.4)',
@@ -582,14 +368,13 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
               {/* Nav — mobile horizontal scroll strip */}
               <div
-                className="flex gap-0 overflow-x-auto scrollbar-none border-t px-2 lg:hidden"
-                style={{ borderColor: 'rgba(255,255,255,0.25)' }}
+                className="ve-hr-nav-scroll border-t border-white/10 px-2 lg:hidden"
               >
                 {NAV.map(n => (
                   <button
                     key={n.id}
                     onClick={() => setActiveSection(n.id)}
-                    className="relative flex-shrink-0 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] transition-colors"
+                    className="ve-hr-profile-nav-btn relative flex-shrink-0 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] transition-colors"
                     style={{ color: activeSection === n.id ? tier.color : 'rgba(255,255,255,0.4)' }}
                   >
                     {n.label}
@@ -602,25 +387,20 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             </div>
 
             {/* ── RIGHT CONTENT AREA ──────────────────────────────────────────── */}
-            <div
-              className="hr-profile__content flex-1 overflow-y-auto"
-            >
-              {/* Desktop right border */}
-              <div className="hidden h-full lg:block">
-                <div className="mx-auto max-w-[1320px] p-8 xl:p-10 2xl:p-12">
+            <div className="ve-hr-profile-content flex-1 overflow-y-auto">
+              <div className="hidden h-full border-l border-white/10 lg:block">
+                <div className="p-6 xl:p-8">
                   {renderContent()}
                 </div>
               </div>
-              {/* Mobile content */}
-              <div className="p-4 sm:p-5 lg:hidden">
+              <div className="lg:hidden p-4">
                 {renderContent()}
               </div>
             </div>
           </motion.div>
         </>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
   );
 
   // ─── Content renderer ────────────────────────────────────────────────────────
@@ -629,99 +409,28 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
       <>
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeSection === 'overview' && (
-          <div className="flex flex-col gap-6">
-
-            {/* Mobile score arcs */}
-            <div className="hr-profile__panel p-4 lg:hidden">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Score Breakdown</p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {ARCS.map(a => (
-                  <Arc key={a.label} value={a.value} color={a.color} label={a.label} size={72} />
-                ))}
-              </div>
-            </div>
-
-            {/* Key stats — 4-col grid on desktop */}
-            <div>
-              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Key Metrics</p>
-              <div className="hr-profile__metrics grid grid-cols-2 sm:grid-cols-4">
-                {[
-                  { label: 'HR Score',       value: fmtScore(player.hrScore),              color: tier.color },
-                  { label: 'Edge Score',      value: fmtScore(player.vouchScore),           color: '#fbbf24' },
-                  { label: 'Model HR%',       value: fmtPct(player.hrProbability),          color: '#00F0FF' },
-                  { label: 'Book Implied',    value: fmtPct(player.impliedProbability),     color: '#00F0FF' },
-                  { label: 'Hitter Power',    value: fmtScore(player.hitterPower),          color: '#00F0FF' },
-                  { label: 'Pitcher Risk',    value: fmtScore(player.pitcherVulnerability), color: '#fb7185' },
-                  { label: 'Park Factor',     value: fmtScore(player.parkFactor),           color: '#00F0FF' },
-                  { label: 'Data Confidence', value: fmtScore(player.dataConfidence),       color: '#00FF94' },
-                ].map(s => (
-                  <div
-                    key={s.label}
-                    className="hr-profile__metric flex min-h-24 flex-col justify-between gap-3 p-4"
-                  >
-                    <span className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
-                    <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile Vegas signal */}
-            {player.bookOdds != null && player.hrProbability != null && player.impliedProbability != null && (() => {
-              const edge = player.hrProbability - player.impliedProbability;
-              const pos = edge >= 0.02, neg = edge <= -0.02;
-              return (
-                <div className="lg:hidden rounded-2xl p-4" style={{ background: pos ? 'rgba(0,255,148,0.08)' : neg ? 'rgba(251,113,133,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid hsl(var(--${pos ? 've-success' : neg ? 've-danger' : 've-border'}) / 0.3)` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>VouchEdge Signal</p>
-                      <p className="mt-0.5 text-3xl font-black" style={{ color: pos ? '#00FF94' : neg ? '#fb7185' : 'rgba(255,255,255,0.4)' }}>
-                        {edge >= 0 ? '+' : ''}{(edge * 100).toFixed(2)}%
-                      </p>
-                    </div>
-                    <Zap className="h-10 w-10 opacity-15" style={{ color: pos ? '#00FF94' : 'rgba(255,255,255,0.4)' }} />
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Top signals */}
-            {(player.reasons?.length ?? 0) > 0 && (
-              <div>
-                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Top Signals</p>
-                <div className="flex flex-col gap-2">
-                  {player.reasons!.map((r, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.28)' }}>
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0" style={{ color: tier.color }} />
-                      <span className="text-sm" style={{ color: '#ffffff' }}>{r}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Warnings */}
-            {(player.warnings?.length ?? 0) > 0 && (
-              <div>
-                <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: '#fbbf24' }}>⚠️ Warnings</p>
-                <div className="flex flex-col gap-2">
-                  {player.warnings!.map((w, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-xl p-3.5" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)' }}>
-                      <span className="text-sm" style={{ color: '#fbbf24' }}>{w}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <HrOverviewDossier
+            player={player}
+            formLogs={formLogs}
+            logState={realLogState}
+            variant="full"
+          />
         )}
 
         {/* ── 12 LAYERS ──────────────────────────────────────────────────────── */}
         {activeSection === 'layers' && (
           <div className="flex flex-col gap-6">
-            <Sec icon={<BarChart2 className="h-4 w-4" style={{ color: '#00F0FF' }} />} title="12-Layer Score Breakdown" sub="Scored 0–100 per layer · dashed line = league average" />
+            <Sec icon={<BarChart2 className="h-4 w-4 text-cyan-400" />} title="12-Layer Score Breakdown" sub="Recharts radar + bars · dashed line = league average" />
 
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
+            <div className="ve-hr-chart-panel mb-4">
+              <LayerRadarChart layers={layers} height={280} />
+            </div>
+
+            <div className="ve-hr-chart-panel mb-4">
+              <LayerHorizontalChart layers={layers} height={340} />
+            </div>
+
+            <div className="rounded-2xl overflow-hidden border border-white/10">
               {layers.map((l, idx) => {
                 const val = l.value;
                 const rank = val == null ? '—' : val >= 75 ? 'Elite' : val >= 60 ? 'Above Avg' : val >= 40 ? 'Avg' : 'Below';
@@ -767,18 +476,69 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
 
         {/* ── BvP ─────────────────────────────────────────────────────────────── */}
         {activeSection === 'bvp' && (
-          <div className="flex min-h-[24rem] flex-col gap-6">
+          <div className="flex flex-col gap-6">
             <Sec
               icon={<Target className="h-4 w-4" style={{ color: '#00F0FF' }} />}
-              title="Verified matchup evidence"
-              sub={`Batter-versus-pitcher history for ${player.pitcherName ?? 'the probable pitcher'}`}
+              title={`vs ${player.pitcherName ?? 'Pitcher'}`}
+              sub="Simulated — no pitcher ID available to fetch real BvP history"
+              simulated
             />
-            <div className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.025] p-8 text-center">
-              <div className="max-w-lg">
-                <ShieldQuestion className="mx-auto h-10 w-10 text-cyan-200/60" />
-                <h3 className="mt-4 text-xl font-black text-white">Matchup history is not verified yet</h3>
-                <p className="mt-2 text-sm leading-6 text-white/45">The current board provides the pitcher name but not a verified MLB pitcher identifier. Home Run Intelligence will not generate or infer batter-versus-pitcher records from a name.</p>
-                <div className="mt-5 border border-[hsl(var(--ve-success)/0.15)] bg-[hsl(var(--ve-success)/0.05)] px-4 py-3 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#8affcd]">Excluded from the decision until an official source is available</div>
+
+            {/* Career summary chips */}
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+              {[
+                { label: 'Career PA',  value: bvpCareer.pa,          color: '#ffffff' },
+                { label: 'Career HR',  value: bvpCareer.hrs,          color: '#fbbf24' },
+                { label: 'Career AVG', value: bvpCareer.avg,          color: '#ffffff' },
+                { label: 'Career SLG', value: bvpCareer.slg,          color: '#00FF94' },
+                { label: 'HR / PA',    value: `${bvpCareer.hrPct}%`,  color: '#00F0FF' },
+              ].map(s => (
+                <div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
+                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* BvP bar chart */}
+            <div className="ve-hr-chart-panel">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">AVG + OBP + SLG by season (Recharts)</p>
+              <BvPSeasonChart logs={bvpLogs} height={170} />
+            </div>
+
+            {/* Season table */}
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.35)' }}>
+              <div className="grid grid-cols-6 gap-0 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.18em]" style={{ background: '#050505', color: 'rgba(255,255,255,0.4)' }}>
+                <span>Season</span><span className="text-right">PA</span><span className="text-right">HR</span><span className="text-right">AVG</span><span className="text-right">SLG</span><span className="text-right">OBP</span>
+              </div>
+              {bvpLogs.map((row, i) => (
+                <div key={row.season} className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: i % 2 === 0 ? '#0A0A0A' : 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                  <span className="text-sm font-bold" style={{ color: '#ffffff' }}>{row.season}</span>
+                  <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{row.pa}</span>
+                  <span className="text-right text-sm font-bold tabular-nums" style={{ color: row.hrs > 0 ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}>{row.hrs}</span>
+                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.avg.toFixed(3)}</span>
+                  <span className="text-right text-sm font-semibold tabular-nums" style={{ color: row.slg > 0.450 ? '#00FF94' : '#ffffff' }}>{row.slg.toFixed(3)}</span>
+                  <span className="text-right text-sm tabular-nums" style={{ color: '#ffffff' }}>{row.obp.toFixed(3)}</span>
+                </div>
+              ))}
+              <div className="grid grid-cols-6 gap-0 px-4 py-3" style={{ background: '#050505', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
+                <span className="text-xs font-black uppercase" style={{ color: '#00F0FF' }}>Career</span>
+                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#00F0FF' }}>{bvpCareer.pa}</span>
+                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>{bvpCareer.hrs}</span>
+                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.avg}</span>
+                <span className="text-right text-sm font-bold tabular-nums" style={{ color: '#ffffff' }}>{bvpCareer.slg}</span>
+                <span className="text-right text-sm tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>—</span>
+              </div>
+            </div>
+
+            {/* Verdict */}
+            <div className="flex items-center gap-4 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
+              {Number(bvpCareer.hrs) >= 2 ? <TrendingUp className="h-6 w-6 shrink-0" style={{ color: '#00FF94' }} /> : Number(bvpCareer.hrs) === 0 ? <TrendingDown className="h-6 w-6 shrink-0" style={{ color: '#fb7185' }} /> : <Minus className="h-6 w-6 shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }} />}
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#ffffff' }}>
+                  {Number(bvpCareer.hrs) >= 2 ? `Owns This Pitcher — ${bvpCareer.hrs} career HRs` : Number(bvpCareer.hrs) === 1 ? 'One career HR against this pitcher' : 'No career HRs against this pitcher'}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{bvpCareer.hrPct}% HR rate · {bvpCareer.pa} career PA</p>
               </div>
             </div>
           </div>
@@ -793,22 +553,14 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               sub="Real box-score games this season — total bases per game"
             />
 
-            {realLogState === 'loading' && (
-              <div className="rounded-2xl p-6 text-center text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.4)' }}>
-                Loading real game log from MLB Stats API…
-              </div>
-            )}
+            {realLogState === 'loading' && <GameLogLoading />}
 
             {realLogState === 'unavailable' && (
-              <div className="rounded-2xl p-6 text-center text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.4)' }}>
-                No real game log available for this player right now.
-              </div>
+              <GameLogEmpty message="No real game log available for this player right now." />
             )}
 
             {realLogState === 'ready' && teamLogs.length === 0 && (
-              <div className="rounded-2xl p-6 text-center text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.4)' }}>
-                No games logged against {player.opponent} yet this season.
-              </div>
+              <GameLogEmpty message={`No games logged against ${player.opponent} yet this season.`} />
             )}
 
             {realLogState === 'ready' && teamLogs.length > 0 && (
@@ -829,9 +581,9 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             </div>
 
             {/* Production bar chart */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={teamLogs} h={110} />
+            <div className="ve-hr-chart-panel">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
+              <ProductionBarChart logs={teamLogs} height={130} />
             </div>
 
             {/* Game log table */}
@@ -867,16 +619,10 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
               sub={realLogState === 'ready' ? `Last ${formLogs.length} games — real box-score production` : 'Real box-score production'}
             />
 
-            {realLogState === 'loading' && (
-              <div className="rounded-2xl p-6 text-center text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.4)' }}>
-                Loading real game log from MLB Stats API…
-              </div>
-            )}
+            {realLogState === 'loading' && <GameLogLoading />}
 
             {realLogState === 'unavailable' && (
-              <div className="rounded-2xl p-6 text-center text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.4)' }}>
-                No real game log available for this player right now.
-              </div>
+              <GameLogEmpty message="No real game log available for this player right now." />
             )}
 
             {realLogState === 'ready' && formLogs.length > 0 && (
@@ -897,26 +643,20 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             </div>
 
             {/* Production bar chart */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>Total Bases per Game (gold = HR game)</p>
-              <ProductionBarChart logs={formLogs} h={110} />
+            <div className="ve-hr-chart-panel">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Total Bases per Game (gold = HR game)</p>
+              <ProductionBarChart logs={formLogs} height={130} />
             </div>
 
-            {/* Production sparkline + HR sparkline side by side */}
+            {/* Production trend charts */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>TB Trend</p>
-                <Sparkline values={TBSeries} color="#00F0FF" h={52} />
-                <div className="mt-1 flex justify-between text-[9px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                  <span>G10</span><span>Recent</span>
-                </div>
+              <div className="ve-hr-chart-panel">
+                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">TB Trend + HR line</p>
+                <FormTrendChart logs={formLogs} height={110} />
               </div>
-              <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.35)' }}>
-                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.4)' }}>HR Activity</p>
-                <Sparkline values={formLogs.map(g => g.hrs)} color="#fbbf24" h={52} />
-                <div className="mt-1 flex justify-between text-[9px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                  <span>G10</span><span>Recent</span>
-                </div>
+              <div className="ve-hr-chart-panel">
+                <p className="mb-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/40">HR Activity</p>
+                <HrActivityChart logs={formLogs} height={72} />
               </div>
             </div>
 
