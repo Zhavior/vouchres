@@ -21,6 +21,7 @@ import {
 import LandingLiveGamesCenter from '../components/landing/LandingLiveGamesCenter';
 import LandingFeatureSlideshow from '../components/landing/LandingFeatureSlideshow';
 import LandingJudgesDeck from '../components/landing/LandingJudgesDeck';
+import LandingDeviceShowcase from '../components/landing/LandingDeviceShowcase';
 import LandingStatusTicker from '../components/landing/LandingStatusTicker';
 import '../styles/public-landing.css';
 import '../styles/legacy/welcome-layout.css';
@@ -306,7 +307,6 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
 
   return (
     <>
-      <LandingStatusTicker position="top" />
       <LandingStatusTicker />
 
       <main className={`ve-terminal-page ${Z8_PAGE} relative min-h-screen overflow-x-hidden pb-28 lg:pb-32`}>
@@ -405,57 +405,31 @@ export default function VouchEdgeTerminalPage({ onAuthed }: { onAuthed?: () => v
                 ))}
               </div>
 
-              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+              <div className="ve-terminal-cta-row flex w-full max-w-xl flex-col items-center gap-4">
                 <button
                   type="button"
                   onClick={() => openSignup('free')}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-primary flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black sm:h-14 sm:max-w-[220px]`}
+                  className={`ve-terminal-cta-primary flex h-14 w-full max-w-[260px] items-center justify-center gap-2 rounded-xl border border-vouch-cyan/55 bg-vouch-cyan/10 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-cyan shadow-[0_0_24px_rgba(0,240,255,0.1)] ${Z8_INTERACTIVE} hover:border-vouch-cyan hover:bg-vouch-cyan hover:text-black`}
                 >
                   <Sparkles size={14} />
                   Enter the Edge
                 </button>
-
-                <div className="ve-terminal-cta-secondary-row">
-                  <button
-                    type="button"
-                    onClick={openLogin}
-                    className="text-white/55 transition hover:text-white"
-                  >
-                    Sign in
-                  </button>
-                  <span className="text-white/15" aria-hidden="true">·</span>
-                  <button
-                    type="button"
-                    onClick={() => openSignup('pro')}
-                    className="text-vouch-emerald/80 transition hover:text-vouch-emerald"
-                  >
-                    Explore Pro
-                  </button>
-                </div>
-
                 <button
                   type="button"
                   onClick={openLogin}
                   onFocus={preloadAuthModal}
                   onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/30 font-mono text-[11px] font-bold uppercase tracking-widest text-white/70 sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-cyan/40 hover:text-white`}
+                  className="font-mono text-[10px] uppercase tracking-widest text-white/40 transition hover:text-white/70"
                 >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openSignup('pro')}
-                  onFocus={preloadAuthModal}
-                  onMouseEnter={preloadAuthModal}
-                  className={`ve-terminal-cta-desktop-only hidden h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-vouch-emerald/35 bg-vouch-emerald/8 font-mono text-[11px] font-bold uppercase tracking-widest text-vouch-emerald sm:flex sm:max-w-[220px] ${Z8_INTERACTIVE} hover:border-vouch-emerald/60`}
-                >
-                  Explore Pro
-                  <ChevronRight size={14} />
+                  Already have an account? Sign in
                 </button>
               </div>
             </section>
+
+            {/* Apple-style device showcase — MacBook + iPhone */}
+            <LandingDeviceShowcase />
 
             <LandingLiveGamesCenter />
 
