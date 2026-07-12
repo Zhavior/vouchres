@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
@@ -400,7 +401,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   }, [player]);
 
   // ── All hooks above ── null guard safe ──
-  if (!player) return null;
+  if (!player || typeof document === 'undefined') return null;
 
   const tier    = tierConfig(player.hrScore);
   const layers  = getLayers(player);
@@ -432,7 +433,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     { value: player.parkFactor ?? 0,           label: 'Park',       color: '#00F0FF' },
   ];
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -632,7 +633,8 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 
   // ─── Content renderer ────────────────────────────────────────────────────────
