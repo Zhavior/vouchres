@@ -1,18 +1,44 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, AlertOctagon, Inbox, Brain, ChartNoAxesCombined } from 'lucide-react';
+import { RefreshCw, AlertOctagon, Inbox, Aperture, BellRing, Database, ShieldCheck, ScanSearch, Brain, ChartNoAxesCombined } from 'lucide-react';
 import {
+  Z8_LABEL,
   Z8_PAGE,
   Z8_PAGE_GAP,
   Z8_PAGE_PAD_X,
   Z8_PAGE_PAD_Y,
+  Z8_PANEL_PREMIUM,
+  Z8_STAT_CHIP,
 } from '../../../theme/z8Tokens';
 import { useHrBoardViewModel } from '../hooks/useHrBoardViewModel';
+import { HrHeader } from '../components/Header/HrHeader';
+import { HrToolbar } from '../components/Toolbar/HrToolbar';
 import { HrCommandCenter } from '../components/CommandCenter/HrCommandCenter';
 import { HrBoard } from '../components/Columns/HrBoard';
 import { HrSpreadsheet } from '../components/Table/HrSpreadsheet';
 import { HrPlayerDrawer } from '../components/Drawer/HrPlayerDrawer';
 import { HrPlayerProfile } from '../components/Profile/HrPlayerProfile';
 import { HrTreemap } from '../components/Treemap/HrTreemap';
+import { summarizeHrLens } from '../engine/hrLensModel';
+import { localISODate } from '../utils/localDate';
+import '../../../styles/z8-hr-lens.css';
+
+interface MiniStatChipProps {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  colorClasses: string;
+  glowClasses: string;
+}
+
+const MiniStatChip: React.FC<MiniStatChipProps> = ({ label, value, icon, colorClasses, glowClasses }) => (
+  <div className={`${Z8_STAT_CHIP} flex items-center gap-2.5 transition duration-200 ${colorClasses} ${glowClasses}`}>
+    <div className="flex h-8 w-8 items-center justify-center border border-vouch-cyan/25 bg-vouch-cyan/10 text-vouch-cyan">{icon}</div>
+    <div className="flex flex-col leading-tight">
+      <span className="text-lg font-extrabold text-ve-flash">{value}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-ve-ion/40">{label}</span>
+    </div>
+  </div>
+);
 
 function formatRelativeTime(date: Date | null | undefined): string {
   if (!date) return '—';
@@ -159,8 +185,9 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
 
   const isAllZero = totalCount === 0 && !vm.loading;
   const lastUpdatedLabel = formatRelativeTime(lastUpdated);
-  const isToday = vm.date === new Date().toISOString().slice(0, 10);
+  const isToday = vm.date === localISODate();
   const autoSwitchedToPreview = vm.autoSwitchedToPreview || (vm.mode === 'curated' && (vm.modeCounts?.confirmed ?? 0) === 0);
+  const lensSummary = useMemo(() => summarizeHrLens(vm.rows ?? []), [vm.rows]);
 
   const handleRefresh = React.useCallback(() => {
     vm.refresh?.();
@@ -171,7 +198,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   // 'table' needs the ViewModel to switch its underlying fetch/shape.
   const [localViewMode, setLocalViewMode] = useState<'cards' | 'table' | 'treemap'>(() => {
     if (typeof window === 'undefined') return 'cards';
-    return window.matchMedia('(max-width: 767px)').matches ? 'table' : 'cards';
+    return 'cards';
   });
   const viewMode = localViewMode;
   const handleViewModeChange = (mode: 'cards' | 'table' | 'treemap') => {
@@ -180,14 +207,39 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
   };
 
   return (
-    <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 overflow-x-hidden bg-ve-obsidian text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
-      <div className={`mx-auto flex max-w-[1600px] flex-col ${Z8_PAGE_GAP}`}>
-        {onSectionChange && (
-          <nav className="grid grid-cols-2 gap-2" aria-label="VouchEdge Brain pages">
-            <button type="button" onClick={() => onSectionChange('brain_picks')} className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-vouch-emerald/30 bg-vouch-emerald/8 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-vouch-emerald hover:border-vouch-emerald/55"><Brain className="h-4 w-4" /> Brain Picks · Pro</button>
-            <button type="button" onClick={() => onSectionChange('brain_performance')} className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-white/10 bg-black/25 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-white/55 hover:border-vouch-cyan/30 hover:text-white"><ChartNoAxesCombined className="h-4 w-4" /> Performance · Pro</button>
-          </nav>
-        )}
+    <div className={`${Z8_PAGE} z8-hr-lens ve-page-shell min-h-0 min-w-0 overflow-x-hidden text-ve-flash ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y}`}>
+      <div className={`mx-auto flex max-w-[1720px] flex-col ${Z8_PAGE_GAP}`}>
+        <section className="z8-hr-hero relative overflow-hidden border border-[#00ff94]/20 px-4 py-6 sm:px-7 sm:py-8 lg:px-10">
+          <div className="z8-hr-hero__aperture" aria-hidden="true" />
+          <div className="relative grid gap-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+            <div>
+              <div className="flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[#00ff94]">
+                <ScanSearch className="h-4 w-4" /> Z8 Home Run Intelligence
+              </div>
+              <h1 className="mt-4 max-w-3xl text-3xl font-black leading-[.98] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl">See the power.<br /><span className="text-[#00ff94]">Understand the signal.</span></h1>
+              <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52 sm:text-base">Every candidate is resolved through observable power, pitcher vulnerability, park context and recent form. No hidden certainty. No projected lineup presented as official.</p>
+              <div className="mt-5 flex flex-wrap gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
+                <span className="border border-[hsl(var(--ve-success)/0.2)] bg-[hsl(var(--ve-success)/0.06)] px-2.5 py-1.5 text-[#7dffc5]">Official data first</span>
+                <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Explainable score</span>
+                <span className="border border-white/10 bg-black/25 px-2.5 py-1.5">Alert-safe</span>
+              </div>
+              {onSectionChange && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => onSectionChange('brain_picks')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-vouch-emerald/30 bg-vouch-emerald/8 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-vouch-emerald hover:border-vouch-emerald/55"><Brain className="h-3.5 w-3.5" /> Brain Picks</button><button type="button" onClick={() => onSectionChange('brain_performance')} className="z8-control inline-flex min-h-10 items-center gap-2 border border-white/10 bg-black/25 px-3 font-mono text-[10px] font-bold uppercase tracking-wide text-white/55 hover:border-vouch-cyan/30 hover:text-white"><ChartNoAxesCombined className="h-3.5 w-3.5" /> Performance</button></div>}
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+              {[
+                ['Official', lensSummary.official, <ShieldCheck className="h-3.5 w-3.5" />],
+                ['Preview', lensSummary.projected, <Aperture className="h-3.5 w-3.5" />],
+                ['Full stack', lensSummary.complete, <Database className="h-3.5 w-3.5" />],
+                ['Confidence', lensSummary.averageConfidence == null ? '—' : `${lensSummary.averageConfidence}%`, <BellRing className="h-3.5 w-3.5" />],
+              ].map(([label, value, icon]) => (
+                <div key={String(label)} className="border border-white/10 bg-black/35 px-3 py-3 backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-white/35">{icon}{label}</div>
+                  <div className="mt-1 font-mono text-xl font-black tabular-nums text-white">{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
         <HrCommandCenter
           mode={vm.mode}
           viewMode={viewMode}

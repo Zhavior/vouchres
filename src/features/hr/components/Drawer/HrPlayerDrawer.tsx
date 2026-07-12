@@ -21,7 +21,12 @@ import {
 } from 'lucide-react';
 import type { HrWatchRow, TruthStatus as HrTruthStatus } from '../../types/hrWatch';
 import { HrStatsTab } from '../Stats/HrStatsTab';
+import { HrOverviewDossier } from '../Profile/HrOverviewDossier';
 import { Z8_AMBER_HEX, Z8_CYAN_HEX, Z8_EMERALD_HEX } from '../../../../theme/z8Tokens';
+import { logoByTeamName } from '../../../../lib/teamLogos';
+import { useRealGameLog } from '../../hooks/useRealGameLog';
+import { lastNGames } from '../../utils/realGameLogs';
+import '../../../../styles/hr-profile.css';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -214,6 +219,8 @@ function getLayers(p: HrWatchRow): Array<{
 export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, onClose }) => {
   const [tab, setTab] = useState<DrawerTab>('overview');
   const [imgError, setImgError] = useState(false);
+  const { logs: realLog, state: logState } = useRealGameLog(player?.playerId, isOpen);
+  const formPreview = lastNGames(realLog ?? [], 8);
 
   useEffect(() => {
     if (isOpen) { setTab('overview'); setImgError(false); }
@@ -230,8 +237,8 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
   const palette = getTierPalette(player.hrScore);
   const badge = truthBadge(player.truthStatus);
   const avatarBg = teamColor(player.team);
-  const hasWarnings = Boolean(player.warnings?.length);
-  const reasons = player.reasons ?? [];
+  const teamLogo = player.teamLogoUrl || logoByTeamName(player.team);
+  const oppLogo = player.opponentLogoUrl || logoByTeamName(player.opponent);
   const layers = getLayers(player);
 
   // Vegas edge calculation
@@ -267,10 +274,10 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-[hsl(var(--ve-border)/0.30)] bg-[hsl(var(--ve-bg-deep)/0.97)] shadow-2xl sm:h-full"
+            className="ve-hr-drawer fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[var(--ve-hr-panel)] shadow-2xl sm:h-full"
           >
             {/* ── Header ────────────────────────────────────── */}
-            <div className="relative shrink-0 border-b border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.40)] p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
+            <div className="ve-hr-drawer-header relative shrink-0 border-b border-white/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">
               <button
                 onClick={onClose} aria-label="Close"
                 className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center border border-[hsl(var(--ve-border)/0.35)] bg-[hsl(var(--ve-surface)/0.30)] text-[hsl(var(--ve-text-muted))] transition hover:border-vouch-cyan/35 hover:text-vouch-cyan sm:right-4 sm:top-4 sm:h-8 sm:w-8"
@@ -304,8 +311,16 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
                       {tierLabel(player.hrScore)}
                     </span>
                   </div>
-                  <p className="truncate text-sm text-[hsl(var(--ve-text-muted))]">
-                    {player.team || '—'} <span className="text-[hsl(var(--ve-text-muted)/0.40)]">vs</span> {player.opponent || '—'}
+                  <p className="truncate text-sm text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      {teamLogo && <img src={teamLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {player.team || '—'}
+                    </span>
+                    <span className="mx-1 text-white/25">vs</span>
+                    <span className="inline-flex items-center gap-1">
+                      {oppLogo && <img src={oppLogo} alt="" className="h-4 w-4 object-contain" loading="lazy" />}
+                      {player.opponent || '—'}
+                    </span>
                   </p>
                   {player.pitcherName && (
                     <p className="truncate text-xs text-[hsl(var(--ve-text-muted)/0.55)]">⚾ {player.pitcherName}</p>
@@ -324,42 +339,32 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
               </div>
             </div>
 
-            {/* ── Score bar ────────────────────────────────── */}
-            <div className="shrink-0 border-b border-[hsl(var(--ve-border)/0.24)] p-4 sm:p-5">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[hsl(var(--ve-text-muted)/0.60)]">HR Score</p>
-                  <p className={`text-4xl font-black ${palette.text}`}>{Math.round(player.hrScore)}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1.5">
-                  {player.hrProbability != null && (
-                    <p className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">
-                      {(player.hrProbability * 100).toFixed(1)}%
-                      <span className="ml-1 text-[10px] font-normal text-[hsl(var(--ve-text-muted)/0.55)]">HR prob</span>
-                    </p>
-                  )}
-                  {player.rank != null && (
-                    <div className="flex items-center gap-1 text-[hsl(var(--ve-text-muted)/0.55)]">
-                      <Award className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold">Rank #{player.rank}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Probability progress bar */}
+            {/* ── Metric tape (one line — no duplicate score block) ── */}
+            <div className="ve-hr-metric-tape shrink-0">
+              <span>HR <strong>{Math.round(player.hrScore)}</strong></span>
+              <span className="ve-hr-metric-tape-sep">·</span>
               {player.hrProbability != null && (
-                <div className="mt-3">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[hsl(var(--ve-border)/0.25)]">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${palette.bar}`}
-                      style={{ width: `${Math.min(100, player.hrProbability * 700)}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 flex justify-between text-[9px] text-[hsl(var(--ve-text-muted)/0.40)]">
-                    <span>0%</span><span>7%</span><span>14%+</span>
-                  </div>
-                </div>
+                <>
+                  <span>Model <strong>{(player.hrProbability * 100).toFixed(1)}%</strong></span>
+                  <span className="ve-hr-metric-tape-sep">·</span>
+                </>
+              )}
+              {player.bookOdds != null && (
+                <>
+                  <span>Book <strong>{fmtOdds(player.bookOdds)}</strong></span>
+                  <span className="ve-hr-metric-tape-sep">·</span>
+                </>
+              )}
+              {edgeRaw != null && (
+                <span className={edgePositive ? 've-hr-metric-tape-edge--pos' : edgeNegative ? 've-hr-metric-tape-edge--neg' : ''}>
+                  Edge <strong>{edgeRaw >= 0 ? '+' : ''}{(edgeRaw * 100).toFixed(1)}%</strong>
+                </span>
+              )}
+              {player.rank != null && (
+                <>
+                  <span className="ve-hr-metric-tape-sep ml-auto">·</span>
+                  <span>Rank <strong>#{player.rank}</strong></span>
+                </>
               )}
             </div>
 
@@ -387,63 +392,12 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
 
               {/* OVERVIEW TAB */}
               {tab === 'overview' && (
-                <div className="flex flex-col gap-4">
-                  {/* Quick stats grid */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <StatBox label="Power" value={fmt(player.hitterPower)} />
-                    <StatBox label="Pitcher Risk" value={fmt(player.pitcherVulnerability)} />
-                    <StatBox label="Park" value={fmt(player.parkFactor)} />
-                    <StatBox label="Recent Form" value={fmt(player.recentForm)} />
-                  </div>
-
-                  {/* Confidence */}
-                  {player.dataConfidence != null && (
-                    <div className="rounded-xl border border-[hsl(var(--ve-border)/0.28)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-3.5">
-                      <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-muted)/0.55)]">
-                        Signal Confidence
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[hsl(var(--ve-border)/0.25)]">
-                          <div
-                            className={`h-full rounded-full ${palette.bar}`}
-                            style={{ width: `${Math.max(0, Math.min(100, player.dataConfidence))}%` }}
-                          />
-                        </div>
-                        <span className={`text-sm font-bold ${palette.text}`}>{fmt(player.dataConfidence)}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Warnings */}
-                  {hasWarnings && (
-                    <div className="flex flex-col gap-2">
-                      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-warning)/0.80)]">
-                        <AlertTriangle className="h-3.5 w-3.5" />Warnings
-                      </p>
-                      {player.warnings?.map((w, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-xl border border-[hsl(var(--ve-warning)/0.22)] bg-[hsl(var(--ve-warning)/0.06)] p-3 text-sm text-[hsl(var(--ve-warning))]">
-                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                          <span>{w}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* AI Reasons */}
-                  {reasons.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-[hsl(var(--ve-text-muted)/0.55)]">
-                        <Sparkles className="h-3.5 w-3.5 text-vouch-cyan" />Top Signals
-                      </p>
-                      {reasons.map((r, i) => (
-                        <div key={i} className="flex items-start gap-2.5 rounded-xl border border-[hsl(var(--ve-border)/0.26)] bg-[hsl(var(--ve-bg-panel)/0.28)] p-3 text-sm text-[hsl(var(--ve-text-primary))]">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-vouch-cyan" />
-                          <span>{r}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <HrOverviewDossier
+                  player={player}
+                  formLogs={formPreview}
+                  logState={logState}
+                  variant="drawer"
+                />
               )}
 
               {/* LAYERS TAB */}

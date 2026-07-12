@@ -47,6 +47,8 @@ export interface Leg {
 
 export interface Parlay {
   id: string;
+  /** Stable client-generated identity used for idempotent backend saves. */
+  clientRef?: string;
   title: string;
   legs: Leg[];
   totalOdds: string; // e.g. "+360" or "4.60"
@@ -84,7 +86,7 @@ export interface Parlay {
   /** Backend pick id after /api/parlays accepts this slip. */
   backendPickId?: string;
   /** Whether the backend knows about this slip yet. */
-  backendSyncState?: 'synced' | 'saving' | 'auth_required' | 'legal_required' | 'failed' | 'not_syncable';
+  backendSyncState?: 'synced' | 'saving' | 'auth_required' | 'legal_required' | 'failed' | 'not_syncable' | 'local_only';
   /** Last backend sync timestamp for this slip. */
   backendSyncedAt?: string;
   /** Most recent backend sync error, if any. */

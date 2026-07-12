@@ -2,11 +2,12 @@ import { useMemo } from 'react';
 import { hr } from '../../../kernel';
 import { useVouchResource } from './useVouchResource';
 import type { HrEvent } from '../../../types/notifications';
+import { localISODate } from '../utils/localDate';
 
 const REFRESH_MS = 60_000;
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
 
 export interface HrResultsForDate {

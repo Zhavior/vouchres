@@ -1,4 +1,4 @@
-import { computeCombinedOdds } from "../../components/parlay/types/parlayHubTypes";
+import { computeCombinedOdds } from "../../components/parlay/types/parlayOsTypes";
 
 export type SlipLegOddsInput = {
   odds?: number | string | null;

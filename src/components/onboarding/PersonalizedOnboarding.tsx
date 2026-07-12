@@ -1,115 +1,67 @@
-import { useState } from "react";
-import { ProductEvents } from "../../lib/productEvents";
+import { BarChart3, Radio, ShieldCheck } from 'lucide-react';
+import { ProductEvents } from '../../lib/productEvents';
 
 type Props = {
-  onComplete: () => void;
+  onComplete: (section?: string) => void;
 };
 
-const sports = [
-  "MLB",
-  "NFL",
-  "NBA",
-];
+const STARTING_POINTS = [
+  {
+    id: 'hr_board',
+    title: "Research today's HR board",
+    description: 'Compare official lineup status, model confidence, and supporting evidence.',
+    icon: BarChart3,
+  },
+  {
+    id: 'live_parlays',
+    title: 'Build and track a parlay',
+    description: 'Create a grading-safe slip and keep its status synchronized.',
+    icon: Radio,
+  },
+  {
+    id: 'profile',
+    title: 'Review my trust record',
+    description: 'See settled results, proof history, and account controls.',
+    icon: ShieldCheck,
+  },
+] as const;
 
-export function PersonalizedOnboarding({
-  onComplete,
-}: Props) {
-  const [step, setStep] = useState(1);
-  const [sport, setSport] = useState<string | null>(null);
-  const [team, setTeam] = useState<string | null>(null);
-
-  function completeStep(name: string) {
-    ProductEvents.experimentViewed(
-      "new_onboarding_v2",
-      "variant"
-    );
-
-    void ProductEvents.onboardingStepCompleted?.(name);
-  }
-
-  function finish() {
-    ProductEvents.onboardingCompleted?.({
-      sport,
-      team,
-    });
-
-    onComplete();
+export function PersonalizedOnboarding({ onComplete }: Props) {
+  function finish(section: string) {
+    ProductEvents.onboardingStepCompleted?.('starting_point_selected');
+    ProductEvents.onboardingCompleted?.({ startingPoint: section });
+    onComplete(section);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white p-6">
-      <div className="max-w-md w-full rounded-2xl bg-white/5 p-6 border border-white/10">
-        {step === 1 && (
-          <>
-            <h1 className="text-3xl font-black">
-              Build Your Edge
-            </h1>
+    <main className="flex min-h-screen items-center justify-center bg-[#070a09] px-4 py-10 text-white">
+      <section className="w-full max-w-3xl border border-white/10 bg-[#0a0f0c] p-5 sm:p-8">
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-vouch-emerald">Welcome to VouchEdge</p>
+        <h1 className="mt-3 max-w-xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">What do you want to do first?</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">Choose a starting point. Nothing is locked in, and every tool remains available from navigation.</p>
 
-            <p className="mt-3 text-white/70">
-              Choose what you follow and we personalize your intelligence feed.
-            </p>
+        <div className="mt-7 grid gap-3 md:grid-cols-3">
+          {STARTING_POINTS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => finish(item.id)}
+                className="z8-control group min-h-44 border border-white/10 bg-black/25 p-4 text-left transition hover:border-vouch-emerald/40 hover:bg-vouch-emerald/[0.04]"
+              >
+                <Icon className="h-5 w-5 text-vouch-emerald" />
+                <span className="mt-5 block text-base font-black leading-tight text-white">{item.title}</span>
+                <span className="mt-2 block text-sm leading-5 text-white/50">{item.description}</span>
+              </button>
+            );
+          })}
+        </div>
 
-            <div className="mt-6 space-y-3">
-              {sports.map((item) => (
-                <button
-                  key={item}
-                  className="w-full rounded-xl bg-white/10 p-3 hover:bg-white/20"
-                  onClick={() => {
-                    setSport(item);
-                    completeStep("sport_selected");
-                    setStep(2);
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <h2 className="text-2xl font-bold">
-              Pick your team
-            </h2>
-
-            <div className="mt-6 space-y-3">
-              {["Yankees", "Dodgers", "Braves"].map((item) => (
-                <button
-                  key={item}
-                  className="w-full rounded-xl bg-white/10 p-3 hover:bg-white/20"
-                  onClick={() => {
-                    setTeam(item);
-                    completeStep("team_selected");
-                    setStep(3);
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <h2 className="text-2xl font-bold">
-              Your Edge is ready
-            </h2>
-
-            <p className="mt-3 text-white/70">
-              We'll personalize Featured Edge, Vouch AI, and Daily Brief.
-            </p>
-
-            <button
-              className="mt-6 w-full rounded-xl bg-cyan-400 text-black p-3 font-bold"
-              onClick={finish}
-            >
-              Enter VouchEdge
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+        <button type="button" onClick={() => finish('today')} className="z8-control mt-5 px-3 text-sm font-semibold text-white/55 hover:text-white">
+          Skip and open Today
+        </button>
+      </section>
+    </main>
   );
 }

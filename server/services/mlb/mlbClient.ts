@@ -60,19 +60,29 @@ export function resetMlbRequestCount(): void {
 }
 
 /** Schedule for a date (YYYY-MM-DD), normalized. Falls back to [] on failure. */
+async function fetchScheduleNormalized(date: string): Promise<NormalizedGame[]> {
+  const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
+  try {
+    const data = await fetchJson<unknown>(url);
+    const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
+    for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
+    return games.map(normalizeGame);
+  } catch (err) {
+    console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);
+    return [];
+  }
+}
+
 export async function getScheduleByDate(date: string): Promise<NormalizedGame[]> {
-  return scheduleCache.getOrSet(`schedule:${date}`, async () => {
-    const url = `${BASE}/v1/schedule?sportId=1&date=${date}&hydrate=probablePitcher(note),linescore,team`;
-    try {
-      const data = await fetchJson<unknown>(url);
-      const { games, warnings } = parseMlbScheduleResponse(data, `schedule:${date}`);
-      for (const warning of warnings) console.warn(`[mlbClient] ${warning}`);
-      return games.map(normalizeGame);
-    } catch (err) {
-      console.error("[mlbClient] getScheduleByDate failed:", (err as Error).message);
-      return [];
-    }
-  }) as Promise<NormalizedGame[]>;
+  return scheduleCache.getOrSet(`schedule:${date}`, () => fetchScheduleNormalized(date)) as Promise<NormalizedGame[]>;
+}
+
+/** Faster refresh for today's live board — 30s TTL vs 5min default schedule cache. */
+export async function getScheduleForLiveBoard(date: string): Promise<NormalizedGame[]> {
+  const isToday = date === todayISO();
+  const key = isToday ? `schedule:live-board:${date}` : `schedule:${date}`;
+  const ttlMs = isToday ? 30_000 : undefined;
+  return scheduleCache.getOrSet(key, () => fetchScheduleNormalized(date), ttlMs) as Promise<NormalizedGame[]>;
 }
 
 export async function getTodayGames(): Promise<NormalizedGame[]> {

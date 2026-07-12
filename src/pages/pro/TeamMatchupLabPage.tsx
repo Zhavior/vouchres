@@ -468,7 +468,7 @@ export default function TeamMatchupLabPage() {
                 <Target className="h-3.5 w-3.5" />
                 Matchup Matrix
               </div>
-              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Team Matchup Lab</h1>
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Pitchers Matchup</h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">
                 Professional pitcher strikeout research using sourced MLB schedule, probable pitcher, season stat, park, and weather fields already available in Vouchres.
               </p>

@@ -7,6 +7,7 @@
  */
 import { isUpstashEnabled, redisGetJson, redisSetJson } from "../../lib/upstashRedis";
 import type { MlbLiveFeed } from "../../types/mlbLiveFeed";
+import { limitConcurrency } from "../../lib/cache";
 import { getGameFeed } from "../mlb/mlbClient";
 
 export const LIVE_HUB_TTL_MS = Number(process.env.LIVE_GAME_HUB_TTL_MS ?? 4_500);
@@ -238,6 +239,15 @@ export async function getSharedGameFeed(gamePk: number): Promise<SharedGameFeedS
   } finally {
     localFeedBuilds.delete(gamePk);
   }
+}
+
+/** Batch hub fetch with shared coalescing per gamePk. */
+export async function getSharedGameFeedsBatch(gamePks: readonly number[]): Promise<Map<number, SharedGameFeedSnapshot>> {
+  const unique = [...new Set(gamePks.filter((pk) => Number.isFinite(pk) && pk > 0))];
+  if (unique.length === 0) return new Map();
+
+  const snapshots = await limitConcurrency(unique, 6, (gamePk) => getSharedGameFeed(gamePk));
+  return new Map(snapshots.map((snapshot) => [snapshot.gamePk, snapshot]));
 }
 
 /** Overlay hub feed scores onto a schedule card for live games. */

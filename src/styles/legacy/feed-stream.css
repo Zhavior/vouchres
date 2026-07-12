@@ -21,8 +21,8 @@
 
 @media (min-width: 1181px) {
   #layout-inner-frame.ve-layout-feed {
-    grid-template-columns: 260px minmax(0, 600px) 290px !important;
-    max-width: 1150px !important;
+    grid-template-columns: var(--ve-sidebar-width) minmax(0, 600px) 290px !important;
+    max-width: calc(var(--ve-sidebar-width) + 890px) !important;
   }
 }
 
@@ -101,4 +101,3 @@
 #feed-right-rail {
   background: transparent !important;
 }
-

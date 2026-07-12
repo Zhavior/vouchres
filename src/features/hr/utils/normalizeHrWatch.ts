@@ -133,8 +133,7 @@ function buildMlbHeadshotUrl(playerId: string | number | null): string | null {
 
 function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWatchRow[] {
   const normalized: HrWatchRow[] = [];
-  for (let index = 0; index < rows.length; index += 1) {
-    const row = rows[index];
+  for (const row of rows) {
     const playerName = firstString(row, ['playerName', 'name', 'batterName', 'fullName'], '');
     if (!playerName) continue;
     const gamePk = firstScalar(row, ['gamePk', 'gameId']);
@@ -146,7 +145,7 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
     const breakdown = readBreakdown(row);
 
     normalized.push({
-      stableId: `${gamePk ?? 'game'}-${playerId ?? playerName}-${mode}-${index}`,
+      stableId: `${gamePk ?? 'game'}-${playerId ?? playerName}-${team}`,
       playerName,
       playerId,
       team,
@@ -173,6 +172,9 @@ function normalizeRows(rows: readonly UnknownRecord[], mode: HrWatchMode): HrWat
       truthStatus: truth,
       riskTier: riskTier(hrScore, truth),
       oddsLabel: firstString(row, ['impliedOdds', 'odds', 'americanOdds'], 'Odds TBD'),
+      bookOdds: firstNullableNumber(row, ['bookOdds', 'americanOdds', 'bestOdds']),
+      hrProbability: firstNullableNumber(row, ['hrProbability', 'estimatedHrProb', 'probability']),
+      impliedProbability: firstNullableNumber(row, ['impliedProbability', 'bookImpliedProbability']),
       reasons: readReasons(row),
       warnings: readWarnings(row),
       sourceMode: mode,

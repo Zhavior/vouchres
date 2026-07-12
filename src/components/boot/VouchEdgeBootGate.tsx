@@ -42,11 +42,9 @@ export default function VouchEdgeBootGate({
     if (hrBoard) {
       const date = todayISO();
       const updatedAt = bootDataStore.getUpdatedAt("dailyHrBoard");
-      for (const limit of [75, 120]) {
-        queryClient.setQueryData(queryKeys.hrBoard(date, limit), hrBoard, {
-          updatedAt,
-        });
-      }
+      queryClient.setQueryData(queryKeys.hrBoard(date), hrBoard, {
+        updatedAt,
+      });
     }
 
     try {

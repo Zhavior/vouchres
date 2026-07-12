@@ -18,7 +18,6 @@ const PersonalizedOnboarding = lazy(() =>
 const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('../TodayDashboard'));
-const EdgeIslandPage = lazy(() => import('../../pages/EdgeIslandPage'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
 const VouchBoard = lazy(() => import('../VouchBoard'));
 const ProfilePage = lazy(() => import('../ProfilePage'));
@@ -31,7 +30,6 @@ const SmartAiEngine = lazy(() => import('../SmartAiEngine'));
 const MlbIntelligenceHub = lazy(() => import('../MlbIntelligenceHub'));
 const Leaderboard = lazy(() => import('../Leaderboard'));
 const SubscriberHub = lazy(() => import('../SubscriberHub'));
-const LiveGameLabPage = lazy(() => import('../../pages/LiveGameLabPage'));
 const HomeRunIntelligencePage = lazy(() => import('../../features/hr/pages/HomeRunIntelligencePage'));
 const BrainPicksPage = lazy(() => import('../../features/brain/BrainPicksPage'));
 const BrainPerformancePage = lazy(() => import('../../features/brain/BrainPerformancePage'));
@@ -45,7 +43,7 @@ const TeamMatchupLabPage = lazy(() => import('../../pages/pro/TeamMatchupLabPage
 const HitterMatchupZonesPage = lazy(() => import('../../pages/pro/HitterMatchupZonesPage'));
 const ProGraphsLabPage = lazy(() => import('../../pages/pro/ProGraphsLabPage'));
 const ProCommandCenterPage = lazy(() => import('../../pages/pro/ProCommandCenterPage'));
-const ParlayCommandCenter = lazy(() => import('../parlay/ParlayCommandCenter'));
+const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
@@ -135,7 +133,7 @@ function MainViewRouter({
         return (
           <LazyRoute>
             <PersonalizedOnboarding
-              onComplete={() => navigateSection("island")}
+              onComplete={(section) => navigateSection(section ?? "today")}
             />
           </LazyRoute>
         );
@@ -143,27 +141,10 @@ function MainViewRouter({
 
       return (
         <LazyRoute>
-          <EdgeIslandShell
-            navigateSection={navigateSection}
-            isLoggedIn={isLoggedIn}
-          />
+          <TodayDashboardShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
         </LazyRoute>
       );
     }
-
-    case 'edge_island_preview':
-      return (
-        <LazyRoute>
-          <div className="mx-auto w-full max-w-[1500px] px-3 py-4 sm:px-6">
-            <LegacyPublicBanner
-              title="Legacy Edge Island preview"
-              backLabel="Back to terminal landing"
-              onBack={() => navigateSection('vouchedge_intro')}
-            />
-            <EdgeIslandShell navigateSection={navigateSection} isLoggedIn={false} />
-          </div>
-        </LazyRoute>
-      );
 
     case 'legacy_studio':
       return (
@@ -182,11 +163,6 @@ function MainViewRouter({
       );
 
     case 'island':
-      return (
-        <LazyRoute>
-          <EdgeIslandShell navigateSection={navigateSection} isLoggedIn={isLoggedIn} />
-        </LazyRoute>
-      );
     case 'today':
       return (
         <LazyRoute>
@@ -276,14 +252,6 @@ function MainViewRouter({
           <ParlayProofShell />
         </LazyRoute>
       );
-    case 'live_game_lab':
-      return (
-        <LazyRoute>
-          <ProGateShell featureName="Live Game Lab" navigateSection={navigateSection}>
-            <LiveGameLabPage />
-          </ProGateShell>
-        </LazyRoute>
-      );
     case 'pro_command_center':
       return (
         <LazyRoute>
@@ -295,7 +263,7 @@ function MainViewRouter({
     case 'player_edge_lab':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Player Edge Lab" navigateSection={navigateSection}>
+          <ProGateShell featureName="Top Player Lab" navigateSection={navigateSection}>
             <PlayerEdgeLabPage />
           </ProGateShell>
         </LazyRoute>
@@ -303,7 +271,7 @@ function MainViewRouter({
     case 'team_matchup_lab':
       return (
         <LazyRoute>
-          <ProGateShell featureName="Team Matchup Lab" navigateSection={navigateSection}>
+          <ProGateShell featureName="Pitchers Matchup" navigateSection={navigateSection}>
             <TeamMatchupLabPage />
           </ProGateShell>
         </LazyRoute>
@@ -433,24 +401,6 @@ function TodayDashboardShell({
   );
 }
 
-function EdgeIslandShell({
-  navigateSection,
-  isLoggedIn,
-}: {
-  navigateSection: (section: string) => void;
-  isLoggedIn: boolean;
-}) {
-  const { profile, savedSlips } = useAppShell();
-  return (
-    <EdgeIslandPage
-      onSectionChange={navigateSection}
-      savedSlips={savedSlips}
-      profile={profile}
-      isLoggedIn={isLoggedIn}
-    />
-  );
-}
-
 function LegacyPublicBanner({
   title,
   backLabel,
@@ -544,7 +494,7 @@ function ParlayShell({
   } = useAppCommandStore();
 
   return (
-    <ParlayCommandCenter
+    <ParlayOsWorkspace
       savedSlips={savedSlips}
       liveGames={liveGames}
       onSectionChange={navigateSection}
@@ -610,10 +560,10 @@ function ProGateShell({
   );
 }
 
-function LiveGamesShell({ navigateSection }: { navigateSection: (section: string) => void }) {
+function LiveGamesShell({ navigateSection: _navigateSection }: { navigateSection: (section: string) => void }) {
   const onAddLegFromResearch = useAppCommandStore((state) => state.onAddLegFromResearch);
   return (
-    <LiveGamesPro onSectionChange={navigateSection} onAddLegToParlay={onAddLegFromResearch} />
+    <LiveGamesPro onAddLegToParlay={onAddLegFromResearch} />
   );
 }
 

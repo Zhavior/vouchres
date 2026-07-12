@@ -40,7 +40,6 @@ export function useSectionNavigation() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [isPendingRoute, startTransition] = useTransition();
 
-  const [edgeIslandOpen, setEdgeIslandOpen] = useState(false);
   const [profileViewUserId, setProfileViewUserId] = useState<string | null>(null);
 
   const commitSection = useCallback((target: string) => {
@@ -168,8 +167,6 @@ export function useSectionNavigation() {
     activeSectionRef,
     loggingOut,
     isPendingRoute,
-    edgeIslandOpen,
-    setEdgeIslandOpen,
     profileViewUserId,
     navigateSection,
     navigateToUserProfile,

@@ -99,7 +99,7 @@ export default function PlayerEdgeLabPage() {
             </div>
 
             <ProPageHeader
-              title="Player Edge Lab"
+              title="Top Player Lab"
               subtitle="Premium player research for HR form, matchup context, hitter power, pitcher vulnerability, hot bats, and value slip signals."
               badge="Player Pro"
             />
@@ -247,7 +247,7 @@ export default function PlayerEdgeLabPage() {
             <VerifiedGraphEmptyState
               variant="feed-required"
               title="Verified data feed required"
-              detail="The Player Edge Lab needs HR board player rows before rendering signal graphs."
+              detail="The Top Player Lab needs HR board player rows before rendering signal graphs."
             />
           )}
 

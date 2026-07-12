@@ -1,14 +1,13 @@
-import { Menu, Sparkles as EdgeIslandIcon, Flame, Brain } from 'lucide-react';
+import { Menu, Flame, Brain } from 'lucide-react';
 import { preloadSection } from '../lib/routePreload';
 import { useNavUiStore } from '../stores/navUiStore';
 
 type AppNavProps = {
   activeSection: string;
   onNavigate: (section: string) => void;
-  onOpenEdgeIsland: () => void;
 };
 
-export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavProps) {
+export function AppNav({ activeSection, onNavigate }: AppNavProps) {
   const openMobileDrawer = useNavUiStore((s) => s.openMobileDrawer);
 
   return (
@@ -46,16 +45,6 @@ export function AppNav({ activeSection, onNavigate, onOpenEdgeIsland }: AppNavPr
         className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
       >
         <Brain className="ve-edge-island-trigger-icon h-4 w-4" />
-      </button>
-
-      <button
-        type="button"
-        onClick={onOpenEdgeIsland}
-        aria-label="Open The Edge Island"
-        title="The Edge Island"
-        className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12"
-      >
-        <EdgeIslandIcon className="ve-edge-island-trigger-icon h-4 w-4 md:h-5 md:w-5" />
       </button>
     </div>
   );

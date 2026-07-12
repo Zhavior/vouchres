@@ -11,7 +11,9 @@ export type BackendParlayRow = {
 async function fetchMyParlays(): Promise<BackendParlayRow[]> {
   if (!isSupabaseConfigured) return [];
   const token = await getAuthToken();
-  if (!token) return [];
+  if (!token) {
+    throw new Error('Authentication token unavailable; parlay reconciliation deferred.');
+  }
   const result = await apiClient.get<{ parlays: BackendParlayRow[] }>('/api/me/parlays?limit=100');
   return result?.parlays ?? [];
 }

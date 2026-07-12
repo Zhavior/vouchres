@@ -3,7 +3,6 @@ import {
   Bell,
   Brain,
   CheckCircle2,
-  Compass,
   Crown,
   FileCheck2,
   Flame,
@@ -38,7 +37,6 @@ const proofCards = [
 const islandActions = [
   ['Open Upcoming Games', 'upcoming_games', Flame],
   ['Check Alerts', 'notifications', Bell],
-  ['Build Parlay', 'build', Compass],
   ['View Results', 'results', Activity],
 ];
 

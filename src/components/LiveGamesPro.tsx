@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PregameAiReadPanel } from './live/command/PregameAiReadPanel';
 import { FinalGameRecapPanel } from './live/command/FinalGameRecapPanel';
 import {
@@ -13,12 +13,11 @@ import type { HrBoardResponse } from '../types/hrBoard';
 import { logoByTeamId, logoByTeamName } from '../lib/teamLogos';
 import { parseAmericanOdds } from '../lib/odds';
 import LiveAtBatView from './live/LiveAtBatView';
-import { VouchLiveEdge } from './live/command/VouchLiveEdge';
 import PlayerHeadshot from './parlays/PlayerHeadshot';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_SECTION_HEADER, Z8_STAT_CHIP, Z8_SURFACE } from '../theme/z8Tokens';
+import './live/live-games-lens.css';
 
 interface Props {
-  onSectionChange: (section: string) => void;
   onAddLegToParlay: (player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string }) => void;
 }
 
@@ -134,7 +133,15 @@ function matchupFromLiveGame(game: LiveGameApiCard): GameMatchup {
   };
 }
 
-function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
+function sortBySchedule(games: GameMatchup[]): GameMatchup[] {
+  return [...games].sort((a, b) => {
+    const timeDelta = Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
+    if (Number.isFinite(timeDelta) && timeDelta !== 0) return timeDelta;
+    return String(a.gamePk).localeCompare(String(b.gamePk));
+  });
+}
+
+export function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMatchup[] {
   const byGame = new Map<string, GameMatchup>();
   base.forEach((game) => byGame.set(String(game.gamePk), game));
 
@@ -146,11 +153,12 @@ function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMat
       return;
     }
 
+    const isFinal = existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status);
     byGame.set(key, {
       ...rich,
       status: existing.status || rich.status,
-      isLive: existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status),
-      isFinal: existing.isFinal || rich.isFinal || isFinalStatus(existing.status) || isFinalStatus(rich.status),
+      isLive: !isFinal && (existing.isLive || rich.isLive || isLiveStatus(existing.status) || isLiveStatus(rich.status)),
+      isFinal,
       score: existing.score ?? rich.score,
       gameTime: existing.gameTime || rich.gameTime,
       venue: rich.venue || existing.venue,
@@ -159,11 +167,39 @@ function mergeMatchups(base: GameMatchup[], enrichments: GameMatchup[]): GameMat
     });
   });
 
-  return Array.from(byGame.values()).sort((a, b) => {
-    const liveDelta = Number(b.isLive) - Number(a.isLive);
-    if (liveDelta) return liveDelta;
-    return Date.parse(a.gameTime || '') - Date.parse(b.gameTime || '');
+  return sortBySchedule(Array.from(byGame.values()));
+}
+
+/** Overlay fresh official scores/status onto enriched rows without dropping model fields. */
+export function mergeOfficialLiveUpdates(enriched: GameMatchup[], official: GameMatchup[]): GameMatchup[] {
+  if (official.length === 0) return enriched;
+
+  const officialByPk = new Map(official.map((game) => [String(game.gamePk), game]));
+  const seen = new Set<string>();
+
+  const merged = enriched.map((game) => {
+    const key = String(game.gamePk);
+    seen.add(key);
+    const next = officialByPk.get(key);
+    if (!next) return game;
+
+    const isFinal = next.isFinal || isFinalStatus(next.status);
+    return {
+      ...game,
+      status: next.status || game.status,
+      isLive: !isFinal && (next.isLive || isLiveStatus(next.status)),
+      isFinal,
+      score: next.score ?? game.score,
+      gameTime: next.gameTime || game.gameTime,
+    };
   });
+
+  for (const game of official) {
+    const key = String(game.gamePk);
+    if (!seen.has(key)) merged.push(game);
+  }
+
+  return sortBySchedule(merged);
 }
 
 function watchFromCandidate(candidate: Record<string, unknown>): HrWatch {
@@ -274,71 +310,6 @@ function StatusBadge({ m }: { m: GameMatchup }) {
 }
 
 const ENV_COLOR: Record<string, string> = { SHOOTOUT: '#f87171', HIGH: '#fb923c', MODERATE: '#fbbf24', LOW: '#64748b' };
-
-const GameCard: React.FC<{ m: GameMatchup; onOpen: () => void }> = ({ m, onOpen }) => {
-  const winProbability = m.winProbability ?? { away: 0, home: 0 };
-  const topHrWatch = Array.isArray(m.topHrWatch) ? m.topHrWatch : [];
-  const homeFav = winProbability.home >= winProbability.away;
-  return (
-    <button onClick={onOpen}
-      className={`text-left rounded-2xl border p-4 transition-all hover:scale-[1.01] w-full ${m.isLive ? 'border-red-500/30 bg-gradient-to-br from-red-950/20 via-[#0b1120] to-[#0b1120] shadow-[0_0_24px_rgba(239,68,68,0.12)]' : 'border-slate-800 bg-gradient-to-br from-slate-900/40 to-[#0b1120]'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <StatusBadge m={m} />
-        <span className="text-[10px] text-slate-500 font-mono truncate max-w-[55%]">{m.venue}</span>
-      </div>
-
-      {/* Teams */}
-      {[m.away, m.home].map((t, i) => {
-        const pct = i === 0 ? winProbability.away : winProbability.home;
-        const fav = i === 0 ? !homeFav : homeFav;
-        const score = i === 0 ? m.score?.away : m.score?.home;
-        return (
-          <div key={`${t.teamId}-${t.name}`} className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <TeamLogo src={t.logo} alt={t.name} />
-              <div className="min-w-0">
-                <p className={`text-sm font-black truncate ${fav ? 'text-slate-100' : 'text-slate-300'}`}>{t.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">
-                  {(m.isLive || m.isFinal) ? (m.isFinal ? 'Final score' : 'Live score') : (t.record ? `${t.record.wins}-${t.record.losses}` : 'Scheduled')}
-                </p>
-              </div>
-            </div>
-            <span className="text-xl font-mono font-black text-white">{(m.isLive || m.isFinal) ? score : ''}</span>
-          </div>
-        );
-      })}
-
-      {/* Win prob bar */}
-      <div className="mt-1 h-1.5 rounded-full overflow-hidden bg-slate-800 flex">
-        <div style={{ width: `${winProbability.away}%`, background: '#64748b' }} />
-        <div style={{ width: `${winProbability.home}%`, background: '#0ea5e9' }} />
-      </div>
-
-      {/* Run env + top HR watch */}
-      <div className="flex items-center justify-between mt-3">
-        {m.runEnvironment && (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded border" style={{ color: ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8', borderColor: (ENV_COLOR[m.runEnvironment.tier] ?? '#94a3b8') + '44' }}>
-            🔥 {m.runEnvironment.tier} RUN ENV
-          </span>
-        )}
-        <span className="flex items-center gap-1 text-[10px] text-sky-400 font-bold">AI Breakdown <ChevronRight className="w-3 h-3" /></span>
-      </div>
-
-      {topHrWatch.length > 0 && (
-        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-800/60">
-          <span className="text-[9px] text-slate-500 font-mono uppercase mr-1">HR Watch</span>
-          {topHrWatch.slice(0, 3).map((w) => (
-            <span key={w.playerId} className="flex items-center gap-1">
-              <PlayerHeadshot name={w.playerName} playerId={w.playerId} headshotUrl={w.headshot} size={20} />
-              <span className="text-[10px] text-slate-300 truncate max-w-[70px]">{w.playerName.split(' ').slice(-1)[0]}</span>
-              <span className="text-[9px] font-mono font-bold" style={{ color: gradeColor(w.grade) }}>{w.hrEdge}</span>
-            </span>
-          ))}
-        </div>
-      )}
-    </button>
-  );
-};
 
 function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () => void; onAddLeg: (w: HrWatch) => void }) {
   const Section: React.FC<{ icon: any; title: string; tone?: string; children: React.ReactNode }> = ({ icon: Icon, title, tone = '#38bdf8', children }) => (
@@ -465,7 +436,7 @@ function MatchupDrawer({ m, onClose, onAddLeg }: { m: GameMatchup; onClose: () =
 }
 
 /** Merge live scores into matchup list by gamePk. */
-function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
+export function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[] {
   if (!scores.length) return matchups;
   const map = new Map(scores.map((s) => [String(s.gamePk), s]));
   return matchups.map((m) => {
@@ -474,24 +445,32 @@ function applyScores(matchups: GameMatchup[], scores: LiveScore[]): GameMatchup[
     return {
       ...m,
       score: s.score,
-      isLive: s.isLive || isLiveStatus(s.status),
+      isLive: !s.isFinal && (s.isLive || isLiveStatus(s.status)),
       isFinal: s.isFinal || isFinalStatus(s.status),
       status: s.status,
     };
   });
 }
 
-export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Props) {
+export default function LiveGamesPro({ onAddLegToParlay }: Props) {
   const liveGamesQuery = useLiveGames();
   const hrBoardQuery = useHrBoardToday(50);
   const [matchups, setMatchups] = useState<GameMatchup[]>([]);
-  const [liveScores, setLiveScores] = useState<LiveScore[]>([]);
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveOnly, setLiveOnly] = useState(false);
-  const [selected, setSelected] = useState<GameMatchup | null>(null);
+  const [selectedGamePk, setSelectedGamePk] = useState<number | string | null>(null);
   const [activeGamePk, setActiveGamePk] = useState<number | string | null>(null);
   const [sourceNote, setSourceNote] = useState('Loading live games...');
+
+  const liveGamesDataRef = useRef(liveGamesQuery.data);
+  const hrBoardDataRef = useRef(hrBoardQuery.data);
+  const matchupsCountRef = useRef(0);
+  const enrichRequestRef = useRef(0);
+
+  liveGamesDataRef.current = liveGamesQuery.data;
+  hrBoardDataRef.current = hrBoardQuery.data;
+  matchupsCountRef.current = matchups.length;
 
   const loading = (liveGamesQuery.isLoading || hrBoardQuery.isLoading) && matchups.length === 0;
 
@@ -506,80 +485,98 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
     return merged;
   }, []);
 
-  const enrichMatchups = useCallback(async (base: GameMatchup[]) => {
-    if (base.length === 0) return;
-    setEnriching(true);
-    try {
-      const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
-      let working = base;
-      if (Array.isArray(scoreResult?.scores)) {
-        setLiveScores(scoreResult.scores);
-        working = applyScores(working, scoreResult.scores);
-      }
-
-      const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
-      const next = Array.isArray(res.matchups) ? res.matchups : [];
-      if (next.length > 0) {
-        setMatchups(working.length > 0 ? mergeMatchups(working, next) : next);
-        setError(null);
-        setSourceNote('Live game model loaded.');
-      } else {
-        setMatchups(working);
-        setError(null);
-        setSourceNote('Live model returned no rows. Showing verified schedule preview.');
-      }
-    } catch {
-      setMatchups(base);
-      setError(null);
-      setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
-    } finally {
-      setEnriching(false);
-    }
+  const buildOfficialBase = useCallback(() => {
+    return (liveGamesDataRef.current?.games ?? [])
+      .map(matchupFromLiveGame)
+      .filter((game) => game.gamePk);
   }, []);
 
+  // Fast path: react-query polls update scores/status without re-enriching the full model.
   useEffect(() => {
     const official = liveGamesQuery.data;
     let officialBase: GameMatchup[] = [];
     if (official?.games?.length) {
       officialBase = official.games.map(matchupFromLiveGame).filter((game) => game.gamePk);
       if (officialBase.length > 0) {
-        setSourceNote('Official MLB live schedule loaded. Enriching game context...');
+        setSourceNote((prev) => (prev === 'Backend unavailable.' ? prev : 'Official MLB live schedule loaded.'));
       }
     }
 
     const merged = mergeFromQueries(officialBase, hrBoardQuery.data);
     if (merged.length > 0) {
-      setMatchups((prev) => {
-        const scored = liveScores.length > 0 ? applyScores(merged, liveScores) : merged;
-        return scored.length > 0 ? scored : prev;
-      });
+      setMatchups((prev) => (prev.length > 0 ? mergeOfficialLiveUpdates(prev, merged) : merged));
+      setError(null);
     } else if (liveGamesQuery.isError && hrBoardQuery.isError) {
       setError('Live games unavailable right now. No fake games shown.');
       setSourceNote('Backend unavailable.');
     }
-  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries, liveScores]);
+  }, [liveGamesQuery.data, liveGamesQuery.isError, hrBoardQuery.data, hrBoardQuery.isError, mergeFromQueries]);
 
+  // Slow path: matchup model enrichment on an interval only — not on every live poll.
   useEffect(() => {
-    const merged = mergeFromQueries(
-      (liveGamesQuery.data?.games ?? []).map(matchupFromLiveGame).filter((game) => game.gamePk),
-      hrBoardQuery.data,
-    );
-    if (merged.length === 0) return;
+    let cancelled = false;
 
-    void enrichMatchups(merged);
+    const runEnrich = async (showBusy: boolean) => {
+      const officialBase = buildOfficialBase();
+      const merged = mergeFromQueries(officialBase, hrBoardDataRef.current);
+      if (merged.length === 0) return;
+
+      const requestId = ++enrichRequestRef.current;
+      if (showBusy && matchupsCountRef.current === 0) setEnriching(true);
+
+      try {
+        const scoreResult = await vouchedgeApi.scoresToday().catch(() => null);
+        let working = merged;
+        if (Array.isArray(scoreResult?.scores) && scoreResult.scores.length > 0) {
+          working = applyScores(working, scoreResult.scores);
+        }
+
+        const res = await withTimeout(vouchedgeApi.matchupsToday(), 9000, 'Live matchup model');
+        const next = Array.isArray(res.matchups) ? res.matchups : [];
+
+        if (cancelled || requestId !== enrichRequestRef.current) return;
+
+        const latestOfficial = buildOfficialBase();
+        const latestMerged = mergeFromQueries(latestOfficial, hrBoardDataRef.current);
+        const enrichedBase = latestMerged.length > 0 ? latestMerged : working;
+
+        if (next.length > 0) {
+          setMatchups(mergeMatchups(enrichedBase, next));
+          setSourceNote('Live game model loaded.');
+        } else {
+          setMatchups((prev) => (prev.length > 0 ? prev : working));
+          setSourceNote('Live model returned no rows. Showing verified schedule preview.');
+        }
+        setError(null);
+      } catch {
+        if (cancelled || requestId !== enrichRequestRef.current) return;
+        setMatchups((prev) => (prev.length > 0 ? prev : merged));
+        setSourceNote('Live model is slow/unavailable. Showing verified game preview.');
+        setError(null);
+      } finally {
+        if (!cancelled && requestId === enrichRequestRef.current && showBusy) {
+          setEnriching(false);
+        }
+      }
+    };
+
+    void runEnrich(true);
     const id = window.setInterval(() => {
-      void enrichMatchups(merged);
+      void runEnrich(false);
     }, REFRESH_MS);
-    return () => window.clearInterval(id);
-  }, [enrichMatchups, mergeFromQueries, liveGamesQuery.data, hrBoardQuery.data]);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [buildOfficialBase, mergeFromQueries, hrBoardQuery.data]);
 
   const load = useCallback(() => {
     void liveGamesQuery.refetch();
     void hrBoardQuery.refetch();
   }, [liveGamesQuery, hrBoardQuery]);
 
-  // Always overlay the latest scores from the fast scores endpoint.
-  const scoredMatchups = applyScores(matchups, liveScores);
+  const scoredMatchups = matchups;
   const liveCount = scoredMatchups.filter((m) => m.isLive).length;
   const shown = liveOnly ? scoredMatchups.filter((m) => m.isLive) : scoredMatchups;
 
@@ -592,6 +589,9 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   const activeGame =
     shown.find((m) => String(m.gamePk) === String(activeGamePk)) ??
     preferredGame;
+  const selected = selectedGamePk == null
+    ? null
+    : matchups.find((game) => String(game.gamePk) === String(selectedGamePk)) ?? null;
 
   useEffect(() => {
     if (!activeGamePk && preferredGame?.gamePk) {
@@ -609,28 +609,28 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
   };
 
   return (
-    <main className={`${Z8_PAGE} ve-page-shell min-w-0 overflow-x-hidden ve-safe-bottom max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5 pb-24 md:pb-5`}>
+    <main className={`${Z8_PAGE} live-games-lens ve-page-shell mx-auto min-w-0 max-w-6xl overflow-x-hidden px-3 py-4 pb-24 sm:px-4 sm:py-5 md:pb-5`}>
       {/* Header */}
-      <div className={`rounded-2xl ${Z8_PANEL_PREMIUM} bg-gradient-to-br from-vouch-cyan/10 via-obsidian-900 to-obsidian-900 p-4 sm:p-5 mb-4 sm:mb-5`}>
+      <div className="live-games-lens__header z8-data-surface mb-4 p-4 sm:mb-5 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2"><Tv className="w-5 h-5 sm:w-6 sm:h-6 text-vouch-cyan shrink-0" /> Live Games Center</h1>
-            <p className="text-xs text-white/50 mt-1 max-w-md">Real MLB game cards with scores, inning context, HR watch, pitcher matchups, and Pro live-stat upgrades. No fake live data.</p>
-            <p className={`mt-2 ${Z8_LABEL} text-vouch-cyan`}>{sourceNote}</p>
+            <h1 className="flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><Tv className="h-5 w-5 shrink-0 text-vouch-emerald sm:h-6 sm:w-6" /> Live MLB games</h1>
+            <p className="mt-1 max-w-xl text-sm leading-5 text-white/55">Official game state first. Matchup research appears only when a verified source is available.</p>
+            <p role="status" aria-live="polite" className={`mt-2 flex items-center gap-2 ${Z8_LABEL} text-vouch-emerald`}><span className="h-1.5 w-1.5 bg-vouch-emerald" aria-hidden="true" />{sourceNote}</p>
           </div>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-xl bg-black/25 border border-white/10 hover:border-vouch-cyan/50 transition-colors text-vouch-cyan shrink-0 self-start sm:self-auto">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching || liveGamesQuery.isFetching ? 'animate-spin' : ''}`} /> Refresh
+          <button onClick={load} className="z8-control flex shrink-0 items-center gap-1.5 self-start border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs text-vouch-emerald transition-colors hover:border-vouch-emerald/50 sm:self-auto">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading || enriching ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
         <div className="flex items-center gap-2 mt-4">
-          <button onClick={() => setLiveOnly(false)} className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
-          <button onClick={() => setLiveOnly(true)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
+          <button onClick={() => setLiveOnly(false)} className={`z8-control px-3 py-1.5 text-xs font-bold border transition-all ${!liveOnly ? `${Z8_ACTIVE}` : Z8_IDLE}`}>All games ({matchups.length})</button>
+          <button onClick={() => setLiveOnly(true)} className={`z8-control flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border transition-all ${liveOnly ? 'bg-red-500/15 border-red-500/50 text-red-300' : Z8_IDLE}`}>
             <Radio className="w-3.5 h-3.5" /> Live only ({liveCount})
           </button>
         </div>
       </div>
 
-      {error && <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-sm text-red-300">{error}</div>}
+      {error && <div className="z8-data-surface p-6 text-center text-sm text-red-300"><p>{error}</p><button type="button" onClick={load} className="z8-control mt-4 border border-red-300/30 px-4 text-white">Try again</button></div>}
 
       {loading && matchups.length === 0 && (
         <div className="grid sm:grid-cols-2 gap-3">{[0, 1, 2, 3].map((i) => <div key={i} className={`h-52 rounded-2xl ${Z8_SURFACE} animate-pulse`} />)}</div>
@@ -638,18 +638,16 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
       {!error && matchups.length > 0 && (
         shown.length === 0 ? (
-          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/50 font-mono`}>No active live games right now. Switch to “All games”.</div>
+          <div className={`${Z8_PANEL_PREMIUM} p-10 text-center text-sm text-white/55`}><p>No games are live right now.</p><button type="button" onClick={() => setLiveOnly(false)} className="z8-control mt-4 border border-white/15 px-4 text-white">Show today&apos;s schedule</button></div>
         ) : (
           <div className="space-y-4 min-w-0">
             {activeGame && (
-              <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border border-vouch-cyan/30 bg-gradient-to-br from-obsidian-900 via-obsidian-800 to-vouch-cyan/10 p-3 sm:p-4 md:p-5 shadow-2xl ${Z8_PANEL_PREMIUM}`}>
-                <div className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-vouch-cyan/20 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+              <div className="live-game-focus relative overflow-hidden p-3 sm:p-4 md:p-5">
 
                 <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-4 sm:mb-5 min-w-0">
                   <div className="min-w-0">
                     <p className={`${Z8_LABEL} text-vouch-cyan`}>
-                      Live Games Center
+                      Current game
                     </p>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">
                       {activeGame.away.abbreviation} @ {activeGame.home.abbreviation}
@@ -670,7 +668,7 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                 </div>
 
-                <div className="relative grid grid-cols-1 min-[400px]:grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-xl sm:rounded-2xl border border-slate-700/70 bg-black/25 p-3 sm:p-4 min-w-0">
+                <div className="live-game-scoreboard relative grid min-w-0 grid-cols-1 items-center gap-3 p-3 min-[400px]:grid-cols-[1fr_auto_1fr] sm:p-4">
                   <div className="text-left min-w-0">
                     <div className="flex items-center gap-2 mb-1 sm:mb-2">
                       <TeamLogo src={activeGame.away.logo} alt={activeGame.away.name} size={28} />
@@ -716,42 +714,30 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
                   </div>
                   <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">HR watch</p>
-                    <p className="text-sm font-black text-slate-100">{((activeGame as { hrWatch?: unknown[] }).hrWatch?.length ?? 0)} players</p>
+                    <p className="text-sm font-black text-slate-100">{activeGame.topHrWatch?.length ?? 0} players</p>
                   </div>
                   <div className={`${Z8_STAT_CHIP} rounded-xl sm:rounded-2xl p-2.5 sm:p-3 min-w-0`}>
                     <p className="text-[10px] text-slate-500 font-mono uppercase">Pitching</p>
                     <p className="text-sm font-black text-slate-100 truncate">{activeGame.away.probablePitcher?.name ?? activeGame.home.probablePitcher?.name ?? 'TBD'}</p>
                   </div>
                   <button
-                    onClick={() => setSelected(activeGame)}
-                    className="rounded-xl sm:rounded-2xl bg-sky-500/15 border border-sky-500/40 p-2.5 sm:p-3 text-left hover:bg-sky-500/25 transition min-w-0"
+                    onClick={() => setSelectedGamePk(activeGame.gamePk)}
+                    className="z8-control min-w-0 border border-vouch-emerald/40 bg-vouch-emerald/10 p-2.5 text-left transition hover:bg-vouch-emerald/15 sm:p-3"
                   >
-                    <p className="text-[10px] text-sky-300 font-mono uppercase">Details</p>
-                    <p className="text-sm font-black text-sky-100">Open game room</p>
+                    <p className="text-[11px] font-mono uppercase text-vouch-emerald">Details</p>
+                    <p className="text-sm font-black text-white">Open matchup</p>
                   </button>
                 </div>
 
-                <div className="relative mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[
-                    'Stolen Base Tracker',
-                    'RBI Opportunity Meter',
-                    'Live Parlay Impact'
-                  ].map((label) => (
-                    <div key={label} className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3">
-                      <p className="text-[10px] font-black font-mono uppercase tracking-wider text-amber-300">🔒 Pro</p>
-                      <p className="text-xs font-bold text-slate-200 mt-1">{label}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 min-w-0">
+            <div className="live-game-selector grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {shown.map((m) => (
                 <button
                   key={m.gamePk}
                   onClick={() => setActiveGamePk(m.gamePk)}
-                  className={`min-w-[140px] sm:min-w-[180px] text-left rounded-xl border p-2.5 sm:p-3 transition-all shrink-0 ${
+                  className={`z8-control min-w-0 text-left border p-2.5 transition-all sm:p-3 ${
                     String(activeGame?.gamePk) === String(m.gamePk)
                       ? 'bg-sky-500/15 border-sky-500/50'
                       : 'bg-slate-900/70 border-slate-800 hover:border-slate-600'
@@ -778,42 +764,17 @@ export default function LiveGamesPro({ onSectionChange, onAddLegToParlay }: Prop
 
             {/* Pitch-by-pitch sweat screen for the selected live game */}
             {activeGame?.isLive && activeGame.gamePk != null && (
-              <div className="min-w-0 max-w-4xl mx-auto w-full space-y-3">
-                <VouchLiveEdge gamePk={Number(activeGame.gamePk)} />
+              <div className="min-w-0 max-w-4xl mx-auto w-full">
                 <LiveAtBatView gamePk={Number(activeGame.gamePk)} />
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
-              {shown.map((m) => (
-                <GameCard
-                  key={m.gamePk}
-                  m={m}
-                  onOpen={() => {
-                    setActiveGamePk(m.gamePk);
-                    setSelected(m);
-                  }}
-                />
-              ))}
-            </div>
           </div>
         )
       )}
 
-      {selected && <MatchupDrawer m={selected} onClose={() => setSelected(null)} onAddLeg={addLeg} />}
+      {selected && <MatchupDrawer m={selected} onClose={() => setSelectedGamePk(null)} onAddLeg={addLeg} />}
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="pointer-events-auto border-t border-amber-400/25 bg-ve-obsidian/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
-          <button
-            type="button"
-            onClick={() => onSectionChange('premium')}
-            className="flex w-full min-h-12 items-center justify-center gap-2 rounded-xl border border-amber-400/45 bg-amber-400/10 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-200"
-          >
-            Unlock Pro live modules
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
     </main>
   );
 }

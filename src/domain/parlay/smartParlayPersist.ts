@@ -42,6 +42,7 @@ export function canonicalToParlay(slip: CanonicalParlaySlip): Parlay {
 
   return {
     id: slip.id,
+    clientRef: slip.clientRef,
     title: slip.title,
     legs,
     status: legStatusToUi(slip.status),
@@ -63,6 +64,7 @@ export function parlayToCanonical(
   return normalizeParlaySlip(
     {
       ...parlay,
+      clientRef: (parlay as Parlay).clientRef ?? (parlay as Parlay).id,
       source: (parlay as Parlay).aiGenerated ? "ai_pick" : source,
     },
     (parlay as Parlay).aiGenerated ? "ai_pick" : source,

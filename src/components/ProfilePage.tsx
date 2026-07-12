@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Shield, ShieldCheck, Calendar, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
+import { Shield, ShieldCheck, ArrowLeft, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import FeedPostCard from '../social/feed/FeedPostCard';
-import { THEME_REGISTRY, VisualTheme } from '../theme/themeRegistry';
+import { THEME_REGISTRY } from '../theme/themeRegistry';
 import ProfileThemeWrapper from './profile/ProfileThemeWrapper';
 import ProfileAvatarBorder from './profile/ProfileAvatarBorder';
 import ProfileShareCard from './profile/ProfileShareCard';
@@ -53,12 +53,13 @@ export default function ProfilePage({
   savedVouchIds = [],
   onAddComment = () => {},
   onDeletePost,
-  savedParlays = [],
   onSectionChange,
   viewUserId,
+  onClearViewUser,
 }: ProfilePageProps) {
   const { user } = useAuth();
   const profileUserId = viewUserId ?? user?.id ?? null;
+  const isOwnProfile = !viewUserId || viewUserId === user?.id;
   const socialStats = useProfileSocialStats(profileUserId);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -96,7 +97,9 @@ export default function ProfilePage({
             };
           }
         }
-      } catch (e) {}
+      } catch {
+        return undefined;
+      }
     }
     return found;
   };
@@ -150,6 +153,24 @@ export default function ProfilePage({
     <ProfileThemeWrapper themeId={profile.profileThemeId || profile.activeTheme || 'cyber-blue'}>
       <div className={`${Z8_PAGE} ve-page-shell min-h-0 min-w-0 max-w-[1120px] mx-auto overflow-x-hidden bg-ve-obsidian text-ve-flash ve-safe-bottom ${Z8_PAGE_PAD_X} ${Z8_PAGE_PAD_Y} ${Z8_PAGE_GAP}`} id="profile-details-view">
 
+        <header className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className={`${Z8_LABEL} text-vouch-emerald`}>{isOwnProfile ? 'Your profile' : 'Community profile'}</span>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              {isOwnProfile ? 'Trust record and identity' : `${profile.displayName}'s trust record`}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-white/55">
+              Settled results, public activity, and account identity in one verifiable record.
+            </p>
+          </div>
+          {!isOwnProfile && onClearViewUser && (
+            <button type="button" onClick={onClearViewUser} className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-white/10 bg-black/30 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-white/70 hover:border-vouch-cyan/35 hover:text-white">
+              <ArrowLeft className="h-4 w-4" />
+              Back to your profile
+            </button>
+          )}
+        </header>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Left Column: Profile Card, Pro verification, & Activity feed */}
@@ -201,7 +222,7 @@ export default function ProfilePage({
 
                 {/* Header customization — Gold+ only */}
                 <div className="absolute top-3 right-3 z-20">
-                  {canEditHeader ? (
+                  {isOwnProfile && canEditHeader ? (
                     <button
                       type="button"
                       onClick={() => onSectionChange?.('themestore')}
@@ -211,7 +232,7 @@ export default function ProfilePage({
                       <Palette className="w-3.5 h-3.5" />
                       Customize Header
                     </button>
-                  ) : (
+                  ) : isOwnProfile ? (
                     <button
                       type="button"
                       onClick={() => onSectionChange?.('premium')}
@@ -222,7 +243,7 @@ export default function ProfilePage({
                       <Lock className="w-3.5 h-3.5 text-vouch-amber/80" />
                       Upgrade to customize header
                     </button>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="absolute -bottom-10 left-6 z-10">
@@ -265,7 +286,7 @@ export default function ProfilePage({
                     {profile.verified && (
                       <span className="text-[10px] bg-vouch-emerald/10 text-vouch-emerald px-2 py-0.5 rounded-full font-bold border border-vouch-emerald/25 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        PRO VERIFIED
+                        VERIFIED ACCOUNT
                       </span>
                     )}
                   </div>
@@ -321,15 +342,17 @@ export default function ProfilePage({
                       <Share className="w-3.5 h-3.5" />
                       Share Card
                     </VEButton>
-                    <VEButton
-                      onClick={() => setIsEditing(true)}
-                      id="edit-profile-btn"
-                      variant="ghost"
-                      className="border-slate-800 text-slate-300 hover:text-slate-100"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      Edit Profile
-                    </VEButton>
+                    {isOwnProfile && (
+                      <VEButton
+                        onClick={() => setIsEditing(true)}
+                        id="edit-profile-btn"
+                        variant="ghost"
+                        className="border-slate-800 text-slate-300 hover:text-slate-100"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Edit Profile
+                      </VEButton>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -385,12 +408,6 @@ export default function ProfilePage({
                 </p>
               )}
 
-              {/* Joined date */}
-              <div className="flex items-center gap-1.5 text-white/35 text-[10px] font-medium font-mono pb-2.5 border-b border-white/10">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Member registered verification: June 19, 2026</span>
-              </div>
-
               {/* Verified Metrics Strip Grid */}
               <div className="space-y-3.5 pt-1">
                 <h4 className={`${Z8_LABEL} text-white/55 flex items-center gap-1.5`}>
@@ -442,11 +459,13 @@ export default function ProfilePage({
                 </div>
                 <div className="text-right">
                   <span className={`${Z8_LABEL} text-white/35 block`}>Status</span>
-                  <span className="text-vouch-emerald text-xs font-black font-mono">ACTIVE GRADER</span>
+                  <span className="text-vouch-emerald text-xs font-black font-mono">
+                    {profile.totalPicks > 0 ? `${profile.totalPicks} PICKS TRACKED` : 'NO SETTLED PICKS'}
+                  </span>
                 </div>
               </div>
 
-              {!canEditHeader && (
+              {isOwnProfile && !canEditHeader && (
                 <div className="flex items-start gap-2 rounded-xl border border-vouch-amber/20 bg-vouch-amber/5 px-3.5 py-2.5 text-[11px] text-white/55">
                   <Lock className="w-3.5 h-3.5 text-vouch-amber shrink-0 mt-0.5" />
                   <p>
@@ -470,8 +489,8 @@ export default function ProfilePage({
           <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-3.5 flex items-start gap-2.5`}>
             <Info className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
             <div className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-              <span className="text-slate-350 block mb-1">PRO VERIFICATION RULES:</span>
-              Your profile is certified as a PRO partner because you conform to our transparent sports logging protocol. Every parlay risk leg is archived in your browser ledger. Volatility increases risk, please track responsibly.
+              <span className="text-slate-350 block mb-1">TRACKING DISCLOSURE:</span>
+              Performance metrics are calculated from settled results available to this profile. Unsettled picks and local-only drafts are excluded. Historical results do not guarantee future outcomes.
             </div>
           </div>
 
@@ -533,7 +552,7 @@ export default function ProfilePage({
                 </p>
               </div>
               <span className="text-[9px] font-mono font-black text-vouch-cyan bg-cyan-950/40 px-2 py-0.5 rounded-full border border-cyan-900/40 uppercase">
-                LIVE DATA
+                SETTLED DATA
               </span>
             </div>
 
@@ -621,17 +640,17 @@ export default function ProfilePage({
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse" />
                 <h3 className="font-bold text-slate-100 text-xs tracking-wider uppercase">
-                  My Outcomes
+                  Recent Outcomes
                 </h3>
               </div>
               <span className="text-[9px] font-mono font-black text-emerald-450 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-900/40 uppercase">
-                🔒 PRIVATE CARD
+                SETTLED RECORD
               </span>
             </div>
 
             <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
-              Your personal settled play winrates grouped day-by-day. These entries are hidden from general feeds. 
-              <strong className="text-slate-300"> Hover over any date</strong> to view settled play items & unit yields!
+              Settled results grouped by day from the profile record currently available.
+              <strong className="text-slate-300"> Hover over a date</strong> to inspect its recorded outcomes and unit result.
             </p>
 
             <div className="space-y-2 relative" id="private-ledgers-days-rows">

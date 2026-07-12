@@ -21,6 +21,7 @@ import { mapBackendParlay, mapBackendVouch } from './backendMappers';
 import { normalizeSlipStatus } from '../lib/parlayDisplay';
 import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
+import { reconcileParlays } from '../domain/parlay/reconcileParlays';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -61,8 +62,8 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   const needsLiveGames = SECTIONS_USING_LIVE_GAMES.has(activeSection)
     || savedSlips.some((slip) => normalizeSlipStatus(slip.status) === 'PENDING');
   const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
-  const liveGames = liveGamesPayload?.games ?? [];
-  const { data: backendParlayRows } = useMyParlays();
+  const liveGames = useMemo(() => liveGamesPayload?.games ?? [], [liveGamesPayload?.games]);
+  const { data: backendParlayRows } = useMyParlays({ enabled: isLoggedIn });
   const { data: backendVouchRows } = useMyVouches();
   const { data: backendFeedPages } = useFeedQuery();
   const backendFeedPosts = useMemo(
@@ -96,32 +97,12 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, []);
 
   useEffect(() => {
-    if (!backendParlayRows?.length) return;
+    if (!isLoggedIn || backendParlayRows === undefined) return;
 
     const backendParlays = backendParlayRows.map(mapBackendParlay);
-    const backendPickIds = new Set(
-      backendParlays
-        .map((p) => p.backendPickId || p.id)
-        .filter(Boolean)
-        .map(String),
-    );
-
     const localSlips = useSlipsStore.getState().savedSlips;
-    const localOnly = localSlips.filter((p) => {
-      if (!p.backendPickId) return true;
-      return !backendPickIds.has(String(p.backendPickId));
-    });
-
-    const merged = [...backendParlays, ...localOnly];
-    const seen = new Set<string>();
-    const deduped = merged.filter((p) => {
-      if (seen.has(p.id)) return false;
-      seen.add(p.id);
-      return true;
-    });
-
-    syncSlips(deduped);
-  }, [backendParlayRows, syncSlips]);
+    syncSlips(reconcileParlays(backendParlays, localSlips, { authenticated: true }));
+  }, [backendParlayRows, isLoggedIn, syncSlips]);
 
   useEffect(() => {
     if (!backendVouchRows?.length) return;
@@ -247,7 +228,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays for today`,
-      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay Hub.',
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to ParlayOS.',
       section: 'live_parlays',
     });
   };
@@ -298,7 +279,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
         notify({
           kind: 'lock',
           title: `🔒 Locked: ${p.title}`,
-          body: 'Moved to Parlay Hub. It will auto-grade when the games are final.',
+      body: 'Moved to ParlayOS. It will auto-grade when the games are final.',
           section: 'live_parlays',
         });
         return { ...p, lockNotified: true };

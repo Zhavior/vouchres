@@ -19,7 +19,6 @@ import {
   RefreshCcw,
   Search,
   Settings,
-  Sliders,
   Sparkles,
   Swords,
   Trophy,
@@ -69,12 +68,6 @@ type FeatureMeta = {
 };
 
 const FEATURE_META: Record<FeatureId, FeatureMeta> = {
-  welcome: {
-    id: "welcome",
-    label: "Edge Island",
-    description: "Morning command board and daily overview.",
-    icon: LayoutDashboard,
-  },
   today: {
     id: "today",
     label: "Today",
@@ -111,21 +104,15 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
     description: "Signals, intel layers, and edge research.",
     icon: Flame,
   },
-  live_game_lab: {
-    id: "live_game_lab",
-    label: "Live Game Lab",
-    description: "In-game analytics and live lab tools.",
-    icon: Radio,
-  },
   player_edge_lab: {
     id: "player_edge_lab",
-    label: "Player Edge Lab",
+    label: "Top Player Lab",
     description: "Deep player edge breakdowns and scores.",
     icon: UserRoundSearch,
   },
   team_matchup_lab: {
     id: "team_matchup_lab",
-    label: "Team Matchup Lab",
+    label: "Pitchers Matchup",
     description: "Pitcher vs lineup matchup research.",
     icon: Swords,
   },
@@ -161,15 +148,9 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   live_parlays: {
     id: "live_parlays",
-    label: "Parlay Hub",
-    description: "Manual builder, saved slips, and parlay command tools.",
+    label: "ParlayOS",
+    description: "Canonical builder, saved slips, and live parlay intelligence.",
     icon: Radio,
-  },
-  build: {
-    id: "build",
-    label: "Build Parlay",
-    description: "Create and edit parlay slips.",
-    icon: Sliders,
   },
   research: {
     id: "research",

@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react-swc';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import path from 'path';
@@ -8,6 +9,9 @@ import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { LIGHTNINGCSS_TARGETS } from './css/lightningcss-targets.mjs';
+
+const SENTRY_ORG = 'vouch-edge';
+const SENTRY_PROJECT = 'javascript-react';
 
 function resolveBuildId(): string {
   if (process.env.VERCEL_GIT_COMMIT_SHA) {
@@ -50,10 +54,13 @@ export default defineConfig(({ mode }) => {
   const disableHmr = process.env.DISABLE_HMR === 'true';
   const analyze = mode === 'analyze';
   const buildId = resolveBuildId();
+  const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+  const sentryRelease = `vouchedge-frontend@${buildId}`;
 
   return {
     define: {
       __APP_BUILD_ID__: JSON.stringify(buildId),
+      __SENTRY_RELEASE__: JSON.stringify(sentryRelease),
     },
     plugins: [
       react(),
@@ -65,6 +72,15 @@ export default defineConfig(({ mode }) => {
             template: 'treemap',
             gzipSize: true,
             brotliSize: true,
+          })
+        : null,
+      // Upload source maps during production builds when CI provides SENTRY_AUTH_TOKEN.
+      sentryAuthToken
+        ? sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: SENTRY_ORG,
+            project: SENTRY_PROJECT,
+            release: { name: sentryRelease },
           })
         : null,
     ].filter(Boolean),
@@ -84,6 +100,8 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       cssMinify: 'lightningcss',
+      // Required for readable stack traces in Sentry when source maps are uploaded.
+      sourcemap: Boolean(sentryAuthToken),
       // Keep a machine-readable asset graph for production budget checks.
       manifest: 'vite-manifest.json',
       chunkSizeWarningLimit: 600,

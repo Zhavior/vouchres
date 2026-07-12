@@ -871,7 +871,7 @@ export default function TheEdgeShell({
                   <div className={`${Z8_PANEL_PREMIUM} rounded-2xl p-5`}>
                     <div className="flex items-center gap-2"><Bot className="h-5 w-5 text-white/40" /><h3 className="text-sm font-bold text-white">AI Seat</h3></div>
                     <div className="mt-4 grid gap-2">
-                      {['Explain today’s board', 'Compare players', 'Build parlay logic'].map((tool) => (
+                      {['Explain today’s board', 'Compare players', 'Open ParlayOS logic'].map((tool) => (
                         <button key={tool} onClick={() => enterSite('ai_engine')} className="rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left text-xs font-bold text-white/80 hover:border-vouch-cyan/30">
                           {tool}
                         </button>

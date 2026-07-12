@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=3000 node --max-old-space-size=12000 --import tsx server.ts",
-    "dev:stop": "sh -c 'lsof -ti :${PORT:-3000} 2>/dev/null | xargs kill -9 2>/dev/null || true'",
+    "dev:stop": "sh -c 'PORT=${PORT:-3000}; PIDS=$(lsof -ti :$PORT 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"[dev:stop] Killing PID(s) on port $PORT: $PIDS\"; echo \"$PIDS\" | xargs kill -9 2>/dev/null || true; sleep 1; else echo \"[dev:stop] Port $PORT is free\"; fi'",
+    "dev:port": "sh -c 'PORT=${PORT:-3000}; lsof -nP -iTCP:$PORT -sTCP:LISTEN || echo \"Port $PORT is free\"'",
     "dev:restart": "npm run dev:stop && npm run dev",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && esbuild server/cron/dailyGradeJob.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/gradeJob.cjs && esbuild server/cron/dailyDeleteJob.ts --bundle --platform=node --format=cjs --packages=external --external:stripe --external:../middleware/auth --outfile=dist/deleteJob.cjs",
     "start": "node dist/server.cjs",
@@ -24,6 +25,7 @@
     "migrate:trustos": "node --env-file=.env.local scripts/applyTrustOsMigration.mjs",
     "verify:billing-hardening": "tsx scripts/verifyBillingHardening.ts",
     "verify:vercel-api-parity": "tsx scripts/verifyVercelApiParity.ts",
+    "sentry:test": "tsx scripts/sentryTestError.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:parlay": "playwright test e2e/parlay-os.smoke.spec.ts",
@@ -87,6 +89,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.51.0",
+    "@sentry/vite-plugin": "^5.4.0",
     "@tailwindcss/vite": "^4.3.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

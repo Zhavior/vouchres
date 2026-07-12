@@ -46,9 +46,9 @@ function MiniStatChip({ label, value, icon }: { label: string; value: number; ic
 
 export function HrCommandCenter(props: Props) {
   return (
-    <div className="space-y-3 sm:space-y-5 lg:sticky lg:top-0 lg:z-30 lg:-mx-8 lg:space-y-5 lg:bg-ve-obsidian/95 lg:px-8 lg:py-2 lg:backdrop-blur-md">
+    <div className="z8-hr-control-dock space-y-3 p-2.5 sm:p-4 lg:sticky lg:top-0 lg:z-30">
       {/* Mobile: header + toolbar stick together; desktop stats/toolbar scroll normally under lg sticky */}
-      <div className="sticky top-0 z-30 -mx-3 space-y-2 bg-ve-obsidian/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md sm:-mx-4 sm:space-y-3 sm:px-4 lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:pt-0 lg:backdrop-blur-none">
+      <div className="space-y-2 sm:space-y-3">
         <HrHeader {...props} />
 
         {props.autoSwitchedToPreview && (

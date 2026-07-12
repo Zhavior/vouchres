@@ -48,8 +48,8 @@ export const StatChip: React.FC<{
 }> = React.memo(function StatChip({ label, value, color = 'hsl(var(--ve-text-primary))' }) {
   return (
     <div className={`${Z8_SURFACE} px-2 py-1.5 text-center font-z8`}>
-      <div className={`${Z8_LABEL} text-[8px] text-white/40`}>{label}</div>
-      <div className="font-mono text-xs font-black" style={{ color }}>
+      <div className={`${Z8_LABEL} text-white/55`}>{label}</div>
+      <div className="font-mono text-sm font-black" style={{ color }}>
         {value}
       </div>
     </div>
@@ -84,12 +84,12 @@ export const Card: React.FC<{ className?: string; onClick?: () => void; children
 };
 
 export function Button({ variant = 'primary', size = 'md', onClick, children, className = '' }: { variant?: 'primary' | 'ghost'; size?: 'sm' | 'md'; onClick?: () => void; children: React.ReactNode; className?: string }) {
-  const base = size === 'sm' ? 'text-[10px] px-2.5 py-1.5' : 'text-[11px] px-4 py-2.5';
+  const base = size === 'sm' ? 'text-[11px] px-3 py-2' : 'text-xs px-4 py-2.5';
   const style = variant === 'primary' ? Z8_ACTIVE : Z8_IDLE;
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 border font-mono font-bold uppercase tracking-wide transition-all ${base} ${style} ${className}`}
+      className={`z8-control inline-flex items-center justify-center gap-1.5 border font-mono font-bold uppercase tracking-[0.08em] ${base} ${style} ${className}`}
     >
       {children}
     </button>
@@ -124,8 +124,8 @@ export function RiskBadge({ risk }: { risk: string }) {
 export const ScorePill: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color = ACCENT.matchup }) => {
   return (
     <div className={`${Z8_SURFACE} px-2.5 py-1.5 text-center font-z8`}>
-      <p className={`${Z8_LABEL} text-[8px] text-white/40`}>{label}</p>
-      <p className="text-sm font-mono font-black" style={{ color }}>{value}</p>
+      <p className={`${Z8_LABEL} text-white/55`}>{label}</p>
+      <p className="font-mono text-base font-black" style={{ color }}>{value}</p>
     </div>
   );
 };

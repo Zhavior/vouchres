@@ -16,6 +16,11 @@ type BackendParlay = {
   created_at?: string | null;
 };
 
+export type ParlaySaveResult = {
+  parlay: Parlay;
+  syncState: NonNullable<Parlay['backendSyncState']>;
+};
+
 function mapBackendParlayFromSave(result: BackendParlay, parlay: Parlay): Parlay {
   return {
     ...parlay,
@@ -26,17 +31,23 @@ function mapBackendParlayFromSave(result: BackendParlay, parlay: Parlay): Parlay
   };
 }
 
-/** Best-effort backend sync — never throws. Parlay survives in localStorage. */
-export async function pushParlayToBackend(parlay: Parlay): Promise<void> {
-  if (!isSupabaseConfigured) return;
+/** Best-effort backend sync. The returned slip is always the exact local record. */
+export async function pushParlayToBackend(parlay: Parlay): Promise<Parlay> {
+  if (!isSupabaseConfigured) {
+    const localOnlyParlay = { ...parlay, backendSyncState: 'local_only' as const };
+    useSlipsStore.getState().syncSlips(
+      useSlipsStore.getState().savedSlips.map((p) => p.id === parlay.id ? localOnlyParlay : p),
+    );
+    return localOnlyParlay;
+  }
 
   const syncSlips = useSlipsStore.getState().syncSlips;
   const current = useSlipsStore.getState().savedSlips.find((p) => p.id === parlay.id);
   if (current?.backendPickId && current?.backendSyncState === 'synced') {
-    return;
+    return current;
   }
   if (current?.backendSyncState === 'saving' && current !== parlay) {
-    return;
+    return current;
   }
 
   const markState = (state: Parlay['backendSyncState'], extra?: Partial<Parlay>) => {
@@ -53,7 +64,10 @@ export async function pushParlayToBackend(parlay: Parlay): Promise<void> {
       markState('auth_required', {
         backendSyncError: 'Sign in to save this parlay to your account.',
       });
-      return;
+      return useSlipsStore.getState().savedSlips.find((p) => p.id === parlay.id) ?? {
+        ...parlay,
+        backendSyncState: 'auth_required',
+      };
     }
 
     markState('saving', { backendSyncError: undefined });
@@ -77,12 +91,14 @@ export async function pushParlayToBackend(parlay: Parlay): Promise<void> {
       backendSyncError: err?.error || err?.message || 'Backend save failed.',
     });
   }
+
+  return useSlipsStore.getState().savedSlips.find((p) => p.id === parlay.id) ?? parlay;
 }
 
 export async function handleSaveParlaySlip(
   newParlay: Parlay | CanonicalParlaySlip,
   navigateSection: (section: string) => void,
-): Promise<void> {
+): Promise<ParlaySaveResult> {
   const liveGames = useAppCommandStore.getState().liveGames;
   const rawLegs = (Array.isArray(newParlay.legs) ? newParlay.legs : []) as unknown as DraftParlayLeg[];
   const { legs: repairedLegs } = repairDraftLegsIdentity(rawLegs, liveGames);
@@ -131,14 +147,18 @@ export async function handleSaveParlaySlip(
   notify({
     kind: 'success',
     title: '✅ Parlay Saved',
-    body: `${savedParlay.title || 'Your parlay'} was saved to Parlay Hub.`,
+    body: `${savedParlay.title || 'Your parlay'} was saved to ParlayOS.`,
     section: 'live_parlays',
   });
 
   useParlayCommandStore.getState().setActivePanel('vai_ledger');
   navigateSection('live_parlays');
 
-  await pushParlayToBackend(savedParlay);
+  const persistedParlay = await pushParlayToBackend(savedParlay);
+  return {
+    parlay: persistedParlay,
+    syncState: persistedParlay.backendSyncState ?? 'local_only',
+  };
 }
 
 export async function pushAiParlaysToBackend(parlays: Parlay[]): Promise<void> {
@@ -202,11 +222,10 @@ export async function handleCommitParlayTrust(input: {
   }
 
   if (!working.backendPickId) {
-    await pushParlayToBackend(working);
-    working = useSlipsStore.getState().savedSlips.find((p) => p.id === input.parlay.id) ?? working;
+    working = await pushParlayToBackend(working);
   }
 
-  const pickId = working.backendPickId ?? working.id;
+  const pickId = working.backendPickId;
   if (!pickId) {
     throw new Error("Save this parlay to your account before locking to the trust ledger.");
   }

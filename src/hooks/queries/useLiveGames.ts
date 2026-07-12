@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { vouchedgeApi } from '../../api/vouchedgeApi';
 import { queryKeys } from './queryKeys';
+import type { LiveGamesPayload } from '../../types/liveGames';
 
-export type LiveGamesPayload = Awaited<ReturnType<typeof vouchedgeApi.liveGames>>;
+export type { LiveGamesPayload } from '../../types/liveGames';
 
 const LIVE_POLL_MS = 6_000;
 const IDLE_POLL_MS = 45_000;
@@ -23,7 +24,7 @@ export function useLiveGames(options?: { enabled?: boolean; refetchInterval?: nu
     queryFn: () => vouchedgeApi.liveGames(),
     staleTime: LIVE_STALE_MS,
     gcTime: 120_000,
-    refetchOnMount: true,
+    refetchOnMount: false,
     placeholderData: (prev) => prev,
     refetchInterval: (query) => {
       if (options?.refetchInterval !== undefined) return options.refetchInterval;

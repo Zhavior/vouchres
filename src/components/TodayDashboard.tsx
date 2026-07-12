@@ -6,6 +6,7 @@ import {
   Bot,
   Brush,
   ClipboardList,
+  ChevronRight,
   Flame,
   LayoutDashboard,
   LineChart,
@@ -20,15 +21,16 @@ import {
   Users,
 } from 'lucide-react';
 import type { CreatorProofProfile, Parlay } from '../types';
+import TodaySliders from './today/TodaySliders';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { motion } from '../lib/motion';
 import { useMode } from '../lib/useMode';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
-const PortfolioAnalyticsPanel = React.lazy(() => import('./PortfolioAnalyticsPanel'));
+const FollowingHubPage = React.lazy(() => import('../pages/FollowingHubPage'));
 
-const TODAY_PANELS = ['overview', 'portfolio'] as const;
+const TODAY_PANELS = ['overview', 'following'] as const;
 type TodayPanel = (typeof TODAY_PANELS)[number];
 const SWIPE_THRESHOLD = 56;
 
@@ -77,10 +79,18 @@ const TODAY_TOOLS: DashboardCard[] = [
   {
     icon: Sliders,
     section: 'build',
-    title: 'Parlay Hub',
+    title: 'ParlayOS',
     eyebrow: 'Builder',
     description: 'Build slips from research legs and track them into the ledger.',
     accent: 'cyan',
+  },
+  {
+    icon: LineChart,
+    section: 'pro_graphs_lab',
+    title: 'Pro Graphs Lab',
+    eyebrow: 'Pro',
+    description: 'Trend charts and advanced graphing tools for deeper research.',
+    accent: 'gold',
   },
 ];
 
@@ -213,16 +223,16 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             <button
               type="button"
               role="tab"
-              aria-selected={activePanel === 'portfolio'}
-              onClick={() => setActivePanel('portfolio')}
+              aria-selected={activePanel === 'following'}
+              onClick={() => setActivePanel('following')}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-                activePanel === 'portfolio'
+                activePanel === 'following'
                   ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
                   : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
               }`}
             >
-              <BarChart3 className="h-3.5 w-3.5" />
-              Portfolio Analytics
+              <Users className="h-3.5 w-3.5" />
+              Following
             </button>
           </div>
           <div className="mt-3 flex justify-center gap-1.5" aria-hidden>
@@ -271,7 +281,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                     <Sparkles className="h-3.5 w-3.5" />
-                    Today’s Research Command Center
+                    Today&apos;s decision brief
                   </span>
                   <span className={`border border-ve-fuse/40 bg-ve-graphite/30 px-3 py-1 ${Z8_LABEL} text-ve-ion/40`}>
                     {reportStatus}
@@ -279,17 +289,17 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
                 </div>
 
                 <h1 className="max-w-4xl text-3xl font-black tracking-tight text-ve-flash sm:text-4xl lg:text-5xl font-mono uppercase">
-                  VouchEdge Research Command Center
+                  What needs your attention today
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55 sm:text-base font-mono">
-                  Start with the live MLB board, move into player and matchup research, then publish or track every vouch from one professional workspace.
+                  Review the strongest available signal, verify its data status, then move directly into research or tracking.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <CommandButton label="Open Daily Players" section="daily_players" onSectionChange={onSectionChange} primary />
-                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} />
-                <CommandButton label="Build Parlay" section="build" onSectionChange={onSectionChange} />
+                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} primary />
+                <CommandButton label="Open Live Games" section="live_games" onSectionChange={onSectionChange} />
+                <CommandButton label="Open ParlayOS" section="live_parlays" onSectionChange={onSectionChange} />
               </div>
             </div>
 
@@ -341,18 +351,26 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
           <MetricTile label="Daily Report" value={loading ? 'Syncing' : report ? 'Ready' : 'Limited'} detail="MLB data powered" />
         </section>
 
-        <DashboardSection
-          title="Today’s MLB Tools"
-          subtitle="Start here for the core research flow."
-          cards={TODAY_TOOLS.map((card) =>
-            card.section === 'build'
-              ? { ...card, meta: savedSlips.length ? `${savedSlips.length} saved slips` : 'No saved slips yet' }
-              : card,
-          )}
-          onSectionChange={onSectionChange}
-        />
+        <TodaySliders onSectionChange={onSectionChange} />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
+        <details className="z8-data-surface group p-3 sm:p-4">
+          <summary className="z8-control flex cursor-pointer list-none items-center justify-between px-2 text-sm font-black text-white marker:content-none">
+            Browse all specialist tools
+            <ChevronRight className="h-4 w-4 text-white/45 transition group-open:rotate-90" />
+          </summary>
+          <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+          <DashboardSection
+            title="Today’s MLB Tools"
+            subtitle="Specialist destinations for deeper research."
+            cards={TODAY_TOOLS.map((card) =>
+              card.section === 'build'
+                ? { ...card, section: 'live_parlays', meta: savedSlips.length ? `${savedSlips.length} saved slips` : 'No saved slips yet' }
+                : card,
+            )}
+            onSectionChange={onSectionChange}
+          />
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
           <div className="space-y-4">
             <DashboardSection
               title="Intelligence And AI"
@@ -397,7 +415,9 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
               />
             </div>
           </aside>
-        </div>
+          </div>
+          </div>
+        </details>
 
         <p className="pb-2 text-center text-[10px] font-medium text-[hsl(var(--ve-text-muted))]">
           Probability-based sports research. No guaranteed outcomes.
@@ -405,14 +425,9 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             </div>
 
             <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-              {activePanel === 'portfolio' && (
+              {activePanel === 'following' && (
                 <React.Suspense fallback={<PortfolioPanelSkeleton />}>
-                  <PortfolioAnalyticsPanel
-                    profile={profile}
-                    savedSlips={savedSlips}
-                    isLoggedIn={isLoggedIn}
-                    onSectionChange={onSectionChange}
-                  />
+                  <FollowingHubPage />
                 </React.Suspense>
               )}
             </div>
@@ -478,8 +493,8 @@ function CommandButton({
       onClick={() => onSectionChange(section)}
       className={
         primary
-          ? `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
-          : `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
+          ? `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
+          : `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
       }
     >
       {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" /> : null}
@@ -497,7 +512,7 @@ function ModeToggle({ mode, toggleMode }: { mode: string; toggleMode: () => void
           key={item}
           type="button"
           onClick={() => item !== mode && toggleMode()}
-          className={`px-2.5 py-1 capitalize transition border ${
+          className={`z8-control px-2.5 py-1 capitalize transition border ${
             mode === item
               ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
               : 'border-transparent text-white/40 hover:text-white/65'

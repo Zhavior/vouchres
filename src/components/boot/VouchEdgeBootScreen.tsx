@@ -6,14 +6,14 @@ type Props = {
 
 const leftFeatures = [
   "Daily Players",
-  "Live Game Lab",
+  "Live Games",
   "Player Research",
   "AI Research",
 ];
 
 const rightFeatures = [
   "Daily HR Board",
-  "Parlay Hub",
+  "ParlayOS",
   "VouchBoard",
   "Results Ledger",
 ];

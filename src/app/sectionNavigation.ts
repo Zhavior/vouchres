@@ -4,7 +4,6 @@ export const DEV_BYPASS_AUTH =
 export const PUBLIC_SECTIONS = new Set([
   'welcome',
   'vouchedge_intro',
-  'edge_island_preview',
   'legacy_studio',
   'feed',
   'following',
@@ -176,7 +175,7 @@ export function resolveDevSectionFromLocation() {
     target === 'legacy/welcome' || target === '/legacy/welcome' ||
     target === 'legacy/edge-island' || target === '/legacy/edge-island'
   ) {
-    return 'edge_island_preview';
+    return 'vouchedge_intro';
   }
 
   if (target === 'legacy/studio' || target === '/legacy/studio') {
@@ -219,10 +218,6 @@ export function resolveDevSectionFromLocation() {
 
   if (target === 'notifications' || target === '/notifications' || target === 'alerts' || target === '/alerts') {
     return 'notifications';
-  }
-
-  if (target === 'live-game-lab' || target === '/live-game-lab') {
-    return 'live_game_lab';
   }
 
   if (target === 'player-edge-lab' || target === '/player-edge-lab') {

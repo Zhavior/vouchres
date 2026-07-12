@@ -6,11 +6,12 @@ import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import { queryKeys } from './hooks/queries/queryKeys';
 import { vouchedgeApi } from './api/vouchedgeApi';
 import VouchEdgeTerminalPage from './pages/VouchEdgeTerminalPage';
+import { PUBLIC_SECTIONS } from './app/sectionNavigation';
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
-const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
+const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
 
 function RouteFallback() {
   const [visible, setVisible] = useState(false);
@@ -49,13 +50,8 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   }, []);
 
   return (
-    <div className="z8-app-shell ve-motion-shell ve-theme-transition font-z8">
-      <div className="ve-motion-bg" aria-hidden="true">
-        <div className="ve-motion-grid" />
-        <div className="ve-motion-noise" />
-        <div className="ve-motion-spotlight" />
-      </div>
-      <div className="ve-motion-content">
+    <div className="z8-app-shell ve-theme-transition font-z8" style={{ background: '#000' }}>
+      <div>
         <div id="layout-inner-frame" className="ve-layout-frame ve-layout-welcome">
           <div id="center-main-content-column">
             <div id="inner-view-slot">
@@ -70,10 +66,16 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
 
 export default function App() {
   const navigation = useSectionNavigation();
+  const canRenderLoggedOutRoute =
+    PUBLIC_SECTIONS.has(navigation.activeSection) && navigation.activeSection !== 'vouchedge_intro';
+  const showPublicLanding =
+    !navigation.isLoggedIn &&
+    !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
+    !canRenderLoggedOutRoute;
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!navigation.isLoggedIn && !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) ? (
+      {showPublicLanding ? (
         <PublicLanding onAuthed={navigation.handleLoginSuccess} />
       ) : (
         <Suspense fallback={<RouteFallback />}>

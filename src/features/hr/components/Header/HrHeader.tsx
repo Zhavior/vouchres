@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutGrid, Table2, RefreshCw, Calendar, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
 import { HrBrandIcon } from '../HrBrandIcon';
+import { localISODate } from '../../utils/localDate';
 
 export type HrViewMode = 'cards' | 'table' | 'treemap';
 
@@ -17,7 +18,7 @@ export interface HrHeaderProps {
 }
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
 
 function isoAddDays(iso: string, delta: number): string {

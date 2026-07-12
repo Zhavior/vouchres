@@ -13,7 +13,7 @@
  *  - All 18+ features preserved, just 2-level hierarchy
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -23,13 +23,9 @@ import {
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut, Crosshair,
+  ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
-import {
-  ALL_FEATURES, getSidebarFeatures, loadFeatureLayout,
-  FeatureLayout,
-} from '../../lib/featureConfig';
-import { canAccessThemeStore } from '../../lib/adminDevAccess';
+import { getPrimaryProductNavigation, getProductWorkspace } from '../../app/productNavigation';
 import { preloadSection } from '../../lib/routePreload';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
@@ -37,6 +33,7 @@ import { useProfileStore } from '../../stores/profileStore';
 import { useShallow } from 'zustand/react/shallow';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import { performAppLogout } from '../../lib/appLogout';
+import { SECTIONS_USING_LIVE_GAMES } from '../../app/sectionNavigation';
 import { hasLiveGames, useLiveGames } from '../../hooks/queries/useLiveGames';
 import { SidebarLiveOnAirBadge } from './SidebarLiveOnAirBadge';
 
@@ -59,7 +56,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Trophy, LayoutDashboard, Home, Award, Tv, Radio, Sliders, Cpu, Activity,
   Flame, ScanLine, Search, ClipboardCheck, BarChart3, Sparkles, MessageSquare,
   ShoppingBag, User, UserCircle, Settings, Users, UserRoundSearch, Swords, LineChart, Bell,
-  CalendarDays, Grid3x3, Crown, Crosshair,
+  CalendarDays, Grid3x3, Crown,
 };
 
 /** HR nav items use Flame per featureConfig — ensure icon resolves even if registry drifts. */
@@ -268,21 +265,9 @@ function FeedSidebar({
   onLogoutComplete,
 }: FeedSidebarProps) {
   const profile = useProfileStore(useShallow(selectSidebarProfile));
-  const [layout, setLayout] = useState<FeatureLayout>(() => loadFeatureLayout());
   const [activeSport, setActiveSportState] = useState<SportId>(() => getActiveSport());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedState);
   const [signingOut, setSigningOut] = useState(false);
-  const previousSectionRef = useRef(activeSection);
-
-  // Reload layout only after leaving Customize — avoids localStorage reads on every nav click.
-  useEffect(() => {
-    const previous = previousSectionRef.current;
-    previousSectionRef.current = activeSection;
-    if (previous === 'customize' && activeSection !== 'customize') {
-      setLayout(loadFeatureLayout());
-    }
-  }, [activeSection]);
-
   useEffect(() => onSportChange(setActiveSportState), []);
 
   const handleSportClick = useCallback((id: SportId) => {
@@ -314,20 +299,15 @@ function FeedSidebar({
   }, [onLogoutComplete, signingOut]);
 
   const sidebarFeatures = useMemo(() => {
-    const items = getSidebarFeatures(layout, {
-      canAccessThemeStore: canAccessThemeStore(profile),
-      activeSport,
-    });
-    for (const id of ['today', 'hr_board', 'mlb_stats'] as const) {
-      if (!items.some(f => f.id === id)) {
-        const feature = ALL_FEATURES.find(f => f.id === id);
-        if (feature) items.push(feature);
-      }
-    }
-    return items
-      .filter(f => f.id !== 'notifications')
-      .sort((a, b) => a.order - b.order);
-  }, [layout, profile, activeSport]);
+    const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
+    return getPrimaryProductNavigation().map((item, order) => ({
+      id: item.section,
+      label: item.label,
+      icon: icons[item.id],
+      order,
+      group: undefined,
+    }));
+  }, []);
 
   const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
   const grouped = useMemo(
@@ -344,7 +324,12 @@ function FeedSidebar({
     [profile.displayName],
   );
 
-  const { data: liveGamesPayload } = useLiveGames();
+  const needsFastLivePoll =
+    SECTIONS_USING_LIVE_GAMES.has(activeSection) || activeSection === 'today';
+
+  const { data: liveGamesPayload } = useLiveGames({
+    refetchInterval: needsFastLivePoll ? undefined : 45_000,
+  });
   const liveGamesActive = hasLiveGames(liveGamesPayload);
 
   return (
@@ -352,7 +337,7 @@ function FeedSidebar({
       id="z8-feed-sidebar"
       className={[
         'relative hidden md:flex h-full min-h-0 flex-col',
-        'w-[72px] xl:w-[280px]',
+        'w-full min-w-0',
         Z8_SIDEBAR_SHELL,
         'px-2 xl:px-3.5 py-4',
         'justify-between select-none',
@@ -388,6 +373,10 @@ function FeedSidebar({
             <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />
           </div>
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
+        </div>
+
+        <div className="flex items-center justify-center gap-2 px-1">
+          <NotificationBellButton size="sm" />
         </div>
 
         <button
@@ -447,7 +436,7 @@ function FeedSidebar({
                   id={f.id}
                   label={f.label}
                   icon={f.icon}
-                  isActive={activeSection === f.id}
+                  isActive={getProductWorkspace(activeSection).defaultSection === f.id}
                   onNavigate={handleNavigate}
                 />
               ))}

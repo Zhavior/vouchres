@@ -3,9 +3,10 @@ import { useDailyHrBoard } from './useDailyHrBoard';
 import { useHrResultsForDate } from './useHrResultsForDate';
 import { buildBoard, rowsForMode } from '../utils/normalizeHrWatch';
 import type { HrWatchMode, HrWatchRow } from '../types/hrWatch';
+import { localISODate } from '../utils/localDate';
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
 
 export type HrResult = 'hit' | 'no-hr' | null;
