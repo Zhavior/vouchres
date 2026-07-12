@@ -131,7 +131,7 @@ function MainViewRouter({
         return (
           <LazyRoute>
             <PersonalizedOnboarding
-              onComplete={() => navigateSection("today")}
+              onComplete={(section) => navigateSection(section ?? "today")}
             />
           </LazyRoute>
         );
