@@ -28,7 +28,7 @@ function EmptyLiveParlays() {
   );
 }
 
-export default function ParlayHubHistoryPanel() {
+export default function ParlayOsHistoryPanel() {
   const savedSlips = useParlayCommandStore(selectSavedSlips);
   const liveGames = useAppCommandStore((s) => s.liveGames);
   const syncSlips = useSlipsStore((s) => s.syncSlips);

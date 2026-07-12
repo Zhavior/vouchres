@@ -41,7 +41,7 @@ import type { Parlay } from '../../types';
 import type { TrustAudience } from '../../lib/trustLockSchedule';
 import { PanelErrorBoundary } from '../common/PanelErrorBoundary';
 import { lazy, Suspense } from 'react';
-const ParlayHubHistoryPanel = lazy(() => import('./hub/ParlayHubHistoryPanel'));
+const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
 import ParlayHubMobileSlipDock from './hub/ParlayHubMobileSlipDock';
 import ParlayHubTemplatesRow from './hub/ParlayHubTemplatesRow';
 import ParlayHubTemplateGuide from './hub/ParlayHubTemplateGuide';
@@ -1057,7 +1057,7 @@ function TabContent({
       return (
         <PanelErrorBoundary>
           <Suspense fallback={<ParlayHubPanelSkeleton label="Loading parlay history" />}>
-            <ParlayHubHistoryPanel />
+            <ParlayOsHistoryPanel />
           </Suspense>
         </PanelErrorBoundary>
       );
