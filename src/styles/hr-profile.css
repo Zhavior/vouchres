@@ -20,6 +20,15 @@
   background: var(--ve-hr-shell);
 }
 
+/* The full dossier occupies the app content viewport, not the navigation rail. */
+@media (min-width: 768px) {
+  #layout-inner-frame:not(.ve-layout-welcome) .ve-hr-profile-backdrop,
+  #layout-inner-frame:not(.ve-layout-welcome) .ve-hr-profile-shell {
+    left: var(--ve-sidebar-width, 72px);
+    width: auto;
+  }
+}
+
 .ve-hr-profile-sidebar {
   border-color: var(--ve-hr-border);
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.55) 0%, #02060e 72%);
