@@ -390,6 +390,10 @@ function FeedSidebar({
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
         </div>
 
+        <div className="flex items-center justify-center gap-2 px-1">
+          <NotificationBellButton size="sm" />
+        </div>
+
         <button
           onClick={onOpenCmdK}
           className={`hidden xl:flex w-full items-center gap-2 px-3 py-2 transition-all hover:bg-vouch-cyan/5 hover:text-white ${Z8_SIDEBAR_SURFACE} ${Z8_LABEL} tracking-widest text-white/40`}
