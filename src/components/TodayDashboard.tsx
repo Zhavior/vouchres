@@ -6,6 +6,7 @@ import {
   Bot,
   Brush,
   ClipboardList,
+  ChevronRight,
   Flame,
   LayoutDashboard,
   LineChart,
@@ -271,7 +272,6 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-        <TodaySliders onSectionChange={onSectionChange} />
         <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
@@ -281,7 +281,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <span className={`inline-flex items-center gap-1.5 border border-vouch-cyan/35 bg-vouch-cyan/10 px-3 py-1 ${Z8_LABEL} text-vouch-cyan`}>
                     <Sparkles className="h-3.5 w-3.5" />
-                    Today’s Research Command Center
+                    Today&apos;s decision brief
                   </span>
                   <span className={`border border-ve-fuse/40 bg-ve-graphite/30 px-3 py-1 ${Z8_LABEL} text-ve-ion/40`}>
                     {reportStatus}
@@ -289,17 +289,17 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
                 </div>
 
                 <h1 className="max-w-4xl text-3xl font-black tracking-tight text-ve-flash sm:text-4xl lg:text-5xl font-mono uppercase">
-                  VouchEdge Research Command Center
+                  What needs your attention today
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55 sm:text-base font-mono">
-                  Start with the live MLB board, move into player and matchup research, then publish or track every vouch from one professional workspace.
+                  Review the strongest available signal, verify its data status, then move directly into research or tracking.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <CommandButton label="Open Daily Players" section="daily_players" onSectionChange={onSectionChange} primary />
-                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} />
-                <CommandButton label="Open ParlayOS" section="build" onSectionChange={onSectionChange} />
+                <CommandButton label="Review HR Board" section="hr_board" onSectionChange={onSectionChange} icon={Flame} primary />
+                <CommandButton label="Open Live Games" section="live_games" onSectionChange={onSectionChange} />
+                <CommandButton label="Open ParlayOS" section="live_parlays" onSectionChange={onSectionChange} />
               </div>
             </div>
 
@@ -351,18 +351,26 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
           <MetricTile label="Daily Report" value={loading ? 'Syncing' : report ? 'Ready' : 'Limited'} detail="MLB data powered" />
         </section>
 
-        <DashboardSection
-          title="Today’s MLB Tools"
-          subtitle="Start here for the core research flow."
-          cards={TODAY_TOOLS.map((card) =>
-            card.section === 'build'
-              ? { ...card, meta: savedSlips.length ? `${savedSlips.length} saved slips` : 'No saved slips yet' }
-              : card,
-          )}
-          onSectionChange={onSectionChange}
-        />
+        <TodaySliders onSectionChange={onSectionChange} />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
+        <details className="z8-data-surface group p-3 sm:p-4">
+          <summary className="z8-control flex cursor-pointer list-none items-center justify-between px-2 text-sm font-black text-white marker:content-none">
+            Browse all specialist tools
+            <ChevronRight className="h-4 w-4 text-white/45 transition group-open:rotate-90" />
+          </summary>
+          <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+          <DashboardSection
+            title="Today’s MLB Tools"
+            subtitle="Specialist destinations for deeper research."
+            cards={TODAY_TOOLS.map((card) =>
+              card.section === 'build'
+                ? { ...card, section: 'live_parlays', meta: savedSlips.length ? `${savedSlips.length} saved slips` : 'No saved slips yet' }
+                : card,
+            )}
+            onSectionChange={onSectionChange}
+          />
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
           <div className="space-y-4">
             <DashboardSection
               title="Intelligence And AI"
@@ -407,7 +415,9 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
               />
             </div>
           </aside>
-        </div>
+          </div>
+          </div>
+        </details>
 
         <p className="pb-2 text-center text-[10px] font-medium text-[hsl(var(--ve-text-muted))]">
           Probability-based sports research. No guaranteed outcomes.
@@ -483,8 +493,8 @@ function CommandButton({
       onClick={() => onSectionChange(section)}
       className={
         primary
-          ? `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
-          : `inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
+          ? `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_ACTIVE} ${Z8_LABEL}`
+          : `z8-control inline-flex items-center justify-center gap-2 border px-4 py-2.5 ${Z8_IDLE} ${Z8_LABEL}`
       }
     >
       {Icon ? <Icon className="h-4 w-4 text-vouch-cyan" /> : null}
@@ -502,7 +512,7 @@ function ModeToggle({ mode, toggleMode }: { mode: string; toggleMode: () => void
           key={item}
           type="button"
           onClick={() => item !== mode && toggleMode()}
-          className={`px-2.5 py-1 capitalize transition border ${
+          className={`z8-control px-2.5 py-1 capitalize transition border ${
             mode === item
               ? 'border-vouch-cyan/45 bg-vouch-cyan/10 text-vouch-cyan'
               : 'border-transparent text-white/40 hover:text-white/65'
