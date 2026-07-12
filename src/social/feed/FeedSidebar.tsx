@@ -25,7 +25,7 @@ import {
   Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
   ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
-import { getPrimaryProductNavigation, getProductWorkspace } from '../../app/productNavigation';
+import { getPrimaryProductNavigation } from '../../app/productNavigation';
 import { preloadSection } from '../../lib/routePreload';
 import { NotificationBellButton } from '../../components/notifications/UnifiedNotificationCenter';
 import { SPORT_LIST, getActiveSport, setActiveSport, onSportChange, SportId } from '../../sports/registry';
@@ -76,6 +76,7 @@ const selectSidebarProfile = (state: ReturnType<typeof useProfileStore.getState>
   const profile = state.profile;
   return {
     displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
     verified: profile.verified,
     winRate: profile.winRate,
     profileBorderId: profile.profileBorderId,
@@ -288,6 +289,10 @@ function FeedSidebar({
     onSectionChange(id);
   }, [onSectionChange]);
 
+  const handleOpenAllTools = useCallback(() => {
+    onOpenCmdK?.();
+  }, [onOpenCmdK]);
+
   const handleLogout = useCallback(async () => {
     if (signingOut) return;
     setSigningOut(true);
@@ -344,10 +349,10 @@ function FeedSidebar({
         Z8_SIDEBAR_SHELL,
         'px-2 xl:px-3.5 py-4',
         'justify-between select-none',
-        'z-40 flex-shrink-0 overflow-y-auto scrollbar-none',
+        'z-40 flex-shrink-0 overflow-hidden',
       ].join(' ')}
     >
-      <div className="relative z-10 space-y-4 flex-1">
+      <div className="relative z-10 flex-1 min-h-0 space-y-3 px-0.5">
         <div className="relative">
           <div className="flex items-start gap-1.5">
             <button
@@ -376,10 +381,6 @@ function FeedSidebar({
             <NotificationBellButton size="sm" className="shrink-0 mt-0.5" />
           </div>
           <div className="z8-accent-line mt-2.5 w-full" aria-hidden />
-        </div>
-
-        <div className="flex items-center justify-center gap-2 px-1">
-          <NotificationBellButton size="sm" />
         </div>
 
         <button
@@ -431,6 +432,23 @@ function FeedSidebar({
         </div>
 
         <nav className="space-y-2.5" id="sidebar-nav-container" aria-label="Main navigation">
+          <div className="flex items-center justify-between gap-2 px-2 xl:px-3">
+            <span className={`${Z8_LABEL} hidden xl:block text-[9px] tracking-[0.2em] text-white/35`}>
+              Your workspace
+            </span>
+            <span className="xl:hidden h-px flex-1 bg-white/10" aria-hidden />
+            <button
+              type="button"
+              onClick={handleOpenAllTools}
+              disabled={!onOpenCmdK}
+              className={`${Z8_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-[9px] tracking-[0.12em] text-vouch-cyan transition-colors hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35`}
+              aria-label="Explore all tools"
+              title="Explore all tools"
+            >
+              <Grid3x3 className="h-3 w-3" />
+              <span className="hidden xl:inline">All tools</span>
+            </button>
+          </div>
           {ungrouped.length > 0 && (
             <div className="space-y-1">
               {ungrouped.map(f => (
@@ -441,12 +459,23 @@ function FeedSidebar({
                   icon={f.icon}
                   isActive={f.id === 'brain_picks'
                     ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
-                    : getProductWorkspace(activeSection).defaultSection === f.id}
+                    : activeSection === f.id}
                   onNavigate={handleNavigate}
                 />
               ))}
             </div>
           )}
+
+          <button
+            type="button"
+            onClick={handleOpenAllTools}
+            disabled={!onOpenCmdK}
+            className={`group flex w-full items-center justify-center gap-3 border border-dashed border-vouch-cyan/25 px-3 py-3 text-vouch-cyan transition-colors hover:border-vouch-cyan/55 hover:bg-vouch-cyan/10 disabled:cursor-default disabled:opacity-35 xl:justify-start ${Z8_LABEL}`}
+            aria-label="Explore every VouchEdge tool"
+          >
+            <Grid3x3 className="h-4 w-4 shrink-0" />
+            <span className="hidden xl:block text-[10px] tracking-[0.15em]">Explore all tools</span>
+          </button>
 
           {grouped.map(({ group, items }) => (
             <SidebarGroup
@@ -514,6 +543,7 @@ function FeedSidebar({
         >
           <ProfileAvatarBorder
             borderId={profile.profileBorderId}
+            avatarUrl={profile.avatarUrl}
             displayName={profile.displayName}
             initials={profileInitials}
             size="md"

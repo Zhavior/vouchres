@@ -13,7 +13,7 @@ import {
   Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
-import { getPrimaryProductNavigation, getProductWorkspace } from '../../app/productNavigation';
+import { getPrimaryProductNavigation } from '../../app/productNavigation';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -236,7 +236,7 @@ function MobileProfileDrawer({
                     {items.map((item) => {
                       const resolvedIcon = HR_NAV_IDS.has(item.id) ? 'Flame' : item.icon;
                       const Icon = ICON_MAP[resolvedIcon] || Settings;
-                      const isActive = getProductWorkspace(activeSection).defaultSection === item.id;
+                      const isActive = activeSection === item.id;
                       return (
                         <button
                           key={item.id}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Brain, Clock3 } from "lucide-react";
-import { Z8_LABEL, Z8_PANEL_PREMIUM } from "../../theme/z8Tokens";
+import { Z8_LABEL } from "../../theme/z8Tokens";
 
 function formatWait(milliseconds: number | null): string {
   if (milliseconds == null) return "Waiting for the next scheduled slate";
@@ -49,11 +49,7 @@ export function BrainMarketLoadingState({
       : Math.max(0, millisecondsUntilWindow - elapsed);
   const percent = Math.max(0, Math.min(99, Math.round(readiness)));
   return (
-    <div
-      className={`${Z8_PANEL_PREMIUM} overflow-hidden p-5`}
-      role="status"
-      aria-live="polite"
-    >
+    <div className="brain-panel overflow-hidden p-5" role="status" aria-live="polite">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center border border-vouch-cyan/25 bg-vouch-cyan/5 text-vouch-cyan">
@@ -74,9 +70,9 @@ export function BrainMarketLoadingState({
         </div>
         <strong className="font-mono text-2xl text-white">{percent}%</strong>
       </div>
-      <div className="mt-4 h-1.5 overflow-hidden bg-white/5">
+      <div className="brain-meter-track mt-4">
         <div
-          className="h-full bg-gradient-to-r from-vouch-cyan to-vouch-emerald transition-[width] duration-700"
+          className="transition-[width] duration-700"
           style={{ width: `${percent}%` }}
         />
       </div>

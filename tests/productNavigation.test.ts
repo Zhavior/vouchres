@@ -37,10 +37,13 @@ describe('customer-facing product navigation', () => {
     expect(getProductWorkspace('unknown-route').id).toBe('today');
   });
 
-  it('drives desktop and mobile navigation from the workspace model', () => {
+  it('drives desktop and mobile navigation from the workspace model without false active states', () => {
     for (const source of shellSources) {
       expect(source).toContain('getPrimaryProductNavigation()');
-      expect(source).toContain('getProductWorkspace(activeSection)');
+      expect(
+        source.includes('activeSection === item.id') ||
+          source.includes('activeSection === f.id'),
+      ).toBe(true);
     }
   });
 });

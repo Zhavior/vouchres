@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, ShieldCheck, ArrowLeft, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Shield, ShieldCheck, ArrowLeft, Edit3, Save, Info, Sparkles, MessageSquare, Share, Lock, Palette, Camera, Loader2 } from 'lucide-react';
 import { CreatorProofProfile, FeedPost, Vouch, Parlay } from '../types';
 import FeedPostCard from '../social/feed/FeedPostCard';
 import { THEME_REGISTRY } from '../theme/themeRegistry';
@@ -12,6 +12,7 @@ import { canCustomizeProfileHeader } from './pro/proAccessUtils';
 import { useEntitlements } from '../features/hr/hooks/useEntitlements';
 import { useAuth } from '../lib/useAuth';
 import { useProfileSocialStats } from '../hooks/useSocialGraph';
+import { uploadProfileAvatar } from '../lib/profileAvatarUpload';
 import { Z8_LABEL, Z8_PAGE, Z8_PAGE_GAP, Z8_PAGE_PAD_X, Z8_PAGE_PAD_Y, Z8_PANEL_PREMIUM, Z8_STAT_CHIP, Z8_TABULAR } from '../theme/z8Tokens';
 import {
   Area,
@@ -65,6 +66,9 @@ export default function ProfilePage({
   const [showShareModal, setShowShareModal] = useState(false);
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [hoveredDayYmd, setHoveredDayYmd] = useState<string | null>(null);
   const entitlements = useEntitlements();
   const canEditHeader = canCustomizeProfileHeader(profile, {
@@ -119,6 +123,22 @@ export default function ProfilePage({
       bio: bio.trim()
     });
     setIsEditing(false);
+  };
+
+  const handleAvatarFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+    try {
+      const avatarUrl = await uploadProfileAvatar(file);
+      onUpdateProfile({ avatarUrl });
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Profile photo upload failed.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   // Filter user's posts
@@ -267,14 +287,40 @@ export default function ProfilePage({
 
                   <ProfileAvatarBorder 
                     borderId={profile.profileBorderId}
+                    avatarUrl={profile.avatarUrl}
                     displayName={profile.displayName}
                     initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
                     size="xl"
                     winRate={profile.winRate}
                     isVerified={profile.verified}
                   />
+                  {isOwnProfile && (
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={(event) => void handleAvatarFile(event)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[#07111a] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
+                        aria-label="Change profile photo"
+                        title="Change profile photo"
+                      >
+                        {isUploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
+
+            {avatarError && isOwnProfile && (
+              <p className="px-6 pt-3 text-sm text-rose-200" role="alert">{avatarError}</p>
+            )}
 
             <div className="p-6 pt-12 space-y-4">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, RefreshCw, Target } from "lucide-react";
 import { useHrBoardViewModel } from "../hr/hooks/useHrBoardViewModel";
 import { selectBrainPicks } from "./brainSelection";
 import { BrainPageShell } from "./BrainPageShell";
-import { Z8_LABEL, Z8_PANEL_PREMIUM, Z8_SURFACE } from "../../theme/z8Tokens";
+import { Z8_LABEL, Z8_PANEL_PREMIUM } from "../../theme/z8Tokens";
 import { apiClient } from "../../lib/apiClient";
 import PlayerHeadshot from "../../components/parlays/PlayerHeadshot";
 import { BrainMarketLoadingState } from "./BrainMarketLoadingState";
@@ -203,7 +203,7 @@ export default function BrainPicksPage({
 
   return (
     <BrainPageShell active="picks" onNavigate={onNavigate}>
-      <section className={`${Z8_PANEL_PREMIUM} brain-premium-card p-4 sm:p-6`}>
+      <section className="brain-panel p-4 sm:p-6">
         <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className={`${Z8_LABEL} text-vouch-cyan`}>
@@ -253,11 +253,11 @@ export default function BrainPicksPage({
             <RefreshCw className="h-4 w-4 animate-spin" /> Scanning MLB evidence
           </div>
         ) : scanQuery.data ? (
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="brain-scan-grid mt-4">
             {scanQuery.data.scan.sources.map((source) => (
               <article
                 key={source.key}
-                className="border border-white/10 bg-black/25 p-3"
+                className="brain-source-card"
               >
                 <div className="flex items-start justify-between gap-3">
                   <strong className="text-xs text-white/75">
@@ -269,9 +269,9 @@ export default function BrainPicksPage({
                     {source.coverage}%
                   </span>
                 </div>
-                <div className="mt-2 h-1 bg-white/5">
+                <div className="brain-source-track mt-2">
                   <div
-                    className={`h-full ${source.status === "verified" ? "bg-vouch-emerald" : source.status === "partial" ? "bg-amber-300" : "bg-rose-400"}`}
+                    className={source.status === "missing" ? "bg-rose-400" : source.status === "partial" ? "bg-amber-300" : undefined}
                     style={{ width: `${source.coverage}%` }}
                   />
                 </div>
@@ -289,7 +289,7 @@ export default function BrainPicksPage({
         )}
       </section>
 
-      <section className={`${Z8_PANEL_PREMIUM} brain-premium-card p-4 sm:p-6`}>
+      <section className="brain-panel p-4 sm:p-6">
         <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className={`${Z8_LABEL} text-amber-200`}>
@@ -319,13 +319,14 @@ export default function BrainPicksPage({
             />
           </div>
         ) : (
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="brain-market-grid mt-4">
             {picksQuery.data.stolenBase.picks.map((pick, index) => {
               const review = stolenBaseReviews.get(String(pick.playerId));
               return (
                 <article
                   key={`sb-${pick.playerId}`}
-                  className={`border bg-black/25 p-4 ${index < 3 ? "border-amber-300/65 shadow-[0_0_24px_rgba(252,211,77,0.08)]" : "border-white/10"}`}
+                  className="brain-market-card"
+                  data-favorite={index < 3}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -396,7 +397,7 @@ export default function BrainPicksPage({
           </div>
         )}
       </section>
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="brain-stat-grid">
         {[
           ["Players chosen", picks.length],
           ["Official lineup", officialCount],
@@ -405,7 +406,7 @@ export default function BrainPicksPage({
             Math.max(0, (vm.rows?.length ?? 0) - picks.length),
           ],
         ].map(([label, value]) => (
-          <div key={String(label)} className={`${Z8_SURFACE} p-4`}>
+          <div key={String(label)} className="brain-stat">
             <div className={`${Z8_LABEL} text-white/40`}>{label}</div>
             <div className="mt-1 font-mono text-2xl font-black text-white">
               {value}
@@ -415,7 +416,7 @@ export default function BrainPicksPage({
       </section>
 
       {picks.some((pick) => pick.evidenceQuality === "preview") && (
-        <div className="flex items-start gap-2 border border-amber-400/20 bg-amber-400/5 p-3 text-sm text-amber-100/75">
+        <div className="brain-callout flex items-start gap-2 p-3 text-sm text-amber-100/75">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> Official lineups
           are incomplete. Preview selections are penalized and may change.
         </div>
@@ -428,7 +429,7 @@ export default function BrainPicksPage({
           millisecondsUntilWindow={untilWindow}
         />
       ) : picksQuery.isError ? (
-        <div className={`${Z8_PANEL_PREMIUM} p-8 text-center`}>
+        <div className="brain-panel p-8 text-center">
           <AlertTriangle className="mx-auto h-8 w-8 text-rose-300" />
           <h2 className="mt-3 text-lg font-bold text-white">
             Verified Brain picks are unavailable.
@@ -452,7 +453,9 @@ export default function BrainPicksPage({
                 key={pick.player.stableId}
                 type="button"
                 onClick={() => setSelectedId(pick.player.stableId)}
-                className={`brain-choice-row grid min-h-[88px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 border p-3 text-left ${index < 3 ? "border-amber-300/65 bg-amber-300/[0.04] shadow-[0_0_24px_rgba(252,211,77,0.08)]" : selected?.player.stableId === pick.player.stableId ? "border-vouch-emerald/45 bg-vouch-emerald/8" : "border-white/10 bg-black/30 hover:border-white/20"}`}
+                className="brain-choice-row grid min-h-[88px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 border p-3 text-left"
+                data-favorite={index < 3}
+                data-selected={selected?.player.stableId === pick.player.stableId}
               >
                 <span className="grid h-10 w-10 place-items-center border border-white/10 font-mono text-sm font-black text-white/55">
                   {index + 1}
@@ -503,7 +506,7 @@ export default function BrainPicksPage({
 
           {selected && (
             <article
-              className={`${Z8_PANEL_PREMIUM} brain-premium-card min-w-0 p-4 sm:p-6`}
+              className="brain-panel min-w-0 p-4 sm:p-6"
             >
               <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -541,10 +544,10 @@ export default function BrainPicksPage({
                 {selected.explanation}
               </p>
               <div
-                className="mt-6 grid gap-2 lg:grid-cols-3"
+                className="brain-stat-grid mt-6"
                 aria-label="Intelligence comparison"
               >
-                <div className={`${Z8_SURFACE} p-3`}>
+                <div className="brain-stat">
                   <div className={`${Z8_LABEL} text-white/40`}>
                     Normal intelligence
                   </div>
@@ -556,7 +559,7 @@ export default function BrainPicksPage({
                     rules.
                   </p>
                 </div>
-                <div className="border border-vouch-emerald/30 bg-vouch-emerald/8 p-3">
+                <div className="brain-stat border-vouch-emerald/30 bg-vouch-emerald/8">
                   <div className={`${Z8_LABEL} text-vouch-emerald`}>
                     Brain decision
                   </div>
@@ -568,7 +571,7 @@ export default function BrainPicksPage({
                     comparison.
                   </p>
                 </div>
-                <div className={`${Z8_SURFACE} p-3`}>
+                <div className="brain-stat">
                   <div className={`${Z8_LABEL} text-vouch-cyan`}>
                     Gemini skeptic
                   </div>
@@ -632,23 +635,23 @@ export default function BrainPicksPage({
                   </p>
                 </section>
               )}
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="brain-stat-grid mt-6">
                 {[
                   ["Power", selected.player.hitterPower],
                   ["Pitcher risk", selected.player.pitcherVulnerability],
                   ["Recent form", selected.player.recentForm],
                   ["Data confidence", selected.player.dataConfidence],
                 ].map(([label, value]) => (
-                  <div key={String(label)} className={`${Z8_SURFACE} p-3`}>
+                  <div key={String(label)} className="brain-stat">
                     <div className="flex justify-between text-xs text-white/55">
                       <span>{label}</span>
                       <strong className="font-mono text-white">
                         {value ?? "—"}
                       </strong>
                     </div>
-                    <div className="mt-2 h-1.5 bg-white/5">
+                    <div className="brain-meter-track mt-2">
                       <div
-                        className="h-full bg-vouch-emerald"
+                        className="bg-vouch-emerald"
                         style={{
                           width: `${Math.max(0, Math.min(100, Number(value) || 0))}%`,
                         }}
@@ -680,7 +683,7 @@ export default function BrainPicksPage({
         </section>
       )}
 
-      <section className={`${Z8_PANEL_PREMIUM} brain-premium-card p-4 sm:p-6`}>
+      <section className="brain-panel p-4 sm:p-6">
         <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className={`${Z8_LABEL} text-vouch-cyan`}>
@@ -711,13 +714,14 @@ export default function BrainPicksPage({
             />
           </div>
         ) : (
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="brain-market-grid mt-4">
             {picksQuery.data.pitcherStrikeouts.picks.map((pitcher, index) => {
               const review = pitcherKReviews.get(String(pitcher.playerId));
               return (
                 <article
                   key={`k-${pitcher.playerId}`}
-                  className={`border bg-black/25 p-4 ${index < 3 ? "border-amber-300/65 shadow-[0_0_24px_rgba(252,211,77,0.08)]" : "border-white/10"}`}
+                  className="brain-market-card"
+                  data-favorite={index < 3}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">

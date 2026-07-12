@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { INITIAL_PROFILE } from '../data/mockData';
 import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
+import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
@@ -75,7 +76,29 @@ export function useAppDomain({
 
   const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
     const cur = useProfileStore.getState().profile ?? INITIAL_PROFILE;
-    syncProfile({ ...cur, ...updatedProfile });
+    const optimisticProfile = { ...cur, ...updatedProfile };
+    syncProfile(optimisticProfile);
+
+    const updates: Record<string, string | null> = {};
+    if (updatedProfile.displayName !== undefined) updates.display_name = updatedProfile.displayName;
+    if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
+    if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
+    if (Object.keys(updates).length === 0) return;
+
+    void apiClient.patch<Record<string, unknown>>('/api/auth/profile', updates)
+      .then((savedProfile) => {
+        const latest = useProfileStore.getState().profile ?? optimisticProfile;
+        syncProfile(mapAuthMeToCreatorProof(savedProfile, latest));
+      })
+      .catch(() => {
+        const latest = useProfileStore.getState().profile;
+        if (latest === optimisticProfile) syncProfile(cur);
+        notify({
+          kind: 'info',
+          title: 'Profile change was not saved',
+          body: 'Check your connection and try again.',
+        });
+      });
   }, [syncProfile]);
 
   const handleResetDatabase = useCallback(() => {

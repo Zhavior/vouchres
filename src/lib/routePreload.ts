@@ -44,8 +44,8 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
   following: ['feed', 'subscriber_hub'],
   today: ['feed', 'hr_board', 'intel'],
   hr_board: ['mlb_stats', 'daily_players'],
-  brain_picks: ['hr_board'],
-  brain_performance: ['hr_board'],
+  brain_picks: ['brain_performance', 'hr_board'],
+  brain_performance: ['brain_picks', 'hr_board'],
   mlb_stats: ['hr_board', 'daily_players'],
   daily_players: ['hr_board', 'live_games'],
   live_parlays: ['build', 'ai_engine'],
@@ -102,10 +102,11 @@ export function warmLikelyRoutes(activeSection?: string): void {
     if (!canWarmRoutes()) return;
     preloadMainRouter();
     const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
-    const defaults = ['feed', 'today', 'hr_board'];
+    // Brain stays isolated until the user intentionally opens a Brain route.
+    const defaults = ['today', 'hr_board'];
     const candidates = [...new Set([...neighbors, ...defaults])]
       .filter((section) => section !== activeSection)
-      .slice(0, 3);
+      .slice(0, 4);
     for (const section of candidates) {
       preloadSection(section);
     }
