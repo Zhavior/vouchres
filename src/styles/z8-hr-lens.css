@@ -73,6 +73,26 @@
   contain-intrinsic-size: 22rem;
 }
 
+.z8-hr-profile-backdrop,
+.z8-hr-profile-panel {
+  left: 0;
+  right: 0;
+  height: 100dvh;
+}
+
+.z8-hr-profile-panel {
+  box-shadow: -20px 0 60px rgba(0, 0, 0, .42);
+}
+
+/* Keep the persistent app rail usable while the profile owns the content column. */
+@media (min-width: 768px) {
+  .z8-hr-profile-backdrop,
+  .z8-hr-profile-panel {
+    left: max(272px, calc((100vw - 1500px) / 2 + 272px));
+    right: max(0px, calc((100vw - 1500px) / 2));
+  }
+}
+
 @media (min-width: 1500px) {
   .z8-hr-card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

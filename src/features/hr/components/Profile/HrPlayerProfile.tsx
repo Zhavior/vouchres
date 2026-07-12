@@ -442,12 +442,12 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="fixed inset-0 z-50"
+            className="z8-hr-profile-backdrop fixed inset-y-0 z-50"
             style={{ background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(10px)' }}
             aria-hidden="true"
           />
 
-          {/* Full-screen profile */}
+          {/* Full profile: viewport-wide on mobile, content-column-wide with the app rail. */}
           <motion.div
             key="profile-panel"
             initial={{ opacity: 0, y: 32, scale: 0.98 }}
@@ -455,7 +455,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="fixed inset-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
+            className="z8-hr-profile-panel fixed inset-y-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
             style={{
               background: '#050505',
               // on mobile show a slight inset so it feels like a sheet
