@@ -135,7 +135,7 @@ export function AppShell({
                           navigateSection('build');
                         }}
                         navigateSection={navigateSection}
-                        suppressFloatingDock={activeSection === 'build'}
+                        suppressFloatingDock={false}
                       />
                     </Suspense>
                   )}
