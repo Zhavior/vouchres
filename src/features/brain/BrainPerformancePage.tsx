@@ -1,37 +1,363 @@
-import { useQuery } from '@tanstack/react-query';
-import { Activity, Database, RefreshCw, ShieldCheck, Target } from 'lucide-react';
-import { apiClient } from '../../lib/apiClient';
-import { BrainPageShell } from './BrainPageShell';
-import { Z8_LABEL } from '../../theme/z8Tokens';
+import { useQuery } from "@tanstack/react-query";
+import {
+  Activity,
+  Database,
+  RefreshCw,
+  ShieldCheck,
+  Target,
+} from "lucide-react";
+import { apiClient } from "../../lib/apiClient";
+import { BrainPageShell } from "./BrainPageShell";
+import { Z8_LABEL } from "../../theme/z8Tokens";
 
-type LedgerPick = { decisionKey: string; date: string; playerName: string; team: string; opponent: string; rank: number; score: number; confidence: number; tier: string; evidenceQuality: 'official' | 'preview'; result: 'pending' | 'hit' | 'miss' | 'void' };
-type Performance = { total: number; resolved: number; pending: number; hits: number; misses: number; voids: number; hitRate: number | null; sampleWarning: string | null };
+type LedgerPick = {
+  decisionKey: string;
+  date: string;
+  playerName: string;
+  team: string;
+  opponent: string;
+  rank: number;
+  score: number;
+  confidence: number;
+  tier: string;
+  evidenceQuality: "official" | "preview";
+  result: "pending" | "hit" | "miss" | "void";
+};
+type Performance = {
+  total: number;
+  resolved: number;
+  pending: number;
+  hits: number;
+  misses: number;
+  voids: number;
+  hitRate: number | null;
+  sampleWarning: string | null;
+};
 type MarketLedger = { picks: LedgerPick[]; performance: Performance };
 type LedgerResponse = {
   picks: LedgerPick[];
   performance: Performance;
-  modelRecords: Array<{ engineVersion: string; samples: number; readyForJudgment: boolean; evaluation: null | { brierScore: number; logLoss: number; calibrationError: number }; excluded: { missingProbability: number; invalidSnapshot: number; temporalLeakage: number } }>;
+  modelRecords: Array<{
+    engineVersion: string;
+    samples: number;
+    readyForJudgment: boolean;
+    evaluation: null | {
+      brierScore: number;
+      logLoss: number;
+      calibrationError: number;
+    };
+    excluded: {
+      missingProbability: number;
+      invalidSnapshot: number;
+      temporalLeakage: number;
+    };
+  }>;
   stolenBase: MarketLedger;
   pitcherStrikeouts: MarketLedger;
 };
 
-function MarketSummary({ label, target, market }: { label: string; target: string; market: MarketLedger }) {
+function MarketSummary({
+  label,
+  target,
+  market,
+}: {
+  label: string;
+  target: string;
+  market: MarketLedger;
+}) {
   const { performance } = market;
-  return <article className="brain-market-card"><div className="flex items-start justify-between gap-4"><div><div className={`${Z8_LABEL} text-white/40`}>{label}</div><h2 className="mt-1 text-lg font-bold text-white">{target}</h2></div><strong className="font-mono text-2xl text-vouch-emerald">{performance.hitRate == null ? '—' : `${performance.hitRate}%`}</strong></div><div className="brain-stat-grid mt-5"><div className="brain-stat"><span className={`${Z8_LABEL} text-white/35`}>Recorded</span><strong className="mt-1 block font-mono text-lg text-white">{performance.total}</strong></div><div className="brain-stat"><span className={`${Z8_LABEL} text-white/35`}>Resolved</span><strong className="mt-1 block font-mono text-lg text-white">{performance.resolved}</strong></div><div className="brain-stat"><span className={`${Z8_LABEL} text-white/35`}>Hits</span><strong className="mt-1 block font-mono text-lg text-white">{performance.hits}</strong></div></div></article>;
+  return (
+    <article className="brain-market-card">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className={`${Z8_LABEL} text-white/40`}>{label}</div>
+          <h2 className="mt-1 text-lg font-bold text-white">{target}</h2>
+        </div>
+        <strong className="font-mono text-2xl text-vouch-emerald">
+          {performance.hitRate == null ? "—" : `${performance.hitRate}%`}
+        </strong>
+      </div>
+      <div className="brain-stat-grid mt-5">
+        <div className="brain-stat">
+          <span className={`${Z8_LABEL} text-white/35`}>Recorded</span>
+          <strong className="mt-1 block font-mono text-lg text-white">
+            {performance.total}
+          </strong>
+        </div>
+        <div className="brain-stat">
+          <span className={`${Z8_LABEL} text-white/35`}>Resolved</span>
+          <strong className="mt-1 block font-mono text-lg text-white">
+            {performance.resolved}
+          </strong>
+        </div>
+        <div className="brain-stat">
+          <span className={`${Z8_LABEL} text-white/35`}>Hits</span>
+          <strong className="mt-1 block font-mono text-lg text-white">
+            {performance.hits}
+          </strong>
+        </div>
+      </div>
+    </article>
+  );
 }
 
-export default function BrainPerformancePage({ onNavigate }: { onNavigate: (section: string) => void }) {
-  const query = useQuery({ queryKey: ['brain', 'ledger', 'mlb', 'home-run'], queryFn: () => apiClient.get<LedgerResponse>('/api/intelligence/brain/mlb/performance'), staleTime: 60_000, refetchInterval: 5 * 60_000 });
+export default function BrainPerformancePage({
+  onNavigate,
+}: {
+  onNavigate: (section: string) => void;
+}) {
+  const query = useQuery({
+    queryKey: ["brain", "ledger", "mlb", "home-run"],
+    queryFn: () =>
+      apiClient.get<LedgerResponse>("/api/intelligence/brain/mlb/performance"),
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+  });
   const ledger = query.data;
 
-  return <BrainPageShell active="performance" onNavigate={onNavigate}>
-    <section className="brain-panel brain-callout p-5 sm:p-6"><div className="flex gap-4"><span className="grid h-10 w-10 shrink-0 place-items-center border border-vouch-emerald/25 bg-vouch-emerald/10 text-vouch-emerald"><ShieldCheck className="h-5 w-5" /></span><div><div className={`${Z8_LABEL} text-vouch-emerald`}>Immutable accountability ledger</div><h2 className="mt-1 text-xl font-black text-white">The record stays after the result.</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">Every market decision is frozen before game time with its model version and source evidence. Only final MLB outcomes change its status.</p></div></div></section>
-    {query.isLoading ? <section className="brain-panel flex min-h-64 items-center justify-center gap-3 p-6"><RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" /><span className={`${Z8_LABEL} text-white/55`}>Opening verified ledger</span></section> : query.isError || !ledger ? <section className="brain-panel p-8 text-center"><Activity className="mx-auto h-8 w-8 text-rose-300" /><h2 className="mt-3 text-lg font-bold text-white">Verified ledger unavailable</h2><p className="mt-2 text-sm text-white/50">No estimated history is displayed when the source cannot be verified.</p></section> : <>
-      {ledger.performance.sampleWarning && <div className="border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3 text-sm leading-6 text-amber-100/75">{ledger.performance.sampleWarning} Treat the current rate as forward evidence, not proof of long-run performance.</div>}
-      <section className="brain-panel p-5 sm:p-6"><div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between"><div><div className={`${Z8_LABEL} text-vouch-cyan`}>Current home-run record</div><h2 className="mt-1 text-2xl font-black text-white">Model outcomes, not marketing.</h2></div><div className="text-left sm:text-right"><strong className="font-mono text-4xl text-vouch-emerald">{ledger.performance.hitRate == null ? '—' : `${ledger.performance.hitRate}%`}</strong><span className={`${Z8_LABEL} block text-white/40`}>Verified hit rate</span></div></div><div className="brain-stat-grid mt-5">{[['Recorded', ledger.performance.total], ['Resolved', ledger.performance.resolved], ['Hits', ledger.performance.hits], ['Misses', ledger.performance.misses], ['Pending', ledger.performance.pending]].map(([label, value]) => <div key={String(label)} className="brain-stat"><span className={`${Z8_LABEL} text-white/40`}>{label}</span><strong className="mt-1 block font-mono text-2xl text-white">{value}</strong></div>)}</div></section>
-      <section className="brain-market-grid"><MarketSummary label="Home run ledger" target="Any HR" market={{ picks: ledger.picks, performance: ledger.performance }} /><MarketSummary label="Stolen base ledger" target="Any SB" market={ledger.stolenBase} /><MarketSummary label="Pitcher K ledger" target="5+ strikeouts" market={ledger.pitcherStrikeouts} /></section>
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]"><article className="brain-panel p-5 sm:p-6"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div><div className={`${Z8_LABEL} text-vouch-cyan`}>Decision history</div><h2 className="mt-1 text-xl font-bold text-white">Frozen against the official result</h2></div><Target className="h-5 w-5 text-white/35" /></div><div className="mt-2">{ledger.picks.length ? ledger.picks.map((pick) => <div key={pick.decisionKey} className="brain-ledger-row"><div className="min-w-0"><strong className="block truncate text-sm text-white">{pick.playerName}</strong><span className="mt-1 block font-mono text-[10px] uppercase text-white/35">{pick.date} · {pick.team} vs {pick.opponent} · score {pick.score} · {pick.evidenceQuality}</span></div><span className={`${Z8_LABEL} self-center ${pick.result === 'hit' ? 'text-vouch-emerald' : pick.result === 'miss' ? 'text-rose-300' : pick.result === 'void' ? 'text-amber-200' : 'text-white/35'}`}>{pick.result === 'hit' ? 'Hit' : pick.result === 'miss' ? 'Miss' : pick.result}</span></div>) : <p className="py-10 text-center text-sm text-white/45">No Brain decisions have been recorded yet.</p>}</div></article><aside className="brain-panel p-5 sm:p-6"><Database className="h-6 w-6 text-vouch-cyan" /><div className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>Integrity protocol</div><h2 className="mt-1 text-xl font-bold text-white">What the record means</h2><div className="mt-5 space-y-4 text-sm leading-6 text-white/55">{['Only server-authored decisions enter the ledger.', 'Pregame evidence and scores are immutable.', 'Final MLB data settles the decision.', 'Pending and void rows never inflate results.'].map((item, index) => <div key={item} className="flex gap-3"><span className="font-mono text-vouch-cyan">0{index + 1}</span><span>{item}</span></div>)}</div></aside></section>
-      <section className="brain-panel p-5 sm:p-6"><div><div className={`${Z8_LABEL} text-vouch-cyan`}>Model accountability</div><h2 className="mt-1 text-xl font-bold text-white">Promotion waits for evidence.</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">Probability quality is evaluated only on settled pregame observations. A new engine does not earn trust from a small sample.</p></div><div className="brain-market-grid mt-5">{ledger.modelRecords.length ? ledger.modelRecords.map((record) => <article key={record.engineVersion} className="brain-market-card"><div className="flex items-start justify-between gap-3"><div><strong className="font-mono text-sm text-white">{record.engineVersion}</strong><p className="mt-1 text-xs text-white/40">{record.samples} valid observations</p></div><span className={`${Z8_LABEL} ${record.readyForJudgment ? 'text-vouch-emerald' : 'text-amber-200'}`}>{record.readyForJudgment ? 'Judgment ready' : 'Collecting evidence'}</span></div>{record.evaluation ? <div className="brain-stat-grid mt-4">{[['Brier', record.evaluation.brierScore], ['Log loss', record.evaluation.logLoss], ['Calibration', record.evaluation.calibrationError]].map(([label, value]) => <div key={String(label)} className="brain-stat"><span className={`${Z8_LABEL} text-white/35`}>{label}</span><strong className="mt-1 block font-mono text-white">{value}</strong></div>)}</div> : <p className="mt-4 text-sm text-white/45">No qualified settled probabilities yet.</p>}</article>) : <p className="py-8 text-sm text-white/45">No settled model versions are available yet.</p>}</div></section>
-    </>}
-  </BrainPageShell>;
+  return (
+    <BrainPageShell active="performance" onNavigate={onNavigate}>
+      <section className="brain-panel brain-callout p-5 sm:p-6">
+        <div className="flex gap-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center border border-vouch-emerald/25 bg-vouch-emerald/10 text-vouch-emerald">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <div>
+            <div className={`${Z8_LABEL} text-vouch-emerald`}>
+              Immutable accountability ledger
+            </div>
+            <h2 className="mt-1 text-xl font-black text-white">
+              The record stays after the result.
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+              Every market decision is frozen before game time with its model
+              version and source evidence. Only final MLB outcomes change its
+              status.
+            </p>
+          </div>
+        </div>
+      </section>
+      {query.isLoading ? (
+        <section className="brain-panel flex min-h-64 items-center justify-center gap-3 p-6">
+          <RefreshCw className="h-5 w-5 animate-spin text-vouch-cyan" />
+          <span className={`${Z8_LABEL} text-white/55`}>
+            Opening verified ledger
+          </span>
+        </section>
+      ) : query.isError || !ledger ? (
+        <section className="brain-panel p-8 text-center">
+          <Activity className="mx-auto h-8 w-8 text-rose-300" />
+          <h2 className="mt-3 text-lg font-bold text-white">
+            Verified ledger unavailable
+          </h2>
+          <p className="mt-2 text-sm text-white/50">
+            No estimated history is displayed when the source cannot be
+            verified.
+          </p>
+        </section>
+      ) : (
+        <>
+          {ledger.performance.sampleWarning && (
+            <div className="border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3 text-sm leading-6 text-amber-100/75">
+              {ledger.performance.sampleWarning} Treat the current rate as
+              forward evidence, not proof of long-run performance.
+            </div>
+          )}
+          <section className="brain-panel p-5 sm:p-6">
+            <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className={`${Z8_LABEL} text-vouch-cyan`}>
+                  Current home-run record
+                </div>
+                <h2 className="mt-1 text-2xl font-black text-white">
+                  Model outcomes, not marketing.
+                </h2>
+              </div>
+              <div className="text-left sm:text-right">
+                <strong className="font-mono text-4xl text-vouch-emerald">
+                  {ledger.performance.hitRate == null
+                    ? "—"
+                    : `${ledger.performance.hitRate}%`}
+                </strong>
+                <span className={`${Z8_LABEL} block text-white/40`}>
+                  Verified hit rate
+                </span>
+              </div>
+            </div>
+            <div className="brain-stat-grid mt-5">
+              {[
+                ["Recorded", ledger.performance.total],
+                ["Resolved", ledger.performance.resolved],
+                ["Hits", ledger.performance.hits],
+                ["Misses", ledger.performance.misses],
+                ["Pending", ledger.performance.pending],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="brain-stat">
+                  <span className={`${Z8_LABEL} text-white/40`}>{label}</span>
+                  <strong className="mt-1 block font-mono text-2xl text-white">
+                    {value}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="brain-market-grid">
+            <MarketSummary
+              label="Home run ledger"
+              target="Any HR"
+              market={{ picks: ledger.picks, performance: ledger.performance }}
+            />
+            <MarketSummary
+              label="Stolen base ledger"
+              target="Any SB"
+              market={ledger.stolenBase}
+            />
+            <MarketSummary
+              label="Pitcher K ledger"
+              target="5+ strikeouts"
+              market={ledger.pitcherStrikeouts}
+            />
+          </section>
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+            <article className="brain-panel p-5 sm:p-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <div className={`${Z8_LABEL} text-vouch-cyan`}>
+                    Decision history
+                  </div>
+                  <h2 className="mt-1 text-xl font-bold text-white">
+                    Frozen against the official result
+                  </h2>
+                </div>
+                <Target className="h-5 w-5 text-white/35" />
+              </div>
+              <div className="mt-2">
+                {ledger.picks.length ? (
+                  ledger.picks.map((pick) => (
+                    <div key={pick.decisionKey} className="brain-ledger-row">
+                      <div className="min-w-0">
+                        <strong className="block truncate text-sm text-white">
+                          {pick.playerName}
+                        </strong>
+                        <span className="mt-1 block font-mono text-[10px] uppercase text-white/35">
+                          {pick.date} · {pick.team} vs {pick.opponent} · score{" "}
+                          {pick.score} · {pick.evidenceQuality}
+                        </span>
+                      </div>
+                      <span
+                        className={`${Z8_LABEL} self-center ${pick.result === "hit" ? "text-vouch-emerald" : pick.result === "miss" ? "text-rose-300" : pick.result === "void" ? "text-amber-200" : "text-white/35"}`}
+                      >
+                        {pick.result === "hit"
+                          ? "Hit"
+                          : pick.result === "miss"
+                            ? "Miss"
+                            : pick.result}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-10 text-center text-sm text-white/45">
+                    No Brain decisions have been recorded yet.
+                  </p>
+                )}
+              </div>
+            </article>
+            <aside className="brain-panel p-5 sm:p-6">
+              <Database className="h-6 w-6 text-vouch-cyan" />
+              <div className={`${Z8_LABEL} mt-4 text-vouch-cyan`}>
+                Integrity protocol
+              </div>
+              <h2 className="mt-1 text-xl font-bold text-white">
+                What the record means
+              </h2>
+              <div className="mt-5 space-y-4 text-sm leading-6 text-white/55">
+                {[
+                  "Only server-authored decisions enter the ledger.",
+                  "Pregame evidence and scores are immutable.",
+                  "Final MLB data settles the decision.",
+                  "Pending and void rows never inflate results.",
+                ].map((item, index) => (
+                  <div key={item} className="flex gap-3">
+                    <span className="font-mono text-vouch-cyan">
+                      0{index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </section>
+          <section className="brain-panel p-5 sm:p-6">
+            <div>
+              <div className={`${Z8_LABEL} text-vouch-cyan`}>
+                Model accountability
+              </div>
+              <h2 className="mt-1 text-xl font-bold text-white">
+                Promotion waits for evidence.
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-white/50">
+                Probability quality is evaluated only on settled pregame
+                observations. A new engine does not earn trust from a small
+                sample.
+              </p>
+            </div>
+            <div className="brain-market-grid mt-5">
+              {ledger.modelRecords.length ? (
+                ledger.modelRecords.map((record) => (
+                  <article
+                    key={record.engineVersion}
+                    className="brain-market-card"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <strong className="font-mono text-sm text-white">
+                          {record.engineVersion}
+                        </strong>
+                        <p className="mt-1 text-xs text-white/40">
+                          {record.samples} valid observations
+                        </p>
+                      </div>
+                      <span
+                        className={`${Z8_LABEL} ${record.readyForJudgment ? "text-vouch-emerald" : "text-amber-200"}`}
+                      >
+                        {record.readyForJudgment
+                          ? "Judgment ready"
+                          : "Collecting evidence"}
+                      </span>
+                    </div>
+                    {record.evaluation ? (
+                      <div className="brain-stat-grid mt-4">
+                        {[
+                          ["Brier", record.evaluation.brierScore],
+                          ["Log loss", record.evaluation.logLoss],
+                          ["Calibration", record.evaluation.calibrationError],
+                        ].map(([label, value]) => (
+                          <div key={String(label)} className="brain-stat">
+                            <span className={`${Z8_LABEL} text-white/35`}>
+                              {label}
+                            </span>
+                            <strong className="mt-1 block font-mono text-white">
+                              {value}
+                            </strong>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm text-white/45">
+                        No qualified settled probabilities yet.
+                      </p>
+                    )}
+                  </article>
+                ))
+              ) : (
+                <p className="py-8 text-sm text-white/45">
+                  No settled model versions are available yet.
+                </p>
+              )}
+            </div>
+          </section>
+        </>
+      )}
+    </BrainPageShell>
+  );
 }

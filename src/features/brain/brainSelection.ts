@@ -69,7 +69,8 @@ export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
     .sort((a, b) => b.score - a.score || numeric(a.row.rank, 999) - numeric(b.row.rank, 999));
 
   const official = ranked.filter(({ row }) => row.truthStatus === 'official');
-  const pool = official.length >= 10 ? official : ranked;
+  // Once an official shortlist exists, previews are not allowed to displace it.
+  const pool = official.length >= 3 ? official : ranked;
   const perGame = new Map<string, number>();
   const perTeam = new Map<string, number>();
   const chosen: Array<{ row: HrWatchRow; score: number }> = [];

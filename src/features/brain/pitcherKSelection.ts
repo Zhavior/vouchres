@@ -12,9 +12,7 @@ export function selectPitcherKBrainPicks(rows: StatPlayerRow[], limit = 12): Pit
   const chosen: StatPlayerRow[] = [];
   const ranked = [...rows].sort((a, b) => b.statScore - a.statScore || b.confidence - a.confidence);
   const primary = ranked.filter((row) => ['elite', 'strong'].includes(row.tier) && row.statScore >= 68);
-  const watch = ranked.filter((row) => row.tier === 'watch' && row.statScore >= 58);
-
-  for (const row of [...primary, ...watch]) {
+  for (const row of primary) {
     if (row.confidence < 55 || row.lineupStatus === 'out') continue;
     if ((teamCounts.get(row.team) ?? 0) >= 1) continue;
     chosen.push(row);
