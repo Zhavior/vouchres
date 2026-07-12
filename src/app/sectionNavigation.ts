@@ -17,6 +17,9 @@ export const PUBLIC_SECTIONS = new Set([
   'subscribers_club',
   'subscriber_club',
   'mlb_stats',
+  // ParlayOS supports guest practice-mode building; saving prompts sign-in
+  // (see backendSyncState: 'auth_required' in domain/parlayActions.ts).
+  'build',
 ]);
 
 export const SIGNED_IN_HOME = 'today';
@@ -204,6 +207,10 @@ export function resolveDevSectionFromLocation() {
 
   if (target === 'live-parlays' || target === '/live-parlays') {
     return 'live_parlays';
+  }
+
+  if (target === 'build' || target === '/build') {
+    return 'build';
   }
 
   const proofMatch = pathname.match(/^\/p\/([0-9a-f-]{36})$/i);
