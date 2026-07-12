@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { FeedPost } from '../types';
 import { INITIAL_POSTS } from '../data/mockData';
+import { accountStorageKey } from '../lib/accountStorage';
 
 const STORAGE_KEY = 'vouchedge_posts';
 
@@ -16,7 +17,7 @@ export const useFeedStore = create<FeedState>((set) => ({
 
   syncPosts: (posts) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(posts));
     } catch {
       // ignore storage failures
     }
@@ -25,12 +26,12 @@ export const useFeedStore = create<FeedState>((set) => ({
 
   hydrateFromStorage: () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(accountStorageKey(STORAGE_KEY));
       if (stored) {
         set({ posts: JSON.parse(stored) });
         return;
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_POSTS));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(INITIAL_POSTS));
       set({ posts: INITIAL_POSTS });
     } catch {
       set({ posts: INITIAL_POSTS });
@@ -39,7 +40,7 @@ export const useFeedStore = create<FeedState>((set) => ({
 
   resetPosts: () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_POSTS));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(INITIAL_POSTS));
     } catch {
       // ignore storage failures
     }

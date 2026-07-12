@@ -21,7 +21,10 @@ import { mapBackendParlay, mapBackendVouch } from './backendMappers';
 import { normalizeSlipStatus } from '../lib/parlayDisplay';
 import { repairAllSavedParlays } from '../lib/parlays/repairSavedParlay';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
-import { reconcileParlays } from '../domain/parlay/reconcileParlays';
+import { setAccountStorageScope } from '../lib/accountStorage';
+import { queryClient } from '../lib/queryClient';
+import { queryKeys } from '../hooks/queries/queryKeys';
+import { INITIAL_PROFILE } from '../data/mockData';
 
 /** Default daily time the AI builds the slate (local time, "HH:MM"). */
 const AI_GEN_DEFAULT_TIME = '10:00';
@@ -47,6 +50,7 @@ type UseAppBootstrapArgs = {
 
 export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: UseAppBootstrapArgs) {
   const gradingRef = useRef(false);
+  const [accountId, setAccountId] = useState<string | null>(null);
   const [, setIsGrading] = useState(false);
   const [, setGradingLastChecked] = useState<Date | null>(null);
 
@@ -63,9 +67,9 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     || savedSlips.some((slip) => normalizeSlipStatus(slip.status) === 'PENDING');
   const { data: liveGamesPayload } = useLiveGames({ enabled: needsLiveGames });
   const liveGames = useMemo(() => liveGamesPayload?.games ?? [], [liveGamesPayload?.games]);
-  const { data: backendParlayRows } = useMyParlays({ enabled: isLoggedIn });
-  const { data: backendVouchRows } = useMyVouches();
-  const { data: backendFeedPages } = useFeedQuery();
+  const { data: backendParlayRows } = useMyParlays({ enabled: Boolean(accountId) });
+  const { data: backendVouchRows } = useMyVouches({ enabled: Boolean(accountId) });
+  const { data: backendFeedPages } = useFeedQuery({ enabled: Boolean(accountId) });
   const backendFeedPosts = useMemo(
     () => flattenFeedPages(backendFeedPages),
     [backendFeedPages],
@@ -79,82 +83,65 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, [activeSection, canSeeThemeStore, commitSection]);
 
   useEffect(() => {
-    useFeedStore.getState().hydrateFromStorage();
-    useSlipsStore.getState().hydrateFromStorage();
-    useProfileStore.getState().hydrateFromStorage();
+    if (!isLoggedIn) {
+      setAccountId(null);
+      setAccountStorageScope(null);
+      useFeedStore.getState().hydrateFromStorage();
+      useSlipsStore.getState().hydrateFromStorage();
+      useProfileStore.getState().hydrateFromStorage();
+      useVouchesStore.getState().hydrateFromStorage();
+      syncAnalyticsProfile('guest', selectProfile(useProfileStore.getState()));
+      return;
+    }
 
-    const profile = selectProfile(useProfileStore.getState());
+    // Never show anonymous or a prior account's browser cache during account bootstrap.
+    setAccountId(null);
+    useFeedStore.setState({ posts: [] });
+    useSlipsStore.setState({ savedSlips: [] });
+    useVouchesStore.setState({ savedVouches: [] });
+    useProfileStore.setState({ profile: INITIAL_PROFILE });
 
-    syncAnalyticsProfile(
-      'local-profile',
-      profile
-    );
-    useVouchesStore.getState().hydrateFromStorage();
-  }, []);
+    let cancelled = false;
+    void fetchAuthMe().then((data) => {
+      const userId = String(data?.id ?? '');
+      if (cancelled || !userId) return;
+      setAccountStorageScope(userId);
+      queryClient.removeQueries({ queryKey: queryKeys.myParlays() });
+      queryClient.removeQueries({ queryKey: queryKeys.myVouches() });
+      queryClient.removeQueries({ queryKey: queryKeys.feed() });
+      useProfileStore.getState().hydrateFromStorage();
+      const current = useProfileStore.getState().profile;
+      const nextProfile = mapAuthMeToCreatorProof(data as unknown as Record<string, unknown>, current);
+      syncProfile(nextProfile);
+      syncAnalyticsProfile(userId, nextProfile);
+      setAccountId(userId);
+    });
+
+    return () => { cancelled = true; };
+  }, [isLoggedIn, syncProfile]);
 
   useEffect(() => {
     trackReturningSession();
   }, []);
 
   useEffect(() => {
-    if (!isLoggedIn || backendParlayRows === undefined) return;
+    if (!accountId || backendParlayRows === undefined) return;
 
     const backendParlays = backendParlayRows.map(mapBackendParlay);
-    const localSlips = useSlipsStore.getState().savedSlips;
-    syncSlips(reconcileParlays(backendParlays, localSlips, { authenticated: true }));
-  }, [backendParlayRows, isLoggedIn, syncSlips]);
+    syncSlips(backendParlays);
+  }, [accountId, backendParlayRows, syncSlips]);
 
   useEffect(() => {
-    if (!backendVouchRows?.length) return;
+    if (!accountId || backendVouchRows === undefined) return;
 
     const backendVouches = backendVouchRows.map(mapBackendVouch);
-    const backendVouchIds = new Set(
-      backendVouches.map((v) => v.backendVouchId || v.id).filter(Boolean).map(String),
-    );
-
-    const localOnly = useVouchesStore.getState().savedVouches.filter((v) => {
-      if (!v.backendVouchId) return true;
-      return !backendVouchIds.has(String(v.backendVouchId));
-    });
-
-    const merged = [...backendVouches, ...localOnly];
-    const seen = new Set<string>();
-    const deduped = merged.filter((v) => {
-      if (seen.has(v.id)) return false;
-      seen.add(v.id);
-      return true;
-    });
-
-    syncVouches(deduped);
-  }, [backendVouchRows, syncVouches]);
+    syncVouches(backendVouches);
+  }, [accountId, backendVouchRows, syncVouches]);
 
   useEffect(() => {
-    if (!backendFeedPosts?.length) return;
-
-    const backendIds = new Set(
-      backendFeedPosts
-        .map((post) => post.backendPostId || post.id)
-        .filter(Boolean)
-        .map(String),
-    );
-
-    const localPosts = useFeedStore.getState().posts;
-    const localOnly = localPosts.filter((post) => {
-      if (!post.backendPostId) return true;
-      return !backendIds.has(String(post.backendPostId));
-    });
-
-    const merged = [...backendFeedPosts, ...localOnly];
-    const seen = new Set<string>();
-    const deduped = merged.filter((post) => {
-      const key = post.backendPostId ? String(post.backendPostId) : post.id;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    syncPosts(deduped);
-  }, [backendFeedPosts, syncPosts]);
+    if (!accountId || backendFeedPages === undefined) return;
+    syncPosts(backendFeedPosts);
+  }, [accountId, backendFeedPages, backendFeedPosts, syncPosts]);
 
   const handleGradeResults = useCallback(async () => {
     if (gradingRef.current) return;
@@ -306,21 +293,6 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     if (!['hr_board', 'daily_hr_watch_new'].includes(activeSection)) return;
     void warmGuestHrBoardCache();
   }, [activeSection, isLoggedIn]);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    let cancelled = false;
-    void fetchAuthMe().then((data) => {
-      if (cancelled || !data) return;
-      const current = useProfileStore.getState().profile;
-      syncProfile(mapAuthMeToCreatorProof(data as unknown as Record<string, unknown>, current));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoggedIn, syncProfile]);
 
   return {
     posts,
