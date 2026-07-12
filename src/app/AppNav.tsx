@@ -36,12 +36,12 @@ export function AppNav({ activeSection, onNavigate }: AppNavProps) {
 
       <button
         type="button"
-        onClick={() => onNavigate('ai_engine')}
-        onPointerDown={() => preloadSection('ai_engine')}
-        onMouseEnter={() => preloadSection('ai_engine')}
-        onFocus={() => preloadSection('ai_engine')}
-        aria-label="Go to AI"
-        title="AI"
+        onClick={() => onNavigate('brain_picks')}
+        onPointerDown={() => preloadSection('brain_picks')}
+        onMouseEnter={() => preloadSection('brain_picks')}
+        onFocus={() => preloadSection('brain_picks')}
+        aria-label="Go to Brain Picks"
+        title="Brain Picks"
         className="ve-edge-island-trigger ve-touch-target z8-interactive flex h-11 w-11 items-center justify-center rounded-full md:hidden"
       >
         <Brain className="ve-edge-island-trigger-icon h-4 w-4" />

@@ -300,13 +300,16 @@ function FeedSidebar({
 
   const sidebarFeatures = useMemo(() => {
     const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
-    return getPrimaryProductNavigation().map((item, order) => ({
+    return [
+      ...getPrimaryProductNavigation().map((item, order) => ({
       id: item.section,
       label: item.label,
       icon: icons[item.id],
       order,
       group: undefined,
-    }));
+      })),
+      { id: 'brain_picks', label: 'Brain', icon: 'Cpu', order: 5, group: undefined },
+    ];
   }, []);
 
   const ungrouped = useMemo(() => sidebarFeatures.filter(f => !f.group), [sidebarFeatures]);
@@ -436,7 +439,9 @@ function FeedSidebar({
                   id={f.id}
                   label={f.label}
                   icon={f.icon}
-                  isActive={getProductWorkspace(activeSection).defaultSection === f.id}
+                  isActive={f.id === 'brain_picks'
+                    ? activeSection === 'brain_picks' || activeSection === 'brain_performance'
+                    : getProductWorkspace(activeSection).defaultSection === f.id}
                   onNavigate={handleNavigate}
                 />
               ))}
