@@ -100,8 +100,8 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
   },
   {
     id: "liveGamesSummary",
-    label: "Preparing Live Game Lab",
-    feature: "Live Game Lab",
+    label: "Preparing Live Games",
+    feature: "Live Games",
     required: false,
     weight: 10,
     timeoutMs: 6500,

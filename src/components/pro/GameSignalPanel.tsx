@@ -2,7 +2,7 @@
  * GameSignalPanel.tsx — Game/slate deep-dive panel.
  *
  * Shows a game header (matchup, venue, environment tag) plus a compact
- * list of ranked players. Used by Team Matchup Lab and Live Game Lab.
+ * list of ranked players. Used by Pitchers Matchup.
  *
  * Accepts NormalizedGamePayload — no raw backend types, no fetching.
  * Shows VerifiedGraphEmptyState if payload is null or has no players.

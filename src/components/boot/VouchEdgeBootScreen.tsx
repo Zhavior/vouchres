@@ -6,7 +6,7 @@ type Props = {
 
 const leftFeatures = [
   "Daily Players",
-  "Live Game Lab",
+  "Live Games",
   "Player Research",
   "AI Research",
 ];

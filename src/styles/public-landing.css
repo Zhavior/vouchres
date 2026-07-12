@@ -8,7 +8,6 @@
 /* Device showcase renders the real HR Board and Today dashboard inside frames. */
 @source "../features/hr/**/*.{ts,tsx}";
 @source "../components/TodayDashboard.tsx";
-@source "../components/PortfolioAnalyticsPanel.tsx";
 @source "../theme/z8Tokens.ts";
 
 @import "./vouchedge-tokens.css";

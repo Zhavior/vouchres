@@ -17,7 +17,6 @@ const DeployUpdateBanner = lazy(() =>
   import('../components/system/DeployUpdateBanner').then((module) => ({ default: module.DeployUpdateBanner })),
 );
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
-const EdgeIslandCommandCenter = lazy(() => import('../components/theEdge/EdgeIslandCommandCenter'));
 const ParlayOsLayer = lazy(() => import('../components/parlay/os/ParlayOsLayer'));
 
 export type AppShellProps = {
@@ -27,7 +26,6 @@ export type AppShellProps = {
   isLoggedIn: boolean;
   isPublicFrontPage: boolean;
   showGlobalAppChrome: boolean;
-  edgeIslandOpen: boolean;
   profileViewUserId: string | null;
   canSeeThemeStore: boolean;
   savedSlips: Parlay[];
@@ -35,7 +33,6 @@ export type AppShellProps = {
   appShellState: AppShellState;
   navigateSection: (section: string) => void;
   navigateToUserProfile: (userId: string) => void;
-  setEdgeIslandOpen: (open: boolean) => void;
   handleLoginSuccess: () => void;
   handleLogoutComplete: () => void;
   handleUpdateProfile: (profile: Partial<CreatorProofProfile>) => void;
@@ -50,7 +47,6 @@ export function AppShell({
   isLoggedIn,
   isPublicFrontPage,
   showGlobalAppChrome,
-  edgeIslandOpen,
   profileViewUserId,
   canSeeThemeStore,
   savedSlips,
@@ -58,7 +54,6 @@ export function AppShell({
   appShellState,
   navigateSection,
   navigateToUserProfile,
-  setEdgeIslandOpen,
   handleLoginSuccess,
   handleLogoutComplete,
   handleUpdateProfile,
@@ -121,7 +116,6 @@ export function AppShell({
                       <AppNav
                         activeSection={activeSection}
                         onNavigate={navigateSection}
-                        onOpenEdgeIsland={() => setEdgeIslandOpen(true)}
                       />
                     </>
                   )}
@@ -140,19 +134,6 @@ export function AppShell({
                     </Suspense>
                   )}
 
-                  {showGlobalAppChrome && (
-                    <Suspense fallback={<RouteShellSkeleton />}>
-                      <EdgeIslandCommandCenter
-                        open={edgeIslandOpen}
-                        onClose={() => setEdgeIslandOpen(false)}
-                        onSectionChange={navigateSection}
-                        onNavigateProfile={navigateToUserProfile}
-                        savedSlips={savedSlips}
-                        profile={profile}
-                        isLoggedIn={hasRealAuthToken()}
-                      />
-                    </Suspense>
-                  )}
                 </NotificationProvider>
               </AppErrorBoundary>
             </div>

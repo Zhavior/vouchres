@@ -41,7 +41,6 @@ interface PaletteItem {
 
 const ALL_ITEMS: PaletteItem[] = [
   // Ungrouped
-  { id: 'welcome',         label: 'Edge Island',           group: 'Home',          icon: LayoutDashboard, keywords: ['island', 'dashboard', 'home'] },
   { id: 'today',           label: 'Today',                 group: 'Daily',         icon: LayoutDashboard, keywords: ['today', 'slate', 'dashboard', 'daily'] },
   // Daily
   { id: 'hr_board',        label: 'Home Run Intelligence', group: 'Daily',         icon: Flame,           keywords: ['hr', 'home run', 'hitter', 'mlb', 'intel'] },
@@ -50,9 +49,8 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'live_games',      label: 'Live Games',          group: 'Daily',         icon: Tv,              keywords: ['live', 'games', 'in-play', 'projections'] },
   // Pro Labs
   { id: 'intel',           label: 'AI Edge Lab',           group: 'Pro Labs',      icon: Flame,           keywords: ['ai', 'edge', 'lab', 'intel', 'signals'] },
-  { id: 'live_game_lab',   label: 'Live Game Lab',         group: 'Pro Labs',      icon: Radio,           keywords: ['live', 'game', 'lab', 'in-game'] },
-  { id: 'player_edge_lab', label: 'Player Intelligence Card',       group: 'Pro Labs',      icon: UserRoundSearch, keywords: ['player', 'edge', 'breakdown', 'score'] },
-  { id: 'team_matchup_lab',label: 'Team Matchup Lab',      group: 'Pro Labs',      icon: Swords,          keywords: ['matchup', 'team', 'pitcher', 'k9', 'era', 'whip'] },
+  { id: 'player_edge_lab', label: 'Top Player Lab',        group: 'Pro Labs',      icon: UserRoundSearch, keywords: ['player', 'edge', 'breakdown', 'score', 'top'] },
+  { id: 'team_matchup_lab',label: 'Pitchers Matchup',      group: 'Pro Labs',      icon: Swords,          keywords: ['matchup', 'team', 'pitcher', 'k9', 'era', 'whip'] },
   { id: 'hitter_matchup_zones', label: 'Hitter Matchup Zones', group: 'Pro Labs', icon: LineChart,       keywords: ['hitter', 'zones', 'heatmap', 'matchup'] },
   { id: 'pro_graphs_lab',  label: 'Pro Graphs Lab',        group: 'Pro Labs',      icon: LineChart,       keywords: ['graphs', 'charts', 'trends', 'data'] },
   { id: 'nba_nfl',         label: 'NBA / NFL Arena',       group: 'Pro Labs',      icon: Trophy,          keywords: ['nba', 'nfl', 'basketball', 'football'] },

@@ -351,9 +351,10 @@ function projectedLineup(
 }
 
 function collectHrPoolPlayerIds(
-  validated: Awaited<ReturnType<typeof getCachedValidatedHrBoard>>,
+  validated: Awaited<ReturnType<typeof getCachedValidatedHrBoard>> | null,
 ): Set<number> {
   const ids = new Set<number>();
+  if (!validated) return ids;
   for (const player of validated.pool.players) {
     if (Number.isFinite(player.playerId)) ids.add(player.playerId);
   }
@@ -502,7 +503,14 @@ export async function getGameMatchups(date = todayISO()): Promise<GameMatchup[]>
     const todayTeamIds = [...new Set(games.flatMap((g) => [g.awayTeam.teamId, g.homeTeam.teamId]))];
     console.log(`[matchupService] fetching hitters for ${todayTeamIds.length} teams in today's slate`);
 
-    const validated = await getCachedValidatedHrBoard(date);
+    // The slate must never depend on HR-board pipeline health: a thrown board
+    // degrades to an empty pool, which the roster-fallback branch below already handles.
+    const validated = await getCachedValidatedHrBoard(date).catch((err: unknown) => {
+      console.warn(
+        `[matchupService] validated HR board unavailable — continuing with roster fallback: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    });
     const poolIds = collectHrPoolPlayerIds(validated);
 
     const hittersByTeam = await getActiveHittersByTeam(todayTeamIds);

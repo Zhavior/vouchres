@@ -20,15 +20,16 @@ import {
   Users,
 } from 'lucide-react';
 import type { CreatorProofProfile, Parlay } from '../types';
+import TodaySliders from './today/TodaySliders';
 import { HrBrandIcon } from '../features/hr/components/HrBrandIcon';
 import { useDailyReport } from '../hooks/queries/useDailyReport';
 import { motion } from '../lib/motion';
 import { useMode } from '../lib/useMode';
 import { Z8_ACTIVE, Z8_IDLE, Z8_LABEL, Z8_PAGE, Z8_PANEL, Z8_SURFACE } from '../theme/z8Tokens';
 
-const PortfolioAnalyticsPanel = React.lazy(() => import('./PortfolioAnalyticsPanel'));
+const FollowingHubPage = React.lazy(() => import('../pages/FollowingHubPage'));
 
-const TODAY_PANELS = ['overview', 'portfolio'] as const;
+const TODAY_PANELS = ['overview', 'following'] as const;
 type TodayPanel = (typeof TODAY_PANELS)[number];
 const SWIPE_THRESHOLD = 56;
 
@@ -81,6 +82,14 @@ const TODAY_TOOLS: DashboardCard[] = [
     eyebrow: 'Builder',
     description: 'Build slips from research legs and track them into the ledger.',
     accent: 'cyan',
+  },
+  {
+    icon: LineChart,
+    section: 'pro_graphs_lab',
+    title: 'Pro Graphs Lab',
+    eyebrow: 'Pro',
+    description: 'Trend charts and advanced graphing tools for deeper research.',
+    accent: 'gold',
   },
 ];
 
@@ -213,16 +222,16 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             <button
               type="button"
               role="tab"
-              aria-selected={activePanel === 'portfolio'}
-              onClick={() => setActivePanel('portfolio')}
+              aria-selected={activePanel === 'following'}
+              onClick={() => setActivePanel('following')}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${
-                activePanel === 'portfolio'
+                activePanel === 'following'
                   ? 'border border-vouch-emerald/40 bg-vouch-emerald/15 text-vouch-emerald'
                   : 'border border-ve-fuse/40 bg-ve-graphite/30 text-ve-ion/45 hover:text-ve-flash/70'
               }`}
             >
-              <BarChart3 className="h-3.5 w-3.5" />
-              Portfolio Analytics
+              <Users className="h-3.5 w-3.5" />
+              Following
             </button>
           </div>
           <div className="mt-3 flex justify-center gap-1.5" aria-hidden>
@@ -262,6 +271,7 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             }}
           >
             <div className="shrink-0 space-y-4" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
+        <TodaySliders onSectionChange={onSectionChange} />
         <section className={`${Z8_PANEL} glass-command ve-premium-panel relative overflow-hidden p-4 sm:p-5 lg:p-6`}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vouch-cyan/65 to-transparent" />
 
@@ -405,14 +415,9 @@ export default function TodayDashboard({ onSectionChange, savedSlips = [], profi
             </div>
 
             <div className="shrink-0 px-0.5" style={{ width: `${100 / TODAY_PANELS.length}%` }}>
-              {activePanel === 'portfolio' && (
+              {activePanel === 'following' && (
                 <React.Suspense fallback={<PortfolioPanelSkeleton />}>
-                  <PortfolioAnalyticsPanel
-                    profile={profile}
-                    savedSlips={savedSlips}
-                    isLoggedIn={isLoggedIn}
-                    onSectionChange={onSectionChange}
-                  />
+                  <FollowingHubPage />
                 </React.Suspense>
               )}
             </div>

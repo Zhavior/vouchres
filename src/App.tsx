@@ -11,7 +11,7 @@ import { PUBLIC_SECTIONS } from './app/sectionNavigation';
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 
 /** Archived landings only — everything else logged-out goes to the terminal landing. */
-const LEGACY_LANDING_SECTIONS = new Set(['edge_island_preview', 'legacy_studio']);
+const LEGACY_LANDING_SECTIONS = new Set(['legacy_studio']);
 
 function RouteFallback() {
   const [visible, setVisible] = useState(false);
