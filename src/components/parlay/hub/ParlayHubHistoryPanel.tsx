@@ -1,7 +1,4 @@
-import React, { Suspense, lazy, useMemo, useState } from 'react';
-import { TrendingUp } from 'lucide-react';
-import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
-import LazyChunkSkeleton from '../../system/LazyChunkSkeleton';
+import React, { useMemo, useState } from 'react';
 import SmartParlaySlipCard from '../smart/SmartParlaySlipCard';
 import { ParlayTreeModal } from '../tree/ParlayTreeModal';
 import {
@@ -18,7 +15,6 @@ import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import { useSlipsStore } from '../../../stores/slipsStore';
 import { ParlayHubLivePulse } from './parlayHubUi';
 
-const ParlayCorrelationGraph = lazy(() => import('../graph/ParlayCorrelationGraph'));
 
 function EmptyLiveParlays() {
   return (
@@ -130,10 +126,6 @@ export default function ParlayHubHistoryPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={<LazyChunkSkeleton height={260} label="Loading correlation graph" />}>
-        <ParlayCorrelationGraph slips={savedSlips} />
-      </Suspense>
-
       <div role="tablist" aria-label="Parlay history" className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
         {HISTORY_TABS.map((tab) => (
           <button
