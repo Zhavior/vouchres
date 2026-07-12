@@ -12,7 +12,7 @@ const adapters = new Map<CentralBrainSport, CentralBrainAdapter<any>>([
 ]);
 
 export function listCentralBrainSports() {
-  return (["mlb", "nba", "nfl"] as const).map((sport) => ({
+  return (["mlb", "nba", "nfl", "nhl"] as const).map((sport) => ({
     sport,
     available: adapters.has(sport),
     engineVersion: adapters.get(sport)?.engineVersion ?? null,

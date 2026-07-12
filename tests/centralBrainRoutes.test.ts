@@ -10,6 +10,8 @@ vi.mock("../server/middleware/auth", () => ({
     next();
   },
 }));
+vi.mock("../server/lib/cronAuth", () => ({ assertCronAuthorized: vi.fn() }));
+vi.mock("../server/middleware/entitlements", () => ({ requireTier: vi.fn(() => (_req: unknown, _res: unknown, next: () => void) => next()) }));
 
 vi.mock("../server/services/intelligence/centralBrain/centralBrainService", () => ({
   listCentralBrainSports: vi.fn(() => [
@@ -23,6 +25,39 @@ vi.mock("../server/services/intelligence/centralBrain/centralBrainService", () =
     scope: `daily:${date ?? "today"}`,
     decisions: [],
   })),
+}));
+
+vi.mock("../server/services/intelligence/centralBrain/brainLedgerService", () => ({
+  snapshotDailyBrainHrPicks: vi.fn(async () => undefined),
+  snapshotDailyBrainStolenBasePicks: vi.fn(async () => undefined),
+  snapshotDailyBrainPitcherKPicks: vi.fn(async () => undefined),
+  settleBrainHrPicks: vi.fn(async () => 2),
+  settleBrainStolenBasePicks: vi.fn(async () => 1),
+  settleBrainPitcherKPicks: vi.fn(async () => 1),
+  getBrainHrLedger: vi.fn(async () => ({
+    picks: [{ decisionKey: "decision_1", result: "hit" }],
+    performance: { total: 1, resolved: 1, pending: 0, hits: 1, misses: 0, voids: 0, hitRate: 100, sampleWarning: "Small sample: fewer than 30 resolved picks." },
+  })),
+  getBrainStolenBaseLedger: vi.fn(async () => ({
+    picks: [], performance: { total: 0, resolved: 0, pending: 0, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Small sample" },
+  })),
+  getBrainPitcherKLedger: vi.fn(async () => ({
+    picks: [{ decisionKey: "k_1", playerId: "99", playerName: "Starter", result: "pending" }],
+    performance: { total: 1, resolved: 0, pending: 1, hits: 0, misses: 0, voids: 0, hitRate: null, sampleWarning: "Small sample" },
+  })),
+}));
+
+vi.mock("../server/services/intelligence/centralBrain/brainScanService", () => ({
+  scanMlbSlate: vi.fn(async () => ({ schemaVersion: "1.0", sport: "mlb", coverage: { games: 15, playersScanned: 180 }, sources: [], warnings: [] })),
+}));
+vi.mock("../server/services/intelligence/centralBrain/brainOperationsService", () => ({
+  executeBrainOperations: vi.fn(async () => ({ date: "2026-07-12", upcomingGames: 2, snapshotAttempted: true, settled: 3 })),
+}));
+vi.mock("../server/services/intelligence/centralBrain/brainLearningService", () => ({
+  evaluateBrainHrHistory: vi.fn(async () => [{ engineVersion: "brain-hr-selection@2", samples: 0, evaluation: null, readyForJudgment: false }]),
+}));
+vi.mock("../server/services/intelligence/centralBrain/brainGeminiReviewService", () => ({
+  getBrainGeminiReviews: vi.fn(async () => ({ home_run: { status: "live", reviews: [] } })),
 }));
 
 import { registerCentralBrainRoutes } from "../server/routes/centralBrainRoutes";
@@ -60,6 +95,7 @@ describe("central brain routes", () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       ok: true,
+      identity: { productName: "ProjectVABrAIns", role: "sports_intelligence_brain" },
       sports: [
         { sport: "mlb", available: true },
         { sport: "nba", available: false },
@@ -87,5 +123,47 @@ describe("central brain routes", () => {
       ok: false,
       error: { code: "validation_error", message: "date must use YYYY-MM-DD format." },
     });
+  });
+
+  it("returns the immutable Brain ledger and calculated performance", async () => {
+    const response = await fetch(`${baseUrl}/api/intelligence/brain/mlb/performance?date=2026-07-12`);
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      picks: [{ decisionKey: "decision_1", result: "hit" }],
+      performance: { total: 1, resolved: 1, hits: 1, hitRate: 100 },
+      modelRecords: [{ engineVersion: "brain-hr-selection@2", samples: 0 }],
+      pitcherStrikeouts: { performance: { total: 1, pending: 1 } },
+      meta: { requestId: expect.any(String) },
+    });
+  });
+
+  it("keeps the Brain Picks endpoint read-only", async () => {
+    const ledger = await import("../server/services/intelligence/centralBrain/brainLedgerService");
+    const response = await fetch(`${baseUrl}/api/intelligence/brain/mlb/picks?date=2026-07-12`);
+    expect(response.status).toBe(200);
+    expect(ledger.snapshotDailyBrainHrPicks).not.toHaveBeenCalled();
+    expect(ledger.snapshotDailyBrainStolenBasePicks).not.toHaveBeenCalled();
+    expect(ledger.snapshotDailyBrainPitcherKPicks).not.toHaveBeenCalled();
+    expect(ledger.getBrainHrLedger).toHaveBeenCalledWith(20, "2026-07-12");
+    expect(ledger.getBrainPitcherKLedger).toHaveBeenCalledWith(20, "2026-07-12");
+    const body = await response.json();
+    expect(body.aiReviews).toMatchObject({ home_run: { status: "live" } });
+    expect(body.pitcherStrikeouts.picks).toMatchObject([{ playerName: "Starter", result: "pending" }]);
+  });
+
+  it("returns sourced MLB scan coverage", async () => {
+    const response = await fetch(`${baseUrl}/api/intelligence/brain/mlb/scan?date=2026-07-12`);
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.scan).toMatchObject({ sport: "mlb", coverage: { games: 15, playersScanned: 180 } });
+  });
+
+  it("runs bounded Brain operations through the cron-only endpoint", async () => {
+    const response = await fetch(`${baseUrl}/api/cron/intelligence/brain/mlb?date=2026-07-12`);
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ date: "2026-07-12", upcomingGames: 2, snapshotAttempted: true, settled: 3 });
   });
 });

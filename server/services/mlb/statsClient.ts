@@ -17,6 +17,10 @@ export interface HitterSeasonStats {
   slg: number;   // slugging (0+)
   ops: number;
   hrPerPA: number; // derived: homeRuns / plateAppearances
+  gamesPlayed: number;
+  onBasePercentage: number;
+  stolenBases: number;
+  caughtStealing: number;
 }
 
 export interface RecentGame {
@@ -25,6 +29,8 @@ export interface RecentGame {
   hits: number;
   atBats: number;
   strikeOuts: number;
+  stolenBases: number;
+  caughtStealing: number;
 }
 
 export interface PitcherRecentGame {
@@ -172,6 +178,10 @@ export async function getHitterStats(playerId: number): Promise<HitterStats> {
           slg: parseFloat(s.slg) || 0,
           ops: parseFloat(s.ops) || 0,
           hrPerPA: pa > 0 ? hr / pa : 0,
+          gamesPlayed: Number(s.gamesPlayed) || 0,
+          onBasePercentage: parseFloat(s.obp) || 0,
+          stolenBases: Number(s.stolenBases) || 0,
+          caughtStealing: Number(s.caughtStealing) || 0,
         };
       }
     } catch (err) {
@@ -189,6 +199,8 @@ export async function getHitterStats(playerId: number): Promise<HitterStats> {
         hits: Number(sp.stat?.hits) || 0,
         atBats: Number(sp.stat?.atBats) || 0,
         strikeOuts: Number(sp.stat?.strikeOuts) || 0,
+        stolenBases: Number(sp.stat?.stolenBases) || 0,
+        caughtStealing: Number(sp.stat?.caughtStealing) || 0,
       }));
     } catch (err) {
       console.warn(`[statsClient] hitter game log failed for ${playerId}:`, (err as Error).message);

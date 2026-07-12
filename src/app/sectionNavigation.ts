@@ -237,6 +237,14 @@ export function resolveDevSectionFromLocation() {
     return 'pro_graphs_lab';
   }
 
+  if (target === 'brain-picks' || target === '/brain-picks' || target === 'brain_picks' || target === '/brain_picks') {
+    return 'brain_picks';
+  }
+
+  if (target === 'brain-performance' || target === '/brain-performance' || target === 'brain_performance' || target === '/brain_performance') {
+    return 'brain_performance';
+  }
+
   if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {
     return 'live_games';
   }

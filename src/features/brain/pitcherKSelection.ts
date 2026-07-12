@@ -7,13 +7,15 @@ export type PitcherKBrainPick = {
   explanation: string;
 };
 
-export function selectPitcherKBrainPicks(rows: StatPlayerRow[], limit = 6): PitcherKBrainPick[] {
+export function selectPitcherKBrainPicks(rows: StatPlayerRow[], limit = 12): PitcherKBrainPick[] {
   const teamCounts = new Map<string, number>();
   const chosen: StatPlayerRow[] = [];
+  const ranked = [...rows].sort((a, b) => b.statScore - a.statScore || b.confidence - a.confidence);
+  const primary = ranked.filter((row) => ['elite', 'strong'].includes(row.tier) && row.statScore >= 68);
+  const watch = ranked.filter((row) => row.tier === 'watch' && row.statScore >= 58);
 
-  for (const row of [...rows].sort((a, b) => b.statScore - a.statScore || b.confidence - a.confidence)) {
-    if (!['elite', 'strong'].includes(row.tier)) continue;
-    if (row.statScore < 68 || row.confidence < 55 || row.lineupStatus === 'out') continue;
+  for (const row of [...primary, ...watch]) {
+    if (row.confidence < 55 || row.lineupStatus === 'out') continue;
     if ((teamCounts.get(row.team) ?? 0) >= 1) continue;
     chosen.push(row);
     teamCounts.set(row.team, 1);

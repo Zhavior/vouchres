@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CentralBrainSportSchema = z.enum(["mlb", "nba", "nfl"]);
+export const CentralBrainSportSchema = z.enum(["mlb", "nba", "nfl", "nhl"]);
 export const CentralBrainQualitySchema = z.enum(["full", "partial", "limited"]);
 
 export const CentralBrainEvidenceSchema = z.object({

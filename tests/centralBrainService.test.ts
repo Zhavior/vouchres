@@ -8,6 +8,7 @@ describe("CentralBrainAgent", () => {
       { sport: "mlb", available: true, engineVersion: "mlb-daily-report@1" },
       { sport: "nba", available: false, engineVersion: null },
       { sport: "nfl", available: false, engineVersion: null },
+      { sport: "nhl", available: false, engineVersion: null },
     ]);
   });
 

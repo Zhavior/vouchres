@@ -57,31 +57,35 @@ function explain(row: HrWatchRow, percentile: number): string {
     `${row.truthStatus === 'official' ? 'The batting order is official.' : 'The lineup is still a preview, so this selection can change.'}`;
 }
 
-export function selectBrainPicks(rows: HrWatchRow[], limit = 8): BrainPick[] {
+export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
   const ranked = rows
     .filter((row) => row.riskTier !== 'Blocked')
     .map((row) => ({ row, score: selectionScore(row) }))
     .filter(({ row, score }) => {
       const primaryTier = row.riskTier === 'Elite' || row.riskTier === 'Core';
       const exceptionalWatch = row.riskTier === 'Watch' && score >= 74;
-      return (primaryTier || exceptionalWatch) && score >= 66 && numeric(row.dataConfidence, 0) >= 55;
+      return (primaryTier || exceptionalWatch || score >= 55) && score >= 55 && numeric(row.dataConfidence, 0) >= 55;
     })
     .sort((a, b) => b.score - a.score || numeric(a.row.rank, 999) - numeric(b.row.rank, 999));
 
   const official = ranked.filter(({ row }) => row.truthStatus === 'official');
-  const pool = official.length >= 3 ? official : ranked;
+  const pool = official.length >= 10 ? official : ranked;
   const perGame = new Map<string, number>();
   const perTeam = new Map<string, number>();
   const chosen: Array<{ row: HrWatchRow; score: number }> = [];
 
-  for (const candidate of pool) {
-    const gameKey = String(candidate.row.gamePk ?? `${candidate.row.team}:${candidate.row.opponent}`);
-    const teamKey = candidate.row.team;
-    if ((perGame.get(gameKey) ?? 0) >= 2 || (perTeam.get(teamKey) ?? 0) >= 2) continue;
-    chosen.push(candidate);
-    perGame.set(gameKey, (perGame.get(gameKey) ?? 0) + 1);
-    perTeam.set(teamKey, (perTeam.get(teamKey) ?? 0) + 1);
-    if (chosen.length >= limit) break;
+  for (const maxPerTeam of [1, 2]) {
+    for (const candidate of pool) {
+      if (chosen.some((item) => item.row.stableId === candidate.row.stableId)) continue;
+      const gameKey = String(candidate.row.gamePk ?? `${candidate.row.team}:${candidate.row.opponent}`);
+      const teamKey = candidate.row.team;
+      if ((perGame.get(gameKey) ?? 0) >= 2 || (perTeam.get(teamKey) ?? 0) >= maxPerTeam) continue;
+      chosen.push(candidate);
+      perGame.set(gameKey, (perGame.get(gameKey) ?? 0) + 1);
+      perTeam.set(teamKey, (perTeam.get(teamKey) ?? 0) + 1);
+      if (chosen.length >= limit) break;
+    }
+    if (chosen.length >= 10) break;
   }
 
   return chosen.map(({ row, score }) => {

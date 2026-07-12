@@ -18,9 +18,9 @@ export function BrainPageShell({
         <header className="brain-hero p-4 sm:p-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <div className={`${Z8_LABEL} brain-product-mark`}><Brain className="h-4 w-4" /> Your VouchEdge Brain · MLB</div>
+              <div className={`${Z8_LABEL} brain-product-mark`}><Brain className="h-4 w-4" /> ProjectVABrAIns · Sports intelligence brain</div>
               <h1 className="mt-4 max-w-2xl text-3xl font-black leading-[1.04] tracking-[-0.035em] text-white sm:text-5xl">Your daily decision room.</h1>
-              <p className="mt-3 text-sm leading-6 text-white/55">A private-feeling research workspace that compares the slate, rejects weak options, and delivers a short briefing you can understand and audit.</p>
+              <p className="mt-3 text-sm leading-6 text-white/55">It scans the full eligible slate, rejects weak options, records every decision, and answers to official outcomes. MLB is the first sport-specific lens.</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => onNavigate('brain_picks')} className={`z8-control inline-flex min-h-11 items-center justify-center gap-2 border px-4 font-mono text-[11px] font-bold uppercase ${active === 'picks' ? 'border-vouch-emerald/50 bg-vouch-emerald/12 text-vouch-emerald' : 'border-white/10 bg-black/30 text-white/55'}`}><Crosshair className="h-4 w-4" /> Picks</button>
