@@ -10,6 +10,7 @@ import { requestContext } from "../server/middleware/requestContext";
 import { routeTiming } from "../server/middleware/routeTiming";
 import { registerApiRoutes } from "../server/routes";
 import { buildOpenApiDocument } from "../server/openapi/openapiRegistry";
+import { GradeParlayResponseSchema } from "../server/validators/parlaySchemas";
 
 /** Top frontend-called API paths — must stay registered in OpenAPI. */
 const TOP_FE_API_PATHS = [
@@ -220,5 +221,53 @@ describe("API contract over HTTP", () => {
     expect(response.status).toBe(200);
     expect(response.body.ok).toBe(true);
     expect(typeof response.headers.get("x-request-id")).toBe("string");
+  });
+
+  it("keeps the stateless grade response compatible with its canonical schema", async () => {
+    const response = await requestJson("/api/parlays/grade", {
+      method: "POST",
+      headers: { "x-request-id": "req_grade_contract" },
+      body: JSON.stringify({
+        legs: [{
+          sport: "nba",
+          gamePk: "200001",
+          market: "points",
+          selection: "Player points",
+          threshold: 20.5,
+          oddsDecimal: 2.2,
+        }],
+        stakeUnits: 1,
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(() => GradeParlayResponseSchema.parse(response.body)).not.toThrow();
+    expect(response.headers.get("x-request-id")).toBe("req_grade_contract");
+    expect(response.body.meta.requestId).toBe("req_grade_contract");
+  });
+
+  it("rejects malformed parlay live-progress identity with the standard error envelope", async () => {
+    const response = await requestJson("/api/mlb/parlay-leg-progress", {
+      method: "POST",
+      headers: { "x-request-id": "req_live_progress_validation" },
+      body: JSON.stringify({
+        legs: [{
+          id: "bad-leg",
+          gamePk: "manual",
+          playerId: "unknown-player",
+          marketCode: "ANYTIME_HR",
+          statTarget: 0,
+        }],
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("validation_error");
+    expect(response.body.error.requestId).toBe("req_live_progress_validation");
+    expect(response.body.error.details).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: "legs.0.gamePk" }),
+      expect.objectContaining({ path: "legs.0.playerId" }),
+      expect.objectContaining({ path: "legs.0.statTarget" }),
+    ]));
   });
 });

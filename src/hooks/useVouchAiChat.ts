@@ -79,9 +79,9 @@ export function useVouchAiChat({
 
     let explanation = "";
     switch (feature) {
-      case "build":
+      case "live_parlays":
         explanation =
-          "🎯 Navigating you to the **Parlay Lab**! Here, you can stack up to 10 player legs. Tweak unit wagers, toggle American/Decimal formats, analyze real-time payouts, and generate dynamic blockchain vouchers!";
+          "Navigating to **Parlay OS**. Build through the global slip from any research page, then track synchronized game status and verified results here.";
         break;
       case "ai_engine":
         explanation =
@@ -116,7 +116,7 @@ export function useVouchAiChat({
 
     if (targetLegs.length === 0) {
       addAgentMessage(
-        "🎫 **No active ticket found!** Double-click any player prop or visit the **Parlay Lab** to draft a slip first. I will instantly run a full correlation check here!"
+        "No active ticket found. Add a player prop to the global **ParlayOS slip** first, then I can run the correlation check."
       );
       return;
     }

@@ -2,8 +2,13 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { apiErrorHandler } from "../server/middleware/errorHandler";
+import { requestContext } from "../server/middleware/requestContext";
 import { parlayRoutes } from "../server/routes/parlayRoutes";
 import { AppError } from "../server/errors/AppError";
+
+const structuredLog = vi.hoisted(() => vi.fn());
+
+vi.mock("../server/lib/structuredLog", () => ({ structuredLog }));
 
 vi.mock("../server/middleware/auth", () => ({
   requireAuth: (req: any, _res: unknown, next: () => void) => {
@@ -60,6 +65,7 @@ beforeAll(async () => {
   vi.stubEnv("CRON_SECRET", "");
 
   const app = express();
+  app.use(requestContext);
   app.use(express.json());
   app.use("/api", parlayRoutes);
   app.use("/api", apiErrorHandler);
@@ -105,7 +111,7 @@ describe("parlay routes", () => {
   it("returns ok envelope for stateless POST /parlays/grade", async () => {
     const response = await fetch(`${baseUrl}/api/parlays/grade`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-request-id": "req_grade_1" },
       body: JSON.stringify({
         legs: [
           {
@@ -113,10 +119,11 @@ describe("parlay routes", () => {
             gamePk: "777001",
             market: "ANYTIME_HR",
             selection: "Player HR",
-            oddsDecimal: 2.1,
+            threshold: "1",
+            oddsDecimal: "2.1",
           },
         ],
-        stakeUnits: 1,
+        stakeUnits: "1",
       }),
     });
     const body = await response.json();
@@ -126,6 +133,50 @@ describe("parlay routes", () => {
     expect(body.legs).toHaveLength(1);
     expect(body.parlay).toBeTruthy();
     expect(body.gradedAt).toEqual(expect.any(String));
+    expect(body.legs[0]).toMatchObject({
+      sport: "mlb",
+      market: "anytime_hr",
+      oddsDecimal: 2.1,
+    });
+    expect(body.meta).toMatchObject({
+      requestId: "req_grade_1",
+      timestamp: expect.any(String),
+    });
+    expect(response.headers.get("x-request-id")).toBe("req_grade_1");
+    expect(structuredLog).toHaveBeenCalledWith(expect.objectContaining({
+      level: "info",
+      event: "parlay.grade_preview.completed",
+      requestId: "req_grade_1",
+      mode: "stateless_preview",
+      legs: 1,
+      games: 1,
+      pendingLegs: 0,
+      outcome: "won",
+      durationMs: expect.any(Number),
+    }));
+  });
+
+  it.each([
+    [{}, "legs"],
+    [{ legs: [] }, "legs"],
+    [{ legs: Array.from({ length: 13 }, () => ({ sport: "mlb", gamePk: "777001", market: "hr", selection: "Player HR" })) }, "legs"],
+    [{ legs: [{ sport: "nhl", gamePk: "777001", market: "hr", selection: "Player HR" }] }, "legs.0.sport"],
+    [{ legs: [{ sport: "mlb", gamePk: "", market: "hr", selection: "Player HR" }] }, "legs.0.gamePk"],
+    [{ legs: [{ sport: "mlb", gamePk: "777001", market: "hr", selection: "Player HR", oddsDecimal: 1 }] }, "legs.0.oddsDecimal"],
+    [{ legs: [{ sport: "mlb", gamePk: "777001", market: "hr", selection: "Player HR" }], stakeUnits: 100001 }, "stakeUnits"],
+  ])("rejects invalid stateless grade payload %#", async (payload, expectedPath) => {
+    const response = await fetch(`${baseUrl}/api/parlays/grade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("validation_error");
+    expect(body.error.details).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: expectedPath }),
+    ]));
   });
 
   it("rejects unauthorized cron grading when CRON_SECRET is set", async () => {
@@ -244,7 +295,7 @@ describe("parlay routes", () => {
       warnings: ["partial settle"],
       errors: [{ pick_id: "pick-d", error: "unexpected grader failure" }],
     });
-    expect(gradePendingPicks).toHaveBeenCalledWith({ days: 3 });
+    expect(gradePendingPicks).toHaveBeenCalledWith({ days: 3, legacyBacklogLimit: 50 });
   });
 
   it("survives grading_logs insert failures without blocking the grade response", async () => {

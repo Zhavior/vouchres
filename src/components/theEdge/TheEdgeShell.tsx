@@ -832,8 +832,7 @@ export default function TheEdgeShell({
                 {/* Quick jumps — routes verified against App.tsx */}
                 <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {([
-                    ['Live Parlays', 'live_parlays', Radio],
-                    ['Parlay Lab', 'build', Layers3],
+                    ['Parlay OS', 'live_parlays', Radio],
                     ['Results Ledger', 'results', Trophy],
                   ] as const).map(([label, section, Icon]) => (
                     <button

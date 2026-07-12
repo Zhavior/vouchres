@@ -13,7 +13,7 @@ const leftFeatures = [
 
 const rightFeatures = [
   "Daily HR Board",
-  "Parlay Hub",
+  "Parlay OS",
   "VouchBoard",
   "Results Ledger",
 ];

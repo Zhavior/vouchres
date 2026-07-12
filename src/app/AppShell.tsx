@@ -132,10 +132,10 @@ export function AppShell({
                         onConfirmTier={onConfirmParlayTier}
                         onSaveParlay={() => {
                           onSaveParlaySlip();
-                          navigateSection('build');
+                          navigateSection('live_parlays');
                         }}
                         navigateSection={navigateSection}
-                        suppressFloatingDock={activeSection === 'build'}
+                        suppressFloatingDock={activeSection === 'live_parlays'}
                       />
                     </Suspense>
                   )}

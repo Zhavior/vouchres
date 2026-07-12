@@ -42,7 +42,7 @@ const TRUST_POINTS = [
 
 const WORKSPACE_MODULES = [
   { title: 'Daily Board', body: 'Official slate context, with lineup status shown honestly before lock.', section: 'daily_players', icon: Radio },
-  { title: 'Build', body: 'Save parlays and keep the reasoning attached to the slip.', section: 'build', icon: Layers3 },
+  { title: 'Parlay OS', body: 'Build from the global slip and track the reasoning with every saved parlay.', section: 'live_parlays', icon: Layers3 },
   { title: 'Ledger', body: 'Track pending, won, and lost results without hiding misses.', section: 'results', icon: ShieldCheck },
   { title: 'Pro Labs', body: 'Move into deeper player, matchup, and graph research when data exists.', section: 'player_edge_lab', icon: TrendingUp },
 ] as const;

@@ -7,11 +7,8 @@ import { AppError } from "../../errors/AppError";
 import { boolQuery, boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { getSupabaseAdmin } from "../../middleware/auth";
-import { gradePendingPicks } from "../../services/grading/gradingService";
-import { buildGradeDueLogRows, persistGradingRunLogs } from "../../services/grading/gradingLogService";
-import { captureGradingFailure } from "../../lib/sentry";
+import { executeGradeDueRun } from "../../services/grading/gradeDueRunService";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
-import { partitionGradeDueResult } from "./parlayGradingResponses";
 import {
   countParlayIntegrityRows,
   isLegacyManualEventId,
@@ -42,6 +39,7 @@ parlayCronRoutes.get("/cron/parlays/live-hr-sync", asyncHandler(async (req: Requ
     dryRun: false,
     limit: 100,
     externalProvider: "cron_live_hr_sync_repair",
+    requestId: req.requestId,
   });
   const result = await applyLiveHrParlayMatches(date);
 
@@ -58,47 +56,13 @@ parlayCronRoutes.get("/cron/parlays/grade-due", asyncHandler(async (req: Request
   assertCronAuthorized(req);
 
   const days = boundedInt(req.query.days, "days", 2, 1, 7);
-  let result;
-  try {
-    result = await gradePendingPicks({ days });
-  } catch (err) {
-    captureGradingFailure(err, { source: "cron", cron: true, extra: { days, route: "grade-due" } });
-    throw err;
-  }
-  const { settled, pending, errors, summary } = partitionGradeDueResult(result);
-  const requestId = req.requestId ?? "unknown";
-
-  console.log("[parlays/grade-due]", JSON.stringify({
-    requestId,
-    mode: "cron_grade_due",
+  const payload = await executeGradeDueRun({
     days,
-    gradedParlays: settled.length,
-    gradedLegs: result.graded.length,
-    pendingLegs: pending.length,
-    errorCount: errors.length,
-  }));
+    source: "cron",
+    requestId: req.requestId ?? "unknown",
+  });
 
-  try {
-    await persistGradingRunLogs(buildGradeDueLogRows({
-      settled,
-      pending,
-      errors,
-      source: "cron_grade_due",
-    }));
-  } catch (logErr) {
-    console.warn("[cron/grade-due] grading_logs unavailable", (logErr as Error)?.message);
-  }
-
-  return res.json(apiOkFlat(req, {
-    mode: "cron_grade_due",
-    gradedParlays: settled.length,
-    gradedLegs: result.graded.length,
-    pendingLegs: pending.length,
-    summary,
-    warnings: summary.warnings,
-    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
-    checkedAt: new Date().toISOString(),
-  }));
+  return res.json(apiOkFlat(req, payload));
 }));
 
 parlayCronRoutes.get("/cron/parlays/integrity", asyncHandler(async (req: RequestWithContext, res: Response) => {
@@ -175,6 +139,7 @@ parlayCronRoutes.post("/cron/parlays/repair-identity", asyncHandler(async (req: 
     dryRun,
     limit,
     externalProvider: "repair_identity",
+    requestId: req.requestId,
   });
 
   return res.json(apiOkFlat(req, {
@@ -192,6 +157,7 @@ parlayCronRoutes.get("/cron/parlays/repair-identity", asyncHandler(async (req: R
     dryRun,
     limit,
     externalProvider: "repair_identity",
+    requestId: req.requestId,
   });
 
   return res.json(apiOkFlat(req, {

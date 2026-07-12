@@ -5,7 +5,6 @@ import {
   selectDraftLegs,
   useParlayCommandStore,
 } from "../../../stores/parlayCommandStore";
-import { useAppCommandStore } from "../../../stores/appCommandStore";
 import ParlayBuilderRail from "../ParlayBuilderRail";
 import ParlayPropPickerModal from "./ParlayPropPickerModal";
 import ParlayLegCardPro from "./ParlayLegCardPro";
@@ -105,7 +104,7 @@ export default function ParlayOsLayer({
   }, [uiLegs, liveProgressByLegId, openLegEditor, removeDraftLeg]);
 
   const handleOpenHub = useCallback(() => {
-    navigateSection?.("build");
+    navigateSection?.("live_parlays");
   }, [navigateSection]);
 
   return (
@@ -189,7 +188,7 @@ export default function ParlayOsLayer({
                   onClick={handleOpenHub}
                   className="flex-1 rounded-xl border border-white/15 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white/70 hover:border-cyan-400/40 hover:text-cyan-200"
                 >
-                  Open Parlay Hub
+                  Open Parlay OS
                 </button>
                 <button
                   type="button"

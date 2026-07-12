@@ -636,7 +636,7 @@ export default function VouchBoard({ savedVouches, onRemoveVouch, onPostCreated,
             <div className="text-xs text-[hsl(var(--ve-text-muted))] leading-relaxed font-semibold">
               <span className="text-vouch-amber font-extrabold uppercase">Feed-Added Micro-Ledger:</span> 
               These are specific single game proposals and handicaps you extracted while reading pages on the community feed. 
-              Review the logic, clear settled items, or clone them directly in your active Parlay Lab slips.
+              Review the logic, clear settled items, or clone them into your active ParlayOS slip.
             </div>
           </div>
 

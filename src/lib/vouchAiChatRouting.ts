@@ -1,6 +1,6 @@
 export const VOUCH_AI_SYSTEM_INSTRUCTION = `You are the master VouchEdge Feature Agent AI.
 You answer friendly, helpful sports-tech questions. Explain our key tools:
-1. Parlay Lab (stake weighting, unit allocations).
+1. Parlay OS (global slip, synchronized tracking, unit allocations).
 2. V.A.I Smart Picks (sabermetric engine, precomputed tickets).
 3. Player Research (Google search grounding).
 4. Java Vouch Studio (ticket card editor).
@@ -107,7 +107,7 @@ export function routeVouchAiMessage(text: string): VouchAiRouteAction {
       kind: "feature_list",
       responseText: `Here is a quick overview of our premier VouchEdge modules:
         
-- **Parlay Lab**: A mathematical allocation workspace to build props, simulate decimal/American odds, and calculate risk profiles.
+- **Parlay OS**: Build from the global slip, compare risk, and track synchronized outcomes in one ledger.
 - **V.A.I Smart Picks**: Our elite AI projection database with weather, Statcast, and seasonal trend indicators.
 - **Player Research Console**: Grounded scouting reports powered by Google Search.
 - **Java Vouch Studio 🛠️**: A customized high-performance photo-editor canvas to mint visual ticket templates.
@@ -136,8 +136,8 @@ export function routeVouchAiMessage(text: string): VouchAiRouteAction {
   if (lower.includes("build")) {
     return {
       kind: "section_nav",
-      section: "build",
-      responseText: "Opening the **Parlay Lab** to draft or review slips.",
+      section: "live_parlays",
+      responseText: "Opening **Parlay OS** to review synchronized slips. Use the global slip to build from any research page.",
     };
   }
 

@@ -1,11 +1,13 @@
 import { AppError } from "../../errors/AppError";
 import { runWithDistributedLock } from "../../lib/distributedLock";
 import { captureGradingFailure } from "../../lib/sentry";
+import { structuredLog } from "../../lib/structuredLog";
 import { getSupabaseAdmin } from "../../middleware/auth";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import { gradePick } from "../persistence/pickService";
 import { createParlayGradedNotification } from "../notifications/notificationService";
 import { formatMlbStatus, isMlbFinalStatusText } from "../mlb/gameStatus";
+import { assessParlayIdentity } from "../parlays/parlayIdentityService";
 
 /**
  * Grading service — resolves pick outcomes by fetching results from the
@@ -53,6 +55,22 @@ export interface GradeRunResult {
   summary: GradeRunSummary;
 }
 
+interface GradePendingOptions {
+  days?: number;
+  dryRun?: boolean;
+  legacyBacklogLimit?: number;
+}
+
+export function isLegacyBacklogPickEligible(
+  pick: Record<string, unknown>,
+  legs: Record<string, unknown>[],
+): boolean {
+  return String(pick.status ?? "").toLowerCase() === "pending" &&
+    String(pick.leg_type ?? "").toLowerCase() === "parlay" &&
+    /^\d{5,10}$/.test(String(pick.event_id ?? "").trim()) &&
+    assessParlayIdentity(legs).complete;
+}
+
 interface FinalGameData {
   boxscore: any;
   game_date: string | null;
@@ -95,10 +113,7 @@ const GRADE_PENDING_LOCK = "grading:pending-picks";
  * @param opts.days Look back N days for pending picks (default 3)
  * @param opts.dryRun If true, returns what would be graded without writing
  */
-export async function gradePendingPicks(opts: {
-  days?: number;
-  dryRun?: boolean;
-} = {}): Promise<GradeRunResult> {
+export async function gradePendingPicks(opts: GradePendingOptions = {}): Promise<GradeRunResult> {
   if (opts.dryRun) {
     return runGradePendingPicks(opts);
   }
@@ -119,16 +134,13 @@ export async function gradePendingPicks(opts: {
   });
 }
 
-async function runGradePendingPicks(opts: {
-  days?: number;
-  dryRun?: boolean;
-} = {}): Promise<GradeRunResult> {
+async function runGradePendingPicks(opts: GradePendingOptions = {}): Promise<GradeRunResult> {
   const supabaseAdmin = await getSupabaseAdmin();
   const days = opts.days ?? 3;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   // 1. Fetch pending picks
-  const { data: pending, error } = await supabaseAdmin
+  const { data: recentPending, error } = await supabaseAdmin
     .from("picks")
     .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status, judge_verdict")
     .eq("status", "pending")
@@ -151,7 +163,50 @@ async function runGradePendingPicks(opts: {
     throw fetchError;
   }
 
-  if (!pending || pending.length === 0) {
+  let legacyPending: any[] = [];
+  const legacyBacklogLimit = Math.min(Math.max(Number(opts.legacyBacklogLimit ?? 0), 0), 50);
+  if (legacyBacklogLimit > 0) {
+    const { data: backlogRows, error: backlogError } = await supabaseAdmin
+      .from("picks")
+      .select("id, user_id, market, selection, event_id, odds_decimal, stake_units, leg_type, sport, created_at, game_date, graded_at, status, judge_verdict")
+      .eq("status", "pending")
+      .eq("leg_type", "parlay")
+      .not("event_id", "is", null)
+      .lt("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(legacyBacklogLimit);
+
+    if (backlogError) {
+      structuredLog({
+        level: "warn",
+        event: "parlay.grade_due.legacy_backlog_unavailable",
+        code: String(backlogError.code ?? "legacy_backlog_query_failed"),
+      });
+    } else if (backlogRows?.length) {
+      const pickIds = backlogRows.map((row: any) => String(row.id));
+      const { data: backlogLegs, error: legsError } = await supabaseAdmin
+        .from("pick_legs")
+        .select("pick_id,leg_index,event_key,market_code,player_id,stat_target,comparator")
+        .in("pick_id", pickIds);
+
+      if (!legsError) {
+        const legsByPick = (backlogLegs ?? []).reduce((map: Map<string, Record<string, unknown>[]>, leg: any) => {
+          const key = String(leg.pick_id);
+          map.set(key, [...(map.get(key) ?? []), leg]);
+          return map;
+        }, new Map<string, Record<string, unknown>[]>());
+        legacyPending = backlogRows.filter((pick: any) =>
+          isLegacyBacklogPickEligible(pick, legsByPick.get(String(pick.id)) ?? []),
+        );
+      }
+    }
+  }
+
+  const pending = [...(recentPending ?? []), ...legacyPending].filter(
+    (pick, index, rows) => rows.findIndex((row) => String(row.id) === String(pick.id)) === index,
+  );
+
+  if (pending.length === 0) {
     return { graded: [], skipped: [], summary: summarizeGradeRun([], [], 0) };
   }
 
@@ -502,7 +557,7 @@ async function gradeParlayPick(
   const { data: legs, error } = await supabaseAdmin
     .from("pick_legs")
     .select(
-      "leg_index, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal"
+      "leg_index, market, selection, event_id, game_id, market_code, player_id, stat_target, comparator, event_key, odds_decimal, game_date"
     )
     .eq("pick_id", pick.id)
     .order("leg_index", { ascending: true });
@@ -544,7 +599,11 @@ async function gradeParlayPick(
         if (rawGamePk === String((pick as any).event_id || "")) {
           legBoxscore = boxscore;
         } else {
-          legBoxscore = await fetchBoxscore(rawGamePk, String(leg.game_date ?? (pick as any).game_date ?? '').slice(0, 10) || null);
+          const legGameData = await fetchBoxscore(
+            rawGamePk,
+            String(leg.game_date ?? (pick as any).game_date ?? '').slice(0, 10) || null,
+          );
+          legBoxscore = legGameData.boxscore;
         }
         boxscoreCache.set(rawGamePk, legBoxscore);
       } catch (err: any) {

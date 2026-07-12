@@ -1148,7 +1148,7 @@ export const BORDER_REGISTRY: ProfileBorder[] = [
     rarity: 'epic',
     category: 'Flex',
     animationType: 'sparkle',
-    unlockCondition: 'Unlocks after hitting a verified parlay slips on Parlay Lab',
+    unlockCondition: 'Unlocks after hitting a verified slip in Parlay OS',
     isPremium: false,
     isEarned: true,
     description: 'Nostalgic deep violet loop with diamond-cut highlight reflections.',

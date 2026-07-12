@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "../../lib/motion";
 import {
-  BarChart3, Calendar, CheckCircle2, XCircle, Clock, Lock,
-  TrendingUp, Award, Filter, Search, ChevronLeft, ChevronRight,
-  Info, Trophy, Flame, Zap,
+  AlertTriangle, BarChart3, Calendar, RefreshCw, Search, ChevronLeft, ChevronRight, Trophy,
 } from "lucide-react";
 import { Parlay, Leg, FeedPost, CreatorProofProfile } from "../../types";
 import ResultsLedgerSummary from "./ResultsLedgerSummary";
 import ResultsPartition from "./ResultsPartition";
+import { CanonicalParlayCard } from "../parlay/hub/CanonicalParlayCard";
+import { deriveCanonicalParlayState } from "../../domain/parlayState";
+import { useSynchronizedParlays } from "../../hooks/useSynchronizedParlays";
+import { normalizePublicSlip, type PublicParlaySlip } from "../../lib/parlayDisplay";
+import { ParlayTreeModal } from "../parlay/tree/ParlayTreeModal";
 
 /**
  * ResultsStudio — Premium proof dashboard
@@ -27,15 +29,18 @@ interface Props {
 
 type ResultFilter = "all" | "wins" | "losses" | "pushes" | "voids" | "pending";
 
-export default function ResultsStudio({ posts = [], profile, savedParlays = [], onTailParlay }: Props) {
+export default function ResultsStudio({ profile, savedParlays = [] }: Props) {
   const [filter, setFilter] = useState<ResultFilter>("all");
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [treeSlip, setTreeSlip] = useState<PublicParlaySlip | null>(null);
+  const synchronized = useSynchronizedParlays(savedParlays);
+  const resultParlays = synchronized.parlays;
 
   // Build all slips from savedParlays
   const allSlips = useMemo(() => {
-    const slips = savedParlays.map((p) => ({
+    const slips = resultParlays.map((p) => ({
       id: p.id,
       title: p.title,
       ownerName: profile?.displayName || "You",
@@ -44,13 +49,13 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
       totalLegs: p.legs.length,
       status: p.status,
       postedAt: p.createdAt,
-      resultDate: p.createdAt.slice(0, 10),
+      resultDate: (p.legs.find((leg) => leg.gameDate)?.gameDate || p.createdAt).slice(0, 10),
       riskTier: p.riskTier,
       oddsValue: p.oddsValue,
       isDemo: false,
     }));
     return slips;
-  }, [savedParlays, profile]);
+  }, [resultParlays, profile]);
 
   // Filter slips
   const filteredSlips = useMemo(() => {
@@ -66,6 +71,10 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
     }
     return result;
   }, [allSlips, filter, selectedDate, search]);
+  const filteredParlays = useMemo(() => {
+    const ids = new Set(filteredSlips.map((slip) => slip.id));
+    return resultParlays.filter((parlay) => ids.has(parlay.id));
+  }, [filteredSlips, resultParlays]);
 
   // Calendar data — now includes winRate % and net units per day
   const calendarDays = useMemo(() => {
@@ -158,15 +167,44 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
             </div>
           </div>
         </div>
+        {synchronized.eligibleLegCount > 0 && (synchronized.isRefreshing || synchronized.isStatusUnavailable) ? (
+          <div
+            role="status"
+            className={`mt-3 flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 ${
+              synchronized.isStatusUnavailable
+                ? 'border-amber-400/20 bg-amber-400/[0.06] text-amber-100/75'
+                : 'border-cyan-400/15 bg-cyan-400/[0.04] text-cyan-100/65'
+            }`}
+          >
+            <div className="flex min-w-0 items-center gap-2.5">
+              {synchronized.isStatusUnavailable ? (
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-300" />
+              ) : (
+                <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-cyan-300" />
+              )}
+              <p className="truncate text-[11px] font-medium">
+                {synchronized.isStatusUnavailable
+                  ? 'Live game status is temporarily unavailable. Saved results remain unchanged.'
+                  : `Checking official game status for ${synchronized.eligibleLegCount} pending leg${synchronized.eligibleLegCount === 1 ? '' : 's'}...`}
+              </p>
+            </div>
+            {synchronized.isStatusUnavailable ? (
+              <button
+                type="button"
+                onClick={() => void synchronized.refresh()}
+                className="min-h-9 shrink-0 rounded-lg border border-amber-300/20 px-3 text-[10px] font-bold uppercase tracking-wide text-amber-200 hover:bg-amber-300/10"
+              >
+                Retry
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-5">
           {/* LEFT: Calendar + Slip Feed */}
           <div className="lg:col-span-8 space-y-5">
-            {/* Summary cards */}
-            <ResultsSummaryCards stats={stats} />
-
             {/* Calendar */}
             <div className="rounded-2xl p-4" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between mb-4">
@@ -341,16 +379,19 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
               </div>
             </div>
 
-            {/* Slip feed */}
+            {/* Canonical ParlayOS results feed */}
             <div className="space-y-3">
-              {filteredSlips.length === 0 ? (
+              {filteredParlays.length === 0 ? (
                 <EmptyResultsState hasSlips={allSlips.length > 0} />
               ) : (
-                <AnimatePresence>
-                  {filteredSlips.map((slip, i) => (
-                    <ResultSlipCard key={slip.id} slip={slip} index={i} />
-                  ))}
-                </AnimatePresence>
+                filteredParlays.map((parlay) => (
+                  <CanonicalParlayCard
+                    key={parlay.backendPickId ?? parlay.id}
+                    parlay={parlay}
+                    state={deriveCanonicalParlayState(parlay)}
+                    onViewStructure={() => setTreeSlip(normalizePublicSlip(parlay))}
+                  />
+                ))
               )}
             </div>
           </div>
@@ -384,163 +425,11 @@ export default function ResultsStudio({ posts = [], profile, savedParlays = [], 
           </div>
         </div>
       </div>
+      <ParlayTreeModal slip={treeSlip} isOpen={treeSlip != null} onClose={() => setTreeSlip(null)} />
     </div>
   );
 }
 
-
-const cleanCustomerText = (value?: string | number | null): string =>
-  String(value ?? "")
-    .replace(/\|\|meta:.*$/i, "")
-    .replace(/\\n/g, " ")
-    .replace(/source=manual_builder\s*/gi, "")
-    .replace(/source=manual\s*/gi, "")
-    .replace(/clientRef=[^\s]+/gi, "")
-    .replace(/Legacy pick saved before canonical grading identity existed; cannot be honestly graded\.?/gi, "Legacy unverified pick")
-    .replace(/\bleg-\d+-[a-z0-9-]+\b/gi, "")
-    .replace(/\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const getCustomerSlipTitle = (title?: string | null, status?: string | null): string => {
-  const cleaned = cleanCustomerText(title);
-  if (!cleaned || cleaned.toLowerCase() === "legacy unverified pick") {
-    return status === "VOID" ? "Legacy Unverified Parlay" : "VouchEdge Parlay";
-  }
-  return cleaned;
-};
-
-const getCustomerLegSelection = (selection?: string | null): string =>
-  cleanCustomerText(selection) || "Player prop";
-
-const shouldShowPublicGameLabel = (game?: string | number | null): boolean => {
-  const cleaned = cleanCustomerText(game);
-  if (!cleaned) return false;
-  if (/^leg-/i.test(cleaned)) return false;
-  if (/^[a-f0-9-]{12,}$/i.test(cleaned)) return false;
-  return true;
-};
-
-
-/* ============ Summary Cards ============ */
-function ResultsSummaryCards({ stats }: { stats: { won: number; lost: number; pending: number; voids: number; settled: number; winRate: number; total: number; units: number } }) {
-  const unitsColor = stats.units > 0 ? "#34d399" : stats.units < 0 ? "#f87171" : "#64748b";
-  const cards = [
-    { label: "Total Slips", value: stats.total,                                                                              icon: BarChart3,    color: "#22d3ee" },
-    { label: "Wins",        value: stats.won,                                                                                icon: CheckCircle2, color: "#34d399" },
-    { label: "Losses",      value: stats.lost,                                                                               icon: XCircle,      color: "#f87171" },
-    { label: "Win Rate",    value: stats.settled > 0 ? `${stats.winRate}%` : "—",                                          icon: TrendingUp,   color: "#a78bfa" },
-    { label: "Net Units",   value: stats.settled > 0 ? `${stats.units >= 0 ? "+" : ""}${stats.units}u` : "—",             icon: Zap,          color: unitsColor },
-  ];
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-      {cards.map((c) => (
-        <div key={c.label} className="rounded-xl p-3" style={{ background: "rgba(15,23,42,0.4)", border: `1px solid ${c.color}20` }}>
-          <c.icon className="w-3.5 h-3.5 mb-2" style={{ color: c.color }} />
-          <div className="text-lg font-bold font-mono" style={{ color: c.color }}>{c.value}</div>
-          <div className="text-[8px] text-slate-600 uppercase tracking-widest">{c.label}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-
-function LivePulseBars({ active }: { active: boolean }) {
-  if (!active) return null;
-
-  return (
-    <div className="flex items-end gap-[3px] h-5" aria-label="Live parlay activity">
-      {[0, 1, 2, 3, 4].map((bar) => (
-        <span
-          key={bar}
-          className="w-[3px] rounded-full bg-cyan-300/90 shadow-[0_0_10px_rgba(34,211,238,0.65)]"
-          style={{
-            height: `${8 + (bar % 3) * 4}px`,
-            animation: "ve-live-bar 0.9s ease-in-out infinite",
-            animationDelay: `${bar * 110}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-
-/* ============ Result Slip Card ============ */
-function ResultSlipCard({ slip, index }: { slip: any; index: number }) {
-  const statusConfig = {
-    WON: { label: "Hit", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)", icon: CheckCircle2 },
-    LOST: { label: "Missed", color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)", icon: XCircle },
-    PENDING: { label: "Pending final", color: "#22d3ee", bg: "rgba(34,211,238,0.06)", border: "rgba(34,211,238,0.15)", icon: Clock },
-    VOID: { label: "Voided", color: "#94a3b8", bg: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)", icon: Info },
-  };
-  const config = statusConfig[slip.status as keyof typeof statusConfig] || statusConfig.PENDING;
-  const Icon = config.icon;
-  const isLivePending = slip.status === "PENDING";
-
-  return (
-    <>
-      <style>{`
-        @keyframes ve-live-bar {
-          0%, 100% { transform: scaleY(0.45); opacity: 0.45; }
-          50% { transform: scaleY(1.25); opacity: 1; }
-        }
-      `}</style>
-      <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="rounded-xl p-4"
-      style={{ background: config.bg, border: `1px solid ${config.border}`, backdropFilter: "blur(8px)" }}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold text-white truncate">{getCustomerSlipTitle(slip.title, slip.status)}</div>
-          <div className="text-[10px] text-slate-500">
-            {slip.ownerName} · {slip.totalLegs}-leg · {new Date(slip.postedAt).toLocaleDateString()}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <LivePulseBars active={isLivePending} />
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: config.bg, border: `1px solid ${config.border}` }}>
-            <Icon className="w-3 h-3" style={{ color: config.color }} />
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.color }}>{config.label}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Legs */}
-      <div className="space-y-1">
-        {slip.legs.map((leg: Leg, i: number) => {
-          const legStatus = {
-            WON: { color: "#34d399", icon: "✓" },
-            LOST: { color: "#f87171", icon: "✗" },
-            PENDING: { color: "#22d3ee", icon: "•" },
-            VOID: { color: "#94a3b8", icon: "—" },
-          };
-          const ls = legStatus[leg.status as keyof typeof legStatus] || legStatus.PENDING;
-          return (
-            <div key={leg.id} className="flex items-center gap-2 p-1.5 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <span className="text-[9px] font-mono text-slate-600">{i + 1}.</span>
-              <span className="text-xs text-slate-300 flex-1 truncate">{getCustomerLegSelection(leg.selection)}</span>
-              {shouldShowPublicGameLabel(leg.game) && <span className="text-[9px] text-slate-500">{cleanCustomerText(leg.game)}</span>}
-              <span className="text-xs font-mono font-bold" style={{ color: ls.color }}>{ls.icon}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/5">
-        {slip.oddsValue && <span className="text-[10px] font-mono text-slate-500">Odds: {slip.oddsValue > 0 ? `+${slip.oddsValue}` : slip.oddsValue}</span>}
-        {slip.riskTier && <span className="text-[10px] text-slate-500">Risk: {slip.riskTier}</span>}
-        <span className="text-[9px] text-slate-600 ml-auto">Graded after final</span>
-      </div>
-    </motion.div>
-    </>
-  );
-}
 
 /* ============ Empty State ============ */
 function EmptyResultsState({ hasSlips }: { hasSlips: boolean }) {

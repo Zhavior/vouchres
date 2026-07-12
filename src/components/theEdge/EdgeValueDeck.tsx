@@ -171,7 +171,7 @@ export function EdgeDashboardMemberDeck({ onGo }: EdgeValueDeckProps) {
     ['Open Daily Players', 'daily_players', Zap],
     ['Review Notifications', 'notifications', Bell],
     ['Check Results', 'results', Trophy],
-    ['Build Parlay', 'build', Layers3],
+    ['Parlay OS', 'live_parlays', Layers3],
   ] as const;
 
   return (

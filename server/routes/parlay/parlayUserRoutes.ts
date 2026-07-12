@@ -6,6 +6,7 @@ import { generationLimiter, gradingLimiter } from "../../middleware/rateLimit";
 import { validate } from "../../middleware/validation";
 import { asyncHandler } from "../../lib/asyncHandler";
 import { apiOkFlat } from "../../lib/apiResponse";
+import { structuredLog } from "../../lib/structuredLog";
 import { AppError } from "../../errors/AppError";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { boundedInt, upstreamUnavailable } from "../../lib/requestValidators";
@@ -29,6 +30,7 @@ import {
   ParlayIdParamsSchema,
   GradeParlaySchema,
   type GradeParlayInput,
+  type GradeParlayResponse,
   SaveMeParlaySchema,
   UpdateParlaySchema,
 } from "../../validators/parlaySchemas";
@@ -75,8 +77,9 @@ parlayUserRoutes.post(
   gradingLimiter,
   validate({ body: GradeParlaySchema }),
   asyncHandler(async (req: Request & RequestWithContext, res: Response) => {
+    const startedAt = Date.now();
     const { legs, stakeUnits } = req.body as GradeParlayInput;
-    const normalizedLegs = legs as GradableLeg[];
+    const normalizedLegs = legs as Array<GradableLeg & { sport: "mlb" | "nba" | "nfl" }>;
 
     const gameCache = new Map<string, GameData | null>();
     for (const leg of normalizedLegs) {
@@ -117,11 +120,25 @@ parlayUserRoutes.post(
       stakeUnits,
     );
 
-    return res.json(apiOkFlat(req, {
+    const responsePayload = {
       legs: gradedLegs,
       parlay,
       gradedAt: new Date().toISOString(),
-    }));
+    } satisfies Omit<GradeParlayResponse, "ok" | "meta">;
+
+    structuredLog({
+      level: "info",
+      event: "parlay.grade_preview.completed",
+      requestId: req.requestId,
+      mode: "stateless_preview",
+      durationMs: Date.now() - startedAt,
+      legs: gradedLegs.length,
+      games: gameCache.size,
+      pendingLegs: gradedLegs.filter((leg) => leg.status === "pending").length,
+      outcome: parlay.status,
+    });
+
+    return res.json(apiOkFlat(req, responsePayload));
   }),
 );
 

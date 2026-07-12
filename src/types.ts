@@ -39,6 +39,10 @@ export interface Leg {
   actual?: number | null;
   /** ISO start time of this leg's game; drives the 30-min lock. */
   gameStartTime?: string;
+  /** Official game date used for grouping and historical grading. */
+  gameDate?: string;
+  /** Latest authoritative league status returned for this leg's game. */
+  gameStatus?: string | null;
 
   // ── Player enrichment (optional; for headshots on parlay cards) ──
   /** Pre-resolved headshot URL. ID-based headshots are preferred. */
@@ -89,6 +93,8 @@ export interface Parlay {
   backendSyncedAt?: string;
   /** Most recent backend sync error, if any. */
   backendSyncError?: string;
+  /** Backend-derived canonical state facets. UI should prefer these over overloaded status text. */
+  canonicalState?: import('./domain/parlayState').CanonicalParlayState;
 }
 
 export type ParlayLifecycle = 'upcoming' | 'live' | 'final';

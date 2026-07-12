@@ -38,7 +38,7 @@ type PanelId = (typeof PANELS)[number];
 
 const ZONES = [
   { title: "HR Board", subtitle: "Daily HR targets, edge grades, and research cards", section: "hr_board", icon: Flame, tag: "Start here" },
-  { title: "Parlay Dock", subtitle: "Build, save, and track parlays", section: "build", icon: Shield, tag: "Builder" },
+  { title: "Parlay OS", subtitle: "Build globally, then track every synchronized slip", section: "live_parlays", icon: Shield, tag: "Ledger" },
   { title: "Research Lab", subtitle: "Player, pitcher, matchup research", section: "research", icon: FlaskConical, tag: "Deep dive" },
   { title: "Ledger Vault", subtitle: "Wins, losses, and full history", section: "results", icon: ScrollText, tag: "Proof" },
   { title: "Notifications", subtitle: "HR alerts, parlay alerts, live updates", section: "notifications", icon: Bell, tag: "Alerts" },
@@ -300,7 +300,7 @@ export default function EdgeIslandCommandCenter({ open, onClose, onSectionChange
                   </div>
                 ) : (
                   <button
-                    onClick={() => go("build")}
+                    onClick={() => go("live_parlays")}
                     className="w-full rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-3.5 text-center text-xs font-bold text-white/40 transition hover:text-white/70"
                   >
                     No pending parlays — build one

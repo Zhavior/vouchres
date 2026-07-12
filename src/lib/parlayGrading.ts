@@ -10,6 +10,21 @@
 
 import type { Parlay, Leg } from '../types';
 import { apiClient } from './apiClient';
+import { toDecimalOrNull } from './odds';
+
+const GRADE_SPORTS = new Set(['mlb', 'nba', 'nfl']);
+
+export interface GradeRequest {
+  legs: Array<{
+    sport: 'mlb' | 'nba' | 'nfl';
+    gamePk: string;
+    market: string;
+    selection: string;
+    threshold?: number;
+    oddsDecimal?: number;
+  }>;
+  stakeUnits: number;
+}
 
 export interface GradedLeg {
   sport: string;
@@ -40,30 +55,50 @@ const PARLAY_STATUS: Record<string, Parlay['status']> = {
   won: 'WON', lost: 'LOST', push: 'VOID', pending: 'PENDING', error: 'PENDING',
 };
 
-/** A parlay can be graded once at least one leg carries a gamePk + marketCode. */
+export function buildGradeRequest(p: Parlay): GradeRequest | null {
+  const legs: GradeRequest['legs'] = [];
+
+  for (const leg of p.legs || []) {
+    const sport = String(leg.sport || 'mlb').trim().toLowerCase();
+    const gamePk = String(leg.gamePk ?? '').trim();
+    const market = String(leg.marketCode ?? '').trim().toLowerCase();
+    const selection = String(leg.selection ?? '').trim();
+    if (!GRADE_SPORTS.has(sport) || !gamePk || !market || !selection) continue;
+
+    const threshold = Number(leg.statTarget ?? leg.threshold);
+    const oddsDecimal = toDecimalOrNull(leg.odds);
+    legs.push({
+      sport: sport as GradeRequest['legs'][number]['sport'],
+      gamePk,
+      market,
+      selection,
+      ...(Number.isFinite(threshold) ? { threshold } : {}),
+      ...(oddsDecimal !== null ? { oddsDecimal } : {}),
+    });
+
+    if (legs.length === 12) break;
+  }
+
+  if (legs.length === 0) return null;
+  const rawStake = Number(p.wagerAmount);
+  const stakeUnits = Number.isFinite(rawStake) && rawStake > 0 && rawStake <= 100000
+    ? rawStake
+    : 1;
+  return { legs, stakeUnits };
+}
+
+/** A parlay can be graded once at least one leg has a contract-valid grading identity. */
 export function parlayIsGradable(p: Parlay): boolean {
-  return (p.legs || []).some((l) => l.gamePk && l.marketCode);
+  return buildGradeRequest(p) !== null;
 }
 
 /** Grade a single parlay against the live feed. Returns null if not gradable. */
 export async function gradeParlay(p: Parlay): Promise<GradeResponse | null> {
-  const legs = (p.legs || [])
-    .filter((l) => l.gamePk && l.marketCode)
-    .map((l) => ({
-      sport: (l.sport || 'mlb').toLowerCase(),
-      gamePk: String(l.gamePk),
-      market: l.marketCode as string,
-      selection: l.selection,
-      threshold: l.threshold,
-      oddsDecimal: l.odds,
-    }));
-  if (legs.length === 0) return null;
+  const request = buildGradeRequest(p);
+  if (!request) return null;
 
   try {
-    const data = await apiClient.post<GradeResponse>('/api/parlays/grade', {
-      legs,
-      stakeUnits: p.wagerAmount ?? 1,
-    });
+    const data = await apiClient.post<GradeResponse>('/api/parlays/grade', request);
     return data;
   } catch (err) {
     console.warn("[parlayGrading] grade request failed", err);

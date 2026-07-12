@@ -1,12 +1,5 @@
 import { create } from "zustand";
-import {
-  PublicParlaySlip,
-  normalizePublicSlip,
-  normalizeSlipStatus,
-  isLiveLikeStatus,
-} from "../lib/parlayDisplay";
-
-export type ParlayCommandPanel = "build" | "ai" | "vai_ledger" | "live" | "premium";
+export type ParlayCommandPanel = "ai" | "vai_ledger" | "live" | "premium";
 
 export type DraftParlayLeg = {
   id: string;
@@ -51,9 +44,7 @@ type ParlayCommandState = {
   draftLegs: DraftParlayLeg[];
   draftMode: DraftMode;
   aiPicks: AiRecommendedLeg[];
-  savedSlips: PublicParlaySlip[];
   optimistic: OptimisticSaveState;
-  lastSyncAt: string | null;
 
   setActivePanel: (panel: ParlayCommandPanel) => void;
   addDraftLeg: (leg: DraftParlayLeg) => void;
@@ -63,10 +54,6 @@ type ParlayCommandState = {
   replaceDraftLeg: (id: string, leg: DraftParlayLeg) => void;
   clearDraft: () => void;
   setAiPicks: (legs: AiRecommendedLeg[]) => void;
-  hydrateSavedSlips: (rawSlips: unknown[]) => void;
-  addOptimisticSlip: (rawSlip: unknown) => string;
-  replaceOptimisticSlip: (optimisticId: string, savedSlip: unknown) => void;
-  removeOptimisticSlip: (optimisticId: string) => void;
   setSaving: (saving: boolean) => void;
   setPosting: (posting: boolean) => void;
   setError: (message: string | null) => void;
@@ -95,18 +82,16 @@ const normalizeDraftLeg = (leg: DraftParlayLeg): DraftParlayLeg => ({
 });
 
 export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => ({
-  activePanel: "build",
+  activePanel: "live",
   draftLegs: [],
   draftMode: "manual",
   aiPicks: [],
-  savedSlips: [],
   optimistic: {
     saving: false,
     posting: false,
     lastError: null,
     lastSavedAt: null,
   },
-  lastSyncAt: null,
 
   setActivePanel: (panel) => set({ activePanel: panel }),
 
@@ -139,7 +124,7 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
       const exists = state.draftLegs.some((existing) => existing.id === normalized.id);
 
       return {
-        activePanel: "build",
+        activePanel: "live",
         draftMode: "ai_locked",
         draftLegs: exists ? state.draftLegs : [...state.draftLegs, normalized],
       };
@@ -173,58 +158,6 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
 
   setAiPicks: (legs) => set({ aiPicks: legs.map(normalizeDraftLeg) }),
 
-  hydrateSavedSlips: (rawSlips) =>
-    set({
-      savedSlips: rawSlips.map(normalizePublicSlip),
-      lastSyncAt: new Date().toISOString(),
-    }),
-
-  addOptimisticSlip: (rawSlip) => {
-    const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const optimisticSlip = normalizePublicSlip({
-      ...(rawSlip as Record<string, unknown>),
-      id: optimisticId,
-      status: normalizeSlipStatus((rawSlip as any)?.status || "PENDING"),
-      synced: false,
-    });
-
-    set((state) => ({
-      savedSlips: [optimisticSlip, ...state.savedSlips],
-      optimistic: {
-        ...state.optimistic,
-        saving: true,
-        lastError: null,
-      },
-    }));
-
-    return optimisticId;
-  },
-
-  replaceOptimisticSlip: (optimisticId, savedSlip) =>
-    set((state) => ({
-      savedSlips: state.savedSlips.map((slip) =>
-        slip.publicId.endsWith(optimisticId.slice(-6).toUpperCase())
-          ? normalizePublicSlip({ ...(savedSlip as Record<string, unknown>), synced: true })
-          : slip
-      ),
-      optimistic: {
-        ...state.optimistic,
-        saving: false,
-        lastSavedAt: new Date().toISOString(),
-      },
-    })),
-
-  removeOptimisticSlip: (optimisticId) =>
-    set((state) => ({
-      savedSlips: state.savedSlips.filter(
-        (slip) => !slip.publicId.endsWith(optimisticId.slice(-6).toUpperCase())
-      ),
-      optimistic: {
-        ...state.optimistic,
-        saving: false,
-      },
-    })),
-
   setSaving: (saving) =>
     set((state) => ({
       optimistic: { ...state.optimistic, saving },
@@ -243,4 +176,3 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
 
 export const selectActiveParlayPanel = (state: ParlayCommandState) => state.activePanel;
 export const selectDraftLegs = (state: ParlayCommandState) => state.draftLegs;
-export const selectSavedSlips = (state: ParlayCommandState) => state.savedSlips;

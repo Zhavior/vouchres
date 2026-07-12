@@ -68,7 +68,7 @@ export const vouchEdgeBootJobs: VouchEdgeBootJob[] = [
   {
     id: "savedParlays",
     label: "Checking saved parlays",
-    feature: "Parlay Hub",
+    feature: "Parlay OS",
     required: true,
     weight: 10,
     timeoutMs: 3500,

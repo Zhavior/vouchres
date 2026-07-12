@@ -1,5 +1,5 @@
 /** MLB data + intelligence report routes. */
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { getLiveGames } from "../services/mlb/liveGamesService";
@@ -11,6 +11,11 @@ import { structuredLog } from "../lib/structuredLog";
 import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
 import { getTodayLineups } from "../services/mlb/lineupService";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { validate } from "../middleware/validation";
+import {
+  ParlayLegProgressRequestSchema,
+  type ParlayLegProgressRequest,
+} from "../validators/parlaySchemas";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -216,18 +221,29 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post("/api/mlb/parlay-leg-progress", validate({ body: ParlayLegProgressRequestSchema }), asyncHandler(async (req: RequestWithContext, res: Response) => {
+    const startedAt = Date.now();
     const { fetchParlayLegProgressBatch } = await import("../services/mlb/parlayLiveProgressService");
-    const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
+    const { legs } = req.body as ParlayLegProgressRequest;
     const progress = await fetchParlayLegProgressBatch(
-      legs.map((leg: Record<string, unknown>, index: number) => ({
-        id: String(leg.id ?? `leg-${index}`),
-        gamePk: String(leg.gamePk ?? leg.game_pk ?? ""),
-        playerId: leg.playerId ?? leg.player_id ?? "",
-        marketCode: leg.marketCode ?? leg.market_code ?? null,
-        statTarget: leg.statTarget ?? leg.stat_target ?? 1,
+      legs.map((leg) => ({
+        id: leg.id,
+        gamePk: leg.gamePk,
+        playerId: leg.playerId,
+        marketCode: leg.marketCode,
+        statTarget: leg.statTarget,
       })),
     );
+    structuredLog({
+      level: "info",
+      event: "parlay.live_progress.completed",
+      requestId: req.requestId,
+      route: "/api/mlb/parlay-leg-progress",
+      durationMs: Date.now() - startedAt,
+      legs: legs.length,
+      games: new Set(legs.map((leg) => leg.gamePk)).size,
+      unavailable: progress.filter((leg) => leg.current == null && !leg.gameStatus).length,
+    });
     return res.json(apiOkFlat(req, { legs: progress }));
   }));
 

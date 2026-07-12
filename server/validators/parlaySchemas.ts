@@ -1,4 +1,7 @@
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+
+extendZodWithOpenApi(z);
 
 export const ParlayIdParamsSchema = z.object({
   id: z.string().uuid(),
@@ -126,7 +129,44 @@ export const GradeParlaySchema = z.object({
   stakeUnits: z.coerce.number().finite().positive().max(100000).default(1),
 });
 
+export const GradeParlayResponseSchema = z.object({
+  ok: z.literal(true),
+  legs: z.array(z.object({
+    sport: z.enum(["mlb", "nba", "nfl"]),
+    gamePk: z.string(),
+    market: z.string(),
+    selection: z.string(),
+    oddsDecimal: z.number().nullable(),
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    actual: z.number().nullable(),
+    note: z.string().nullable(),
+  })),
+  parlay: z.object({
+    status: z.enum(["won", "lost", "push", "pending", "error"]),
+    settledUnits: z.number().nullable(),
+    combinedOdds: z.number().nullable(),
+    note: z.string(),
+  }),
+  gradedAt: z.string().datetime(),
+  meta: z.object({
+    requestId: z.string(),
+    timestamp: z.string().datetime(),
+  }).passthrough(),
+});
+
+export const ParlayLegProgressRequestSchema = z.object({
+  legs: z.array(z.object({
+    id: z.string().trim().min(1).max(160),
+    gamePk: z.coerce.string().trim().regex(/^\d{5,10}$/, "gamePk must be a numeric league game id."),
+    playerId: z.union([z.string().trim().regex(/^\d{1,12}$/, "playerId must be numeric."), z.number().int().positive()]),
+    marketCode: z.string().trim().min(1).max(64),
+    statTarget: z.coerce.number().finite().positive().max(100).default(1),
+  })).min(1, "legs must include at least 1 item.").max(50, "legs must include at most 50 items."),
+});
+
 export type ListParlaysQuery = z.infer<typeof ListParlaysQuerySchema>;
 export type UpdateParlayInput = z.infer<typeof UpdateParlaySchema>;
 export type SaveMeParlayInput = z.infer<typeof SaveMeParlaySchema>;
 export type GradeParlayInput = z.infer<typeof GradeParlaySchema>;
+export type GradeParlayResponse = z.infer<typeof GradeParlayResponseSchema>;
+export type ParlayLegProgressRequest = z.infer<typeof ParlayLegProgressRequestSchema>;

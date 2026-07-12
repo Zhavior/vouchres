@@ -1,6 +1,7 @@
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 
 const MLB_API = process.env.MLB_API_BASE_URL ?? "https://statsapi.mlb.com/api";
+const MAX_GAME_CONCURRENCY = 4;
 
 const MARKET_STAT_MAP: Record<string, { side: "batting" | "pitching"; stat: string }> = {
   ANYTIME_HR: { side: "batting", stat: "homeRuns" },
@@ -87,13 +88,16 @@ export async function fetchParlayLegProgressBatch(
     byGame.set(gamePk, bucket);
   }
 
-  const results: ParlayLegProgressResult[] = [];
+  const games = [...byGame.entries()];
+  const groupedResults = new Array<ParlayLegProgressResult[]>(games.length);
+  let nextGameIndex = 0;
 
-  for (const [gamePk, gameLegs] of byGame.entries()) {
-    let boxscore: any = null;
-    let gameStatus: string | null = null;
-    try {
-      const [linescore, box] = await Promise.all([
+  async function processNextGame(): Promise<void> {
+    while (nextGameIndex < games.length) {
+      const index = nextGameIndex;
+      nextGameIndex += 1;
+      const [gamePk, gameLegs] = games[index];
+      const [linescoreResult, boxscoreResult] = await Promise.allSettled([
         sportsFetchJson<any>(`${MLB_API}/v1/game/${gamePk}/linescore`, {
           cacheKey: `live-progress:linescore:${gamePk}`,
           ttlMs: 15_000,
@@ -109,25 +113,30 @@ export async function fetchParlayLegProgressBatch(
           debugLabel: "parlayLiveProgress",
         }),
       ]);
-      boxscore = box;
-      gameStatus = String(linescore?.status?.detailedState ?? linescore?.status ?? "");
-    } catch {
-      boxscore = null;
-    }
 
-    for (const leg of gameLegs) {
-      const target = Number(leg.statTarget ?? 1);
-      const marketCode = String(leg.marketCode ?? "ANYTIME_HR");
-      const current = boxscore ? readPlayerStat(boxscore, leg.playerId, marketCode) : null;
-      results.push({
-        id: leg.id,
-        current,
-        target: Number.isFinite(target) && target > 0 ? target : 1,
-        label: progressLabel(marketCode),
-        gameStatus,
+      const linescore = linescoreResult.status === "fulfilled" ? linescoreResult.value : null;
+      const boxscore = boxscoreResult.status === "fulfilled" ? boxscoreResult.value : null;
+      const gameStatus = linescore
+        ? String(linescore?.status?.detailedState ?? linescore?.status ?? "") || null
+        : null;
+
+      groupedResults[index] = gameLegs.map((leg) => {
+        const target = Number(leg.statTarget ?? 1);
+        const marketCode = String(leg.marketCode ?? "ANYTIME_HR");
+        return {
+          id: leg.id,
+          current: boxscore ? readPlayerStat(boxscore, leg.playerId, marketCode) : null,
+          target: Number.isFinite(target) && target > 0 ? target : 1,
+          label: progressLabel(marketCode),
+          gameStatus,
+        };
       });
     }
   }
 
-  return results;
+  await Promise.all(
+    Array.from({ length: Math.min(MAX_GAME_CONCURRENCY, games.length) }, () => processNextGame()),
+  );
+
+  return groupedResults.flat();
 }

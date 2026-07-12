@@ -12,6 +12,7 @@ import { pushAiParlaysToBackend, finalizeParlayTrustLockClient } from '../domain
 import { warmGuestHrBoardCache } from '../lib/boot/guestHrBoardWarmCache';
 import { useFeedStore, selectPosts, selectSyncPosts } from '../stores/feedStore';
 import { useSlipsStore, selectSavedSlips, selectSyncSlips } from '../stores/slipsStore';
+import { reconcileParlaySlips } from './reconcileParlaySlips';
 import { useProfileStore, selectProfile, selectSyncProfile } from '../stores/profileStore';
 import { useVouchesStore, selectSavedVouches, selectSyncVouches } from '../stores/vouchesStore';
 import { SECTIONS_USING_LIVE_GAMES } from './sectionNavigation';
@@ -43,6 +44,7 @@ type UseAppBootstrapArgs = {
 
 export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: UseAppBootstrapArgs) {
   const gradingRef = useRef(false);
+  const gradingLastCheckedRef = useRef(0);
   const [, setIsGrading] = useState(false);
   const [, setGradingLastChecked] = useState<Date | null>(null);
 
@@ -92,31 +94,11 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, []);
 
   useEffect(() => {
-    if (!backendParlayRows?.length) return;
+    if (backendParlayRows === null || backendParlayRows === undefined) return;
 
     const backendParlays = backendParlayRows.map(mapBackendParlay);
-    const backendPickIds = new Set(
-      backendParlays
-        .map((p) => p.backendPickId || p.id)
-        .filter(Boolean)
-        .map(String),
-    );
-
     const localSlips = useSlipsStore.getState().savedSlips;
-    const localOnly = localSlips.filter((p) => {
-      if (!p.backendPickId) return true;
-      return !backendPickIds.has(String(p.backendPickId));
-    });
-
-    const merged = [...backendParlays, ...localOnly];
-    const seen = new Set<string>();
-    const deduped = merged.filter((p) => {
-      if (seen.has(p.id)) return false;
-      seen.add(p.id);
-      return true;
-    });
-
-    syncSlips(deduped);
+    syncSlips(reconcileParlaySlips(backendParlays, localSlips));
   }, [backendParlayRows, syncSlips]);
 
   useEffect(() => {
@@ -172,7 +154,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
   }, [backendFeedPosts, syncPosts]);
 
   const handleGradeResults = useCallback(async () => {
-    if (gradingRef.current) return;
+    if (gradingRef.current || Date.now() - gradingLastCheckedRef.current < 60_000) return;
     gradingRef.current = true;
     setIsGrading(true);
     try {
@@ -206,6 +188,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
       }
     } finally {
       gradingRef.current = false;
+      gradingLastCheckedRef.current = Date.now();
       setIsGrading(false);
       setGradingLastChecked(new Date());
     }
@@ -233,7 +216,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
     notify({
       kind: 'ai',
       title: `🤖 V.A.I built ${created.length} parlays for today`,
-      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay Hub.',
+      body: 'Confirmed starters only. They lock 30 min before first pitch, then move to Parlay OS.',
       section: 'live_parlays',
     });
   };
@@ -284,7 +267,7 @@ export function useAppBootstrap({ activeSection, commitSection, isLoggedIn }: Us
         notify({
           kind: 'lock',
           title: `🔒 Locked: ${p.title}`,
-          body: 'Moved to Parlay Hub. It will auto-grade when the games are final.',
+          body: 'Moved to Parlay OS. It will auto-grade when the games are final.',
           section: 'live_parlays',
         });
         return { ...p, lockNotified: true };

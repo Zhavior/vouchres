@@ -161,7 +161,7 @@ export default function PremiumSubPage({ profile, onUpdateProfile }: PremiumSubP
               <div className="border-t border-white/10 pt-3.5 space-y-2.5">
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
-                  <span>Build up to 20 slips inside Parlay Lab</span>
+                  <span>Build and track up to 20 slips with Parlay OS</span>
                 </div>
                 <div className="flex items-start gap-2 text-[11px] text-white/60">
                   <Check className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />

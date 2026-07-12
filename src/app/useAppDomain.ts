@@ -168,7 +168,7 @@ export function useAppDomain({
         kind: 'success',
         title: 'Leg updated',
         body: replacement.draft.selection ?? tier.label,
-        section: 'build',
+        section: 'live_parlays',
       });
       useParlayOsStore.getState().openSheet(true);
       return;
@@ -187,7 +187,7 @@ export function useAppDomain({
       kind: 'success',
       title: built.length > 1 ? `${built.length} legs added` : 'Leg added',
       body: tier.label,
-      section: 'build',
+      section: 'live_parlays',
     });
   }, [liveGames, commitLegsToSlip]);
 

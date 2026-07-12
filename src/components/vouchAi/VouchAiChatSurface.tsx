@@ -31,7 +31,7 @@ type Props = {
 const ISLAND_PAGE_SHORTCUTS = [
   { label: "V.A.I Smart Picks", section: "ai_engine", icon: Cpu },
   { label: "HR Board", section: "hr_board", icon: Flame },
-  { label: "Parlay Lab", section: "build", icon: Shield },
+  { label: "Parlay OS", section: "live_parlays", icon: Shield },
 ] as const;
 
 export default function VouchAiChatSurface({
@@ -122,10 +122,10 @@ export default function VouchAiChatSurface({
 
               {m.type === "feature_list" && (
                 <div className={`mt-3.5 grid grid-cols-2 gap-2 pt-2 ${isIsland ? "" : "border-t border-slate-800"}`}>
-                  <button type="button" onClick={() => handleExplainFeature("build")} className={featureBtn}>
+                  <button type="button" onClick={() => handleExplainFeature("live_parlays")} className={featureBtn}>
                     <Sliders className={`w-4 h-4 shrink-0 ${isIsland ? "text-vouch-cyan" : "text-sky-400"}`} />
                     <span className={`text-[10px] font-bold ${isIsland ? "text-white/70 group-hover:text-vouch-cyan" : "text-slate-300 group-hover:text-sky-400"}`}>
-                      Explain Parlay Lab
+                      Explain Parlay OS
                     </span>
                   </button>
                   <button type="button" onClick={() => handleExplainFeature("ai_engine")} className={featureBtn}>
@@ -287,7 +287,7 @@ export default function VouchAiChatSurface({
       )}
 
       <div className={`flex flex-wrap gap-2 ${isIsland ? "mt-3" : "overflow-x-auto pb-1 scrollbar-none"}`}>
-        <button type="button" onClick={() => handleExplainFeature("build")} className={quickBtn}>
+        <button type="button" onClick={() => handleExplainFeature("live_parlays")} className={quickBtn}>
           <Sliders className="w-3 h-3" />
           <span>Explain features</span>
         </button>

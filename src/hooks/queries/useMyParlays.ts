@@ -8,10 +8,10 @@ export type BackendParlayRow = {
   [key: string]: unknown;
 };
 
-async function fetchMyParlays(): Promise<BackendParlayRow[]> {
-  if (!isSupabaseConfigured) return [];
+async function fetchMyParlays(): Promise<BackendParlayRow[] | null> {
+  if (!isSupabaseConfigured) return null;
   const token = await getAuthToken();
-  if (!token) return [];
+  if (!token) return null;
   const result = await apiClient.get<{ parlays: BackendParlayRow[] }>('/api/me/parlays?limit=100');
   return result?.parlays ?? [];
 }

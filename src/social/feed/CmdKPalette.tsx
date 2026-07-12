@@ -12,7 +12,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Search, Command, Home, Flame, Users, Tv, Activity, Radio,
-  UserRoundSearch, Swords, LineChart, Cpu, Sliders, ClipboardCheck,
+  UserRoundSearch, Swords, LineChart, Cpu, ClipboardCheck,
   BarChart3, Trophy, Sparkles, Settings, LayoutDashboard, ShoppingBag,
   User, X,
 } from 'lucide-react';
@@ -24,7 +24,7 @@ const CMDK_PREFETCH_SECTIONS = [
   'feed',
   'hr_board',
   'today',
-  'build',
+  'live_parlays',
   'ai_engine',
   'ai_pilot',
 ] as const;
@@ -60,8 +60,7 @@ const ALL_ITEMS: PaletteItem[] = [
   { id: 'ai_pilot',        label: 'V.A.I Dynamic Creator', group: 'AI',            icon: Cpu,             keywords: ['ai', 'pilot', 'dynamic', 'creator', 'parlay', 'vai'] },
   { id: 'ai_engine',       label: 'V.A.I Research Center', group: 'AI',            icon: Cpu,             keywords: ['ai', 'research', 'vai', 'rooms', 'smart'] },
   // Build & Track
-  { id: 'live_parlays',    label: 'Parlay Hub',             group: 'Build & Track', icon: Radio,           keywords: ['parlay', 'hub', 'live', 'slips'] },
-  { id: 'build',           label: 'Build Parlay',           group: 'Build & Track', icon: Sliders,         keywords: ['build', 'parlay', 'create', 'legs', 'slip'] },
+  { id: 'live_parlays',    label: 'Parlay OS',              group: 'Build & Track', icon: Radio,           keywords: ['parlay', 'build', 'live', 'slips', 'ledger'] },
   { id: 'research',        label: 'Player Research',        group: 'Build & Track', icon: Search,          keywords: ['research', 'player', 'stats', 'search'] },
   { id: 'board',           label: 'Vouch Board',            group: 'Build & Track', icon: ClipboardCheck,  keywords: ['vouch', 'board', 'picks', 'ledger'] },
   { id: 'results',         label: 'Results',                group: 'Build & Track', icon: BarChart3,       keywords: ['results', 'record', 'history', 'wins', 'losses'] },

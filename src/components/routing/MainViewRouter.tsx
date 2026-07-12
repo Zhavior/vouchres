@@ -206,7 +206,7 @@ function MainViewRouter({
     case 'build':
       return (
         <LazyRoute>
-          <ParlayShell panel="build" navigateSection={navigateSection} />
+          <ParlayShell panel="live" navigateSection={navigateSection} />
         </LazyRoute>
       );
     case 'ai_pilot':
@@ -513,7 +513,7 @@ function ParlayShell({
   panel,
   navigateSection,
 }: {
-  panel: 'build' | 'live';
+  panel: 'live';
   navigateSection: (section: string) => void;
 }) {
   const { savedSlips, onSaveVouch } = useAppShell();

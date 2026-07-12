@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createTestUser, resetTestDb } from "./setup";
+import { createTestUser, resetTestDb, testDb } from "./setup";
 
 const SKIP = !process.env.SUPABASE_URL_TEST;
 const describeOrSkip = SKIP ? describe.skip : describe;
@@ -226,5 +226,118 @@ describeOrSkip("Grading service", () => {
       .eq("user_id", user.id)
       .single();
     expect(pick.status).toBe("pending");
+  });
+
+  it("settles a two-game parlay only after both game dates are final and remains idempotent", async () => {
+    const user = await createTestUser({ username: "grade_multi_game", ageConfirmed: true });
+    const firstGame = "745101";
+    const secondGame = "745202";
+    let secondGameFinal = false;
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/v1/schedule")) {
+        const gamePk = url.includes("2026-07-10") ? firstGame : secondGame;
+        const isFinal = gamePk === firstGame || secondGameFinal;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            dates: [{ games: [{
+              gamePk: Number(gamePk),
+              officialDate: gamePk === firstGame ? "2026-07-10" : "2026-07-11",
+              status: { detailedState: isFinal ? "Final" : "Scheduled" },
+            }] }],
+          }),
+        } as Response);
+      }
+      if (url.includes(`/v1/game/${firstGame}/boxscore`) || url.includes(`/v1/game/${secondGame}/boxscore`)) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(MOCK_BOXSCORE) } as Response);
+      }
+      return Promise.reject(new Error(`unexpected fetch: ${url}`));
+    }) as any;
+
+    const { data: parent, error: parentError } = await testDb
+      .from("picks")
+      .insert({
+        user_id: user.id,
+        capper_id: null,
+        leg_type: "parlay",
+        sport: "mlb",
+        event_id: firstGame,
+        market: "parlay",
+        selection: "Two-game HR parlay",
+        odds_decimal: 4,
+        stake_units: 1,
+        is_demo: false,
+        status: "pending",
+        game_date: "2026-07-10",
+      })
+      .select("id")
+      .single();
+    expect(parentError).toBeNull();
+
+    const { error: legsError } = await testDb.from("pick_legs").insert([
+      {
+        pick_id: parent!.id,
+        leg_index: 0,
+        sport: "mlb",
+        event_id: firstGame,
+        game_id: firstGame,
+        game_date: "2026-07-10",
+        market: "hr",
+        market_code: "ANYTIME_HR",
+        selection: "Aaron Judge HR",
+        odds_decimal: 2,
+        status: "pending",
+        player_id: "123",
+        event_key: `MLB_${firstGame}_123_ANYTIME_HR_1_GTE`,
+        stat_target: 1,
+        comparator: ">=",
+      },
+      {
+        pick_id: parent!.id,
+        leg_index: 1,
+        sport: "mlb",
+        event_id: secondGame,
+        game_id: secondGame,
+        game_date: "2026-07-11",
+        market: "hr",
+        market_code: "ANYTIME_HR",
+        selection: "Aaron Judge HR",
+        odds_decimal: 2,
+        status: "pending",
+        player_id: "123",
+        event_key: `MLB_${secondGame}_123_ANYTIME_HR_1_GTE`,
+        stat_target: 1,
+        comparator: ">=",
+      },
+    ]);
+    expect(legsError).toBeNull();
+
+    const { gradePendingPicks } = await import("../server/services/grading/gradingService");
+    const partial = await gradePendingPicks({ days: 7 });
+    expect(partial.graded).toHaveLength(0);
+    expect(partial.skipped[0]?.error).toContain(`parlay_leg_event_not_ready:${secondGame}`);
+
+    const { data: pendingParent } = await testDb.from("picks").select("status").eq("id", parent!.id).single();
+    expect(pendingParent?.status).toBe("pending");
+
+    secondGameFinal = true;
+    // Clear the sports HTTP cache so the next run observes the final transition.
+    vi.resetModules();
+    const { gradePendingPicks: gradeAfterFinal } = await import("../server/services/grading/gradingService");
+    const settled = await gradeAfterFinal({ days: 7 });
+    expect(settled.graded).toHaveLength(1);
+    expect(settled.graded[0]).toMatchObject({ pick_id: parent!.id, status: "won" });
+
+    const { data: settledLegs } = await testDb
+      .from("pick_legs")
+      .select("status")
+      .eq("pick_id", parent!.id)
+      .order("leg_index");
+    expect(settledLegs?.map((leg) => leg.status)).toEqual(["won", "won"]);
+
+    const rerun = await gradeAfterFinal({ days: 7 });
+    expect(rerun.graded).toHaveLength(0);
+    expect(rerun.skipped).toHaveLength(0);
   });
 });

@@ -130,7 +130,7 @@ export async function handleSaveParlaySlip(
   notify({
     kind: 'success',
     title: '✅ Parlay Saved',
-    body: `${savedParlay.title || 'Your parlay'} was saved to Parlay Hub.`,
+    body: `${savedParlay.title || 'Your parlay'} was saved to Parlay OS.`,
     section: 'live_parlays',
   });
 
@@ -155,13 +155,6 @@ function patchSlipTrustFields(parlayId: string, patch: Partial<Parlay>): void {
       p.id === parlayId || p.backendPickId === parlayId ? { ...p, ...patch } : p,
     ),
   );
-  const slips = useSlipsStore.getState().savedSlips.map((p) => {
-    if (p.id === parlayId || p.backendPickId === parlayId) {
-      return { ...p, ...patch };
-    }
-    return p;
-  });
-  useParlayCommandStore.getState().hydrateSavedSlips(slips);
 }
 
 export async function handleCommitParlayTrust(input: {

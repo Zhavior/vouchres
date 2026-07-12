@@ -287,7 +287,7 @@ export default function LiveGames({ onSectionChange, onAddLegToParlay }: LiveGam
         odds: defaultProp.odds,
         spec: defaultProp.spec
       });
-      onSectionChange('build');
+      onSectionChange('live_parlays');
     } else {
       alert("No active propositions available for this athlete currently.");
     }

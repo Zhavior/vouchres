@@ -1055,14 +1055,14 @@ export default function AisLandingPage({ profile, onUpdateProfile, onSectionChan
       actionText: 'Consult AI Models',
     },
     {
-      id: 'build',
-      title: 'The Multi-Leg Parlay Laboratory',
+      id: 'live_parlays',
+      title: 'Parlay OS',
       description: 'An offline-safe stake builder. Calculate comprehensive compound odds, toggle customizable decimal-to-american odds, and adjust fractional weights before saving slips.',
       tag: 'RESEARCH BENCH',
       icon: Sliders,
       color: 'from-indigo-400 to-purple-500',
       accentHexColor: '#818cf8',
-      actionText: 'Open Parlay Lab',
+      actionText: 'Open Parlay OS',
     },
     {
       id: 'live_games',

@@ -551,7 +551,7 @@ export default function NotificationCenter({ savedSlips = [] }: NotificationCent
                   <div className="py-8 text-center text-slate-550 flex flex-col items-center justify-center gap-1.5">
                     <Trophy className="w-7 h-7 text-slate-700" />
                     <span className="text-xs uppercase font-mono tracking-wider font-bold">No parlays monitored</span>
-                    <span className="text-[10px] text-slate-600">Build a sliplist parlay in Parlay Lab!</span>
+                    <span className="text-[10px] text-slate-600">Build with the global ParlayOS slip.</span>
                   </div>
                 ) : (
                   savedSlips.map((slip) => (

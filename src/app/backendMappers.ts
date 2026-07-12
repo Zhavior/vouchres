@@ -2,6 +2,7 @@ import { decimalToAmerican, decimalLabel } from '../lib/odds';
 import { normalizePlayerId } from '../lib/mlbHeadshot';
 import { resolveMarket } from '../sports/markets';
 import type { Leg, Parlay, Vouch } from '../types';
+import { deriveCanonicalParlayState } from '../domain/parlayState';
 
 export interface BackendProfile {
   id: string;
@@ -61,6 +62,7 @@ export function mapBackendParlay(pick: any): Parlay {
       marketCode: leg.market || undefined,
       actual: leg.actual ?? null,
       gameStartTime: leg.game_start_time || undefined,
+      gameDate: leg.game_date || pick.game_date || undefined,
       playerId: normalizePlayerId(leg.player_id),
     };
   });
@@ -76,7 +78,7 @@ export function mapBackendParlay(pick: any): Parlay {
   const decOdds = typeof pick.odds_decimal === 'number' ? pick.odds_decimal : null;
   const totalOdds = decimalLabel(decOdds);
 
-  return {
+  const parlay: Parlay = {
     id: pick.id,
     title: pick.explanation || pick.market || 'Saved Parlay',
     legs,
@@ -97,6 +99,8 @@ export function mapBackendParlay(pick: any): Parlay {
     trustLockAt: pick.trust_lock_at ?? undefined,
     trustAudience: (pick.visibility ?? "private") as Parlay["trustAudience"],
   };
+  parlay.canonicalState = deriveCanonicalParlayState(parlay);
+  return parlay;
 }
 
 export function mapBackendVouch(row: any): Vouch {

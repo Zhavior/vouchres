@@ -56,4 +56,28 @@ describe("openapi routes", () => {
     expect(body.paths["/api/parlays/grade-due"]).toBeTruthy();
     expect(Object.keys(body.paths).length).toBeGreaterThanOrEqual(29);
   });
+
+  it("documents the canonical stateless parlay grading contract", async () => {
+    const response = await fetch(`${baseUrl}/api/openapi.json`);
+    const body = await response.json();
+    const operation = body.paths["/api/parlays/grade"].post;
+    const requestSchema = operation.requestBody.content["application/json"].schema;
+    const request = requestSchema.$ref
+      ? body.components.schemas[requestSchema.$ref.split("/").at(-1)]
+      : requestSchema;
+    const legSchema = request.properties.legs.items;
+    const gradeResponse = operation.responses["200"].content["application/json"].schema;
+    const success = gradeResponse.$ref
+      ? body.components.schemas[gradeResponse.$ref.split("/").at(-1)]
+      : gradeResponse;
+
+    expect(request.properties.legs.maxItems).toBe(12);
+    expect(legSchema.properties).toHaveProperty("threshold");
+    expect(legSchema.properties).toHaveProperty("oddsDecimal");
+    expect(request.properties.stakeUnits.maximum).toBe(100000);
+    expect(success.properties).toHaveProperty("gradedAt");
+    expect(success.properties).toHaveProperty("meta");
+    expect(operation.responses).toHaveProperty("400");
+    expect(operation.responses).toHaveProperty("429");
+  });
 });

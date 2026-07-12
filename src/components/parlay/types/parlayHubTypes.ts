@@ -1,5 +1,5 @@
 /**
- * parlayHubTypes — Shared discriminated unions for the Parlay Hub
+ * parlayHubTypes - Shared discriminated unions for Parlay OS
  *
  * Judge panel synthesis:
  * - Judge 12: status fields must be shared exported types, not inline string literals

@@ -1,5 +1,9 @@
 import { extendZodWithOpenApi, OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import {
+  GradeParlayResponseSchema,
+  GradeParlaySchema,
+} from "../validators/parlaySchemas";
 
 extendZodWithOpenApi(z);
 
@@ -89,17 +93,6 @@ const AuthMeSchema = z.object({
   display_name: z.string().nullable().optional(),
 }).passthrough().openapi("AuthMeResponse");
 
-const GradeParlayDocSchema = z.object({
-  legs: z.array(z.object({
-    sport: z.enum(["mlb", "nba", "nfl"]),
-    gamePk: z.string(),
-    market: z.string(),
-    selection: z.string(),
-    oddsDecimal: z.number().optional(),
-  })).min(1).max(12),
-  stakeUnits: z.number().positive().default(1),
-}).openapi("GradeParlayRequest");
-
 const SaveMeParlayDocSchema = z.object({
   title: z.string().max(200).optional(),
   legs: z.array(z.object({
@@ -134,27 +127,6 @@ const MeParlaysListSchema = z.object({
   limit: z.number().int().positive(),
   offset: z.number().int().nonnegative(),
 }).openapi("MeParlaysListResponse");
-
-const GradeParlayResponseSchema = z.object({
-  ok: z.literal(true),
-  legs: z.array(z.object({
-    sport: z.string(),
-    gamePk: z.string(),
-    market: z.string(),
-    selection: z.string(),
-    oddsDecimal: z.number().nullable(),
-    status: z.enum(["won", "lost", "push", "pending", "error"]),
-    actual: z.number().nullable(),
-    note: z.string().nullable(),
-  })),
-  parlay: z.object({
-    status: z.enum(["won", "lost", "push", "pending", "error"]),
-    settledUnits: z.number().nullable(),
-    combinedOdds: z.number().nullable(),
-    note: z.string(),
-  }),
-  gradedAt: z.string().datetime(),
-}).openapi("GradeParlayResponse");
 
 const NotificationsListSchema = z.object({
   ok: z.literal(true),
@@ -410,7 +382,7 @@ openapiRegistry.register("BackendHealth", HealthBackendSchema);
 openapiRegistry.register("LiveGamesResponse", LiveGamesSchema);
 openapiRegistry.register("HrBoardTodayResponse", HrBoardTodaySchema);
 openapiRegistry.register("AuthMeResponse", AuthMeSchema);
-openapiRegistry.register("GradeParlayRequest", GradeParlayDocSchema);
+openapiRegistry.register("GradeParlayRequest", GradeParlaySchema);
 openapiRegistry.register("SaveMeParlayRequest", SaveMeParlayDocSchema);
 openapiRegistry.register("ListParlaysQuery", ListParlaysQueryDocSchema);
 openapiRegistry.register("MeParlaysListResponse", MeParlaysListSchema);
@@ -669,13 +641,21 @@ openapiRegistry.registerPath({
   tags: ["Parlays"],
   request: {
     body: {
-      content: { "application/json": { schema: GradeParlayDocSchema } },
+      content: { "application/json": { schema: GradeParlaySchema } },
     },
   },
   responses: {
     200: {
       description: "Graded legs",
       content: { "application/json": { schema: GradeParlayResponseSchema } },
+    },
+    400: {
+      description: "Invalid grading request",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+    429: {
+      description: "Grading rate limit exceeded",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });

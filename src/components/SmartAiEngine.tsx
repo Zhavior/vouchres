@@ -167,7 +167,7 @@ export default function SmartAiEngine({
                 <CheckCircle2 className={`mb-3 h-5 w-5 ${Z8_EMERALD}`} />
                 <h3 className="text-sm font-black text-white">Locked separation</h3>
                 <p className="mt-1 text-xs leading-relaxed text-white/45">
-                  AI Made Parlays stay separate from manual Build Parlay slips.
+                  AI-made parlays stay separate from manual ParlayOS slips.
                 </p>
               </div>
               <div className={Z8_STAT_CHIP}>

@@ -6,11 +6,9 @@ import { boundedInt, optionalYmd } from "../../lib/requestValidators";
 import type { RequestWithContext } from "../../middleware/requestContext";
 import { AuthedRequest, requireAuth, requireStaff } from "../../middleware/auth";
 import { gradingLimiter } from "../../middleware/rateLimit";
-import { gradePendingPicks } from "../../services/grading/gradingService";
-import { buildGradeDueLogRows, persistGradingRunLogs } from "../../services/grading/gradingLogService";
+import { executeGradeDueRun } from "../../services/grading/gradeDueRunService";
 import { previewLiveHrParlayMatches } from "../../services/grading/liveHrParlayService";
 import { applyLiveHrParlayMatches } from "../../services/grading/liveHrParlayWriteService";
-import { partitionGradeDueResult } from "./parlayGradingResponses";
 import { repairLegacyParlayIdentityForSync } from "./parlayRepairHelpers";
 
 export const parlayStaffRoutes = Router();
@@ -22,6 +20,7 @@ parlayStaffRoutes.post("/parlays/live-hr-sync", requireAuth, requireStaff, gradi
     dryRun: false,
     limit: 100,
     externalProvider: "live_hr_sync_repair",
+    requestId: req.requestId,
   });
   const result = await applyLiveHrParlayMatches(date);
 
@@ -50,42 +49,14 @@ parlayStaffRoutes.post("/parlays/live-hr-preview", requireAuth, requireStaff, gr
 parlayStaffRoutes.post("/parlays/grade-due", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const rawDays = (req.body as { days?: number | string } | undefined)?.days ?? req.query.days;
   const days = boundedInt(rawDays, "days", 2, 1, 7);
-  const result = await gradePendingPicks({ days });
-  const { settled, pending, errors, summary } = partitionGradeDueResult(result);
-  const requestId = (req as AuthedRequest & RequestWithContext).requestId ?? "unknown";
-
-  console.log("[parlays/grade-due]", JSON.stringify({
-    requestId,
-    mode: "grade_due",
+  const payload = await executeGradeDueRun({
     days,
+    source: "staff",
+    requestId: req.requestId ?? "unknown",
     userId: req.user?.id ?? null,
-    gradedParlays: settled.length,
-    gradedLegs: result.graded.length,
-    pendingLegs: pending.length,
-    errorCount: errors.length,
-  }));
+  });
 
-  try {
-    const logRows = buildGradeDueLogRows({ settled, pending, errors, source: "grade-due" });
-    await persistGradingRunLogs(logRows);
-  } catch (logErr: any) {
-    console.warn("[parlays/grade-due] grading_logs unavailable", JSON.stringify({
-      requestId,
-      code: logErr?.code ?? null,
-      message: logErr instanceof Error ? logErr.message : String(logErr),
-    }));
-  }
-
-  return res.json(apiOkFlat(req, {
-    mode: "grade_due",
-    gradedParlays: settled.length,
-    gradedLegs: result.graded.length,
-    pendingLegs: pending.length,
-    summary,
-    warnings: summary.warnings,
-    errors: errors.map((row) => ({ pick_id: row.pick_id, error: row.error })),
-    checkedAt: new Date().toISOString(),
-  }));
+  return res.json(apiOkFlat(req, payload));
 }));
 
 parlayStaffRoutes.post("/parlays/repair-identity", requireAuth, requireStaff, gradingLimiter, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
@@ -95,6 +66,7 @@ parlayStaffRoutes.post("/parlays/repair-identity", requireAuth, requireStaff, gr
     dryRun,
     limit,
     externalProvider: "staff_repair_identity",
+    requestId: req.requestId,
   });
 
   return res.json(apiOkFlat(req, {
