@@ -84,7 +84,7 @@ export async function handleSaveParlaySlip(
   navigateSection: (section: string) => void,
 ): Promise<void> {
   const liveGames = useAppCommandStore.getState().liveGames;
-  const rawLegs = (Array.isArray(newParlay.legs) ? newParlay.legs : []) as DraftParlayLeg[];
+  const rawLegs = (Array.isArray(newParlay.legs) ? newParlay.legs : []) as unknown as DraftParlayLeg[];
   const { legs: repairedLegs } = repairDraftLegsIdentity(rawLegs, liveGames);
   const parlayToSave = { ...newParlay, legs: repairedLegs };
 
@@ -173,7 +173,7 @@ export async function handleCommitParlayTrust(input: {
   let working = { ...input.parlay };
   const liveGames = useAppCommandStore.getState().liveGames;
   const { legs: repairedLegs } = repairDraftLegsIdentity(
-    (working.legs || []) as DraftParlayLeg[],
+    (working.legs || []) as unknown as DraftParlayLeg[],
     liveGames,
   );
   working = {

@@ -10,7 +10,7 @@
 
 import type { Parlay, Leg } from '../types';
 import { apiClient } from './apiClient';
-import { buildGradeLegPayload } from './parlays/gradeLegMapper';
+import { buildGradeLegPayload, type GradeLegPayload } from './parlays/gradeLegMapper';
 import { GradeParlaySchema } from '../../server/validators/parlaySchemas';
 
 export interface GradedLeg {
@@ -54,7 +54,7 @@ function parlayGradeFingerprint(p: Parlay): string {
   return `${p.id}::${legs}`;
 }
 
-function buildGradeRequest(p: Parlay): { legs: NonNullable<ReturnType<typeof buildGradeLegPayload>>[]; stakeUnits: number } | null {
+function buildGradeRequest(p: Parlay): { legs: GradeLegPayload[]; stakeUnits: number } | null {
   const legs = (p.legs || [])
     .map((l) => buildGradeLegPayload(l))
     .filter((leg): leg is NonNullable<typeof leg> => leg != null);
@@ -75,7 +75,10 @@ function buildGradeRequest(p: Parlay): { legs: NonNullable<ReturnType<typeof bui
     return null;
   }
 
-  return parsed.data;
+  return {
+    legs: parsed.data.legs as GradeLegPayload[],
+    stakeUnits: parsed.data.stakeUnits,
+  };
 }
 
 /** A parlay can be graded once at least one leg maps to a valid grade payload. */

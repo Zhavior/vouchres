@@ -18,7 +18,7 @@ export function registerNflRoutes(app: Express): void {
       warnings: [NFL_NOT_READY],
       meta: buildApiMeta({
         source: "nfl_stub",
-        dataQuality: "unavailable",
+        dataQuality: "limited",
         warnings: [NFL_NOT_READY],
       }),
     }));

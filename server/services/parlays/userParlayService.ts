@@ -57,7 +57,7 @@ export async function getUserParlay(input: {
     throw new AppError({ status: 404, code: "not_found", message: "Parlay not found." });
   }
 
-  let legs = await findLegsForPick(input.parlayId);
+  const legs = await findLegsForPick(input.parlayId);
   return enrichParlayForDisplay(parlay, legs);
 }
 

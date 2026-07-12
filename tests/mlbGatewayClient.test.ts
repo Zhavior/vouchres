@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMlbDirectFallbackAllowed } from "../src/lib/mlbGatewayClient";
+import { isMlbDirectFallbackAllowed } from "../src/lib/mlbDirectFallbackPolicy";
 
 describe("mlbGatewayClient", () => {
   it("allows direct MLB fallback only in dev or when explicitly enabled", () => {

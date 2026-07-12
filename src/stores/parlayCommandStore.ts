@@ -182,7 +182,7 @@ export const useParlayCommandStore = create<ParlayCommandState>()((set, get) => 
 
   clearDraft: () => set({ draftLegs: [], draftMode: "manual" }),
 
-  setAiPicks: (legs) => set({ aiPicks: legs.map(normalizeDraftLeg) }),
+  setAiPicks: (legs) => set({ aiPicks: legs.map((leg) => normalizeDraftLeg(leg)) }),
 
   hydrateSavedSlips: (rawSlips) =>
     set({

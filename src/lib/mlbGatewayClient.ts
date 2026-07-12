@@ -1,5 +1,5 @@
-import { apiUrl } from "./apiBase";
-import { unwrapApiPayload } from "./apiEnvelope";
+import { apiClient } from "./apiClient";
+export { isMlbDirectFallbackAllowed } from "./mlbDirectFallbackPolicy";
 
 export type DataProviderStatus = {
   id: string;
@@ -24,13 +24,6 @@ export type SportsDataGatewayStatus = {
   };
 };
 
-/** Direct MLB Stats API fallback is dev-only unless explicitly enabled. */
-export function isMlbDirectFallbackAllowed(): boolean {
-  return import.meta.env.DEV || import.meta.env.VITE_ALLOW_MLB_DIRECT_FALLBACK === "true";
-}
-
 export async function fetchSportsDataGatewayStatus(): Promise<SportsDataGatewayStatus> {
-  const res = await fetch(apiUrl("/api/mlb/gateway/status"));
-  if (!res.ok) throw new Error(`GET /api/mlb/gateway/status -> ${res.status}`);
-  return unwrapApiPayload<SportsDataGatewayStatus>(await res.json());
+  return apiClient.get<SportsDataGatewayStatus>("/api/mlb/gateway/status");
 }

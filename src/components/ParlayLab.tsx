@@ -823,7 +823,6 @@ export default function ParlayLab({
             potentialPayout={legs.length > 0 ? potentialPayout : null}
             saveLabel="Lock Slate"
             showLiveIndicator={legs.length > 0}
-            formatLegOdds={(leg) => decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
             layout="inline"
           />
 
@@ -1164,7 +1163,6 @@ export default function ParlayLab({
                   potentialPayout={legs.length > 0 ? potentialPayout : null}
                   saveLabel="Lock Slate"
                   showLiveIndicator={legs.length > 0}
-                  formatLegOdds={(leg) => decimalToAmericanNotation(getLegOddsForSelectedBookie(leg, bookie))}
                   layout="sheet"
                 />
               </div>

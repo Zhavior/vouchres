@@ -35,7 +35,7 @@ function IdentityChip({ complete }: { complete: boolean }) {
   );
 }
 
-export default React.memo(function SmartParlayLegCard({
+const SmartParlayLegCardComponent = React.memo(function SmartParlayLegCard({
   leg,
   legIndex,
   odds,
@@ -154,6 +154,8 @@ export default React.memo(function SmartParlayLegCard({
   );
 });
 
+export default SmartParlayLegCardComponent;
+
 export function SmartParlayLegCardFromLeg({
   leg,
   index = 0,
@@ -173,7 +175,7 @@ export function SmartParlayLegCardFromLeg({
 }) {
   const smartLeg = applySmartLegLiveProgress(projectSmartParlayLegFromLeg(leg, index), liveProgress);
   return (
-    <SmartParlayLegCard
+    <SmartParlayLegCardComponent
       leg={smartLeg}
       legIndex={index + 1}
       odds={leg.odds}

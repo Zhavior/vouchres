@@ -103,7 +103,7 @@ function projectLegFromRecord(raw: Record<string, unknown>, index: number): Smar
     headshotUrl:
       (raw.headshotUrl as string | null) ??
       (raw.headshot as string | null) ??
-      getMlbHeadshotUrl(playerId) ??
+      getMlbHeadshotUrl(playerId as string | number | null) ??
       getFallbackHeadshot(playerName),
     status,
     statusLabel: publicStatusLabel(status),
@@ -113,7 +113,7 @@ function projectLegFromRecord(raw: Record<string, unknown>, index: number): Smar
     gameId: raw.gameId != null ? String(raw.gameId) : gamePk,
     playerId: playerId as string | number | null,
     marketCode: marketCode != null ? String(marketCode) : null,
-    statTarget,
+    statTarget: statTarget != null && Number.isFinite(Number(statTarget)) ? Number(statTarget) : null,
     comparator: comparator != null ? String(comparator) : null,
     eventKey: raw.eventKey != null ? String(raw.eventKey) : raw.event_key != null ? String(raw.event_key) : null,
     actual: raw.actual != null ? Number(raw.actual) : null,
