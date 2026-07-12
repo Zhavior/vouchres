@@ -7,6 +7,7 @@ const config: Config = {
     './src/App.tsx',
     './src/pages/VouchEdgeTerminalPage.tsx',
     './src/components/landing/**/*.{ts,tsx}',
+    './src/components/vouch-studio-darkroom/panels/preview/*.{ts,tsx}',
   ],
 };
 
