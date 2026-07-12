@@ -223,7 +223,7 @@ interface DraftLegCardProps {
   onRemove: (id: string) => void;
 }
 
-const DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
+const _DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }: DraftLegCardProps) {
   const record = leg as Record<string, unknown>;
   const confidence = Number(record.confidence ?? record.edgeScore ?? null);
   const hasConf = Number.isFinite(confidence);
@@ -238,7 +238,7 @@ const DraftLegCard = React.memo(function DraftLegCard({ leg, isWeak, onRemove }:
     });
   const oddsSource = record.oddsSource as string | undefined;
   const status = (record.status as LegGradeStatus | undefined) ?? 'pending';
-  const statusMeta = LEG_STATUS_META[status as LegGradeStatus] ?? LEG_STATUS_META.pending;
+  const _statusMeta = LEG_STATUS_META[status as LegGradeStatus] ?? LEG_STATUS_META.pending;
 
   return (
     <div
@@ -502,7 +502,7 @@ function EmptyCommunity() {
 
 // ─── Stake + payout calculator (Judge 1) ─────────────────────────────────────
 
-function StakePayout({
+const _StakePayout = function StakePayout({
   combinedDecimalOdds,
 }: {
   combinedDecimalOdds: number | null;
@@ -538,7 +538,7 @@ function StakePayout({
       </div>
     </div>
   );
-}
+};
 
 // ─── Build Slip panel ─────────────────────────────────────────────────────────
 
