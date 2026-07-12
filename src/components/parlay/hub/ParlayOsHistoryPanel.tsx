@@ -13,7 +13,7 @@ import { repairAllSavedParlays } from '../../../lib/parlays/repairSavedParlay';
 import { useAppCommandStore } from '../../../stores/appCommandStore';
 import { useParlayOsStore } from '../../../stores/parlayOsStore';
 import { useSlipsStore } from '../../../stores/slipsStore';
-import { ParlayHubLivePulse } from './parlayHubUi';
+import { ParlayOsLivePulse } from './parlayOsUi';
 
 
 function EmptyLiveParlays() {
@@ -99,7 +99,7 @@ export default function ParlayOsHistoryPanel() {
       <section aria-label={title}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--ve-text-muted))]">{title}</span>
-          {live ? <ParlayHubLivePulse active /> : null}
+          {live ? <ParlayOsLivePulse active /> : null}
         </div>
         <div className="flex flex-col gap-2">
           {slips.map((slip) => {

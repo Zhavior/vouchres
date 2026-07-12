@@ -8,7 +8,7 @@ import {
   projectSmartParlayLegFromLeg,
   type LegLiveProgress,
 } from "../../../domain/parlay/smartParlayProject";
-import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayHubTypes";
+import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayOsTypes";
 import { z8StatusColor } from "../../../theme/z8Tokens";
 import { marketStyle } from "./smartSlipStyles";
 

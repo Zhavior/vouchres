@@ -3,7 +3,7 @@ import {
   LEG_STATUS_META,
   type LegGradeStatus,
   type SlipGradeStatus,
-} from '../types/parlayHubTypes';
+} from '../types/parlayOsTypes';
 import { z8StatusColor } from '../../../theme/z8Tokens';
 import { withAlpha } from '../../../theme/colors';
 
@@ -16,7 +16,7 @@ function statusColorStyle(token: string) {
   };
 }
 
-export function ParlayHubStatusBadge({
+export function ParlayOsStatusBadge({
   status,
   size = 'sm',
 }: {
@@ -37,7 +37,7 @@ export function ParlayHubStatusBadge({
   );
 }
 
-export function ParlayHubLivePulse({ active }: { active: boolean }) {
+export function ParlayOsLivePulse({ active }: { active: boolean }) {
   if (!active) return null;
   return (
     <div className="flex h-5 items-end gap-[3px]" aria-label="Live parlay activity" aria-hidden="true">
@@ -57,7 +57,7 @@ export function ParlayHubLivePulse({ active }: { active: boolean }) {
   );
 }
 
-export function ParlayHubPanelSkeleton({ label = 'Loading panel' }: { label?: string }) {
+export function ParlayOsPanelSkeleton({ label = 'Loading panel' }: { label?: string }) {
   return (
     <div className="flex flex-col gap-3 py-8 animate-pulse" aria-busy="true" aria-label={label}>
       <div className="h-4 w-40 rounded bg-white/[0.06]" />

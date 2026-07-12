@@ -8,8 +8,8 @@ import SmartParlayLegRow from "./SmartParlayLegRow";
 import SmartParlayLegCard from "./SmartParlayLegCard";
 import { trustLockCountdownLabel } from "../../../lib/trustLockSchedule";
 import type { SmartParlaySlip } from "../../../domain/parlay";
-import { ParlayHubStatusBadge } from "../hub/parlayHubUi";
-import type { LegGradeStatus } from "../types/parlayHubTypes";
+import { ParlayOsStatusBadge } from "../hub/parlayOsUi";
+import type { LegGradeStatus } from "../types/parlayOsTypes";
 import {
   deriveSlipDisplayTitle,
   deriveSlipMarketChips,
@@ -224,7 +224,7 @@ export default function SmartParlaySlipCard({
               </p>
             ) : null}
           </div>
-          <ParlayHubStatusBadge status={status} size="xs" />
+          <ParlayOsStatusBadge status={status} size="xs" />
         </div>
 
         <div

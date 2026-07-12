@@ -1,5 +1,5 @@
 import React from "react";
-import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayHubTypes";
+import { LEG_STATUS_META, type LegGradeStatus } from "../types/parlayOsTypes";
 import { z8StatusColor } from "../../../theme/z8Tokens";
 import type { SmartParlayLeg } from "../../../domain/parlay";
 import { marketStyle } from "./smartSlipStyles";

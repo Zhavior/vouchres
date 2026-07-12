@@ -12,7 +12,7 @@
  *           44×44pt min touch targets on all interactive elements.
  *           Single <StickyFooterSlot> for action bar.
  * Judge 4:  All leg state through useParlayCommandStore only.
- *           OptimisticSaveState as discriminated union via parlayHubTypes.
+ *           OptimisticSaveState as discriminated union via parlayOsTypes.
  * Judge 5:  AI pick confidence shown per leg card (0–100). Reason text shown.
  * Judge 6:  Grading is store-driven; this component only reads results.
  * Judge 7:  Full ARIA tablist/tab/tabpanel. <LiveAnnouncer> for state changes.
@@ -23,7 +23,7 @@
  * Judge 10: Community tab (was Premium) with PremiumFeed + TailButton.
  *           Responsible agreement is one-time per session, not per save.
  * Judge 11: liveProgress indicator on pending legs during LIVE state.
- * Judge 12: Status fields use LEG_STATUS_META / SLIP_STATUS_META from parlayHubTypes.
+ * Judge 12: Status fields use LEG_STATUS_META / SLIP_STATUS_META from parlayOsTypes.
  */
 
 import React, {
@@ -45,7 +45,7 @@ const ParlayOsHistoryPanel = lazy(() => import('./hub/ParlayOsHistoryPanel'));
 import ParlayHubMobileSlipDock from './hub/ParlayHubMobileSlipDock';
 import ParlayHubTemplatesRow from './hub/ParlayHubTemplatesRow';
 import ParlayHubTemplateGuide from './hub/ParlayHubTemplateGuide';
-import { ParlayHubPanelSkeleton } from './hub/parlayHubUi';
+import { ParlayOsPanelSkeleton } from './hub/parlayOsUi';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
 import { assessTemplateProgress } from '../../lib/parlays/templateProgress';
 import { useParlayOsStore } from '../../stores/parlayOsStore';
@@ -76,7 +76,7 @@ import {
   type LegGradeStatus,
   type SlipGradeStatus,
   type DfsLegContext,
-} from './types/parlayHubTypes';
+} from './types/parlayOsTypes';
 import {
   Z8_CYAN_HEX,
   Z8_EMERALD_HEX,
@@ -1048,7 +1048,7 @@ function TabContent({
     case 'vai_ledger':
       return (
         <PanelErrorBoundary>
-          <Suspense fallback={<ParlayHubPanelSkeleton label="Loading track record" />}>
+          <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
             <ParlayHubTrackRecordPanel savedSlips={savedSlips} onSectionChange={onSectionChange} />
           </Suspense>
         </PanelErrorBoundary>
@@ -1056,7 +1056,7 @@ function TabContent({
     case 'live':
       return (
         <PanelErrorBoundary>
-          <Suspense fallback={<ParlayHubPanelSkeleton label="Loading parlay history" />}>
+          <Suspense fallback={<ParlayOsPanelSkeleton label="Loading parlay history" />}>
             <ParlayOsHistoryPanel />
           </Suspense>
         </PanelErrorBoundary>

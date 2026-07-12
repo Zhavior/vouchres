@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useMemo } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { PanelErrorBoundary } from '../../common/PanelErrorBoundary';
-import { ParlayHubPanelSkeleton } from './parlayHubUi';
+import { ParlayOsPanelSkeleton } from './parlayOsUi';
 
 const ResultsStudio = lazy(() => import('../../results/ResultsStudio'));
 
@@ -49,7 +49,7 @@ export default function ParlayHubTrackRecordPanel({
       </div>
 
       <PanelErrorBoundary>
-        <Suspense fallback={<ParlayHubPanelSkeleton label="Loading track record" />}>
+        <Suspense fallback={<ParlayOsPanelSkeleton label="Loading track record" />}>
           <ResultsStudio
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             savedParlays={mappedParlays as any}
