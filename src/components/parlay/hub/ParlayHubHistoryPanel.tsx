@@ -22,7 +22,7 @@ function EmptyLiveParlays() {
       <div className="text-5xl" aria-hidden="true">📋</div>
       <h3 className="text-sm font-bold text-[hsl(var(--ve-text-primary))]">No parlays saved yet</h3>
       <p className="text-xs text-[hsl(var(--ve-text-muted))] max-w-xs">
-        Build a slip and save it — it will appear here for live tracking and grading.
+        Build a slip in ParlayOS and save it — it will appear here for live tracking and grading.
       </p>
     </div>
   );
@@ -155,7 +155,7 @@ export default function ParlayHubHistoryPanel() {
       />
       {historySlips.length === 0 ? (
         <p className="text-center text-xs text-white/45 py-6">
-          No {historyTab} parlays yet. Use <strong className="text-white/70">Lock to Ledger</strong> on Build to start your trust record.
+          No {historyTab} parlays yet. Use <strong className="text-white/70">Lock to Ledger</strong> in ParlayOS to start your trust record.
         </p>
       ) : null}
 
