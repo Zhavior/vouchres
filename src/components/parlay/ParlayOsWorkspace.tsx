@@ -31,7 +31,7 @@ import React, {
 } from 'react';
 import {
   Bot, Brain, Crown, Layers3, Radio, Sparkles, Users,
-  ChevronUp, ChevronDown, X, Trash2, AlertTriangle,
+  ChevronUp, ChevronDown, X, AlertTriangle,
 } from 'lucide-react';
 import ParlayTrustLockModal from './ParlayTrustLockModal';
 import { useAppCommandStore } from '../../stores/appCommandStore';
@@ -67,7 +67,6 @@ import {
 } from '../../stores/parlayCommandStore';
 import {
   LEG_STATUS_META,
-  SLIP_STATUS_META,
   RISK_MODE_META,
   computeJudgeVerdict,
   computeCombinedOdds,
@@ -83,15 +82,12 @@ import {
   Z8_LABEL,
   Z8_PAGE,
   Z8_PAGE_PAD_X,
-  Z8_PAGE_PAD_Y,
   Z8_PANEL_PREMIUM,
   Z8_SECTION_HEADER,
   Z8_STAT_CHIP,
-  Z8_SURFACE,
   z8StatusColor,
 } from '../../theme/z8Tokens';
 import { withAlpha } from '../../theme/colors';
-import type { Leg } from '../../types';
 import ParlayBuilderRail from './ParlayBuilderRail';
 import { SmartParlayLegList } from './smart/SmartParlayLegCard';
 import { draftLegsToUiLegs } from '../../lib/parlays/draftLegsToUiLegs';
@@ -107,7 +103,6 @@ function statusColorStyle(token: string) {
   };
 }
 
-const SmartAiEngine  = lazy(() => import('../SmartAiEngine'));
 const ParlayOsTrackRecordPanel = lazy(() => import('./hub/ParlayOsTrackRecordPanel'));
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -1025,13 +1020,11 @@ function TabContent({
   activePanel,
   savedSlips,
   onSaveParlay,
-  onHideParlay,
   onSectionChange,
 }: {
   activePanel: ParlayCommandPanel;
   savedSlips:  unknown[];
   onSaveParlay?: (parlay: CanonicalParlaySlip) => Promise<void> | void;
-  onHideParlay?: (parlayId: string) => Promise<void> | void;
   onSectionChange?: (section: string) => void;
 }) {
   switch (activePanel) {
@@ -1075,11 +1068,8 @@ interface ParlayOsWorkspaceProps {
   liveGames?:      unknown[];
   initialPanel?:   ParlayCommandPanel;
   onSectionChange?: (section: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAddLegToParlay?: (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSaveVouch?:    (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPostCreated?:  (...args: any[]) => void;
   onSaveParlay?:   (parlay: CanonicalParlaySlip) => Promise<void> | void;
   onHideParlay?:   (parlayId: string) => Promise<void> | void;
@@ -1090,7 +1080,6 @@ export default function ParlayOsWorkspace({
   initialPanel  = 'live',
   onSectionChange,
   onSaveParlay,
-  onHideParlay,
 }: ParlayOsWorkspaceProps) {
   const activePanel       = useParlayCommandStore(selectActiveParlayPanel);
   const setActivePanel    = useParlayCommandStore((s) => s.setActivePanel);
@@ -1228,7 +1217,6 @@ export default function ParlayOsWorkspace({
                     activePanel={tab.id}
                     savedSlips={savedSlips}
                     onSaveParlay={onSaveParlay}
-                    onHideParlay={onHideParlay}
                     onSectionChange={onSectionChange}
                   />
                 </PanelErrorBoundary>
