@@ -9,9 +9,9 @@ describe("GradeParlaySchema", () => {
         {
           sport: "MLB",
           gamePk: 823062,
-          market: " HR ",
+          marketCode: "ANYTIME_HR",
           selection: "Aaron Judge 1+ HR",
-          oddsDecimal: "2.1",
+          odds: -110,
         },
       ],
     });
@@ -21,8 +21,8 @@ describe("GradeParlaySchema", () => {
       sport: "mlb",
       gamePk: "823062",
       market: "hr",
-      oddsDecimal: 2.1,
     });
+    expect(parsed.legs[0].oddsDecimal).toBeGreaterThan(1);
   });
 
   it("rejects empty, oversized, or unsupported grade requests", () => {

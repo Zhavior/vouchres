@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Parlay } from '../types';
+import { accountStorageKey } from '../lib/accountStorage';
 
 const STORAGE_KEY = 'vouchedge_slips';
 
@@ -15,7 +16,7 @@ export const useSlipsStore = create<SlipsState>((set) => ({
 
   syncSlips: (slips) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(slips));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(slips));
     } catch {
       // ignore storage failures
     }
@@ -24,7 +25,7 @@ export const useSlipsStore = create<SlipsState>((set) => ({
 
   hydrateFromStorage: () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(accountStorageKey(STORAGE_KEY));
       set({ savedSlips: stored ? JSON.parse(stored) : [] });
     } catch {
       set({ savedSlips: [] });
@@ -33,7 +34,7 @@ export const useSlipsStore = create<SlipsState>((set) => ({
 
   resetSlips: () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify([]));
     } catch {
       // ignore storage failures
     }

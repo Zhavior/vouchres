@@ -1,8 +1,12 @@
 /**
  * ParlayOS market catalog — canonical prop families + tiers for the global picker.
  * Drives tier popup UX (HR → 2 HR, runs 1–4, pitcher K lines, etc.).
+ *
+ * Sport-specific catalogs: use `getParlayMarketFamilies(sport)` so NFL tiers
+ * can ship without touching MLB families.
  */
 
+import type { SportId } from "../../sports/registry";
 import type { ParlayMarketCode } from "./parlayBridge";
 
 export type ParlayMarketFamilyId =
@@ -263,8 +267,24 @@ export const PARLAY_MARKET_FAMILIES: ParlayMarketFamily[] = [
   },
 ];
 
-export function getParlayMarketFamily(id: ParlayMarketFamilyId): ParlayMarketFamily | undefined {
-  return PARLAY_MARKET_FAMILIES.find((f) => f.id === id);
+/** NFL families ship here when `PARLAY_SPORT_CAPABILITIES.nfl.marketCatalog` flips true. */
+export const NFL_PARLAY_MARKET_FAMILIES: ParlayMarketFamily[] = [];
+
+export const PARLAY_MARKETS_BY_SPORT: Record<SportId, ParlayMarketFamily[]> = {
+  mlb: PARLAY_MARKET_FAMILIES,
+  nba: [],
+  nfl: NFL_PARLAY_MARKET_FAMILIES,
+};
+
+export function getParlayMarketFamilies(sport: SportId = "mlb"): ParlayMarketFamily[] {
+  return PARLAY_MARKETS_BY_SPORT[sport] ?? PARLAY_MARKET_FAMILIES;
+}
+
+export function getParlayMarketFamily(
+  id: ParlayMarketFamilyId,
+  sport: SportId = "mlb",
+): ParlayMarketFamily | undefined {
+  return getParlayMarketFamilies(sport).find((f) => f.id === id);
 }
 
 export function inferFamilyFromText(text: string): ParlayMarketFamilyId {
@@ -302,8 +322,8 @@ export function resolveParlayPlayerRole(input: {
   return "batter";
 }
 
-export function tiersForRole(role: ParlayPlayerRole): ParlayMarketFamily[] {
-  return PARLAY_MARKET_FAMILIES.filter((f) => f.role === role);
+export function tiersForRole(role: ParlayPlayerRole, sport: SportId = "mlb"): ParlayMarketFamily[] {
+  return getParlayMarketFamilies(sport).filter((f) => f.role === role);
 }
 
 export function flattenTierLegs(selected: ParlayMarketTier): ParlayMarketTier[] {

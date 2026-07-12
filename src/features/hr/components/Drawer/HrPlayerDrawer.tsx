@@ -274,7 +274,7 @@ export const HrPlayerDrawer: React.FC<HrPlayerDrawerProps> = ({ player, isOpen, 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 34 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} HR analysis`}
-            className="ve-hr-drawer fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[#0a0e14] shadow-2xl sm:h-full"
+            className="ve-hr-drawer fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-l border-white/10 bg-[var(--ve-hr-panel)] shadow-2xl sm:h-full"
           >
             {/* ── Header ────────────────────────────────────── */}
             <div className="ve-hr-drawer-header relative shrink-0 border-b border-white/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5 sm:pt-5">

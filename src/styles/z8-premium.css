@@ -1,5 +1,6 @@
 /* Z8 Premium is the single visual foundation for every product surface. */
 :root {
+  --ve-sidebar-width: 72px;
   --ve-bg: 222 47% 4%;
   --ve-bg-deep: 222 50% 2%;
   --ve-bg-panel: 222 40% 6%;
@@ -34,14 +35,23 @@ html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; backgrou
 .ve-motion-content { position: relative; z-index: 1; }
 
 #layout-inner-frame.ve-layout-frame { display: grid; width: 100%; min-width: 0; margin: 0 auto; }
-#layout-inner-frame.ve-layout-feed { max-width: 1280px; grid-template-columns: 272px minmax(0,1fr) 308px; }
-#layout-inner-frame.ve-layout-wide { max-width: 1500px; grid-template-columns: 272px minmax(0,1fr); }
+#layout-inner-frame.ve-layout-feed { max-width: 1280px; grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr) 308px; }
+#layout-inner-frame.ve-layout-wide { max-width: 1500px; grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); }
 #layout-inner-frame.ve-layout-welcome { display: block; max-width: none; }
 #center-main-content-column, #inner-view-slot { width: 100%; min-width: 0; max-width: 100%; }
 .ve-edge-rail { min-width: 0; }
 .ve-edge-rail-left { grid-column: 1; align-self: start; height: 100dvh; }
 .ve-edge-rail-right { grid-column: 3; }
 #layout-inner-frame #center-main-content-column { grid-column: 2; }
+
+/* Navigation is a compact product map, not a second scroll page. */
+@media (min-width: 1181px) {
+  #layout-inner-frame.ve-layout-feed .ve-edge-rail-left > #z8-feed-sidebar,
+  #layout-inner-frame.ve-layout-wide .ve-edge-rail-left > #z8-feed-sidebar {
+    overflow-y: hidden !important;
+    overscroll-behavior: auto;
+  }
+}
 .page-shell, .page-container, .dashboard-shell, .daily-theater-pro, .daily-players-page, .daily-players-board, .daily-players-content, .results-studio, .profile-page, .settings-page, .live-games-pro, .player-research-hub, .team-matchup-lab, .daily-hr-board { width: 100%; min-width: 0; }
 
 .ve-premium-panel, .ve-card, .ve-card-soft, .ve-card-elevated, .ve-stat-card, .ve-surface-card, .ve-tool-card {
@@ -75,7 +85,8 @@ html, body, #root { min-width: 0; min-height: 100%; overflow-x: hidden; backgrou
 
 .ve-terminal-preview-row { background: rgba(2,6,23,.46); }
 
-@media (max-width: 1180px) { #layout-inner-frame.ve-layout-feed { grid-template-columns: 248px minmax(0,1fr); } .ve-edge-rail-right { display: none; } }
+@media (min-width: 1280px) { :root { --ve-sidebar-width: 280px; } }
+@media (max-width: 1180px) { #layout-inner-frame.ve-layout-feed { grid-template-columns: var(--ve-sidebar-width) minmax(0,1fr); } .ve-edge-rail-right { display: none; } }
 @media (max-width: 767px) {
   #layout-inner-frame.ve-layout-feed, #layout-inner-frame.ve-layout-wide { display: block; }
   .ve-edge-rail-left { display: none; }

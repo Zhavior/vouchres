@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CreatorProofProfile } from '../types';
 import { INITIAL_PROFILE } from '../data/mockData';
+import { accountStorageKey } from '../lib/accountStorage';
 
 const STORAGE_KEY = 'vouchedge_profile';
 
@@ -16,7 +17,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
   syncProfile: (profile) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(profile));
     } catch {
       // ignore storage failures
     }
@@ -25,12 +26,12 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
   hydrateFromStorage: () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(accountStorageKey(STORAGE_KEY));
       if (stored) {
         set({ profile: JSON.parse(stored) as CreatorProofProfile });
         return;
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROFILE));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(INITIAL_PROFILE));
       set({ profile: INITIAL_PROFILE });
     } catch {
       set({ profile: INITIAL_PROFILE });
@@ -39,7 +40,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
   resetProfile: () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PROFILE));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(INITIAL_PROFILE));
     } catch {
       // ignore storage failures
     }

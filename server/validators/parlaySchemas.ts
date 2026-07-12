@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { buildGradeLegPayload } from "../../src/lib/parlays/gradeLegMapper";
 
 export const ParlayIdParamsSchema = z.object({
   id: z.string().uuid(),
@@ -106,20 +107,26 @@ const requiredTrimmedString = (field: string, max = 280) =>
     z.string().trim().min(1, `${field} is required.`).max(max)
   );
 
-export const GradeParlayLegSchema = z
-  .object({
-    sport: z
-      .string()
-      .trim()
-      .toLowerCase()
-      .pipe(z.enum(["mlb", "nba", "nfl"])),
-    gamePk: requiredTrimmedString("gamePk", 64),
-    market: z.string().trim().toLowerCase().min(1, "market is required.").max(80),
-    selection: requiredTrimmedString("selection", 280),
-    threshold: z.coerce.number().finite().optional(),
-    oddsDecimal: z.coerce.number().finite().gt(1).max(10000).optional(),
-  })
-  .passthrough();
+export const GradeParlayLegSchema = z.preprocess(
+  (raw) => {
+    if (!raw || typeof raw !== "object") return raw;
+    return buildGradeLegPayload(raw as Record<string, unknown>) ?? raw;
+  },
+  z
+    .object({
+      sport: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .pipe(z.enum(["mlb", "nba", "nfl"])),
+      gamePk: requiredTrimmedString("gamePk", 64),
+      market: z.string().trim().toLowerCase().min(1, "market is required.").max(80),
+      selection: requiredTrimmedString("selection", 280),
+      threshold: z.coerce.number().finite().optional(),
+      oddsDecimal: z.coerce.number().finite().gt(1).max(10000).optional(),
+    })
+    .passthrough(),
+);
 
 export const GradeParlaySchema = z.object({
   legs: z.array(GradeParlayLegSchema).min(1, "legs must include at least 1 item.").max(12, "legs must include at most 12 items."),

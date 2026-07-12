@@ -18,6 +18,7 @@ import {
   upstreamUnavailable,
   ymdOrDefault,
 } from "../lib/requestValidators";
+import { getSportsDataGatewayStatus } from "../services/data/sportsDataGateway";
 
 function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
@@ -43,9 +44,14 @@ export function registerMlbRoutes(app: Express): void {
     return res.status(status).json(apiOkFlat(req, report as unknown as Record<string, unknown>));
   }));
 
+  app.get("/api/mlb/gateway/status", asyncHandler(async (req: RequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, getSportsDataGatewayStatus()));
+  }));
+
   app.get("/api/mlb/live", asyncHandler(async (req: RequestWithContext, res: Response) => {
     const date = dateQueryOrToday(req.query.date);
     const live = await getLiveGames(date);
+    res.setHeader("Cache-Control", "private, max-age=4, stale-while-revalidate=15");
     return res.json(apiOkFlat(req, live as unknown as Record<string, unknown>));
   }));
 
@@ -217,11 +223,12 @@ export function registerMlbRoutes(app: Express): void {
   }));
 
   app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
-    const { fetchParlayLegProgressBatch } = await import("../services/mlb/parlayLiveProgressService");
+    const { fetchParlayLiveProgressBySport } = await import("../services/parlays/parlayLiveProgressRouter");
     const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
-    const progress = await fetchParlayLegProgressBatch(
+    const progress = await fetchParlayLiveProgressBySport(
       legs.map((leg: Record<string, unknown>, index: number) => ({
         id: String(leg.id ?? `leg-${index}`),
+        sport: "mlb",
         gamePk: String(leg.gamePk ?? leg.game_pk ?? ""),
         playerId: leg.playerId ?? leg.player_id ?? "",
         marketCode: leg.marketCode ?? leg.market_code ?? null,

@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
-import { Share2 } from 'lucide-react';
+import { Share2, Ticket } from 'lucide-react';
 import type { Leg } from '../../types';
-import { americanLabel } from '../../lib/odds';
 import { assessSlipOdds } from '../../lib/parlays/slipOddsPolicy';
-import ParlayLegCardPro from './os/ParlayLegCardPro';
+import { SmartParlayLegCardFromLeg } from './smart/SmartParlayLegCard';
 
 export interface ParlayBuilderRailProps {
   legs: Leg[];
@@ -23,64 +22,13 @@ export interface ParlayBuilderRailProps {
   title?: string;
   subtitle?: string;
   showLiveIndicator?: boolean;
-  formatLegOdds?: (leg: Leg) => string;
   legContent?: React.ReactNode;
   footerExtra?: React.ReactNode;
   className?: string;
-  /** Use rich ParlayOS leg cards */
-  useProLegCards?: boolean;
   /** Live stat progress keyed by leg id */
   liveProgressByLegId?: Record<string, { current: number; target: number; label: string }>;
   /** inline = flows in parent column; fixed = xl+ right rail only; sheet = mobile bottom sheet body */
   layout?: 'inline' | 'fixed' | 'sheet';
-}
-
-function defaultFormatLegOdds(leg: Leg): string {
-  if (leg.odds == null) return 'TBD';
-  return americanLabel(leg.odds);
-}
-
-function RailLegCard({
-  leg,
-  oddsLabel,
-  onRemove,
-}: {
-  leg: Leg;
-  oddsLabel: string;
-  onRemove: () => void;
-}) {
-  const marketLabel = leg.market || 'Prop';
-  const subtitle = leg.game?.replace(/\s*Live Target$/i, '') || '';
-
-  return (
-    <div className="relative glass-command p-4 group transition-transform duration-150 hover:-translate-y-0.5">
-      <div className="absolute inset-0 border border-charged opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" />
-      <div className="flex justify-between items-start mb-2">
-        <span className="text-[10px] font-mono text-ion uppercase tracking-widest">{marketLabel}</span>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${leg.selection}`}
-          className="text-flash opacity-30 hover:opacity-100 hover:text-locked transition-colors min-h-[2.75rem] min-w-[2.75rem] -mr-2 -mt-1 flex items-center justify-center"
-        >
-          ✕
-        </button>
-      </div>
-      <div className="flex justify-between items-end gap-3">
-        <div className="min-w-0">
-          <div className="text-sm font-bold font-mono text-flash group-hover:text-ion transition-colors duration-150 truncate">
-            {leg.selection}
-          </div>
-          {subtitle ? (
-            <div className="text-[10px] font-mono text-flash opacity-50 truncate">{subtitle}</div>
-          ) : null}
-        </div>
-        <div className={`text-sm font-bold font-mono shrink-0 ${leg.odds != null && leg.odds > 0 ? 'text-voltage' : 'text-flash'}`}>
-          {oddsLabel}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function EmptySlip() {
@@ -112,12 +60,10 @@ export default function ParlayBuilderRail({
   title = 'Active Slate',
   subtitle,
   showLiveIndicator = false,
-  formatLegOdds = defaultFormatLegOdds,
   legContent,
   footerExtra,
   className = '',
   layout = 'inline',
-  useProLegCards = false,
   liveProgressByLegId,
 }: ParlayBuilderRailProps) {
   const oddsAssessment = useMemo(
@@ -160,33 +106,37 @@ export default function ParlayBuilderRail({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
-        {legContent ?? (
-          legs.length === 0 ? (
-            <EmptySlip />
-          ) : (
-            legs.map((leg) =>
-              useProLegCards ? (
-                <ParlayLegCardPro
-                  key={leg.id}
-                  leg={{
-                    ...leg,
-                    actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
-                    statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
-                  }}
-                  onRemove={() => onRemoveLeg(leg.id)}
-                  compact={layout === 'sheet'}
-                />
+        <div className="rounded-2xl border border-dashed border-cyan-400/25 bg-gradient-to-b from-slate-900/80 to-black/70 overflow-hidden">
+          <div className="flex items-center gap-1.5 border-b border-dashed border-white/10 px-3 py-2">
+            <Ticket className="h-3.5 w-3.5 text-cyan-400/80" aria-hidden="true" />
+            <span className="font-mono text-[10px] font-bold tracking-wider text-cyan-300/90">DRAFT-SLIP</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 ml-auto">
+              {legs.length} leg{legs.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="p-3 space-y-2.5">
+            {legContent ?? (
+              legs.length === 0 ? (
+                <EmptySlip />
               ) : (
-                <RailLegCard
-                  key={leg.id}
-                  leg={leg}
-                  oddsLabel={formatLegOdds(leg)}
-                  onRemove={() => onRemoveLeg(leg.id)}
-                />
-              ),
-            )
-          )
-        )}
+                legs.map((leg, index) => (
+                  <SmartParlayLegCardFromLeg
+                    key={leg.id}
+                    leg={{
+                      ...leg,
+                      actual: liveProgressByLegId?.[leg.id]?.current ?? leg.actual,
+                      statTarget: liveProgressByLegId?.[leg.id]?.target ?? leg.statTarget,
+                    }}
+                    index={index}
+                    liveProgress={liveProgressByLegId?.[leg.id]}
+                    onRemove={() => onRemoveLeg(leg.id)}
+                    compact={layout === 'sheet'}
+                  />
+                ))
+              )
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="p-5 border-t border-fuse bg-graphite shrink-0">

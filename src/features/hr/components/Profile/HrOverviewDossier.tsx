@@ -69,7 +69,7 @@ const GamePip: React.FC<{ log: RealGameLog }> = ({ log }) => {
         ].join(' ')}
       />
       <span className="font-mono text-[7px] uppercase tracking-wide text-white/30">{log.opponentAbbr}</span>
-      <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded border border-white/10 bg-[#111820] px-1.5 py-0.5 font-mono text-[9px] text-white/70 group-hover:block">
+      <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded border border-white/10 bg-[var(--ve-hr-tooltip)] px-1.5 py-0.5 font-mono text-[9px] text-white/70 group-hover:block">
         {log.date} · {log.hits}-{log.ab}{log.hrs > 0 ? ` · ${log.hrs} HR` : ''}
       </span>
     </div>

@@ -147,8 +147,8 @@ export default function ProCommandCenterPage({
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <LabCard title="Player Edge Lab" />
-          <LabCard title="Team Matchup Lab" />
+          <LabCard title="Top Player Lab" />
+          <LabCard title="Pitchers Matchup" />
           <LabCard title="Pro Graphs Lab" />
         </div>
       </section>

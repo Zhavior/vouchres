@@ -4,7 +4,6 @@ export const DEV_BYPASS_AUTH =
 export const PUBLIC_SECTIONS = new Set([
   'welcome',
   'vouchedge_intro',
-  'edge_island_preview',
   'legacy_studio',
   'feed',
   'following',
@@ -176,7 +175,7 @@ export function resolveDevSectionFromLocation() {
     target === 'legacy/welcome' || target === '/legacy/welcome' ||
     target === 'legacy/edge-island' || target === '/legacy/edge-island'
   ) {
-    return 'edge_island_preview';
+    return 'vouchedge_intro';
   }
 
   if (target === 'legacy/studio' || target === '/legacy/studio') {
@@ -221,10 +220,6 @@ export function resolveDevSectionFromLocation() {
     return 'notifications';
   }
 
-  if (target === 'live-game-lab' || target === '/live-game-lab') {
-    return 'live_game_lab';
-  }
-
   if (target === 'player-edge-lab' || target === '/player-edge-lab') {
     return 'player_edge_lab';
   }
@@ -235,6 +230,14 @@ export function resolveDevSectionFromLocation() {
 
   if (target === 'pro-graphs-lab' || target === '/pro-graphs-lab') {
     return 'pro_graphs_lab';
+  }
+
+  if (target === 'brain-picks' || target === '/brain-picks' || target === 'brain_picks' || target === '/brain_picks') {
+    return 'brain_picks';
+  }
+
+  if (target === 'brain-performance' || target === '/brain-performance' || target === 'brain_performance' || target === '/brain_performance') {
+    return 'brain_performance';
   }
 
   if (target === 'live_games' || target === '/live_games' || target === 'live-projections' || target === '/live-projections') {

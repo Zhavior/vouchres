@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Vouch } from '../types';
 import { INITIAL_POSTS } from '../data/mockData';
+import { accountStorageKey } from '../lib/accountStorage';
 
 const STORAGE_KEY = 'vouchedge_vouches';
 
@@ -20,7 +21,7 @@ export const useVouchesStore = create<VouchesState>((set) => ({
 
   syncVouches: (vouches) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(vouches));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(vouches));
     } catch {
       // ignore storage failures
     }
@@ -29,13 +30,13 @@ export const useVouchesStore = create<VouchesState>((set) => ({
 
   hydrateFromStorage: () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(accountStorageKey(STORAGE_KEY));
       if (stored) {
         set({ savedVouches: JSON.parse(stored) });
         return;
       }
       const seeds = seedVouches();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(seeds));
       set({ savedVouches: seeds });
     } catch {
       const seeds = seedVouches();
@@ -46,7 +47,7 @@ export const useVouchesStore = create<VouchesState>((set) => ({
   resetVouches: () => {
     const seeds = seedVouches();
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds));
+      localStorage.setItem(accountStorageKey(STORAGE_KEY), JSON.stringify(seeds));
     } catch {
       // ignore storage failures
     }

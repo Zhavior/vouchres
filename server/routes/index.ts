@@ -18,6 +18,7 @@ import { shareRoutes } from "./shareRoutes";
 import { proofRoutes } from "./proofRoutes";
 import { subscriberRoutes } from "./subscriberRoutes";
 import { registerMlbRoutes } from "./mlbRoutes";
+import { registerNflRoutes } from "./nflRoutes";
 import { registerHrBoardRoutes } from "./mlbHrBoardRoutes";
 import { registerMatchupRoutes } from "./mlbMatchupRoutes";
 import { registerAgentRoutes } from "./agentRoutes";
@@ -26,6 +27,7 @@ import { registerAiRoutes } from "./aiRoutes";
 import { registerTrustRoutes } from "./trustRoutes";
 import { registerResultRoutes } from "./resultRoutes";
 import { registerAiJudgeSocialRoutes } from "./aiJudgeSocialRoutes";
+import { registerCentralBrainRoutes } from "./centralBrainRoutes";
 import { worldChatRoutes } from "./worldChatRoutes";
 import { socialHubRoutes } from "./socialHubRoutes";
 import { listSkills, runSkill } from "../skills/skillRegistry";
@@ -35,6 +37,7 @@ import { getPublicVouchWithAuthor } from "../services/persistence/vouchService";
 import { getPublicParlayProof, formatProofTimestamp, parlayProofAuthorLabel } from "../services/proof/parlayProofService";
 import { getBackendHealthReport } from "../services/health/backendHealthService";
 import { getRouteMetricsSnapshot } from "../lib/observability/routeMetrics";
+import { getParlayGradeMetricsSnapshot } from "../lib/observability/parlayGradeMetrics";
 import { getSupabaseAdmin } from "../middleware/auth";
 import { isUpstashEnabled } from "../lib/upstashRedis";
 import { asyncHandler } from "../lib/asyncHandler";
@@ -74,6 +77,7 @@ export function registerApiRoutes(app: Express): void {
   app.use("/api", socialHubRoutes);
 
   registerMlbRoutes(app);
+  registerNflRoutes(app);
   registerHrBoardRoutes(app);
   registerMatchupRoutes(app);
   registerAgentRoutes(app);
@@ -82,6 +86,7 @@ export function registerApiRoutes(app: Express): void {
   registerTrustRoutes(app);
   registerResultRoutes(app);
   registerAiJudgeSocialRoutes(app);
+  registerCentralBrainRoutes(app);
 
   // Skills introspection + generic runner.
   app.get("/api/skills", (req: RequestWithContext, res: Response) =>
@@ -176,11 +181,13 @@ export function registerApiRoutes(app: Express): void {
 
   app.get("/api/health/metrics", (req: RequestWithContext, res: Response) => {
     const metrics = getRouteMetricsSnapshot();
+    const parlayGrade = getParlayGradeMetricsSnapshot();
     res.json(apiOkFlat(req, {
       service: "vouchedge-backend",
-      schema: "route_metrics_v1",
+      schema: "route_metrics_v2",
       updatedAt: new Date().toISOString(),
       metrics,
+      parlayGrade,
     }));
   });
 

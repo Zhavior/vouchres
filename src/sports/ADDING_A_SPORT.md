@@ -66,6 +66,31 @@ notification dispatch (`src/lib/appNotifications.ts`) require **no changes**.
 
 ---
 
+## Parlay-specific touchpoints (NFL / NBA)
+
+Smart Parlay slips are **sport-agnostic** at the read-model layer
+(`src/domain/parlay/smartParlayTypes.ts`). To light up NFL parlays after MLB:
+
+| Step | File | What to add |
+|------|------|-------------|
+| Capabilities | `src/sports/parlaySportCapabilities.ts` | Flip `liveProgress`, `marketCatalog`, `productionGrading`, `aiGenerate` for `nfl` |
+| Market picker | `src/lib/parlays/parlayMarketCatalog.ts` | Populate `NFL_PARLAY_MARKET_FAMILIES` |
+| Market resolver | `src/sports/markets.ts` | Extend `resolveNflMarket()` |
+| Live progress | `server/services/nfl/nflLiveProgressService.ts` | Wire to NFL boxscore provider |
+| Gateway | `server/services/data/dataProviderRegistry.ts` | Replace `nfl_stats` planned entry with real provider |
+| Grader | `server/services/grading/sportGraders.ts` | Replace `comingSoonGrader('nfl')` with real `nflGrader` |
+| Routes | `server/routes/nflRoutes.ts` | Replace 503 stubs with real lineup + edge-board |
+| Registry | `src/sports/registry.ts` | `SPORTS.nfl.enabled = true` |
+
+**Already sport-dispatched (no rewrite needed):**
+- Save path (`parlayCreationService`, `pick_legs.sport`)
+- Grade preview (`POST /api/parlays/grade` → `getGrader(leg.sport)`)
+- Live progress router (`POST /api/parlays/live-progress` → dispatches by `leg.sport`)
+- Smart Parlay UI cards (`SmartParlaySlipCard`, `SmartParlayLegCard`)
+- Parlay combine math (`settleParlay`)
+
+---
+
 ## What you NEVER touch
 - `server/services/mlb/**` (HR Engine Pro v2) — MLB-only by design.
 - `settleParlay` parlay-combine math — sport-agnostic.

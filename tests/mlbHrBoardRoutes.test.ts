@@ -112,4 +112,22 @@ describe("mlb hr board routes", () => {
     expect(body.meta.requestId).toBe(inboundId);
     expect(response.headers.get("x-request-id")).toBe(inboundId);
   });
+
+  it("returns ok flat envelope for GET /api/mlb/hr-board/player/:playerId", async () => {
+    const response = await fetch(`${baseUrl}/api/mlb/hr-board/player/592450`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      player: expect.objectContaining({
+        playerId: 592450,
+        playerName: "Aaron Judge",
+      }),
+      meta: {
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+      },
+    });
+  });
 });

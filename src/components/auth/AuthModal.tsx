@@ -147,9 +147,11 @@ export default function AuthModal({
   onGuest,
 }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
-  const [signupStep, setSignupStep] = useState<SignupStep>('intro');
+  const [signupStep, setSignupStep] = useState<SignupStep>(() =>
+    initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form',
+  );
   const [introIndex, setIntroIndex] = useState(0);
-  const [plan, setPlan] = useState<SignupPlan>('free');
+  const [plan, setPlan] = useState<SignupPlan>(initialPlan);
   const [redirectingToCheckout, setRedirectingToCheckout] = useState(false);
   const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({ age: false, terms: false, research: false });
   const [email, setEmail] = useState('');
@@ -174,7 +176,7 @@ export default function AuthModal({
       setError(null);
       setNotice(null);
       setEmailSent(false);
-      setSignupStep(initialMode === 'signup' ? 'intro' : 'form');
+      setSignupStep(initialMode === 'signup' ? (initialPlan === 'free' ? 'policy' : 'plan') : 'form');
       setIntroIndex(0);
       setPlan(initialPlan);
       setAgreements({ age: false, terms: false, research: false });
@@ -714,7 +716,7 @@ export default function AuthModal({
               {(['signup', 'login'] as Mode[]).map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'intro' : 'form'); setIntroIndex(0); }}
+                  onClick={() => { setMode(m); setError(null); setNotice(null); setSignupStep(m === 'signup' ? 'policy' : 'form'); setIntroIndex(0); }}
                   className="relative py-2 text-sm font-bold rounded-lg transition-colors"
                   style={{ color: mode === m ? '#fff' : '#64748b' }}
                 >

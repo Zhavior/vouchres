@@ -1,0 +1,43 @@
+.live-games-lens {
+  color: hsl(var(--ve-text-primary));
+}
+
+.live-games-lens__header {
+  background:
+    linear-gradient(90deg, rgba(0, 255, 148, 0.04), transparent 38%),
+    rgba(7, 11, 8, 0.94);
+  border-top-color: rgba(0, 255, 148, 0.32);
+}
+
+.live-game-focus {
+  background: #090d0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(0, 255, 148, 0.72);
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+.live-game-scoreboard {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.24);
+  background-size: 32px 100%;
+  border-block: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.live-game-selector button {
+  border-radius: 4px;
+  contain: layout paint;
+}
+
+@media (max-width: 399px) {
+  .live-game-scoreboard {
+    background-size: 24px 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-games-lens * {
+    scroll-behavior: auto !important;
+  }
+}

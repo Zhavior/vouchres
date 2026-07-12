@@ -81,6 +81,7 @@ export default function ProfileShareCard({ profile, onClose }: ProfileShareCardP
             <div className="flex items-center gap-4">
               <ProfileAvatarBorder 
                 borderId={profile.profileBorderId}
+                avatarUrl={profile.avatarUrl}
                 displayName={profile.displayName}
                 initials={profile.displayName.split(' ').map(n=>n[0]).join('')}
                 size="lg"

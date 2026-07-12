@@ -7,12 +7,13 @@ import {
   initChunkRecovery,
   onChunkRecoveryMountSuccess,
 } from './lib/chunkRecovery';
+import { initSentry } from './lib/sentry';
 
 const SpeedInsights = lazy(() =>
   import('@vercel/speed-insights/react').then((module) => ({ default: module.SpeedInsights })),
 );
 if (import.meta.env.VITE_SENTRY_DSN) {
-  void import('./lib/sentry').then(({ initSentry }) => initSentry());
+  initSentry();
 }
 initChunkRecovery();
 clearChunkRecoveryFlag();
@@ -51,6 +52,7 @@ function DeferredSpeedInsights() {
   }, []);
 
   if (!enabled) return null;
+  if (!import.meta.env.PROD && import.meta.env.VITE_ENABLE_SPEED_INSIGHTS !== 'true') return null;
   return (
     <Suspense fallback={null}>
       <SpeedInsights />

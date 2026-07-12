@@ -23,6 +23,40 @@ import { hasConsent } from "../components/legal/CookieConsentBanner";
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN ?? "";
 const SENTRY_ENV = import.meta.env.VITE_SENTRY_ENV ?? "development";
 const CLIENT_VERSION = import.meta.env.VITE_CLIENT_VERSION ?? "0.1.0-beta";
+declare const __SENTRY_RELEASE__: string | undefined;
+const SENTRY_RELEASE =
+  typeof __SENTRY_RELEASE__ !== "undefined"
+    ? __SENTRY_RELEASE__
+    : `vouchedge-frontend@${CLIENT_VERSION}`;
+
+function buildTracePropagationTargets(): (string | RegExp)[] {
+  const targets: (string | RegExp)[] = [
+    "localhost",
+    /^https?:\/\/localhost(:\d+)?\/api/,
+    /^\/api/,
+  ];
+
+  const apiBase = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (apiBase) {
+    try {
+      const origin = new URL(apiBase).origin;
+      targets.push(origin);
+      const escaped = origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      targets.push(new RegExp(`^${escaped}/api`));
+    } catch {
+      targets.push(apiBase);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    const { origin } = window.location;
+    if (!targets.includes(origin)) {
+      targets.push(origin);
+    }
+  }
+
+  return targets;
+}
 
 let initialized = false;
 
@@ -32,12 +66,10 @@ export function initSentry() {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: SENTRY_ENV,
-    release: `vouchedge-frontend@${CLIENT_VERSION}`,
-    integrations: [
-      // Browser performance monitoring — sample at 10% to control quota
-      Sentry.browserTracingIntegration(),
-    ],
+    release: SENTRY_RELEASE,
+    integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: SENTRY_ENV === "production" ? 0.1 : 1.0,
+    tracePropagationTargets: buildTracePropagationTargets(),
     // Capture errors but not user-identifying info by default
     sendDefaultPii: false,
     // Don't capture console.log — only errors
@@ -66,6 +98,21 @@ export function initSentry() {
   });
 
   initialized = true;
+}
+
+/** Report React render errors captured by AppErrorBoundary. */
+export function captureReactError(
+  error: unknown,
+  errorInfo?: { componentStack?: string | null },
+) {
+  if (!initialized) return;
+  Sentry.captureException(error, {
+    contexts: {
+      react: {
+        componentStack: errorInfo?.componentStack ?? undefined,
+      },
+    },
+  });
 }
 
 /**

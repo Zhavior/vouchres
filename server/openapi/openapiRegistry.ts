@@ -1091,6 +1091,7 @@ openapiRegistry.registerPath({
             username: z.string().min(3).max(24).optional(),
             display_name: z.string().max(64).optional(),
             bio: z.string().max(500).optional(),
+            avatar_url: z.string().url().max(500).nullable().optional(),
           }),
         },
       },

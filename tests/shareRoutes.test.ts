@@ -9,7 +9,7 @@ vi.mock("../server/services/persistence/vouchService", () => ({
 }));
 
 vi.mock("../server/services/hubs/hrBoardHub", () => ({
-  getCachedHrBoardResponse: vi.fn(),
+  getCachedValidatedHrBoard: vi.fn(),
 }));
 
 vi.mock("../server/services/share/hrShareCard", () => ({

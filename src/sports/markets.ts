@@ -6,7 +6,7 @@
  * Adding NBA/NFL markets later = add entries here keyed by their sport.
  */
 
-import type { SportId } from './registry';
+import type { SportId } from "./registry";
 
 export interface MarketResolution {
   marketCode: string;
@@ -56,6 +56,29 @@ function resolveMlbMarket(label: string, spec: string): MarketResolution {
   return { marketCode: '', threshold: parseThreshold(t, 1) };
 }
 
+/** NFL market resolver stub — extend when nflGrader ships. */
+function resolveNflMarket(label: string, spec: string): MarketResolution {
+  const t = `${label} ${spec}`.toLowerCase();
+
+  if (/\btouchdown\b|\btd\b/.test(t)) {
+    return { marketCode: "touchdown", threshold: parseThreshold(t, 1) };
+  }
+  if (/passing\s*yards?|\bpass\s*yds\b/.test(t)) {
+    return { marketCode: "passing_yards", threshold: parseThreshold(t, 1) };
+  }
+  if (/rushing\s*yards?|\brush\s*yds\b/.test(t)) {
+    return { marketCode: "rushing_yards", threshold: parseThreshold(t, 1) };
+  }
+  if (/receiving\s*yards?|\brec\s*yds\b/.test(t)) {
+    return { marketCode: "receiving_yards", threshold: parseThreshold(t, 1) };
+  }
+  if (/reception(s)?|\brec(s)?\b/.test(t)) {
+    return { marketCode: "receptions", threshold: parseThreshold(t, 1) };
+  }
+
+  return { marketCode: "", threshold: parseThreshold(t, 1) };
+}
+
 /** Sport-dispatched market resolver. NBA/NFL stubs until their graders exist. */
 export function resolveMarket(
   sport: SportId,
@@ -63,11 +86,11 @@ export function resolveMarket(
   spec: string,
 ): MarketResolution {
   switch (sport) {
-    case 'mlb':
+    case "mlb":
       return resolveMlbMarket(label, spec);
-    // case 'nba': return resolveNbaMarket(label, spec);
-    // case 'nfl': return resolveNflMarket(label, spec);
+    case "nfl":
+      return resolveNflMarket(label, spec);
     default:
-      return { marketCode: '', threshold: 1 };
+      return { marketCode: "", threshold: 1 };
   }
 }

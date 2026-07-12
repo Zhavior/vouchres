@@ -13,6 +13,13 @@ vi.mock("../server/middleware/auth", () => ({
     };
     next();
   },
+  optionalAuth: (req: any, _res: unknown, next: () => void) => {
+    req.user = {
+      id: "user-test-1",
+      profile: { is_staff: (globalThis as any).__parlayTestIsStaff !== false },
+    };
+    next();
+  },
   requireStaff: (req: any, _res: unknown, next: (err?: unknown) => void) => {
     if (!req.user?.profile?.is_staff) {
       return next(new AppError({

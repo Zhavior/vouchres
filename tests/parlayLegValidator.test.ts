@@ -1,11 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
   assessPlayerTeamSafety,
+  findPlayerLiveGame,
   TEAM_MISMATCH_REASON,
   validateParlayLegCandidate,
 } from "../src/lib/parlays/parlayLegValidator";
+import { teamMatchesMlbSlateName } from "../src/lib/mlb/teamNameMatch";
 
 describe("parlayLegValidator", () => {
+  it("matches abbrev team labels to full slate names", () => {
+    expect(teamMatchesMlbSlateName("NYY", "New York Yankees")).toBe(true);
+    const game = findPlayerLiveGame(
+      { team: "NYY" },
+      [{
+        homeTeam: "New York Yankees",
+        awayTeam: "Boston Red Sox",
+        status: "Scheduled",
+        id: "777001",
+      }],
+    );
+    expect(game?.id).toBe("777001");
+  });
   it("blocks legs missing playerId", () => {
     const result = validateParlayLegCandidate({
       leg: {

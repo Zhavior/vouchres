@@ -42,9 +42,8 @@ const TIER_THEMES: Record<RequiredTier, TierTheme> = {
     price: '$12.99/mo',
     ctaLabel: 'Upgrade to Gold — Unlock Pro Labs',
     benefits: [
-      { icon: Zap, text: 'Live Game Lab — real game-by-game signal panels' },
-      { icon: Star, text: 'Player Edge Lab — verified HR edge scores and risk tiers' },
-      { icon: Zap, text: 'Team Matchup Lab — runs, hits, and pitcher vulnerability' },
+            { icon: Star, text: 'Top Player Lab — verified HR edge scores and risk tiers' },
+      { icon: Zap, text: 'Pitchers Matchup — runs, hits, and pitcher vulnerability' },
       { icon: Star, text: 'Pro Graphs Lab — signal breakdown and confidence meters' },
     ],
   },

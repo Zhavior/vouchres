@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { Share2, BadgeCheck, Trophy } from 'lucide-react';
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from './LandingTokens';
 import { MLB_PLAYER_RECORDS } from '../../data/playerData';
-import PrimaryStudioCard from '../vouch-studio-darkroom/panels/preview/PrimaryStudioCard';
+import PreviewCardStage from '../vouch-studio-darkroom/panels/preview/PreviewCardStage';
 import { cardStyleConfigs } from '../vouch-studio-darkroom/utils/cardStyleConfigs';
 import type { CardLayoutId, CustomPlayerSelection, VouchStudioDarkroomProps } from '../vouch-studio-darkroom/types';
 
@@ -34,8 +35,8 @@ const DEMO_SELECTED_PLAYERS: CustomPlayerSelection[] = [
 ];
 
 const DEMO_PROFILE = {
-  displayName: 'ZHAVIOR',
-  username: 'user_7133c107d7a0',
+  displayName: 'user_name',
+  username: 'user_name',
   avatarUrl: undefined,
 };
 
@@ -151,22 +152,59 @@ const STUDIO_STYLE = cardStyleConfigs.cyberpunk;
 const FEATURES = [
   {
     icon: Share2,
-    title: 'Post straight to your feed',
-    copy: 'Build a card in the Vouch Board and share it to your feed in one tap — no screenshots, no re-uploading.',
+    title: 'One-tap feed post',
+    copy: 'Share straight from the Vouch Board.',
   },
   {
     icon: Trophy,
     title: 'Auto win/loss grading',
-    copy: 'Every card settles itself. When your pick hits or misses, it flips to WON or LOST automatically for everyone to see.',
+    copy: 'Cards settle themselves — WON or LOST.',
   },
   {
     icon: BadgeCheck,
-    title: 'Your name on a verified pick',
-    copy: 'Each card carries your handle and the exact verified pick, so your record speaks for itself.',
+    title: 'Verified to your name',
+    copy: 'Your handle. Your exact pick. Your record.',
   },
 ];
 
 export default function LandingVouchCardShowcase() {
+  const [activeLayout, setActiveLayout] = useState<CardLayoutId>('orbit');
+  const [paused, setPaused] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const settleTimer = useRef<number | undefined>(undefined);
+
+  // Auto-advance through the card layouts; holds while the cursor is on the card.
+  useEffect(() => {
+    if (paused) return undefined;
+    const id = window.setInterval(() => {
+      setActiveLayout((prev) => {
+        const idx = DEMO_CARDS.findIndex((card) => card.layout === prev);
+        return DEMO_CARDS[(idx + 1) % DEMO_CARDS.length].layout;
+      });
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [paused]);
+
+  const handleTilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    window.clearTimeout(settleTimer.current);
+    const rect = el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    el.classList.add('is-tilting');
+    el.style.transform = `rotateY(${(x * 10).toFixed(2)}deg) rotateX(${(-y * 8).toFixed(2)}deg) scale(1.015)`;
+  };
+
+  const handleTiltEnd = () => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = '';
+    // Let the transform ease back to neutral before resuming the idle float,
+    // whose keyframes start at neutral — no visible jump.
+    settleTimer.current = window.setTimeout(() => el.classList.remove('is-tilting'), 260);
+  };
+
   return (
     <section className={`rounded-2xl ${Z8_PANEL_PREMIUM} p-5 sm:p-8`} aria-labelledby="vouch-card-system-heading">
       <div className="text-center">
@@ -175,8 +213,7 @@ export default function LandingVouchCardShowcase() {
           Turn every pick into a Vouch Card
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/50">
-          Design a card in the Vouch Board, then post it straight to your feed. Cards grade themselves — the
-          community sees whether your pick won or lost, tied to your name and the exact verified pick.
+          Build it. Post it. It grades itself.
         </p>
       </div>
 
@@ -193,23 +230,39 @@ export default function LandingVouchCardShowcase() {
       </div>
 
       <div className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <p className={`${Z8_LABEL} text-vouch-cyan`}>Feed-ready cards</p>
-          <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">Swipe to browse</span>
-        </div>
-        <div className="ve-vouch-card-strip flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
           {DEMO_CARDS.map(({ layout, caption }) => (
-            <figure key={layout} className="flex shrink-0 snap-center flex-col items-center">
-              <div className="pointer-events-none select-none" aria-hidden="true" style={{ zoom: 0.68 }}>
-                <div className="w-[420px]">
-                  <PrimaryStudioCard {...makeDemoProps(layout)} activeStyle={STUDIO_STYLE} />
-                </div>
-              </div>
-              <figcaption className="mt-2 text-center font-mono text-[9px] uppercase tracking-widest text-white/35">
-                {caption}
-              </figcaption>
-            </figure>
+            <button
+              key={layout}
+              type="button"
+              onClick={() => setActiveLayout(layout)}
+              aria-pressed={activeLayout === layout}
+              className={`rounded-full border px-3.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest transition ${
+                activeLayout === layout
+                  ? 'border-vouch-cyan/60 bg-vouch-cyan/10 text-vouch-cyan'
+                  : 'border-white/10 bg-black/25 text-white/45 hover:border-vouch-cyan/30 hover:text-white/70'
+              }`}
+            >
+              {caption}
+            </button>
           ))}
+        </div>
+
+        {/* The real Vouch Board preview stage — same component the studio renders — floating in 3D.
+            The card tracks the cursor like a holo trading card, then settles back into its idle float. */}
+        <div className="ve-vouch-3d-stage">
+          <div
+            ref={cardRef}
+            onMouseEnter={() => setPaused(true)}
+            onMouseMove={handleTilt}
+            onMouseLeave={() => {
+              setPaused(false);
+              handleTiltEnd();
+            }}
+            className="ve-vouch-3d-card overflow-hidden rounded-2xl border border-white/[0.06]"
+          >
+            <PreviewCardStage {...makeDemoProps(activeLayout)} activeStyle={STUDIO_STYLE} />
+          </div>
         </div>
       </div>
     </section>

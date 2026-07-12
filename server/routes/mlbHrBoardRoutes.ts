@@ -18,7 +18,7 @@
 import type { Express, Response } from "express";
 import { AppError } from "../errors/AppError";
 import { asyncHandler } from "../lib/asyncHandler";
-import { apiOk, apiOkFlat } from "../lib/apiResponse";
+import { apiOkFlat } from "../lib/apiResponse";
 import { boundedInt, optionalYmd, positiveInt, requiredYmd, upstreamUnavailable } from "../lib/requestValidators";
 import { buildApiMeta } from "../lib/apiResponseMeta";
 import { getCachedValidatedHrBoard, getCachedDeepHrBoard } from "../services/hubs/hrBoardHub";
@@ -113,17 +113,20 @@ export function registerHrBoardRoutes(app: Express): void {
       });
     }
 
-    res.json(apiOk(req, snapshot, buildApiMeta({
-      source: "live_game_hub",
-      dataQuality: "official_mlb_live_feed",
-      updatedAt: snapshot.updatedAt,
-      warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
-      cache: {
-        strategy: "live_game_hub_swr",
-        ttlMs: LIVE_HUB_TTL_MS,
-        asOf: snapshot.updatedAt,
-      },
-    })));
+res.json(apiOkFlat(req, {
+  ...snapshot,
+  meta: buildApiMeta({
+    source: "live_game_hub",
+    dataQuality: "official_mlb_live_feed",
+    updatedAt: snapshot.updatedAt,
+    warnings: snapshot.play ? [] : ["No current at-bat play is available for this game."],
+    cache: {
+      strategy: "live_game_hub_swr",
+      ttlMs: LIVE_HUB_TTL_MS,
+      asOf: snapshot.updatedAt,
+    },
+  }),
+}));
   }));
 
   /* ============ MAIN: Validated HR Board ============ */
@@ -215,7 +218,7 @@ export function registerHrBoardRoutes(app: Express): void {
           message: "Player not found in validated candidates.",
         });
       }
-      res.json(apiOk(req, { player: candidate }));
+      res.json(apiOkFlat(req, { player: candidate }));
     } catch (err: any) {
       console.error("[hr-board/player] failed:", err?.message);
       if (err instanceof AppError) throw err;

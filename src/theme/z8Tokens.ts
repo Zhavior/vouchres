@@ -3,7 +3,7 @@
  * Uses Tailwind @theme colors from src/styles/z8-design-system.css.
  */
 
-export const Z8_ACCENT = 'text-vouch-cyan';
+export const Z8_ACCENT = 'text-vouch-emerald';
 export const Z8_EMERALD = 'text-vouch-emerald';
 export const Z8_WARNING = 'text-vouch-amber';
 
@@ -56,7 +56,7 @@ export const Z8_SIDEBAR_IDLE =
   'bg-black/30 text-white/45 hover:bg-vouch-cyan/8 hover:text-white hover:shadow-[0_0_20px_rgba(0,240,255,0.1)]';
 
 /** Mono label typography. */
-export const Z8_LABEL = `${Z8_FONT_MONO} text-[10px] font-bold uppercase tracking-wide`;
+export const Z8_LABEL = `${Z8_FONT_MONO} text-[11px] font-bold uppercase tracking-[0.08em]`;
 
 /** Page root background — transparent; unified obsidian base lives on .z8-app-shell. */
 export const Z8_PAGE = 'bg-transparent font-z8 text-white min-h-full';

@@ -13,11 +13,7 @@ import {
   Bell, Grid3x3, Palette, CalendarDays, Crown, UserCircle, Shield, LogOut,
 } from 'lucide-react';
 import { CreatorProofProfile } from '../../types';
-import {
-  getSidebarFeatures, loadFeatureLayout, FeatureGroup,
-} from '../../lib/featureConfig';
-import { canAccessThemeStore } from '../../lib/adminDevAccess';
-import { getActiveSport } from '../../sports/registry';
+import { getPrimaryProductNavigation } from '../../app/productNavigation';
 import {
   Z8_LABEL, Z8_SIDEBAR_SHELL, Z8_SIDEBAR_PANEL, Z8_SIDEBAR_SURFACE,
   Z8_SIDEBAR_ICON_BOX, Z8_SIDEBAR_ACTIVE, Z8_SIDEBAR_IDLE,
@@ -36,8 +32,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 /** HR nav items use Flame per featureConfig. */
 const HR_NAV_IDS = new Set(['hr_board']);
-
-const GROUP_ORDER: FeatureGroup[] = ['Daily', 'Pro Labs', 'AI', 'Build & Track', 'Social', 'Account'];
 
 export interface TierMeta {
   label: string;
@@ -142,14 +136,12 @@ function MobileProfileDrawer({
 
   const groups = useMemo(() => {
     if (!open) return [];
-    const features = getSidebarFeatures(loadFeatureLayout(), {
-      canAccessThemeStore: canAccessThemeStore(profile),
-      activeSport: getActiveSport(),
-    }).filter((f) => f.id !== 'notifications');
-    return GROUP_ORDER
-      .map((group) => ({ group, items: features.filter((f) => f.group === group) }))
-      .filter((g) => g.items.length > 0);
-  }, [profile, open]);
+    const icons = { today: 'CalendarDays', intelligence: 'Flame', players: 'UserRoundSearch', parlays: 'Radio', profile: 'UserCircle' } as const;
+    return [{
+      group: 'Navigate',
+      items: getPrimaryProductNavigation().map((item) => ({ id: item.section, label: item.label, icon: icons[item.id] })),
+    }];
+  }, [open]);
 
   const go = useCallback((section: string) => {
     onSectionChange(section);

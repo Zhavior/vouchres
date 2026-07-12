@@ -5,19 +5,20 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   feed: () => import('../social/feed/HomeFeedPage'),
   following: () => import('../pages/FollowingHubPage'),
   today: () => import('../components/TodayDashboard'),
-  welcome: () => import('../pages/EdgeIslandPage'),
-  island: () => import('../pages/EdgeIslandPage'),
+  welcome: () => import('../components/TodayDashboard'),
+  island: () => import('../components/TodayDashboard'),
   vouchedge_intro: () => import('../pages/VouchEdgeTerminalPage'),
-  edge_island_preview: () => import('../pages/EdgeIslandPage'),
   legacy_studio: () => import('../components/AisLandingPage'),
   hr_board: () => import('../features/hr/pages/HomeRunIntelligencePage'),
+  brain_picks: () => import('../features/brain/BrainPicksPage'),
+  brain_performance: () => import('../features/brain/BrainPerformancePage'),
   daily_hr_watch_new: () => import('../features/hr/pages/HomeRunIntelligencePage'),
   mlb_stats: () => import('../features/mlb-stats/pages/MlbStatHubPage'),
   daily_players: () => import('../pages/DailyPlayersPage'),
   live_games: () => import('../components/LiveGamesPro'),
   intel: () => import('../components/MlbIntelligenceHub'),
-  live_parlays: () => import('../components/parlay/ParlayCommandCenter'),
-  build: () => import('../components/parlay/ParlayCommandCenter'),
+  live_parlays: () => import('../components/parlay/ParlayOsWorkspace'),
+  build: () => import('../components/parlay/ParlayOsWorkspace'),
   board: () => import('../components/VouchBoard'),
   research: () => import('../components/PlayerResearchHub'),
   profile: () => import('../components/ProfilePage'),
@@ -31,7 +32,6 @@ const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   customize: () => import('../components/CustomizePage'),
   subscriber_hub: () => import('../components/SubscriberHub'),
   nba_nfl: () => import('../components/NbaNflArena'),
-  live_game_lab: () => import('../pages/LiveGameLabPage'),
   pro_command_center: () => import('../pages/pro/ProCommandCenterPage'),
   player_edge_lab: () => import('../pages/pro/PlayerEdgeLabPage'),
   team_matchup_lab: () => import('../pages/pro/TeamMatchupLabPage'),
@@ -43,7 +43,9 @@ const WARM_NEIGHBORS: Record<string, string[]> = {
   feed: ['today', 'hr_board', 'live_parlays', 'following'],
   following: ['feed', 'subscriber_hub'],
   today: ['feed', 'hr_board', 'intel'],
-  hr_board: ['today', 'mlb_stats', 'daily_players'],
+  hr_board: ['mlb_stats', 'daily_players'],
+  brain_picks: ['brain_performance', 'hr_board'],
+  brain_performance: ['brain_picks', 'hr_board'],
   mlb_stats: ['hr_board', 'daily_players'],
   daily_players: ['hr_board', 'live_games'],
   live_parlays: ['build', 'ai_engine'],
@@ -100,10 +102,11 @@ export function warmLikelyRoutes(activeSection?: string): void {
     if (!canWarmRoutes()) return;
     preloadMainRouter();
     const neighbors = activeSection ? WARM_NEIGHBORS[activeSection] ?? [] : [];
-    const defaults = ['feed', 'today', 'hr_board'];
+    // Brain stays isolated until the user intentionally opens a Brain route.
+    const defaults = ['today', 'hr_board'];
     const candidates = [...new Set([...neighbors, ...defaults])]
       .filter((section) => section !== activeSection)
-      .slice(0, 3);
+      .slice(0, 4);
     for (const section of candidates) {
       preloadSection(section);
     }

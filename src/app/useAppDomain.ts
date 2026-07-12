@@ -2,11 +2,13 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { INITIAL_PROFILE } from '../data/mockData';
 import { notify } from '../lib/appNotifications';
 import { apiClient } from '../lib/apiClient';
+import { mapAuthMeToCreatorProof } from '../lib/profileFromAuth';
 import { type CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
 import { useParlayCommandStore } from '../stores/parlayCommandStore';
 import { useParlayOsStore } from '../stores/parlayOsStore';
 import { buildLegsFromTier } from '../lib/parlays/parlayOsLegBuilder';
-import { validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
+import type { DraftParlayLeg } from '../stores/parlayCommandStore';
+import { findPlayerLiveGame, validateParlayLegBatch } from '../lib/parlays/parlayLegValidator';
 import type { ParlayMarketTier } from '../lib/parlays/parlayMarketCatalog';
 import { inferFamilyFromText, resolveParlayPlayerRole } from '../lib/parlays/parlayMarketCatalog';
 import { useFeedStore } from '../stores/feedStore';
@@ -58,7 +60,7 @@ export function useAppDomain({
   }, []);
 
   const handleSaveParlaySlip = useCallback(async (newParlay: Parlay | CanonicalParlaySlip) => {
-    await saveParlaySlipAction(newParlay, navigateSection);
+    return saveParlaySlipAction(newParlay, navigateSection);
   }, [navigateSection]);
 
   const handleCommitParlayTrust = useCallback(async (input: {
@@ -74,7 +76,29 @@ export function useAppDomain({
 
   const handleUpdateProfile = useCallback((updatedProfile: Partial<CreatorProofProfile>) => {
     const cur = useProfileStore.getState().profile ?? INITIAL_PROFILE;
-    syncProfile({ ...cur, ...updatedProfile });
+    const optimisticProfile = { ...cur, ...updatedProfile };
+    syncProfile(optimisticProfile);
+
+    const updates: Record<string, string | null> = {};
+    if (updatedProfile.displayName !== undefined) updates.display_name = updatedProfile.displayName;
+    if (updatedProfile.bio !== undefined) updates.bio = updatedProfile.bio;
+    if (updatedProfile.avatarUrl !== undefined) updates.avatar_url = updatedProfile.avatarUrl || null;
+    if (Object.keys(updates).length === 0) return;
+
+    void apiClient.patch<Record<string, unknown>>('/api/auth/profile', updates)
+      .then((savedProfile) => {
+        const latest = useProfileStore.getState().profile ?? optimisticProfile;
+        syncProfile(mapAuthMeToCreatorProof(savedProfile, latest));
+      })
+      .catch(() => {
+        const latest = useProfileStore.getState().profile;
+        if (latest === optimisticProfile) syncProfile(cur);
+        notify({
+          kind: 'info',
+          title: 'Profile change was not saved',
+          body: 'Check your connection and try again.',
+        });
+      });
   }, [syncProfile]);
 
   const handleResetDatabase = useCallback(() => {
@@ -84,29 +108,13 @@ export function useAppDomain({
     useProfileStore.getState().resetProfile();
   }, []);
 
-  const commitLegsToSlip = useCallback((newLegs: Leg[]) => {
-    if (newLegs.length === 0) return;
-    setActiveLegs((prev) => [...prev, ...newLegs]);
-    for (const newLeg of newLegs) {
+  const commitBuiltLegsToSlip = useCallback((built: Array<{ leg: Leg; draft: DraftParlayLeg }>) => {
+    if (built.length === 0) return;
+    setActiveLegs((prev) => [...prev, ...built.map((entry) => entry.leg)]);
+    for (const entry of built) {
       useParlayCommandStore.getState().addDraftLeg({
-        id: newLeg.id,
-        source: 'manual',
-        sport: newLeg.sport,
-        game: newLeg.game,
-        selection: newLeg.selection,
-        odds: newLeg.odds ?? undefined,
-        marketCode: newLeg.marketCode,
-        marketLabel: newLeg.market,
-        playerId: newLeg.playerId,
-        playerName: newLeg.selection.split(' ')[0],
-        teamLabel: undefined,
-        statTarget: newLeg.statTarget ?? newLeg.threshold,
-        comparator: newLeg.comparator,
-        externalProvider: newLeg.externalProvider ?? 'parlayos',
-        eventKey: newLeg.eventKey,
-        teamId: newLeg.teamId,
-        gamePk: newLeg.gamePk,
-        tags: ['#ParlayOS'],
+        ...entry.draft,
+        tags: entry.draft.tags ?? ['#ParlayOS'],
       });
     }
     useParlayOsStore.getState().openSheet(true);
@@ -118,11 +126,7 @@ export function useAppDomain({
 
     const editLegId = useParlayOsStore.getState().editLegId;
 
-    const matchedGameCheck = ctx.player.team?.toLowerCase() ?? '';
-    const matchedGame = liveGames.find((g: any) =>
-      g.homeTeam.toLowerCase() === matchedGameCheck ||
-      g.awayTeam.toLowerCase() === matchedGameCheck,
-    );
+    const matchedGame = findPlayerLiveGame(ctx.player, liveGames);
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
       notify({ kind: 'info', title: 'Cannot add legs', body: 'Player\'s game is already final.' });
       return;
@@ -182,21 +186,17 @@ export function useAppDomain({
       return;
     }
 
-    commitLegsToSlip(built.map((b) => b.leg));
+    commitBuiltLegsToSlip(built);
     notify({
       kind: 'success',
       title: built.length > 1 ? `${built.length} legs added` : 'Leg added',
       body: tier.label,
       section: 'build',
     });
-  }, [liveGames, commitLegsToSlip]);
+  }, [liveGames, commitBuiltLegsToSlip]);
 
   const handleAddLegFromResearch = useCallback((player: MLBPlayer, prop: { id: string; market: string; odds: number | null; spec: string; gamePk?: string | number; playerId?: number | string }) => {
-    const matchedGameCheck = player.team ? player.team.toLowerCase() : '';
-    const matchedGame = liveGames.find((g: any) =>
-      g.homeTeam.toLowerCase() === matchedGameCheck ||
-      g.awayTeam.toLowerCase() === matchedGameCheck,
-    );
+    const matchedGame = findPlayerLiveGame(player, liveGames);
 
     if (matchedGame && matchedGame.status.toLowerCase() === 'final') {
       notify({ kind: 'info', title: 'Game final', body: `Cannot add — ${player.name}'s game is already final.` });

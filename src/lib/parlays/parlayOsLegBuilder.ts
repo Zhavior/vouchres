@@ -1,6 +1,7 @@
 import { normalizePlayerId } from "../mlbHeadshot";
 import type { Leg, MLBPlayer, Vouch } from "../../types";
 import type { ResearchProp } from "../../stores/appCommandStore";
+import { getActiveSportConfig } from "../../sports/registry";
 import {
   flattenTierLegs,
   type ParlayMarketTier,
@@ -44,6 +45,7 @@ export function buildLegsFromTier(
   const tiers = flattenTierLegs(tier);
   const player = ctx.player;
   const matchedGame = findPlayerLiveGame(player, ctx.liveGames);
+  const activeSport = getActiveSportConfig();
 
   const gamePk =
     ctx.propHint?.gamePk != null
@@ -69,7 +71,7 @@ export function buildLegsFromTier(
     const tierOdds = mergeTierOddsQuote(researchOdds, liveOdds);
     const oddsFromApi = liveOdds?.source === "live" && tierOdds.source === "live";
     const eventKey = buildEventKey({
-      sport: "MLB",
+      sport: activeSport.label,
       gamePk,
       playerId,
       marketCode: t.marketCode,
@@ -80,7 +82,7 @@ export function buildLegsFromTier(
 
     const leg: Leg = {
       id,
-      sport: "MLB",
+      sport: activeSport.label,
       game: matchedGame
         ? `${matchedGame.awayTeam} @ ${matchedGame.homeTeam}`
         : `${player.team ?? "MLB"} Live Target`,
@@ -89,6 +91,7 @@ export function buildLegsFromTier(
       odds: tierOdds.odds ?? ctx.propHint?.odds ?? null,
       status: "PENDING",
       gamePk,
+      gameId: gamePk,
       marketCode: t.marketCode,
       statTarget: t.statTarget,
       threshold: t.statTarget,
@@ -115,6 +118,7 @@ export function buildLegsFromTier(
       teamId,
       teamLabel: player.team ?? null,
       gamePk: leg.gamePk,
+      gameId: leg.gameId,
       marketCode: leg.marketCode,
       marketLabel: leg.market,
       statTarget: leg.statTarget,

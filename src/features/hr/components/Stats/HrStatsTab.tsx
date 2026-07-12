@@ -78,7 +78,7 @@ const ProLock: React.FC<{ label: string }> = ({ label }) => (
     <div className="pointer-events-none select-none p-4 opacity-40 blur-sm">
       <div className="h-28 rounded-lg bg-white/[0.04]" />
     </div>
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-[#02060e]/85 backdrop-blur-sm">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-[var(--ve-hr-shell)]/85 backdrop-blur-sm">
       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10 ring-1 ring-amber-500/35">
         <Lock className="h-4 w-4 text-amber-400" />
       </div>
@@ -203,7 +203,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
               <BvPSeasonChart logs={bvpLogs} height={160} />
             </div>
             <div className="overflow-hidden rounded-xl border border-white/10">
-              <div className="grid grid-cols-6 gap-0 bg-[#02060e] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+              <div className="grid grid-cols-6 gap-0 bg-[var(--ve-hr-shell)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
                 <span>Season</span>
                 <span className="text-right">PA</span>
                 <span className="text-right">HR</span>
@@ -228,7 +228,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                   <span className="text-right text-xs tabular-nums text-white/85">{row.obp.toFixed(3)}</span>
                 </div>
               ))}
-              <div className="flex items-center gap-3 border-t border-white/10 bg-[#02060e] px-3 py-2.5">
+              <div className="flex items-center gap-3 border-t border-white/10 bg-[var(--ve-hr-shell)] px-3 py-2.5">
                 {Number(bvpCareer.hrs) >= 2 ? (
                   <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                 ) : Number(bvpCareer.hrs) === 0 ? (
@@ -280,7 +280,7 @@ export const HrStatsTab: React.FC<HrStatsTabProps> = ({ player, isPro = true }) 
                 <ProductionBarChart logs={teamLogs} height={120} />
               </div>
               <div className="overflow-hidden rounded-xl border border-white/10">
-                <div className="grid grid-cols-6 gap-0 bg-[#02060e] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <div className="grid grid-cols-6 gap-0 bg-[var(--ve-hr-shell)] px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
                   <span>Date</span>
                   <span className="text-right">AB</span>
                   <span className="text-right">H</span>

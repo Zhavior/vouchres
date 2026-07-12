@@ -2,7 +2,7 @@ import type { LineupStatus, StatPlayerRow, StatScope, StatType, WeightedFactor }
 import type { SportsIntelligenceResult } from '../../../kernel/sports/intelligence';
 import { assignTier } from '../types/statHubTypes';
 import { STAT_CONFIG } from './statHubConfig';
-import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction, createSportsIntelligenceResult } from '../../../kernel';
+import { calculateWeightedScore, rankByScore, calculateConfidence, generatePrediction } from '../../../kernel';
 
 
 const MLB_API_BASE = 'https://statsapi.mlb.com/api/v1';
@@ -140,6 +140,11 @@ async function fetchRoster(teamId: number, group: 'hitting' | 'pitching', season
 
   rosterCache.set(key, promise);
   return promise;
+}
+
+function samePersonName(left: string, right: string): boolean {
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return normalize(left) === normalize(right);
 }
 
 function lineupStatusFor(entry: RosterEntry): LineupStatus {
@@ -374,7 +379,15 @@ export async function fetchMlbStatHubRows(statType: StatType, date: string, stat
     await Promise.all(sides.map(async ({ side, team, opponent, pitcherName }) => {
       const group = statType === 'pitcher_k' ? 'pitching' : 'hitting';
       const roster = await fetchRoster(team.id, group, season, statScope);
+      const probablePitcherName = side === 'away' ? game.awayPitcher : game.homePitcher;
       const playerContexts = roster
+        .filter((entry) => {
+          if (statType !== 'pitcher_k') return true;
+          const rosterName = entry.person?.fullName;
+          return probablePitcherName && rosterName
+            ? samePersonName(rosterName, probablePitcherName)
+            : false;
+        })
         .map((entry): PlayerContext | null => {
           if (!entry.person?.id || !entry.person.fullName) return null;
           const position = entry.position?.abbreviation || entry.person.primaryPosition?.abbreviation || '';

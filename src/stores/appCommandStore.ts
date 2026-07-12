@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CreatorProofProfile, FeedPost, MLBPlayer, Parlay } from '../types';
 import type { CanonicalParlaySlip } from '../lib/parlays/parlayBridge';
+import type { ParlaySaveResult } from '../domain/parlayActions';
 import {
   handlePostCreated,
   handleLikePost,
@@ -34,7 +35,7 @@ type AppCommandBindings = {
   navigateSection: (section: string) => void;
   onLoginSuccess: () => void;
   onClearProfileViewUser: () => void;
-  onSaveParlaySlip: (newParlay: Parlay | CanonicalParlaySlip) => Promise<void>;
+  onSaveParlaySlip: (newParlay: Parlay | CanonicalParlaySlip) => Promise<ParlaySaveResult>;
   onCommitParlayTrust: (input: {
     parlay: Parlay;
     audience: "private" | "public" | "subscriber";
@@ -59,12 +60,13 @@ type AppCommandState = AppCommandBindings & {
 };
 
 const noopAsync = async () => {};
+const noopSaveParlaySlip = async (): Promise<ParlaySaveResult> => ({}) as ParlaySaveResult;
 
 const defaultBindings: AppCommandBindings = {
   navigateSection: () => {},
   onLoginSuccess: () => {},
   onClearProfileViewUser: () => {},
-  onSaveParlaySlip: noopAsync,
+  onSaveParlaySlip: noopSaveParlaySlip,
   onCommitParlayTrust: noopAsync,
   onHideSavedParlay: noopAsync,
   onAddLegFromResearch: () => {},
