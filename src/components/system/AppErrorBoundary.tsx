@@ -1,4 +1,5 @@
 import React from 'react';
+import { captureReactError } from '../../lib/sentry';
 
 type AppErrorBoundaryProps = {
   children: React.ReactNode;
@@ -36,8 +37,9 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
     }
   }
 
-  componentDidCatch(error: unknown, errorInfo: unknown) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     console.error('[VouchEdge Stability Shield]', error, errorInfo);
+    captureReactError(error, errorInfo);
   }
 
   handleReload = () => {
