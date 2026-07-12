@@ -185,9 +185,10 @@ async function startServer() {
 
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
-      console.error(
-        `[boot] Port ${PORT} is already in use. Stop the stale process: lsof -ti :${PORT} | xargs kill`,
-      );
+      console.error(`[boot] Port ${PORT} is already in use.`);
+      console.error(`[boot] Run: npm run dev:port   (see what is listening)`);
+      console.error(`[boot] Run: npm run dev:stop   (force kill stale process)`);
+      console.error(`[boot] Or use another port: PORT=3001 npm run dev`);
       process.exit(1);
     }
     throw err;
