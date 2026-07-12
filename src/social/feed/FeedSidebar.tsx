@@ -22,8 +22,8 @@ import {
   UserCircle, Home, ClipboardCheck, BarChart3, User, Settings, Shield,
   Sparkles, Trophy, Search, Cpu, Tv, Radio, Award, ShoppingBag,
   MessageSquare, Activity, Flame, ScanLine, LayoutDashboard, Sliders,
-  Eye, Zap, Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
-  ChevronDown, Command, ChevronRight, CalendarDays, Grid3x3, Crown, LogOut,
+  Palette, Users, UserRoundSearch, Swords, LineChart, Bell,
+  ChevronDown, Command, CalendarDays, Grid3x3, Crown, LogOut,
 } from 'lucide-react';
 import { getPrimaryProductNavigation, getProductWorkspace } from '../../app/productNavigation';
 import { preloadSection } from '../../lib/routePreload';
@@ -337,7 +337,7 @@ function FeedSidebar({
       id="z8-feed-sidebar"
       className={[
         'relative hidden md:flex h-full min-h-0 flex-col',
-        'w-[72px] xl:w-[280px]',
+        'w-full min-w-0',
         Z8_SIDEBAR_SHELL,
         'px-2 xl:px-3.5 py-4',
         'justify-between select-none',
