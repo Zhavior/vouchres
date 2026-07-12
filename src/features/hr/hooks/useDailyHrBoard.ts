@@ -2,10 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { hrBoardQueryOptions } from '../../../hooks/queries/hrBoardQuery';
 import type { HrBoardContract } from '../../../kernel/contracts/hrBoard';
 
-const PREVIEW_LIMIT = 120;
-
 export function useDailyHrBoard(date: string) {
-  const query = useQuery(hrBoardQueryOptions(date, PREVIEW_LIMIT));
+  const query = useQuery(hrBoardQueryOptions(date));
 
   const contract: HrBoardContract | null = query.data
     ? {

@@ -20,6 +20,7 @@ import type { LiveAtBatSnapshot } from "../types/liveAtBat";
 import type { MatchupsResponse, GameMatchup, LiveScore } from "../types/matchup";
 import type { LiveGamesPayload } from "../types/liveGames";
 import { dailyReportDirect, liveGamesDirect, matchupsDirect, hrBoardDirect } from "../lib/mlbDirect";
+import type { LiveGamesDirectPayload } from "../lib/mlbDirect";
 import { isMlbDirectFallbackAllowed } from "../lib/mlbGatewayClient";
 import { apiUrl } from "../lib/apiBase";
 import { unwrapApiPayload } from "../lib/apiEnvelope";
@@ -86,6 +87,24 @@ async function hrBoardTodayWithFallback(): Promise<HrBoardResponse> {
   );
 }
 
+function normalizeLiveGamesFallback(raw: LiveGamesDirectPayload): LiveGamesPayload {
+  return {
+    ...raw,
+    games: raw.games.map((game) => ({
+      ...game,
+      homeAbbr: null,
+      awayAbbr: null,
+      homeTeamId: null,
+      awayTeamId: null,
+      inning: null,
+      halfInning: null,
+      outs: null,
+      liveStateLabel: null,
+      feedAsOf: null,
+    })),
+  };
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(apiUrl(url), {
     method: "POST",
@@ -145,7 +164,7 @@ export const vouchedgeApi = {
   liveGames: () =>
     withFallback(
       () => getJson<LiveGamesPayload>("/api/mlb/live"),
-      () => liveGamesDirect(),
+      () => liveGamesDirect().then(normalizeLiveGamesFallback),
     ),
   matchupsToday: () => withFallback(() => getJson<MatchupsResponse>("/api/mlb/matchups/today"), () => matchupsDirect()),
   matchup: (gamePk: number) => getJson<{ matchup: GameMatchup }>(`/api/mlb/matchup/${gamePk}`),

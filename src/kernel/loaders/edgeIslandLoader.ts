@@ -5,7 +5,7 @@ import { loadNotifications } from './notificationsLoader';
 export async function loadEdgeIsland() {
   const [summary, board, notifications] = await Promise.all([
     vouchedgeApi.dailyReport(),
-    vouchedgeApi.hrBoardToday(25),
+    vouchedgeApi.hrBoardToday(),
     loadNotifications(),
   ]);
 
