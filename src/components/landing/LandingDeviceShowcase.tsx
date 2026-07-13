@@ -143,7 +143,7 @@ const SLIDES = ['hr', 'home'] as const;
 type Slide = (typeof SLIDES)[number];
 
 const SLIDE_LABELS: Record<Slide, string> = {
-  hr: 'Home Run Intelligence',
+  hr: 'Home Run Picks',
   home: 'Command Center',
 };
 

@@ -105,7 +105,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => (
       <AlertOctagon className="h-7 w-7 text-red-400" />
     </div>
     <div>
-      <p className="text-base font-bold text-ve-flash">Failed to load Home Run Intelligence</p>
+      <p className="text-base font-bold text-ve-flash">Failed to load Home Run Picks</p>
       <p className="mt-1 max-w-sm text-sm text-ve-locked">{message}</p>
     </div>
     <button
@@ -141,7 +141,7 @@ const EmptyState: React.FC<{
         <p className="mt-1 max-w-sm text-sm text-ve-locked">
           {noLineupsYet
             ? `MLB hasn't posted official batting orders for today's games yet — we never fake a confirmed lineup. ${previewCount} preview candidates are already scored from projected lineups.`
-            : 'There are no Home Run Intelligence candidates for the current filters or slate.'}
+            : 'There are no Home Run Picks candidates for the current filters or slate.'}
         </p>
       </div>
       <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ const HomeRunIntelligencePage: React.FC<{ onSectionChange?: (section: string) =>
           <div className="relative grid gap-7 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
             <div>
               <div className="flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-[#00ff94]">
-                <ScanSearch className="h-4 w-4" /> Z8 Home Run Intelligence
+                <ScanSearch className="h-4 w-4" /> Z8 Home Run Picks
               </div>
               <h1 className="mt-4 max-w-3xl text-3xl font-black leading-[.98] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl">See the power.<br /><span className="text-[#00ff94]">Understand the signal.</span></h1>
               <p className="mt-5 max-w-2xl text-sm leading-6 text-white/52 sm:text-base">Every candidate is resolved through observable power, pitcher vulnerability, park context and recent form. No hidden certainty. No projected lineup presented as official.</p>

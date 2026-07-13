@@ -72,7 +72,7 @@ describe('HomeRunIntelligencePage honest states', () => {
     } as any);
 
     render(<HomeRunIntelligencePage />);
-    expect(screen.getByText(/Failed to load Home Run Intelligence/i)).toBeTruthy();
+    expect(screen.getByText(/Failed to load Home Run Picks/i)).toBeTruthy();
     expect(screen.getByText(/Upstream timeout/i)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /retry/i }));
     expect(refresh).toHaveBeenCalled();

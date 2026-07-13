@@ -50,7 +50,7 @@ export const ALL_FEATURES: FeatureConfig[] = [
 
   // Daily — sport-scoped boards and slates
   { id: "today", label: "Today", icon: "CalendarDays", enabled: true, order: 2, group: "Daily", sports: ALL_SPORTS, locked: true },
-  { id: "hr_board", label: "Home Run Intelligence", icon: "Flame", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS, locked: true },
+  { id: "hr_board", label: "Home Run Picks", icon: "Flame", enabled: true, order: 3, group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "mlb_stats", label: "MLB Stat Hub", icon: "BarChart3", enabled: true, order: 4, group: "Daily", sports: ALL_SPORTS, locked: false },
   { id: "daily_players", label: "Daily Players", icon: "Users", enabled: true, order: 5, group: "Daily", sports: ALL_SPORTS, locked: true },
   { id: "live_games", label: "Live Games", icon: "Tv", enabled: true, order: 6, group: "Daily", sports: ALL_SPORTS, locked: true },

@@ -63,7 +63,7 @@ const TODAY_TOOLS: DashboardCard[] = [
   {
     icon: Flame,
     section: 'hr_board',
-    title: 'Home Run Intelligence',
+    title: 'Home Run Picks',
     eyebrow: 'Power',
     description: 'Ranked home run research with pitcher, park, form, and data status.',
     accent: 'cyan',

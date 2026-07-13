@@ -76,7 +76,7 @@ const FEATURE_META: Record<FeatureId, FeatureMeta> = {
   },
   hr_board: {
     id: "hr_board",
-    label: "Home Run Intelligence",
+    label: "Home Run Picks",
     description: "Home run board, power spots, and matchup context.",
     icon: Flame,
   },

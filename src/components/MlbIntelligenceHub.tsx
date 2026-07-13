@@ -614,7 +614,7 @@ export default function MlbIntelligenceHub({ onSectionChange }: Props) {
                 className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 py-3 text-sm font-black text-vouch-cyan hover:bg-vouch-cyan/15"
               >
                 <HrBrandIcon size="sm" />
-                Home Run Intelligence
+                Home Run Picks
               </button>
             )}
             <button

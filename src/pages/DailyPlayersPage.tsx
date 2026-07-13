@@ -1696,7 +1696,7 @@ export default function DailyPlayersPage({ onSectionChange }: DailyPlayersPagePr
                   className={`${Z8_IDLE} inline-flex w-full items-center justify-center gap-2.5 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wide sm:w-auto`}
                 >
                   <HrBrandIcon size="sm" />
-                  Home Run Intelligence
+                  Home Run Picks
                 </button>
               )}
               <button
