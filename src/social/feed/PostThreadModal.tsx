@@ -12,7 +12,7 @@ function formatTimestamp(value: string) {
 export default function PostThreadModal({ post, onClose }: { post: FeedPost; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[90] bg-black/75 p-0 backdrop-blur-sm sm:p-6">
-      <section className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden bg-[#070d13] shadow-2xl sm:h-[min(760px,92vh)] sm:rounded-3xl sm:border sm:border-white/10">
+      <section className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden bg-[var(--ve-glass-modal)] shadow-2xl sm:h-[min(760px,92vh)] sm:rounded-3xl sm:border sm:border-white/10">
         <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <button type="button" onClick={onClose} className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" />

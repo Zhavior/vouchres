@@ -8,7 +8,7 @@ export default function RouteShellSkeleton() {
       aria-busy="true"
       aria-label="Loading workspace"
     >
-      <div className="overflow-hidden border border-white/10 bg-[#060b12]/90 shadow-[0_18px_70px_rgba(0,0,0,0.38)]">
+      <div className="overflow-hidden border border-white/10 bg-[var(--ve-glass-skeleton)]/90 shadow-[0_18px_70px_rgba(0,0,0,0.38)]">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-3"><div className="h-8 w-8 animate-pulse bg-vouch-cyan/10" /><div><div className="h-2 w-20 animate-pulse bg-white/10" /><div className="mt-2 h-4 w-40 animate-pulse bg-white/[0.07]" /></div></div>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">Opening workspace</span>

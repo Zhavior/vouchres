@@ -57,4 +57,14 @@
   --ve-ion: var(--ion-core);
   --ve-voltage: var(--voltage-green);
   --ve-obsidian: var(--bg-obsidian);
+
+  /* Floating-glass panel shades — each currently distinct per surface
+     (feed popover, modal, chip, skeleton, island). Named so no raw hex
+     needs to appear in component classNames; not yet consolidated to a
+     single shade since that would be a visual design decision. */
+  --ve-glass-feed-popover: #09121b;
+  --ve-glass-modal: #070d13;
+  --ve-glass-chip: #07111a;
+  --ve-glass-skeleton: #060b12;
+  --ve-glass-island: #050a10;
 }

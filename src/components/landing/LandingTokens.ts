@@ -38,4 +38,4 @@ export const Z8_BTN_TERMINAL_HEADER_LOGIN =
   `z8-control ${Z8_INTERACTIVE} border border-white/15 bg-black/30 px-4 py-2.5 font-mono text-[11px] font-bold text-white/65 transition hover:border-vouch-emerald/40 hover:text-white`;
 
 export const Z8_BTN_TERMINAL_HEADER_SIGNUP =
-  `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:bg-[#4dffb2]`;
+  `z8-control ${Z8_INTERACTIVE} border border-vouch-emerald/55 bg-vouch-emerald px-4 py-2.5 font-mono text-[11px] font-bold text-black transition hover:brightness-110`;

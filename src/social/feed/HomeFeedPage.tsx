@@ -440,7 +440,7 @@ function HomeFeedPage({
               <Search className="w-4 h-4 text-white/35 absolute left-3.5 top-3" />
             </div>
             {deferredSearchQuery.length >= 2 && (
-              <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#09121b] shadow-xl">
+              <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[var(--ve-glass-feed-popover)] shadow-xl">
                 <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white/40">
                   People
                 </div>

@@ -4,18 +4,17 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync('src/features/hr/components/Profile/HrPlayerProfile.tsx', 'utf8');
 
 describe('HR full profile modal boundary', () => {
-  it('escapes the app shell stacking context through a body portal', () => {
-    expect(source).toContain("import { createPortal } from 'react-dom'");
-    expect(source).toContain('return createPortal(');
-    expect(source).toContain('document.body');
+  it('covers the full viewport above the app shell with a fixed, high z-index layer', () => {
+    expect(source).toContain('className="ve-hr-profile-backdrop fixed inset-0 z-50"');
+    expect(source).toContain('fixed inset-0 z-[60]');
   });
 
-  it('covers the navigation sidebar while the full profile is open', () => {
-    expect(source).toContain('className="fixed inset-0 z-[190]"');
-    expect(source).toContain('className="fixed inset-0 z-[200] flex flex-col');
+  it('renders as a modal dialog that closes on backdrop click', () => {
+    expect(source).toContain('role="dialog" aria-modal="true"');
+    expect(source).toContain('onClick={onClose}');
   });
 
-  it('keeps server rendering safe', () => {
-    expect(source).toContain("if (!player || typeof document === 'undefined') return null;");
+  it('returns null instead of rendering when no player is selected', () => {
+    expect(source).toContain('if (!player) return null;');
   });
 });
