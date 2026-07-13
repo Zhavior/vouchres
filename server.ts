@@ -165,42 +165,58 @@ function gracefulShutdown(httpServer: http.Server, signal: string, code: number)
 
 async function startServer() {
   const httpServer = http.createServer();
-  const app = await createApp(httpServer);
-  httpServer.on("request", app);
   const PORT = Number(process.env.PORT) || 3000;
 
-  registerProcessSafetyHandlers(httpServer);
+  try {
+    const app = await createApp(httpServer);
+    httpServer.on("request", app);
 
-  // Loud, unmissable warning if production is running without error tracking —
-  // the two highest-stakes signals (failed payment, crashed grading) funnel to
-  // Sentry, so a missing DSN means running blind. Not a hard boot-fail so a
-  // deploy isn't blocked, but it should never go unnoticed.
-  if (process.env.NODE_ENV === "production" && !isSentryEnabled()) {
-    console.warn(
-      "[boot] ⚠️  SENTRY_DSN is not set — server errors, failed Stripe webhooks, " +
-        "and grading crashes will NOT be reported anywhere except stdout. " +
-        "Set SENTRY_DSN before taking real payments.",
-    );
-  }
+    registerProcessSafetyHandlers(httpServer);
 
-  httpServer.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
-      console.error(`[boot] Port ${PORT} is already in use.`);
-      console.error(`[boot] Run: npm run dev:port   (see what is listening)`);
-      console.error(`[boot] Run: npm run dev:stop   (force kill stale process)`);
-      console.error(`[boot] Or use another port: PORT=3001 npm run dev`);
-      process.exit(1);
+    // Loud, unmissable warning if production is running without error tracking —
+    // the two highest-stakes signals (failed payment, crashed grading) funnel to
+    // Sentry, so a missing DSN means running blind. Not a hard boot-fail so a
+    // deploy isn't blocked, but it should never go unnoticed.
+    if (process.env.NODE_ENV === "production" && !isSentryEnabled()) {
+      console.warn(
+        "[boot] ⚠️  SENTRY_DSN is not set — server errors, failed Stripe webhooks, " +
+          "and grading crashes will NOT be reported anywhere except stdout. " +
+          "Set SENTRY_DSN before taking real payments.",
+      );
     }
-    throw err;
-  });
 
-  httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express custom server running on http://localhost:${PORT}`);
-  });
+    httpServer.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(`[boot] Port ${PORT} is already in use.`);
+        console.error(`[boot] Run: npm run dev:doctor   (free port + reset Vite cache)`);
+        console.error(`[boot] Run: npm run dev:port     (see what is listening)`);
+        console.error(`[boot] Or use another port: PORT=3001 npm run dev`);
+        process.exit(1);
+      }
+      throw err;
+    });
+
+    httpServer.listen(PORT, "0.0.0.0", () => {
+      console.log(`Express custom server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("[boot] Failed to start local server.");
+    if (err instanceof Error) {
+      console.error(`[boot] ${err.message}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[boot] Common fixes:");
+        console.error("[boot]   npm run dev:doctor");
+        console.error("[boot]   git pull   (missing public/favicon assets)");
+      }
+    } else {
+      console.error(err);
+    }
+    process.exit(1);
+  }
 }
 
 // Render / local dev listen on a port. Vercel serverless (api/index.ts) imports
 // dist/server.cjs and calls createApp() only — it must not bind a port here.
 if (process.env.VERCEL !== "1") {
-  startServer();
+  void startServer();
 }
