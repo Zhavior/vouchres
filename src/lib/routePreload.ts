@@ -4,6 +4,7 @@ const preloaded = new Set<string>();
 const SECTION_LOADERS: Record<string, () => Promise<unknown>> = {
   feed: () => import('../social/feed/HomeFeedPage'),
   following: () => import('../pages/FollowingHubPage'),
+  messages: () => import('../social/messaging/MessagesPage'),
   today: () => import('../components/TodayDashboard'),
   welcome: () => import('../components/TodayDashboard'),
   island: () => import('../components/TodayDashboard'),

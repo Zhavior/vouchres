@@ -155,6 +155,14 @@ export const worldChatLimiter = rateLimit({
   handler,
 });
 
+export const directMessageLimiter = rateLimit({
+  name: "direct_messages",
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
 export const socialSafetyLimiter = rateLimit({
   name: "social_safety",
   windowMs: 60 * 1000,

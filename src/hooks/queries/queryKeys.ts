@@ -13,4 +13,6 @@ export const queryKeys = {
   profileFeed: (profileId: string) => ['profile', profileId, 'feed'] as const,
   hrFeedToday: () => ['hrFeedToday'] as const,
   appNotifications: () => ['appNotifications'] as const,
+  messageConversations: () => ['messages', 'conversations'] as const,
+  messageThread: (conversationId: string) => ['messages', 'conversations', conversationId] as const,
 };

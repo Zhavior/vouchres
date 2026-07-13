@@ -276,7 +276,24 @@ export default function ProfilePage({
         id="profile-details-view"
       >
         {!isOwnProfile && onClearViewUser && (
-          <header className="flex justify-end">
+          <header className="flex flex-wrap items-center justify-between gap-2">
+            {profileUserId && (
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem("vouchedge_message_recipient_id", profileUserId);
+                  } catch {
+                    // ignore storage failures
+                  }
+                  onSectionChange?.("messages");
+                }}
+                className="z8-control inline-flex min-h-11 items-center justify-center gap-2 border border-vouch-cyan/35 bg-vouch-cyan/10 px-4 font-mono text-[11px] font-bold uppercase tracking-wide text-vouch-cyan hover:border-vouch-cyan/60"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Message
+              </button>
+            )}
             <button
               type="button"
               onClick={onClearViewUser}
@@ -433,7 +450,7 @@ export default function ProfilePage({
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
                         disabled={isUploadingAvatar}
-                        className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[#07111a] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
+                        className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-vouch-cyan/45 bg-[var(--ve-glass-chip)] text-vouch-cyan shadow-[0_8px_22px_rgba(0,0,0,0.48)] transition hover:bg-vouch-cyan/15 disabled:cursor-wait disabled:opacity-70"
                         aria-label="Change profile photo"
                         title="Change profile photo"
                       >

@@ -16,6 +16,7 @@ const PersonalizedOnboarding = lazy(() =>
   })),
 );
 const FollowingHubPage = lazy(() => import('../../pages/FollowingHubPage'));
+const MessagesPage = lazy(() => import('../../social/messaging/MessagesPage'));
 const HomeFeedPage = lazy(() => import('../../social/feed/HomeFeedPage'));
 const TodayDashboard = lazy(() => import('../TodayDashboard'));
 const VouchEdgeTerminalPage = lazy(() => import('../../pages/VouchEdgeTerminalPage'));
@@ -47,6 +48,26 @@ const ParlayOsWorkspace = lazy(() => import('../parlay/ParlayOsWorkspace'));
 const ParlayProofPage = lazy(() => import('../../pages/ParlayProofPage'));
 const NbaNflArena = lazy(() => import('../NbaNflArena'));
 const AisLandingPage = lazy(() => import('../AisLandingPage'));
+
+function MessagesShell() {
+  const recipientUserId = (() => {
+    try {
+      return sessionStorage.getItem('vouchedge_message_recipient_id');
+    } catch {
+      return null;
+    }
+  })();
+
+  if (recipientUserId) {
+    try {
+      sessionStorage.removeItem('vouchedge_message_recipient_id');
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  return <MessagesPage pendingRecipientUserId={recipientUserId} />;
+}
 
 function ParlayProofShell() {
   const storePickId = useParlayOsStore((s) => s.proofPickId);
@@ -181,6 +202,12 @@ function MainViewRouter({
       return (
         <LazyRoute>
           <FollowingHubPage />
+        </LazyRoute>
+      );
+    case 'messages':
+      return (
+        <LazyRoute>
+          <MessagesShell />
         </LazyRoute>
       );
     case 'build':

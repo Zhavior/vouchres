@@ -220,6 +220,10 @@ export function resolveDevSectionFromLocation() {
     return 'notifications';
   }
 
+  if (target === 'messages' || target === '/messages') {
+    return 'messages';
+  }
+
   if (target === 'player-edge-lab' || target === '/player-edge-lab') {
     return 'player_edge_lab';
   }
