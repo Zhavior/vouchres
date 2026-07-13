@@ -18,12 +18,76 @@ import {
   sendDirectMessage,
   upsertStatusNote,
 } from "../services/social/followingHubService";
+import {
+  clearSocialControl,
+  createSocialReport,
+  getSocialControlState,
+  setSocialControl,
+  type SocialControlType,
+  type SocialReportReason,
+  type SocialReportSubjectType,
+} from "../services/social/socialSafetyService";
+import { socialReportLimiter, socialSafetyLimiter } from "../middleware/rateLimit";
 
 export const socialHubRoutes = Router();
 
 socialHubRoutes.get("/following-hub", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const payload = await buildFollowingHub(req.user!.id);
   return res.json(apiOkFlat(req, payload as unknown as Record<string, unknown>));
+}));
+
+const SocialControlSchema = z.object({
+  target_id: z.string().uuid(),
+  control_type: z.enum(["block", "mute"]),
+});
+
+socialHubRoutes.get("/social/safety", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const targetId = typeof req.query.target_id === "string" ? req.query.target_id : "";
+  if (!z.string().uuid().safeParse(targetId).success) {
+    throw new AppError({ status: 400, code: "bad_request", message: "A valid profile is required." });
+  }
+  const controls = await getSocialControlState(req.user!.id, targetId);
+  return res.json(apiOkFlat(req, controls));
+}));
+
+socialHubRoutes.post("/social/safety", requireAuth, socialSafetyLimiter, validate({ body: SocialControlSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body as z.infer<typeof SocialControlSchema>;
+  const controls = await setSocialControl({
+    actorId: req.user!.id,
+    targetId: body.target_id,
+    controlType: body.control_type as SocialControlType,
+  });
+  return res.json(apiOkFlat(req, controls));
+}));
+
+socialHubRoutes.delete("/social/safety", requireAuth, socialSafetyLimiter, validate({ body: SocialControlSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body as z.infer<typeof SocialControlSchema>;
+  const controls = await clearSocialControl({
+    actorId: req.user!.id,
+    targetId: body.target_id,
+    controlType: body.control_type as SocialControlType,
+  });
+  return res.json(apiOkFlat(req, controls));
+}));
+
+const SocialReportSchema = z.object({
+  subject_type: z.enum(["profile", "post", "story"]),
+  subject_id: z.string().uuid(),
+  reason: z.enum(["spam", "harassment", "impersonation", "harmful_content", "other"]),
+  details: z.string().max(500).optional(),
+});
+
+socialHubRoutes.post("/social/reports", requireAuth, socialReportLimiter, validate({ body: SocialReportSchema }), asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+  const body = req.body as z.infer<typeof SocialReportSchema>;
+  const report = await createSocialReport({
+    reporterId: req.user!.id,
+    subjectType: body.subject_type as SocialReportSubjectType,
+    subjectId: body.subject_id,
+    reason: body.reason as SocialReportReason,
+    details: body.details,
+    requestId: req.requestId,
+  });
+  return res.status(201).json(apiOkFlat(req, { report }));
 }));
 
 const StatusNoteSchema = z.object({

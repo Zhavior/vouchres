@@ -22,6 +22,7 @@ import {
   Award,
   Trash2,
   Lock,
+  Play,
 } from 'lucide-react';
 import { FeedPost, Vouch } from '../../types';
 import {
@@ -65,6 +66,7 @@ import VouchCircleFeedCard from '../../components/VouchCircleFeedCard';
 import VouchCard from '../../components/vouch-system/VouchCard';
 import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import CommentThread from './CommentThread';
+import PostThreadModal from './PostThreadModal';
 import { useFeedStore } from '../../stores/feedStore';
 import { useAuth } from '../../lib/useAuth';
 import { useOptionalSocialGraph } from '../../hooks/SocialGraphProvider';
@@ -113,6 +115,7 @@ function FeedPostCard({
   onDeletePost,
 }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
+  const [showThread, setShowThread] = useState(false);
   const [focusReply, setFocusReply] = useState(false);
   const syncPosts = useFeedStore((state) => state.syncPosts);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -561,7 +564,14 @@ function FeedPostCard({
       {/* Attached Media Render container with Hover Navigation Slides */}
       {post.mediaUrl && !post.boardConfig && (
         <div className="mb-3.5 bg-black/28 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/28 p-1 flex justify-center max-w-full relative group shadow-lg shadow-black/16">
-          {post.mediaType === 'video' ? (
+          {post.mediaType === 'audio' ? (
+            <div className="flex w-full items-center gap-3 rounded-xl bg-black/45 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vouch-cyan/15 text-vouch-cyan">
+                <Play className="h-4 w-4 fill-current" />
+              </div>
+              <audio controls src={post.mediaUrl} className="h-9 min-w-0 flex-1" preload="metadata" />
+            </div>
+          ) : post.mediaType === 'video' ? (
             <video 
               src={post.mediaUrl} 
               controls 
@@ -868,6 +878,15 @@ function FeedPostCard({
         >
           <Share className="w-[18px] h-[18px]" />
         </button>
+        <button
+          type="button"
+          onClick={() => setShowThread(true)}
+          className="feed-action-btn hover:text-vouch-cyan transition-colors"
+          title="Open post conversation"
+          aria-label="Open post conversation"
+        >
+          <ExternalLink className="w-[17px] h-[17px]" />
+        </button>
       </div>
 
       {/* Quote Vouch Modal overlay */}
@@ -938,6 +957,8 @@ function FeedPostCard({
         autoFocus={focusReply}
         onCountChange={handleCommentsCountChange}
       />
+
+      {showThread && <PostThreadModal post={post} onClose={() => setShowThread(false)} />}
 
       {/* 5. Custom premium tail-lock subscription upgrade modal */}
       {showUpgradeModal && (

@@ -18,6 +18,7 @@ const DeployUpdateBanner = lazy(() =>
 );
 const MainViewRouter = lazy(() => import('../components/routing/MainViewRouter'));
 const ParlayOsLayer = lazy(() => import('../components/parlay/os/ParlayOsLayer'));
+const EdgeCommandIsland = lazy(() => import('../components/theEdge/EdgeCommandIsland'));
 
 export type AppShellProps = {
   activeSection: string;
@@ -71,6 +72,7 @@ export function AppShell({
       <MainViewRouter
         activeSection={activeSection}
         navigateSection={navigateSection}
+        navigateToUserProfile={navigateToUserProfile}
         isLoggedIn={isLoggedIn}
         profileViewUserId={profileViewUserId}
         canSeeThemeStore={canSeeThemeStore}
@@ -130,6 +132,17 @@ export function AppShell({
                         }}
                         navigateSection={navigateSection}
                         suppressFloatingDock={false}
+                      />
+                    </Suspense>
+                  )}
+
+                  {showGlobalAppChrome && isLoggedIn && !isPublicFrontPage && (
+                    <Suspense fallback={null}>
+                      <EdgeCommandIsland
+                        profile={profile}
+                        isLoggedIn={isLoggedIn}
+                        onNavigateProfile={navigateToUserProfile}
+                        onSectionChange={navigateSection}
                       />
                     </Suspense>
                   )}

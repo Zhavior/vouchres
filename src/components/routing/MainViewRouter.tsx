@@ -99,6 +99,7 @@ export type MainViewRouterProps = {
   isLoggedIn: boolean;
   profileViewUserId: string | null;
   canSeeThemeStore: boolean;
+  navigateToUserProfile: (userId: string) => void;
 };
 
 function MainViewRouter({
@@ -107,6 +108,7 @@ function MainViewRouter({
   isLoggedIn,
   profileViewUserId,
   canSeeThemeStore: _canSeeThemeStore,
+  navigateToUserProfile,
 }: MainViewRouterProps) {
   const onLoginSuccess = useAppCommandStore((state) => state.onLoginSuccess);
 
@@ -172,7 +174,7 @@ function MainViewRouter({
     case 'feed':
       return (
         <LazyRoute>
-          <FeedShell navigateSection={navigateSection} />
+          <FeedShell navigateSection={navigateSection} navigateToUserProfile={navigateToUserProfile} />
         </LazyRoute>
       );
     case 'following':
@@ -439,7 +441,7 @@ function LegacyStudioShell({ navigateSection }: { navigateSection: (section: str
   );
 }
 
-function FeedShell({ navigateSection }: { navigateSection: (section: string) => void }) {
+function FeedShell({ navigateSection, navigateToUserProfile }: { navigateSection: (section: string) => void; navigateToUserProfile: (userId: string) => void }) {
   const { posts, profile, savedVouchIds, savedSlips, onSaveVouch } = useAppShell();
   const {
     onPostCreated,
@@ -466,6 +468,7 @@ function FeedShell({ navigateSection }: { navigateSection: (section: string) => 
       onDeletePost={onDeletePost}
       profile={profile}
       onSectionChange={navigateSection}
+      onNavigateToProfile={navigateToUserProfile}
       hasMoreServer={Boolean(feedQuery.hasNextPage)}
       isFetchingServer={feedQuery.isFetchingNextPage}
       onLoadMoreServer={() => {

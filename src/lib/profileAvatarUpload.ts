@@ -1,45 +1,71 @@
-import { supabase } from "./supabaseClient";
+import { getAuthToken } from "./supabaseClient";
 
-const AVATAR_BUCKET = "avatars";
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
-const FILE_EXTENSIONS: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
+const SUPPORTED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+
+const MIME_BY_EXTENSION: Record<string, string> = {
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heif",
 };
 
-function assertValidAvatar(file: File): string {
-  const extension = FILE_EXTENSIONS[file.type];
-  if (!extension) {
-    throw new Error("Choose a JPG, PNG, or WebP image.");
+function resolveMimeType(file: File): string {
+  if (SUPPORTED_TYPES.has(file.type)) return file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const inferred = extension ? MIME_BY_EXTENSION[extension] : undefined;
+  if (!inferred) {
+    throw new Error("Choose a JPG, PNG, WebP, or HEIC image.");
   }
+  return inferred;
+}
+
+function assertValidAvatar(file: File): string {
+  const mimeType = resolveMimeType(file);
   if (file.size === 0 || file.size > MAX_AVATAR_BYTES) {
     throw new Error("Profile photos must be 3 MB or smaller.");
   }
-  return extension;
+  return mimeType;
 }
 
-/** Upload a cache-safe, account-owned image and return its public profile URL. */
+/** Upload through the authenticated server, which safely normalizes phone photos to WebP. */
 export async function uploadProfileAvatar(file: File): Promise<string> {
-  const extension = assertValidAvatar(file);
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError || !auth.user) {
+  const mimeType = assertValidAvatar(file);
+  const token = await getAuthToken();
+  if (!token) {
     throw new Error("Sign in before changing your profile photo.");
   }
 
-  const objectPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await supabase.storage
-    .from(AVATAR_BUCKET)
-    .upload(objectPath, file, {
-      cacheControl: "31536000",
-      contentType: file.type,
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message || "Profile photo upload failed.");
+  const response = await fetch(
+    new URL(
+      "/api/auth/profile/avatar",
+      import.meta.env.VITE_API_BASE_URL || window.location.origin,
+    ),
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": mimeType },
+      body: file,
+      credentials: "include",
+    },
+  );
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(
+      payload?.error?.message ||
+        payload?.message ||
+        "Profile photo upload failed.",
+    );
   }
-
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(objectPath);
-  return data.publicUrl;
+  if (typeof payload?.avatar_url !== "string") {
+    throw new Error("Profile photo upload returned an invalid response.");
+  }
+  return payload.avatar_url;
 }

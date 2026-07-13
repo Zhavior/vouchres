@@ -19,6 +19,7 @@ type Props = {
   onNavigateProfile?: (userId: string) => void;
   onSectionChange?: (section: string) => void;
   onClose?: () => void;
+  compact?: boolean;
 };
 
 function formatTime(iso: string): string {
@@ -35,6 +36,7 @@ export default function WorldChatPanel({
   onNavigateProfile,
   onSectionChange,
   onClose,
+  compact = false,
 }: Props) {
   const [messages, setMessages] = useState<WorldChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,19 +120,19 @@ export default function WorldChatPanel({
   };
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col">
-      <div className="glass-panel glass-border mb-3 flex items-center gap-3 rounded-2xl p-3.5">
+    <div className={`flex h-full flex-col ${compact ? 'min-h-0' : 'min-h-[420px]'}`}>
+      <div className={`glass-panel glass-border mb-3 flex items-center gap-3 rounded-2xl ${compact ? 'p-2.5' : 'p-3.5'}`}>
         <div className="grid h-10 w-10 place-items-center rounded-xl border border-vouch-emerald/30 bg-vouch-emerald/10 text-vouch-emerald">
           <Globe className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-black text-white">World Chat</h2>
-          <p className="text-[10px] text-white/40">Community lounge · profile-linked messages</p>
+          <p className="text-[10px] text-white/40">{isLoggedIn ? `Chatting as @${resolvedProfile.username}` : 'Community lounge · profile-linked messages'}</p>
         </div>
         {previewMode ? (
           <span className="terminal-text rounded-full border border-white/10 px-2 py-1 text-vouch-amber">Preview</span>
         ) : null}
-        {isLoggedIn ? (
+        {isLoggedIn && !compact ? (
           <button
             type="button"
             onClick={() => setShowEditor((v) => !v)}
@@ -143,7 +145,7 @@ export default function WorldChatPanel({
       </div>
 
       {isLoggedIn ? (
-        showEditor ? (
+        compact ? null : showEditor ? (
           <div className="mb-3 shrink-0">
             <ChatProfileEditor
               resolved={resolvedProfile}
@@ -179,7 +181,7 @@ export default function WorldChatPanel({
 
       <div
         ref={scrollRef}
-        className="glass-panel glass-border min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl p-3"
+        className={`glass-panel glass-border min-h-0 flex-1 space-y-2 overflow-y-auto rounded-2xl ${compact ? 'p-2' : 'p-3'}`}
       >
         {loading ? (
           <p className="text-center text-xs text-white/35">Loading messages…</p>
@@ -191,7 +193,7 @@ export default function WorldChatPanel({
           </p>
         ) : (
           messages.map((msg) => (
-            <article key={msg.id} className="rounded-xl border border-white/5 bg-black/20 p-2.5">
+            <article key={msg.id} className={`rounded-xl border border-white/5 bg-black/20 ${compact ? 'p-2' : 'p-2.5'}`}>
               <ChatAuthorChip
                 author={{
                   userId: msg.userId,
@@ -206,7 +208,7 @@ export default function WorldChatPanel({
                 timestamp={formatTime(msg.createdAt)}
                 onOpenProfile={openAuthorProfile}
               />
-              <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-white/80">{msg.text}</p>
+              <p className={`${compact ? 'mt-1 text-[13px]' : 'mt-1.5 text-sm'} whitespace-pre-wrap break-words text-white/80`}>{msg.text}</p>
             </article>
           ))
         )}
@@ -233,9 +235,9 @@ export default function WorldChatPanel({
           <Send className="h-4 w-4" />
         </button>
       </form>
-      <p className="mt-2 text-center text-[10px] text-white/25">
+      {!compact && <p className="mt-2 text-center text-[10px] text-white/25">
         Trust-first lounge — no bots, no fake users. Research &amp; entertainment only.
-      </p>
+      </p>}
     </div>
   );
 }

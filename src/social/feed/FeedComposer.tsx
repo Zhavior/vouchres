@@ -1,8 +1,9 @@
 import React from 'react';
-import { CheckCircle2, Send, Sparkles, TrendingUp, Trophy, FileText } from 'lucide-react';
+import { CheckCircle2, Send, Sparkles, TrendingUp, Trophy, FileText, MessageCircle, Mic, Square, Play } from 'lucide-react';
 import { FeedPost, Parlay } from '../../types';
+import { uploadPostAudio } from '../../lib/postAudioUpload';
 
-type ComposerMode = 'VOUCH' | 'PARLAY' | 'RESULT' | 'RESEARCH_NOTE';
+type ComposerMode = 'DISCUSSION' | 'AUDIO' | 'VOUCH' | 'PARLAY' | 'RESULT' | 'RESEARCH_NOTE';
 
 interface FeedComposerProps {
   onPostCreated: (postData: Partial<FeedPost>) => void;
@@ -18,6 +19,8 @@ const MODES: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
+  { id: 'DISCUSSION', label: 'Post', icon: MessageCircle },
+  { id: 'AUDIO', label: 'Voice', icon: Mic },
   { id: 'VOUCH', label: 'Pick', icon: Sparkles },
   { id: 'PARLAY', label: 'Parlay', icon: TrendingUp },
   { id: 'RESULT', label: 'Result', icon: Trophy },
@@ -36,7 +39,7 @@ export default function FeedComposer({
   const expanded = expandedProp ?? internalExpanded;
   const setExpanded = onExpandedChange ?? setInternalExpanded;
 
-  const [mode, setMode] = React.useState<ComposerMode>('VOUCH');
+  const [mode, setMode] = React.useState<ComposerMode>('DISCUSSION');
   const [content, setContent] = React.useState('');
   const [sport, setSport] = React.useState('MLB');
   const [market, setMarket] = React.useState('');
@@ -44,10 +47,16 @@ export default function FeedComposer({
   const [tags, setTags] = React.useState('');
   const [selectedSlipId, setSelectedSlipId] = React.useState('');
   const [isPosting, setIsPosting] = React.useState(false);
+  const [audioBlob, setAudioBlob] = React.useState<Blob | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = React.useState<string | null>(null);
+  const [isRecording, setIsRecording] = React.useState(false);
+  const recorderRef = React.useRef<MediaRecorder | null>(null);
+  const audioStreamRef = React.useRef<MediaStream | null>(null);
+  const audioChunksRef = React.useRef<Blob[]>([]);
 
   const maxChars = 360;
   const remaining = maxChars - content.length;
-  const canPost = content.trim().length >= 3 && remaining >= 0 && !isPosting;
+  const canPost = (content.trim().length >= 3 || audioBlob !== null) && remaining >= 0 && !isPosting;
   const initials =
     avatarInitials ||
     (profileName || 'VE')
@@ -74,11 +83,39 @@ export default function FeedComposer({
     setOdds('');
     setTags('');
     setSelectedSlipId('');
-    setMode('VOUCH');
+    setAudioBlob(null);
+    if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+    setAudioPreviewUrl(null);
+    setMode('DISCUSSION');
     setExpanded(false);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    audioChunksRef.current = [];
+    recorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) audioChunksRef.current.push(event.data);
+    });
+    recorder.addEventListener('stop', () => {
+      const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+      if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+      setAudioBlob(blob);
+      setAudioPreviewUrl(URL.createObjectURL(blob));
+      stream.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+      recorderRef.current = null;
+      setIsRecording(false);
+    });
+    audioStreamRef.current = stream;
+    recorderRef.current = recorder;
+    recorder.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => recorderRef.current?.stop();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canPost) return;
 
@@ -91,12 +128,27 @@ export default function FeedComposer({
 
     setIsPosting(true);
 
+    let uploadedAudio: { mediaPath: string; mediaUrl: string } | undefined;
+    try {
+      if (mode === 'AUDIO') {
+        if (!audioBlob) return;
+        uploadedAudio = await uploadPostAudio(audioBlob);
+      }
+    } catch (error) {
+      setIsPosting(false);
+      window.alert(error instanceof Error ? error.message : 'Voice upload failed.');
+      return;
+    }
+
     const postData: Partial<FeedPost> = {
-      content: content.trim(),
+      content: content.trim() || 'Voice post',
       postType: mode,
       sportBadge: sport,
       sourceBadge: 'Community',
       isVerified: false,
+      mediaUrl: uploadedAudio?.mediaUrl,
+      mediaPath: uploadedAudio?.mediaPath,
+      mediaType: uploadedAudio ? 'audio' : undefined,
     };
 
     if (mode === 'VOUCH') {
@@ -137,11 +189,9 @@ export default function FeedComposer({
       };
     }
 
-    window.setTimeout(() => {
-      onPostCreated(postData);
-      reset();
-      setIsPosting(false);
-    }, 160);
+    onPostCreated(postData);
+    reset();
+    setIsPosting(false);
   };
 
   if (!expanded) {
@@ -180,6 +230,28 @@ export default function FeedComposer({
             autoFocus
           />
 
+          {mode === 'AUDIO' && (
+            <div className="rounded-2xl border border-vouch-cyan/20 bg-vouch-cyan/[0.04] p-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void (isRecording ? stopRecording() : startRecording())}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold ${isRecording ? 'bg-rose-400 text-black' : 'bg-vouch-cyan text-obsidian-900'}`}
+                >
+                  {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <Mic className="h-3.5 w-3.5" />}
+                  {isRecording ? 'Stop recording' : audioBlob ? 'Record again' : 'Record voice'}
+                </button>
+                <span className="text-xs text-white/50">{isRecording ? 'Recording…' : 'Up to 8 MB. Your voice post is public.'}</span>
+              </div>
+              {audioPreviewUrl && (
+                <div className="mt-3 flex items-center gap-2">
+                  <Play className="h-4 w-4 text-vouch-cyan" />
+                  <audio controls src={audioPreviewUrl} className="h-8 max-w-full" />
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-1" role="tablist" aria-label="Post type">
             {MODES.map((item) => {
               const Icon = item.icon;
@@ -203,6 +275,7 @@ export default function FeedComposer({
             })}
           </div>
 
+          {mode !== 'DISCUSSION' && (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <label className="block">
               <span className="text-[11px] font-medium text-white/40">Sport</span>
@@ -268,6 +341,7 @@ export default function FeedComposer({
               />
             </label>
           </div>
+          )}
 
           <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/[0.06]">
             <div className="flex items-center gap-2 text-[12px] text-white/35">

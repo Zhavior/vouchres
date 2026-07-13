@@ -155,6 +155,22 @@ export const worldChatLimiter = rateLimit({
   handler,
 });
 
+export const socialSafetyLimiter = rateLimit({
+  name: "social_safety",
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
+export const socialReportLimiter = rateLimit({
+  name: "social_report",
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  keyGenerator,
+  handler,
+});
+
 export const betaSignupLimiter = rateLimit({
   name: "beta_signup",
   windowMs: 60 * 60 * 1000,

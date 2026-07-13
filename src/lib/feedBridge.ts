@@ -6,6 +6,9 @@ export type BackendFeedPostRow = {
   created_at: string;
   view_count?: number;
   is_demo?: boolean;
+  post_kind?: string | null;
+  media_url?: string | null;
+  media_type?: 'audio' | null;
   author?: {
     id?: string;
     username?: string;
@@ -41,7 +44,11 @@ function mapAuthorTier(tier?: string): FeedPost['subscriptionTier'] {
 
 function inferPostType(row: BackendFeedPostRow): FeedPost['postType'] {
   if (row.pick?.id) return 'PARLAY';
-  return 'RESEARCH_NOTE';
+  if (row.post_kind === 'audio') return 'AUDIO';
+  if (row.post_kind === 'research_note') return 'RESEARCH_NOTE';
+  if (row.post_kind === 'result') return 'RESULT';
+  if (row.post_kind === 'vouch') return 'VOUCH';
+  return 'DISCUSSION';
 }
 
 export function mapBackendFeedPost(row: BackendFeedPostRow): FeedPost {
@@ -67,6 +74,8 @@ export function mapBackendFeedPost(row: BackendFeedPostRow): FeedPost {
     viewsCount: row.view_count ?? 0,
     isLiked: Boolean(row.liked_by_me),
     comments: [],
+    mediaUrl: row.media_url ?? undefined,
+    mediaType: row.media_type ?? undefined,
     parlay: pick?.id
       ? {
           id: pick.id,

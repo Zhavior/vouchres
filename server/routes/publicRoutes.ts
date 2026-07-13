@@ -28,6 +28,35 @@ import {
  */
 export const publicRoutes = Router();
 
+publicRoutes.get("/profiles/search", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  const rawQuery = typeof req.query.q === "string" ? req.query.q.trim() : "";
+  const query = rawQuery.replace(/[,%()]/g, "").slice(0, 50);
+  const limit = Math.min(Math.max(Number(req.query.limit ?? 8), 1), 20);
+
+  if (query.length < 2) {
+    return res.json(apiOkFlat(req, { profiles: [], query }));
+  }
+
+  const pattern = `%${query}%`;
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, username, handle, display_name, avatar_url, tier, is_staff")
+    .or(`username.ilike.${pattern},handle.ilike.${pattern},display_name.ilike.${pattern}`)
+    .order("display_name", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new AppError({
+      status: 500,
+      code: "internal_server_error",
+      message: "Failed to search profiles.",
+      cause: error,
+    });
+  }
+
+  return res.json(apiOkFlat(req, { profiles: data ?? [], query }));
+}));
+
 publicRoutes.post(
   "/ai-judges/save-current-picks",
   requireAuth,

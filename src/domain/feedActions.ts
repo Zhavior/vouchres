@@ -28,7 +28,7 @@ export function createFeedPost(postData: Partial<FeedPost>): FeedPost {
     repostsCount: 0,
     comments: [],
     content: postData.content || '',
-    postType: postData.postType || 'RESEARCH_NOTE',
+    postType: postData.postType || 'DISCUSSION',
     sportBadge: postData.sportBadge,
     sourceBadge: postData.sourceBadge || 'Community',
     parlay: postData.parlay,
@@ -37,6 +37,7 @@ export function createFeedPost(postData: Partial<FeedPost>): FeedPost {
     researchNote: postData.researchNote,
     mediaUrl: postData.mediaUrl,
     mediaType: postData.mediaType,
+    mediaPath: postData.mediaPath,
     mediaUrl2: postData.mediaUrl2,
     showSecondCard: postData.showSecondCard,
     boardConfig: postData.boardConfig,
@@ -92,6 +93,9 @@ export function handlePostCreated(postData: Partial<FeedPost>): void {
           body: newPost.content,
           pick_id: newPost.parlay?.backendPickId,
           vouch_id: backendVouchId,
+          post_kind: newPost.postType === 'AI_PICK' ? 'discussion' : newPost.postType.toLowerCase(),
+          media_path: newPost.mediaPath,
+          media_type: newPost.mediaType,
         });
         if (created?.id) {
           const prev = useFeedStore.getState().posts;
@@ -159,4 +163,3 @@ export function handleDeletePost(postId: string): void {
     }
   })();
 }
-

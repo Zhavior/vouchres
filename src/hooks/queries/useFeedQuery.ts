@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 import { mapBackendFeedPost, type BackendFeedPostRow } from '../../lib/feedBridge';
@@ -59,6 +59,23 @@ export async function fetchFeedPage({
   };
 }
 
+async function fetchScopedFeedPage(path: string): Promise<FeedPage> {
+  const result = await apiClient.get<FeedResponse>(path, {
+    limit: FEED_PAGE_SIZE,
+    offset: 0,
+  });
+  const rows = Array.isArray(result?.posts) ? result.posts : [];
+  const posts = rows.map(mapBackendFeedPost);
+  const total = result?.total ?? posts.length;
+  return {
+    posts,
+    total,
+    offset: result?.offset ?? 0,
+    limit: result?.limit ?? FEED_PAGE_SIZE,
+    hasMore: Boolean(result?.has_more),
+  };
+}
+
 export function flattenFeedPages(data: InfiniteData<FeedPage> | undefined): FeedPost[] {
   if (!data?.pages?.length) return [];
 
@@ -87,6 +104,24 @@ export function useFeedQuery(options?: { enabled?: boolean }) {
     staleTime: 60_000,
     gcTime: 10 * 60_000,
     enabled: (options?.enabled ?? true) && isSupabaseConfigured,
+  });
+}
+
+export function useFollowingFeedQuery(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.followingFeed(),
+    queryFn: () => fetchScopedFeedPage('/api/feed/following'),
+    staleTime: 30_000,
+    enabled: (options?.enabled ?? true) && isSupabaseConfigured,
+  });
+}
+
+export function useProfileFeedQuery(profileId: string | null | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.profileFeed(profileId ?? 'anonymous'),
+    queryFn: () => fetchScopedFeedPage(`/api/profiles/${encodeURIComponent(profileId!)}/posts`),
+    staleTime: 60_000,
+    enabled: Boolean(profileId) && (options?.enabled ?? true) && isSupabaseConfigured,
   });
 }
 

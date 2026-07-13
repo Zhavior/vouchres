@@ -1,7 +1,14 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import type { Response } from "express";
 import { z } from "zod";
-import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { randomUUID } from "node:crypto";
+import sharp from "sharp";
+import {
+  AuthedRequest,
+  requireAuth,
+  optionalAuth,
+  supabaseAdmin,
+} from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
@@ -45,32 +52,42 @@ const ME_PROFILE_COLUMNS = `
   updated_at
 `;
 
-authRoutes.get("/me", requireAuth, asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
-  const { data: profile, error } = await supabaseAdmin
-    .from("profiles")
-    .select(ME_PROFILE_COLUMNS)
-    .eq("id", req.user!.id)
-    .single();
+authRoutes.get(
+  "/me",
+  requireAuth,
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+    const { data: profile, error } = await supabaseAdmin
+      .from("profiles")
+      .select(ME_PROFILE_COLUMNS)
+      .eq("id", req.user!.id)
+      .single();
 
-  if (error || !profile) {
-    throw new AppError({
-      status: 500,
-      code: "internal_server_error",
-      message: "Failed to load profile.",
-      cause: error,
-    });
-  }
+    if (error || !profile) {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to load profile.",
+        cause: error,
+      });
+    }
 
-  return res.json(apiOkFlat(req, {
-    ...profile,
-    email: req.user!.email ?? null,
-    entitlements: { tier: profile.tier },
-  }));
-}));
+    return res.json(
+      apiOkFlat(req, {
+        ...profile,
+        email: req.user!.email ?? null,
+        entitlements: { tier: profile.tier },
+      }),
+    );
+  }),
+);
 
-authRoutes.post("/signout", requireAuth, asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
-  return res.json(apiOkFlat(req, {}));
-}));
+authRoutes.post(
+  "/signout",
+  requireAuth,
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+    return res.json(apiOkFlat(req, {}));
+  }),
+);
 
 const ProfileUpdateSchema = z.object({
   handle: HandleSchema.optional(),
@@ -79,6 +96,83 @@ const ProfileUpdateSchema = z.object({
   bio: z.string().max(500).optional(),
   avatar_url: z.string().url().max(500).optional().nullable(),
 });
+
+const AVATAR_UPLOAD_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+];
+
+authRoutes.post(
+  "/profile/avatar",
+  requireAuth,
+  express.raw({ type: AVATAR_UPLOAD_TYPES, limit: "3mb" }),
+  asyncHandler(async (req: AuthedRequestWithContext, res: Response) => {
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      throw new AppError({
+        status: 400,
+        code: "bad_request",
+        message: "Choose a valid profile photo.",
+      });
+    }
+
+    let normalized: Buffer;
+    try {
+      normalized = await sharp(req.body)
+        .rotate()
+        .resize(512, 512, { fit: "cover", withoutEnlargement: true })
+        .webp({ quality: 86 })
+        .toBuffer();
+    } catch (error) {
+      throw new AppError({
+        status: 400,
+        code: "bad_request",
+        message:
+          "That photo format could not be processed. Use JPG, PNG, WebP, or HEIC.",
+        cause: error,
+      });
+    }
+
+    const objectPath = `${req.user!.id}/${randomUUID()}.webp`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("avatars")
+      .upload(objectPath, normalized, {
+        contentType: "image/webp",
+        cacheControl: "31536000",
+        upsert: false,
+      });
+    if (uploadError) {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to store profile photo.",
+        cause: uploadError,
+      });
+    }
+
+    const { data: publicUrl } = supabaseAdmin.storage
+      .from("avatars")
+      .getPublicUrl(objectPath);
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .update({ avatar_url: publicUrl.publicUrl })
+      .eq("id", req.user!.id)
+      .select(ME_PROFILE_COLUMNS)
+      .single();
+    if (error) {
+      throw new AppError({
+        status: 500,
+        code: "internal_server_error",
+        message: "Failed to save profile photo.",
+        cause: error,
+      });
+    }
+
+    return res.json(apiOkFlat(req, data as unknown as Record<string, unknown>));
+  }),
+);
 
 async function assertHandleAvailable(handle: string, excludeUserId: string) {
   const { data: existing } = await supabaseAdmin
@@ -112,9 +206,11 @@ authRoutes.patch(
       safeUpdates.handle = nextHandle;
       safeUpdates.username = nextHandle;
     }
-    if (updates.display_name !== undefined) safeUpdates.display_name = updates.display_name;
+    if (updates.display_name !== undefined)
+      safeUpdates.display_name = updates.display_name;
     if (updates.bio !== undefined) safeUpdates.bio = updates.bio;
-    if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url;
+    if (updates.avatar_url !== undefined)
+      safeUpdates.avatar_url = updates.avatar_url;
 
     if (Object.keys(safeUpdates).length === 0) {
       throw new AppError({
@@ -146,10 +242,16 @@ authRoutes.patch(
   }),
 );
 
-async function checkHandleAvailability(req: RequestWithContext, res: Response, raw: string) {
+async function checkHandleAvailability(
+  req: RequestWithContext,
+  res: Response,
+  raw: string,
+) {
   const validated = validateHandle(raw);
   if (validated.ok === false) {
-    return res.json(apiOkFlat(req, { available: false, reason: validated.reason }));
+    return res.json(
+      apiOkFlat(req, { available: false, reason: validated.reason }),
+    );
   }
 
   const { data } = await supabaseAdmin
@@ -158,11 +260,13 @@ async function checkHandleAvailability(req: RequestWithContext, res: Response, r
     .eq("handle", validated.handle)
     .maybeSingle();
 
-  return res.json(apiOkFlat(req, {
-    available: !data,
-    handle: validated.handle,
-    reason: data ? "taken" : undefined,
-  }));
+  return res.json(
+    apiOkFlat(req, {
+      available: !data,
+      handle: validated.handle,
+      reason: data ? "taken" : undefined,
+    }),
+  );
 }
 
 authRoutes.get(

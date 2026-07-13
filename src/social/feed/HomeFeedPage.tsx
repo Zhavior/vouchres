@@ -1,5 +1,6 @@
-import React, { useState, lazy, Suspense, useRef, useCallback, useMemo } from 'react';
+import React, { useState, lazy, Suspense, useRef, useCallback, useMemo, useDeferredValue } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useQuery } from '@tanstack/react-query';
 import FeedTabs from './FeedTabs';
 import FeedComposer from './FeedComposer';
 import FeedPostCard from './FeedPostCard';
@@ -20,6 +21,9 @@ const CapperNetworkGraph = lazy(() => import('./CapperNetworkGraph'));
 import { FeedPost, Parlay, Vouch, CreatorProofProfile } from '../../types';
 import { useOptionalSocialGraph, type SocialGraphBucket } from '../../hooks/SocialGraphProvider';
 import { useAuth } from '../../lib/useAuth';
+import { useFollowingFeedQuery } from '../../hooks/queries/useFeedQuery';
+import { apiClient } from '../../lib/apiClient';
+import ProfileAvatarBorder from '../../components/profile/ProfileAvatarBorder';
 import {
   Search,
   AlertTriangle,
@@ -27,6 +31,7 @@ import {
   Crown,
   Users,
   Feather,
+  Loader,
 } from 'lucide-react';
 
 function FeedEmptyState({ id, icon, title, body }: { id: string; icon: React.ReactNode; title: string; body: React.ReactNode }) {
@@ -57,6 +62,7 @@ interface HomeFeedPageProps {
   onDeletePost?: (postId: string) => void;
   profile?: CreatorProofProfile;
   onSectionChange?: (section: string) => void;
+  onNavigateToProfile?: (userId: string) => void;
   hasMoreServer?: boolean;
   isFetchingServer?: boolean;
   onLoadMoreServer?: () => void;
@@ -76,6 +82,7 @@ function HomeFeedPage({
   onDeletePost,
   profile,
   onSectionChange,
+  onNavigateToProfile,
   hasMoreServer = false,
   isFetchingServer = false,
   onLoadMoreServer,
@@ -84,6 +91,7 @@ function HomeFeedPage({
   const [searchOpen, setSearchOpen] = useState(false);
   const [composerExpanded, setComposerExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim());
   const [selectedSport, setSelectedSport] = useState('ALL');
   const [selectedPostType, setSelectedPostType] = useState('ALL');
   const [proOnlyMode, setProOnlyMode] = useState(false);
@@ -101,6 +109,22 @@ function HomeFeedPage({
   const { user } = useAuth();
   const socialGraph = useOptionalSocialGraph();
   const [followingFilter, setFollowingFilter] = useState<SocialGraphBucket>('following');
+  const followingFeed = useFollowingFeedQuery({ enabled: Boolean(user) });
+  const followingPosts = followingFeed.data?.posts ?? [];
+  const profileSearch = useQuery({
+    queryKey: ['profiles', 'search', deferredSearchQuery],
+    queryFn: () => apiClient.get<{ profiles?: Array<{
+      id: string;
+      username: string;
+      handle: string;
+      display_name: string;
+      avatar_url: string | null;
+      tier: string;
+      is_staff: boolean;
+    }> }>('/api/profiles/search', { q: deferredSearchQuery, limit: 8 }),
+    enabled: searchOpen && deferredSearchQuery.length >= 2,
+    staleTime: 30_000,
+  });
 
   const followingList = socialGraph?.followingUsernames ?? [];
   const tailingList = socialGraph?.tailingUsernames ?? [];
@@ -173,7 +197,7 @@ function HomeFeedPage({
   }, [followingList, selectedSport]);
 
   const filteredPosts = useMemo(() => {
-    let list = [...posts];
+    let list = [...(activeTab === 'following' ? followingPosts : posts)];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -199,7 +223,9 @@ function HomeFeedPage({
         finalTabList = list;
         break;
       case 'following':
-        finalTabList = list.filter((p) => activeFollowingUsernames.includes(p.username));
+        finalTabList = followingFilter === 'following'
+          ? list
+          : list.filter((post) => activeFollowingUsernames.includes(post.username));
         break;
       case 'mlb':
         finalTabList = list.filter((p) => p.sportBadge?.toUpperCase() === 'MLB');
@@ -225,7 +251,7 @@ function HomeFeedPage({
     }
 
     return finalTabList;
-  }, [posts, searchQuery, activeTab, selectedSport, selectedPostType, proOnlyMode, activeFollowingUsernames, followingFilter]);
+  }, [posts, followingPosts, searchQuery, activeTab, selectedSport, selectedPostType, proOnlyMode, followingFilter, activeFollowingUsernames]);
 
   const algorithmPosts = useMemo(() => {
     const chronological = [...filteredPosts].sort(
@@ -413,6 +439,43 @@ function HomeFeedPage({
               />
               <Search className="w-4 h-4 text-white/35 absolute left-3.5 top-3" />
             </div>
+            {deferredSearchQuery.length >= 2 && (
+              <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#09121b] shadow-xl">
+                <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white/40">
+                  People
+                </div>
+                {profileSearch.isLoading ? (
+                  <p className="px-3 pb-3 text-sm text-white/45">Searching people…</p>
+                ) : (profileSearch.data?.profiles ?? []).length > 0 ? (
+                  (profileSearch.data?.profiles ?? []).map((person) => (
+                    <button
+                      key={person.id}
+                      type="button"
+                      onClick={() => {
+                        onNavigateToProfile?.(person.id);
+                        setSearchOpen(false);
+                        setSearchQuery('');
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-white/[0.05]"
+                    >
+                      <ProfileAvatarBorder
+                        avatarUrl={person.avatar_url ?? undefined}
+                        displayName={person.display_name || person.username}
+                        initials={(person.display_name || person.username).slice(0, 2).toUpperCase()}
+                        size="sm"
+                        isVerified={person.is_staff}
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-white">{person.display_name || person.username}</span>
+                        <span className="block truncate text-xs text-white/45">@{person.handle || person.username}</span>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-3 pb-3 text-sm text-white/45">No people found.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -486,7 +549,7 @@ function HomeFeedPage({
         {activeTab === 'following' && activeFollowingUsernames.length > 0 && (
           <div className="px-4 py-3 border-b border-white/[0.08]">
             <Suspense fallback={<LazyChunkSkeleton height={320} label="Loading network graph" />}>
-              <CapperNetworkGraph posts={posts} followingList={activeFollowingUsernames} />
+              <CapperNetworkGraph posts={followingPosts} followingList={activeFollowingUsernames} />
             </Suspense>
           </div>
         )}
@@ -506,6 +569,13 @@ function HomeFeedPage({
                     : 'Not following anyone yet'
             }
             body={<>Go to the <strong className="text-white/70">"For You"</strong> feed tab, find verified sports partners, and click <strong className="text-white/70">"Follow"</strong> or <strong className="text-white/70">"Tail"</strong>. Notifications turn on automatically when you follow someone.</>}
+          />
+        ) : activeTab === 'following' && followingFeed.isLoading ? (
+          <FeedEmptyState
+            id="loading-following-feed"
+            icon={<Loader className="w-6 h-6 animate-spin" />}
+            title="Loading your timeline"
+            body="Getting the latest from your circle."
           />
         ) : algorithmPosts.length === 0 && posts.length === 0 ? (
           /* Genuinely no posts anywhere yet (no filter/search at play) */

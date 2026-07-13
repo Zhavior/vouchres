@@ -147,7 +147,7 @@ export interface FeedPost {
   timestamp: string; // ISO string or relative
   sportBadge?: string; // e.g. "MLB", "NBA", "NFL"
   sourceBadge?: string; // e.g. "AI Pick", "PRO", "Community"
-  postType: 'PARLAY' | 'VOUCH' | 'RESULT' | 'RESEARCH_NOTE' | 'AI_PICK';
+  postType: 'PARLAY' | 'VOUCH' | 'RESULT' | 'RESEARCH_NOTE' | 'AI_PICK' | 'DISCUSSION' | 'AUDIO';
   content: string;
   
   // Attached items
@@ -179,7 +179,9 @@ export interface FeedPost {
   isSaved?: boolean;
   comments?: FeedComment[];
   mediaUrl?: string;
-  mediaType?: 'image' | 'video';
+  mediaType?: 'image' | 'video' | 'audio';
+  /** Server-owned media object path used only while a post is being created. */
+  mediaPath?: string;
   mediaUrl2?: string;
   showSecondCard?: boolean;
   boardConfig?: any;

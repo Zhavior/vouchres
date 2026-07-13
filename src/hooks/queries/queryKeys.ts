@@ -9,6 +9,8 @@ export const queryKeys = {
   myParlays: () => ['myParlays'] as const,
   myVouches: () => ['myVouches'] as const,
   feed: () => ['feed'] as const,
+  followingFeed: () => ['feed', 'following'] as const,
+  profileFeed: (profileId: string) => ['profile', profileId, 'feed'] as const,
   hrFeedToday: () => ['hrFeedToday'] as const,
   appNotifications: () => ['appNotifications'] as const,
 };

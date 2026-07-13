@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "../../middleware/auth";
+import { getHiddenProfileIds } from "./socialSafetyService";
 
 const NOTE_TTL_MS = 24 * 60 * 60 * 1000;
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -100,8 +101,11 @@ export async function markStoryViewed(input: { storyId: string; viewerId: string
 
 export async function buildFollowingHub(userId: string) {
   const supabaseAdmin = await admin();
-  const followedIds = await listFollowedProfileIds(userId);
-  const profileIds = [...new Set([userId, ...followedIds])];
+  const [followedIds, hiddenProfileIds] = await Promise.all([
+    listFollowedProfileIds(userId),
+    getHiddenProfileIds(userId),
+  ]);
+  const profileIds = [...new Set([userId, ...followedIds.filter((id) => !hiddenProfileIds.has(id))])];
   const profileMap = await hydrateProfiles(profileIds);
   const nowIso = new Date().toISOString();
 

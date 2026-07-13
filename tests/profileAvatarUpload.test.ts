@@ -20,12 +20,18 @@ describe("profile avatar upload contract", () => {
     expect(migration).toContain("owner_id = (select auth.uid()::text)");
   });
 
-  it("uses immutable object names and saves the resulting URL through the profile API", () => {
-    const upload = readFileSync(resolve(ROOT, "src/lib/profileAvatarUpload.ts"), "utf8");
-    const domain = readFileSync(resolve(ROOT, "src/app/useAppDomain.ts"), "utf8");
+  it("normalizes supported phone photos through the authenticated profile API", () => {
+    const upload = readFileSync(
+      resolve(ROOT, "src/lib/profileAvatarUpload.ts"),
+      "utf8",
+    );
+    const domain = readFileSync(
+      resolve(ROOT, "src/app/useAppDomain.ts"),
+      "utf8",
+    );
 
-    expect(upload).toContain("crypto.randomUUID()");
-    expect(upload).toContain("upsert: false");
+    expect(upload).toContain("image/heic");
+    expect(upload).toContain("/api/auth/profile/avatar");
     expect(upload).toContain("MAX_AVATAR_BYTES");
     expect(domain).toContain("avatar_url = updatedProfile.avatarUrl || null");
     expect(domain).toContain("/api/auth/profile");
