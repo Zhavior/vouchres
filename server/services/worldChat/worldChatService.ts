@@ -1,7 +1,7 @@
-/**
- * In-memory World Chat store — honest MVP with no seeded/fake messages.
- * Messages and chat profiles reset on server restart until a DB table exists.
- */
+import { getSupabaseAdmin } from "../../middleware/auth";
+
+/** Durable World Chat store. Messages and profile preferences are only accessed
+ * through authenticated server routes; no client has direct table access. */
 
 export type ChatProfileJson = {
   statusLine: string;
@@ -40,17 +40,76 @@ export function buildProfilePath(userId: string): string {
   return `profile:${userId}`;
 }
 
-const MAX_MESSAGES = 200;
+type ProfileRow = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  won_picks: number | null;
+  total_picks: number | null;
+};
 
-const messages: WorldChatMessage[] = [];
-const chatProfiles = new Map<string, ChatProfileJson>();
+type MessageRow = {
+  id: string;
+  user_id: string;
+  text: string;
+  accent_color: string;
+  status_line: string;
+  border_id: string | null;
+  created_at: string;
+};
 
-export function listWorldChatMessages(limit = 50): WorldChatMessage[] {
-  const cap = Math.min(Math.max(limit, 1), 100);
-  return messages.slice(-cap);
+function toMessage(row: MessageRow, profile: ProfileRow): WorldChatMessage {
+  const username = profile.username;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    username,
+    handle: username.startsWith("@") ? username.slice(1) : username,
+    displayName: profile.display_name || username,
+    avatarUrl: profile.avatar_url,
+    borderId: row.border_id,
+    accentColor: row.accent_color,
+    statusLine: row.status_line,
+    winRate: honestWinRate(profile.won_picks, profile.total_picks),
+    profilePath: buildProfilePath(row.user_id),
+    text: row.text,
+    createdAt: row.created_at,
+  };
 }
 
-export function postWorldChatMessage(input: {
+export async function listWorldChatMessages(limit = 50): Promise<WorldChatMessage[]> {
+  const cap = Math.min(Math.max(limit, 1), 100);
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("world_chat_messages")
+    .select("id, user_id, text, accent_color, status_line, border_id, created_at")
+    .order("created_at", { ascending: false })
+    .limit(cap);
+  if (error) throw error;
+
+  const rows = (data ?? []) as MessageRow[];
+  if (rows.length === 0) return [];
+
+  const userIds = [...new Set(rows.map((row) => row.user_id))];
+  const { data: profiles, error: profileError } = await supabaseAdmin
+    .from("profiles")
+    .select("id, username, display_name, avatar_url, won_picks, total_picks")
+    .in("id", userIds);
+  if (profileError) throw profileError;
+
+  const profileById = new Map(
+    ((profiles ?? []) as ProfileRow[]).map((profile) => [profile.id, profile]),
+  );
+  return rows
+    .reverse()
+    .flatMap((row) => {
+      const profile = profileById.get(row.user_id);
+      return profile ? [toMessage(row, profile)] : [];
+    });
+}
+
+export async function postWorldChatMessage(input: {
   userId: string;
   username: string;
   displayName: string;
@@ -60,47 +119,73 @@ export function postWorldChatMessage(input: {
   statusLine: string;
   winRate?: number | null;
   text: string;
-}): WorldChatMessage {
-  const handle = input.username.startsWith('@') ? input.username.slice(1) : input.username;
-  const msg: WorldChatMessage = {
-    id: `wc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    userId: input.userId,
-    username: input.username,
-    handle,
+}): Promise<WorldChatMessage> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("world_chat_messages")
+    .insert({
+      user_id: input.userId,
+      text: input.text.trim(),
+      accent_color: input.accentColor,
+      status_line: input.statusLine,
+      border_id: input.borderId ?? null,
+    })
+    .select("id, user_id, text, accent_color, status_line, border_id, created_at")
+    .single();
+  if (error || !data) throw error ?? new Error("Could not save chat message.");
+
+  const row = data as MessageRow;
+  const username = input.username;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    username,
+    handle: username.startsWith("@") ? username.slice(1) : username,
     displayName: input.displayName,
     avatarUrl: input.avatarUrl ?? null,
-    borderId: input.borderId ?? null,
-    accentColor: input.accentColor,
-    statusLine: input.statusLine,
+    borderId: row.border_id,
+    accentColor: row.accent_color,
+    statusLine: row.status_line,
     winRate: input.winRate ?? null,
-    profilePath: buildProfilePath(input.userId),
-    text: input.text.trim(),
-    createdAt: new Date().toISOString(),
+    profilePath: buildProfilePath(row.user_id),
+    text: row.text,
+    createdAt: row.created_at,
   };
-
-  messages.push(msg);
-  if (messages.length > MAX_MESSAGES) {
-    messages.splice(0, messages.length - MAX_MESSAGES);
-  }
-  return msg;
 }
 
-export function getChatProfile(userId: string): ChatProfileJson | null {
-  return chatProfiles.get(userId) ?? null;
+export async function getChatProfile(userId: string): Promise<ChatProfileJson | null> {
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("world_chat_profiles")
+    .select("status_line, accent_color, tag")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    statusLine: String(data.status_line),
+    accentColor: String(data.accent_color),
+    tag: data.tag ? String(data.tag) : undefined,
+  };
 }
 
-export function putChatProfile(userId: string, profile: ChatProfileJson): ChatProfileJson {
+export async function putChatProfile(userId: string, profile: ChatProfileJson): Promise<ChatProfileJson> {
   const safe: ChatProfileJson = {
     statusLine: String(profile.statusLine ?? '').slice(0, 80),
     accentColor: String(profile.accentColor ?? 'cyan').slice(0, 24),
     tag: profile.tag ? String(profile.tag).slice(0, 32) : undefined,
   };
-  chatProfiles.set(userId, safe);
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { error } = await supabaseAdmin.from("world_chat_profiles").upsert(
+    {
+      user_id: userId,
+      status_line: safe.statusLine,
+      accent_color: safe.accentColor,
+      tag: safe.tag ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw error;
   return safe;
-}
-
-/** Test helper — clears in-memory state between tests. */
-export function resetWorldChatStore(): void {
-  messages.length = 0;
-  chatProfiles.clear();
 }

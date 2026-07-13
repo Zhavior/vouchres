@@ -33,7 +33,7 @@ worldChatRoutes.get(
   optionalAuth,
   asyncHandler(async (req: RequestWithContext, res: Response) => {
     const limit = Math.min(Number(req.query.limit ?? 50), 100);
-    const items = listWorldChatMessages(limit);
+    const items = await listWorldChatMessages(limit);
     return res.json(apiOkFlat(req, { messages: items, preview: items.length === 0 }));
   }),
 );
@@ -69,11 +69,11 @@ worldChatRoutes.post(
       });
     }
 
-    const storedChat = getChatProfile(userId);
+    const storedChat = await getChatProfile(userId);
     const accentColor = body.accentColor ?? storedChat?.accentColor ?? "cyan";
     const statusLine = body.statusLine ?? storedChat?.statusLine ?? "Researching edges";
 
-    const message = postWorldChatMessage({
+    const message = await postWorldChatMessage({
       userId,
       username: profileRow.username,
       displayName: profileRow.display_name || profileRow.username,
@@ -99,7 +99,7 @@ worldChatRoutes.get(
   "/profile/chat-profile",
   requireAuth,
   asyncHandler(async (req: WorldChatReq, res: Response) => {
-    const chatProfile = getChatProfile(req.user!.id);
+    const chatProfile = await getChatProfile(req.user!.id);
     return res.json(apiOkFlat(req, { chatProfile }));
   }),
 );
@@ -110,8 +110,8 @@ worldChatRoutes.put(
   validate({ body: ChatProfileSchema }),
   asyncHandler(async (req: WorldChatReq, res: Response) => {
     const body = req.body as z.infer<typeof ChatProfileSchema>;
-    const existing = getChatProfile(req.user!.id);
-    const chatProfile = putChatProfile(req.user!.id, {
+    const existing = await getChatProfile(req.user!.id);
+    const chatProfile = await putChatProfile(req.user!.id, {
       statusLine: body.statusLine ?? existing?.statusLine ?? "Researching edges",
       accentColor: body.accentColor ?? existing?.accentColor ?? "cyan",
       tag: body.tag ?? existing?.tag,
