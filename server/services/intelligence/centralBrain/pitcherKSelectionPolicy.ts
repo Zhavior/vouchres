@@ -1,9 +1,11 @@
 import type { BrainFeatureSnapshot } from "./featureSchemas";
 import { buildBrainTemporalContext } from "./temporalPolicy";
 
-export const BRAIN_PITCHER_K_SELECTION_VERSION = "brain-pitcher-k-selection@1";
+export const BRAIN_PITCHER_K_SELECTION_VERSION = "brain-pitcher-k-selection@2";
 const PICK_TARGET = 10;
 const PICK_LIMIT = 12;
+const PREVIEW_SCORE_PENALTY = 6;
+const PREVIEW_CONFIDENCE_PENALTY = 8;
 
 function value(snapshot: BrainFeatureSnapshot, key: string): number {
   const candidate = snapshot.features[key];
@@ -12,16 +14,20 @@ function value(snapshot: BrainFeatureSnapshot, key: string): number {
 
 export function selectMlbPitcherKFeatures(snapshots: BrainFeatureSnapshot[], now = new Date()) {
   const ranked = snapshots
-    .filter((snapshot) => snapshot.market === "pitcher_strikeouts" && snapshot.eligibility === "eligible")
+    .filter((snapshot) => snapshot.market === "pitcher_strikeouts" && snapshot.eligibility !== "blocked")
     .filter((snapshot) => buildBrainTemporalContext({ now, observedAt: snapshot.observedAt, scheduledAt: snapshot.scheduledAt }).canSnapshot)
     .map((snapshot) => {
       const seasonKPer9 = value(snapshot, "seasonKPer9");
       const recentKAverage = value(snapshot, "recentKAverage");
       const starts = value(snapshot, "gamesStarted");
+      const previewPenalty = snapshot.eligibility === "eligible" ? 0 : PREVIEW_SCORE_PENALTY;
       const score = Math.round(Math.max(0, Math.min(100,
-        seasonKPer9 * 6 + recentKAverage * 5 + Math.min(starts, 20) * 0.5 - snapshot.missingFeatures.length * 3,
+        seasonKPer9 * 6 + recentKAverage * 5 + Math.min(starts, 20) * 0.5 - snapshot.missingFeatures.length * 3 - previewPenalty,
       )));
-      const confidence = Math.round(Math.max(35, Math.min(78, 48 + Math.min(starts, 20) + (recentKAverage ? 10 : 0) - snapshot.missingFeatures.length * 4)));
+      const confidence = Math.round(Math.max(35, Math.min(78,
+        48 + Math.min(starts, 20) + (recentKAverage ? 10 : 0) - snapshot.missingFeatures.length * 4
+          - (snapshot.eligibility === "eligible" ? 0 : PREVIEW_CONFIDENCE_PENALTY),
+      )));
       return { snapshot, score, confidence };
     })
     .filter(({ snapshot, score }) => score >= 55 && value(snapshot, "seasonKPer9") >= 6.5)

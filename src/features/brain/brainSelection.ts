@@ -101,3 +101,111 @@ export function selectBrainPicks(rows: HrWatchRow[], limit = 12): BrainPick[] {
     };
   });
 }
+
+/** Server ledger pick shape used to drive the Brain Picks UI (single source of truth). */
+export type ServerLedgerPick = {
+  playerId: string;
+  playerName: string;
+  team: string;
+  opponent: string;
+  rank: number;
+  score: number;
+  confidence: number;
+  tier: string;
+  evidenceQuality: string;
+  reasons?: string[];
+  risks?: string[];
+};
+
+function ledgerRow(pick: ServerLedgerPick, boardRow?: HrWatchRow): HrWatchRow {
+  if (boardRow) return boardRow;
+  const evidenceOfficial = pick.evidenceQuality === 'official';
+  return {
+    stableId: `brain-ledger-${pick.playerId}`,
+    playerName: pick.playerName,
+    playerId: pick.playerId,
+    team: pick.team,
+    opponent: pick.opponent,
+    teamLogoUrl: null,
+    opponentLogoUrl: null,
+    pitcherName: null,
+    venue: null,
+    gamePk: null,
+    gameTime: null,
+    headshotUrl: null,
+    rank: pick.rank,
+    hrScore: pick.score,
+    hitterPower: null,
+    pitcherVulnerability: null,
+    parkFactor: null,
+    recentForm: null,
+    vouchScore: pick.score,
+    dataConfidence: pick.confidence,
+    truthStatus: evidenceOfficial ? 'official' : 'projected',
+    riskTier: pick.tier === 'Elite' || pick.tier === 'Core' || pick.tier === 'Watch' || pick.tier === 'Deep' || pick.tier === 'Blocked'
+      ? pick.tier
+      : 'Watch',
+    oddsLabel: 'No book odds',
+    reasons: pick.reasons ?? [],
+    warnings: pick.risks ?? [],
+    sourceMode: evidenceOfficial ? 'confirmed' : 'curated',
+  };
+}
+
+function ledgerTags(pick: ServerLedgerPick, row: HrWatchRow): BrainPickTag[] {
+  const tags: BrainPickTag[] = [];
+  if (pick.evidenceQuality === 'official') tags.push({ label: 'Official lineup', tone: 'positive' });
+  else tags.push({ label: 'Preview only', tone: 'warning' });
+  if (pick.tier) tags.push({ label: pick.tier, tone: 'neutral' });
+  for (const reason of (pick.reasons ?? []).slice(0, 2)) {
+    tags.push({ label: reason.slice(0, 36), tone: 'positive' });
+  }
+  if (numeric(row.dataConfidence, 0) < 65) tags.push({ label: 'Evidence caution', tone: 'warning' });
+  return tags.slice(0, 4);
+}
+
+function ledgerExplain(pick: ServerLedgerPick, row: HrWatchRow, percentile: number): string {
+  const reasons = (pick.reasons ?? []).slice(0, 2);
+  const pitcher = row.pitcherName || 'the listed opposing pitcher';
+  const evidence =
+    pick.evidenceQuality === 'official'
+      ? 'The batting order is official.'
+      : 'The lineup is still a preview, so this selection can change.';
+  if (reasons.length >= 2) {
+    return `${pick.playerName} is Brain rank #${pick.rank} (${percentile}th percentile of today's frozen shortlist). ` +
+      `Ledger evidence: ${reasons[0]} ${reasons[1]} against ${pitcher}. ${evidence}`;
+  }
+  return `${pick.playerName} is Brain rank #${pick.rank} on today's frozen shortlist. ${evidence}`;
+}
+
+/**
+ * Map server-authored ledger picks into Brain UI rows.
+ * Board enrichment is display-only; ranking and inclusion come from the ledger.
+ */
+export function mergeServerLedgerPicks(
+  serverPicks: ServerLedgerPick[],
+  rows: HrWatchRow[],
+): BrainPick[] {
+  const byPlayerId = new Map(
+    rows
+      .filter((row) => row.playerId != null && String(row.playerId).length > 0)
+      .map((row) => [String(row.playerId), row]),
+  );
+  const ordered = [...serverPicks].sort((a, b) => a.rank - b.rank || b.score - a.score);
+  const total = ordered.length;
+
+  return ordered.map((pick) => {
+    const player = ledgerRow(pick, byPlayerId.get(String(pick.playerId)));
+    const percentile = total
+      ? Math.max(1, Math.round(((total - pick.rank + 1) / total) * 100))
+      : 1;
+    return {
+      player,
+      selectionScore: pick.score,
+      slatePercentile: percentile,
+      tags: ledgerTags(pick, player),
+      explanation: ledgerExplain(pick, player, percentile),
+      evidenceQuality: pick.evidenceQuality === 'official' ? 'official' : 'preview',
+    };
+  });
+}

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, RefreshCw, Target } from "lucide-react";
 import { useHrBoardViewModel } from "../hr/hooks/useHrBoardViewModel";
-import { selectBrainPicks } from "./brainSelection";
+import { mergeServerLedgerPicks } from "./brainSelection";
 import { BrainPageShell } from "./BrainPageShell";
 import { Z8_LABEL, Z8_PANEL_PREMIUM } from "../../theme/z8Tokens";
 import { apiClient } from "../../lib/apiClient";
@@ -102,10 +102,6 @@ export default function BrainPicksPage({
 }) {
   const vm = useHrBoardViewModel();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const candidatePicks = useMemo(
-    () => selectBrainPicks(vm.rows ?? []),
-    [vm.rows],
-  );
   const picksQuery = useQuery({
     queryKey: ["brain", "picks", "mlb", vm.date],
     queryFn: () =>
@@ -115,22 +111,10 @@ export default function BrainPicksPage({
     staleTime: 60_000,
     refetchInterval: 5 * 60_000,
   });
-  const picks = useMemo(() => {
-    const serverByPlayer = new Map(
-      (picksQuery.data?.picks ?? []).map((pick) => [pick.playerId, pick]),
-    );
-    return candidatePicks
-      .filter((pick) => serverByPlayer.has(String(pick.player.playerId)))
-      .map((pick) => ({
-        ...pick,
-        selectionScore: serverByPlayer.get(String(pick.player.playerId))!.score,
-      }))
-      .sort(
-        (a, b) =>
-          serverByPlayer.get(String(a.player.playerId))!.rank -
-          serverByPlayer.get(String(b.player.playerId))!.rank,
-      );
-  }, [candidatePicks, picksQuery.data]);
+  const picks = useMemo(
+    () => mergeServerLedgerPicks(picksQuery.data?.picks ?? [], vm.rows ?? []),
+    [picksQuery.data?.picks, vm.rows],
+  );
   const scanQuery = useQuery({
     queryKey: ["brain", "scan", "mlb", vm.date],
     queryFn: () =>
@@ -402,7 +386,7 @@ export default function BrainPicksPage({
           ["Players chosen", picks.length],
           ["Official lineup", officialCount],
           [
-            "Roster rows rejected",
+            "Board rows not frozen",
             Math.max(0, (vm.rows?.length ?? 0) - picks.length),
           ],
         ].map(([label, value]) => (

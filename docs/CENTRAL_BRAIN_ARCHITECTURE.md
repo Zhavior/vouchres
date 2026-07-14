@@ -44,6 +44,8 @@ The central brain is a versioned decision platform, not an LLM that invents pick
 
 ## Migration order
 
+Product staging (research-backed exit criteria): see `docs/BRAIN_PRODUCT_PLAN.md`.
+
 1. Home Run Intelligence reads the MLB central snapshot without changing current visuals.
 2. Today and Daily Players consume matchup and availability projections from the same snapshot.
 3. ParlayOS consumes immutable decision IDs and engine versions, never copied display text.

@@ -1,5 +1,6 @@
 import { runWithDistributedLock } from "../../../lib/distributedLock";
 import { structuredLog } from "../../../lib/structuredLog";
+import { getCachedValidatedHrBoard } from "../../hubs/hrBoardHub";
 import { getScheduleByDate, todayISO } from "../../mlb/mlbClient";
 import { settleBrainHrPicks, settleBrainPitcherKPicks, settleBrainStolenBasePicks, snapshotDailyBrainHrPicks, snapshotDailyBrainPitcherKPicks, snapshotDailyBrainStolenBasePicks } from "./brainLedgerService";
 import { buildBrainTemporalContext } from "./temporalPolicy";
@@ -13,8 +14,13 @@ function yesterdayIso(date: string): string {
 
 export async function executeBrainOperations(date = todayISO(), now = new Date()) {
   return runWithDistributedLock(`brain:mlb:operations:${date}`, async () => {
-    const games = await getScheduleByDate(date);
-    const observedAt = now.toISOString();
+    const [games, board] = await Promise.all([
+      getScheduleByDate(date),
+      getCachedValidatedHrBoard(date),
+    ]);
+    // Use real board evidence age — never spoof observedAt to "now" or selection will
+    // correctly reject stale snapshots while ops reports a successful freeze attempt.
+    const observedAt = board.debug?.lastRefresh ?? now.toISOString();
     const upcomingGames = games.filter((game) => buildBrainTemporalContext({
       now,
       scheduledAt: game.gameDate,
@@ -25,6 +31,15 @@ export async function executeBrainOperations(date = todayISO(), now = new Date()
     if (upcomingGames.length) {
       await Promise.all([snapshotDailyBrainHrPicks(date), snapshotDailyBrainStolenBasePicks(date), snapshotDailyBrainPitcherKPicks(date)]);
       await generateBrainGeminiReviews(date);
+    } else {
+      structuredLog({
+        level: "info",
+        event: "brain.operations.snapshot_skipped",
+        date,
+        games: games.length,
+        observedAt,
+        reason: "no_game_in_fresh_decision_window",
+      });
     }
 
     const [settledToday, settledYesterday, settledSbToday, settledSbYesterday, settledKToday, settledKYesterday] = await Promise.all([
@@ -40,6 +55,7 @@ export async function executeBrainOperations(date = todayISO(), now = new Date()
       games: games.length,
       upcomingGames: upcomingGames.length,
       snapshotAttempted: upcomingGames.length > 0,
+      evidenceObservedAt: observedAt,
       settled: settledToday + settledYesterday + settledSbToday + settledSbYesterday + settledKToday + settledKYesterday,
       checkedAt: now.toISOString(),
     };

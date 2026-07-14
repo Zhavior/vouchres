@@ -121,7 +121,8 @@ export async function snapshotDailyBrainPitcherKPicks(date = todayISO()): Promis
     decision_date: date, sport: "mlb", market: "pitcher_strikeouts", game_id: snapshot.eventId,
     player_id: snapshot.subjectId, player_name: snapshot.subjectLabel, team: snapshot.team, opponent: snapshot.opponent,
     engine_version: BRAIN_PITCHER_K_SELECTION_VERSION, rank, score, confidence,
-    tier: score >= 75 ? "Strong" : "Watch", evidence_quality: "official",
+    tier: score >= 75 ? "Strong" : "Watch",
+    evidence_quality: snapshot.eligibility === "eligible" ? "official" : "preview",
     reasons: snapshot.reasons.slice(0, 6), risks: snapshot.risks.slice(0, 6), feature_snapshot: snapshot,
     source_generated_at: snapshot.observedAt,
   }));

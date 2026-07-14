@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectBrainPicks } from '../src/features/brain/brainSelection';
+import { mergeServerLedgerPicks, selectBrainPicks } from '../src/features/brain/brainSelection';
 import { selectPitcherKBrainPicks } from '../src/features/brain/pitcherKSelection';
 import type { HrWatchRow } from '../src/features/hr/types/hrWatch';
 import type { StatPlayerRow } from '../src/features/mlb-stats/types/statHubTypes';
@@ -71,5 +71,74 @@ describe('brain selection policy', () => {
     expect(source).toContain("const probablePitcherName = side === 'away' ? game.awayPitcher : game.homePitcher;");
     expect(source).toContain("statType !== 'pitcher_k'");
     expect(source).toContain('samePersonName');
+  });
+});
+
+describe('mergeServerLedgerPicks', () => {
+  it('keeps server ledger order and scores even when client math would diverge', () => {
+    const picks = mergeServerLedgerPicks(
+      [
+        {
+          playerId: '2',
+          playerName: 'Server First',
+          team: 'BOS',
+          opponent: 'NYY',
+          rank: 1,
+          score: 91,
+          confidence: 80,
+          tier: 'Elite',
+          evidenceQuality: 'official',
+          reasons: ['Power'],
+        },
+        {
+          playerId: '1',
+          playerName: 'Server Second',
+          team: 'NYY',
+          opponent: 'BOS',
+          rank: 2,
+          score: 70,
+          confidence: 70,
+          tier: 'Core',
+          evidenceQuality: 'preview',
+        },
+      ],
+      [
+        hitter({ playerId: 1, playerName: 'Board One', hrScore: 99 }),
+        hitter({
+          stableId: 'two',
+          playerId: 2,
+          playerName: 'Board Two',
+          team: 'BOS',
+          opponent: 'NYY',
+          hrScore: 40,
+          pitcherName: 'Ace',
+        }),
+      ],
+    );
+    expect(picks.map((pick) => pick.player.playerName)).toEqual(['Board Two', 'Board One']);
+    expect(picks.map((pick) => pick.selectionScore)).toEqual([91, 70]);
+    expect(picks[0].player.pitcherName).toBe('Ace');
+    expect(picks[1].evidenceQuality).toBe('preview');
+  });
+
+  it('still renders ledger picks when the board row is missing', () => {
+    const picks = mergeServerLedgerPicks(
+      [{
+        playerId: '99',
+        playerName: 'Ledger Only',
+        team: 'LAD',
+        opponent: 'SF',
+        rank: 1,
+        score: 88,
+        confidence: 76,
+        tier: 'Strong',
+        evidenceQuality: 'official',
+        reasons: ['Form'],
+      }],
+      [],
+    );
+    expect(picks).toHaveLength(1);
+    expect(picks[0].player.playerName).toBe('Ledger Only');
+    expect(picks[0].selectionScore).toBe(88);
   });
 });

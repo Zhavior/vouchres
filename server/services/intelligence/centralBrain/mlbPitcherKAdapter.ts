@@ -54,7 +54,8 @@ export const mlbPitcherKFeatureAdapter: BrainFeatureAdapter<{ date?: string }> =
         scheduledAt: game.gameDate,
         adapterVersion: MLB_PITCHER_K_FEATURE_ADAPTER_VERSION,
         quality: missingFeatures.length > 2 ? "limited" : "partial",
-        eligibility: "eligible",
+        // Probable pitchers are listed on the schedule — not confirmed starters. Keep preview.
+        eligibility: "preview",
         features: {
           statTarget: BRAIN_PITCHER_K_TARGET,
           comparator: "gte",
@@ -63,6 +64,7 @@ export const mlbPitcherKFeatureAdapter: BrainFeatureAdapter<{ date?: string }> =
           seasonStrikeouts: season.strikeOuts,
           inningsPitched: season.inningsPitched,
           gamesStarted: season.gamesStarted,
+          probableStarter: true,
           opposingLineupStrikeoutRate: null,
           swingingStrikeRate: null,
           pitchCountProjection: null,
@@ -71,10 +73,14 @@ export const mlbPitcherKFeatureAdapter: BrainFeatureAdapter<{ date?: string }> =
         reasons: [
           `${seasonKPer9.toFixed(1)} strikeouts per nine across ${season.gamesStarted} starts.`,
           recentKAverage == null ? "Recent-start strikeout history unavailable." : `${recentKAverage.toFixed(1)} strikeouts per recent start.`,
+          "Listed as a probable starter; not an official confirmed start yet.",
         ],
-        risks: ["Opponent lineup strikeout rate, swinging-strike rate, and pitch-count projection are not connected."],
+        risks: [
+          "Probable pitcher listings can change before first pitch.",
+          "Opponent lineup strikeout rate, swinging-strike rate, and pitch-count projection are not connected.",
+        ],
         evidence: [
-          { feature: "probablePitcher", source: "MLB Stats API schedule", status: "verified", observedAt },
+          { feature: "probablePitcher", source: "MLB Stats API schedule", status: "projected", observedAt },
           { feature: "seasonPitching", source: "MLB Stats API season pitching", status: "verified", observedAt },
           { feature: "recentPitching", source: "MLB Stats API game logs", status: recentKAverage == null ? "missing" : "verified", observedAt },
           { feature: "opposingLineupStrikeoutRate", source: "No lineup split provider connected", status: "missing", observedAt },
