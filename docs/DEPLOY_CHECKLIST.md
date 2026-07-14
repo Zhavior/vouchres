@@ -24,13 +24,12 @@ Verified:
 - [x] Parlay grade / live-progress → 401 without auth
 - [x] Cron / staff backend → 401 without secrets
 - [x] `production-smoke` with `FRONTEND_URL=https://vouchres.vercel.app`
+- [x] `CRON_SECRET` authenticated cron probe (`cron-grade-due-authenticated`)
+- [x] `FRONTEND_URL` + `VITE_SENTRY_DSN` + `SENTRY_DSN` on Vercel Production
 
 Still optional / operator:
 
-- [ ] `FRONTEND_URL=https://vouchres.vercel.app` on Vercel (docs / Stripe redirects)
-- [ ] `VITE_SENTRY_DSN` on Vercel (browser Sentry)
-- [ ] `BASE_URL=… CRON_SECRET=… npm run production-smoke` (unskip cron auth probe)
-- [ ] Staff JWT → `productionProof.envReady`
+- [ ] Staff JWT → `productionProof.envReady` (`STAFF_ACCESS_TOKEN`)
 - [ ] Custom domain `vouchedge.app` + `CORS_ALLOWED_ORIGINS` when ready
 - [ ] Render cutover (canonical) vs stay on Vercel API
 - [ ] Manual soak: Stats API kill-switch + multi-instance Redis
