@@ -15,6 +15,7 @@ import {
   postWorldChatMessage,
   putChatProfile,
 } from "../services/worldChat/worldChatService";
+import { worldChatStorageMeta } from "../services/worldChat/worldChatStorage";
 
 /**
  * World Chat — public read, authenticated write.
@@ -34,7 +35,11 @@ worldChatRoutes.get(
   asyncHandler(async (req: RequestWithContext, res: Response) => {
     const limit = Math.min(Number(req.query.limit ?? 50), 100);
     const items = listWorldChatMessages(limit);
-    return res.json(apiOkFlat(req, { messages: items, preview: items.length === 0 }));
+    return res.json(apiOkFlat(req, {
+      messages: items,
+      preview: items.length === 0,
+      storage: worldChatStorageMeta(),
+    }));
   }),
 );
 
@@ -85,7 +90,10 @@ worldChatRoutes.post(
       text: body.text,
     });
 
-    return res.json(apiOkFlat(req, { message }));
+    return res.json(apiOkFlat(req, {
+      message,
+      storage: worldChatStorageMeta(),
+    }));
   }),
 );
 

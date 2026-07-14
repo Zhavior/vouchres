@@ -143,6 +143,15 @@ export const pickLimiter = rateLimit({
   handler,
 });
 
+/** Authenticated MLB POST helpers (odds/progress) — caps upstream amplification. */
+export const mlbMutationLimiter = rateLimit({
+  name: "mlb_mutation",
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator,
+  handler,
+});
+
 export const worldChatLimiter = rateLimit({
   name: "world_chat",
   windowMs: 60 * 1000,

@@ -1,5 +1,5 @@
 /** MLB data + intelligence report routes. */
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { getTodayGames, getScheduleByDate, getGameFeed, getProbablePitchers, todayISO } from "../services/mlb/mlbClient";
 import { getSharedDailyReport } from "../services/intelligence/mlbIntelligenceEngine";
 import { getLiveGames } from "../services/mlb/liveGamesService";
@@ -11,6 +11,14 @@ import { structuredLog } from "../lib/structuredLog";
 import { getMlbHealthReport } from "../services/mlb/mlbHealthService";
 import { getTodayLineups } from "../services/mlb/lineupService";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { requireAuth, type AuthedRequest } from "../middleware/auth";
+import { mlbMutationLimiter } from "../middleware/rateLimit";
+import { validate } from "../middleware/validation";
+import {
+  ParlayLegProgressSchema,
+  ParlayTierOddsBatchSchema,
+  ParlayTierOddsSchema,
+} from "../validators/mlbMutationSchemas";
 import {
   optionalYmd as optionalDateQuery,
   positiveInt as requiredPositiveIntParam,
@@ -19,6 +27,8 @@ import {
   ymdOrDefault,
 } from "../lib/requestValidators";
 import { getSportsDataGatewayStatus } from "../services/data/sportsDataGateway";
+
+type MlbReq = AuthedRequest & RequestWithContext;
 
 function dateQueryOrToday(value: unknown, field = "date"): string {
   return ymdOrDefault(value, todayISO(), field);
@@ -222,9 +232,14 @@ export function registerMlbRoutes(app: Express): void {
     }
   }));
 
-  app.post("/api/mlb/parlay-leg-progress", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post(
+    "/api/mlb/parlay-leg-progress",
+    requireAuth,
+    mlbMutationLimiter,
+    validate({ body: ParlayLegProgressSchema }),
+    asyncHandler(async (req: MlbReq, res: Response) => {
     const { fetchParlayLiveProgressBySport } = await import("../services/parlays/parlayLiveProgressRouter");
-    const legs = Array.isArray(req.body?.legs) ? req.body.legs : [];
+    const legs = req.body.legs;
     const progress = await fetchParlayLiveProgressBySport(
       legs.map((leg: Record<string, unknown>, index: number) => ({
         id: String(leg.id ?? `leg-${index}`),
@@ -238,27 +253,39 @@ export function registerMlbRoutes(app: Express): void {
     return res.json(apiOkFlat(req, { legs: progress }));
   }));
 
-  app.post("/api/mlb/parlay-tier-odds", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post(
+    "/api/mlb/parlay-tier-odds",
+    requireAuth,
+    mlbMutationLimiter,
+    validate({ body: ParlayTierOddsSchema }),
+    asyncHandler(async (req: MlbReq, res: Response) => {
     const { fetchLiveTierOdds } = await import("../services/mlb/parlayOddsFeedService");
+    const body = req.body;
     const quote = await fetchLiveTierOdds({
-      playerName: req.body?.playerName ?? req.body?.player_name,
-      teamName: req.body?.teamName ?? req.body?.team_name,
-      homeTeam: req.body?.homeTeam ?? req.body?.home_team,
-      awayTeam: req.body?.awayTeam ?? req.body?.away_team,
-      marketCode: req.body?.marketCode ?? req.body?.market_code,
-      statTarget: req.body?.statTarget ?? req.body?.stat_target,
+      playerName: body.playerName ?? body.player_name,
+      teamName: body.teamName ?? body.team_name,
+      homeTeam: body.homeTeam ?? body.home_team,
+      awayTeam: body.awayTeam ?? body.away_team,
+      marketCode: body.marketCode ?? body.market_code,
+      statTarget: body.statTarget ?? body.stat_target,
     });
     return res.json(apiOkFlat(req, quote));
   }));
 
-  app.post("/api/mlb/parlay-tier-odds/batch", asyncHandler(async (req: RequestWithContext, res: Response) => {
+  app.post(
+    "/api/mlb/parlay-tier-odds/batch",
+    requireAuth,
+    mlbMutationLimiter,
+    validate({ body: ParlayTierOddsBatchSchema }),
+    asyncHandler(async (req: MlbReq, res: Response) => {
     const { fetchLiveTierOddsBatch } = await import("../services/mlb/parlayOddsFeedService");
-    const tiers = Array.isArray(req.body?.tiers) ? req.body.tiers : [];
+    const body = req.body;
+    const tiers = body.tiers;
     const quotes = await fetchLiveTierOddsBatch({
-      playerName: req.body?.playerName ?? req.body?.player_name,
-      teamName: req.body?.teamName ?? req.body?.team_name,
-      homeTeam: req.body?.homeTeam ?? req.body?.home_team,
-      awayTeam: req.body?.awayTeam ?? req.body?.away_team,
+      playerName: body.playerName ?? body.player_name,
+      teamName: body.teamName ?? body.team_name,
+      homeTeam: body.homeTeam ?? body.home_team,
+      awayTeam: body.awayTeam ?? body.away_team,
       tiers: tiers.map((tier: Record<string, unknown>, index: number) => ({
         key: String(tier.key ?? tier.id ?? index),
         marketCode: tier.marketCode ?? tier.market_code,

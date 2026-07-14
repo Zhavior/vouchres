@@ -83,6 +83,11 @@ describe("world chat routes", () => {
       ok: true,
       messages: [],
       preview: true,
+      storage: {
+        mode: "in_memory_ephemeral",
+        multiInstanceSafe: false,
+        persistence: "none",
+      },
       meta: {
         requestId: expect.any(String),
         timestamp: expect.any(String),

@@ -7,6 +7,7 @@ import { AuthedRequest, getSupabaseAdmin, requireAuth, requireLegalConfirmed, re
 import { betaSignupLimiter, pickLimiter } from "../middleware/rateLimit";
 import { requireTierOrQuota, incrementQuota } from "../middleware/entitlements";
 import { validate } from "../middleware/validation";
+import { assertJurisdictionAllowed } from "../lib/jurisdictionPolicy";
 import { createPick, getLedger, gradePick } from "../services/persistence/pickService";
 import { joinWaitlist } from "../services/persistence/betaService";
 import { BetaSignupSchema, GradePickSchema, LegalConfirmSchema, type BetaSignupInput, type GradePickInput, type LegalConfirmInput } from "../validators/coreSchemas";
@@ -41,6 +42,7 @@ coreRoutes.post(
   validate({ body: LegalConfirmSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { jurisdiction } = req.body as LegalConfirmInput;
+    assertJurisdictionAllowed(jurisdiction);
     const supabaseAdmin = await getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("profiles")

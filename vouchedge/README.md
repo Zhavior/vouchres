@@ -1,3 +1,5 @@
+> **Archived / not canonical.** This Next.js app is legacy. Production API + HR truth live in the repo-root Express server (`server/routes/`). See `docs/ARCHIVED_NEXT_APPS.md`.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
