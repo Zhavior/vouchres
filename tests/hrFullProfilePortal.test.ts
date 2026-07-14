@@ -11,8 +11,8 @@ describe('HR full profile modal boundary', () => {
   });
 
   it('covers the navigation sidebar while the full profile is open', () => {
-    expect(source).toContain('className="fixed inset-0 z-[190]"');
-    expect(source).toContain('className="fixed inset-0 z-[200] flex flex-col');
+    expect(source).toContain('fixed inset-0 z-[190]');
+    expect(source).toContain('fixed inset-0 z-[200] flex flex-col');
   });
 
   it('keeps server rendering safe', () => {
