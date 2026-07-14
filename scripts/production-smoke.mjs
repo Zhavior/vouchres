@@ -113,6 +113,11 @@ const checks = [
   {
     id: "cron-grade-due-unauthenticated",
     async run() {
+      // Dev/local: when CRON_SECRET is unset, cron routes are intentionally open
+      // (see server/lib/cronAuth.ts). Production always has CRON_SECRET → 401.
+      if (LOCAL && !CRON_SECRET) {
+        return "skipped: local cron is open when CRON_SECRET unset (prod requires it)";
+      }
       const { status } = await fetchJson("/api/cron/parlays/grade-due");
       if (status !== 401 && status !== 403) return `expected 401/403 without secret, got ${status}`;
       return null;
