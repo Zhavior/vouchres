@@ -100,6 +100,17 @@ const GradeParlayDocSchema = z.object({
   stakeUnits: z.number().positive().default(1),
 }).openapi("GradeParlayRequest");
 
+const ParlayLiveProgressDocSchema = z.object({
+  legs: z.array(z.object({
+    id: z.union([z.string(), z.number()]).optional(),
+    sport: z.string().optional(),
+    gamePk: z.union([z.string(), z.number()]).optional(),
+    playerId: z.union([z.string(), z.number()]).optional(),
+    marketCode: z.string().optional(),
+    statTarget: z.number().optional(),
+  }).passthrough()).min(1).max(10),
+}).openapi("ParlayLiveProgressRequest");
+
 const SaveMeParlayDocSchema = z.object({
   title: z.string().max(200).optional(),
   legs: z.array(z.object({
@@ -411,6 +422,7 @@ openapiRegistry.register("LiveGamesResponse", LiveGamesSchema);
 openapiRegistry.register("HrBoardTodayResponse", HrBoardTodaySchema);
 openapiRegistry.register("AuthMeResponse", AuthMeSchema);
 openapiRegistry.register("GradeParlayRequest", GradeParlayDocSchema);
+openapiRegistry.register("ParlayLiveProgressRequest", ParlayLiveProgressDocSchema);
 openapiRegistry.register("SaveMeParlayRequest", SaveMeParlayDocSchema);
 openapiRegistry.register("ListParlaysQuery", ListParlaysQueryDocSchema);
 openapiRegistry.register("MeParlaysListResponse", MeParlaysListSchema);
@@ -673,7 +685,7 @@ openapiRegistry.registerPath({
 openapiRegistry.registerPath({
   method: "post",
   path: "/api/parlays/grade",
-  summary: "Stateless parlay grade preview (no DB writes)",
+  summary: "Stateless parlay grade preview (auth required; no DB writes)",
   tags: ["Parlays"],
   request: {
     body: {
@@ -684,6 +696,32 @@ openapiRegistry.registerPath({
     200: {
       description: "Graded legs",
       content: { "application/json": { schema: GradeParlayResponseSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
+    },
+  },
+});
+
+openapiRegistry.registerPath({
+  method: "post",
+  path: "/api/parlays/live-progress",
+  summary: "Sport-dispatched parlay leg live progress (auth required)",
+  tags: ["Parlays"],
+  request: {
+    body: {
+      content: { "application/json": { schema: ParlayLiveProgressDocSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Live leg progress",
+      content: { "application/json": { schema: OkEnvelopeSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorEnvelopeSchema } },
     },
   },
 });

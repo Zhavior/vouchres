@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { z } from "zod";
-import { AuthedRequest, requireAuth, optionalAuth, supabaseAdmin } from "../middleware/auth";
+import { AuthedRequest, requireAuth, optionalAuth, requireLegalConfirmed, supabaseAdmin } from "../middleware/auth";
 import { validate } from "../middleware/validation";
 import { asyncHandler } from "../lib/asyncHandler";
 import { AppError } from "../errors/AppError";
@@ -155,6 +155,7 @@ const CreatePostSchema = z.object({
 postRoutes.post(
   "/posts",
   requireAuth,
+  requireLegalConfirmed,
   validate({ body: CreatePostSchema }),
   asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { body: postBody, pick_id, vouch_id } = req.body as z.infer<typeof CreatePostSchema>;

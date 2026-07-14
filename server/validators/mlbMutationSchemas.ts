@@ -16,6 +16,35 @@ export const ParlayLegProgressSchema = z.object({
   legs: z.array(MlbLegProgressSchema).min(1).max(10),
 });
 
+const ParlayLiveProgressLegSchema = z.object({
+  id: z.union([z.string(), z.number()]).optional(),
+  gamePk: z.union([z.string(), z.number()]).optional(),
+  game_pk: z.union([z.string(), z.number()]).optional(),
+  gameId: z.union([z.string(), z.number()]).optional(),
+  game_id: z.union([z.string(), z.number()]).optional(),
+  playerId: z.union([z.string(), z.number()]).optional(),
+  player_id: z.union([z.string(), z.number()]).optional(),
+  marketCode: z.string().trim().max(64).optional().nullable(),
+  market_code: z.string().trim().max(64).optional().nullable(),
+  statTarget: z.coerce.number().finite().optional(),
+  stat_target: z.coerce.number().finite().optional(),
+  sport: z.string().trim().max(16).optional(),
+  sport_id: z.string().trim().max(16).optional(),
+}).superRefine((leg, ctx) => {
+  if (!leg.gamePk && !leg.game_pk && !leg.gameId && !leg.game_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "gamePk is required.",
+      path: ["gamePk"],
+    });
+  }
+});
+
+/** Sport-dispatched live progress (POST /api/parlays/live-progress). */
+export const ParlayLiveProgressSchema = z.object({
+  legs: z.array(ParlayLiveProgressLegSchema).min(1).max(10),
+});
+
 const playerNameField = z
   .object({
     playerName: z.string().trim().min(1).max(120).optional(),
