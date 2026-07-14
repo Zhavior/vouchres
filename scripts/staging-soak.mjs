@@ -267,15 +267,53 @@ const CHECKS = [
       return null;
     },
   },
+  {
+    id: "parlay-grade-auth-gate",
+    path: "/api/parlays/grade",
+    localOnly: true,
+    method: "POST",
+    body: { legs: [] },
+    validate({ status, body }) {
+      if (status !== 401) return `expected HTTP 401 (auth required), got ${status}`;
+      const row = /** @type {Record<string, unknown>} */ (body);
+      if (row.ok !== false) return "expected ok:false for unauthenticated grade";
+      const error = row.error;
+      if (!isRecord(error)) return "missing error envelope";
+      if (error.code !== "missing_token") return `unexpected error.code: ${String(error.code ?? "missing")}`;
+      return null;
+    },
+  },
+  {
+    id: "parlay-live-progress-auth-gate",
+    path: "/api/parlays/live-progress",
+    localOnly: true,
+    method: "POST",
+    body: { legs: [{ gamePk: "777001", playerId: "592450" }] },
+    validate({ status, body }) {
+      if (status !== 401) return `expected HTTP 401 (auth required), got ${status}`;
+      const row = /** @type {Record<string, unknown>} */ (body);
+      if (row.ok !== false) return "expected ok:false for unauthenticated live progress";
+      const error = row.error;
+      if (!isRecord(error)) return "missing error envelope";
+      if (error.code !== "missing_token") return `unexpected error.code: ${String(error.code ?? "missing")}`;
+      return null;
+    },
+  },
 ];
 
 /**
  * @param {string} path
+ * @param {RequestInit} [init]
  */
-async function fetchJson(path) {
+async function fetchJson(path, init) {
   const url = `${BASE_URL}${path}`;
   const response = await fetch(url, {
-    headers: { Accept: "application/json" },
+    ...init,
+    headers: {
+      Accept: "application/json",
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(init?.headers ?? {}),
+    },
   });
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -336,7 +374,10 @@ async function main() {
 
   for (const check of checks) {
     try {
-      const result = await fetchJson(check.path);
+      const init = check.method === "POST"
+        ? { method: "POST", body: JSON.stringify(check.body ?? {}) }
+        : undefined;
+      const result = await fetchJson(check.path, init);
       const error = check.validate(result);
       if (error) {
         hardFailures += 1;
