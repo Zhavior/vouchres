@@ -63,8 +63,11 @@ shareRoutes.get("/share/hr-card", asyncHandler(async (req, res) => {
   try {
     const params = parseHrShareCardParams(req.query as unknown as Record<string, unknown>);
     const board = await getCachedValidatedHrBoard(params.date);
-    const candidates = [...(board.candidates ?? []), ...(board.projectedCandidates ?? [])];
-    const candidate = findHrShareCardCandidate(candidates, params);
+    const confirmed = board.candidates ?? [];
+    let candidate = findHrShareCardCandidate(confirmed, params);
+    if (!candidate) {
+      candidate = findHrShareCardCandidate(board.projectedCandidates ?? [], params);
+    }
 
     if (!candidate) {
       throw new AppError({

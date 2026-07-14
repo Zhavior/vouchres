@@ -38,7 +38,7 @@ export async function createApp(httpServer?: http.Server) {
   // Stripe signature verification requires the raw body. This must run before
   // express.json(); the billing router handles the actual webhook route.
   app.use("/api/billing/webhook", express.raw({ type: "application/json", limit: "1mb" }));
-  app.use(express.json());
+  app.use(express.json({ limit: "256kb" }));
 
   // CORS applies to API only — static JS/CSS assets must not be blocked by API origin rules.
   app.use("/api", corsMiddleware);

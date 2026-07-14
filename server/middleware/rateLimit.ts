@@ -100,7 +100,7 @@ export const globalLimiter = rateLimit({
   keyGenerator,
   handler,
   // Public liveness only — staff ops telemetry stays rate-limited.
-  skip: (req) => req.path === "/api/health" || req.path === "/api/health/ready",
+  skip: (req) => req.path === "/health" || req.path === "/health/ready",
 });
 
 export const aiLimiter = rateLimit({

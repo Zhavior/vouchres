@@ -149,19 +149,18 @@ describe("API route smoke envelopes", () => {
     });
   });
 
-  it("normalizes parlay grade validation errors", async () => {
+  it("requires auth for POST /parlays/grade", async () => {
     const response = await requestJson("/api/parlays/grade", {
       method: "POST",
       body: JSON.stringify({ legs: [] }),
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
     expect(response.body).toMatchObject({
       ok: false,
       error: {
-        code: "validation_error",
-        message: "Request validation failed.",
-        details: [{ path: "legs", message: "legs must include at least 1 item." }],
+        code: "missing_token",
+        message: "Authentication token is required.",
       },
     });
   });

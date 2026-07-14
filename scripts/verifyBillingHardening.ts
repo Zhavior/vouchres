@@ -33,12 +33,14 @@ const { effectiveTierForSubscriptionStatus, getStripePriceConfigs } = await impo
   "../server/services/billing/stripeService"
 );
 
+const JSON_BODY_MIDDLEWARE = "app.use(express.json(";
+
 includesAll(server, [
   "app.use(\"/api/billing/webhook\", express.raw({ type: \"application/json\", limit: \"1mb\" }))",
-  "app.use(express.json())",
+  JSON_BODY_MIDDLEWARE,
 ], "raw body webhook mount");
 assert(
-  server.indexOf("express.raw({ type: \"application/json\"") < server.indexOf("app.use(express.json())"),
+  server.indexOf("express.raw({ type: \"application/json\"") < server.indexOf(JSON_BODY_MIDDLEWARE),
   "Stripe webhook raw body middleware must be mounted before express.json"
 );
 

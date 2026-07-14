@@ -82,7 +82,7 @@ export const mlbHrFeatureAdapter: BrainFeatureAdapter<{ date?: string }> = {
       scheduledAt: game.gameDate,
       homeTeamId: game.homeTeam.teamId,
     }]));
-    const candidates = board.candidates.length >= 3 ? board.candidates : board.projectedCandidates;
+    const candidates = board.candidates;
     const observedAt = board.debug.lastRefresh;
 
     return candidates.flatMap((candidate) => {
