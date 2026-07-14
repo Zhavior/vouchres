@@ -30,6 +30,50 @@ Optional when billing is on: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`.
 `TRUST_PROXY` defaults to `1` on Render (see `render.yaml`). Rate limits key off
 Express `req.ip` (trusted hop), not the leftmost `X-Forwarded-For`.
 
+## Step 5 — Supabase auth URLs (required before login works in prod)
+
+Production email confirm, magic links, and password reset all redirect through
+`/auth/callback` on the SPA. Supabase must allow those origins.
+
+### Dashboard (manual)
+
+Supabase → **Authentication** → **URL Configuration**:
+
+| Field | Value |
+| --- | --- |
+| Site URL | `https://vouchedge.app` (or your `FRONTEND_URL`) |
+| Redirect URLs | `https://vouchedge.app/**`, `https://www.vouchedge.app/**`, `http://localhost:3000/**`, `https://*.vercel.app/**` |
+
+### CLI (recommended)
+
+```bash
+# Dry-run — prints exact PATCH body + Vite env mirror checklist
+npm run configure:supabase-auth-urls
+
+# Apply to remote project (needs SUPABASE_ACCESS_TOKEN)
+SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --apply
+
+# Verify without writing
+SUPABASE_ACCESS_TOKEN=<token> npm run configure:supabase-auth-urls -- --verify
+```
+
+Resolves `SUPABASE_PROJECT_REF` from `SUPABASE_URL` when unset.
+
+### Mirror on Vercel (frontend build)
+
+Set the same Supabase project on the Vercel SPA:
+
+- `VITE_SUPABASE_URL` = project URL
+- `VITE_SUPABASE_ANON_KEY` = anon public key
+
+Render API only needs server keys (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`).
+
+### Smoke test after apply
+
+1. Sign up on production → confirm email → lands on `/auth/callback` → redirects to `/today`
+2. Magic link sign-in → same callback path
+3. `GET /api/auth/username-check?username=probe` returns 200/400/500 (not CORS-blocked from SPA)
+
 ## Ops telemetry
 
 - Public: `GET /api/health` (liveness), `GET /api/health/ready` (readiness)

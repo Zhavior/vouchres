@@ -6,7 +6,13 @@ import { warmGuestHrBoardCache } from './lib/boot/guestHrBoardWarmCache';
 import { queryKeys } from './hooks/queries/queryKeys';
 import { vouchedgeApi } from './api/vouchedgeApi';
 import VouchEdgeTerminalPage from './pages/VouchEdgeTerminalPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import { PUBLIC_SECTIONS } from './app/sectionNavigation';
+
+function isAuthCallbackPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.location.pathname.toLowerCase() === '/auth/callback';
+}
 
 const AuthenticatedApp = lazy(() => import('./app/AuthenticatedApp'));
 
@@ -64,7 +70,7 @@ function PublicLanding({ onAuthed }: { onAuthed: () => void }) {
   );
 }
 
-export default function App() {
+function MainAppRoutes() {
   const navigation = useSectionNavigation();
   const canRenderLoggedOutRoute =
     PUBLIC_SECTIONS.has(navigation.activeSection) && navigation.activeSection !== 'vouchedge_intro';
@@ -73,15 +79,21 @@ export default function App() {
     !LEGACY_LANDING_SECTIONS.has(navigation.activeSection) &&
     !canRenderLoggedOutRoute;
 
+  if (showPublicLanding) {
+    return <PublicLanding onAuthed={navigation.handleLoginSuccess} />;
+  }
+
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      <AuthenticatedApp navigation={navigation} />
+    </Suspense>
+  );
+}
+
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {showPublicLanding ? (
-        <PublicLanding onAuthed={navigation.handleLoginSuccess} />
-      ) : (
-        <Suspense fallback={<RouteFallback />}>
-          <AuthenticatedApp navigation={navigation} />
-        </Suspense>
-      )}
+      {isAuthCallbackPath() ? <AuthCallbackPage /> : <MainAppRoutes />}
     </QueryClientProvider>
   );
 }
