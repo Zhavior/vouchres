@@ -46,10 +46,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Staging soak (built server)
+      - name: Staging soak + production smoke (built server)
         run: |
           NODE_ENV=development PORT=3010 node dist/server.cjs &
           SERVER_PID=$!
+          cleanup() { kill $SERVER_PID 2>/dev/null || true; }
+          trap cleanup EXIT
           for i in $(seq 1 45); do
             if curl -sf http://127.0.0.1:3010/api/health > /dev/null; then
               break
@@ -58,7 +60,7 @@ jobs:
           done
           BASE_URL=http://127.0.0.1:3010 npm run staging-soak
           BASE_URL=http://127.0.0.1:3010 npm run staging-soak:strict
-          kill $SERVER_PID
+          BASE_URL=http://127.0.0.1:3010 npm run production-smoke -- --local
 
       - name: Bundle gzip budget
         run: npm run bundle-budget
