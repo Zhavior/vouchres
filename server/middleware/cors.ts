@@ -37,7 +37,8 @@ export const corsMiddleware = cors({
     if (ALLOWED_ORIGINS.includes(origin) || isAllowedPreviewOrigin(origin)) {
       return cb(null, true);
     }
-    cb(new Error(`Origin ${origin} not allowed by CORS`));
+    // Deny without throwing — cors.Error becomes an Express 500 and breaks preflight.
+    return cb(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],

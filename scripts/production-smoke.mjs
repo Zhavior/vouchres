@@ -17,7 +17,16 @@ const BASE_URL = (process.env.BASE_URL ?? "http://127.0.0.1:3000").replace(/\/$/
 const LOCAL = process.argv.includes("--local");
 const CRON_SECRET = process.env.CRON_SECRET?.trim() ?? "";
 const STAFF_TOKEN = process.env.STAFF_ACCESS_TOKEN?.trim() ?? "";
-const FRONTEND_URL = (process.env.FRONTEND_URL ?? "https://vouchedge.app").replace(/\/$/, "");
+const FRONTEND_URL = (
+  process.env.FRONTEND_URL
+  ?? (() => {
+    try {
+      return new URL(BASE_URL).origin;
+    } catch {
+      return "https://vouchres.vercel.app";
+    }
+  })()
+).replace(/\/$/, "");
 
 /**
  * @param {string} path
@@ -195,11 +204,13 @@ const checks = [
           "Access-Control-Request-Method": "GET",
         },
       });
-      // Some hosts may not answer OPTIONS; treat 2xx/204/404 as non-fatal if ACAO present or skip
+      if (response.status >= 500) {
+        return `CORS preflight failed with ${response.status} (Origin ${FRONTEND_URL}). ` +
+          "Add this origin to CORS_ALLOWED_ORIGINS on the API host, or set FRONTEND_URL to an allowed origin.";
+      }
       const allowOrigin = response.headers.get("access-control-allow-origin");
-      if (response.status >= 500) return `CORS preflight failed with ${response.status}`;
-      if (allowOrigin && allowOrigin !== FRONTEND_URL && allowOrigin !== "*") {
-        return `unexpected ACAO ${allowOrigin} for Origin ${FRONTEND_URL}`;
+      if (allowOrigin !== FRONTEND_URL && allowOrigin !== "*") {
+        return `expected ACAO ${FRONTEND_URL}, got ${allowOrigin ?? "(missing)"}`;
       }
       return null;
     },
