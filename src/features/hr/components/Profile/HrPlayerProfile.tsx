@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, TrendingUp, TrendingDown, Minus, Flame, Award, Eye, Moon,
@@ -202,7 +203,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
   }, [player]);
 
   // ── All hooks above ── null guard safe ──
-  if (!player) return null;
+  if (!player || typeof document === 'undefined') return null;
 
   const tier    = tierConfig(player.hrScore);
   const layers  = getLayers(player);
@@ -224,7 +225,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
     { id: 'form'     as const, label: 'Recent Form' },
   ];
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -234,7 +235,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="ve-hr-profile-backdrop fixed inset-0 z-50"
+            className="ve-hr-profile-backdrop fixed inset-0 z-[190]"
             aria-hidden="true"
           />
 
@@ -246,7 +247,7 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             role="dialog" aria-modal="true" aria-label={`${player.playerName} full profile`}
-            className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[60] flex flex-col overflow-hidden lg:flex-row"
+            className="ve-hr-profile ve-hr-profile-shell fixed inset-0 z-[200] flex flex-col overflow-hidden lg:flex-row"
           >
             {/* ── LEFT SIDEBAR (desktop) / TOP HERO (mobile) ──────────────── */}
             <div className="ve-hr-profile-sidebar relative flex-shrink-0 overflow-hidden border-b border-white/10 lg:flex lg:w-72 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-80">
@@ -400,7 +401,8 @@ export const HrPlayerProfile: React.FC<HrPlayerProfileProps> = ({ player, isOpen
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 
   // ─── Content renderer ────────────────────────────────────────────────────────

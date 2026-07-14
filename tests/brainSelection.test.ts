@@ -36,12 +36,15 @@ describe('brain selection policy', () => {
     expect(picks.map((pick) => pick.player.playerName)).toEqual(['Hitter One']);
   });
 
-  it('prefers an official shortlist when at least three official players qualify', () => {
+  it('prefers an official shortlist when at least ten official players qualify', () => {
     const rows = [
-      hitter({ stableId: 'o1', playerName: 'Official 1', team: 'NYY', gamePk: 1 }),
-      hitter({ stableId: 'o2', playerName: 'Official 2', team: 'BOS', gamePk: 2 }),
-      hitter({ stableId: 'o3', playerName: 'Official 3', team: 'LAD', gamePk: 3 }),
-      hitter({ stableId: 'p1', playerName: 'Preview', team: 'ATL', gamePk: 4, truthStatus: 'projected', hrScore: 99 }),
+      ...Array.from({ length: 10 }, (_, index) => hitter({
+        stableId: `o${index + 1}`,
+        playerName: `Official ${index + 1}`,
+        team: ['NYY', 'BOS', 'LAD', 'ATL', 'CHC', 'HOU', 'SEA', 'SF', 'MIL', 'CLE'][index],
+        gamePk: index + 1,
+      })),
+      hitter({ stableId: 'p1', playerName: 'Preview', team: 'TOR', gamePk: 99, truthStatus: 'projected', hrScore: 99 }),
     ];
     expect(selectBrainPicks(rows).every((pick) => pick.evidenceQuality === 'official')).toBe(true);
   });
@@ -56,7 +59,7 @@ describe('brain selection policy', () => {
   it('keeps pitcher K selections on their own elite and strong thresholds', () => {
     const picks = selectPitcherKBrainPicks([
       pitcher(),
-      pitcher({ stableId: 'watch', playerName: 'Watch Pitcher', team: 'BOS', tier: 'watch', statScore: 90 }),
+      pitcher({ stableId: 'watch', playerName: 'Watch Pitcher', team: 'BOS', tier: 'watch', statScore: 52 }),
       pitcher({ stableId: 'low-confidence', playerName: 'Low Confidence', team: 'LAD', confidence: 40 }),
     ]);
     expect(picks.map((pick) => pick.pitcher.playerName)).toEqual(['Pitcher One']);
