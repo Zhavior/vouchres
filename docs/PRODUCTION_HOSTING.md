@@ -16,6 +16,12 @@ operational noise.
 `vercel.json` ships with `"crons": []` so Vercel cannot schedule grade/live-HR
 jobs while Render crons are enabled.
 
+> **Ops note:** Repo homepage `https://vouchres.vercel.app` currently still
+> boots the Express API via the Vercel function. Production fail-closed will
+> refuse requests until `SENTRY_DSN` (and other required secrets) are set on
+> that project — or until traffic moves to Render `vouchedge-api`. See
+> `docs/DEPLOY_CHECKLIST.md`.
+
 ## Ship checklist
 
 See **[DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md)** for the ordered ship list

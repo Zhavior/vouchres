@@ -48,14 +48,15 @@ Optional product / billing:
 
 ### Vercel (SPA, if split from Render)
 
-- [ ] `vercel.json` crons remain `[]` (verified by `production-smoke --local`)
+- [x] `vercel.json` crons remain `[]` (verified by `production-smoke --local` + CI)
 - [ ] `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
-- [ ] `VITE_API_BASE_URL` = Render API origin
+- [ ] `VITE_API_BASE_URL` = Render API origin (or leave empty only if same-origin)
 - [ ] `VITE_SENTRY_DSN` (recommended)
+- [ ] If Vercel still hosts `/api`: also set server `SENTRY_DSN` + other fail-closed keys (see live finding below)
 
 ### Supabase auth URLs (step 5)
 
-- [ ] Dry-run: `npm run configure:supabase-auth-urls`
+- [x] Dry-run: `npm run configure:supabase-auth-urls` (ships in repo; CI-independent)
 - [ ] Apply: `SUPABASE_ACCESS_TOKEN=… npm run configure:supabase-auth-urls -- --apply`
 - [ ] Verify: `… -- --verify`
 - [ ] Dashboard confirm: Site URL = `https://vouchedge.app`
@@ -93,4 +94,29 @@ BASE_URL=https://<api-host> npm run staging-soak:strict
 
 ## Operator note
 
-This cloud agent cannot set Render / Supabase / Vercel secrets. Paste the env table into the Render dashboard, then run `production-smoke` against the live `BASE_URL`.
+This cloud agent **cannot** set Render / Supabase / Vercel secrets from this
+environment (no dashboard tokens available).
+
+### Live finding (2026-07-14)
+
+`https://vouchres.vercel.app` (repo homepage) serves the API today and returns:
+
+```json
+{"error":"vercel_api_boot_failed","message":"Missing required production config: SENTRY_DSN."}
+```
+
+Fail-closed boot is working. Until `SENTRY_DSN` (and any other required secrets)
+are set on the API host, post-deploy smoke cannot pass against that URL.
+
+**Preferred fix (canonical):** stand up Render `vouchedge-api` with
+`docs/RENDER_ENV_TEMPLATE.env`, point `VITE_API_BASE_URL` / homepage at Render,
+keep Vercel frontend-only (`vercel.json` crons already `[]`).
+
+**Alternate:** set the same required env on the Vercel project that hosts `/api`,
+then run:
+
+```bash
+BASE_URL=https://vouchres.vercel.app npm run production-smoke
+```
+
+Paste the env table into the hosting dashboard, redeploy, then re-run smoke.

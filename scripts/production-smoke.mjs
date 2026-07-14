@@ -42,6 +42,15 @@ async function fetchJson(path, opts = {}) {
   } catch {
     body = { _raw: text.slice(0, 200) };
   }
+  if (
+    isRecord(body)
+    && body.error === "vercel_api_boot_failed"
+  ) {
+    throw new Error(
+      `API host failed production boot: ${String(body.message ?? "missing required env").replace(/\.$/, "")}. ` +
+        "Set SENTRY_DSN (+ other fail-closed secrets) on Render/Vercel, or point BASE_URL at a healthy host.",
+    );
+  }
   return { status: response.status, body, headers: response.headers };
 }
 
