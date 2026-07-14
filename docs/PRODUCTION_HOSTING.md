@@ -16,6 +16,18 @@ operational noise.
 `vercel.json` ships with `"crons": []` so Vercel cannot schedule grade/live-HR
 jobs while Render crons are enabled.
 
+## Ship checklist
+
+See **[DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md)** for the ordered ship list
+(Render env, cron services, Supabase URLs, post-deploy smoke).
+
+Automated probes:
+
+```bash
+BASE_URL=https://<api-host> npm run production-smoke
+BASE_URL=http://127.0.0.1:3010 npm run production-smoke -- --local
+```
+
 ## Hard requirements (prod boot fails closed)
 
 Set on the Render web service (and grader where noted):

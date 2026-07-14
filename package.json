@@ -36,6 +36,7 @@
     "perf-check": "node scripts/perf-check.mjs",
     "staging-soak": "node scripts/staging-soak.mjs",
     "staging-soak:strict": "node scripts/staging-soak.mjs --strict --local-only",
+    "production-smoke": "node scripts/production-smoke.mjs",
     "configure:supabase-auth-urls": "tsx scripts/configureSupabaseAuthUrls.ts",
     "lighthouse-ci": "node scripts/lighthouse-ci.mjs",
     "typecheck": "tsc --noEmit",
