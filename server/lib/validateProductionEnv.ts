@@ -32,7 +32,15 @@ export function validateProductionEnvAtBoot(): void {
     return;
   }
 
-  const message = `Missing required production config: ${missing.join(", ")}.`;
+  let message = `Missing required production config: ${missing.join(", ")}.`;
+  if (missing.includes("SENTRY_DSN")) {
+    message +=
+      " Set SENTRY_DSN on the API host (Vercel → Project → Settings → Environment Variables → Production), then Redeploy." +
+      " Do not use VITE_SENTRY_DSN for the server boot check.";
+    if (process.env.VITE_SENTRY_DSN?.trim()) {
+      message += " (VITE_SENTRY_DSN is set, but server requires SENTRY_DSN.)";
+    }
+  }
   if (env === "production") {
     throw new Error(message);
   }

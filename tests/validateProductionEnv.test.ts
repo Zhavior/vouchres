@@ -41,6 +41,15 @@ describe("validateProductionEnvAtBoot", () => {
     vi.stubEnv("SENTRY_DSN", "");
 
     expect(() => validateProductionEnvAtBoot()).toThrow(/SENTRY_DSN/);
+    expect(() => validateProductionEnvAtBoot()).toThrow(/Vercel/);
+  });
+
+  it("notes when only VITE_SENTRY_DSN is present", () => {
+    stubRequiredProductionEnv();
+    vi.stubEnv("SENTRY_DSN", "");
+    vi.stubEnv("VITE_SENTRY_DSN", "https://example.ingest.sentry.io/frontend");
+
+    expect(() => validateProductionEnvAtBoot()).toThrow(/VITE_SENTRY_DSN is set/);
   });
 
   it("passes in production when required config is present", () => {

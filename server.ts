@@ -15,10 +15,13 @@ import { validateProductionEnvAtBoot } from "./server/lib/validateProductionEnv"
 import { logDevSupabaseEnvStatus, syncDevSupabaseEnv } from "./server/lib/syncDevSupabaseEnv";
 import { logWorldChatEphemeralBootNotice } from "./server/services/worldChat/worldChatStorage";
 
-// Load base env, then local secrets (.env.local) which take precedence.
-// Keys (e.g. GEMINI_API_KEY) stay server-side only — never exposed to the client.
-dotenv.config();
-dotenv.config({ path: ".env.local", override: true });
+// Local/dev: load .env then .env.local (local wins).
+// On Vercel, platform Environment Variables are the source of truth — do not
+// dotenv-override them (an uploaded/empty .env.local can wipe SENTRY_DSN etc.).
+if (process.env.VERCEL !== "1") {
+  dotenv.config();
+  dotenv.config({ path: ".env.local", override: true });
+}
 syncDevSupabaseEnv();
 logDevSupabaseEnvStatus();
 validateProductionEnvAtBoot();
