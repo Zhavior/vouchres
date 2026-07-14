@@ -1,4 +1,8 @@
+import { TEAM_MISMATCH_REASON } from "./teamAssignmentSafety";
+
 type AnyRecord = Record<string, any>;
+
+export const OFFICIAL_LINEUP_PREVIEW_WARNING = "Official lineup not posted yet";
 
 export interface HrCandidateLike extends AnyRecord {
   playerName?: string;
@@ -9,6 +13,12 @@ export interface HrCandidateLike extends AnyRecord {
   hrScore?: number;
   rank?: number;
   isConfirmed?: boolean;
+  warnings?: unknown;
+  lineupStatus?: string;
+  dataQuality?: string;
+  status?: string;
+  blockedReasons?: unknown;
+  reasons?: unknown;
 }
 
 export interface HrBoardLike extends AnyRecord {
@@ -62,6 +72,42 @@ function candidateKey(c: HrCandidateLike): string {
     .join("|");
 }
 
+function reasonsIncludeTeamMismatch(raw: HrCandidateLike): boolean {
+  const pools = [raw.blockedReasons, raw.reasons, raw.warnings];
+  for (const pool of pools) {
+    if (!Array.isArray(pool)) continue;
+    for (const item of pool) {
+      if (typeof item === "string" && item.includes(TEAM_MISMATCH_REASON)) return true;
+    }
+  }
+  return false;
+}
+
+function isProjectedLike(raw: HrCandidateLike): boolean {
+  const lineup = text(raw.lineupStatus).toLowerCase();
+  const quality = text(raw.dataQuality).toLowerCase();
+  const status = text(raw.status).toLowerCase();
+  const source = text(raw.source).toLowerCase();
+  return (
+    lineup.includes("project")
+    || quality.includes("projection")
+    || quality.includes("preview")
+    || status === "preview"
+    || source.includes("projected")
+    || source.includes("preview")
+  );
+}
+
+function withPreviewWarning(candidate: HrCandidateLike): HrCandidateLike {
+  const warnings = Array.isArray(candidate.warnings)
+    ? candidate.warnings.filter((w): w is string => typeof w === "string")
+    : [];
+  if (!warnings.some((w) => w.includes(OFFICIAL_LINEUP_PREVIEW_WARNING))) {
+    warnings.unshift(`${OFFICIAL_LINEUP_PREVIEW_WARNING}. Do not treat as confirmed.`);
+  }
+  return { ...candidate, warnings };
+}
+
 function normalizeCandidate(raw: unknown): HrCandidateLike | null {
   if (!isRecord(raw)) return null;
 
@@ -82,6 +128,15 @@ function normalizePool(raw: unknown): HrCandidateLike[] {
   return asArray(raw)
     .map(normalizeCandidate)
     .filter((x): x is HrCandidateLike => Boolean(x));
+}
+
+/** Confirmed batting-order candidates only — never projected or team-mismatch rows. */
+function sanitizeConfirmed(candidates: HrCandidateLike[]): HrCandidateLike[] {
+  return candidates.filter((c) => {
+    if (reasonsIncludeTeamMismatch(c)) return false;
+    if (isProjectedLike(c) && !c.isConfirmed) return false;
+    return true;
+  });
 }
 
 function dedupeAndSort(candidates: HrCandidateLike[]): HrCandidateLike[] {
@@ -125,43 +180,46 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
 
   const rawRows = normalizePool(input.rows);
   const confirmedCandidates = dedupeAndSort(
-    normalizePool(
-      isRecord(input.candidateBuckets)
-        ? input.confirmedCandidates ?? input.candidates ?? input.candidateBuckets.confirmed
-        : input.confirmedCandidates ?? input.candidates
-    )
+    sanitizeConfirmed(
+      normalizePool(
+        isRecord(input.candidateBuckets)
+          ? input.confirmedCandidates ?? input.candidates ?? input.candidateBuckets.confirmed
+          : input.confirmedCandidates ?? input.candidates
+      ),
+    ),
   );
   const projectedCandidates = dedupeAndSort(
     normalizePool(
       isRecord(input.candidateBuckets)
         ? input.projectedCandidates ?? input.candidateBuckets.projected
         : input.projectedCandidates
-    )
-  );
+    ),
+  ).map(withPreviewWarning);
 
   const allProjectedCandidates = dedupeAndSort(
-    normalizePool(input.allProjectedCandidates).concat(projectedCandidates)
-  );
+    normalizePool(input.allProjectedCandidates).concat(projectedCandidates),
+  ).map(withPreviewWarning);
 
-  const fallbackPool = dedupeAndSort([
-    ...confirmedCandidates,
-    ...projectedCandidates,
-    ...allProjectedCandidates,
-    ...rawRows,
-  ]);
-
+  // Display fallback may show projected rows, but candidates[] stays confirmed-only.
   const rows =
     confirmedCandidates.length > 0
       ? confirmedCandidates
       : projectedCandidates.length > 0
         ? projectedCandidates
-        : rawRows.length > 0
-          ? rawRows
-          : fallbackPool;
+        : allProjectedCandidates.length > 0
+          ? allProjectedCandidates
+          : rawRows.length > 0
+            ? rawRows.map((row) => (isProjectedLike(row) ? withPreviewWarning(row) : row))
+            : [];
+
+  const { candidates: _ignoredCandidates, ...inputWithoutCandidates } = isRecord(input) ? input : {};
+  void _ignoredCandidates;
 
   return {
-    ...(isRecord(input) ? input : {}),
+    ...inputWithoutCandidates,
     generatedAt: typeof input.generatedAt === "string" ? input.generatedAt : new Date().toISOString(),
+    // Honesty contract: candidates[] === official confirmed batting-order only
+    candidates: confirmedCandidates,
     rows,
     confirmedCandidates,
     projectedCandidates,
@@ -176,7 +234,7 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
       confirmedCandidates: confirmedCandidates.length,
       projectedCandidates: projectedCandidates.length,
       allProjectedCandidates: allProjectedCandidates.length,
-      totalCandidates: fallbackPool.length,
+      totalCandidates: confirmedCandidates.length + allProjectedCandidates.length,
     },
     debug: {
       ...(isRecord(input.debug) ? input.debug : {}),
@@ -185,6 +243,7 @@ export function buildFutureProofHrBoardResponse(input: HrBoardLike, requestedLim
       confirmedCount: confirmedCandidates.length,
       projectedCount: projectedCandidates.length,
       allProjectedCount: allProjectedCandidates.length,
+      confirmedSource: "validated_hr_pipeline",
     },
     dataQuality:
       confirmedCandidates.length > 0

@@ -20,8 +20,11 @@ import {
   InjuryStatus,
   isPlaceholder,
 } from "./hrValidation";
-
-const TEAM_MISMATCH_REASON = "Team mismatch / stale roster assignment";
+import {
+  TEAM_MISMATCH_REASON,
+  hasTeamAssignmentMismatch,
+  teamAssignmentMismatchDetail,
+} from "./teamAssignmentSafety";
 
 /* ============ Main validation function ============ */
 
@@ -82,46 +85,49 @@ function validateCandidateInternal(
 
   if (requireConfirmedLineup) {
     if (
-      player.teamId !== player.sourceTeamId ||
-      player.activeRosterTeamId !== player.sourceTeamId ||
-      (player.playerCurrentTeamId !== null &&
-        player.playerCurrentTeamId !== undefined &&
-        player.playerCurrentTeamId !== player.sourceTeamId) ||
-      (expectedTeamAbbrev && player.teamAbbrev !== expectedTeamAbbrev) ||
-      (player.sourceTeamAbbrev && player.teamAbbrev !== player.sourceTeamAbbrev)
+      hasTeamAssignmentMismatch({
+        teamId: player.teamId,
+        sourceTeamId: player.sourceTeamId,
+        activeRosterTeamId: player.activeRosterTeamId,
+        playerCurrentTeamId: player.playerCurrentTeamId,
+      })
+      || (expectedTeamAbbrev && player.teamAbbrev !== expectedTeamAbbrev)
+      || (player.sourceTeamAbbrev && player.teamAbbrev !== player.sourceTeamAbbrev)
     ) {
       return {
         valid: false,
         status: "blocked",
         reasons: [TEAM_MISMATCH_REASON],
         warnings: [
-          `teamId=${player.teamId}, sourceTeamId=${player.sourceTeamId}, currentTeamId=${player.playerCurrentTeamId ?? "unknown"}, teamAbbrev=${player.teamAbbrev}, expectedTeamAbbrev=${expectedTeamAbbrev || "unknown"}`,
+          teamAssignmentMismatchDetail({
+            teamId: player.teamId,
+            sourceTeamId: player.sourceTeamId,
+            activeRosterTeamId: player.activeRosterTeamId,
+            playerCurrentTeamId: player.playerCurrentTeamId,
+          }) + `, teamAbbrev=${player.teamAbbrev}, expectedTeamAbbrev=${expectedTeamAbbrev || "unknown"}`,
         ],
       };
     }
   } else {
-    if (player.activeRosterTeamId && player.activeRosterTeamId !== player.teamId) {
-      return {
-        valid: false,
-        status: "blocked",
-        reasons: [TEAM_MISMATCH_REASON],
-        warnings: [
-          `Preview safety mismatch: activeRosterTeamId=${player.activeRosterTeamId}, player.teamId=${player.teamId}`,
-        ],
-      };
-    }
-
     if (
-      player.playerCurrentTeamId !== null &&
-      player.playerCurrentTeamId !== undefined &&
-      player.playerCurrentTeamId !== player.teamId
+      hasTeamAssignmentMismatch({
+        teamId: player.teamId,
+        sourceTeamId: player.sourceTeamId ?? player.teamId,
+        activeRosterTeamId: player.activeRosterTeamId,
+        playerCurrentTeamId: player.playerCurrentTeamId,
+      })
     ) {
       return {
         valid: false,
         status: "blocked",
         reasons: [TEAM_MISMATCH_REASON],
         warnings: [
-          `Preview safety mismatch: playerCurrentTeamId=${player.playerCurrentTeamId}, player.teamId=${player.teamId}`,
+          `Preview safety mismatch: ${teamAssignmentMismatchDetail({
+            teamId: player.teamId,
+            sourceTeamId: player.sourceTeamId ?? player.teamId,
+            activeRosterTeamId: player.activeRosterTeamId,
+            playerCurrentTeamId: player.playerCurrentTeamId,
+          })}`,
         ],
       };
     }

@@ -7,6 +7,8 @@ import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
 import { assertUserOwnsResource } from "../middleware/ownership";
+import { validate } from "../middleware/validation";
+import { NotificationPreferencesPatchSchema } from "../validators/mutationSchemas";
 import {
   deletePushSubscription,
   getNotificationPreferences,
@@ -26,23 +28,28 @@ notificationRoutes.get("/notification-preferences", requireAuth, asyncHandler(as
   return res.json(apiOkFlat(req, { preferences: prefs }));
 }));
 
-notificationRoutes.patch("/notification-preferences", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
-  const body = req.body ?? {};
-  const patch: Record<string, boolean> = {};
-  for (const key of [
-    "in_app_enabled",
-    "hr_alerts_enabled",
-    "parlay_alerts_enabled",
-    "follow_alerts_enabled",
-    "tail_alerts_enabled",
-    "browser_push_enabled",
-  ] as const) {
-    if (typeof body[key] === "boolean") patch[key] = body[key];
-  }
+notificationRoutes.patch(
+  "/notification-preferences",
+  requireAuth,
+  validate({ body: NotificationPreferencesPatchSchema }),
+  asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
+    const body = req.body as Record<string, boolean>;
+    const patch: Record<string, boolean> = {};
+    for (const key of [
+      "in_app_enabled",
+      "hr_alerts_enabled",
+      "parlay_alerts_enabled",
+      "follow_alerts_enabled",
+      "tail_alerts_enabled",
+      "browser_push_enabled",
+    ] as const) {
+      if (typeof body[key] === "boolean") patch[key] = body[key];
+    }
 
-  const prefs = await updateNotificationPreferences(req.user!.id, patch);
-  return res.json(apiOkFlat(req, { preferences: prefs }));
-}));
+    const prefs = await updateNotificationPreferences(req.user!.id, patch);
+    return res.json(apiOkFlat(req, { preferences: prefs }));
+  }),
+);
 
 notificationRoutes.get("/notifications", requireAuth, asyncHandler(async (req: AuthedRequest & RequestWithContext, res: Response) => {
   const start = Date.now();

@@ -26,6 +26,7 @@ import { NormalizedGame } from "./mlbTypes";
 import { clamp } from "../intelligence/scoring";
 import { getParkFactor } from "./parkFactors";
 import { validateHrCandidate, validateProjectedPreviewCandidate } from "./hrValidator";
+import { TEAM_MISMATCH_REASON } from "./teamAssignmentSafety";
 import { MLB_PLAYER_RECORDS } from "../../../src/data/playerData";
 import { sportsFetchJson } from "../../lib/sports/sportsHttpClient";
 import {
@@ -47,23 +48,10 @@ const pitcherStatsCache = new TTLCache<any>(15 * 60_000); // 15 min
 const hitterStatsCache = new TTLCache<HitterStats>(15 * 60_000); // 15 min
 const boxscoreLineupCache = new TTLCache<Map<number, number>>(2 * 60_000); // 2 min — official batting order
 const boardCache = new HybridTTLCache<any>(5 * 60_000, "hr:validatedBoard", "hr:board"); // 5 min — final scored board
-const TEAM_MISMATCH_REASON = "Team mismatch / stale roster assignment";
 const REGISTRY_CONFLICT_WARNING =
   "Trusted registry differs from MLB current roster. Using MLB active roster/currentTeam for preview.";
 const curatedTeamByPlayerName = new Map(
   MLB_PLAYER_RECORDS.map((player) => [player.name.trim().toLowerCase(), player.team])
-);
-const legacyBadPairAuditTargets = [
-  { playerName: "Pete Alonso", team: "BAL" },
-  { playerName: "Willson Contreras", team: "BOS" },
-  { playerName: "Bo Bichette", team: "NYM" },
-  { playerName: "Alex Bregman", team: "CHC" },
-  { playerName: "Brandon Lowe", team: "PIT" },
-  { playerName: "Rhys Hoskins", team: "CLE" },
-  { playerName: "Rob Refsnyder", team: "SEA" },
-];
-const badPairingKeySet = new Set(
-  legacyBadPairAuditTargets.map((entry) => `${entry.playerName.toLowerCase()}|${entry.team}`)
 );
 
 /* ============ Types ============ */
@@ -920,6 +908,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
           };
 
           const previewKey = `${previewCandidate.playerName.toLowerCase()}|${previewCandidate.team}`;
+          void previewKey;
           const hasPitcherContext =
             !!previewCandidate.opponentPitcherId ||
             (!!previewCandidate.opponentPitcherName &&
@@ -937,13 +926,7 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
             !!hitterStats?.season &&
             Number.isFinite(previewCandidate.hrScore);
 
-          if (badPairingKeySet.has(previewKey)) {
-            badPairingAuditBlocked.push({
-              playerName: previewCandidate.playerName,
-              team: previewCandidate.team,
-              reason: "Known bad pairing blocked from ranked preview board.",
-            });
-          } else if (hasRequiredPreviewShape) {
+          if (hasRequiredPreviewShape) {
             scoredPreviewCandidates.push(previewCandidate);
             scoredPreviewPoolCount++;
           } else {
@@ -1040,28 +1023,29 @@ export async function buildValidatedHrBoard(date = todayISO()): Promise<{
     projectedCandidates.sort((a, b) => b.hrScore - a.hrScore);
     projectedPreviewCount = projectedCandidates.length;
 
-    const legacyBadPairAudit = [
-      ...legacyBadPairAuditTargets.flatMap((target) =>
-        candidates
-          .filter((candidate) => candidate.playerName === target.playerName && candidate.team === target.team)
-          .map(() => ({ playerName: target.playerName, team: target.team, source: "candidates" as const }))
-      ),
-      ...legacyBadPairAuditTargets.flatMap((target) =>
-        projectedCandidates
-          .filter((candidate) => candidate.playerName === target.playerName && candidate.team === target.team)
-          .map(() => ({ playerName: target.playerName, team: target.team, source: "projectedCandidates" as const }))
-      ),
-      ...legacyBadPairAuditTargets.flatMap((target) =>
-        blockedPlayers
-          .filter((candidate) => candidate.playerName === target.playerName && candidate.team === target.team)
-          .map(() => ({ playerName: target.playerName, team: target.team, source: "blockedPlayers" as const }))
-      ),
-      ...legacyBadPairAuditTargets.flatMap((target) =>
-        pool
-          .filter((candidate) => candidate.playerName === target.playerName && candidate.teamAbbrev === target.team)
-          .map(() => ({ playerName: target.playerName, team: target.team, source: "pool" as const }))
-      ),
-    ];
+    // Structured team-mismatch audit replaces the old name|abbrev BAD_PAIRINGS handlist.
+    const teamMismatchAudit = blockedPlayers
+      .filter((player) => (player.reasons ?? []).includes(TEAM_MISMATCH_REASON) || player.reason === TEAM_MISMATCH_REASON)
+      .slice(0, 50)
+      .map((player) => ({
+        playerName: player.playerName,
+        team: player.team,
+        source: "blockedPlayers" as const,
+        reason: TEAM_MISMATCH_REASON,
+      }));
+
+    const candidatesWithMismatch = candidates.filter((candidate) =>
+      (candidate.warnings ?? []).some((w) => w.includes(TEAM_MISMATCH_REASON)),
+    );
+    for (const slip of candidatesWithMismatch) {
+      badPairingAuditBlocked.push({
+        playerName: slip.playerName,
+        team: slip.team,
+        reason: TEAM_MISMATCH_REASON,
+      });
+    }
+
+    const legacyBadPairAudit = teamMismatchAudit;
 
     const isWaitingStarReason = (value: string) =>
       /official lineup not posted yet|lineup pending|lineup not posted|pitcher not announced|probable pitcher/i.test(value);

@@ -6,6 +6,8 @@ import { apiOkFlat } from "../lib/apiResponse";
 import { structuredLog } from "../lib/structuredLog";
 import { AppError } from "../errors/AppError";
 import type { RequestWithContext } from "../middleware/requestContext";
+import { validate } from "../middleware/validation";
+import { PrivacyDeleteAccountSchema } from "../validators/mutationSchemas";
 
 /**
  * Privacy routes — GDPR / CCPA / CPRA compliance endpoints.
@@ -62,18 +64,11 @@ privacyRoutes.get("/export", requireAuth, asyncHandler(async (req: PrivacyReq, r
   return res.json(apiOkFlat(req, { data }));
 }));
 
-privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: PrivacyReq, res: Response) => {
-  const { confirm } = req.body ?? {};
-
-  if (confirm !== "DELETE MY ACCOUNT") {
-    throw new AppError({
-      status: 400,
-      code: "bad_request",
-      message: 'Send { "confirm": "DELETE MY ACCOUNT" } to confirm deletion.',
-      details: { error: "confirmation_required" },
-    });
-  }
-
+privacyRoutes.post(
+  "/delete-account",
+  requireAuth,
+  validate({ body: PrivacyDeleteAccountSchema }),
+  asyncHandler(async (req: PrivacyReq, res: Response) => {
   if ((req.user!.profile as any).deletion_scheduled_at) {
     throw new AppError({
       status: 400,
@@ -92,6 +87,7 @@ privacyRoutes.post("/delete-account", requireAuth, asyncHandler(async (req: Priv
       is_banned: true,
     })
     .eq("id", req.user!.id);
+
 
   if (error) {
     structuredLog({

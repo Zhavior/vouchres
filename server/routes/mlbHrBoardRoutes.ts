@@ -169,7 +169,7 @@ res.json(apiOkFlat(req, {
     }
   }));
 
-  /* ============ Deep endpoint (old full board — slow, use sparingly) ============ */
+  /* ============ Deep endpoint — research-only; NEVER a confirmed-candidate source ============ */
   app.get("/api/mlb/hr-board/today/deep", asyncHandler(async (req: RequestWithContext, res: Response) => {
     try {
       const result = await Promise.race([
@@ -178,7 +178,18 @@ res.json(apiOkFlat(req, {
           setTimeout(() => reject(new Error("Deep board timed out after 20s")), 20000)
         ),
       ]);
-      res.json(apiOkFlat(req, result as unknown as Record<string, unknown>));
+      // Wall-off: deep board cannot silently become confirmed. Use /today for candidates[].
+      res.json(apiOkFlat(req, {
+        ...(result as unknown as Record<string, unknown>),
+        candidates: [],
+        confirmedCandidates: [],
+        projectedOnly: true,
+        isConfirmedBoard: false,
+        confirmedSource: "/api/mlb/hr-board/today",
+        dataQuality: "projection_preview",
+        warning:
+          "Deep board is research-only. Official confirmed candidates come only from GET /api/mlb/hr-board/today (validated pipeline). Official lineup not posted yet rows stay preview.",
+      }));
     } catch (err: any) {
       console.error("[hr-board/today/deep] failed:", err?.message);
       throw upstreamUnavailable("Deep HR board unavailable. Use /api/mlb/hr-board/today for the fast validated board.", err);

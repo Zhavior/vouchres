@@ -39,17 +39,15 @@ export async function assertUserOwnsResource(
   // Supabase's typed select parser. Keep the runtime filters, but prevent the
   // typed query builder from bottlenecking this generic helper.
   let query = (supabaseAdmin.from(lookup.table) as any)
-    .select("*")
+    .select(lookup.idColumn)
     .eq(lookup.idColumn, resourceId)
-    .eq(lookup.ownerColumn, userId)
-    .limit(1)
-    .maybeSingle();
+    .eq(lookup.ownerColumn, userId);
 
   for (const [column, value] of Object.entries(lookup.extra ?? {})) {
     query = query.eq(column, value);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(1).maybeSingle();
   if (error) {
     console.warn(
       `[ownership] lookup failed resource=${resourceType} id=${resourceId} user=${userId}: ${error.message}`

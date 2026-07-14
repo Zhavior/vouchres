@@ -212,6 +212,9 @@ export function calculateHrScore(hitter: HrEligibleHitter): HrCandidate {
 
     team: hitter.team,
     teamId: hitter.teamId,
+    sourceTeamId: hitter.sourceTeamId ?? hitter.teamId,
+    activeRosterTeamId: hitter.activeRosterTeamId ?? hitter.teamId,
+    currentTeamId: hitter.currentTeamId ?? null,
     opponent: hitter.opponent,
     opponentTeam: hitter.opponent,
     opponentTeamId: hitter.opponentTeamId,

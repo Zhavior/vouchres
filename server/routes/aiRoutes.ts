@@ -30,6 +30,7 @@ import {
   type ParlayEdgeInput,
   type PlayerResearchInput,
 } from "../validators/aiSchemas";
+import { AiLearningNoteSchema } from "../validators/mutationSchemas";
 
 type AiReq = AuthedRequest & RequestWithContext;
 
@@ -131,19 +132,14 @@ export function registerAiRoutes(app: Express): void {
     requireAuth,
     generationLimiter,
     requireTierOrQuota("gold", 5, "ai_learning_note", 200),
+    validate({ body: AiLearningNoteSchema }),
     asyncHandler(async (req: AiReq, res: Response) => {
-      const { pickId, result, originalLogic, whatActuallyHappened } = req.body ?? {};
-      if (!pickId || !result) {
-        throw new AppError({
-          status: 400,
-          code: "validation_error",
-          message: "pickId and result are required.",
-          details: [
-            ...(!pickId ? [{ path: "pickId", message: "Required." }] : []),
-            ...(!result ? [{ path: "result", message: "Required." }] : []),
-          ],
-        });
-      }
+      const { pickId, result, originalLogic, whatActuallyHappened } = req.body as {
+        pickId: string;
+        result: "win" | "loss" | "push";
+        originalLogic: string;
+        whatActuallyHappened?: string;
+      };
       const note = await generateLearningNote({ pickId, result, originalLogic: originalLogic ?? "", whatActuallyHappened });
       await incrementAiQuotaIfNeeded(req);
       return res.json(apiOkFlat(req, note as unknown as Record<string, unknown>));
